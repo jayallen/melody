@@ -52,11 +52,11 @@ sub import {
             eval "require $class; 1;" or die $@;
             if ($fast_cgi) {
                 while (my $cgi = new CGI::Fast) {
-                    $app = $class->new( %param ) or die $class->errstr;
+                    $app = $class->new( %param, CGIObject => $cgi )
+                        or die $class->errstr;
                     local $SIG{__WARN__} = sub { $app->trace($_[0]) };
                     MT->set_instance($app);
-                    $app->init_request(CGIObject => $cgi)
-                        unless $app->{init_request};
+                    $app->init_request(CGIObject => $cgi);
                     $app->run;
                 }
             } else {
