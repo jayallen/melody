@@ -7592,7 +7592,7 @@ sub rebuild_confirm {
     }
     my $order = join ',', @at, 'index';
     require MT::Entry;
-    my $total = MT::Entry->count({ blog_id => $blog_id });
+    my $total = MT::Entry->count({ blog_id => $blog_id, status => MT::Entry::RELEASE() });
     my %param = ( archive_type_loop => \@data,
                   build_order => $order,
                   build_next => 0,
@@ -7614,6 +7614,7 @@ sub rebuild_confirm {
 
 my %Limit_Multipliers = (
     Individual => 1,
+    Category => 1,
     Daily => 2,
     Weekly => 5,
     Monthly => 10,
@@ -7749,6 +7750,26 @@ sub rebuild_pages {
                              OldNext => $q->param('old_next') )
             or return;
         $order = "entry '" . $entry->title . "'";
+    } elsif ($type eq 'Category') {
+        return $app->error($app->translate("Permission denied."))
+            unless $perms->can_rebuild;
+        $offset = $q->param('offset') || 0;
+        my $total_cats = MT::Category->count({blog_id => $blog_id});
+        if ($offset < $total_cats) {
+            $app->rebuild( BlogID => $blog_id,
+                           ArchiveType => $type,
+                           NoIndexes => 1,
+                           Offset => $offset,
+                           Limit => $limit)
+                or return;
+            $offset += $limit;
+        }
+        if ($offset < $total_cats) {
+            $done-- if $done;
+            $next--;
+        } else {
+            $offset = 0;
+        }
     } elsif ($Limit_Multipliers{$type} && $limit ne '*') {
         return $app->error($app->translate("Permission denied."))
             unless $perms->can_rebuild;
@@ -7797,7 +7818,12 @@ sub rebuild_pages {
         ## limit.
         my $mult = $Limit_Multipliers{$type_name} || 1;
         my $entries_per_rebuild = $app->config('EntriesPerRebuild');
-        my $static_count = $blog->count_static_templates($type_name) || 0;
+        my $static_count;
+        if ($type_name !~ m/^index/) {
+            $static_count = $blog->count_static_templates($type_name) || 0;
+        } else {
+            $static_count = 1;
+        }
         if (!$static_count) {
             $limit = $entries_per_rebuild * $mult * $Limit_Multipliers{'Dynamic'};
             $dynamic = 1;

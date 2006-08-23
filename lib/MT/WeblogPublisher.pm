@@ -48,8 +48,16 @@ sub rebuild {
         return $mt->error(
             MT->translate("Archive type '[_1]' is not a chosen archive type",
                 $set_at)) unless $at{$set_at};
+
         @at = ($set_at);
     }
+
+    if ($param{ArchiveType} &&
+        (!$param{Entry}) && ($param{ArchiveType} eq 'Category')) {
+        # Pass to full category rebuild
+        return $mt->rebuild_categories(%param);
+    }
+
     if (@at) {
         require MT::Entry;
         my %arg = ('sort' => 'created_on', direction => 'descend');
@@ -104,6 +112,34 @@ sub rebuild {
     }
     if ($mt->{PublishCommenterIcon}) {
         $mt->make_commenter_icon($blog);
+    }
+    1;
+}
+
+sub rebuild_categories {
+    my $mt = shift;
+    my %param = @_;
+    my $blog;
+    unless ($blog = $param{Blog}) {
+        my $blog_id = $param{BlogID};
+        $blog = MT::Blog->load($blog_id, {cached_ok=>1}) or
+            return $mt->error(
+                MT->translate("Load of blog '[_1]' failed: [_2]",
+                    $blog_id, MT::Blog->errstr));
+    }
+    my %arg;
+    $arg{'sort'} = 'id';
+    $arg{direction} = 'ascend';
+    if ($param{Limit}) {
+        $arg{offset} = $param{Offset};
+        $arg{limit} = $param{Limit};
+    }
+    my $cat_iter = MT::Category->load_iter({ blog_id => $blog->id }, \%arg);
+    while (my $cat = $cat_iter->()) {
+        $mt->_rebuild_entry_archive_type(
+            Blog => $blog, Category => $cat, ArchiveType => 'Category',
+            NoStatic => $param{NoStatic},
+        ) or return;
     }
     1;
 }
