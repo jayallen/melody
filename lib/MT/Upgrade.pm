@@ -1724,6 +1724,290 @@ against the database.
 
 =back
 
+=head1 UPGRADE FUNCTIONS
+
+The bulk of this module consists of Movable Type upgrade operations.
+These are declared as upgrade functions, and are registered in the
+package variabled '%functions'. (Note: the word 'function' here is
+not meant to describe a Perl subroutine.)
+
+Some functions are invoked to manage the upgrade process from start
+to finish ('core_upgrade_begin' for instance, which merely displays
+a progress message to the calling application). The rest handle
+schema and data transformation from one version of the MT schema to
+another.
+
+Schema translation itself is handled by Movable Type automatically.
+MT is able to check the physical schema represenation in the database
+and compare it with the schema as defined by the L<MT::Object>-descended
+package. If a new property is added to the L<MT::Blog> package, the
+upgrade process sees that has happened and can issue the actual
+'alter table' SQL statement necessary to add it to the database. The
+'core_fix_class' function is responsible for examining a particular
+table used by a class like L<MT::Blog> and will append additional
+upgrade steps ('core_add_column', 'core_alter_column') that it finds
+necessary to the upgrade workflow.
+
+Following the schema translation operations, the data transformation
+functions would be used to manipulate the data as necessary from
+an older schema to the current one. For instance, the
+'core_create_placements' upgrade function was written to upgrade
+really old MT schemas from the pre-2.0 release to the current schema.
+The upgrade function is registered like this:
+
+    $MT::Upgrade::functions{core_create_placements} = {
+        version_limit => 2.0,
+        code          => \&core_update_records,
+        priority      => 9.1,
+        updater       => {
+            class     => 'MT::Entry',
+            message   => 'Creating entry category placements...',
+            condition => sub { $_[0]->category_id },
+            code      => sub {
+                require MT::Placement;
+                my $entry = shift;
+                my $existing = MT::Placement->load({ entry_id => $entry->id,
+                    category_id => $entry->category_id });
+                if (!$existing) {
+                    my $place = MT::Placement->new;
+                    $place->entry_id($entry->id);
+                    $place->blog_id($entry->blog_id);
+                    $place->category_id($entry->category_id);
+                    $place->is_primary(1);
+                    $place->save;
+                }
+                $entry->category_id(0);
+            }
+        }
+    };
+
+With MT version 2.0, the L<MT::Placement> class was introduced and
+immediately deprecated the use of MT::Entry-E<gt>category as a result.
+To facilitate upgrading the existing L<MT::Entry> objects this upgrade
+function is declared such that:
+
+=over 4
+
+=item * It is limited to only run for MT schemas older than version 2.0 (the version_limit element handles this).
+
+=item * It operates on L<MT::Entry> objects (updater-E<gt>class element
+declares that).
+
+=item * It tells the user what is happening (updater-E<gt>message).
+
+=item * It excludes any L<MT::Entry> objects that do not have a category_id element (updater-E<gt>condition).
+
+=item * It checks for an existing L<MT::Placement> relationship; if not
+present, it creates one (updater-E<gt>code).
+
+=item * It empties out the category_id member of the L<MT::Entry> object
+being upgrade to prevent it from being processed in the future
+(updater-E<gt>code).
+
+=back
+
+For plugins, upgrade functions are assignable in the plugin registration
+hash as documented in L<MT::Plugin>. You may also return a hashref of
+upgrade functions from the plugin using the MT::Plugin::upgrade_functions
+subroutine.
+
+Let's look at the anatomy of an upgrade function declaration:
+
+=over 4
+
+=item * version_limit (optional)
+
+The version_limit property allows you to declare that this upgrade
+operation is only applicable to MT B<schema> versions below the version
+specified.
+
+To register an upgrade function that is only applied to releases prior
+to the current one, specify the current schema version as the version
+limit. This will allow the upgrade function to run for any prior releases
+but prevent it from running in subsequent releases.
+
+B<NOTE>: If you are declaring a B<plugin> upgrade function, this version
+limit is compared with your plugin's schema version, not the Movable Type
+schema version.
+
+=item * priority (optional)
+
+If your upgrade operation is dependent on another being done already,
+it is possible to order them using the priority value. A lower value
+means a higher priority.
+
+=item * condition (optional)
+
+This is a coderef parameter. If specified, it should return a true or
+false value that determines whether the upgrade step is actually to run
+or not.
+
+When called, it is given the parameters normally passed to an upgrade
+operation (see the 'code' parameter documentation).
+
+=item * on_field (optional)
+
+If specified, this upgrade function is triggered upon the creation of
+the field identified by this element. For instance,
+
+    on_field => 'MT::Foo->bar'
+
+This would specify that the upgrade step is only to run when the 'bar'
+column is being added to the table that stores data for the MT::Foo
+package.
+
+=item * code
+
+This coderef parameter is the declared handler for the upgrade
+function. It is responsible for doing the upgrade task itself. For
+quick operations, it is fine to do all of your work within this
+subroutine. However, to faciliate large databases, it is important
+to do that work in manageable portions so it doesn't time-out by
+the web server or browser client.
+
+To facilitate an iterative process for your upgrade function, the
+upgrade routine itself can yield a return value to signal the
+upgrade process on how to proceed:
+
+=over 4
+
+=item * 0
+
+The upgrade function completed successfully.
+
+=item * undef
+
+upgrade routine failed with error. The error should be placed using the
+MT::Upgrade-E<gt>error method.
+
+=item * E<gt> 0
+
+More work to do; the return value is the 'offset' parameter
+to pass on the next invocation of the upgrade function.
+
+=back
+
+Due to the complexity of handling this kind of staged operation,
+you will most likely want to use the prebuilt
+'MT::Upgrade::core_update_records' routine to do most of your upgrade
+operations that handle some or all records of a given package.
+
+If using the 'core_update_records' routine, you should also specify
+an 'updater' parameter for your upgrade function.
+
+=item * updater
+
+This parameter is only used if you've specified the 'core_update_records'
+routine (from the L<MT::Upgrade> package itself) for the 'code' element of
+your upgrade function.
+
+    code => \&MT::Upgrade::core_update_records,
+    updater => {
+        class => 'MT::Foo',
+        message => 'Updating Foo bars...',
+        code => sub {
+            my $foo = shift;
+            $foo->bar(1);
+        },
+        condition => sub {
+            my $foo = shift;
+            !defined $foo->bar;
+        },
+        sql => 'update mt_foo set foo_bar = 1 where foo_bar is null'
+    }
+
+This updater declaration is going to process all MT::Foo objects that
+are available, setting the 'bar' property to 1 if it hasn't been assigned
+a value already.
+
+Here's an overview of an 'updater' element:
+
+=over 4
+
+=item * class (required)
+
+The L<MT::Object>-descendant class to be processed.
+
+=item * code (required)
+
+A coderef to execute for B<each> record of the table. The parameter to
+this routine is the object being processed. Following the call to your
+subroutine, the object is saved for you, so you don't have to save
+the object yourself.
+
+=item * message (optional)
+
+The status message to display when running this upgrade operation.
+
+=item * condition (optional)
+
+A coderef to use to test whether the current object needs to be upgraded
+or not. This routine should return true if it is to be processed; false
+if not. It is given the object as a parameter.
+
+=item * sql (optional)
+
+If specified, and if MT is using a SQL-based database for storing data,
+this SQL statement is issued instead of doing the Perl-based row-by-row
+upgrade.
+
+    sql => 'update mt_foo set foo_bar=1 where foo_bar is null'
+
+You may also specify multiple SQL statements using an array:
+
+    sql => [
+        'update mt_foo set foo_bar=1 where foo_bar is null',
+        'update mt_foo set foo_baz=2 where foo_baz is null'
+    ]
+
+B<WARNING>: The 'sql' property is only meant to be used for cases where you
+can issue simple, cross-database SQL statements. It is not advised to
+use any vendor-specific SQL syntax. So, if you can't do that, don't specify
+the 'sql' element at all and instead use the 'code' element exclusively
+to do the upgrade operation.
+
+=back
+
+=back
+
+The declarative style of upgrade functions make it possible for MT to
+fix itself, upgrading from any older schema version to the current one.
+Upgrade functions are selected through an introspection process, so any
+given upgrade operation may run a different selection of upgrade functions.
+As such, it is important that any upgrade functions be written with this
+in mind. Here are some general best practices to use when writing them:
+
+=over 4
+
+=item * Make them fast.
+
+Use the 'sql' element for a 'core_update_records' type upgrade function
+so that SQL-based databases can be upgraded in one pass.
+
+=item * Make them indepedent.
+
+Don't assume that any other upgrade operation will have run within the
+same application request. The upgrade process can run them in most any
+order and across multiple application requests. You do have a guarantee
+that a higher priority upgrade function will be run prior to a lower-priority
+upgrade function (ie, assigning a priority of 1 will ensure it will run
+before one with a priority of 2).
+
+=item * Limit them as much as possible.
+
+Specify a version_limit so it only runs for the proper schemas. Use the
+condition element to bypass objects or the upgrade step altogether when
+possible.
+
+=item * Repeating an upgrade function should be safe.
+
+This can be made possible through use of the 'condition' elements, bypassing
+objects that have already been processed (see how the
+'core_create_placements' upgrade function declares conditions for an
+example).
+
+=back
+
 =head1 AUTHOR & COPYRIGHTS
 
 Please see the I<MT> manpage for author, copyright, and license information.
