@@ -50,6 +50,7 @@ use_ok 'MT::ObjectDriver::DBI::mysql';
 SKIP: {
     eval { require MT::ObjectDriver::DBI::oracle };
     skip 'MT::ObjectDriver::DBI::oracle not installed', 1 if $@;
+    use_ok 'MT::ObjectDriver::DBI::oracle';
 }
 use_ok 'MT::ObjectDriver::DBI::postgres';
 use_ok 'MT::ObjectDriver::DBI::sqlite';
