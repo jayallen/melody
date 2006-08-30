@@ -18,7 +18,11 @@ use_ok 'MT::AtomServer';
 use_ok 'MT::Author';
 use_ok 'MT::Blog';
 use_ok 'MT::Builder';
-use_ok 'MT::BulkCreation';
+SKIP: {
+    eval { require MT::BulkCreation };
+    skip 'MT::BulkCreation not present', 1 if $@;
+    use_ok 'MT::BulkCreation';
+}
 use_ok 'MT::Callback';
 use_ok 'MT::Category';
 use_ok 'MT::Comment';
@@ -49,7 +53,7 @@ use_ok 'MT::ObjectDriver::DBI';
 use_ok 'MT::ObjectDriver::DBI::mysql';
 SKIP: {
     eval { require MT::ObjectDriver::DBI::oracle };
-    skip 'MT::ObjectDriver::DBI::oracle not installed', 1 if $@;
+    skip 'MT::ObjectDriver::DBI::oracle not present', 1 if $@;
     use_ok 'MT::ObjectDriver::DBI::oracle';
 }
 use_ok 'MT::ObjectDriver::DBI::postgres';
