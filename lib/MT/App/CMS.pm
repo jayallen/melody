@@ -7592,11 +7592,14 @@ sub rebuild_confirm {
     }
     my $order = join ',', @at, 'index';
     require MT::Entry;
-    my $total = MT::Entry->count({ blog_id => $blog_id, status => MT::Entry::RELEASE() });
+    my $total_entries = MT::Entry->count({ blog_id => $blog_id, status => MT::Entry::RELEASE() });
+    require MT::Category;
+    my $total_cats = MT::Category->count({ blog_id => $blog_id });
     my %param = ( archive_type_loop => \@data,
                   build_order => $order,
                   build_next => 0,
-                  total_entries => $total );
+                  total_cats => $total_cats,
+                  total_entries => $total_entries );
     $param{index_selected} = ($app->param('prompt')||"") eq 'index';
     if (my $tmpl_id = $app->param('tmpl_id')) {
         require MT::Template;
@@ -7629,9 +7632,11 @@ sub start_rebuild_pages {
     my @order = split /,/, $type;
     my $type_name = $order[$next];
     my $total_entries = $q->param('total_entries');
+    my $total_cats = $q->param('total_cats');
     my %param = ( build_type => $type,
                   build_next => $next,
                   total_entries => $total_entries,
+                  total_cats => $total_cats,
                   build_type_name => $app->translate($type_name) );
     my $static_count;
     my $entries_per_rebuild = $app->config('EntriesPerRebuild');
@@ -7642,11 +7647,12 @@ sub start_rebuild_pages {
             $param{limit} = $entries_per_rebuild * $mult * $Limit_Multipliers{'Dynamic'};
             $param{dynamic} = 1;
         } else {
+            my $total = $type_name eq 'Category' ? $total_cats : $total_entries;
             $param{limit} = int($entries_per_rebuild * $mult / $static_count);
             $param{is_individual} = 1;
             $param{limit} = $entries_per_rebuild * $mult;
             $param{indiv_range} = "1 - " .
-                ($param{limit} > $total_entries ? $total_entries : $param{limit});
+                ($param{limit} > $total ? $total : $param{limit});
         }
     } elsif ($type_name =~ /^index-(\d+)$/) {
         my $tmpl_id = $1;
@@ -7701,6 +7707,8 @@ sub rebuild_pages {
     my ($limit) = $q->param('limit');
 
     my $total_entries = $q->param('total_entries');
+    my $total_cats = $q->param('total_cats');
+    my $total = $type eq 'Category' ? $total_cats : $total_entries;
 
     ## Tells MT::_rebuild_entry_archive_type to cache loaded templates so
     ## that each template is only loaded once.
@@ -7754,7 +7762,6 @@ sub rebuild_pages {
         return $app->error($app->translate("Permission denied."))
             unless $perms->can_rebuild;
         $offset = $q->param('offset') || 0;
-        my $total_cats = MT::Category->count({blog_id => $blog_id});
         if ($offset < $total_cats) {
             $app->rebuild( BlogID => $blog_id,
                            ArchiveType => $type,
@@ -7764,7 +7771,7 @@ sub rebuild_pages {
                 or return;
             $offset += $limit;
         }
-        if ($offset < $total_cats) {
+        if ($offset < $total) {
             $done-- if $done;
             $next--;
         } else {
@@ -7774,7 +7781,7 @@ sub rebuild_pages {
         return $app->error($app->translate("Permission denied."))
             unless $perms->can_rebuild;
         $offset = $q->param('offset') || 0;
-        if ($offset < $total_entries) {
+        if ($offset < $total) {
             $app->rebuild( BlogID => $blog_id,
                            ArchiveType => $type,
                            NoIndexes => 1,
@@ -7783,7 +7790,7 @@ sub rebuild_pages {
                 or return;
             $offset += $limit;
         }
-        if ($offset < $total_entries) {
+        if ($offset < $total) {
             $done-- if $done;
             $next--;
         } else {
@@ -7836,6 +7843,7 @@ sub rebuild_pages {
         my %param = ( build_type => $order, build_next => $next,
                       build_type_name => $app->translate($type_name),
                       total_entries => $total_entries,
+                      total_cats => $total_cats,
                       offset => $offset, limit => $limit,
                       is_bm => scalar $q->param('is_bm'),
                       entry_id => scalar $q->param('entry_id'),
@@ -7846,7 +7854,7 @@ sub rebuild_pages {
             if ($limit && !$dynamic) {
                 $param{is_individual} = 1;
                 $param{indiv_range} = sprintf "%d - %d", $offset+1,
-                    $offset + $limit > $total_entries ? $total_entries :
+                    $offset + $limit > $total ? $total :
                     $offset + $limit;
             }
         }
