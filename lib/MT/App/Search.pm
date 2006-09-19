@@ -355,7 +355,6 @@ sub _tag_search {
     #    level => MT::Log::INFO(),
     #    class => 'search',
     #    category => 'tag_search',
-    #    metadata => $app->{search_string}
     #});
 
     my %terms = (status => MT::Entry::RELEASE());
@@ -451,7 +450,6 @@ sub _straight_search {
         level => MT::Log::INFO(),
         class => 'search',
         category => 'straight_search',
-        metadata => $app->{search_string},
         $blog_id ? (blog_id => $blog_id) : ()
     });
 
