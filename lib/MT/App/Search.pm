@@ -65,8 +65,13 @@ sub init_request{
         for my $blog_id ($q->param($type)) {
             if ($blog_id =~ m/,/) {
                 my @ids = split /,/, $blog_id;
-                $app->{searchparam}{$type}{$_} = 1 for @ids;
+                s/\D+//g for @ids; # only numeric values.
+                foreach my $id (@ids) {
+                    next unless $id;
+                    $app->{searchparam}{$type}{$id} = 1;
+                }
             } else {
+                $blog_id =~ s/\D+//g; # only numeric values.
                 $app->{searchparam}{$type}{$blog_id} = 1;
             }
         }
