@@ -83,7 +83,7 @@ mt-check.cgi: %: %.pre build-language-stamp
 	chmod +x $@
 
 $(local_js): mt-static/mt_%.js: mt-static/mt.js lib/MT/L10N/%.pm
-	build/mt-dists/make-js
+	perl build/mt-dists/make-js
 
 $(latin1_modules): %-iso-8859-1.pm: %.pm
 	iconv -f utf-8 -t iso-8859-1 $< > $@
@@ -146,6 +146,12 @@ quick-test: code
 		t/29-cleanup.t t/31-dbm.t t/32-mysql.t t/33-postgres.t   \
 		t/34-sqlite.t t/35-tags.t t/45-datetime.t t/46-i18n-en.t \
 		t/47-i18n-ja.t t/48-cache.t t/49-tagsplit.t
+
+dist:
+    perl build/exportmt.pl --local
+
+me:
+    perl build/exportmt.pl --make
 
 # tools-dist:
 # 	(cd tools; perl -e 'use ExtUtils::Manifest qw(maniread manicopy); $$mani = maniread("MANIFEST"); manicopy($$mani, "mt-tools", "cp")'; tar czvf ../mt-tools.tar.gz mt-tools; zip -r ../mt-tools.zip mt-tools)
