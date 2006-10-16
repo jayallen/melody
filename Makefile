@@ -148,20 +148,20 @@ quick-test: code
 		t/47-i18n-ja.t t/48-cache.t t/49-tagsplit.t
 
 dist:
-    perl build/exportmt.pl --local
+	perl build/exportmt.pl --local
 
 me:
-    perl build/exportmt.pl --make
+	perl build/exportmt.pl --make
 
 # tools-dist:
 # 	(cd tools; perl -e 'use ExtUtils::Manifest qw(maniread manicopy); $$mani = maniread("MANIFEST"); manicopy($$mani, "mt-tools", "cp")'; tar czvf ../mt-tools.tar.gz mt-tools; zip -r ../mt-tools.zip mt-tools)
 
 clean:
-	-rm lib/MT.pm mt-config.cgi-original mt-check.cgi $(latin1_modules) $(local_js)
-	-rm lib/MT/ConfigMgr.pm
-	-rm php/mt.php
+	-rm -rf lib/MT.pm mt-config.cgi-original mt-check.cgi $(latin1_modules) $(local_js)
+	-rm -rf lib/MT/ConfigMgr.pm
+	-rm -rf php/mt.php
 	-rm -rf `ls tmpl/cms/*.tmpl.pre | sed s/\.pre//`
 	-rm -rf tmpl/cms/admin_essential_links_$(BUILD_LANGUAGE).tmpl
 	-rm -rf index.html
-	-rm MANIFEST
+	-rm -rf MANIFEST
 
