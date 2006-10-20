@@ -29,6 +29,7 @@ function smarty_block_MTEntries($args, $content, &$ctx, &$repeat) {
             $args['lastn'] or $args['lastn'] = -1;
             $ts = $ctx->stash('current_timestamp');
             $tse = $ctx->stash('current_timestamp_end');
+            require_once("archive_lib.php");
             global $_archive_helpers;
             if (($ts && $tse) && isset($_archive_helpers[$at])) {
                 # assign date range if we have both
