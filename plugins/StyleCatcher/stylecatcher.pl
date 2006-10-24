@@ -101,6 +101,7 @@ sub save_config {
     my $plugin = shift;
     my ($param, $scope) = @_;
     my $themeroot = $param->{themeroot};
+    return 1 unless $themeroot;
 
     my $app = MT->instance;
 
