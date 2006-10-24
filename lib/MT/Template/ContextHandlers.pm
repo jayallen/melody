@@ -3925,13 +3925,16 @@ sub _hdlr_sub_categories {
     my $current_cat;
     my @cats;
   
-    # If we find ourselves in a category context
-    if (!$args->{top}) {
+    if ($args->{top}) {
+        @cats = MT::Category->top_level_categories($ctx->stash('blog_id'));
+    } else {
+        # Use explicit category or category context
         if ($args->{category}) {
             # user specified category; list from this category down
             $current_cat = cat_path_to_category($args->{category}, $ctx->stash('blog_id'));
+        } else {
+            $current_cat = $ctx->stash('category') || $ctx->stash('archive_category');
         }
-        $current_cat ||= $ctx->stash('category') || $ctx->stash('archive_category');
         if ($current_cat) {
             if ($include_current) {
                 # If we're to include it, just use it to seed the category list
@@ -3941,10 +3944,6 @@ sub _hdlr_sub_categories {
                 @cats = $current_cat->children_categories;
             }
         }
-    }
-    if (!@cats) {
-        # Otherwise, use the top level categories
-        @cats = MT::Category->top_level_categories($ctx->stash('blog_id'));
     }
     return '' unless @cats;
   
