@@ -67,12 +67,12 @@ sub get_options {
       'deploy:s'        => '', #($ENV{USER}||$ENV{USERNAME}).'@rongo:/usr/local/cifs/intranet/mt-interest/',
       'deploy-uri=s'    => 'https://intranet.sixapart.com/mt-interest',
       'build!'          => 1,  # Build distribution files?
-      'email-bcc:s'     => undef,
-      'email-body=s'    => '',  # Constructed at run-time.
-      'email-cc:s'      => undef,
-      'email-from=s'    => ( $ENV{USER} || $ENV{USERNAME} ) .'@sixapart.com',
-      'email-host=s'    => 'mail.sixapart.com',
-      'email-subject=s' => '',  # Constructed at run-time.
+#      'email-bcc:s'     => undef,
+#      'email-body=s'    => '',  # Constructed at run-time.
+#      'email-cc:s'      => undef,
+#      'email-from=s'    => ( $ENV{USER} || $ENV{USERNAME} ) .'@sixapart.com',
+#      'email-host=s'    => 'mail.sixapart.com',
+#      'email-subject=s' => '',  # Constructed at run-time.
       'export!'         => 1,  # To export or not to export. That is the question.
       'export-dir=s'    => '',  # Constructed at run-time.
       'footer=s'        => "<br/><b>SOFTWARE IS PROVIDED FOR TESTING ONLY - NOT FOR PRODUCTION USE.</b>\n",
@@ -82,6 +82,7 @@ sub get_options {
       'http-pass=s'     => undef,
       'ldap'            => 0,  # Use LDAP (and don't initialize the database).
       'lang=s'          => $ENV{BUILD_LANGUAGE} || 'en_US',  # de,es,en_US,fr,ja,nl
+      'language=s@'     => undef,  # Constructed below.
       'local'           => 0,  # Command-line --option alias
       'make'            => 0,  # Command-line --option alias for simple legacy `make`
       'notify:s'        => undef,  # Send email notification on completion.
@@ -119,15 +120,19 @@ sub get_options {
             if ref($val) eq 'SCALAR' || ref($val) eq 'REF';
     }
 
-    # XXX Can't figure out how to pre-define arrays yet.
     # Make sure we have an archive file type list.
     $self->{'arch=s@'} ||= [qw( .tar.gz .zip )];
     # Make the plugins an empty list unless defined.
     $self->{'plugin=s@'} ||= [];
+    # Construct the list of languages to build.
+    $self->{'lang=s'} = 'de,en_US,es,fr,ja,nl'
+        if lc( $self->{'lang=s'} ) eq 'all';
+    push @{ $self->{'language=s@'} }, split /,/, $self->{'lang=s'};
 }
 
 sub setup {
     my $self = shift;
+    my %args = @_;
 
     # Do we have SSL support?
     my $ssl = 'Crypt::SSLeay';
@@ -158,7 +163,9 @@ sub setup {
     # Figure out what repository to use.
     $self->set_repo();
 
-    # Make ab_CD into just ab.
+    # Replace the current language if given one as an argument.
+    $self->{'lang=s'} = $args{language} if $args{language};
+    # Strip the dialect portion of the language code (ab_CD into ab).
     ($self->{'short-lang=s'} = $self->{'lang=s'}) =~ s/([a-z]{2})_[A-Z]{2}$/$1/o;
 
     # Create the build-stamp if one is not already defined.
@@ -180,6 +187,7 @@ sub setup {
             push @stamp, sprintf(
                 '%04d%02d%02d', (localtime)[5]+1900, (localtime)[4]+1, (localtime)[3]
             ) if $self->{'date!'};
+            # Add -ldap to distingush them from Melody Nelson builds.
             push @stamp, 'ldap' if $self->{'ldap'};
         }
         $self->{'stamp=s'} = join '-', @stamp;
@@ -792,8 +800,12 @@ sub verbose {
     print join( "\n", @_ ), "\n\n";
 }
 
-sub debug { shift->{'debug'} }
-sub help { shift->{'help|h'} }
+sub languages { return @{ shift->{'language=s@'} } }
+
+sub debug { return shift->{'debug'} }
+
+sub help { return shift->{'help|h'} }
+
 sub usage {
     my $self = shift;
     print <<'USAGE';
