@@ -169,7 +169,7 @@ sub setup {
     $self->set_repo();
 
     # Create the build-stamp if one is not already defined.
-    unless( $self->{'stamp=s'} ) {
+    if( !$self->{'stamp=s'} || $args{language} ) {
         # Read-in the configuration variables for substitution.
         my $config = $self->read_conf( "build/mt-dists/$self->{'pack=s'}.mk" );
         my @stamp = ();
