@@ -67,12 +67,12 @@ sub get_options {
       'deploy:s'        => '', #($ENV{USER}||$ENV{USERNAME}).'@rongo:/usr/local/cifs/intranet/mt-interest/',
       'deploy-uri=s'    => 'https://intranet.sixapart.com/mt-interest',
       'build!'          => 1,  # Build distribution files?
-#      'email-bcc:s'     => undef,
-#      'email-body=s'    => '',  # Constructed at run-time.
-#      'email-cc:s'      => undef,
-#      'email-from=s'    => ( $ENV{USER} || $ENV{USERNAME} ) .'@sixapart.com',
-#      'email-host=s'    => 'mail.sixapart.com',
-#      'email-subject=s' => '',  # Constructed at run-time.
+      'email-bcc:s'     => undef,
+      'email-body=s'    => '',  # Constructed at run-time.
+      'email-cc:s'      => undef,
+      'email-from=s'    => ( $ENV{USER} || $ENV{USERNAME} ) .'@sixapart.com',
+      'email-host=s'    => 'mail.sixapart.com',
+      'email-subject=s' => '',  # Constructed at run-time.
       'export!'         => 1,  # To export or not to export. That is the question.
       'export-dir=s'    => '',  # Constructed at run-time.
       'footer=s'        => "<br/><b>SOFTWARE IS PROVIDED FOR TESTING ONLY - NOT FOR PRODUCTION USE.</b>\n",
@@ -139,6 +139,11 @@ sub setup {
     eval { require $ssl };
     warn( "WARNING: $ssl not found. Can't use SSL.\n" ) if $@;
 
+    # Replace the current language if given one as an argument.
+    $self->{'lang=s'} = $args{language} if $args{language};
+    # Strip the dialect portion of the language code (ab_CD into ab).
+    ($self->{'short-lang=s'} = $self->{'lang=s'}) =~ s/([a-z]{2})_[A-Z]{2}$/$1/o;
+
     $self->{'pack=s'} ||= -e 'build/mt-dists/MTE.mk' ? 'MTE' : 'MT';
     $ENV{BUILD_PACKAGE}  = $self->{'pack=s'};
     $ENV{BUILD_LANGUAGE} = $self->{'lang=s'};
@@ -162,11 +167,6 @@ sub setup {
     $self->{'revision=s'} = repo_rev();
     # Figure out what repository to use.
     $self->set_repo();
-
-    # Replace the current language if given one as an argument.
-    $self->{'lang=s'} = $args{language} if $args{language};
-    # Strip the dialect portion of the language code (ab_CD into ab).
-    ($self->{'short-lang=s'} = $self->{'lang=s'}) =~ s/([a-z]{2})_[A-Z]{2}$/$1/o;
 
     # Create the build-stamp if one is not already defined.
     unless( $self->{'stamp=s'} ) {

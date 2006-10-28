@@ -18,7 +18,6 @@ $build->get_options();
 $build->usage() if $build->help();
 
 for( $build->languages() ) {
-    # Perform the preliminary contextual set-up.
     $build->setup( language => $_ );
 
     # Summarize what we are about to do.
@@ -50,7 +49,7 @@ for( $build->languages() ) {
     # Cleanup the exported files.
     $build->cleanup();
 
-    # TODO Refactor the (rarely used) email notification.
+    # TODO Factor out the (rarely used) email notification.
     $build->notify( $distros );
 }
 
