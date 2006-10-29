@@ -177,9 +177,9 @@ sub setup {
             $self->{'alpha=s'} ? "a$self->{'alpha=s'}"
           : $self->{'beta=s'}  ? "b$self->{'beta=s'}"
           : '' );
-        push @stamp, $self->{'short-lang=s'};
         # Add repo, date and ldap to the stamp if we are not production.
         unless( $self->{'prod'} ) {
+            push @stamp, $self->{'short-lang=s'};
             if( $self->{'rev!'} ) {
                 push @stamp, lc( fileparse $self->{'repo=s'} );
                 push @stamp, $self->{'revision=s'};
@@ -200,6 +200,8 @@ sub setup {
 
     # Set the full name to use for the distribution (e.g. MT-3.3b1-fr-r12345-20061225).
     $self->{'export-dir=s'} = "$self->{'pack=s'}-$self->{'stamp=s'}";
+    # Production builds are explicitly named with their language code.
+    $self->{'export-dir=s'} .= "-$self->{'short-lang=s'}" if $self->{'prod'};
 }
 
 sub make {
