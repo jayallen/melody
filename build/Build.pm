@@ -200,7 +200,7 @@ sub setup {
 
     # Set the full name to use for the distribution (e.g. MT-3.3b1-fr-r12345-20061225).
     $self->{'export-dir=s'} = "$self->{'pack=s'}-$self->{'stamp=s'}";
-    # Production builds are explicitly named with their language code.
+    # Name the exported directory (and archive) with the language.
     $self->{'export-dir=s'} .= "-$self->{'short-lang=s'}" if $self->{'prod'};
 }
 
@@ -360,9 +360,16 @@ sub stage_distro {
 
     my $cwd = cwd();
 
-    chdir $self->{'stage-dir=s'} or
-        die( "ERROR: Can't chdir to $self->{'stage-dir=s'}: $!" );
-    $self->verbose( "Change to staging root $self->{'stage-dir=s'}" );
+    my $prod = $self->{'prod'} && $self->{'stage'} && $self->{'prod-dir=s'} && -e File::Spec->catdir( $self->{'stage-dir=s'}, $self->{'prod-dir=s'} );
+
+    # Add the prod-dir to the staged directory if appropriate.
+    my $stage_root = $self->{'stage-dir=s'};
+    $stage_root = File::Spec->catdir( $self->{'stage-dir=s'}, $self->{'prod-dir=s'} )
+        if $prod;
+
+    chdir $stage_root or
+        die( "ERROR: Can't chdir to $stage_root $!" );
+    $self->verbose( "Change to staging root $stage_root" );
 
     # Do we have a current symlink?
     my $link = lc( fileparse $self->{'repo=s'} );
@@ -376,15 +383,17 @@ sub stage_distro {
     (my $current_db = $current) =~ s/[.-]/_/g;
     $current_db = 'stage_' . $current_db;
 
-    # Grab the literal build directory name.
+    # Set the stage_dir to the literal build directory name.
     my $stage_dir = fileparse( $dest, @{ $self->{'arch=s@'} } );
+    # Reset the staging root directory.
+    $stage_root = File::Spec->catdir( $stage_root, $stage_dir );
 
     # Remove any existing distro, with the same path name.
-    if( -d $stage_dir ) {
-        rmtree( $stage_dir ) or
-            die( "ERROR: Can't rmtree the old $stage_dir $!" )
+    if( -d $stage_root ) {
+        rmtree( $stage_root ) or
+            die( "ERROR: Can't rmtree the old $stage_root $!" )
             unless $self->{'debug'};
-        $self->verbose( "Remove: $stage_dir" );
+        $self->verbose( "Remove: $stage_root" );
     }
 
     # Drop previous.
@@ -409,9 +418,9 @@ sub stage_distro {
     $self->verbose( "Extract: $dest" );
 
     # Change to the distribution directory.
-    chdir( $stage_dir ) or die( "ERROR: Can't chdir $stage_dir: $!" )
+    chdir( $stage_root ) or die( "ERROR: Can't chdir $stage_root $!" )
         unless $self->{'debug'};
-    $self->verbose( "Change to $stage_dir" );
+    $self->verbose( "Change to $stage_root" );
 
     # Our database is named the same as the distribution (but with _'s) except for LDAP.
     (my $db = $stage_dir) =~ s/[.-]/_/g;
@@ -421,8 +430,13 @@ sub stage_distro {
     $db = 'stage_' . $db;
 
     # Set the staging URL to a real location now.
-    my $url = sprintf '%s/%s/',
-        $self->{'stage-uri=s'}, ($self->{'symlink!'} ? $link : $stage_dir);
+    my $url = sprintf '%s/%s/', $self->{'stage-uri=s'},
+        ($prod
+            ? File::Spec->catdir( $self->{'prod-dir=s'}, $stage_dir )
+            : $self->{'symlink!'}
+                ? $link
+                : $stage_dir
+        );
 
     # Give unto us a shiny, new config file.
     my $config = 'mt-config.cgi';
