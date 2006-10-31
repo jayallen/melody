@@ -1866,6 +1866,16 @@ Opzoekingen houden IP adressen van oorsprong en hyperlinks in de gaten van alle 
     'This can be in the form of http://example.com/mt-static/ or simply /mt-static' => 'Dit kan in de vorm http://voorbeeld.com/mt-static/ of eenvoudigweg /mt-static',
     'Begin' => 'Start!',
 
+    ## ./tmpl/wizard/cfg_dir.tmpl
+    'Temporary Directory Configuration' => 'Tijdelijke map configuratie',
+    'You should configure you temporary directory settings.' => 'U moet uw instellingen configureren voor de tijdelijke map.',
+    'Your TempDir has been successfully configured. Click \'Continue\' below to configure your mail settings.' => 'Uw TempDir is met succes geconfigureerd.  Klik hieronder op \'Doorgaan\' om uw e-mail instellingen te configureren.', # Translate - New (14)
+    '[_1] could not be found.' => '[_1] kon niet worden gevonden.',
+    '[_1] is not writable.' => '[_1] is niet beschrijfbaar.',
+    'TempDir is required.' => 'TempDir is vereist.',
+    'TempDir' => 'TempDir', # Translate - Previous (1)
+    'The physical path for temporary directory.' => 'Het fysieke pad naar de tijdelijke map.',
+
     ## ./tmpl/wizard/configure.tmpl
     'You must set your Database Path.' => 'U moet uw databasepad instellen.',
     'You must set your Database Name.' => 'U moet de naam van uw database instellen.',
@@ -1873,7 +1883,7 @@ Opzoekingen houden IP adressen van oorsprong en hyperlinks in de gaten van alle 
     'You must set your Database Server.' => 'U moet uw databaseserver instellen.',
     'Step 2 of 3' => 'Stap 2 van 3',
     'Database Configuration' => 'Database configuratie',
-    'Your database configuration is complete. Click \'Continue\' below to configure your mail settings.' => 'Uw databaseconfiguratie is voltooid.  Klik op \'Doorgaan\' hieronder om uw e-mail instellingen te configureren.',
+    'Your database configuration is complete. Click \'Continue\' below to configure your temporary directory settings.' => 'Uw database-configuratie is klaar. Klik op \'Doorgaan\' hieronder om de instellingen voor de tijdelijke map te configureren.',
     'Please enter the parameters necessary for connecting to your database.If your database type is not listed in the dropdown below, you may be missing the Perl module necessary to connect to your database.  If this is the case, please check your installation and click <a href=' => 'Gelieve hieronder de parameters in te vullen die nodig zijn om verbinding te maken met uw database.  Als uw databasetype niet in het onderstaande lijstje voorkomt, kan het zijn dat er een Perl module ontbreekt op uw systeem om verbinding te kunnen maken met uw database.  Als dit het geval is, controleer uw installatie en klik <a href=',
     'An error occurred while attempting to connect to the database: ' => 'Er deed zich een fout bij tijdens het verbinden met de database: ',
     'Database' => 'Database', # Translate - Previous (1)

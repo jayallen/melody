@@ -1548,10 +1548,21 @@ use vars qw( @ISA %Lexicon );
     'This can be in the form of http://example.com/mt-static/ or simply /mt-static' => 'http://example.com/mt-static/のような絶対URLまたは/mt-staticのようにも指定できます。',
     'Movable Type ships with directory named <strong>mt-static</strong> which contains a number of important files such as images, javascript files and stylesheets.' => 'Movable Type には <strong>mt-static</strong> ディレクトリが標準で含まれています。この中には画像ファイルやJavaScript、スタイルシートのファイルが含まれています。',
     'Begin' => '開始',
+
+    ## tmpl/wizard/cfg_dir.tmpl
+    'Temporary Directory Configuration' => 'テンポラリディレクトリの構成',
+    'You should configure you temporary directory settings.' => 'テンポラリディレクトリの設定をしてください。',
+    'Your TempDir has been successfully configured. Click \'Continue\' below to configure your mail settings.' => 'TempDirの設定を完了しました。次へをクリックしてメールの設定へ進んでください。',
+    'TempDir is required.' => 'TempDirは必須です。',
+    'TempDir' => 'TempDir',
+    'The physical path for temporary directory.' => 'テンポラリディレクトリへの物理パスです。',
+    '[_1] is not writable.' => '[_1]は書き込みできません。',
+    '[_1] could not be found.' => '[_1]が見つかりません。',
+
     ## tmpl/wizard/configure.tmpl
     'Step 2 of 3' => 'ステップ 2/3',
     'Database Configuration' => 'データベースの構成',
-    "Your database configuration is complete. Click 'Continue' below to configure your mail settings." => 'データベース設定を完了しました。次へボタンをクリックしてメールの設定をしてください。',
+    "Your database configuration is complete. Click 'Continue' below to configure your temporary directory settings." => 'データベース設定を完了しました。次へボタンをクリックしてテンポラリディレクトリの設定をしてください。',
     'Please enter the parameters necessary for connecting to your database.If your database type is not listed in the dropdown below, you may be missing the Perl module necessary to connect to your database.  If this is the case, please check your installation and click <a href="?__mode=configure">here</a> to re-test your installation.' => 'データベースにアクセスするのに必要なパラメータを指定してください。利用するデータベースがリストに入っていない場合は、必要なPerlモジュールが不足しています。Perlモジュールのインストール状況を確認して、<a href="?__mode=configure">再度実行</a>してください。',
     'An error occurred while attempting to connect to the database: ' => 'データベースへの接続でエラーが発生しました: ',
     'Database' => 'データベース',

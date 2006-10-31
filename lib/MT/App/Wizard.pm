@@ -76,6 +76,8 @@ sub init {
     $app->add_methods(start => \&start);
     $app->add_methods(configure => \&configure);
     $app->add_methods(configure_save => \&configure);
+    $app->add_methods(cfg_dir => \&cfg_dir);
+    $app->add_methods(cfg_dir_save => \&cfg_dir);
     $app->add_methods(optional => \&optional);
     $app->add_methods(optional_save => \&optional);
     $app->add_methods(seed => \&seed);
@@ -114,6 +116,8 @@ sub config_keys {
         configure => [
             'dbname', 'dbpath', 'dbport', 'dbserver', 'dbsocket',
             'dbtype', 'dbuser', 'dbpass' ],
+        cfg_dir => [
+            'temp_dir' ],
         optional => [
             'mail_transfer', 'sendmail_path', 'smtp_server',
             'test_mail_address' ],
@@ -284,13 +288,75 @@ sub configure {
         $param{connect_error} = 1;
         $param{error} = $err_msg;
     } elsif ($mode eq 'configure_save') {
-        return $app->optional(%param);
+        return $app->cfg_dir(%param);
     }
 
     $app->build_page("configure.tmpl", \%param);
 }
 
 my @Sendmail = qw( /usr/lib/sendmail /usr/sbin/sendmail /usr/ucblib/sendmail );
+
+sub cfg_dir {
+    my $app = shift;
+    my %param = @_;
+
+    my $q = $app->param;
+    my $mode = $q->param('__mode');
+
+    # input data unserialize to config
+    %param = $app->unserialize_config;
+    # get post data
+    my $dir_mode = $mode;
+    $dir_mode =~ s/_save//;
+    my $keys = $app->config_keys;
+    if (!$q->param('back')) {
+        foreach (@{ $keys->{$dir_mode} }) {
+            $param{$_} = $q->param($_);
+        }
+    }
+    $param{set_static_uri_to} = $q->param('set_static_uri_to');
+
+    # set static web path
+    $app->{cfg}->set('StaticWebPath', $param{set_static_uri_to});
+
+    $param{config} = $app->serialize_config(%param);
+
+    my $temp_dir;
+    if ($q->param('test')) {
+        $param{changed} = 1;
+        if ($param{temp_dir}) {
+            $temp_dir = $param{temp_dir};
+        } else {
+            $param{invalid_error} = 1;
+        }
+    } else {
+        if ($param{temp_dir}) {
+            $temp_dir = $param{temp_dir};
+            $param{changed} = 1;
+        } else {
+            $temp_dir = $app->{cfg}->TempDir;
+            $param{temp_dir} = $temp_dir;
+        }
+    }
+
+    # check temp dir
+    if ($temp_dir) {
+        if (!-d $temp_dir) {
+            $param{not_found_error} = 1;
+        } elsif (!-w $temp_dir) {
+            $param{not_write_error} = 1;
+        } else {
+            $param{success} = 1;
+        }
+    }
+
+    # if check successfully and push continue then goto next step
+    if ($mode eq 'cfg_dir_save') {
+        return $app->optional(%param);
+    }
+
+    $app->build_page("cfg_dir.tmpl", \%param);
+}
 
 sub optional {
     my $app = shift;
@@ -428,6 +494,11 @@ sub seed {
             $param{database_port} = $param{dbport} if $param{dbport};
             $param{use_setnames} =  $param{setnames} if $param{setnames};
         }
+    }
+
+
+    if ($param{temp_dir} eq $app->{cfg}->TempDir) {
+        $param{temp_dir} = '';
     }
 
     my $data = $app->build_page("mt-config.tmpl", \%param);
@@ -570,3 +641,18 @@ sub is_valid_static_path {
     $response->is_success;
 }
 1;
+__END__
+
+=head1 NAME
+
+MT::App::Wizard
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

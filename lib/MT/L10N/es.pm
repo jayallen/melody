@@ -1862,6 +1862,16 @@ sub encoding { 'utf-8' }
     'This can be in the form of http://example.com/mt-static/ or simply /mt-static' => 'Puede tener el formato http://ejemplo.com/mt-estatico/ o simplemente /mt-estatico',
     'Begin' => 'Comenzar',
 
+    ## ./tmpl/wizard/cfg_dir.tmpl
+    'Temporary Directory Configuration' => 'Configuración del directorio temporal',
+    'You should configure you temporary directory settings.' => 'Debe configurar las opciones del directorio temporal.',
+    'Your TempDir has been successfully configured. Click \'Continue\' below to configure your mail settings.' => 'TempDir fue configurado con éxito. Haga clic en \'Continuar\' para configurar las opciones de correo electrónico.', # Translate - New (14)
+    '[_1] could not be found.' => '[_1] no pudo encontrarse.',
+    '[_1] is not writable.' => 'No puede escribirse en [_1].',
+    'TempDir is required.' => 'TempDir es necesario.',
+    'TempDir' => 'TempDir', # Translate - Previous (1)
+    'The physical path for temporary directory.' => 'La ruta al directorio temporal.',
+
     ## ./tmpl/wizard/configure.tmpl
     'You must set your Database Path.' => 'Debe establecer la ruta de la base de datos.',
     'You must set your Database Name.' => 'Debe establecer el nombre de la base de datos.',
@@ -1869,7 +1879,7 @@ sub encoding { 'utf-8' }
     'You must set your Database Server.' => 'Debe establecer el servidor de base de datos.',
     'Step 2 of 3' => 'Paso 2 de 3',
     'Database Configuration' => 'Configuración de la base de datos',
-    'Your database configuration is complete. Click \'Continue\' below to configure your mail settings.' => 'La configuración de la base de datos se ha completado. Haga clic en \'Continuar\' para configurar el correo.',
+    'Your database configuration is complete. Click \'Continue\' below to configure your temporary directory settings.' => 'Se ha completado la configuración de la base de datos. Haga clic en \'Continuar\' para configurar el directorio temporal.',
     'Please enter the parameters necessary for connecting to your database.If your database type is not listed in the dropdown below, you may be missing the Perl module necessary to connect to your database.  If this is the case, please check your installation and click <a href=' => 'Por favor, introduzca los parámetros necesarios para la conexión a la base de datos. Si su base de datos no está listada en el menú desplegable de abajo, es posible que no tenga instalados algunos de los módulos de Perl necesarios para la conexión. En este caso, por favor, compruebe su instalación y haga clic en <a href=',
     'An error occurred while attempting to connect to the database: ' => 'Ocurrió un error intentando la conexión a la base de datos: ',
     'Database' => 'Base de datos',

@@ -37,7 +37,7 @@ function mail_select(sel) {
 // -->
 </script>
 
-<h3><MT_TRANS phrase="Step 3 of 3"> &mdash; <MT_TRANS phrase="Mail Configuration"></h3>
+<h3><MT_TRANS phrase="Step [_1] of [_2]" params="4%%4"> &mdash; <MT_TRANS phrase="Mail Configuration"></h3>
 
 <TMPL_IF NAME=SUCCESS>
 <div class="message">
@@ -120,12 +120,12 @@ function mail_select(sel) {
 </div>
 
 <div id="goback" <TMPL_IF NAME=mail_transfer>style="display: none"</TMPL_IF>>
-<input name="back" type="submit" value="<MT_TRANS phrase="Back">" onclick="this.form.reset(); go('configure');" />
+<input name="back" type="submit" value="<MT_TRANS phrase="Back">" onclick="this.form.reset(); go('cfg_dir');" />
 <input name="continue" type="submit" value="<MT_TRANS phrase="Continue">" name="continue" onclick="go('optional_save')" />
 </div>
 
 <div id="submit" <TMPL_UNLESS NAME=mail_transfer>style="display: none"</TMPL_UNLESS>>
-<input name="back" type="submit" value="<MT_TRANS phrase="Back">" onclick="this.form.reset(); go('configure')" />
+<input name="back" type="submit" value="<MT_TRANS phrase="Back">" onclick="this.form.reset(); go('cfg_dir')" />
 <input name="test" type="submit" value="<MT_TRANS phrase="Send Test Email">" />
 <input name="continue" type="submit" value="<MT_TRANS phrase="Continue">" name="continue" onclick="go('optional_save')" />
 </div>

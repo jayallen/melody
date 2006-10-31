@@ -1862,6 +1862,17 @@ sub encoding { 'utf-8' }
     'This can be in the form of http://example.com/mt-static/ or simply /mt-static' => 'Ceci peut avoir la forme de http://example.com/mt-static/ ou simplement /mt-static',
     'Begin' => 'Commencer',
 
+    ## ./tmpl/wizard/cfg_dir.tmpl
+    'Temporary Directory Configuration' => 'Configuration du répertoire temporaire',
+    'You should configure you temporary directory settings.' => 'Vous devriez configurer les paramètres de votre répertoire temporaire.',
+    'Your TempDir configuration is success. Click \'Continue\' below to configure your mail settings.' => 'La configuration de votre TempDir est réussie. Cliquez sur \'Continuer\' ci-dessous pour  configurer vos paramètres Email.',
+    'Your TempDir has been successfully configured. Click \'Continue\' below to configure your mail settings.' => 'Votre TempDir a été correctement configuré. Cliquez ci-dessous sur \'Continuer\' pour configurer vos paramètres emails.',
+    '[_1] could not be found.' => '[_1] introuvable.',
+    '[_1] is not writable.' => '[_1] non éditable.',
+    'TempDir is required.' => 'TempDir est requis.',
+    'TempDir' => 'TempDir', # Translate - Previous (1)
+    'The physical path for temporary directory.' => 'Chemin physique pour le répertoire temporaire.',
+
     ## ./tmpl/wizard/configure.tmpl
     'You must set your Database Path.' => 'Vous devez paramétrer un chemin pour la Base de données.',
     'You must set your Database Name.' => 'Vous devez attribuer un nom à la Base de données.',
@@ -1869,7 +1880,7 @@ sub encoding { 'utf-8' }
     'You must set your Database Server.' => 'Vous devez paramétrer votre  serveur de base de Données.',
     'Step 2 of 3' => 'Étape 2 sur 3',
     'Database Configuration' => 'Configuration Base de Données',
-    'Your database configuration is complete. Click \'Continue\' below to configure your mail settings.' => 'La configuration de votre Base de Données est terminée.  Cliquez sur \'Continuer\' pour configurer les paramètres email',
+    'Your database configuration is complete. Click \'Continue\' below to configure your temporary directory settings.' => 'La configuration de votre base de données est terminée. Cliquez sur \'Continuer\' ci-dessous pour configurer les paramètres de votre répertoire temporaire.',
     'Please enter the parameters necessary for connecting to your database.If your database type is not listed in the dropdown below, you may be missing the Perl module necessary to connect to your database.  If this is the case, please check your installation and click <a href=' => 'Merci de saisir les paramètres de connexion à votre base de données. Si votre base n\'eest pas listée dans le menu déroulant ci-dessous, c\'est probablement qu\'il vous manque un module Perl nécessaire pour effectuer cette connexion. Dans ce cas, merci de vérifier votre installation et cliquer sur <a href=',
     'An error occurred while attempting to connect to the database: ' => 'Une erreur s\'est produite lors de la tentative de connexion à votre base de données: ',
     'Database' => 'Base de données',

@@ -61,11 +61,11 @@ function db_select(sel) {
 <input type="hidden" name="set_static_uri_to" id="set_static_uri_to" value="<TMPL_VAR NAME=STATIC_URI>">
 <input type="hidden" name="config" value="<TMPL_VAR NAME=CONFIG ESCAPE=HTML>" />
 
-<h3><MT_TRANS phrase="Step 2 of 3"> &mdash; <MT_TRANS phrase="Database Configuration"></h3>
+<h3><MT_TRANS phrase="Step [_1] of [_2]" params="2%%4"> &mdash; <MT_TRANS phrase="Database Configuration"></h3>
 
 <TMPL_IF NAME=SUCCESS>
 <div class="message">
-<MT_TRANS phrase="Your database configuration is complete. Click 'Continue' below to configure your mail settings.">
+<MT_TRANS phrase="Your database configuration is complete. Click 'Continue' below to configure your temporary directory settings.">
 </div>
 <TMPL_ELSE>
 <p>

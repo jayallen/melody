@@ -14,7 +14,7 @@ function go(mode) {
 <input type="hidden" name="config" value="<TMPL_VAR NAME=CONFIG ESCAPE=HTML>" />
 <input type="hidden" name="set_static_uri_to" value="<TMPL_VAR NAME=STATIC_URI>" size="50">
 
-<h3><MT_TRANS phrase="Step 1 of 3"> &mdash; <MT_TRANS phrase="Requirements Check"></h3>
+<h3><MT_TRANS phrase="Step [_1] of [_2]" params="1%%4"> &mdash; <MT_TRANS phrase="Requirements Check"></h3>
 
 <TMPL_IF NAME=MISSING_DB>
 <h4 class="error-message">
