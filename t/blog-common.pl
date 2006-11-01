@@ -28,7 +28,7 @@ $T_CFG = $ARGV[0] || $T_CFG;
 my $mt = MT->instance(Config => $T_CFG) or die "No MT object " . MT->errstr();
 
 my $driver = MT::Object->driver();
-my @tables = qw(author blog category comment entry fileinfo ipbanlist log notification permission placement plugindata session tbping template templatemap trackback objecttag);
+my @tables = qw(author blog category comment entry fileinfo ipbanlist log notification permission placement plugindata session tbping template templatemap trackback objecttag group association);
 if ($driver->{dbh}) {
     $driver->{dbh}->do("drop table mt_$_") foreach @tables;
     if ($driver->{dbh}->isa('MT::ObjectDriver::DBI::postgres')) {
@@ -214,7 +214,7 @@ And it\'s a hard, it\'s a hard, it\'s a hard, it\'s a hard,
 It\'s a hard rain\'s a-gonna fall');
 
 require MT::Category;
-my $cat = MT::Category->load({ name => 'foo', blog_id => 1});
+my $cat = MT::Category->load({ label => 'foo', blog_id => 1});
 if (!$cat) {
     $cat = new MT::Category;
     $cat->blog_id(1);
@@ -226,7 +226,7 @@ if (!$cat) {
     $cat->save or die "Couldn't save category record 1: ". $cat->errstr;
 }
 
-$cat = MT::Category->load({ name => 'bar', blog_id => 1});
+$cat = MT::Category->load({ label => 'bar', blog_id => 1});
 if (!$cat) {
     $cat = new MT::Category;
     $cat->blog_id(1);
@@ -250,7 +250,7 @@ if (!$tb) {
     $tb->save or die "Couldn't save Trackback record 2: " . $tb->errstr;;
 }
 
-$cat = MT::Category->load({ name => 'subfoo', blog_id => 1});
+$cat = MT::Category->load({ label => 'subfoo', blog_id => 1});
 if (!$cat) {
     $cat = new MT::Category;
     $cat->blog_id(1);

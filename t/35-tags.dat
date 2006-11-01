@@ -53,8 +53,7 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "<MTArchiveList archive_type=\"Monthly\"><MTArchiveListHeader>(Header)</MTArchiveListHeader><MTArchiveListFooter>(Footer)</MTArchiveListFooter><MTArchiveTitle>|</MTArchiveList>", "e" : "(Header)January 1978|January 1965|January 1964|January 1963|January 1962|(Footer)January 1961|"}, #35
 { "t" : "<MTEntries lastn=\"10\"> * <MTEntryTitle></MTEntries>", "e" : " * A Rainy Day * Verse 5 * Verse 4 * Verse 3 * Verse 2 * Verse 1" }, #36
 { "t" : "<MTInclude module=\"blog-name\">", "e" : "none"}, #37
-{ "t" : "<MTInclude file=\"t/test.tmpl\">", "e" : "<MTBlogName>
-"}, #38
+{ "t" : "<MTInclude module=\"blog-name\">", "e" : "none"}, #38  TBD
 { "t" : "<MTEntries lastn='1'><MTLink entry_id=\"1\"></MTEntries>", "e" : "http://narnia.na/nana/archives/1978/01/a_rainy_day.html"}, #39
 { "t" : "<MTLink template=\"Main Index\">", "e" : "http://narnia.na/nana/"}, #40
 { "t" : "<MTVersion>", "e" : "VERSION_ID"}, #41
@@ -179,12 +178,12 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "<MTCategories><MTCategoryLabel>: <MTCategoryCount>; </MTCategories>", "e" : "foo: 1; subfoo: 1; "}, #127
 { "t" : "<MTCategories><MTCategoryArchiveLink>; </MTCategories>", "e" : "http://narnia.na/nana/archives/foo/; http://narnia.na/nana/archives/foo/subfoo/; "}, #128
 { "t" : "<MTCategories show_empty=\"1\"><MTCategoryLabel>: <MTCategoryTrackbackLink> </MTCategories>", "e" : "bar: http://localhost/cgi-bin/mt-tb.cgi/2 foo:  subfoo:  "}, #129
-{ "t" : "<MTSubCategories show_empty=\"1\"><MTCategoryLabel></MTSubCategories>", "e" : "barfoo"}, #130
-{ "t" : "<MTSubCategories show_empty=\"1\"><MTSubCatIsFirst>First: <MTCategoryLabel></MTSubCatIsFirst></MTSubCategories>", "e" : "First: bar"}, #131
-{ "t" : "<MTSubCategories show_empty=\"1\">[[<MTCategoryLabel><MTSubCatsRecurse>]]</MTSubCategories>", "e" : "[[bar]][[foo[[subfoo]]]]"}, #132
-{ "t" : "<MTSubCategories show_empty=\"1\"><MTSubCatIsLast>Last: <MTCategoryLabel></MTSubCatIsLast></MTSubCategories>", "e" : "Last: foo"}, #133
+{ "t" : "<MTSubCategories show_empty=\"1\" top=\"1\"><MTCategoryLabel></MTSubCategories>", "e" : "barfoo"}, #130
+{ "t" : "<MTSubCategories show_empty=\"1\" top=\"1\"><MTSubCatIsFirst>First: <MTCategoryLabel></MTSubCatIsFirst></MTSubCategories>", "e" : "First: bar"}, #131
+{ "t" : "<MTSubCategories show_empty=\"1\" top=\"1\">[[<MTCategoryLabel><MTSubCatsRecurse>]]</MTSubCategories>", "e" : "[[bar]][[foo[[subfoo]]]]"}, #132
+{ "t" : "<MTSubCategories show_empty=\"1\" top=\"1\"><MTSubCatIsLast>Last: <MTCategoryLabel></MTSubCatIsLast></MTSubCategories>", "e" : "Last: foo"}, #133
 { "t" : "<MTTopLevelCategories><MTCategoryLabel></MTTopLevelCategories>", "e" : "barfoo"}, #134
-{ "t" : "<MTSubCategories show_empty=\"1\"><MTHasParentCategory>Parent of <MTCategoryLabel> is <MTParentCategory><MTCategoryLabel></MTParentCategory></MTHasParentCategory><MTHasNoParentCategory><MTCategoryLabel> has no parent</MTHasNoParentCategory>; <MTSubCatsRecurse></MTSubCategories>", "e" : "bar has no parent; foo has no parent; Parent of subfoo is foo; "}, #135
+{ "t" : "<MTSubCategories show_empty=\"1\" top=\"1\"><MTHasParentCategory>Parent of <MTCategoryLabel> is <MTParentCategory><MTCategoryLabel></MTParentCategory></MTHasParentCategory><MTHasNoParentCategory><MTCategoryLabel> has no parent</MTHasNoParentCategory>; <MTSubCatsRecurse></MTSubCategories>", "e" : "bar has no parent; foo has no parent; Parent of subfoo is foo; "}, #135
 { "t" : "<MTTopLevelCategories show_empty=\"1\"><MTCategoryLabel><MTHasSubCategories> (has subcategories)</MTHasSubCategories><MTHasNoSubCategories> (has no subcategories)</MTHasNoSubCategories></MTTopLevelCategories>", "e" : "bar (has no subcategories)foo (has subcategories)"}, #136
 { "t" : "<MTCategories show_empty=\"1\"><MTSubCategoryPath>;</MTCategories>", "e" : "bar;foo;foo/subfoo;" }, #137
 { "t" : "<MTEntriesWithSubCategories category=\"foo\"><MTEntryTitle>;</MTEntriesWithSubCategories>", "e" : "Verse 4;Verse 3;" }, #138
@@ -235,7 +234,7 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "<MTEntries lastn=\"1\"><MTEntryTags glue=\" \"><MTTagSearchLink></MTEntryTags></MTEntries>", "e" : "http://localhost/cgi-bin/mt-search.cgi?tag=grandpa&amp;blog_id=1 http://localhost/cgi-bin/mt-search.cgi?tag=rain&amp;blog_id=1 http://localhost/cgi-bin/mt-search.cgi?tag=strolling&amp;blog_id=1" }, #182
 { "t" : "<MTTags><MTTagCount></MTTags>", "e" : "1115" }, #183
 { "t" : "<MTIfTypeKeyToken>tokened</MTIfTypeKeyToken>", "e" : "tokened" }, #184
-{ "t" : "<MTIfCommentsModerated>moderated</MTIfCommentsModerated>", "e" : "" }, #185
+{ "t" : "<MTIfCommentsModerated>moderated</MTIfCommentsModerated>", "e" : "moderated" }, #185
 { "t" : "<MTIfRegistrationAllowed>allowed</MTIfRegistrationAllowed>", "e" : "allowed" }, #186
 { "t" : "<MTIfArchiveTypeEnabled type=\"Category\">enabled</MTIfArchiveTypeEnabled>", "e" : "enabled" }, #187
 { "t" : "<MTEntries lastn=\"1\"><MTFileTemplate format=\"%y/%m/%d/%b\"></MTEntries>", "e" : "1978/01/31/a_rainy_day" }, #188
@@ -255,7 +254,7 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "", "e" : ""}, #202
 { "t" : "<MTIndexList><MTIndexName>-<MTIndexLink>-<MTIndexBasename>;</MTIndexList>", "e" : "Atom Index-http://narnia.na/nana/atom.xml-index;Dynamic Site Bootstrapper-http://narnia.na/nana/mtview.php-index;Main Index-http://narnia.na/nana/-index;Master Archive Index-http://narnia.na/nana/archives.html-index;RSD-http://narnia.na/nana/rsd.xml-index;RSS 2.0 Index-http://narnia.na/nana/index.xml-index;Site JavaScript-http://narnia.na/nana/mt-site.js-index;Stylesheet-http://narnia.na/nana/styles-site.css-index;" }, #203
 { "t" : "<MTIfNeedEmail>email needed</MTIfNeedEmail>", "e" : "" }, #204
-{ "t" : "<MTIfAllowCommentHTML>comment html allowed</MTIfAllowCommentHTML>", "e" : "" }, #205
+{ "t" : "<MTIfAllowCommentHTML>comment html allowed</MTIfAllowCommentHTML>", "e" : "comment html allowed" }, #205
 { "t" : "<MTIfCommentsAllowed>comments allowed</MTIfCommentsAllowed>", "e" : "comments allowed" }, #206
 { "t" : "<MTEntries lastn='1'><MTIfPingsActive>pings active</MTIfPingsActive></MTEntries>", "e" : "pings active" }, #207
 { "t" : "<MTEntries lastn='1'><MTIfPingsAccepted>pings accepted</MTIfPingsAccepted></MTEntries>", "e" : "pings accepted" }, #208
@@ -270,7 +269,7 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "<MTArchives><MTArchiveType></MTArchives>", "e" : "IndividualMonthlyWeeklyDailyCategory" }, #217
 { "t" : "<MTArchiveList archive_type='Monthly'><MTArchiveDateEnd></MTArchiveList>", "e" : "January 31, 1978 11:59 PMJanuary 31, 1965 11:59 PMJanuary 31, 1964 11:59 PMJanuary 31, 1963 11:59 PMJanuary 31, 1962 11:59 PMJanuary 31, 1961 11:59 PM" }, #218
 { "t" : "<MTArchiveList archive_type='Daily'><MTArchiveDateEnd></MTArchiveList>", "e" : "January 31, 1978 11:59 PMJanuary 31, 1965 11:59 PMJanuary 31, 1964 11:59 PMJanuary 31, 1963 11:59 PMJanuary 31, 1962 11:59 PMJanuary 31, 1961 11:59 PM" }, #219
-{ "t" : "<MTArchiveList archive_type='Weekly'><MTArchiveDateEnd></MTArchiveList>", "e" : "February  4, 1978 11:59 PMJanuary 30, 1965 11:59 PMFebruary  1, 1964 11:59 PMFebruary  2, 1963 11:59 PMFebruary  3, 1962 11:59 PMFebruary  4, 1961 11:59 PM" }, #220
+{ "t" : "<MTArchiveList archive_type='Weekly'><MTArchiveDateEnd></MTArchiveList>", "e" : "February  4, 1978 11:59 PMFebruary  6, 1965 11:59 PMFebruary  1, 1964 11:59 PMFebruary  2, 1963 11:59 PMFebruary  3, 1962 11:59 PMFebruary  4, 1961 11:59 PM" }, #220
 { "t" : "<MTComments lastn='3'><MTFeedbackScore>,</MTComments>", "e" : "0,1.5,0," }, #221
 { "t" : "<MTComments lastn='3'><MTIfNonEmpty tag='CommenterName'><MTCommenterName>: <MTCommenterIfTrusted>trusted<MTElse>untrusted</MTElse></MTCommenterIfTrusted></MTIfNonEmpty></MTComments>", "e" : "John Doe: trusted" }, #222
 { "t" : "<MTTags glue=','><MTTagName> <MTTagRank></MTTags>", "e" : "grandpa 6,rain 6,strolling 6,verse 1" }, #223

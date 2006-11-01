@@ -1,20 +1,24 @@
+#!/usr/bin/perl
 # $Id$
-
-BEGIN { unshift @INC, 't/' }
-
-use Test;
-use MT::Entry;
-use MT::Blog;
-use MT;
 use strict;
+use warnings;
 
-BEGIN { plan tests => 29 };
+use Test::More tests => 31;
 
+use MT;
+use MT::Blog;
+use MT::Entry;
+
+use lib 't';
 use vars qw( $DB_DIR $T_CFG );
+
 require 'test-common.pl';
 system('rm t/db/* 2>/dev/null');
 require 'blog-common.pl';
+
 my $mt = MT->new( Config => $T_CFG ) or die MT->errstr;
+isa_ok($mt, 'MT');
+
 MT->add_text_filter(wiki => {
     label => 'Wiki',
     on_format => sub {
@@ -24,27 +28,28 @@ MT->add_text_filter(wiki => {
 });
 
 my $blog = MT::Blog->load(1);
-ok($blog);
+isa_ok($blog, 'MT::Blog');
 
 my $entry = MT::Entry->load(1);
-ok($entry);
-ok($entry->blog_id, $blog->id);
-ok($entry->status, MT::Entry::RELEASE());
-ok($entry->status, 2);
-ok($entry->title, 'A Rainy Day');
-ok($entry->allow_comments, 1);
-ok($entry->excerpt, 'A story of a stroll.');
-ok($entry->text, 'On a drizzly day last weekend,');
-ok($entry->text_more, 'I took my grandpa for a walk.');
+isa_ok($entry, 'MT::Entry');
+is($entry->blog_id, $blog->id, 'blog id');
+is($entry->status, MT::Entry::RELEASE(), 'status');
+is($entry->status, 2, 'status 2');
+is($entry->title, 'A Rainy Day', 'title');
+is($entry->allow_comments, 1, 'allow_comments 1');
+is($entry->excerpt, 'A story of a stroll.', 'excerpt');
+is($entry->text, 'On a drizzly day last weekend,', 'text');
+is($entry->text_more, 'I took my grandpa for a walk.', 'text_more');
 
-ok(MT::Entry::status_text(1), 'Draft');
-ok(MT::Entry::status_text($entry->status), 'Publish');
-ok(MT::Entry::status_int('Draft'), 1);
-ok(MT::Entry::status_int('Publish'), 2);
-ok(MT::Entry::status_int('Future'), 4);
+is(MT::Entry::status_text(1), 'Draft', 'Draft');
+is(MT::Entry::status_text($entry->status), 'Publish', 'Publish');
+is(MT::Entry::status_int('Draft'), 1, 'Draft 1');
+is(MT::Entry::status_int('Publish'), 2, 'Publish 2');
+is(MT::Entry::status_int('Future'), 4, 'Future 4');
 
 my $author = $entry->author;
-ok($author->name, 'Chuck D');
+isa_ok($author, 'MT::Author');
+is($author->name, 'Chuck D', 'name');
 #ok($author->id, 1);
 
 ## Test next and previous.
@@ -55,25 +60,25 @@ ok($author->name, 'Chuck D');
 
 ## Test entry auto-generation.
 $entry->excerpt('');
-ok($entry->excerpt, '');
-ok($entry->get_excerpt, $entry->text . '...');
+is($entry->excerpt, '', 'excerpt empty');
+is($entry->get_excerpt, $entry->text . '...', 'get_excerpt');
 $blog->words_in_excerpt(3);
-ok($entry->get_excerpt, 'On a drizzly...');
+is($entry->get_excerpt, 'On a drizzly...', 'get_excerpt');
 $entry->convert_breaks('wiki');
 $entry->text("Foo ''bar'' baz");
-ok($entry->get_excerpt, 'Foo bar baz...');
+is($entry->get_excerpt, 'Foo bar baz...', 'get_excerpt');
 
 ## Test TrackBack object generation.
 $entry->allow_pings(1);
-ok($entry->save);
+ok($entry->save, 'save');
 my $tb = MT::Trackback->load({ entry_id => $entry->id });
-ok($tb);
-ok($tb->entry_id, $entry->id);
-ok($tb->description, $entry->get_excerpt);
-ok($tb->title, $entry->title);
-ok($tb->url, $entry->permalink);
-ok($tb->is_disabled, 0);
+isa_ok($tb, 'MT::Trackback');
+is($tb->entry_id, $entry->id, 'entry_id');
+is($tb->description, $entry->get_excerpt, 'description');
+is($tb->title, $entry->title, 'title');
+is($tb->url, $entry->permalink, 'url');
+is($tb->is_disabled, 0, 'is_disabled');
 $entry->allow_pings(0);
-ok($entry->save);
+ok($entry->save, 'save');
 $tb = MT::Trackback->load({ entry_id => $entry->id });
-ok($tb->is_disabled, 1);
+is($tb->is_disabled, 1, 'is_disabled');

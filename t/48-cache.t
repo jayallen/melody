@@ -8,6 +8,7 @@ use vars qw($T_CFG);
 require 'test-common.pl';
 
 $T_CFG = -r 't/mysql.cfg' ? 't/mysql.cfg' : $ENV{HOME} .'/mysql-test.cfg';
+$T_CFG = -r 't/mt.cfg' ? 't/mt.cfg' : $ENV{HOME} .'/mt-test.cfg';
 
 require 'blog-common.pl';
 
@@ -25,7 +26,7 @@ ok($cat_cache->[0][1] eq 'foo');
 ok($cat_cache->[0][2] eq '0');
 
 require MT::Tag;
-my $tag_cache = MT::Tag->cache(blog_id => 1, datasource => 'entry');
+my $tag_cache = MT::Tag->cache(blog_id => 1, class => 'MT::Entry');
 ok($tag_cache);
 
 ok($tag_cache->{grandpa} == 1);
@@ -35,7 +36,7 @@ my $entry = MT::Entry->load(1);
 $entry->tags($entry->get_tags(), 'newtag');
 $entry->save;
 
-$tag_cache = MT::Tag->cache(blog_id => 1, datasource => 'entry');
+$tag_cache = MT::Tag->cache(blog_id => 1, class => 'MT::Entry');
 ok($tag_cache->{newtag} == 1);
 
 my $cat = new MT::Category;

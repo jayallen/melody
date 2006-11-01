@@ -1,24 +1,31 @@
-# $Id$
-
-use Test;
-use MT::Util;
-
-BEGIN { plan tests => 7 }
+#!/usr/bin/perl
+# $Id: 13-dirify.t 38700 2006-09-25 03:49:23Z gboggs $
+use strict;
+use warnings;
+use Test::More tests => 7;
 
 use MT;
+use MT::Util;
+
 MT->set_language('en_US');
 
-ok(MT::Util::iso_dirify("Siegfried & Roy"), "siegfried_roy");
-ok(MT::Util::iso_dirify("Cauchy-Schwartz Inequality"), "cauchyschwartz_inequality");
-ok(MT::Util::utf8_dirify("Siegfried & Roy"), "siegfried_roy");
-ok(MT::Util::utf8_dirify("Cauchy-Schwartz Inequality"), 
-   "cauchyschwartz_inequality");
-
-ok(MT::Util::iso_dirify("Some & Something"), 
-   MT::Util::utf8_dirify("Some & Something"));
-
-ok(MT::Util::iso_dirify("Cauchy-Schwartz Inequality"), 
-   MT::Util::utf8_dirify("Cauchy-Schwartz Inequality"));
-
-ok(MT::Util::utf8_dirify("M\303\272m"), "mum");
+is(MT::Util::iso_dirify('Siegfried & Roy'),
+                        'siegfried_roy',
+                        'siegfried_roy');
+is(MT::Util::iso_dirify('Cauchy-Schwartz Inequality'),
+                        'cauchyschwartz_inequality',
+                        'cauchyschwartz_inequality');
+is(MT::Util::utf8_dirify('Siegfried & Roy'),
+                         'siegfried_roy',
+                         'siegfried_roy');
+is(MT::Util::utf8_dirify('Cauchy-Schwartz Inequality'),
+                         'cauchyschwartz_inequality',
+                         'cauchyschwartz_inequality');
+is( MT::Util::iso_dirify('Some & Something'), 
+   MT::Util::utf8_dirify('Some & Something'),
+                         'Some & Something');
+is( MT::Util::iso_dirify('Cauchy-Schwartz Inequality'),
+   MT::Util::utf8_dirify('Cauchy-Schwartz Inequality'),
+                         'Cauchy-Schwartz Inequality');
+is(MT::Util::utf8_dirify("M\303\272m"), 'mum', 'mum');
 

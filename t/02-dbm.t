@@ -6,7 +6,7 @@ use Test::More tests => 113;
 use Fcntl qw( O_RDWR );
 
 use vars qw( $DB_DIR $DB_BTREE );
-use lib 't';
+use lib qw( lib t t/lib );
 require 'test-common.pl';
 
 use_ok 'MT';  #1

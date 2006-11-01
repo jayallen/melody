@@ -1,22 +1,23 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
 # $Id$
 
-BEGIN { unshift @INC, 't/' }
+use Test::More tests => 35;
 
-use Test;
-use MT::Blog;
+use MT;
 use MT::Author;
-use MT::Template;
-use MT::Entry;
+use MT::Blog;
 use MT::Category;
 use MT::Comment;
+use MT::Entry;
 use MT::Permission;
+use MT::Template;
 use MT::TemplateMap;
-use MT;
-use strict;
-
-BEGIN { plan tests => 35 };
 
 use vars qw( $DB_DIR $T_CFG );
+use lib 't';
 require 'test-common.pl';
 
 if (-d $DB_DIR) {
@@ -44,7 +45,7 @@ my $BLOG_URL = 'http://www.black-planet.org/';
 my $BLOG_PATH = '/opt/www/content/blog';
 
 my $blog = MT::Blog->new;
-ok($blog);
+isa_ok($blog, 'MT::Blog');
 $blog->name($BLOG_NAME);
 $blog->description($BLOG_DESC);
 $blog->site_url($BLOG_URL);
@@ -67,24 +68,27 @@ $blog->language('en');
 $blog->sort_order_posts('descend');
 $blog->sort_order_comments('ascend');
 $blog->status_default(1);
-ok($blog->save or die $blog->errstr);
+my $test = $blog->save or die $blog->errstr;
+ok($test, "saved $blog");
 
 my $author = MT::Author->new;
-ok($author);
+isa_ok($author, 'MT::Author');
 $author->name('Chuck D');
 $author->set_password('bass');
 $author->type(1);
-ok($author->save or die $author->errstr);
+$test = $author->save or die $author->errstr;
+ok($test, "saved $author");
 
 my $perms = MT::Permission->new;
 $perms->author_id($author->id);
 $perms->blog_id($blog->id);
 $perms->set_full_permissions;
-ok($perms->save or die $perms->errstr);
+$test = $perms->save or die $perms->errstr;
+ok($test, "saved $perms");
 
 my($entry);
 $entry = MT::Entry->new;
-ok($entry);
+isa_ok($entry, 'MT::Entry');
 $entry->blog_id($blog->id);
 $entry->status(2);
 $entry->author_id($author->id);
@@ -94,19 +98,22 @@ $entry->excerpt('Fight the powers that be');
 $entry->text('Elvis was a hero to most but he never meant shit to me');
 $entry->text_more('straight up racist that sucker was simple and plain ' .
                   'mother fuck him and john wayne');
-ok($entry->save or die $entry->errstr);
+$test = $entry->save or die $entry->errstr;
+ok($test, "saved $entry");
 
 my $cat = MT::Category->new;
-ok($cat);
+isa_ok($cat, 'MT::Category');
 $cat->blog_id($blog->id);
 $cat->label('Foo');
-ok($cat->save or die $cat->errstr);
+$test = $cat->save or die $cat->errstr;
+ok($test, "saved Foo $cat");
 
 $cat = MT::Category->new;
-ok($cat);
+isa_ok($cat, 'MT::Category');
 $cat->blog_id($blog->id);
 $cat->label('Bar');
-ok($cat->save or die $cat->errstr);
+$test = $cat->save or die $cat->errstr;
+ok($test, "saved Bar $cat");
 
 my @arch_tmpl;
 my $tmpl_list = require 'MT/default-templates.pl';
@@ -114,7 +121,8 @@ for my $val (@$tmpl_list) {
     my $obj = MT::Template->new;
     $obj->set_values($val);
     $obj->blog_id($blog->id);
-    ok($obj->save or die $obj->errstr);
+    $test = $obj->save or die $obj->errstr;
+    ok($test, "saved $obj");
     if ($val->{type} eq 'archive' || $val->{type} eq 'individual' ||
         $val->{type} eq 'category') {
         push @arch_tmpl, $obj;
@@ -136,6 +144,7 @@ for my $tmpl (@arch_tmpl) {
         $map->is_preferred(1);
         $map->template_id($tmpl->id);
         $map->blog_id($tmpl->blog_id);
-        ok($map->save or die $map->errstr);
+        $test = $map->save or die $map->errstr;
+        ok($test, "saved $map");
     }
 }

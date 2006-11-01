@@ -1,46 +1,40 @@
+#!/usr/bin/perl
 # $Id$
-
 use strict;
+use warnings;
 
-BEGIN { unshift @INC, 't/' }
-
-use Test;
-
-BEGIN { plan tests => 6 };
+use Test::More tests => 6;
+use CGI;
+use DB_File;
 
 use MT;
-
-BEGIN { unshift @INC, 't/' }
-
-require 'test-common.pl';
-require 'blog-common.pl';
+use MT::Plugin;
+use MT::Entry;
+use MT::App::CMS;
+use MT::Permission;
+use MT::ObjectDriver::DBM;
 
 use vars qw($T_CFG);
 
+use lib 't';
+require 'test-common.pl';
+require 'blog-common.pl';
+
 my $mt = MT->new(Config => $T_CFG);
-
 die "Couldn't create MT (" . MT->errstr. ")" unless $mt;
-
-print "# " . MT->errstr() if !$mt;
 
 sub rot13 {
     $_[0] =~ tr/A-Za-z/N-ZA-Mn-za-m/;
     return $_[0];
 }
 
-use MT::Plugin;
-
-my $plug = new MT::Plugin();
-
-use MT::Entry;
+my $plug = MT::Plugin->new();
 
 # my $blog = MT::Blog->new();
 # $blog->set_values({ name => 'none'});
 # $blog->save();
 
-use MT::Plugin;
-my $plugin = new MT::Plugin({name => "21-callbacks.t"});
-
+my $plugin = MT::Plugin->new({name => "21-callbacks.t"});
 
 ### Test object callbacks
 
@@ -65,18 +59,13 @@ $entry->title("Cantaloop");
 $entry->blog_id(1);
 $entry->save() or die $entry->errstr();
 my $id = $entry->id();
-ok($entry->text, $TEST_TEXT . '(rot13d)');   # test that the in-mem object got altered
+is($entry->text, $TEST_TEXT . '(rot13d)', 'in-mem object altered');
 
 my $entry2 = MT::Entry->load($id);
-ok($entry2->text, $TEST_TEXT);     # test that the on-disk obj got altered
-
-use MT::ObjectDriver::DBM;
+is($entry2->text, $TEST_TEXT, 'on-disk obj altered');
 
 # TBD: generalize this
 my $driver = MT::ObjectDriver->new('DBM');
-
-use DB_File;
-use strict;
 
 my %entries;
 tie %entries, "DB_File", $mt->{cfg}->DataSource . "/entry.db",
@@ -84,17 +73,15 @@ tie %entries, "DB_File", $mt->{cfg}->DataSource . "/entry.db",
     || die $!;
 my $rec = $entries{$id};
 $rec = $driver->{serializer}->unserialize($rec);
-use Data::Dumper;
-ok($$rec->{text}, rot13($TEST_TEXT));
+is($$rec->{text}, rot13($TEST_TEXT), 'text rotated');
 
-ok($entry2->text_more, $TEST_TEXT_MORE);
-ok($$rec->{text_more}, $TEST_TEXT_MORE);
+is($entry2->text_more, $TEST_TEXT_MORE, '$entry2->text_more()');
+is($$rec->{text_more}, $TEST_TEXT_MORE, '$$rec->{text_more}');
 
 ### Test app callbacks
 
 my @result_cats = ();
 
-require MT::App::CMS;
 my $cms = MT::App::CMS->new(Config => $T_CFG);
 
 MT->add_callback('AppPostEntrySave', 1, $plugin, 
@@ -106,8 +93,7 @@ MT->add_callback('AppPostEntrySave', 1, $plugin,
 		   } );
 
 MT::unplug();
-require CGI;
-my $q = new CGI;
+my $q = CGI->new();
 #$q->param(id => $entry2->id);
 $q->param(blog_id => 1);
 $q->param(category_id => 17);
@@ -116,15 +102,14 @@ $q->param(category_id => 17);
 $q->param(text => "Buddha blessed and boo-ya blasted; 
 these are the words that she manifested.");
 $cms->{query} = $q;
-require MT::Permission;
-$cms->{perms} = new MT::Permission();
+$cms->{perms} = MT::Permission->new();
 $cms->{perms}->can_post(1);
-$cms->{author} = new MT::Author();
+$cms->{author} = MT::Author->new();
 $cms->{author}->name("Mel E. Mel");
 $cms->{author}->id(1);
 # fake out the magic; we're not testing that right now
-no warnings 'once';
+no warnings qw(once redefine);
 *MT::App::CMS::validate_magic = sub { 1; };
-use warnings 'once';
+use warnings qw(once redefine);
 print STDERR $cms->save_entry();
-ok($result_cats[0], 17);
+is($result_cats[0], 17, 'result_cats = 17');
