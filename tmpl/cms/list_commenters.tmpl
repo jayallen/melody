@@ -97,7 +97,7 @@ TC.attachLoadEvent( init );
 <TMPL_UNLESS NAME=FILTER>
 <a href="#" onclick="toggleFilter()"><MT_TRANS phrase="None."></a> <span class="hint"><MT_TRANS phrase="(Showing all commenters.)"></span>
 <TMPL_ELSE>
-<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only commenters whose [_1] is [_2]." params='<span id="filter-text-col"></span>%%<span id="filter-text-val"></span>'></a>
+<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only commenters whose [_1] is [_2]." params='<span id="filter-text-col">&nbsp;</span>%%<span id="filter-text-val"></span>'></a>
 
 <TMPL_IF NAME=FEED_URL>
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/feed.gif" alt="<MT_TRANS phrase="Commenter Feed">" width="9" height="9" />

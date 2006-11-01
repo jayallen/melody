@@ -521,6 +521,7 @@ sub decode_url {
 sub remove_html {
     my($text) = @_;
     return $text if !defined $text;  # suppress warnings
+    return $text if $text =~ m/^<\!\[CDATA\[/i; 
     $text =~ s!<[^>]+>!!gs;
     $text =~ s!<!&lt;!gs;
     $text;
@@ -1773,6 +1774,30 @@ sub unescape_unicode {
         my $f = XML::SAX::ParserFactory->new;
         $f->parser();
     }
+}
+
+sub multi_iter {
+    my ($iters) = @_;
+    my @streams;
+    foreach my $iter (@$iters) {
+        my $head = $iter->();
+        push @streams, { iter => $iter, head => $head };
+    }
+    sub {
+        # find the head with greatest created_on
+        my $which = $streams[0];
+        foreach my $iter (@streams) {
+            next unless defined($iter->{head});
+            $which = $iter;
+            last;
+        }
+        # Advance the chosen one
+        my $result = $which->{head};
+        if (defined $result) {
+            $which->{head} = $which->{iter}->();
+        }
+        $result;
+    };
 }
 
 1;

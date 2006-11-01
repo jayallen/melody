@@ -46,9 +46,9 @@ sub load_iter {
     $sql = $tmp . $sql;
     my $dbh = $driver->{dbh};
     warn "load_iter - Preparing SQL: $sql" if $MT::DebugMode & 4;
-    my $sth = $dbh->prepare($sql) or return sub { $driver->error($dbh->errstr) };
+    my $sth = $dbh->prepare($sql) or return $driver->error($dbh->errstr);
     $sth->{private_is_tmp} = 1 if $tbl =~ m/^temp_/i;
-    $sth->execute(@$bind) or return sub { $driver->error($sth->errstr) };
+    $sth->execute(@$bind) or return $driver->error($sth->errstr);
     $sth->bind_columns(undef, @bind);
     sub {
         if ((@_ && ($_[0] eq 'finish')) || !$sth->fetch) {
@@ -138,10 +138,27 @@ sub load {
 sub _prepare_count_sql {
     my $driver = shift;
     my($class, $terms, $args) = @_;
-    my($tbl, $sql, $bind) = $driver->_prepare_from_where($class, $terms, $args);    if ($args->{join} && $args->{join}[3]{unique}) {
-        $sql = "select count(distinct ${tbl}_id)\n" . $sql;
+    my($tbl, $sql, $bind) = $driver->_prepare_from_where($class, $terms, $args);
+    if ($args->{join} && $args->{join}[3]{unique}) {
+        my $col;
+        if ($args->{join}[3]{unique} =~ m/\D/) {
+            $col = $args->{join}[3]{unique};
+        } else {
+            $col = 'id';
+        }
+        $sql = "select count(distinct ${tbl}_$col)\n" . $sql;
     } else {
-        $sql = "select count(*)\n" . $sql;
+        if ($args->{unique}) {
+            my $col;
+            if ($args->{unique} =~ m/\D/) {
+                $col = $args->{unique};
+            } else {
+                $col = 'id';
+            }
+            $sql = "select count(distinct ${tbl}_$col)\n" . $sql;
+        } else {
+            $sql = "select count(*)\n" . $sql;
+        }
     }
     ($tbl, $sql, $bind);
 }
@@ -186,7 +203,7 @@ sub count_group_by {
     my $dbh = $driver->{dbh};
     warn "count_group_by - Preparing SQL: $sql" if $MT::DebugMode & 4;
     my $sth = $dbh->prepare($sql) or return sub { $driver->error(MT->translate("Prepare failed")) };
-    $sth->execute(@$bind) or return return sub { $driver->error(MT->translate("Execute failed")) };
+    $sth->execute(@$bind) or return sub { $driver->error(MT->translate("Execute failed")) };
     $sth->{private_is_tmp} = 1 if $tbl =~ m/^temp_/i;
     my @bindvars = ();
     for (@{$args->{group}}) {
@@ -311,9 +328,23 @@ sub insert {
     1;
 }
 
+sub _static_update {
+    my $driver = shift;
+    my $pkg = shift;
+    my ($val, $terms, $args) = @_;
+    my $iter = $driver->load_iter($pkg, $terms, $args) or return;
+    while (my $obj = $iter->()) {
+        $obj->set_values($val);
+        $obj->update or return $driver->error($obj->errstr);
+    }
+    1;
+}
+
 sub update {
     my $driver = shift;
     my($obj) = @_;
+    return $driver->_static_update(@_) unless ref $obj;
+
     my $cols = $obj->column_names;
     $cols = [ grep $_ ne 'id', @$cols ];
     my $tbl = $obj->datasource;
@@ -355,9 +386,25 @@ sub update {
     1;
 }
 
+sub _static_remove {
+    my $driver = shift;
+    my $pkg = shift;
+    my ($terms, $args) = @_;
+    my $iter = $driver->load_iter($pkg, $terms, $args)
+        or return 1;
+    while (my $obj = $iter->()) {
+        $obj->remove
+            or return $iter->('finish'),
+            $driver->error($obj->errstr);
+    }
+    1;
+}
+
 sub remove {
     my $driver = shift;
-    my($obj) = @_;
+    my ($obj) = @_;
+    return $driver->_static_remove(@_) unless ref $obj;
+
     my $class = ref $obj;
     $driver->run_callbacks($class . '::pre_remove', $obj);
     my $id = $obj->id();
@@ -437,8 +484,9 @@ sub build_sql {
                           $driver->is_date_col($col) ? $driver->ts2db($end) : $end;
                     }
                 } else {
-                    $term = "${tbl}_$col in (" .
-                        (join (", ", map {$driver->{dbh}->quote($_)} @{$terms->{$col}})) . ")";
+                    my $list = join (", ", map {$driver->{dbh}->quote($_)} @{$terms->{$col}});
+                    $list = 'null' if $list eq '';
+                    $term = "${tbl}_$col in ($list)";
                     if ($args->{not} && $args->{not}{$col}) {
                         $term = 'not ('. $term . ')';
                     }
@@ -449,9 +497,13 @@ sub build_sql {
                 } elsif ($args->{not_null} && $args->{not_null}{$col}) {
                     $term = "${tbl}_$col is not null";
                 } else {
-                    $term = "${tbl}_$col = ?";
-                    push @bind, $driver->is_date_col($col) ?
-                        $driver->ts2db($terms->{$col}) : $terms->{$col};
+                    if (defined $terms->{$col}) {
+                        $term = "${tbl}_$col = ?";
+                        push @bind, $driver->is_date_col($col) ?
+                            $driver->ts2db($terms->{$col}) : $terms->{$col};
+                    } else {
+                        $term = "${tbl}_$col is NULL";
+                    }
                 }
             }
             push @terms, "($term)";
@@ -807,3 +859,18 @@ sub _index_column {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::DBI
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

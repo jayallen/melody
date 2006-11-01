@@ -48,6 +48,7 @@ lib/MT.pm: %: %.pre build-language-stamp
 	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
 	    -e 's!__PRODUCT_VERSION_ID__!$(BUILD_VERSION_ID)!g' \
 	    -e 's!__SCHEMA_VERSION__!$(SCHEMA_VERSION)!g' \
+        -e 's!__API_VERSION__!$(API_VERSION)!g' \
 	    $< > $@
 
 lib/MT/ConfigMgr.pm: %: %.pre build-language-stamp
@@ -70,6 +71,7 @@ php/mt.php: %: %.pre build-language-stamp
 	    -e 's!__PRODUCT_NAME__!$(PRODUCT_NAME)!g' \
 	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
 	    -e 's!__PRODUCT_VERSION_ID__!$(BUILD_VERSION_ID)!g' \
+        -e 's!__API_VERSION__!$(API_VERSION)!g' \
 	$< > $@
 
 mt-config.cgi-original: mt-config.cgi-original.pre build-language-stamp
@@ -145,16 +147,13 @@ quick-test: code
 		t/23-entry.t t/26-pings.t t/27-context.t t/28-xmlrpc.t   \
 		t/29-cleanup.t t/31-dbm.t t/32-mysql.t t/33-postgres.t   \
 		t/34-sqlite.t t/35-tags.t t/45-datetime.t t/46-i18n-en.t \
-		t/47-i18n-ja.t t/48-cache.t t/49-tagsplit.t
+		t/47-i18n-ja.t t/48-cache.t
 
 dist:
 	perl build/exportmt.pl --local
 
 me:
 	perl build/exportmt.pl --make
-
-# tools-dist:
-# 	(cd tools; perl -e 'use ExtUtils::Manifest qw(maniread manicopy); $$mani = maniread("MANIFEST"); manicopy($$mani, "mt-tools", "cp")'; tar czvf ../mt-tools.tar.gz mt-tools; zip -r ../mt-tools.zip mt-tools)
 
 clean:
 	-rm -rf lib/MT.pm mt-config.cgi-original mt-check.cgi $(latin1_modules) $(local_js)
@@ -164,4 +163,5 @@ clean:
 	-rm -rf tmpl/cms/admin_essential_links_$(BUILD_LANGUAGE).tmpl
 	-rm -rf index.html
 	-rm -rf MANIFEST
+	-rm -rf build-language-stamp
 

@@ -53,11 +53,15 @@ sub login {
         ($user, $cookie_middle, $remember) = split /::/, $cookies->{$cookie_name}->value;
     } elsif ($cookies->{'user'}) {   # 1.1 - 2.661
         ($user, $cookie_middle, $remember) = split /::/, $cookies->{'user'}->value;
+    }else{
+        $cookie_middle = '';
+        $remember = '';
     }
     if ($q->param('username') && $q->param('password')) {
         $first_time = 1;
         $user = $q->param('username');
         $pass = $q->param('password');
+        $remember = $q->param('remember') || '';
         $crypted = 0;
     }
     return unless $user && ($pass || $cookie_middle);
@@ -398,6 +402,7 @@ sub main {
         }
     }
     $param->{plugin_upgrades} = \@plugins if @plugins;
+    $param->{needs_upgrade} = $param->{mt_upgrade} || (@plugins > 0);
 
     $app->build_page('upgrade.tmpl', $param);
 }
@@ -426,3 +431,14 @@ sub build_page {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::App::Upgrader
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

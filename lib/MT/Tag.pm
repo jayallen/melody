@@ -77,16 +77,18 @@ sub normalize {
 sub remove {
     my $tag = shift;
     my $n8d_tag;
-    if (!$tag->n8d_id) {
-        # normalized tag! we can't delete if others reference us
-        my $child_tags = MT::Tag->count({n8d_id => $tag->id});
-        return $tag->error(MT->translate("This tag is referenced by others."))
-            if $child_tags;
-    } else {
-        $n8d_tag = MT::Tag->load($tag->n8d_id);
+    if (ref $tag) {
+        if (!$tag->n8d_id) {
+            # normalized tag! we can't delete if others reference us
+            my $child_tags = MT::Tag->count({n8d_id => $tag->id});
+            return $tag->error(MT->translate("This tag is referenced by others."))
+                if $child_tags;
+        } else {
+            $n8d_tag = MT::Tag->load($tag->n8d_id);
+        }
     }
     $tag->remove_children({key => 'tag_id'});
-    $tag->SUPER::remove;
+    $tag->SUPER::remove(@_);
     # check for an orphaned normalized tag and delete if necessary
     if ($n8d_tag) {
         # Normalized tag, no longer referenced by other tags...
@@ -106,11 +108,14 @@ sub split {
     $delim = quotemeta($delim);
     my @tags;
     $str =~ s/(^\s+|\s+$)//gs;
-    while (length($str) && ($str =~ m/^(((['"])(.*?)\3|.*?)($delim\s*|$))/s)) {
+    while (length($str) && ($str =~ m/^(((['"])(.*?)\3[^$delim]*?|.*?)($delim\s*|$))/s)) {
         $str = substr($str, length($1));
         my $tag = defined $4 ? $4 : $2;
+        #$tag =~ s/(^[\s,]+|[\s,]+$)//gs;
         $tag =~ s/(^\s+|\s+$)//gs;
         $tag =~ s/\s+/ /gs;
+        my $n8d_tag = MT::Tag->normalize($tag);
+        next if $n8d_tag eq '';
         push @tags, $tag if $tag ne '';
     }
     @tags;
@@ -141,14 +146,18 @@ sub load_by_datasource {
     $args ||= {};
     $args->{'sort'} ||= 'name';
     my $blog_id;
+    my %jargs;
     if ($terms->{blog_id}) {
         $blog_id = $terms->{blog_id};
         delete $terms->{blog_id};
+        if ($args->{not} && $args->{not}{blog_id}) {
+            $jargs{not}{blog_id} = 1;
+        }
     }
-    $args->{'join'} ||= ['MT::ObjectTag', 'tag_id', {
+    $args->{'join'} ||= MT::ObjectTag->join_on('tag_id', {
         $blog_id ? (blog_id => $blog_id) : (),
         object_datasource => $datasource
-    }, { unique => 1 }];
+    }, { unique => 1, %jargs });
     my @tags = MT::Tag->load($terms, $args);
     @tags;
 }
@@ -186,9 +195,17 @@ sub cache {
     my $pkg = shift;
     my (%param) = @_;
     my $blog_id = $param{blog_id};
-    my $ds = $param{datasource};
+    my $class = $param{class};
+    if (ref($class) eq 'SCALAR') {
+        $class = eval "use $class;";
+        if (my $err = $@) {
+            $class = eval 'use MT::Entry;';
+        }
+    }
+    my $ds = $class->datasource;
+    $param{datasource} = $ds;
 
-    my $tag_cache = $pkg->cache_obj(@_);
+    my $tag_cache = $pkg->cache_obj(%param);
     my $data = $tag_cache->get('tag_cache');
     if (!$data) {
         my $tag_count;
@@ -204,11 +221,37 @@ sub cache {
                 $tag_count->{$tag_id} = $count;
             }
         }
-        my @tags = MT::Tag->load(undef,
-            { 'join' => ['MT::ObjectTag', 'tag_id',
+        my $iter = MT::Entry->load_iter(undef,
+            { 'join' => ['MT::ObjectTag', 'object_id',
             { ($blog_id ? (blog_id => $blog_id) : ()), object_datasource => $ds },
-            { unique => 1 } ]
+            { unique => 1 } ],
+              sort => 'modified_on', direction => 'descend' 
         });
+        my @tags;
+        my %tags_seen;
+        my $limit = MT::ConfigMgr->instance->MaxTagAutoCompletionItems;
+        while (my $entry = $iter->()) {
+            my @etags = $entry->tags;
+            @etags = grep /^[^@]/, @etags;
+            @etags = grep { !exists($tags_seen{$_}) } @etags;
+            next if 0 == scalar(@etags);
+
+            $tags_seen{$_} = 1 for @etags;
+
+            my @ttags = MT::Tag->load({ 'name' => \@etags },
+                { 'join' => ['MT::ObjectTag', 'tag_id',
+                { ($blog_id ? (blog_id => $blog_id) : ()), object_datasource => $ds },
+                { unique => 1 } ]
+            });
+            if (scalar(@tags) + scalar(@ttags) <= $limit) {
+                push @tags, @ttags;
+            } else {
+                for (0..($limit - scalar(@tags)) - 1) {
+                    push @tags, $ttags[$_];
+                }
+            }
+            last if ($limit <= scalar(@tags));
+        }
         $data = {};
         foreach my $tag (@tags) {
             $data->{$tag->name} = $tag_count->{$tag->id} || 1;
@@ -242,7 +285,7 @@ sub get_tags {
 
 sub set_tags {
     my $obj = shift;
-    $obj->{__tags} = \@_;
+    $obj->{__tags} = [ @_ ];
     $obj->{__save_tags} = 1;
 }
 
@@ -268,7 +311,7 @@ sub save_tags {
             # new tag
             $tag = new MT::Tag;
             $tag->name($tag_name);
-            $tag->save or return;
+            $tag->save or next;
             $clear_cache = 1;
         }
         my $otag = new MT::ObjectTag;
@@ -367,7 +410,7 @@ sub tag_count {
     }
     $jterms->{object_datasource} = $obj->datasource;
     require MT::ObjectTag;
-    MT::Tag->count(undef, { join => ['MT::ObjectTag', 'tag_id', $jterms, { unique => 1 } ] });
+    MT::Tag->count(undef, { join => MT::ObjectTag->join_on('tag_id', $jterms, { unique => 1 } )});
 }
 
 # counts number of objects tagged with a given tag
@@ -402,7 +445,7 @@ __END__
 
 =head1 NAME
 
-MT::Tag - Movable Type tag record
+MT::Tag - Movable Type tag record and methods
 
 =head1 SYNOPSIS
 
@@ -411,10 +454,6 @@ MT::Tag - Movable Type tag record
     $tag->name('favorite');
     $tag->save
         or die $tag->errstr;
-
-=head1 DESCRIPTION
-
-=head1 USAGE
 
 =head1 DATA ACCESS METHODS
 
@@ -451,6 +490,50 @@ I<MT::Object> for more information.
 
 =back
 
+=head1 OTHER METHODS
+
+=head2 cache
+
+Return the entry tags. If there are no cached tags, they are loaded
+first. If the tags have already been loaded with this method, that
+data is returned instead.
+
+=head2 cache_obj
+
+Cache the session tags.
+
+=head2 clear_cache
+
+Remove the tag cache.
+
+=head2 join($seperator, @tags)
+
+Return the given I<tags> as a string with the defined I<seperator>.
+
+=head2 split($seperator, $tags)
+
+Split-up the given I<tags> string by the given I<seperator>.
+
+=head2 normalize($tag)
+
+Sanitize the text (remove potentially characters) and lower-case the
+I<tag>. The I<tag> may be given as a string or as a tag object. In the
+case of the latter, C<$tag-E<gt>name> attribute is used.
+
+=head2 load_by_datasource($datasource, $terms, $args)
+
+Return a list of tags given by an object I<datasource> type, selection
+I<terms> and I<arguments>.
+
+=head2 $tag->save()
+
+Save the literal as well as a normalized copy if one does not exist.
+
+=head2 $tag->remove()
+
+Remove the tag and all its children unless it is referenced by another
+entry.
+
 =head1 NOTES
 
 =over 4
@@ -463,8 +546,8 @@ removed as well.
 
 =back
 
-=head1 AUTHOR & COPYRIGHTS
+=head1 AUTHOR & COPYRIGHT
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

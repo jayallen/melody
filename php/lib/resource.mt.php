@@ -16,6 +16,7 @@ function smarty_resource_mt_source($tpl_name, &$tpl_source, &$ctx) {
     $row = $ctx->mt->db->get_row($query, ARRAY_N);
     if (is_array($row)) {
         list($tmpl, $ts, $file, $mtime, $size) = $row;
+        $file = trim($file);
         if ($file) {
             if (!file_exists($file)) {
                 $blog = $ctx->stash('blog');

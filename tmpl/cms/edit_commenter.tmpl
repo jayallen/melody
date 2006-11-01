@@ -114,8 +114,6 @@ TC.attachLoadEvent(init);
 <TMPL_INCLUDE NAME=comment_table.tmpl>
 <TMPL_INCLUDE NAME=pager.tmpl>
 </div>
-</TMPL_IF>
-</TMPL_IF>
 
 <TMPL_IF NAME=PLUGIN_ACTION_LOOP>
 <div class="box" id="plugin-actions-box">
@@ -128,6 +126,14 @@ TC.attachLoadEvent(init);
 </ul>
 </div>
 </div>
+</TMPL_IF>
+<TMPL_ELSE>
+<TMPL_UNLESS NAME=TAB_JUNK>
+<div class="message"><MT_TRANS phrase="No comments could be found."></div>
+<TMPL_ELSE>
+<div class="message"><MT_TRANS phrase="No junk comments could be found."></div>
+</TMPL_UNLESS>
+</TMPL_IF>
 </TMPL_IF>
 
 </div>

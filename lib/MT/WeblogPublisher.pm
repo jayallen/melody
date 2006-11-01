@@ -891,8 +891,7 @@ __END__
 
 =head1 NAME
 
-MT::WeblogPublisher - A module for expressing weblog templates and
-content into a specific URL structure
+MT::WeblogPublisher - Express weblog templates and content into a specific URL structure
 
 =head1 SYNOPSIS
 
@@ -900,11 +899,13 @@ content into a specific URL structure
     my $pub = MT::WeblogPublisher->new;
     $pub->rebuild(Blog => $blog, ArchiveType => "Individual");
 
-=head1 DESCRIPTION
-
-mmmm mmmm mhmmmm.
-
 =head1 METHODS
+
+=head2 MT::WeblogPublisher->new()
+
+Return a new C<MT::WeblogPublisher>. Additionally, call
+L<MT::ConfigMgr/instance> and set the I<NoTempFiles> and
+I<PublishCommenterIcon> attributes, if not already set.
 
 =head2 $mt->rebuild( %args )
 
@@ -1127,6 +1128,49 @@ The default is C<0> (do not rebuild such templates).
 
 =back
 
+=head2 $mt->trans_error
+
+Call L<MT/translate>.
+
+=head2 $mt->make_commenter_icon
+
+Make sure there is a C<nav-commenters.gif> file under the blog I<site_path>.
+
+=head2 $mt->remove_entry_archive_file(%param)
+
+Delete the archive files for an entry based on the following
+parameters.  One of a I<Blog>, I<Entry> or I<Category> are required.
+
+=over 4
+
+=item * Blog
+=item * Entry
+=item * Category
+=item * ArchiveType (Default 'Individual')
+=item * TemplateID
+
+=back
+
+=head2 $mt->rebuild_categories(%param)
+
+Rebuild category archives based on the following parameters:
+
+=over 4
+
+=item * Blog
+=item * BlogID
+=item * Limit
+=item * Offset
+=item * Limit
+=item * NoStatic
+
+=back
+
+=head2 $mt->publish_future_posts
+
+Build and publish all scheduled entries with a I<created_on> timestamp
+that is less than the current time.
+
 =head1 CALLBACKS
 
 =over 4
@@ -1252,5 +1296,9 @@ BuildFile callbacks are invoked just after a file has been built.
 Parameters in %args are as with BuildPage.
 
 =back
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

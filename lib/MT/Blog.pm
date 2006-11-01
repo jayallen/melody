@@ -81,10 +81,10 @@ __PACKAGE__->install_properties({
     defaults => {
         'custom_dynamic_templates' => 'none',
     },
-    child_classes => ['MT::Permission', 'MT::Entry',
-                      'MT::Template', 'MT::Category',
-                      'MT::Notification', 'MT::Log',
-                      'MT::PluginData', 'MT::ObjectTag'],
+    child_classes => ['MT::Entry', 'MT::Template',
+                      'MT::Category', 'MT::Notification', 'MT::Log',
+                      'MT::ObjectTag', 'MT::Association', 'MT::Comment',
+                      'MT::TBPing', 'MT::Trackback', 'MT::TemplateMap'],
     datasource => 'blog',
     primary_key => 'id',
 });
@@ -129,6 +129,65 @@ sub set_defaults {
     $blog->server_offset(MT->config('DefaultTimezone') || 0);
     # something far in the future to force dynamic side to read it.
     $blog->children_modified_on('20101231120000');
+    $blog;
+}
+
+sub create_default_blog {
+    my $class = shift;
+    my ($blog_name) = @_;
+    $blog_name ||= MT->translate("First Weblog");
+    $class = ref $class if ref $class;
+
+    my $tmpl_list;
+    require MT::DefaultTemplates;
+    $tmpl_list = MT::DefaultTemplates->templates;
+    return $class->error(MT->translate("Can't find default template list; where is 'default-templates.pl'?"))
+        if !$tmpl_list || ref($tmpl_list) ne 'ARRAY' || !@$tmpl_list;
+        
+    my $blog = new $class;
+    $blog->name($blog_name);
+    $blog->save or return $class->error($blog->errstr);
+
+    require MT::Template;
+
+    my @arch_tmpl;
+    for my $val (@$tmpl_list) {
+        $val->{name} = MT->translate($val->{name});
+        $val->{text} = MT->translate_templatized($val->{text});
+
+        my $obj = MT::Template->new;
+        $obj->build_dynamic(0);
+        $obj->set_values($val);
+        $obj->blog_id($blog->id);
+        $obj->save;
+        if ($val->{type} eq 'archive' || $val->{type} eq 'individual' ||
+            $val->{type} eq 'category') {
+            push @arch_tmpl, $obj;
+        }
+    }
+
+    if (@arch_tmpl) {
+        require MT::TemplateMap;
+        for my $tmpl (@arch_tmpl) {
+            my(@at);
+            if ($tmpl->type eq 'archive') {
+                @at = qw( Daily Weekly Monthly );
+            } elsif ($tmpl->type eq 'category') {
+                @at = qw( Category );
+            } elsif ($tmpl->type eq 'individual') {
+                @at = qw( Individual );
+            }
+            for my $at (@at) {
+                my $map = MT::TemplateMap->new;
+                $map->archive_type($at);
+                $map->is_preferred(1);
+                $map->template_id($tmpl->id);
+                $map->blog_id($tmpl->blog_id);
+                $map->save;
+            }
+        }
+    }
+
     $blog;
 }
 
@@ -228,7 +287,12 @@ sub file_mgr {
 sub remove {
     my $blog = shift;
     $blog->remove_children({ key => 'blog_id'});
-    $blog->SUPER::remove;
+    my $res = $blog->SUPER::remove(@_);
+    if ((ref $blog) && $res) {
+        require MT::Permission;
+        MT::Permission->remove({ blog_id => $blog->id });
+    }
+    $res;
 }
 
 # deprecated: use $blog->remote_auth_token instead
@@ -275,6 +339,304 @@ sub touch {
                            1900+$y, $mo+1, $d, $h, $m, $s);
     $blog->children_modified_on($mod_time);
     $mod_time;
+}
+
+sub clone {
+    my $blog = shift;
+    my ($param) = @_;
+    if ($param && $param->{Children}) {
+        $blog->clone_with_children(@_);
+    } else {
+        $blog->SUPER::clone(@_);
+    }
+}
+
+sub clone_with_children {
+    my $blog = shift;
+    my ($params) = @_;
+    my $callback = $params->{Callback} || sub {};
+    my $classes = $params->{Classes};
+    my $blog_name = $params->{BlogName};
+    delete $$params{Children} if ($params->{Children});
+    my $old_blog_id = $blog->id;
+
+    # we must clone:
+    #    Blog record
+    #    Entry records
+    #       - Comment records
+    #       - TrackBack records
+    #       - TBPing records
+    #       - ObjectTag records (if running 3.3)
+    #    Category records
+    #    Placement records
+    #    Template records
+    #    Permission records
+    #    IPBanList records???
+    #    Notification records???
+
+    my $new_blog_id;
+    my (%entry_map, %cat_map, %tb_map, %tmpl_map, $counter, $iter);
+
+    # Cloning blog
+    my $new_blog = $blog->clone($params);
+    $new_blog->name(MT->translate($blog_name ? $blog_name : "Clone of [_1]", $blog->name));
+    $new_blog->id(0);
+    $new_blog->save or die $new_blog->errstr;
+    $new_blog_id = $new_blog->id;
+    $callback->(MT->translate("Cloned blog... new id is [_1].",
+        $new_blog_id));
+
+    if ((!exists $classes->{'MT::Permission'}) || $classes->{'MT::Permission'}) {
+        # Cloning PERMISSIONS records
+        $counter = 0;
+        my $state = MT->translate("Cloning permissions for weblog:");
+        $callback->($state, "perms");
+        require MT::Permission;
+        $iter = MT::Permission->load_iter({blog_id => $old_blog_id});
+        while (my $perm = $iter->()) {
+            $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'perms')
+                if $counter && ($counter % 100 == 0);
+            $counter++;
+            $perm->id(0);
+            $perm->blog_id($new_blog_id);
+            $perm->save or die $perm->errstr;
+        }
+        $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'perms');
+    }
+
+    if ((!exists $classes->{'MT::Association'}) || $classes->{'MT::Association'}) {
+        # Cloning association records
+        $counter = 0;
+        my $state = MT->translate("Cloning associations for weblog:");
+        $callback->($state, "assoc");
+        require MT::Association;
+        $iter = MT::Association->load_iter({blog_id => $old_blog_id});
+        while (my $assoc = $iter->()) {
+            $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'assoc')
+                if $counter && ($counter % 100 == 0);
+            $counter++;
+            $assoc->id(0);
+            $assoc->blog_id($new_blog_id);
+            $assoc->save or die $assoc->errstr;
+        }
+        $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'assoc');
+    }
+
+    # include/exclude class logic
+    # if user has not specified 'Classes' element, clone everything
+    # if user has specified Classes, but a particular class is not
+    # identified, clone it (forward compatibility). if a class is
+    # specified and the flag is '1', clone it. if a class is specified
+    # but the flag is '0', skip it.
+
+    if ((!exists $classes->{'MT::Entry'}) || $classes->{'MT::Entry'}) {
+        # Cloning ENTRY records
+        my $state = MT->translate("Cloning entries for weblog...");
+        $callback->($state, "entries");
+        $counter = 0;
+        require MT::Entry;
+        $iter = MT::Entry->load_iter({blog_id => $old_blog_id});
+        while (my $entry = $iter->()) {
+            $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'entries')
+                if $counter && ($counter % 100 == 0);
+            $counter++;
+            my $entry_id = $entry->id;
+            $entry->id(0);
+            $entry->blog_id($new_blog_id);
+            $entry->save or die $entry->errstr;
+            $entry_map{$entry_id} = $entry->id;
+        }
+        $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'entries');
+
+
+        if ((!exists $classes->{'MT::Category'}) || $classes->{'MT::Category'}) {
+            # Cloning CATEGORY records
+            my $state = MT->translate("Cloning categories for weblog...");
+            $callback->($state, "cats");
+            $counter = 0;
+            require MT::Category;
+            $iter = MT::Category->load_iter({ blog_id => $old_blog_id });
+            my %cat_parents;
+            while (my $cat = $iter->()) {
+                $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'cats')
+                    if $counter && ($counter % 100 == 0);
+                $counter++;
+                my $cat_id = $cat->id;
+                my $old_parent = $cat->parent;
+                $cat->id(0);
+                $cat->blog_id($new_blog_id);
+                # temporarily wipe the parent association
+                # to avoid constraint issues.
+                $cat->parent(0);
+                $cat->save or die $cat->errstr;
+                $cat_map{$cat_id} = $cat->id;
+                if ($old_parent) {
+                    $cat_parents{$cat->id} = $old_parent;
+                }
+            }
+            # reassign the new category parents
+            foreach (keys %cat_parents) {
+                my $cat = MT::Category->load($_);
+                if ($cat) {
+                    $cat->parent($cat_map{$cat_parents{$cat->id}});
+                    $cat->save or die $cat->errstr;
+                }
+            }
+            $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'cats');
+
+            # Placements are automatically cloned if categories are
+            # cloned.
+            $state = MT->translate("Cloning entry placements for weblog...");
+            $callback->($state, "places");
+            require MT::Placement;
+            $iter = MT::Placement->load_iter({ blog_id => $old_blog_id });
+            $counter = 0;
+            while (my $place = $iter->()) {
+                $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'places')
+                    if $counter && ($counter % 100 == 0);
+                $counter++;
+                $place->id(0);
+                $place->blog_id($new_blog_id);
+                $place->category_id($cat_map{$place->category_id});
+                $place->entry_id($entry_map{$place->entry_id});
+                $place->save or die $place->errstr;
+            }
+            $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'places');
+        }
+
+        if ((!exists $classes->{'MT::Comment'}) || $classes->{'MT::Comment'}) {
+            # Comments can only be cloned if entries are cloned.
+            my $state = MT->translate("Cloning comments for weblog...");
+            $callback->($state, "comments");
+            require MT::Comment;
+            $iter = MT::Comment->load_iter({ blog_id => $old_blog_id });
+            $counter = 0;
+            while (my $comment = $iter->()) {
+                $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'comments')
+                    if $counter && ($counter % 100 == 0);
+                $counter++;
+                $comment->id(0);
+                $comment->entry_id($entry_map{$comment->entry_id});
+                $comment->blog_id($new_blog_id);
+                $comment->save or die $comment->errstr;
+            }
+            $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'comments');
+        }
+
+        if ((!exists $classes->{'MT::ObjectTag'}) || $classes->{'MT::ObjectTag'}) {
+            # conditionally do MT::ObjectTag since it is only
+            # available with MT 3.3.
+            if ($MT::VERSION >= 3.3) {
+                my $state = MT->translate("Cloning entry tags for weblog...");
+                $callback->($state, "tags");
+                require MT::ObjectTag;
+                $iter = MT::ObjectTag->load_iter({ blog_id => $old_blog_id, object_datasource => 'entry' });
+                $counter = 0;
+                while (my $entry_tag = $iter->()) {
+                    $callback->($state . " " . MT->translate("[_1] records processed...", $counter), "tags")
+                        if $counter && ($counter % 100 == 0);
+                    $counter++;
+                    $entry_tag->id(0);
+                    $entry_tag->blog_id($new_blog_id);
+                    $entry_tag->object_id($entry_map{$entry_tag->object_id});
+                    $entry_tag->save or die $entry_tag->errstr;
+                }
+                $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'tags');
+            }
+        }
+    }
+
+    if ((!exists $classes->{'MT::Trackback'}) || $classes->{'MT::Trackback'}) {
+        my $state = MT->translate("Cloning TrackBacks for weblog...");
+        $callback->($state, "tbs");
+        require MT::Trackback;
+        $iter = MT::Trackback->load_iter({ blog_id => $old_blog_id });
+        $counter = 0;
+        while (my $tb = $iter->()) {
+            next unless ($tb->entry_id && $entry_map{$tb->entry_id}) ||
+                ($tb->category_id && $cat_map{$tb->category_id});
+
+            $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'tbs')
+                if $counter && ($counter % 100 == 0);
+            $counter++;
+            my $tb_id = $tb->id;
+            $tb->id(0);
+
+            $tb->entry_id($entry_map{$tb->entry_id})
+                if $tb->entry_id && $entry_map{$tb->entry_id};
+            $tb->category_id($cat_map{$tb->category_id})
+                if $tb->category_id && $cat_map{$tb->category_id};
+            $tb->blog_id($new_blog_id);
+            $tb->save or die $tb->errstr;
+            $tb_map{$tb_id} = $tb->id;
+        }
+        $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'tbs');
+
+        if ((!exists $classes->{'MT::TBPing'}) || $classes->{'MT::TBPing'}) {
+            my $state = MT->translate("Cloning TrackBack pings for weblog...");
+            $callback->($state, "pings");
+            require MT::TBPing;
+            $iter = MT::TBPing->load_iter({ blog_id => $old_blog_id });
+            $counter = 0;
+            while (my $ping = $iter->()) {
+                next unless $tb_map{$ping->tb_id};
+                $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'pings')
+                    if $counter && ($counter % 100 == 0);
+                $counter++;
+                $ping->id(0);
+                $ping->tb_id($tb_map{$ping->tb_id});
+                $ping->blog_id($new_blog_id);
+                $ping->save or die $ping->errstr;
+            }
+            $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'pings');
+        }
+    }
+
+    if ((!exists $classes->{'MT::Template'}) || $classes->{'MT::Template'}) {
+        my $state = MT->translate("Cloning templates for weblog...");
+        $callback->($state, "tmpls");
+        require MT::Template;
+        $iter = MT::Template->load_iter({ blog_id => $old_blog_id });
+        $counter = 0;
+        while (my $tmpl = $iter->()) {
+            $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'tmpls')
+                if $counter && ($counter % 100 == 0);
+            my $tmpl_id = $tmpl->id;
+            $counter++;
+            $tmpl->id(0);
+            $tmpl->blog_id($new_blog_id);
+            $tmpl->save or die $tmpl->errstr;
+            $tmpl_map{$tmpl_id} = $tmpl->id;
+        }
+        $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'tmpls');
+
+        $state = MT->translate("Cloning template maps for weblog...");
+        $callback->($state, "tmplmaps");
+        require MT::TemplateMap;
+        $iter = MT::TemplateMap->load_iter({ blog_id => $old_blog_id });
+        $counter = 0;
+        while (my $map = $iter->()) {
+            $callback->($state . " " . MT->translate("[_1] records processed...", $counter), 'tmplmaps')
+                if $counter && ($counter % 100 == 0);
+            $counter++;
+            $map->id(0);
+            $map->template_id($tmpl_map{$map->template_id});
+            $map->blog_id($new_blog_id);
+            $map->save or die $map->errstr;
+        }
+        $callback->($state . " " . MT->translate("[_1] records processed.", $counter), 'tmplmaps');
+    }
+
+    MT->run_callbacks(ref($blog). '::post_clone',
+        OldObject => $blog,
+        NewObject => $new_blog,
+        EntryMap => \%entry_map,
+        CategoryMap => \%cat_map,
+        TrackbackMap => \%tb_map,
+        TemplateMap => \%tmpl_map,
+        Callback => $callback
+    );
+    $new_blog;
 }
 
 1;
@@ -454,6 +816,35 @@ The language for date and time display for this particular blog.
 
 The welcome message to be displayed on the main Editing Menu for this blog.
 Should contain all desired HTML formatting.
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item * clone( [ \%parameters ] )
+
+MT::Blog provides a clone method that supports cloning of all known child
+records related to the MT::Blog object. To invoke this behavior, you
+simply specify a parameter hash with a 'Children' key set.
+
+    # Clones blog and all data related to this blog within the database.
+    my $new_blog = $original_blog->clone({ Children => 1 });
+
+You may further specify what kind of records are cloned in the process
+of cloning child objects. Use the 'Classes' parameter to specifically
+exclude particular classes:
+
+    # Clones everything except comments and trackback pings
+    my $new_blog = $original_blog->clone({
+        Children => 1,
+        Classes => { 'MT::Comments' => 0, 'MT::TBPing' => 0 }
+    });
+
+Note: Certain exclusions will prevent the clone process from including
+other classes. For instance, if you exclude MT::Trackback, all MT::TBPing
+objects are automatically excluded.
 
 =back
 

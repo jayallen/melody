@@ -2,7 +2,8 @@
 
 <div class="button-bar">
 <TMPL_IF NAME=IS_ADMINISTRATOR>
-<input onclick="doRemoveItems(this.form, '<MT_TRANS phrase="author" escape="js">', '<MT_TRANS phrase="authors" escape="js">')" type="button" value="<MT_TRANS phrase="Delete" escape="js">" accesskey="x" title="<MT_TRANS phrase="Delete selected authors (x)">" />
+<input onclick="setObjectStatus(this.form, '<MT_TRANS phrase="user" escape="js">', '<MT_TRANS phrase="users" escape="js">', 1)" type="button" value="<MT_TRANS phrase="_USER_ENABLE" escape="js">" accesskey="e" title="<MT_TRANS phrase="Enable selected users (e)">" />
+<input onclick="var sysadmin = getByID('sysadmin'); if (sysadmin &amp;&amp; sysadmin.checked) { alert('<MT_TRANS phrase="_NO_SUPERUSER_DISABLE" escape="js">'); sysadmin.click(); } setObjectStatus(this.form, '<MT_TRANS phrase="user" escape="js">', '<MT_TRANS phrase="users" escape="js">', 0)" type="button" value="<MT_TRANS phrase="_USER_DISABLE" escape="js">" accesskey="d" title="<MT_TRANS phrase="Disable selected users (d)">" />
 </TMPL_IF>
 </div>
 

@@ -931,7 +931,26 @@ function first_n_text($text, $n) {
     }
 }
 
+function tag_split_delim($delim, $str) {
+    $delim = quotemeta($delim);
+    $tags = array();
+    $str = trim($str);
+    while (strlen($str) && (preg_match("/^(((['\"])(.*?)\3[^$delim]*?|.*?)($delim\s*|$))/s", $str, $match))) {
+        print_r($match);
+        $str = substr($str, strlen($match[1]));
+        $tag = isset($match[4]) ? $match[4] : $match[2];
+        $tag = trim($tag);
+        $tag = preg_replace('/\s+/', ' ', $tag);
+        $n8d_tag = tag_normalize($tag);
+        if ($n8d_tag != '')
+            if ($tag != '') $tags[] = $tag;
+    }
+    return $tags;
+}
+
 function tag_split($str) {
+    return tag_split_delim(',', $str);
+    /*
     $list = preg_split('/[,;]/', $str);
     $tags = array();
     foreach ($list as $tag) {
@@ -941,16 +960,18 @@ function tag_split($str) {
         $tag = preg_replace('/[;,]+$/', '', $tag);
         $tag = preg_replace('/^"(.+?)"$/', '$1', $tag);
         $tag = preg_replace("/^'(.+?)'\$/", '$1', $tag);
-        if ($tag != '') $tags[] = $tag;
+        $n8d_tag = tag_normalize($tag);
+        if (($n8d_tag != '') && ($tag != '')) $tags[] = $tag;
     }
     return $tags;
+    */
 }
 
 # sorts by length of category label, from longest to shortest
 function catarray_length_sort($a, $b) {
 	$al = strlen($a['category_label']);
 	$bl = strlen($b['category_label']);
-	$al == $bl ? 0 : $al < $bl ? 1 : -1;
+	return $al == $bl ? 0 : $al < $bl ? 1 : -1;
 }
 
 function create_expr_exception($m) {
@@ -963,17 +984,18 @@ function create_expr_exception($m) {
 function create_cat_expr_function($expr, &$cats, $param) {
     global $mt;
     $cats_used = array();
+    $orig_expr = $expr;
 
     $include_children = $param['children'] ? 1 : 0;
 
     # handle path category expressions too?
 	usort($cats, 'catarray_length_sort');
+	$cats_replaced = array();
     foreach ($cats as $cat) {
         $catl = $cat['category_label'];
         $catid = $cat['category_id'];
-        $oldexpr = $expr;
         $catre = preg_quote($catl, "/");
-        if (!preg_match("/(?:\[$catre\]|$catre|#$catid)/", $expr))
+        if (!preg_match("/(?:(?<!#)\[$catre\]|$catre)|(?:#$catid\b)/", $expr))
             continue;
         if ($include_children) {
             $kids = array($cat);
@@ -981,10 +1003,11 @@ function create_cat_expr_function($expr, &$cats, $param) {
             while ($c = array_shift($kids)) {
                 $child_cats[$c['category_id']] = $c;
                 $children = $mt->db->fetch_categories(array('category_id' => $c['category_id'], 'children' => 1, 'show_empty' => 1));
-                if ($children)
-                    $kids = array_merge($kids, $children);
+                if ($children) {
+                    foreach ($children as $child)
+                        $kids[] = $child;
+                }
             }
-
             $repl = '';
             foreach ($child_cats as $ccid => $cc) {
                 $repl .= '||#' . $ccid;
@@ -994,15 +1017,19 @@ function create_cat_expr_function($expr, &$cats, $param) {
         } else {
             $repl = "(#$catid)";
         }
-	    $expr = preg_replace("/(?:\[$catre\]|$catre|#$catid)/", $repl,
-            $expr);
-        if ($oldexpr != $expr) {
-            if ($include_children) {
-                foreach ($child_cats as $ccid => $cc)
-                    $cats_used[$ccid] = $cc;
-            } else {
-                $cats_used[$catid] = $cat;
-            }
+        if (isset($cats_replaced[$catl])) {
+            $last_catid = $cats_replaced[$catl];
+            $expr = preg_replace("/(#$last_catid\b)/", '($1 || #' . $catid . ')', $expr);
+        } else {
+    	    $expr = preg_replace("/(?:(?<!#)(?:\[$catre\]|$catre))|#$catid\b/", $repl,
+                $expr);
+            $cats_replaced[$catl] = $catid;
+        }
+        if ($include_children) {
+            foreach ($child_cats as $ccid => $cc)
+                $cats_used[$ccid] = $cc;
+        } else {
+            $cats_used[$catid] = $cat;
         }
     }
     $expr = preg_replace('/\bAND\b/i', '&&', $expr);
@@ -1014,7 +1041,7 @@ function create_cat_expr_function($expr, &$cats, $param) {
     # some invalid data in our expression:
     $test_expr = preg_replace('/!|&&|\|\||\(0\)|\(|\)|\s|#\d+/', '', $expr);
     if ($test_expr != '') {
-        print("Invalid category filter: [$expr]");
+        echo "Invalid category filter: $orig_expr";
         return;
     }
 
@@ -1025,7 +1052,7 @@ function create_cat_expr_function($expr, &$cats, $param) {
     $expr = 'if (!array_key_exists($e["entry_id"], $c["p"])) return FALSE; return (' . $expr . ');';
     $fn = create_function('&$e,&$c', $expr);
     if ($fn === FALSE) {
-        print("Invalid category filter: $expr");
+        echo "Invalid category filter: $orig_expr";
         return;
     }
     return $fn;
@@ -1063,13 +1090,18 @@ function cat_path_to_category($path, $blog_id = 0) {
 function tagarray_length_sort($a, $b) {
 	$al = strlen($a['tag_name']);
 	$bl = strlen($b['tag_name']);
-	$al == $bl ? 0 : $al < $bl ? 1 : -1;
+	return $al == $bl ? 0 : $al < $bl ? 1 : -1;
 }
 
 function create_tag_expr_function($expr, &$tags) {
     $tags_used = array();
-
+    $orig_expr = $expr;
+    
+    # Sort in descending order by length
 	usort($tags, 'tagarray_length_sort');
+
+    # Modify the tag argument, replacing the tag name with '#TagID'
+    # Create a ID-based hash of the tags that are used in the arg
     foreach ($tags as $tag) {
         $tagn = $tag['tag_name'];
         $tagid = $tag['tag_id'];
@@ -1079,27 +1111,51 @@ function create_tag_expr_function($expr, &$tags) {
 	    if ($oldexpr != $expr)
 	        $tags_used[$tagid] = $tag;
 	}
+    # Replace logical constructs with their PHP equivalents
     $expr = preg_replace('/\bAND\b/i', '&&', $expr);
     $expr = preg_replace('/\bOR\b/i', '||', $expr);
     $expr = preg_replace('/\bNOT\b/i', '!', $expr);
+
+    # The following is no more readable in PHP than it is in Perl
     $expr = preg_replace_callback('/( |#\d+|&&|\|\||!|\(|\))|([^#0-9&|!()]+)/', 'create_expr_exception', $expr);
 
-    # strip out all the 'ok' stuff. if anything is left, we have
-    # some invalid data in our expression:
+    # Syntax check on 'tag' argument
+    # Strip out all the valid stuff. if anything is left, we have
+    # some invalid data in our expression
     $test_expr = preg_replace('/!|&&|\|\||\(0\)|\(|\)|\s|#\d+/', '', $expr);
-    if ($test_expr != '')
-        die("bad expression in tag filter: [$expr]");
+    if ($test_expr != '') {
+        echo "Invalid tag filter: $orig_expr";
+        return;
+    }
 
+    # Populate array (passed in by reference) of used tags
+    # but only if expression is positive (i.e. not NOT)
 	if (!preg_match('/!/', $expr))
 	    $tags = array_values($tags_used);
 
+    # Replace '#TagID' with a hash lookup function.
+    # Function confirms/denies use of tag on entry (by IDs)
     $expr = preg_replace('/#(\d+)/', "array_key_exists('\\1', \$c['t'][\$e['entry_id']])", $expr);
+
+    # Create a PHP-blessed function of that code and return it
+    # if all is well.  This function will be used later to 
+    # test for existence of specified tags in entries.
     $expr = 'return array_key_exists($e["entry_id"], $c["t"])?' . $expr .
         ':FALSE;';
     $fn = create_function('&$e,&$c', $expr);
     if ($fn === FALSE) {
-        die("bad expression in tag filter: $expr");
+        echo "Invalid tag filter: $orig_expr";
+        return;
     }
     return $fn;
+}
+
+function tag_normalize($str) {
+    # FIXME: character set issues here...
+    $private = preg_match('/^@/', $str) ? 1 : 0;
+    $str = preg_replace('/[@!`\\<>\*&#\/~\?\'"\.\,=\(\)\${}\[\];:\ \+\-\r\n]+/', '', $str);
+    $str = strtolower($str);
+    if ($private) $str = '@' . $str;
+    return $str;
 }
 ?>

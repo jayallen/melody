@@ -5,12 +5,16 @@ use MT;
 
 # constants that force an action or determination. these are all non-numeric
 use constant ABSTAIN  => 'ABSTAIN';
+use constant HAM      => 'HAM';
+use constant SPAM     => 'SPAM';
+use constant APPROVE  => 'APPROVE';
+use constant JUNK     => 'JUNK';
 
 use Exporter;
 *import = \&Exporter::import;
 use vars qw(@EXPORT_OK %EXPORT_TAGS);
-@EXPORT_OK = qw(ABSTAIN);
-%EXPORT_TAGS = (constants => [qw(ABSTAIN)]);
+@EXPORT_OK = qw(ABSTAIN HAM SPAM APPROVE JUNK);
+%EXPORT_TAGS = (constants => [qw(ABSTAIN HAM SPAM APPROVE JUNK)]);
 
 sub filter {
     my $pkg = shift;
@@ -179,6 +183,20 @@ Think of the balance beam as a perfectly smooth continuum from -10 to +10 --
 don't count on any particular value being the cutoff between junk and
 not-junk. If your plugin's sensors don't know what to make of a comment, it
 should abstain and let other plugins take care of it.
+
+=head1 METHODS
+
+=head2 filter($obj)
+
+Score the object, mark as junk or not-junk and log the action.
+
+=head2 score($obj)
+
+Apply the defined filters and return the junk score.
+
+=head2 task_expire_junk()
+
+Perform junk expiration for each blog.
 
 =head1 The API: Sample Code
 

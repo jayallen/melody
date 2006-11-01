@@ -25,3 +25,14 @@ __PACKAGE__->install_properties({
 });
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectTag
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

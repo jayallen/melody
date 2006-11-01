@@ -33,6 +33,7 @@ __PACKAGE__->install_properties({
         allow_pings => 0,
     },
     child_of => 'MT::Blog',
+    audit => 1,
     child_classes => ['MT::Placement', 'MT::Trackback', 'MT::FileInfo'],
     datasource => 'category',
     primary_key => 'id',
@@ -198,18 +199,19 @@ sub save {
 sub remove {
     my $cat = shift;
     $cat->remove_children({ key => 'category_id' });
-
-    # orphan my children up to the root level
-    my @children = $cat->children_categories;
-    if (scalar @children) {
-        foreach my $child (@children) {
-            $child->parent(($cat->parent) ? $cat->parent : '0');
-            $child->save or return $cat->error($child->save);
+    if (ref $cat) {
+        # orphan my children up to the root level
+        my @children = $cat->children_categories;
+        if (scalar @children) {
+            foreach my $child (@children) {
+                $child->parent(($cat->parent) ? $cat->parent : '0');
+                $child->save or return $cat->error($child->save);
+            }
+        } else {
+            MT::Category->clear_cache('blog_id' => $cat->blog_id);
         }
-    } else {
-        MT::Category->clear_cache('blog_id' => $cat->blog_id);
     }
-    $cat->SUPER::remove;
+    $cat->SUPER::remove(@_);
 }
 
 

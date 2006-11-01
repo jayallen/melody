@@ -13,6 +13,9 @@ function submitMoveMode() {
     f.submit();
 }
 function setCreateMode (id) {
+    if (getByID('messaging')) {
+	getByID('messaging').style.display = 'none'; // hide any messaging 
+    }
     if (document.all) {
         getByID('create-' + id).style.display = 'block'; // show subcategory creation row
     } else {
@@ -62,6 +65,9 @@ function cancelCreateMode (id) {
 }
 
 function setMoveMode (id) {
+    if (getByID('messaging')) {
+	getByID('messaging').style.display = 'none'; // hide any messaging 
+    }
     getByID('category-' + id).style.backgroundColor = '#FFB13E'; // set background color of selected row to orange
 	getByID('move-radio-' + id).style.display = 'none'; // hide radio button of selected row
 	if (document.all) {
@@ -104,11 +110,11 @@ TC.attachLoadEvent( init );
 <p class="page-desc"><MT_TRANS phrase="_USAGE_CATEGORIES"></p>
 
 <TMPL_IF NAME=SAVED>
-<div class="message"><MT_TRANS phrase="Your category changes and additions have been made."> <TMPL_INCLUDE NAME="rebuild-stub.tmpl"></div>
+<h4 id="messaging" class="message"><MT_TRANS phrase="Your category changes and additions have been made."> <TMPL_INCLUDE NAME="rebuild-stub.tmpl"></h4>
 </TMPL_IF>
 
 <TMPL_IF NAME=SAVED_DELETED>
-<h4 class="message"><MT_TRANS phrase="You have successfully deleted the selected categories."> <TMPL_INCLUDE NAME="rebuild-stub.tmpl"></h4>
+<h4 id="messaging" class="message"><MT_TRANS phrase="You have successfully deleted the selected categories."> <TMPL_INCLUDE NAME="rebuild-stub.tmpl"></h4>
 </TMPL_IF>
 
 <form id="cat_form" method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" name="cat_form">
@@ -181,7 +187,7 @@ TC.attachLoadEvent( init );
 
 <td><TMPL_IF NAME=CATEGORY_ENTRYCOUNT><TMPL_IF NAME=CAN_EDIT_ENTRIES><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_entries&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;filter=category_id&amp;filter_val=<TMPL_VAR NAME=CATEGORY_ID>"></TMPL_IF></TMPL_IF><MT_TRANS phrase="[quant,_1,entry,entries]" params="<TMPL_VAR NAME=CATEGORY_ENTRYCOUNT>"><TMPL_IF NAME=CATEGORY_ENTRYCOUNT><TMPL_IF NAME=CAN_EDIT_ENTRIES></a></TMPL_IF></TMPL_IF></td>
 
-<td class="status-disabled"><TMPL_IF NAME=HAS_TB><TMPL_IF NAME=CATEGORY_TBCOUNT><TMPL_IF NAME=CAN_EDIT_ENTRIES><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_pings&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;filter=category_id&amp;filter_val=<TMPL_VAR NAME=CATEGORY_ID>"></TMPL_IF></TMPL_IF><MT_TRANS phrase="[quant,_1,TrackBack]" params="<TMPL_VAR NAME=CATEGORY_TBCOUNT>"><TMPL_IF NAME=CATEGORY_TBCOUNT><TMPL_IF NAME=CAN_EDIT_ENTRIES></a></TMPL_IF></TMPL_IF><TMPL_ELSE></TMPL_IF></td>
+<td class="status-disabled"><TMPL_IF NAME=HAS_TB><TMPL_IF NAME=CATEGORY_TBCOUNT><TMPL_IF NAME=CAN_EDIT_ENTRIES><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=category&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;id=<TMPL_VAR NAME=CATEGORY_ID>&amp;tab=pings"></TMPL_IF></TMPL_IF><MT_TRANS phrase="[quant,_1,TrackBack]" params="<TMPL_VAR NAME=CATEGORY_TBCOUNT>"><TMPL_IF NAME=CATEGORY_TBCOUNT><TMPL_IF NAME=CAN_EDIT_ENTRIES></a></TMPL_IF></TMPL_IF><TMPL_ELSE></TMPL_IF></td>
 
 </tr>
 

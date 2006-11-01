@@ -132,13 +132,38 @@ Active user sessions are held in 'US' records.
 The cached contents of the newsbox (top right of MT's welcome screen)
 is held in the I<single> record of kind 'NW'.
 
+=back
+
 =head1 METHODS
 
-=head2 $sess = MT::Session->get_unexpired_value($timeout,
-                                        [ $terms, [ $args, ... ] ]);
+=head2 $sess = MT::Session->get_unexpired_value($timeout[, $terms[, $args, ...]]);
 
 Fetches the specified session record, if it is current (its C<start>
 field falls within last $timeout seconds). Arguments following the
 $timeout argument are passed directly to C<MT::Object::load>.
+
+=head2 $sess->get($var)
+
+Return the value of I<var>.
+
+=head2 is_dirty
+
+Return the value of the session I<__dirty> flag.
+
+=head2 $sess->save()
+
+Save the session data and unset the I<__dirty> flag.
+
+=head2 $sess->set($var, $val)
+
+Set the I<var> to I<val> and set the session I<__dirty> flag.
+
+=head2 $sess->thaw_data()
+
+Return the session data and unset the I<__dirty> flag.
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

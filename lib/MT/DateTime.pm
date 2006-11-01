@@ -169,3 +169,14 @@ sub tz_offset_as_seconds {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::DateTime
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

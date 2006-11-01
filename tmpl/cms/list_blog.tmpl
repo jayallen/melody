@@ -21,15 +21,16 @@
 </li>
 <TMPL_IF NAME=CAN_EDIT_AUTHORS>
 <li id="nav-authors">
-<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_authors"><MT_TRANS phrase="Authors"></a><br />
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_authors"><MT_TRANS phrase="Users"></a><br />
 <MT_TRANS phrase="Create, manage, set permissions.">
 </li>
-</TMPL_IF>
-<li id="nav-plugins">
-<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_plugins"><MT_TRANS phrase="Plugins"></a><br />
-<MT_TRANS phrase="What's installed, access to more.">
+<li id="nav-privileges">
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations"><MT_TRANS phrase="Privileges"></a><br />
+<MT_TRANS phrase="Create and manage roles and associations.">
 </li>
+</TMPL_IF>
 </ul>
+<TMPL_IF NAME=CAN_EDIT_ENTRIES>
 <ul class="nav">
 <li id="nav-entries">
 <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_entries"><MT_TRANS phrase="Entries"></a><br />
@@ -50,14 +51,31 @@
 <MT_TRANS phrase="Multi-weblog TrackBack listing.">
 </li>
 </ul>
-<TMPL_IF NAME=IS_ADMINISTRATOR>
+<TMPL_ELSE><TMPL_IF NAME=CAN_EDIT_TAGS>
 <ul class="nav">
+<li id="nav-tags">
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_tags"><MT_TRANS phrase="Tags"></a><br />
+<MT_TRANS phrase="Multi-weblog tag listing.">
+</li>
+</ul>
+</TMPL_IF></TMPL_IF>
+<ul class="nav">
+<TMPL_IF NAME=IS_ADMINISTRATOR>
 <li id="nav-settings">
 <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=cfg_system"><MT_TRANS phrase="Settings"></a><br />
 <MT_TRANS phrase="System-wide configuration.">
 </li>
-</ul>
+<li id="nav-plugins">
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_plugins"><MT_TRANS phrase="Plugins"></a><br />
+<MT_TRANS phrase="What's installed, access to more.">
+</li>
+<TMPL_ELSE>
+<li id="nav-plugins">
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_plugins"><MT_TRANS phrase="Plugins"></a><br />
+<MT_TRANS phrase="What's installed, access to more.">
+</li>
 </TMPL_IF>
+</ul>
 <ul class="nav last">
 <li id="nav-search">
 <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=search_replace"><MT_TRANS phrase="Search &amp; Replace"></a><br />

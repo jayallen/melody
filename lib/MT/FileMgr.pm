@@ -88,6 +88,11 @@ host does not require anything.
 If an initialization error occurs, returns C<undef>; see L<ERROR HANDLING>,
 below.
 
+=head2 $fmgr->init()
+
+This is an internal method called by C<MT::FileMgr-E<gt>new> that
+initializes an L<MT::ConfigMgr/instance> as the I<cfg> attribute.
+
 =head2 $fmgr->put($src, $dest [, $type ])
 
 Puts the contents of the file I<$src> in the path I<$dest>. I<$src> can be
@@ -149,6 +154,14 @@ Renames the file or directory I<$src> to I<$dest>. Returns true on success.
 
 On error, returns C<undef>; see L<ERROR HANDLING>, below.
 
+=head2 content_is_updated()
+
+Return one (1).
+
+=head2 $fmgr->is_handle($file)
+
+Return the file descriptor of I<file> or C<undef> if not found.
+
 =head1 ERROR HANDLING
 
 On an error, all of the above methods (except I<exists>) return C<undef>,
@@ -166,8 +179,8 @@ Or, called on an object:
     defined(my $bytes = $fmgr->put($src, $dest))
         or die $fmgr->errstr;
 
-=head1 AUTHOR & COPYRIGHTS
+=head1 AUTHOR & COPYRIGHT
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

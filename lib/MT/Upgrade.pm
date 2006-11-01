@@ -28,7 +28,8 @@ sub BEGIN {
                                            Notification Permission Placement
                                            PluginData Session TBPing Template
                                            TemplateMap Trackback Config
-                                           Tag ObjectTag );
+                                           Tag ObjectTag Role
+                                           Association );
 
     %functions = (
         # standard routines
@@ -239,6 +240,7 @@ sub BEGIN {
                 }
             }
         },
+        # TBD: Revise to use role.
         'core_set_blog_admins' => {
             version_limit => 3.2,
             code => \&core_update_records,
@@ -303,7 +305,7 @@ sub BEGIN {
                 class => 'MT::Author',
                 condition => sub { ($_[0]->type == 1) && (($_[0]->api_password || '') eq '') },
                 code => sub { $_[0]->api_password($_[0]->password) },
-                message => 'Updating author web services passwords...',
+                message => 'Updating user web services passwords...',
             }
         },
         'core_create_config_table' => {
@@ -376,7 +378,7 @@ sub BEGIN {
             priority => 9.3,
             updater => {
                 class => 'MT::Blog',
-                condition => sub { !(scalar MT::Permission->load({
+                condition => sub { !(MT::Permission->count({
                     blog_id => $_[0]->id, author_id => 0 })) },
                 code => sub {
                     my $perm = new MT::Permission;
@@ -432,7 +434,7 @@ sub BEGIN {
                 class => 'MT::Author',
                 condition => sub { !$_[0]->type },
                 code => sub { $_[0]->type(1) },
-                message => 'Assigning author types...',
+                message => 'Assigning user types...',
                 sql => 'update mt_author set author_type = 1
                         where author_type is null or author_type = 0',
             }
@@ -529,8 +531,90 @@ sub BEGIN {
                 },
                 message => 'Assigning basename for categories...',
             }
-        }
+        },
+        'core_set_author_status' => {
+            code => \&core_update_records,
+            version_limit => 3.301,
+            priority => 3.1,
+            updater => {
+                class => 'MT::Author',
+                message => 'Assigning user status...',
+                condition => sub {
+                    ($_[0]->type == 1) && (!defined $_[0]->status)
+                },
+                code => sub {
+                    shift->status(1);
+                },
+                sql => 'update mt_author set author_status = 1
+                        where author_type = 1 and author_status is null',
+            }
+        },
+        'core_install_default_roles' => {
+            code => \&create_default_roles,
+            on_class => 'MT::Role',
+            priority => 3.1,
+        },
+        'core_migrate_permissions_to_roles' => {
+            code => \&core_update_records,
+            version_limit => 3.303,
+            priority => 3.2,
+            updater => {
+                class => 'MT::Permission',
+                message => 'Migrating permissions to roles...',
+                condition => sub { $_[0]->blog_id },
+                code => \&_migrate_permission_to_role,
+            }
+        },
     );
+}
+
+my $perm_role_names = {
+    4096 => 'Weblog Administrator',  # administer_blog
+    30687 => 'Weblog Administrator', # 32767 - 2048(not comment) - 32(reserved) = every permissions in MT3.3
+    2 => 'Writer', # post
+    6 => 'Writer (can upload)', # post + upload
+    17032 => 'Editor',  # edit_all_posts + edit_tags + edit_categories + rebuild
+    17036 => 'Editor (can upload)', # Editor + upload
+    144 => 'Designer', # edit_templates + rebuild
+    64 => 'Manager', # edit_config
+    17292 => 'Publisher', # Editor (can upload) + send_notifications
+    256 => 'Communicator', # send_notifications
+    512 => 'Taxonomist', # edit_categories
+    1024 => 'Secretary', # edit_notifications
+    1024+256 => 'Communications Manager', # edit_notifications + send_notifications
+    16384 => 'Tagger', # edit_tags
+    8192 => 'Monitor', # view_blog_log
+};
+
+sub _migrate_permission_to_role {
+    my $perm = shift;
+
+    return unless $perm->author_id;
+    my $user = MT::Author->load($perm->author_id);
+    if (!$user) {
+        $perm->remove;
+        return;
+    }
+    my $role_mask = $perm->role_mask;
+    my $name = MT->translate($perm_role_names->{$role_mask});
+    $name ||= MT->translate("Custom ([_1])", $role_mask);
+    require MT::Role;
+    my $role = MT::Role->load({ name => $name });
+    if ($role) {
+        if (($role->role_mask != $role_mask) && 
+            ((4096 != $role->role_mask) && (30687 != $role_mask))) {
+            $role = undef;
+        }
+    }
+    unless ($role) {
+        $role = new MT::Role;
+        $role->name($name);
+        $role->description(MT->translate("This role was generated by Movable Type upon upgrade."));
+        $role->role_mask($role_mask);
+        $role->save;
+    }
+    my $blog = MT::Blog->load($perm->blog_id);
+    $user->add_role($role, $blog) if $blog;
 }
 
 sub register_class {
@@ -581,8 +665,8 @@ sub init {
 # iterate routines:
 #     no parameters, start with offset == 0
 #     offset parameter, pass thru
-#     if routine returns -1, routine is done
-#     if routine returns false, routine failed
+#     if routine returns 0, routine is done
+#     if routine returns undef, routine failed
 #     if routine returns > 0, that's the new offset
 
 sub run_step {
@@ -830,7 +914,7 @@ sub seed_database {
     require MT::Author;
     return undef if MT::Author->count;
 
-    $self->progress($self->translate("Creating initial weblog and author records..."));
+    $self->progress($self->translate("Creating initial weblog and user records..."));
 
     local $MT::CallbacksEnabled = 1;
 
@@ -846,24 +930,80 @@ sub seed_database {
     $author->set_password(exists $param{user_password} ? $param{user_password} : 'Nelson');
     $author->email(exists $param{user_email} ? $param{user_email} : '');
     $author->hint(exists $param{user_hint} ? uri_unescape($param{user_hint}) : '');
+    $author->nickname(exists $param{user_nickname} ? uri_unescape($param{user_nickname}) : '');
     $author->is_superuser(1);
     $author->can_create_blog(1);
     $author->can_view_log(1);
     $author->preferred_language($lang);
     $author->save or return $self->error($self->translate("Error saving record: [_1].", $author->errstr));
+    $App->{author} = $author if ref $App;
+
+    $self->create_default_roles(%param);
 
     require MT::Blog;
     my $blog = MT::Blog->new;
-    $blog->set_defaults();
     $blog->name($LH->maketext('First Weblog'));
     $blog->save or return $self->error($self->translate("Error saving record: [_1].", $blog->errstr));
 
+    # TBD: change to use association methods...
     require MT::Permission;
     my $perms = MT::Permission->new;
     $perms->author_id($author->id);
     $perms->blog_id($blog->id);
-    $perms->set_full_permissions;
+    $perms->set_full_permissions();
     $perms->save or return $self->error($self->translate("Error saving record: [_1].", $perms->errstr));
+
+    1;
+}
+
+sub create_default_roles {
+    my $self = shift;
+    my (%param) = @_;
+
+    my @default_roles = (
+        # { name => 'System Administrator',
+        #   perms => ['administer'] },
+        # { name => 'System Designer',
+        #   perms => ['edit_templates', 'rebuild'] },
+        { name => 'Weblog Administrator',
+          description => 'Can administer the weblog.',
+          perms => ['administer_blog'] },
+        { name => 'Designer',
+          description => 'Can edit, manage and rebuild weblog templates.',
+          perms => ['edit_templates', 'rebuild'] },
+        { name => 'Editor',
+          description => 'Can edit all entries/categories/tags on a weblog and rebuild.',
+          perms => ['edit_all_posts', 'edit_categories', 'rebuild', 'edit_tags'], },
+        { name => 'Editor (can upload)',
+          description => 'Can upload files, edit all entries/categories/tags on a weblog and rebuild.',
+          perms => ['edit_all_posts', 'edit_categories', 'edit_tags', 'rebuild', 'upload'], },
+        { name => 'Publisher',
+          description => 'Can upload files, edit all entries/categories/tags on a weblog, rebuild and send notifications.',
+          perms => ['edit_all_posts', 'edit_categories', 'edit_tags', 'send_notifications', 'rebuild', 'upload'], },
+        { name => 'Writer',
+          description => 'Can create entries and edit their own.',
+          perms => ['post'], },
+        { name => 'Writer (can upload)',
+          description => 'Can create entries, edit their own and upload files.',
+          perms => ['post', 'upload'], },
+        # { name => 'System Blog Administrator',
+        #   perms => ['administer_blog'] },
+    );
+
+    require MT::Role;
+    return if MT::Role->count();
+
+    foreach my $r (@default_roles) {
+        my $role = MT::Role->new();
+        $role->name(MT->translate($r->{name}));
+        $role->description(MT->translate($r->{description}));
+        $role->clear_full_permissions;
+        $role->set_these_permissions($r->{perms});
+        if ($r->{name} =~ m/^System/) {
+            $role->is_system(1);
+        }
+        $role->save;
+    }
 
     1;
 }
@@ -970,7 +1110,7 @@ sub post_schema_upgrade {
     my $self = shift;
     my ($from) = @_;
 
-    my $plugin_ver = MT->config('PluginSchemaVersion');
+    my $plugin_ver = MT->config('PluginSchemaVersion') || {};
 
     # run any functions that define a version_limit and where the schema we're
     # upgrading from is below that limit.
@@ -978,8 +1118,8 @@ sub post_schema_upgrade {
         my $save_from = $from;
         {
             my $func = $functions{$fn};
-            if ($func->{plugin_sig} && $plugin_ver) {
-                $from = $plugin_ver->{$func->{plugin_sig}};
+            if ($func->{plugin_sig}) {
+                $from = $plugin_ver->{$func->{plugin_sig}} || 0;
             }
             if ($func->{version_limit} && ($from < $func->{version_limit})) {
                 $self->add_step($fn, from => $from);
@@ -1405,7 +1545,7 @@ sub core_create_template_maps {
         $continue = 1, last if time > $start + $MAX_TIME;
     }
     if ($continue) {
-        while ($iter->()) {}
+        $iter->('finish');
         return $offset;
     } else {
         $self->progress("$msg (100%)", 1);
@@ -1664,7 +1804,7 @@ handful of arguments, which are:
 =item * Install
 
 Specify a value of '1' to assume a new installation along with an operation
-to install a weblog and initial author.
+to install a weblog and initial user.
 
 =item * App
 

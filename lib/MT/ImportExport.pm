@@ -94,12 +94,12 @@ sub do_import {
     ## Determine the author as whom we will import the entries.
     my($author, $pass, $parent_author);
     if ($author = $param{ImportAs}) {
-#        $cb->("Importing entries as author '", $author->name, "'\n");
+#        $cb->("Importing entries as user '", $author->name, "'\n");
     } elsif ($parent_author = $param{ParentAuthor}) {
         $pass = $param{NewAuthorPassword}
             or return $class->error(MT->translate(
                 "You need to provide a password if you are going to\n" .
-                "create new authors for each author listed in your blog.\n"));
+                "create new users for each user listed in your blog.\n"));
     } else {
         return $class->error(MT->translate(
             "Need either ImportAs or ParentAuthor"));
@@ -188,16 +188,16 @@ sub do_import {
                                 } else {
                                     $author->password('(none)');
                                 }
-                                $cb->(MT->translate("Creating new author ('[_1]')...", $val));
+                                $cb->(MT->translate("Creating new user ('[_1]')...", $val));
                                 if ($author->save) {
                                     $cb->(MT->translate("ok\n"));
                                 } else {
                                     $cb->(MT->translate("failed\n"));
                                     return $class->error(MT->translate(
-                                        "Saving author failed: [_1]", $author->errstr));
+                                        "Saving user failed: [_1]", $author->errstr));
                                 }
                                 $authors{$val} = $author;
-                                $cb->(MT->translate("Assigning permissions for new author..."));
+                                $cb->(MT->translate("Assigning permissions for new user..."));
                                 my $perms = MT::Permission->new;
                                 $perms->blog_id($blog_id);
                                 $perms->author_id($author->id);
@@ -615,3 +615,25 @@ sub _convert_date {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ImportExport
+
+=head1 METHODS
+
+=head2 do_import(%param)
+
+This complex method imports a blog by... TODO
+
+=head2 export($blog[, $callback])
+
+Export the I<blog> as a template named "Export Template", with an
+optional I<callback>.
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

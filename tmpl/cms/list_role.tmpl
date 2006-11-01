@@ -1,0 +1,148 @@
+<TMPL_INCLUDE NAME="header.tmpl">
+
+<div id="list-role">
+
+<script type="text/javascript">
+<!--
+var tableSelect;
+function init()
+{
+	// setup
+	tableSelect = new TC.TableSelect( "selector" );
+	tableSelect.rowSelect = true;
+}
+TC.attachLoadEvent( init );
+// -->
+</script>
+
+<h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_GROUP_ID><TMPL_VAR NAME=GROUP_NAME ESCAPE=HTML><TMPL_ELSE><TMPL_IF NAME=EDIT_AUTHOR_ID><TMPL_VAR NAME=EDIT_AUTHOR_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF></TMPL_IF>: </span> <MT_TRANS phrase="Roles"></h2>
+
+<p class="page-desc"><MT_TRANS phrase="_USAGE_ROLES"></p>
+
+<TMPL_IF NAME=SAVED_DELETED>
+<h4 class="message"><MT_TRANS phrase="You have successfully deleted the role(s)."></h4>
+</TMPL_IF>
+
+<div class="tabs">
+<ul>
+<TMPL_IF NAME=EDIT_GROUP_ID>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=group&amp;id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Profile"></a></li>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_authors&amp;group_id=<TMPL_VAR NAME=EDIT_GROUP_ID>"><MT_TRANS phrase="Members"> (<TMPL_VAR NAME=USER_COUNT>)</a></li>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_roles&amp;group_id=<TMPL_VAR NAME=EDIT_GROUP_ID>"><MT_TRANS phrase="Roles"></a></li>
+<TMPL_ELSE>
+<TMPL_IF NAME=EDIT_AUTHOR_ID>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author&amp;id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>"><MT_TRANS phrase="Profile"></a></li>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_roles&amp;author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>"><MT_TRANS phrase="Roles"></a></li>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_groups&amp;author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>"><MT_TRANS phrase="Groups"> (<TMPL_VAR NAME=GROUP_COUNT>)</a></li>
+
+<li class="special">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Grant a new role">" width="9" height="9" />
+<a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role')"><MT_TRANS phrase="Grant another role to [_1]" params="<TMPL_VAR NAME=EDIT_AUTHOR_NAME ESCAPE=HTML>"></a>
+</li>
+<TMPL_ELSE>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations"><MT_TRANS phrase="Associations"></a></li>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_roles"><MT_TRANS phrase="Roles"></a></li>
+<TMPL_IF NAME=CAN_CREATE_ROLE>
+<li class="special">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Create New Role">" width="9" height="9" />
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_role"><MT_TRANS phrase="Create New Role"></a>
+</li>
+</TMPL_IF>
+</TMPL_IF>
+</TMPL_IF>
+</ul>
+</div>
+
+<div class="list-wrapper">
+<TMPL_IF NAME=OBJECT_LOOP>
+<form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return this['__mode'] ? true : false">
+<input type="hidden" name="__mode" value="" />
+<input type="hidden" name="_type" value="role" />
+<input type="hidden" name="action_name" value="" />
+<input type="hidden" name="itemset_action_input" value="" />
+<input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+
+<TMPL_IF NAME=POSITION_ACTIONS_TOP>
+<TMPL_INCLUDE NAME=role_actions.tmpl>
+</TMPL_IF>
+
+<div class="list" id="selector">
+<table cellspacing="0" class="<TMPL_IF NAME=VIEW_EXPANDED>expanded<TMPL_ELSE>compact</TMPL_IF>">
+
+<thead>
+<tr>
+<th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+<th id="at-flag"><img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/flag.gif" alt="<MT_TRANS phrase="_USER_STATUS_CAPTION">" title="<MT_TRANS phrase="_USER_STATUS_CAPTION">" width="9"height="9" /></th>
+<th id="rt-name"><MT_TRANS phrase="Role"></th>
+<TMPL_IF NAME=EDIT_GROUP_ID><!-- group view -->
+<th id="rt-weblog"><MT_TRANS phrase="In Weblog"></th>
+<th id="rt-user"><MT_TRANS phrase="User"></th>
+<TMPL_ELSE>
+<TMPL_IF NAME=EDIT_AUTHOR_ID><!-- author view -->
+<th id="rt-weblog"><MT_TRANS phrase="In Weblog"></th>
+<th id="rt-group"><MT_TRANS phrase="Via Group"></th>
+<TMPL_ELSE><!-- role view -->
+<th id="rt-description"><MT_TRANS phrase="Description"></th>
+<th id="rt-members"><MT_TRANS phrase="Members"></th>
+<th id="rt-weblogs"><MT_TRANS phrase="Weblogs"></th>
+<th id="rt-created-by"><MT_TRANS phrase="Created By"></th>
+</TMPL_IF>
+</TMPL_IF>
+</tr>
+</thead>
+<tbody>
+
+<TMPL_LOOP NAME=OBJECT_LOOP>
+<tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF><TMPL_UNLESS NAME=EDIT_AUTHOR_ID><TMPL_UNLESS NAME=EDIT_GROUP_ID><TMPL_UNLESS NAME=MEMBERS> inactive</TMPL_UNLESS></TMPL_UNLESS></TMPL_UNLESS>">
+<td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
+<td class="<TMPL_IF NAME=MEMBERS>role-status-active<TMPL_ELSE>role-status-inactive</TMPL_IF>">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<TMPL_IF NAME=MEMBERS><MT_TRANS phrase="Role Is Active"><TMPL_ELSE><MT_TRANS phrase="Role Not Being Used"></TMPL_IF>" width="9" height="9" />
+</td>
+<td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_role&amp;id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NAME ESCAPE=HTML><TMPL_IF NAME=HAS_EDIT_ACCESS></a></TMPL_IF></td>
+<TMPL_IF NAME=EDIT_GROUP_ID>
+<td><TMPL_VAR NAME=USER_NAME ESCAPE=HTML></td>
+<td><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></td>
+<TMPL_ELSE>
+<TMPL_IF NAME=EDIT_AUTHOR_ID>
+<td><TMPL_VAR NAME=GROUP_NAME ESCAPE=HTML></td>
+<td><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></td>
+<TMPL_ELSE>
+<td><TMPL_VAR NAME=DESCRIPTION ESCAPE=HTML></td>
+<td><TMPL_VAR NAME=MEMBERS></td>
+<td><TMPL_VAR NAME=WEBLOGS></td>
+<td><TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF></td>
+</TMPL_IF>
+</TMPL_IF>
+</tr>
+<TMPL_IF NAME=VIEW_EXPANDED>
+<tr class="<TMPL_IF NAME=__ODD__>odd<TMPL_ELSE>even</TMPL_IF> slave<TMPL_UNLESS NAME=EDIT_AUTHOR_ID><TMPL_UNLESS NAME=EDIT_GROUP_ID><TMPL_UNLESS NAME=MEMBERS> inactive</TMPL_UNLESS></TMPL_UNLESS></TMPL_UNLESS>">
+<td>&nbsp;</td><td colspan="<TMPL_IF NAME=EDIT_GROUP_ID>4<TMPL_ELSE><TMPL_IF NAME=EDIT_AUTHOR_ID>4<TMPL_ELSE>6</TMPL_IF></TMPL_IF>"><div class="detail-inner"><MT_TRANS phrase="Permissions">: <TMPL_LOOP NAME=PERM_LOOP><TMPL_VAR NAME=NAME><TMPL_UNLESS NAME=__LAST__>, </TMPL_UNLESS></TMPL_LOOP></div></td>
+</tr>
+</TMPL_IF>
+</TMPL_LOOP>
+
+</tbody>
+</table>
+</div>
+
+<TMPL_IF NAME=POSITION_ACTIONS_BOTTOM>
+<div class="list-actions-footer">
+<TMPL_INCLUDE NAME=role_actions.tmpl>
+</div>
+</TMPL_IF>
+
+</form>
+
+<TMPL_INCLUDE NAME=pager.tmpl>
+
+
+<TMPL_ELSE>
+<br /><h4 class="message"><MT_TRANS phrase="No roles could be found."></h4>
+</TMPL_IF>
+
+</div>
+
+</div>
+
+<TMPL_INCLUDE NAME="footer.tmpl">

@@ -1,0 +1,165 @@
+<TMPL_INCLUDE NAME="header.tmpl">
+
+<script type="text/javascript">
+<!--
+function validate (f) {
+    if (f.default_site_url.value && !is_valid_url(f.default_site_url.value)){
+        alert('<MT_TRANS phrase="You must set a valid Default Site URL." escape="singlequotes">');
+        return false;
+    } else if (f.default_site_root.value && !is_valid_path(f.default_site_root.value)) {
+        alert('<MT_TRANS phrase="You must set a valid Default Site Root." escape="singlequotes">');
+        return false;
+    }
+    return true;
+}
+function is_valid_url(url_){
+    return url_.match( /^https?:\/\/[A-Za-z0-9!$%()=_.:,;@~-]+/ );
+}
+function is_valid_path(path_){
+    for(i = 0; i < path_.length; i++){
+        var buf = escape(path_.substr(i, 1));
+        if (buf.match(/^%u.*/)){
+            return false;
+        }
+        if (buf.match(/(%.{2}){2}?/)){
+        	return false;
+        }
+    }
+    return true;
+}
+-->
+</script>
+
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="System-wide">:</span> <MT_TRANS phrase="General Settings"></h2>
+
+<p class="page-desc"><MT_TRANS phrase="This screen allows you to set system-wide new user defaults."></p>
+
+<div class="tabs">
+<ul>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=cfg_system"><MT_TRANS phrase="General"></a></li>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=cfg_system_feedback"><MT_TRANS phrase="Feedback"></a></li>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_plugins"><MT_TRANS phrase="Plugins"></a></li>
+</ul>
+</div>
+
+<TMPL_IF NAME=ERROR>
+<p class="error-message"><TMPL_VAR NAME=ERROR></p>
+</TMPL_IF>
+
+<TMPL_IF NAME=SAVED>
+<div class="message"><MT_TRANS phrase="Your settings have been saved."> </div>
+</TMPL_IF>
+
+<form action="<TMPL_VAR NAME=SCRIPT_URL>" method="post" onsubmit="return validate(this);">
+<input type="hidden" name="__mode" value="save_cfg_system_general" />
+<input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+
+<fieldset>
+
+<h3><MT_TRANS phrase="New User Defaults"></h3>
+
+<div class="inner">
+
+
+<div class="setting">
+<div class="label"><label for="default_site_url"><MT_TRANS phrase="Default Site URL">:</label></div>
+<div class="field">
+<input type="text" id="default_site_url" name="default_site_url" value="<TMPL_VAR NAME=DEFAULT_SITE_URL ESCAPE=HTML>" size="50" <TMPL_IF NAME=DEFAULT_SITE_URL_READONLY>disabled="disabled"</TMPL_IF> />
+<p><MT_TRANS phrase="Define the default site URL for new weblogs. This URL will be appended with a unique identifier for the weblog."></p>
+</div>
+</div>
+
+
+<div class="setting">
+<div class="label"><label for="default_site_root"><MT_TRANS phrase="Default Site Root">:</label></div>
+<div class="field">
+<input type="text" id="default_site_root" name="default_site_root" value="<TMPL_VAR NAME=DEFAULT_SITE_ROOT ESCAPE=HTML>" size="50" <TMPL_IF NAME=DEFAULT_SITE_ROOT_READONLY>disabled="disabled"</TMPL_IF> />
+<p><MT_TRANS phrase="Define the default site root for new weblogs. This path will be appended with a unique identifier for the weblog."></p>
+</div>
+</div>
+
+
+<div class="setting">
+<div class="label"><label for="default_language"><MT_TRANS phrase="Default User Language">:</label></div>
+<div class="field">
+<ul>
+<li><select id="default_language" name="default_language" size="1" <TMPL_IF NAME=DEFAULT_LANGUAGE_READONLY>disabled="disabled"</TMPL_IF>>
+<TMPL_LOOP NAME=LANGUAGES>
+<option value="<TMPL_VAR NAME=L_TAG>" <TMPL_IF NAME=L_SELECTED>selected="selected"</TMPL_IF>><TMPL_VAR NAME=L_NAME ESCAPE=HTML></option>
+</TMPL_LOOP>
+</select>
+</li>
+</ul>
+<p><MT_TRANS phrase="Define the default language to apply to all new users."></p>
+</div>
+</div>
+
+
+<div class="setting">
+<div class="label"><label for="default_time_zone"><MT_TRANS phrase="Default Timezone:"></label></div>
+<div class="field">
+<select name="default_time_zone" id="default_time_zone" <TMPL_IF NAME=DEFAULT_TIME_ZONE_READONLY>disabled="disabled"</TMPL_IF>>
+<TMPL_IF NAME=SERVER_OFFSET_><option value=""><MT_TRANS phrase="Time zone not selected"></option></TMPL_IF>
+<option value="13"<TMPL_IF NAME=SERVER_OFFSET_13> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+13 (New Zealand Daylight Savings Time)"></option>
+<option value="12"<TMPL_IF NAME=SERVER_OFFSET_12> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+12 (International Date Line East)"></option>
+<option value="11"<TMPL_IF NAME=SERVER_OFFSET_11> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+11"></option>
+<option value="10"<TMPL_IF NAME=SERVER_OFFSET_10> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+10 (East Australian Time)"></option>
+<option value="9.5"<TMPL_IF NAME=SERVER_OFFSET_9_5> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+9.5 (Central Australian Time)"></option>
+<option value="9"<TMPL_IF NAME=SERVER_OFFSET_9> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+9 (Japan Time)"></option>
+<option value="8"<TMPL_IF NAME=SERVER_OFFSET_8> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+8 (China Coast Time)"></option>
+<option value="7"<TMPL_IF NAME=SERVER_OFFSET_7> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+7 (West Australian Time)"></option>
+<option value="6.5"<TMPL_IF NAME=SERVER_OFFSET_6_5> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+6.5 (North Sumatra)"></option>
+<option value="6"<TMPL_IF NAME=SERVER_OFFSET_6> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+6 (Russian Federation Zone 5)"></option>
+<option value="5.5"<TMPL_IF NAME=SERVER_OFFSET_5_5> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+5.5 (Indian)"></option>
+<option value="5"<TMPL_IF NAME=SERVER_OFFSET_5> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+5 (Russian Federation Zone 4)"></option>
+<option value="4"<TMPL_IF NAME=SERVER_OFFSET_4> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+4 (Russian Federation Zone 3)"></option>
+<option value="3.5"<TMPL_IF NAME=SERVER_OFFSET_3_5> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+3.5 (Iran)"></option>
+<option value="3"<TMPL_IF NAME=SERVER_OFFSET_3> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+3 (Baghdad Time/Moscow Time)"></option>
+<option value="2"<TMPL_IF NAME=SERVER_OFFSET_2> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+2 (Eastern Europe Time)"></option>
+<option value="1"<TMPL_IF NAME=SERVER_OFFSET_1> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+1 (Central European Time)"></option>
+<option value="0"<TMPL_IF NAME=SERVER_OFFSET_0> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC+0 (Universal Time Coordinated)"></option>
+<option value="-1"<TMPL_IF NAME=SERVER_OFFSET__1> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-1 (West Africa Time)"></option>
+<option value="-2"<TMPL_IF NAME=SERVER_OFFSET__2> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-2 (Azores Time)"></option>
+<option value="-3"<TMPL_IF NAME=SERVER_OFFSET__3> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-3 (Atlantic Time)"></option>
+<option value="-3.5"<TMPL_IF NAME=SERVER_OFFSET__3_5> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-3.5 (Newfoundland)"></option>
+<option value="-4"<TMPL_IF NAME=SERVER_OFFSET__4> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-4 (Atlantic Time)"></option>
+<option value="-5"<TMPL_IF NAME=SERVER_OFFSET__5> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-5 (Eastern Time)"></option>
+<option value="-6"<TMPL_IF NAME=SERVER_OFFSET__6> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-6 (Central Time)"></option>
+<option value="-7"<TMPL_IF NAME=SERVER_OFFSET__7> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-7 (Mountain Time)"></option>
+<option value="-8"<TMPL_IF NAME=SERVER_OFFSET__8> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-8 (Pacific Time)"></option>
+<option value="-9"<TMPL_IF NAME=SERVER_OFFSET__9> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-9 (Alaskan Time)"></option>
+<option value="-10"<TMPL_IF NAME=SERVER_OFFSET__10> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-10 (Aleutians-Hawaii Time)"></option>
+<option value="-11"<TMPL_IF NAME=SERVER_OFFSET__11> selected="selected"</TMPL_IF>><MT_TRANS phrase="UTC-11 (Nome Time)"></option>
+</select>
+<p><MT_TRANS phrase="Select your timezone from the pulldown menu.">
+<a href="#" onclick="return openManual('blog_settings_general', 'blog_timezone')" class="help">?</a></p>
+</div>
+</div>
+
+
+<div class="setting">
+    <div class="label">
+        <label for="tag_delim"><MT_TRANS phrase="Default Tag Delimiter:"></label>
+    </div>
+    <div class="field">
+		<select name="default_user_tag_delimiter" id="tag_delim" <TMPL_IF NAME=DEFAULT_USER_TAG_DELIMITER_READONLY>disabled="disabled"</TMPL_IF>>
+			<option value="comma"<TMPL_IF NAME=TAG_DELIM_COMMA> selected="selected"</TMPL_IF>><MT_TRANS phrase="Comma"></option>
+			<option value="space"<TMPL_IF NAME=TAG_DELIM_SPACE> selected="selected"</TMPL_IF>><MT_TRANS phrase="Space"></option>
+		 </select>
+        <p><MT_TRANS phrase="Define the default delimiter for entering tags."></p>
+    </div>
+</div>
+
+
+</div>
+
+</fieldset>
+
+<div style="text-align: center;">
+<input type="submit" value="<MT_TRANS phrase="Save Changes">" title="<MT_TRANS phrase="Save changes (s)">" accesskey="s" />
+</div>
+
+</form>
+
+<TMPL_INCLUDE NAME="footer.tmpl">

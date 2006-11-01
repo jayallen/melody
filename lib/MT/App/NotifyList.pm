@@ -189,3 +189,63 @@ sub unsubscribe {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::App::NotifyList - Provide Movable Type email notification support
+
+=head1 SYNOPSIS
+
+  use MT::App::NotifyList;
+  $app->init(@args)
+  $app->subscribe()
+  $notification = $app->lookup($blog_id, $email);
+  $app->confirm()
+  $app->unsubscribe()
+
+=head1 DESCRIPTION
+
+An C<MT::App::NotifyList> object represents... TODO
+
+=head1 METHODS
+
+=head2 init
+
+  $app->init(@args)
+
+This method is used to construct an C<MT::App::NotifyList> object.
+It passes any given arguments onto the C<SUPER::init> method and
+registers the methods defined in this package.
+
+=head2 subscribe
+
+  $app->subscribe()
+
+This method verifies and adds an email address to the list of
+notifications.
+
+=head2 lookup
+
+  $notification = $app->lookup($blog_id, $email);
+
+This method returns the notification object of the given blog that
+contains the given email.  If no email is found in the blod, I<undef>
+is returned.
+
+=head2 confirm
+
+  $app->confirm()
+
+This method confirms that an email address was added to the
+blog notification list and then redirects to that blog.
+
+=head2 unsubscribe
+
+  $app->unsubscribe()
+
+This method removes an email address from the notification.
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.

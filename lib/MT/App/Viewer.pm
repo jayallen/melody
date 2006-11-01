@@ -230,3 +230,26 @@ sub _view_section {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::App::Viewer
+
+=head1 METHODS
+
+=head2 $app->init()
+
+This method is called automatically during construction. It calls
+L<MT::App/init>, regsters the C<view> method and sets the object's
+I<default_mode>.
+
+=head2 $app->view()
+
+This generic method views a template interpolated in the appropriate context.
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

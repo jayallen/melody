@@ -259,6 +259,15 @@ width and height will be scaled equally.
 
 =back
 
+=head2 $img->get_dimensions(%arg)
+
+This utility method returns a width and height value pair after applying
+the given arguments. Valid arguments are the same as the L<scale> method.
+If 'Width' is given, a proportionate height will be calculated. If a
+'Height' is given, the width will be calculated. If 'Scale' is given
+the height and width will be calculated based on that scale (a value
+between 1 to 100).
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see the I<MT> manpage for author, copyright, and license information.

@@ -180,3 +180,18 @@ sub decode_entities {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::Plugin::JunkFilter
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

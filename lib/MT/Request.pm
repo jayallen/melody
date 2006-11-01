@@ -62,6 +62,10 @@ for the lifetime of the application).
 
 Returns the I<MT::Request> singleton.
 
+=head2 new
+
+This is an internal method used by C<MT::Request-E<gt>instance>.
+
 =head2 $r->cache($key [, $value ])
 
 Given a key I<$key>, returns the cached value of the key in the cache held by
@@ -73,8 +77,17 @@ an object, etc.
 
 C<stash> is an alias to C<cache>.
 
+=head2 $r->finish()
+
+This method sets the given request (I<$r>) to C<undef>.
+
+=head2 $r->reset()
+
+This method sets the request object's I<__stash> attribute to C<{}>
+(nothing).
+
 =head1 AUTHOR & COPYRIGHT
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

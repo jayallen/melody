@@ -140,3 +140,20 @@ sub templates {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::DefaultTemplates
+
+=head1 METHODS
+
+=head2 templates()
+
+Return the list of the templates in the WeblogTemplatesPath.
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

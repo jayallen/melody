@@ -119,7 +119,7 @@ sub init {
         ['IncludeBlogs'],
         ['DefaultTemplate', { Default => 'default.tmpl' }],
         ['Type', { Default => 'straight' }],
-        ['MaxResults', { Default => '9999999' }],
+        ['MaxResults', { Default => '100' }],
         ['SearchCutoff', { Default => '9999999' }],
         ['CommentSearchCutoff', { Default => '30' }],
         ['AltTemplate', { Type => 'ARRAY', Default => 'feed results_feed.tmpl' }],
@@ -156,7 +156,7 @@ sub init {
         ['ShowIPInformation', { Default => 0 }],
         ['AllowComments', {Default => 1}],
         ['AllowPings', {Default => 1}],
-        ['HelpURL', {Default => '__HELP_URL__' . MT->version_number . '/'}],
+        ['HelpURL', {Default => '__HELP_URL__' . MT->product_version . '/'}],
         ['UsePlugins', {Default => 1}],
         ['PluginSwitch', {Type => 'HASH'}],
         ['PluginSchemaVersion', {Type => 'HASH'}],
@@ -184,9 +184,11 @@ sub init {
                                Default => {
                                    Type => 'Basic',   # Basic|All|Custom
                                    Button => 'Below', # Above|Below|Both
+                                   Height => 162,     # textarea height
                                }
                              }],
         ['DeleteFilesAtRebuild', { Default => 0 } ],
+        ['MaxTagAutoCompletionItems', { Default => 10000 } ],
     ]);
 }
 
@@ -214,17 +216,28 @@ sub paths {
     wantarray ? @{$mgr->{__paths}} : $mgr->{__paths};
 }
 
+my $depth = 0;
+my $max_depth = 5;
 sub get {
     my $mgr = shift;
     my $var = shift;
     my $val;
-    if (defined($val = $mgr->{__var}{$var})) {
+    if (defined(my $alias = $mgr->{__settings}{$var}{Alias})) {
+        if ($max_depth < $depth) {
+            die MT->translate('Alias for [_1] is looping in the configuration.', $alias);
+        }
+        $depth++;
+        $mgr->get($alias);
+    } elsif (defined($val = $mgr->{__var}{$var})) {
+        $depth = 0;
         wantarray && ($mgr->{__settings}{$var}{Type}||'') eq 'ARRAY' ?
             @$val : ((ref $val) eq 'ARRAY' && @$val ? $val->[0] : $val);
     } elsif (defined($val = $mgr->{__dbvar}{$var})) {
+        $depth = 0;
         wantarray && ($mgr->{__settings}{$var}{Type}||'') eq 'ARRAY' ?
             @$val : ((ref $val) eq 'ARRAY' && @$val ? $val->[0] : $val);
     } else {
+        $depth = 0;
         $mgr->default($var);
     }
 }
@@ -258,7 +271,14 @@ sub set {
     my($var, $val, $db_flag) = @_;
     $db_flag ||= exists $mgr->{__dbvar}{$var};
     my $set = $db_flag ? '__dbvar' : '__var';
-    if (my $type = $mgr->{__settings}{$var}{Type}) {
+    if (defined(my $alias = $mgr->{__settings}{$var}{Alias})) {
+        if ($max_depth < $depth) {
+            die MT->translate('Alias for [_1] is looping in the configuration.', $alias);
+        }
+        $depth++;
+        $mgr->set($alias, $val, $db_flag);
+    } elsif (my $type = $mgr->{__settings}{$var}{Type}) {
+        $depth = 0;
         if ($type eq 'ARRAY') {
             if (ref $val eq 'ARRAY') {
                 $mgr->{$set}{$var} = $val;
@@ -280,8 +300,15 @@ sub set {
             $mgr->{$set}{$var} = $val;
         }
     } else {
+        $depth = 0;
         $mgr->{$set}{$var} = $val;
     }
+}
+
+sub is_readonly {
+    my $class = shift;
+    my ($var) = @_;
+    defined $class->instance->{__var}{$var} ? 1 : 0;
 }
 
 sub read_config {
@@ -334,7 +361,7 @@ sub read_config_file {
         my($var, $val) = $_ =~ /^\s*(\S+)\s+(.*)$/;
         return $class->error(MT->translate("Config directive [_1] without value at [_2] line [_3]", $var, $cfg_file, $line))
             unless defined($val) && $val ne '';
-        $val =~ s/\s*$//;
+        $val =~ s/\s*$// if defined($val);
         next unless $var && defined($val);
         #return $class->error(MT->translate(
         #    "[_1]:[_2]: variable '[_3]' not defined", $cfg_file, $., $var
@@ -360,8 +387,8 @@ sub read_config_db {
             chomp;
             next if !/\S/ || /^#/;
             my($var, $val) = $_ =~ /^\s*(\S+)\s+(.+)$/;
-            $val =~ s/\s*$//;
             next unless $var && defined($val);
+            $val =~ s/\s*$//;
             #return $class->error(MT->translate(
             #    "[_1]:[_2]: variable '[_3]' not defined", "database", $line, $var
             #)) unless exists $mgr->{__settings}->{$var};

@@ -83,6 +83,11 @@ C<10.100.100.3>, etc.
 
 =back
 
+=head2 ban_ip($ip, $blog_id)
+
+This convenience method can be used in place of setting the I<ip> and
+I<blog_id> individually.
+
 =head1 DATA LOOKUP
 
 In addition to numeric ID lookup, you can look up or sort records by any
@@ -97,8 +102,8 @@ I<MT::Object> for more information.
 
 =back
 
-=head1 AUTHOR & COPYRIGHTS
+=head1 AUTHOR & COPYRIGHT
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

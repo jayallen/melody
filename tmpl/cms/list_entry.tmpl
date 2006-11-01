@@ -134,7 +134,7 @@ TC.attachLoadEvent( init );
 <TMPL_UNLESS NAME=FILTER>
 <a href="#" onclick="toggleFilter()"><MT_TRANS phrase="None."></a> <span class="hint"><MT_TRANS phrase="(Showing all entries.)"></span>
 <TMPL_ELSE>
-<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only entries where [_1] is [_2]." params='<span id="filter-text-col"></span>%%<span id="filter-text-val"></span>'></a>
+<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only entries where [_1] is [_2]." params='<span id="filter-text-col">&nbsp;</span>%%<span id="filter-text-val"></span>'></a>
 </TMPL_UNLESS>
 
 </div>
@@ -164,7 +164,7 @@ TC.attachLoadEvent( init );
 <MT_TRANS phrase="entries where">
 <select id="filter-col" name="filter" onchange="setFilterCol(this.options[this.selectedIndex].value);enableFilterButton()">
 <option value="status"><MT_TRANS phrase="status"></option>
-<option value="author_id"><MT_TRANS phrase="author"></option>
+<option value="author_id"><MT_TRANS phrase="user"></option>
 <option value="exacttag"><MT_TRANS phrase="tag (exact match)"></option>
 <option value="normalizedtag"><MT_TRANS phrase="tag (fuzzy match)"></option>
 <TMPL_IF NAME=CATEGORY_LOOP>

@@ -6,6 +6,8 @@ Movable Type license.
 $Id$
 */
 
+var pager;
+var CMSScriptURI;
 var ScriptURI;
 var ScriptBaseURI;
 var StaticURI;
@@ -37,7 +39,7 @@ function restore () {
 }
 
 function doRebuild (blogID, otherParams) {
-    window.open(ScriptURI + '?__mode=rebuild_confirm&blog_id=' + blogID + '&' + otherParams, 'rebuild', 'width=400,height=250,resizable=yes');
+    window.open(CMSScriptURI + '?__mode=rebuild_confirm&blog_id=' + blogID + '&' + otherParams, 'rebuild', 'width=400,height=300,resizable=yes');
 }
 
 function openManual (section, page) {
@@ -46,6 +48,7 @@ function openManual (section, page) {
     return false;
 }
 
+// no longer used
 function gatherMarked (f, nameRestrict) {
     var url = '';
     var e = f.id;
@@ -53,15 +56,15 @@ function gatherMarked (f, nameRestrict) {
     if (e.value && e.checked)
         url += '&id=' + e.value;
     else
-	if (nameRestrict) {
-	    for (i=0; i<e.length; i++)
-        	if (e[i].checked && (e[i].name == nameRestrict))
+    if (nameRestrict) {
+        for (i=0; i<e.length; i++)
+            if (e[i].checked && (e[i].name == nameRestrict))
                     url += '&id=' + e[i].value;
-	} else {
-	    for (i=0; i<e.length; i++)
-        	if (e[i].checked)
+    } else {
+        for (i=0; i<e.length; i++)
+            if (e[i].checked)
                     url += '&id=' + e[i].value;
-	}
+    }
    return url;
 }
 
@@ -73,24 +76,24 @@ function countMarked (f, nameRestrict) {
     if (e.value && e.checked)
         count++;
     else
-	if (nameRestrict) {
-	    for (i=0; i<e.length; i++)
-        	if (e[i].checked && (e[i].name == nameRestrict))
+    if (nameRestrict) {
+        for (i=0; i<e.length; i++)
+            if (e[i].checked && (e[i].name == nameRestrict))
                     count++;
-	} else {
-	    for (i=0; i<e.length; i++)
-        	if (e[i].checked)
+    } else {
+        for (i=0; i<e.length; i++)
+            if (e[i].checked)
                     count++;
-	}
+    }
    return count;
 }
 
+//For make-js script
+//trans('to delete');
+//trans('to remove');
+//trans('to enable');
+//trans('to disable');
 function doRemoveItems (f, singular, plural, nameRestrict, args) {
-    var count = countMarked(f, nameRestrict);
-    if (!count) {
-        alert(trans('You did not select any [_1] to delete.', plural));
-        return false;
-    }
     var toRemove = "";
     for (var i = 0; i < f.childNodes.length; i++) {
         if (f.childNodes[i].name == '_type') {
@@ -98,17 +101,56 @@ function doRemoveItems (f, singular, plural, nameRestrict, args) {
             break;
         }
     }
-    if(toRemove == 'author') {
-        singularMessage = trans('Deleting an author is an irrevocable action which creates orphans of the author\'s entries.  If you wish to retire an author or remove their access to the system, removing all of their permissions is the recommended course of action.  Are you sure you want to delete this author?');
-        pluralMessage = trans('Deleting an author is an irrevocable action which creates orphans of the author\'s entries.  If you wish to retire an author or remove their access to the system, removing all of their permissions is the recommended course of action.  Are you sure you want to delete the [_1] selected authors?');
+    var mode = 'delete';
+    var trans_mode = trans('delete');
+    if (toRemove == 'association') {
+        mode = 'remove';
+        trans_mode = trans('remove');
+    }
+    var count = countMarked(f, nameRestrict);
+    if (!count) {
+        alert(trans('You did not select any [_1] to [_2].', plural, trans_mode));
+        return false;
+    }
+    if (toRemove == 'role') {
+        singularMessage = trans('Are you certain you want to remove this role? By doing so you will be taking away the permissions currently assigned to any users associated with this role.');
+        pluralMessage = trans('Are you certain you want to remove these [_1] roles? By doing so you will be taking away the permissions currently assigned to any users associated with these roles.');
     } else {
-        singularMessage = trans('Are you sure you want to delete this [_1]?');
-        pluralMessage = trans('Are you sure you want to delete the [_1] selected [_2]?');
+        singularMessage = trans('Are you sure you want to [_2] this [_1]?');
+        pluralMessage = trans('Are you sure you want to [_3] the [_1] selected [_2]?');
     } 
 
-    if (confirm(count == 1 ? trans(singularMessage, singular) : trans(pluralMessage, count, plural))) {
-        return doForMarkedInThisWindow(f, singular, plural, nameRestrict, 'delete', args, trans('to delete'));
+    if (confirm(count == 1 ? trans(singularMessage, singular, trans_mode) : trans(pluralMessage, count, plural, trans_mode))) {
+        return doForMarkedInThisWindow(f, singular, plural, nameRestrict, 'delete', args, trans('to ' + mode));
     }
+}
+
+function setObjectStatus (f, singular, plural, new_status, nameRestrict, args) {
+    var count = countMarked(f, nameRestrict);
+    var status_mode = 'enable';
+    var named_status = trans('enable');
+    if (new_status == 0) {
+        status_mode = 'disable';
+        named_status = trans('disable');
+    }
+    if (!count) {
+        alert(trans('You did not select any [_1] to [_2].', plural, named_status));
+        return false;
+    }
+    var toSet = "";
+    for (var i = 0; i < f.childNodes.length; i++) {
+        if (f.childNodes[i].name == '_type') {
+            toSet = f.childNodes[i].value;
+            break;
+        }
+    }
+    if (toSet) {
+        singularMessage = trans('Are you sure you want to [_2] this [_1]?');
+        pluralMessage = trans('Are you sure you want to [_3] the [_1] selected [_2]?');
+        if (confirm(count == 1 ? trans(singularMessage, singular, named_status) : trans(pluralMessage, count, plural, named_status))) {
+            return doForMarkedInThisWindow(f, singular, plural, nameRestrict, status_mode + '_object', args, trans('to ' + status_mode));
+        }
+    } 
 }
 
 function doForMarkedInThisWindow (f, singular, plural, nameRestrict, 
@@ -118,13 +160,20 @@ function doForMarkedInThisWindow (f, singular, plural, nameRestrict,
         alert(trans('You did not select any [_1] [_2].', plural, phrase));
         return false;
     }
+    f.target = "_top";
     if (f.elements['itemset_action_input'])
         f.elements['itemset_action_input'].value = '';
     if (args) {
         var opt;
         var input;
         if (opt = itemset_options[args['action_name']]) {
-            if (opt['input']) {
+            if (opt['min'] && (count < opt['min'])) {
+                alert(trans('You can only act upon a minimum of [_1] [_2].', opt['min'], plural));
+                return false;
+            } else if (opt['max'] && (count > opt['max'])) {
+                alert(trans('You can only act upon a maximum of [_1] [_2].', opt['max'], plural));
+                return false;
+            } else if (opt['input']) {
                 if (input = prompt(opt['input'])) {
                     f.elements['itemset_action_input'].value = input;
                 } else {
@@ -134,6 +183,11 @@ function doForMarkedInThisWindow (f, singular, plural, nameRestrict,
                 if (!confirm(opt['continue_prompt'])) {
                     return false;
                 }
+            }
+            if (opt['dialog']) {
+                f.target = "dialog_iframe";
+                show("dialog-container");
+                window.onkeypress = dialogKeyPress;
             }
         }
         for (var arg in args) {
@@ -194,20 +248,82 @@ function doItemsAreNotJunk (f, type, plural, nameRestrict) {
         'not_junk', {}, trans('to remove "junk" status'));
 }
 
+// no longer used
 function doRemoveItem (f, id, type) {
     var url = ScriptURI;
     url += '?__mode=delete_confirm&_type=' + type + '&id=' + id + '&return_args=' + (f ? escape(f['return_args'].value) : '');
     window.open(url, 'confirm_delete', 'width=370,height=250,scrollbars=yes');
 }
 
-function getByID (n) {
-    var d = window.document;
+function dialogKeyPress(e) {
+    if (e.keyCode == 27) {
+        // escape key...
+        window.onkeypress = null;
+        closeDialog();
+    }
+}
+
+function openDialog(f, mode, params) {
+    var url = ScriptURI;
+    url += '?__mode=' + mode;
+    if (params) url += '&' + params;
+    show("dialog-container");
+    // handle escape key for closing modal dialog
+    window.onkeypress = dialogKeyPress;
+    openDialogUrl(url);
+    return false;
+}
+
+function openDialogUrl(url) {
+    var iframe = getByID("dialog-iframe");
+    var frame_d = iframe.contentDocument;
+    if (!frame_d) {
+        // Sometimes the contentWindow is unavailable because we've just
+        // unhidden the container div that holds the iframe. If this happens
+        // we have to wait for the contentWindow object to be created
+        // before we can access the document within. This may take an extra
+        // try using a setTimeout on this window.
+        if (iframe.contentWindow)
+            frame_d = iframe.contentWindow.document || iframe.document;
+    }
+    if (frame_d) {
+        frame_d.open();
+        frame_d.write("<html><head><style type=\"text/css\">\n"
+            + "#dialog-indicator {\nposition: relative;\ntop: 200px;\n"
+            + "background: url(" + StaticURI + "images/indicator.gif) "
+            + "no-repeat;\nwidth: 66px;\nheight: 66px;\nmargin: 0 auto;"
+            + "\n}\n</style><script type=\"text/javascript\">\n"
+            + "function init() {\ndocument.location = \"" + url + "\";\n}\n"
+            + "if (window.navigator.userAgent.match(/ AppleWebKit\\//))\n"
+            + "window.setTimeout(\"init()\", 1500);\n"
+            + "else window.onload = init;\n</scr"+"ipt></head><body>"
+            + "<div align=\"center\"><div id=\"dialog-indicator\"></div>"
+            + "</div></body></html>");
+        frame_d.close();
+    } else {
+        window.setTimeout("openDialogUrl('" + url + "')", 100);
+    }
+}
+
+function closeDialog(url) {
+    var w = window;
+    while (w.parent && (w.parent != w))
+        w = w.parent;
+    hide("dialog-container", w.document);
+    if (url)
+        w.location = url;
+    return false;
+}
+
+function getByID(n, d) {
+    if (!d) d = document;
     if (d.getElementById)
         return d.getElementById(n);
     else if (d.all)
         return d.all[n];
 }
 
+// no longer used
 var theForm;
 var requestSubmitted = false;
 function disableButton (e) {
@@ -221,11 +337,13 @@ function disableButton (e) {
     }
 }
 
+// no longer used
 function submitIt () {
     theForm.submit();
     return false;
 }
 
+// no longer used
 function checkAndSubmit (f) {
     if (requestSubmitted == true) {
         return false;
@@ -323,6 +441,7 @@ function insertLink (e, isMail) {
     return false;
 }
 
+// no longer used
 function doCheckAll (f, v) {
     var e = f.id;
     if (e.value)
@@ -332,8 +451,9 @@ function doCheckAll (f, v) {
             e[i].checked = v;
 }
 
+// no longer used
 function doCheckboxCheckAll (t) {
-	var v = t.checked;
+    var v = t.checked;
     var e = t.form.id;
     if (e.value)
         e.checked = v;
@@ -350,6 +470,7 @@ function execFilter(f) {
     } else {
         var filter_col = f['filter-col'].options[f['filter-col'].selectedIndex].value;
         var opts = f[filter_col+'-val'].options;
+        var filter_val = '';
         if (opts) {
             filter_val = opts[f[filter_col+'-val'].selectedIndex].value;
         } else if (f[filter_col+'-val'].value) {
@@ -395,14 +516,14 @@ function toggleDisplayOptions() {
 }
 
 function toggleActive(el) {
-	var opt = TC.elementOrId(el);
-	if (opt) {
-		if (TC.hasClassName(opt, 'active'))
-			TC.removeClassName(opt, 'active');
-		else
-			TC.addClassName(opt, 'active');
-	}
-	return false;
+    var opt = TC.elementOrId(el);
+    if (opt) {
+        if (TC.hasClassName(opt, 'active'))
+            TC.removeClassName(opt, 'active');
+        else
+            TC.addClassName(opt, 'active');
+    }
+    return false;
 }
 
 function tabToggle(selectedTab, tabs) {
@@ -420,69 +541,69 @@ function tabToggle(selectedTab, tabs) {
             }
         }
     }
-	return false;
+    return false;
 }
 
-function show(id) {
-    var el = getByID(id);
+function show(id, d) {
+    var el = getByID(id, d);
     if (!el) return;
     el.style.display = 'block';
 }
 
-function hide(id) {
-    var el = getByID(id);
+function hide(id, d) {
+    var el = getByID(id, d);
     if (!el) return;
     el.style.display = 'none';
 }
 
 function toggleSubPrefs(c) {
-	var div = TC.elementOrId((c.name || c.id)+"-prefs") || TC.elementOrId((c.name || c.id)+'_prefs');
-	if (div) {
-		if (c.type) {
-			var on = c.type == 'checkbox' ? c.checked : c.value != 0;
-			div.style.display = on ? "block" : "none";
-		} else {
-			var on = div.style.display && div.style.display != "none";
-			div.style.display = on ? "none" : "block";
-		}
-	}
-	return false;
+    var div = TC.elementOrId((c.name || c.id)+"-prefs") || TC.elementOrId((c.name || c.id)+'_prefs');
+    if (div) {
+        if (c.type) {
+            var on = c.type == 'checkbox' ? c.checked : c.value != 0;
+            div.style.display = on ? "block" : "none";
+        } else {
+            var on = div.style.display && div.style.display != "none";
+            div.style.display = on ? "none" : "block";
+        }
+    }
+    return false;
 }
 
 function toggleAdvancedPrefs(evt, c) {
-	evt = evt || window.event;
-	var id;
-	var obj;
-	if (!c || (typeof c != 'string')) {
-		c = c || evt.target || evt.srcElement;
-		id = c.id || c.name;
-		obj = c;
-	} else {
-		id = c;
-	}
-	var div = getByID( id + '-advanced');
-	if (div) {
-		if (obj) {
-			var shiftKey = evt ? evt.shiftKey : undefined;
-        		if (evt && shiftKey && obj.type == 'checkbox')
-				obj.checked = true;
-			var on = obj.type == 'checkbox' ? obj.checked : obj.value != 0;
-			if (on && shiftKey) {
-				if (div.style.display == "block")
-					div.style.display = "none";
-				else
-					div.style.display = "block";
-			} else {
-				div.style.display = "none";
-			}
-		} else {
-			if (div.style.display == "block")
-				div.style.display = "none";
-			else
-				div.style.display = "block";
-		}
-	}
-	return false;
+    evt = evt || window.event;
+    var id;
+    var obj;
+    if (!c || (typeof c != 'string')) {
+        c = c || evt.target || evt.srcElement;
+        id = c.id || c.name;
+        obj = c;
+    } else {
+        id = c;
+    }
+    var div = getByID( id + '-advanced');
+    if (div) {
+        if (obj) {
+            var shiftKey = evt ? evt.shiftKey : undefined;
+                if (evt && shiftKey && obj.type == 'checkbox')
+                obj.checked = true;
+            var on = obj.type == 'checkbox' ? obj.checked : obj.value != 0;
+            if (on && shiftKey) {
+                if (div.style.display == "block")
+                    div.style.display = "none";
+                else
+                    div.style.display = "block";
+            } else {
+                div.style.display = "none";
+            }
+        } else {
+            if (div.style.display == "block")
+                div.style.display = "none";
+            else
+                div.style.display = "block";
+        }
+    }
+    return false;
 }
 
 function trans(str) {
@@ -760,3 +881,346 @@ function dirify (s) {
 function setElementValue(domID, newVal) {
     getByID(domID).value = newVal;
 }
+
+/* pager and datasource */
+
+/***
+ * Datasource class
+ * A class for navigating and displaying data from an AJAX datasource.
+ * Methods:
+ *   constructor(el, datatype): Creates a new datasource using DOM
+ *     element 'el' as a container for the data (table rows typically)
+ *     and datatype is used to communicate the '_type' parameter to
+ *     the server.
+ *   setPager(pager): Sets a Pager class object which is refreshed
+ *     upon receiving new data.
+ *   search(string): Invokes a search on the datasource.
+ *   navigate(offset): Used to navigate to a particular offset within
+ *     the dataset.
+ */
+Datasource = new Class(Object, {
+    init: function(el, datatype) {
+        // this.id = id;
+        // this.document = doc || document;
+        this.element = TC.elementOrId(el);
+        this.searching = false;
+        this.navigating = false;
+        this.type = datatype;
+        this.onUpdate = null;
+    },
+    setPager: function(pager) {
+        this.pager = pager;
+        pager.datasource = this;
+        pager.render();
+    },
+    search: function(str) {
+        if (this.searching) return;
+
+        var doc = TC.getOwnerDocument(this.element);
+        var args = doc.location.search;
+        args = args.replace(/^\?/, '');
+        args = args.replace(/&?offset=\d+/, '');
+        args = 'search=' + escape(str) + (args ? '&' + args : '') + '&json=1';
+        if (this.type) {
+            args = args.replace(/&?_type=\w+/, '');
+            args += '&_type=' + this.type;
+        }
+
+        this.searching = true;
+        if (this.pager)
+            this.pager.render();
+        var self = this;
+        TC.Client.call({
+            'load': function(c,r) { self.searched(r); },
+            'error': function() { alert("Error during search."); self.searched(null); },
+            'method': 'POST',
+            'uri': ScriptURI,
+            'arguments': args
+        });
+    },
+    searched: function(c) {
+        this.searching = false;
+        if (c) {
+            try {
+                data = eval('(' + c + ')');
+                this.update(data['html']);
+                if (this.pager)
+                    this.pager.setState({});
+            } catch (e) {
+                alert("Error in response: " + e);
+                if (this.pager)
+                    this.pager.render();
+            }
+        } else {
+            if (this.pager)
+                this.pager.render();
+        }
+    },
+    update: function(html) {
+        if (!this.element) return;
+        this.element.innerHTML = html;
+        this.updated();
+    },
+    updated: function() {
+        if (this.onUpdate) this.onUpdate(this);
+    },
+    navigate: function(offset) {
+        if (offset == null) return;
+        if (this.navigating) return;
+
+        var doc = TC.getOwnerDocument(this.element);
+        var args = doc.location.search;
+        args = args.replace(/^\?/, '');
+        //args = args.replace(/&?search=[^&]+/, '');
+        //args = args.replace(/&?do_search=1/, '');
+        args = args.replace(/&?offset=\d+/, '');
+        args = 'offset=' + offset + (args ? '&' + args : '') + '&json=1';
+        if (this.type) {
+            args = args.replace(/&?_type=\w+/, '');
+            args = args + '&_type=' + this.type;
+        }
+
+        this.navigating = true;
+        if (this.pager)
+            this.pager.render();
+        var self = this;
+        TC.Client.call({
+            'load': function(c,r) { self.navigated(r); },
+            'error': function() { alert("Error in request."); self.navigated(null); },
+            'method': 'POST',
+            'uri': ScriptURI,
+            'arguments': args
+        });
+        return false;
+    },
+    navigated: function(c) {
+        var data;
+        this.navigating = false;
+        if (c) {
+            try {
+                data = eval('(' + c + ')');
+                this.update(data['html']);
+                if (this.pager)
+                    this.pager.setState(data['pager']);
+            } catch (e) {
+                alert("Error in response: " + e);
+                if (this.pager)
+                    this.pager.render();
+            }
+        } else {
+            if (this.pager) this.pager.render();
+        }
+    }
+});
+
+/***
+ * Pager class
+ * Expects a 'state' object containing:
+ *   offset: offset into listing (10, means first row displayed is 11)
+ *   listTotal: total number of rows in dataset
+ *   rows: number of rows being displayed
+ *   chronological: boolean, whether listing is reverse-chronological
+ *     or not.
+ *  Methods:
+ *    constructor(el): constructs using DOM element el as a container
+ *    setDatasource(ds): used to assign a datasource object
+ *    setState(state): used to update state settings
+ *    previous: navigates datasource to previous page
+ *    next: navigates datasource to next page
+ *    first: navigates datasource to first page
+ *    last: navigates datasource to last page
+ *    previousOffset: calculates and returns offset for previous page
+ *    nextOffset: calculates and returns offset for next page
+ *    lastOffset: calculates and returns offset for 'last' page
+ *    render: refreshes the pagination controls
+ */
+Pager = new Class(Object, {
+    init: function(el) {
+        this.element = TC.elementOrId(el);
+        this.state = {};
+    },
+    setDatasource: function(ds) {
+        this.datasource = ds;
+        this.render();
+    },
+    setState: function(state) {
+        this.state = state;
+        this.render();
+    },
+    previous: function(e) {
+        this.navigate(this.previousOffset());
+        return TC.stopEvent(e || window.event);
+    },
+    navigate: function(offset) {
+        if (offset == null) return;
+        if (this.datasource)
+            return this.datasource.navigate(offset);
+        // traditional navigation...
+        var doc = TC.getOwnerDocument(this.element);
+        new_loc = doc.location.href;
+        new_loc = new_loc.replace(/&?offset=\d+/, '');
+        new_loc += '&offset=' + offset;
+        window.location = new_loc;
+        // window.setTimeout("window.location='" + new_loc + "';", 1);
+        return false;
+    },
+    previousOffset: function() {
+        if (this.state.offset > 0) {
+            var offset = this.state.offset - this.state.limit;
+            if (offset < 0)
+                offset = 0;
+            return offset;
+        }
+        return null;
+    },
+    nextOffset: function() {
+        if (this.state.listTotal) {
+            var listStart = (this.state.offset ? this.state.offset : 0) + 1;
+            var offset = (this.state.offset ? this.state.offset : 0) + this.state.rows;
+            if (offset >= this.state.listTotal) {
+                offset = null;
+            }
+            return offset;
+        }
+        return null;
+    },
+    lastOffset: function() {
+        var offset = 0;
+        if (this.state.listTotal) {
+            var listStart = (this.state.offset ? this.state.offset : 0) + 1;
+            var listEnd = (this.state.offset ? this.state.offset : 0) + this.state.rows;
+            if (listEnd >= this.state.listTotal) {
+                offset = null;
+            } else {
+                offset = this.state.listTotal - this.state.rows;
+                if (offset < listStart)
+                    offset = null;
+            }
+            return offset;
+        }
+        return null;
+    },
+    next: function(e) {
+        this.navigate(this.nextOffset());
+        return TC.stopEvent(e || window.event);
+    },
+    first: function(e) {
+        this.navigate(0);
+        return TC.stopEvent(e || window.event);
+    },
+    last: function(e) {
+        this.navigate(this.lastOffset());
+        return TC.stopEvent(e || window.event);
+    },
+    render: function() {
+        if (!this.element) return;
+
+        /*
+        This long method is concerned with creating the elements of
+        the pagination control. It refreshes the controls based on
+        the 'state' member of the Pager object. This control is
+        typically tied to a Datasource object. So the navigation
+        links of the control will influence the Datasource.
+        Likewise, upon navigating the Datasource, it will invoke
+        the pager to refresh when the data has been updated.
+
+        pager.rows (number of rows shown)
+        pager.listTotal (total number of rows in datasource)
+        pager.offset (offset currently used)
+        pager.chronological (boolean, whether the listing is chronological or not)
+        */
+        var html = '';
+        if (this.datasource && this.datasource.navigating) {
+            // TODO: change this to use a CSS class instead.
+            html = "<div>" + trans('Loading...') + " <img src=\"" + StaticURI + "images/indicator.white.gif\" height=\"10\" width=\"10\" alt=\"...\" /></div>";
+            this.element.innerHTML = html;
+        } else if ((this.state.rows != null) && (this.state.rows > 0)) {
+            this.element.innerHTML = '';
+            var listStart = (this.state.offset ? this.state.offset : 0) + 1;
+            var listEnd = (this.state.offset ? this.state.offset : 0) + this.state.rows;
+            var nextLinkName;
+            var prevLinkName;
+            if (this.state.chronological) {
+                nextLinkName = trans('Older');
+                prevLinkName = trans('Newer');
+            } else {
+                nextLinkName = trans('Next');
+                prevLinkName = trans('Previous');
+            }
+
+            var doc = TC.getOwnerDocument(this.element);
+            var self = this;
+            // pagination control structure
+            if (this.state.offset > 0) {
+                var link = doc.createElement('a');
+                link.href = 'javascript:void(0)';
+                link.onclick = function(e) { return self.first(e) };
+                link.innerHTML = '&lt;&lt;';
+                var nbsp = doc.createElement('span');
+                nbsp.innerHTML = '&nbsp;';
+                this.element.appendChild(link);
+                this.element.appendChild(nbsp)
+            } else {
+                var txt = doc.createElement('span');
+                txt.innerHTML = '&lt;&lt;&nbsp;';
+                this.element.appendChild(txt);
+            }
+            if (this.previousOffset() != null) {
+                var link = doc.createElement('a');
+                link.href = 'javascript:void(0)';
+                link.onclick = function(e) { return self.previous(e) };
+                link.innerHTML = '&lt;&nbsp;' + prevLinkName;
+                this.element.appendChild(link);
+            } else {
+                var txt = doc.createElement('span');
+                txt.innerHTML = '&lt;&nbsp;' + prevLinkName + '&nbsp;';
+                this.element.appendChild(txt);
+            }
+            var txt = doc.createElement('span');
+            txt.innerHTML = '&nbsp;';
+            this.element.appendChild(txt);
+            var span = doc.createElement('span');
+            span.className = 'current-page';
+            var showing = doc.createElement('span');
+            if (this.state.listTotal)
+                showing.innerHTML = trans('Showing: [_1] &ndash; [_2] of [_3]', listStart, listEnd, this.state.listTotal);
+            else
+                showing.innerHTML = trans('Showing: [_1] &ndash; [_2]', listStart, listEnd);
+            span.appendChild(showing);
+            this.element.appendChild(span);
+            var nbsp = doc.createElement('span');
+            nbsp.innerHTML = '&nbsp;';
+            this.element.appendChild(nbsp);
+            if (this.nextOffset() != null) {
+                var link = doc.createElement('a');
+                link.href = 'javascript:void(0)';
+                link.onclick = function(e) { return self.next(e) };
+                link.innerHTML = nextLinkName + ' &gt;';
+                var nbsp = doc.createElement('span');
+                nbsp.innerHTML = '&nbsp;';
+                this.element.appendChild(nbsp);
+                this.element.appendChild(link);
+            } else {
+                var txt = doc.createElement('span');
+                txt.innerHTML = '&nbsp;' + nextLinkName + '&nbsp;&gt;';
+                this.element.appendChild(txt);
+            }
+            if (this.lastOffset() != null) {
+                var link = doc.createElement('a');
+                link.href = 'javascript:void(0)';
+                link.onclick = function(e) { return self.last(e) };
+                link.innerHTML = '&gt;&gt;';
+                var nbsp = doc.createElement('span');
+                nbsp.innerHTML = '&nbsp;';
+                this.element.appendChild(nbsp);
+                this.element.appendChild(link);
+            } else {
+                var txt = doc.createElement('span');
+                txt.innerHTML = '&nbsp;&gt;&gt;';
+                this.element.appendChild(txt);
+            }
+        } else {
+            this.element.innerHTML = '';
+        }
+    }
+});

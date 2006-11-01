@@ -3,222 +3,195 @@
 <script type="text/javascript">
 <!--
 function passwordResetConfirm() {
-    if (confirm('<MT_TRANS phrase="_WARNING_PASSWORD_RESET_SINGLE" escape="singlequotes" params="<TMPL_VAR NAME=SELECTED_AUTHOR_NAME ESCAPE=JS>%%<TMPL_VAR NAME=EMAIL ESCAPE=JS>">')) {
+    if (confirm('<MT_TRANS phrase="_WARNING_PASSWORD_RESET_SINGLE" escape="singlequotes" params="<TMPL_VAR NAME=NAME ESCAPE=JS>%%<TMPL_VAR NAME=EMAIL ESCAPE=JS>">')) {
         document.forms['recover'].submit();
     }
 }
 
-function addToWeblog() {
-    var f = document.forms['perms'];
-    var fld = f['add_role_mask'];
-    if (fld.selectedIndex == -1) return;
+function toggleDisabled( state ){
+    if (state == 1) {
+        state = false;
+    } else if (state == 2) {
+        state = true;
+    }
+    var elements = TC.getElementsByClassName('state_change');
+    for (var i=0; i < elements.length; i++) {
+        elements[i].disabled = state;
+    }
+}
 
-    var id = fld.options[fld.selectedIndex].value;
-    var div = getByID("weblog-"+id);
-    if (div) {
-        div.style.display = "block";
-        fld.options[fld.selectedIndex] = null;
-        fld.selectedIndex = 0;
-        if (fld.options.length == 1) {
-            div = getByID("add-weblog");
-            if (div) div.style.display = "none";
+function togglePerms(c) {
+    var p = TC.getElementsByTagAndClassName("input", "subPerm", TC.elementOrId("permission-list"));
+    for (var i = 0; i < p.length; i++) {
+        var sc = p[i];
+        if (c.checked) {
+            sc.checked = true;
+            sc.disabled = true;
+        } else {
+            sc.checked = false;
+            sc.disabled = false;
         }
     }
 }
 
-function allPerms(name, check) {
-    var f = document.forms['perms'];
-    var flds = f[name];
-    for (var i = 0; i < flds.length; i++) {
-        flds[i].checked = check;
-        if (!flds[i].className.match(/administer_blog/))
-            flds[i].disabled = check;
-    }
-    return false;
+function init() {
+    var c = document.forms['profile'].elements['is_superuser'];
+    if (c.checked)
+        togglePerms(document.forms['profile'].elements['is_superuser']);
 }
 
-function getParentByClass(n, c) {
-    var result = n;
-    while (!result.className.match(c)
-           && result.nodeName && (result.nodeName != 'body')) {
-       result = result.parentNode;
-    }
-    return result;
-}
-
-function rectify(blogPermContainer, forcibly) {
-    var permCheckboxes = blogPermContainer.getElementsByTagName('input');
-    for (var i=0; i < permCheckboxes.length; i++) {
-        if (permCheckboxes[i].className.match(/administer_blog/)) {
-            isAdmin = permCheckboxes[i].checked;
-        }
-    }
-    for (var i=0; i < permCheckboxes.length; i++) {
-        if (!permCheckboxes[i].className.match(/administer_blog/)) {
-            if (isAdmin) {
-                permCheckboxes[i].disabled = true;
-                permCheckboxes[i].checked = true;
-            } else {
-                if (forcibly) {
-                    permCheckboxes[i].disabled = false;
-                    permCheckboxes[i].checked = false;
-                }
-            }
-        }
-    }
-}
-
-function handleClick(e) {
-    e = e || event;
-    var targ = e.target || e.srcElement;
-    if (!targ || !targ.nodeName) {
-        return;
-    }
-    if (targ.nodeName.toLowerCase() == 'label') {
-        if (targ.getAttribute('for'))
-            targ = getByID(targ.getAttribute('for'));
-        else {
-           var inputs = targ.getElementsByTagName('input');
-           targ = inputs[0];
-        }
-    }
-    if (targ.className.match(/administer_blog/)) {
-        blogPermContainer = getParentByClass(targ, 'blogcntr');
-        rectify(blogPermContainer, 1);
-    }
-}
-
-function rectifyAll() {
-    var containers = TC.getElementsByClassName('blogcntr');
-    for (var i=0; i < containers.length; i++)
-    {
-        rectify(containers[i]);
-    }
-}
-
-
-TC.attachLoadEvent( rectifyAll );
-
+TC.attachLoadEvent(init);
 //-->
 </script>
 
-<div id="edit-permissions" onclick="handleClick(event)">
+<div id="edit-author">
 
-<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=SELECTED_AUTHOR_NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Author Permissions">
+<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="User Profile">
 </h2>
 
-<TMPL_IF NAME=SELECTED_AUTHOR_NAME>
-<p><MT_TRANS phrase="_USAGE_PERMISSIONS_1" params="<TMPL_VAR NAME=SELECTED_AUTHOR_NAME ESCAPE=HTML>"> <a href="#" onclick="return openManual('author_permissions', 'index')" class="help">?</a></p>
+<TMPL_UNLESS NAME=STATUS_ENABLED>
+<h3 class="user_disabled"><MT_TRANS phrase="User Disabled"></h3>
+</TMPL_UNLESS> 
+
+<p><MT_TRANS phrase="_GENL_USAGE_PROFILE" params="<TMPL_VAR NAME=NAME ESCAPE=HTML>"></p>
 
 <div class="tabs">
 <ul>
-<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_profile&amp;author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>"><MT_TRANS phrase="Profile"></a></li>
-<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_permissions&amp;author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>"><MT_TRANS phrase="Permissions"></a></li>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author&amp;id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Profile"></a></li>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Associations"></a></li>
 </ul>
 </div>
 
 <TMPL_IF NAME=SAVED>
-<h4 class="message"><MT_TRANS phrase="Your changes to [_1]'s permissions have been saved." params="<TMPL_VAR NAME=SELECTED_AUTHOR_NAME ESCAPE=HTML>"></h4>
-</TMPL_IF>
-
-<TMPL_IF NAME=SAVED_ADD_TO_BLOG>
-<h4 class="message"><MT_TRANS phrase="[_1] has been successfully added to [_2]." params="<TMPL_VAR NAME=SELECTED_AUTHOR_NAME ESCAPE=HTML>%%<TMPL_VAR NAME=SAVED_ADD_TO_BLOG>"></h4>
-</TMPL_IF>
-
-<TMPL_ELSE>
-<p><MT_TRANS phrase="_USAGE_PERMISSIONS_3"></p>
+<h4 class="message"><MT_TRANS phrase="Your changes to [_1]'s profile have been saved." params="<TMPL_VAR NAME=NAME ESCAPE=HTML>"></h4>
 </TMPL_IF>
 
 <TMPL_IF NAME="RECOVERED">
 <h4 class="message"><MT_TRANS phrase="A new password has been generated and sent to the email address [_1]." params="<TMPL_VAR NAME=EMAIL ESCAPE=HTML>"></h4>
 </TMPL_IF>
 
-<TMPL_IF NAME=SELECTED_AUTHOR_NAME>
-<form name="perms" method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
-<input type="hidden" name="author_id" value="<TMPL_VAR NAME=EDIT_AUTHOR_ID>" />
-<input type="hidden" name="__mode" value="save_profile" />
+<TMPL_IF NAME=ERROR>
+<h4 class="error-message"><TMPL_VAR NAME=ERROR ESCAPE=HTML></h4>
+</TMPL_IF>
+
+<form name="profile" id="profile" method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
+<input type="hidden" name="__mode" value="save" />
+<input type="hidden" name="id" value="<TMPL_VAR NAME=ID>" />
+<input type="hidden" name="_type" value="author">
 <input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+
+<div class="flt-wrppr">
 
 <fieldset>
 
 <h3><MT_TRANS phrase="Profile"></h3>
 
+<div class="rightcol">
+<div class="box permission-box">
+<h4><MT_TRANS phrase="System Permissions"></h4>
 <div class="inner">
-
-<TMPL_IF NAME=TOPLEVEL_EDIT_ACCESS>
-	<div class="setting">
-		<div class="label"><label for="name"><MT_TRANS phrase="Username">:</label></div>
-		<div class="field">
-			<input name="name" id="name" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>" />
-			<p><MT_TRANS phrase="The name used by this author to login."></p>
-		</div>
-    </div>
-	<div class="setting">
-		<div class="label"><label for="nickname"><MT_TRANS phrase="Display Name">:</label></div>
-		<div class="field">
-			<input name="nickname" id="nickname" value="<TMPL_VAR NAME=NICKNAME ESCAPE=HTML>" />
-			<p><MT_TRANS phrase="The author's published name."></p>
-		</div>
-    </div>
-</TMPL_IF>
-<div class="setting">
-	<div class="label"><label for="email"><MT_TRANS phrase="Email Address">:</label></div>
-	<div class="field">
-		<input type="text" name="email" id="email" value="<TMPL_VAR NAME=EMAIL ESCAPE=HTML>" />
-		<p><MT_TRANS phrase="The author's email address."></p>
-	</div>
+<ul class="last" id="permission-list">
+<li><input name="is_superuser" id="is_superuser" type="checkbox"<TMPL_IF NAME=PERM_IS_SUPERUSER> checked="checked"</TMPL_IF> value="1" onclick="togglePerms(this)" <TMPL_IF NAME=ID><TMPL_UNLESS NAME=STATUS_ENABLED>disabled="disabled"</TMPL_UNLESS></TMPL_IF> /> <label for="is_superuser"><MT_TRANS phrase="System Administrator"></label></li>
+<li><input name="can_create_blog" id="can_create_blog" type="checkbox"<TMPL_IF NAME=PERM_CAN_CREATE_BLOG> checked="checked"</TMPL_IF> value="1"  class="subPerm" <TMPL_IF NAME=ID><TMPL_UNLESS NAME=STATUS_ENABLED>disabled="disabled"</TMPL_UNLESS></TMPL_IF> /> <label for="can_create_blog"><MT_TRANS phrase="Create Weblogs"></label></li>
+<li><input name="can_view_log" id="can_view_log" type="checkbox"<TMPL_IF NAME=PERM_CAN_VIEW_LOG> checked="checked"</TMPL_IF> value="1" class="subPerm" <TMPL_IF NAME=ID><TMPL_UNLESS NAME=STATUS_ENABLED>disabled="disabled"</TMPL_UNLESS></TMPL_IF> /> <label for="can_view_log"><MT_TRANS phrase="View Activity Log"></label></li>
+</ul>
 </div>
-<TMPL_IF NAME=TOPLEVEL_EDIT_ACCESS>
-	<div class="setting">
-	    <div class="label"><label for="url"><MT_TRANS phrase="Website URL:"></label></div>
-	    <div class="field">
-	    	<input name="url" id="url" value="<TMPL_VAR NAME=URL ESCAPE=HTML>" />
-	    	<p><MT_TRANS phrase="The URL of this author's website. (Optional)"></p>
-	    </div>
-    </div>
-	<div class="setting">
-	    <div class="label"><label for="preferred_language"><MT_TRANS phrase="Language:"></label></div>
-	    <div class="field">
-			<select name="preferred_language" id="preferred_language"><TMPL_LOOP NAME=LANGUAGES>
-				<option value="<TMPL_VAR NAME=L_TAG>"<TMPL_IF NAME=L_SELECTED> selected="selected"</TMPL_IF>><TMPL_VAR NAME=L_NAME></option></TMPL_LOOP>
-			</select>
-			<p><MT_TRANS phrase="The author's preferred language."></p>
-	    </div>
-    </div>
-</TMPL_IF>
+</div>
+</div>
 
+<div class="leftcol">
+
+<div class="setting">
+    <div class="label"><label for="name"><MT_TRANS phrase="Username"> (*):</label></div>
+    <div class="field">
+        <TMPL_IF NAME=CAN_EDIT_USERNAME>
+        <input name="name" id="name" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>"<TMPL_UNLESS NAME=IS_SUPERUSER> class="state_change"<TMPL_UNLESS NAME=STATUS_ENABLED> disabled="disabled"</TMPL_UNLESS></TMPL_UNLESS> />
+        <TMPL_IF NAME=STATUS_ENABLED><input type="hidden" name="name" id="name" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>" /></TMPL_IF>
+        <TMPL_ELSE>
+        <input name="name" id="name" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>" disabled="disabled" />
+        <input type="hidden" name="name" id="name" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>" />
+        </TMPL_IF>
+        <p><MT_TRANS phrase="The name used by this user to login."></p>
+    </div>
+</div>
+
+<div class="setting">
+    <div class="label"><label for="nickname"><MT_TRANS phrase="Display Name">:</label></div>
+    <div class="field">
+        <input name="nickname" id="nickname" value="<TMPL_VAR NAME=NICKNAME ESCAPE=HTML>"<TMPL_UNLESS NAME=IS_SUPERUSER> class="state_change"<TMPL_UNLESS NAME=STATUS_ENABLED> disabled="disabled"</TMPL_UNLESS></TMPL_UNLESS> />
+        <p><MT_TRANS phrase="The user's published name."></p>
+    </div>
+</div>
+
+<div class="setting">
+    <div class="label"><label for="status"><MT_TRANS phrase="Status">:</label></div>
+    <div class="field">
+        <select name="status" id="status" onchange="toggleDisabled(this.value);">
+            <option <TMPL_IF NAME=STATUS_ENABLED>selected="selected"</TMPL_IF> value="1"><MT_TRANS phrase="_USER_ENABLED"></option>
+            <option <TMPL_UNLESS NAME=STATUS_ENABLED>selected="selected"</TMPL_UNLESS> value="2"><MT_TRANS phrase="_USER_DISABLED"></option>
+        </select>
+        <p><MT_TRANS phrase="Status of user in the system. Disabling a user removes their access to the system but preserves their content and history."></p>
+    </div>
+</div>
+
+<div class="setting">
+    <div class="label"><label for="email"><MT_TRANS phrase="Email Address"> (*):</label></div>
+    <div class="field">
+        <input type="text" name="email" id="email" value="<TMPL_VAR NAME=EMAIL ESCAPE=HTML>"<TMPL_UNLESS NAME=IS_SUPERUSER> class="state_change"<TMPL_UNLESS NAME=STATUS_ENABLED> disabled="disabled"</TMPL_UNLESS></TMPL_UNLESS> />
+        <p><MT_TRANS phrase="The user's email address."></p>
+    </div>
+</div>
+
+<div class="setting">
+    <div class="label"><label for="url"><MT_TRANS phrase="Website URL">:</label></div>
+    <div class="field">
+        <input name="url" id="url" value="<TMPL_VAR NAME=URL ESCAPE=HTML>"<TMPL_UNLESS NAME=IS_SUPERUSER> class="state_change"<TMPL_UNLESS NAME=STATUS_ENABLED> disabled="disabled"</TMPL_UNLESS></TMPL_UNLESS> />
+        <p><MT_TRANS phrase="The URL of this user's website. (Optional)"></p>
+    </div>
+</div>
+
+<div class="setting">
+    <div class="label"><label for="preferred_language"><MT_TRANS phrase="Language">:</label></div>
+    <div class="field">
+        <select name="preferred_language" id="preferred_language"  <TMPL_UNLESS NAME=IS_SUPERUSER> class="state_change"<TMPL_UNLESS NAME=STATUS_ENABLED> disabled="disabled"</TMPL_UNLESS></TMPL_UNLESS> ><TMPL_LOOP NAME=LANGUAGES>
+            <option value="<TMPL_VAR NAME=L_TAG>"<TMPL_IF NAME=L_SELECTED> selected="selected"</TMPL_IF>><TMPL_VAR NAME=L_NAME></option></TMPL_LOOP>
+        </select>
+        <p><MT_TRANS phrase="The user's preferred language."></p>
+    </div>
 </div>
 
 </fieldset>
 
+</div>
+
+</div>
+
 <div style="text-align: center">
-<input type="submit" value="<MT_TRANS phrase="Save Changes">" accesskey="s" alt="<MT_TRANS phrase="Save permissions for this author (s)">" />
+<input type="submit" value="<MT_TRANS phrase="Save Changes">" accesskey="s" alt="<MT_TRANS phrase="Save profile for this user (s)">" />
 </div>
 
 </form>
 
-<TMPL_IF NAME=TOPLEVEL_EDIT_ACCESS>
+<TMPL_IF NAME=CAN_RECOVER_PASSWORD>
 <form name="recover" method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
-<input type="hidden" name="author_id" value="<TMPL_VAR NAME=EDIT_AUTHOR_ID>" />
 <input type="hidden" name="__mode" value="recover_profile_password" />
+<input type="hidden" name="author_id" value="<TMPL_VAR NAME=ID>" />
 <input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 
-	<fieldset>
-	
-	<h3><MT_TRANS phrase="Password"></h3>
+    <fieldset>
+    
+    <h3><MT_TRANS phrase="Password"></h3>
 
     <p><MT_TRANS phrase="_USAGE_PASSWORD_RESET" params="<TMPL_VAR NAME=EMAIL ESCAPE=HTML>"></p>
 
     <div style="text-align: center">
-        <input onclick="passwordResetConfirm()" type="button" value="<MT_TRANS phrase="Password Recovery">">
+        <input class="state_change" onclick="passwordResetConfirm()" type="button" value="<MT_TRANS phrase="Password Recovery">" <TMPL_UNLESS NAME=STATUS_ENABLED>disabled</TMPL_UNLESS> >
     </div>
 
     </fieldset>
 </form>
-</TMPL_IF>
-
 </TMPL_IF>
 
 </div>

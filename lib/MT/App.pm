@@ -43,7 +43,7 @@ sub add_plugin_action {
     }
     $action_link .= '?' unless $action_link =~ m.\?.;
     push @{$MT::Plugins{$plugin_sig}{actions}}, "$object_type Action" if $plugin_sig;
-    my $page = $app->config('AdminCGIPath') || $app->config('CGIPath');
+    my $page = $app->config->AdminCGIPath || $app->config->CGIPath;
     $page .= '/' unless $page =~ m!/$!;
     $page .= $plugin_envelope . '/' if $plugin_envelope;
     $page .= $action_link;
@@ -95,7 +95,7 @@ sub charset {
     my $app = shift;
     $app->{charset} = shift if @_;
     return $app->{charset} if $app->{charset};
-    $app->{charset} = $app->config('PublishCharset') || $app->language_handle->encoding;
+    $app->{charset} = $app->config->PublishCharset || $app->language_handle->encoding;
 }
 
 sub send_http_header {
@@ -181,8 +181,9 @@ sub init {
     $app->{plugin_template_path} = 'tmpl';
     $app->{plugin_actions} ||= {};
     # stash this for use after app object is destroyed
-    $TransparentProxyIPs = MT::ConfigMgr->instance()->TransparentProxyIPs;
-    MT->add_callback('*::post_save', 0, $app, \&cb_mark_blog );
+    $TransparentProxyIPs = $app->config->TransparentProxyIPs;
+    MT->add_callback('*::post_save', 0, $app, \&_cb_mark_blog );
+    MT->add_callback('MT::Blog::post_remove', 0, $app, \&_cb_unmark_blog );
 
     $_->init_app($app) foreach @MT::Plugins;
 
@@ -209,16 +210,18 @@ sub init_request {
         author cgi_headers breadcrumbs goback cache_templates warning_trace
         cookies _errstr request_method);
     delete $app->{$_} foreach @req_vars;
-    $app->{trace} = '';
-    $app->{author} = $app->{$COOKIE_NAME} = undef;
+    $app->{trace} = undef;
+    $app->user(undef);
     if ($ENV{MOD_PERL}) {
         require Apache::Request;
         $app->{apache} = $param{ApacheObject} || Apache->request;
         $app->{query} = Apache::Request->instance($app->{apache},
-            POST_MAX => $app->config('CGIMaxUpload'));
+            POST_MAX => $app->config->CGIMaxUpload);
     } else {
         if ($param{CGIObject}) {
             $app->{query} = $param{CGIObject};
+            require CGI;
+            $CGI::POST_MAX = $app->config->CGIMaxUpload;
         } else {
             if (my $path_info = $ENV{PATH_INFO}) {
                 if ($path_info =~ m/\.cgi$/) {
@@ -229,7 +232,7 @@ sub init_request {
                 }
             }
             require CGI;
-            $CGI::POST_MAX = $app->config('CGIMaxUpload');
+            $CGI::POST_MAX = $app->config->CGIMaxUpload;
             $app->{query} = CGI->new( $app->{no_read_body} ? {} : () );
         }
     }
@@ -249,7 +252,16 @@ sub init_request {
     $app->{init_request} = 1;
 }
 
-sub cb_mark_blog {
+sub _cb_unmark_blog {
+    my ($eh, $obj) = @_;
+    my $mt_req = MT->instance->request;
+    if (my $blogs_touched = $mt_req->stash('blogs_touched')) {
+        delete $blogs_touched->{$obj->id};
+        $mt_req->stash('blogs_touched', $blogs_touched);
+    }
+}
+
+sub _cb_mark_blog {
     my ($eh, $obj) = @_;
     my $obj_type = ref $obj;
     return if ($obj_type eq 'MT::Author' ||
@@ -285,10 +297,13 @@ sub add_breadcrumb {
 
 sub is_authorized { 1 }
 
-sub user_cookie { return $COOKIE_NAME }
+sub user_cookie { $COOKIE_NAME }
 
 sub user {
     my $app = shift;
+    if (@_) {
+        $app->{author} = $app->{$COOKIE_NAME} = $_[0];
+    }
     $app->{author};
 }
 
@@ -379,7 +394,7 @@ sub start_session {
     my $app = shift;
     my ($author, $remember) = @_;
     if (!defined $author) {
-        $author = $app->{author};
+        $author = $app->user;
         my ($x, $y);
         ($x, $y, $remember) = split(/::/, $app->cookie_val($app->user_cookie));
     }
@@ -389,7 +404,7 @@ sub start_session {
                               $author->name,
                               $session->id,
                               $remember),
-               -path => $app->config('CookiePath') || $app->mt_path
+               -path => $app->config->CookiePath || $app->mt_path
                );
     $arg{-expires} = '+10y' if $remember;
     $app->{session} = $session;
@@ -426,20 +441,45 @@ sub login {
 
     if ($author) {
         # Login valid
-        $app->{author} = $app->{$COOKIE_NAME} = $author;
+        $app->user($author);
         if ($pass) {
             # Presence of 'password' indicates this is a login request;
             # do session/cookie management.
             $app->start_session($author, $remember);
             $app->request('fresh_login', 1);
             $app->log($app->translate("User '[_1]' (ID:[_2]) logged in successfully", $author->name, $author->id));
+        # } else {
+        #     $author = $app->session_user($author, $session_id, permanent => $remember);
+        #     if (!defined($author)) {
+        #         $app->user(undef);
+        #         $app->{login_again} = 1;
+        #         return undef;
+        #     }
         }
+        ## update session so the user will be counted as active
+        require MT::Session;
+        my $sess_active = MT::Session->load( { kind => 'UA', name => $author->id } );
+        if (!$sess_active) {
+            $sess_active = MT::Session->new;
+            $sess_active->id(make_magic_token());
+            $sess_active->kind('UA'); # UA == User Activation
+            $sess_active->name($author->id);
+        }
+        $sess_active->start(time);
+        $sess_active->save;
+
         return ($author, defined($pass));
     } else {
         ## Login invalid, so get rid of cookie (if it exists) and let the
         ## user know.
         $app->clear_login_cookie;
         if (!defined($author)) {
+            require MT::Log;
+            # undef indicates *invalid* login as opposed to no login at all.
+            $app->log({
+                message => $app->translate("Invalid login attempt from user '[_1]'", $user),
+                level => MT::Log::WARNING(),
+            });
             return $app->error($app->translate('Invalid login.'));
         } else {
             return undef;
@@ -449,11 +489,20 @@ sub login {
 
 sub logout {
     my $app = shift;
-    if (my $user = $app->user) {
+    my $user = $app->user;
+    if (!$user) {
+        my $cookies = $app->cookies;
+        my ($username, $session_id, $remember);
+        if ($cookies->{$COOKIE_NAME}) {
+            ($username, $session_id, $remember) = split /::/, $cookies->{$COOKIE_NAME}->value;
+        }
+        $user = MT::Author->load( { name => $username, type => MT::Author::AUTHOR() } );
+    }
+    if ($user) {
         $app->log($app->translate("User '[_1]' (ID:[_2]) logged out",
                                   $user->name, $user->id));
         $user->remove_sessions;
-        delete $app->{author};
+        $app->user(undef);
     }
     $app->clear_login_cookie;
     $app->build_page('login.tmpl', {logged_out => 1, no_breadcrumbs => 1});
@@ -462,7 +511,7 @@ sub logout {
 sub clear_login_cookie {
     my $app = shift;
     $app->bake_cookie(-name => $COOKIE_NAME, -value => '', -expires => '-1y',
-        -path => $app->config('CookiePath') || $app->mt_path);
+        -path => $app->config->CookiePath || $app->mt_path);
 }
 
 sub request_content {
@@ -594,7 +643,7 @@ sub show_error {
 
 sub pre_run {
     my $app = shift;
-    if (my $auth = $app->{author}) {
+    if (my $auth = $app->user) {
         $app->set_language($auth->column('preferred_language'))
             if $auth->column('preferred_language');
     }
@@ -709,8 +758,17 @@ sub run {
                 if ($body =~ m!</body>!i) {
                     if ($app->{trace} &&
                         (!defined $app->{warning_trace} || $app->{warning_trace})) {
-                        my $panel = "<div class=\"debug-panel\">" . encode_html($app->{trace}) . "</div>";
-                        $body =~ s!(</body>)!$panel$1!i;
+                        my $trace = '';
+                        foreach (@{$app->{trace}}) {
+                            my $msg = encode_html($_);
+                            $trace .= '<li>' . $msg . '</li>';
+                        }
+                        $trace = '<ul>' . $trace . '</ul>';
+                        my $panel = "<div class=\"debug-panel\">"
+                            . "<h3>" . $app->translate("Warnings and Log Messages") . "</h3>"
+                            . "<div class=\"debug-panel-inner\">"
+                            . $trace . "</div></div>";
+                         $body =~ s!(</body>)!$panel$1!i;
                     }
                 }
             }
@@ -757,7 +815,7 @@ sub l10n_filter { $_[0]->translate_templatized($_[1]) }
 sub template_paths {
     my $app = shift;
     my @paths;
-    my $path = $app->config('TemplatePath');
+    my $path = $app->config->TemplatePath;
     if ($app->{plugin_template_path}) {
         if (File::Spec->file_name_is_absolute($app->{plugin_template_path})) {
             push @paths, $app->{plugin_template_path}
@@ -774,7 +832,7 @@ sub template_paths {
             }
         }
     }
-    if (my $alt_path = $app->config('AltTemplatePath')) {
+    if (my $alt_path = $app->config->AltTemplatePath) {
         if (-d $alt_path) {    # AltTemplatePath is absolute
             push @paths, File::Spec->catdir($alt_path,
                                             $app->{template_dir})
@@ -810,7 +868,7 @@ sub load_tmpl {
     my @paths = $app->template_paths;
 
     my $cache_dir;
-    if (!$app->config('NoLocking')) {
+    if (!$app->config->NoLocking) {
         my $path = $cfg->TemplatePath;
         $cache_dir = File::Spec->catdir($path, 'cache');
         undef $cache_dir if (!-d $cache_dir) || (!-w $cache_dir);
@@ -867,8 +925,8 @@ sub set_default_tmpl_params {
     $tmpl->param(mt_product_name => $app->translate(MT->product_name));
     my $lang = $app->current_language;
     $tmpl->param(language_tag => $lang);
-    $lang =~ s/[-_].+//;
-    $tmpl->param("language_$lang" => 1);
+    #$lang =~ s/[-_].+//;
+    #$tmpl->param("language_$lang" => 1);
     $tmpl->param(language_encoding => $app->charset);
 }
 
@@ -924,7 +982,7 @@ sub build_page {
     if (my $lang_id = $app->current_language) {
         $param->{local_lang_id} ||= lc $lang_id if $lang_id !~ m/^en/i;
     }
-    $param->{magic_token} = $app->current_magic if $app->{author};
+    $param->{magic_token} = $app->current_magic if $app->user;
     my $tmpl_file;
     if (UNIVERSAL::isa($file, 'HTML::Template')) {
         $tmpl = $file;
@@ -936,7 +994,7 @@ sub build_page {
         $app->run_callbacks(ref($app) . '::AppTemplateParam.' . $tmpl_file, $app, $param, $tmpl);
     }
     if (($mode && ($mode !~ m/delete/)) && ($app->{login_again} ||
-        ($app->{requires_login} && !$app->{author}))) {
+        ($app->{requires_login} && !$app->user))) {
         ## If it's a login screen, direct the user to where they were going
         ## (query params including mode and all) unless they were logging in,
         ## logging out, or deleting something.
@@ -973,10 +1031,10 @@ sub current_magic {
 sub validate_magic {
     my $app = shift;
     return 1
-        if ($app->param('username') && $app->param('password')
-            && $app->request('fresh_login') == 1);
+        if $app->param('username') && $app->param('password')
+            && $app->request('fresh_login');
     $app->{login_again} = 1, return undef
-        unless $app->current_magic eq $app->param('magic_token');;
+        unless ($app->current_magic || '') eq ($app->param('magic_token') || '');
     1;
 }
 
@@ -1131,7 +1189,7 @@ sub envelope { '' }
 
 sub static_path {
     my $app = shift;
-    my $spath = $app->config('StaticWebPath');
+    my $spath = $app->config->StaticWebPath;
     if (!$spath) {
         $spath = $app->path . 'mt-static/';
     } else {
@@ -1164,7 +1222,7 @@ sub app_uri {
         # app_uri refers to the active app script
 sub mt_uri {
     my $app = shift;
-    $app->mt_path . MT::ConfigMgr->instance->AdminScript . $app->uri_params(@_);
+    $app->mt_path . $app->config->AdminScript . $app->uri_params(@_);
 }
         # mt_uri refers to mt's script even if we're in a plugin.
 sub uri_params {
@@ -1272,10 +1330,12 @@ sub log {
 
 sub trace {
     my $app = shift;
-    $app->{trace} .= "@_";
+    $app->{trace} ||= [];
+    push @{$app->{trace}}, "@_";
     if ($MT::DebugMode & 2) {
         require Carp;
-        $app->{trace} .= Carp::longmess("Stack trace:");
+        local $Carp::CarpLevel = 1;
+        push @{$app->{trace}}, Carp::longmess("Stack trace:");
     }
 }
 
@@ -1346,19 +1406,19 @@ publishing methods in that class.
 
 =item <package>::AppTemplateSource.<filename>
 
-	callback($eh, $app, \$tmpl)
+    callback($eh, $app, \$tmpl)
 
 Executed after loading the HTML::Template file.  The E<lt>packageE<gt> portion
 is the full package name of the application running. For example,
 
-	MT::App::CMS::AppTemplateSource.menu
+    MT::App::CMS::AppTemplateSource.menu
 
 Is the full callback name for loading the menu.tmpl file under the
 L<MT::App::CMS> application. The "MT::App::CMS::AppTemplateSource" callback is
 also invoked for all templates loading by the CMS.  Finally, you can also hook
 into:
 
-	*::AppTemplateSource
+    *::AppTemplateSource
 
 as a wildcard callback name to capture any C<HTML::Template> files that are 
 loaded regardless of application.
@@ -1367,7 +1427,7 @@ loaded regardless of application.
 
 =item <package>::AppTemplateParam.<filename>
 
-	callback($eh, $app, \%param, $tmpl)
+    callback($eh, $app, \%param, $tmpl)
 
 This callback is invoked in conjunction with the MT::App-E<gt>build_page
 method. The $param argument is a hashref of L<HTML::Template> parameter
@@ -1377,7 +1437,7 @@ data that will eventually be passed to the template to produce the page.
 
 =item <package>::AppTemplateOutput.<filename>
 
-	callback($eh, $app, \$tmpl_str, \%param, $tmpl)
+    callback($eh, $app, \$tmpl_str, \%param, $tmpl)
 
 This callback is invoked in conjunction with the MT::App-E<gt>build_page
 method. The C<$tmpl_str> parameter is a string reference for the page that
@@ -1504,12 +1564,27 @@ with the C<validate_magic> method.
 Creates a new "magic token" string which is a random set of characters.
 The 
 
+=head2 $app->template_paths
+
+Returns an array of directory paths where application templates exist.
+
+=head2 $app->find_file(\@paths, $filename)
+
+Returns the path and filename for a file found in any of the given paths.
+If the file cannot be found, it returns undef.
+
 =head2 $app->load_tmpl($file[, @params])
 
 Loads a L<HTML::Template> template using the filename specified. See the
 documentation for the C<build_page> method to learn about how templates
 are located. The optional C<@params> are passed to the L<HTML::Template>
 constructor.
+
+=head2 $app->set_default_tmpl_params($tmpl)
+
+Assigns standard parameters to the given L<HTML::Template> C<$tmpl> object.
+Refer to the L<STANDARD APPLICATION TEMPLATE PARAMETERS> section for a
+complete list of these parameters.
 
 =head2 $app->charset
 
@@ -1591,7 +1666,7 @@ Example:
     # be cleared when the user logs out or has to reauthenicate.
     $app->session('color', $app->param('color'))
 
-=head2 $app->start_session
+=head2 $app->start_session([$author, $remember])
 
 Initializes a new user session by both calling C<make_session> and
 setting the user's login cookie.
@@ -1600,9 +1675,20 @@ setting the user's login cookie.
 
 Creates a new user session MT::Session record for the active user.
 
+=head2 $app->session_user($user_obj, $session_id, %options)
+
+Given an existing user object and a session ID ("token"), this returns the
+user object back if the session's user ID matches the requested
+$user_obj-E<gt>id, undef if the session can't be found or if the session's
+user ID doesn't match the $user_obj-E<gt>id.
+
 =head2 $app->show_error($error)
 
 Handles the display of an application error.
+
+=head2 $app->envelope
+
+This method is deprecated.
 
 =head2 $app->static_path
 
@@ -1679,6 +1765,14 @@ my-plugin.cgi, you'll want to append a '?' to the argument you pass:
 Finally, the $link_text parameter specifies the text of the link; this
 value will be wrapped in E<lt>a> tags that point to the $action_link.
 
+=head2 $app->plugin_actions($type)
+
+Returns a list of plugin actions that are registered for the C<$type>
+specified. The return value is an array of hashrefs with the following
+keys set for each: C<page> (the registered 'action link'),
+C<link_text> (the registered 'link text'), C<plugin> (the plugin's envelope).
+See the documentation for L<$app-E<gt>add_plugin_action> for more information.
+
 =head2 $app->app_path
 
 Returns the path portion of the active URI.
@@ -1702,6 +1796,12 @@ mt.cgi).
 Returns the active weblog, if available. The I<blog_id> query
 parameter identifies this weblog.
 
+=head2 $app->touch_blogs
+
+An internal routine that is used during the end of an application
+request to update each L<MT::Blog> object's timestamp if any of it's
+child objects were changed during the application request.
+
 =head2 $app->build_page($tmpl_name, \%param)
 
 Builds an application page to be sent to the client; the page name is specified
@@ -1713,7 +1813,7 @@ On success, returns a scalar containing the page to be sent to the client. On
 failure, returns C<undef>, and the error message can be obtained from
 C<$app-E<gt>errstr>.
 
-=head2 How does build_page find a template?
+=head3 How does build_page find a template?
 
 The C<build_page> function looks in several places for an app
 template. Two configuration directives can modify these search paths,
@@ -1766,6 +1866,111 @@ Given these values, the order of search is as follows:
 If a template with the given name is not found in any of these
 locations, an ugly error is thrown to the user.
 
+=head2 $app->build_page_in_mem($tmpl, \%param)
+
+Used internally by the L<build_page> method to render the output
+of a L<HTML::Template> object (the first parameter) using the parameter
+data (the second parameter). It additionally calls the L<process_mt_template>
+method (to process any E<lt>MT_ACTIONE<gt> and E<lt>MT_X:YE<gt> marker tags)
+and then L<translate_templatized> (to process any E<lt>MT_TRANSE<gt> tags).
+
+=head2 $app->process_mt_template($str)
+
+Processes the E<lt>MT_ACTION<gt> tags that are present in C<$str>. These tags
+are in the following format:
+
+    <MT_ACTION mode="mode_name" parameter="value">
+
+The mode parameter is required (and must be the first attribute). The
+following attributes are appended as regular query parameters.
+
+The MT_ACTION tag is a preferred way to specify application links rather
+than using this syntax:
+
+    <TMPL_VAR NAME=SCRIPT_URL>?__mode=mode_name&parameter=value
+
+C<process_mt_templates> also strips the C<$str> variable of any tags in
+the format of C<E<lt>MT_\w+:\w+E<gt>>. These are 'marker' tags that are
+used to identify specific portions of the template page and used in
+conjunction with the transformer callback helper methods C<tmpl_prepend>,
+C<tmpl_append>, C<tmpl_replace>, C<tmpl_select>.
+
+=head2 $app->tmpl_prepend(\$str, $section, $id, $content)
+
+Adds text at the top of a MT marker tag identified by C<$section> and
+C<$id>. If a template contains the following:
+
+    <MT_HEAD:STYLE>
+    <link ...>
+    </MT_HEAD:STYLE>
+
+A call to tmpl_prepend like this:
+
+    $app->tmpl_prepend($tmpl_ref, 'HEAD', 'STYLE', "new link tag\n");
+
+will result in this change in the template page:
+
+    <MT_HEAD:STYLE>
+    new link tag
+    <link ...>
+    </MT_HEAD:STYLE>
+
+=head2 $app->tmpl_append(\$str, $section, $id, $content)
+
+Adds text at the bottom of a MT marker tag identified by C<$section> and
+C<$id>. If a template contains the following:
+
+    <MT_HEAD:STYLE>
+    <link ...>
+    </MT_HEAD:STYLE>
+
+A call to tmpl_append like this:
+
+    $app->tmpl_append($tmpl_ref, 'HEAD', 'STYLE', "new link tag\n");
+
+will result in this change in the template page:
+
+    <MT_HEAD:STYLE>
+    <link ...>
+    new link tag
+    </MT_HEAD:STYLE>
+
+=head2 $app->tmpl_replace(\$str, $section, $id, $content)
+
+Replaces text within a MT marker tag identified by C<$section> and
+C<$id>. If a template contains the following:
+
+    <MT_HEAD:STYLE>
+    <link ...>
+    </MT_HEAD:STYLE>
+
+A call to tmpl_replace like this:
+
+    $app->tmpl_prepend($tmpl_ref, 'HEAD', 'STYLE', "new style content\n");
+
+will result in this change in the template page:
+
+    <MT_HEAD:STYLE>
+    new style content
+    </MT_HEAD:STYLE>
+
+=head2 $app->tmpl_select(\$str, $section, $id)
+
+Returns the text found within a MT marker tag identified by C<$section> and
+C<$id>. If a template contains the following:
+
+    <MT_HEAD:STYLE>
+    <link ...>
+    </MT_HEAD:STYLE>
+
+A call to tmpl_select like this:
+
+    my $str = $app->tmpl_select($tmpl_ref, 'HEAD', 'STYLE');
+
+will select the following and return it:
+
+    <link ...>
+
 =head2 $app->cookie_val($name)
 
 Returns the value of a given cookie.
@@ -1807,7 +2012,7 @@ be rejected with a generic error message at the MT::App level, if
 is_authorized returns false, but MT::App subclasses may wish to
 perform additional checks which produce more specific error messages.
 
-Subclass authors can assume that $app->{author} is populated with the
+Subclass authors can assume that $app->user is populated with the
 authenticated user when this routine is invoked, and that CGI query
 object is available through $app->{query} and $app->param().
 
@@ -2003,6 +2208,7 @@ you. The following are some parameters that are assigned by C<MT::App> itself:
 =over 4
 
 =item * AUTHOR_ID
+
 =item * AUTHOR_NAME
 
 The MT::Author ID and username of the currently logged-in user.
@@ -2115,7 +2321,7 @@ Sample usage:
 
 Which produces something like this:
 
-    http://example.com/mt/plugins/myplugin/myplugin.cgi
+    http://example.com/mt/plugins/myplugin/myplugin.cgi?__mode=blah
 
 =back
 

@@ -35,9 +35,11 @@ sub send {
     $body = encode_text($body, $enc, lc $mail_enc);
 
     eval "require MIME::Words;";
-    my $subj = MIME::Words::decode_mimewords($hdrs->{Subject});
-    $hdrs->{Subject} = encode_text($subj, $enc, lc $mail_enc);
     unless ($@) {
+        my $subj = MIME::Words::decode_mimewords($hdrs->{Subject});
+        my $from = MIME::Words::decode_mimewords($hdrs->{From});
+        $hdrs->{Subject} = encode_text($subj, $enc, lc $mail_enc);
+        $hdrs->{From} = encode_text($from, $enc, lc $mail_enc);
         foreach my $header (keys %$hdrs) {
             my $val = $hdrs->{$header};
             if (ref $val eq 'ARRAY') {
@@ -64,8 +66,10 @@ sub send {
                 }
             }
         }
+    } else {
+        $hdrs->{Subject} = encode_text($hdrs->{Subject}, $enc, lc $mail_enc);
+        $hdrs->{From} = encode_text($hdrs->{From}, $enc, lc $mail_enc);
     }
-
     $hdrs->{'Content-Type'} ||= qq(text/plain; charset=") . lc $mail_enc . q(");
     $hdrs->{'Content-Transfer-Encoding'} ||= ((lc $mail_enc) !~ m/utf-?8/) ? '7bit' : '8bit';
     $hdrs->{'MIME-Version'} ||= "1.0";

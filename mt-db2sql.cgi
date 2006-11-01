@@ -87,7 +87,7 @@ eval {
             $ids{$class} = $obj->id
                 if $obj->properties->{column_defs}->{id} =~ /auto_increment/ &&
                    (!$ids{$class} || $obj->id > $ids{$class});
-            ## Look for duplicate template, category, and author names,
+            ## Look for duplicate template, category, and user names,
             ## because we have uniqueness constraints in the DB.
             if ($class eq 'MT::Template') {
                 my $key = lc($obj->name) . $obj->blog_id;
@@ -103,7 +103,7 @@ eval {
             } elsif ($class eq 'MT::Author') {
                 my $key = lc($obj->name);
                 if ($names{$class . ($obj->type || 1)}{$key}++) {
-                    print "        Found duplicate author name '" .
+                    print "        Found duplicate user name '" .
                           $obj->name;
                     $obj->name($obj->name . ' ' . $names{$class . ($obj->type || 1)}{$key});
                     print "'; renaming to '" . $obj->name . "'\n";

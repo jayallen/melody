@@ -13,7 +13,7 @@
 
 <p>
 <TMPL_IF NAME=TYPE_AUTHOR>
-<MT_TRANS phrase="Are you sure you want to permanently delete the [quant,_1,author] from the system?" params="<TMPL_VAR NAME=NUM>">
+<MT_TRANS phrase="Are you sure you want to permanently delete the [quant,_1,user] from the system?" params="<TMPL_VAR NAME=NUM>">
 </TMPL_IF>
 <TMPL_IF NAME=TYPE_COMMENT>
 <MT_TRANS phrase="Are you sure you want to delete the [quant,_1,comment]?" params="<TMPL_VAR NAME=NUM>">
@@ -46,7 +46,7 @@ Are you sure you want to delete <TMPL_VAR NAME=THISTHESE> TrackBack<TMPL_UNLESS 
 <MT_TRANS phrase="Are you sure you want to delete the [quant,_1,blocked item,blocked items]?" params="<TMPL_VAR NAME=NUM>">
 </TMPL_IF>
 <TMPL_IF NAME=TYPE_BLOG>
-<MT_TRANS phrase="Are you sure you want to delete the [quant,_1,weblog]? When you delete a weblog, all of the entries, comments, templates, notifications, and author permissions are deleted along with the weblog itself. Make sure that this is what you want, because this action is permanent." params="<TMPL_VAR NAME=NUM>">
+<MT_TRANS phrase="Are you sure you want to delete the [quant,_1,weblog]? When you delete a weblog, all of the entries, comments, templates, notifications, and user permissions are deleted along with the weblog itself. Make sure that this is what you want, because this action is permanent." params="<TMPL_VAR NAME=NUM>">
 </TMPL_IF>
 </p>
 

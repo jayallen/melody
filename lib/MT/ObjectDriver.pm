@@ -37,6 +37,12 @@ sub save;
 sub clear_cache {}
 sub configure {}
 
+sub join_on {
+    my $driver = shift;
+    my ($pkg, $col, $terms, $args) = @_;
+    [$pkg, $col, $terms, $args];
+}
+
 sub set_callback_routine {
     my $driver = shift;
     $driver->{callback_routine} = $_[0];
@@ -68,3 +74,18 @@ sub create_sequence {}
 sub drop_sequence {}
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -138,7 +138,7 @@ TC.attachLoadEvent( init );
 <TMPL_UNLESS NAME=FILTER>
 <a href="#" onclick="toggleFilter()"><MT_TRANS phrase="None."></a> <span class="hint"><MT_TRANS phrase="(Showing all comments.)"></span>
 <TMPL_ELSE>
-<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only comments where [_1] is [_2]." params='<span id="filter-text-col"></span>%%<span id="filter-text-val"></span>'></a>
+<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only comments where [_1] is [_2]." params='<span id="filter-text-col">&nbsp;</span>%%<span id="filter-text-val"></span>'></a>
 </TMPL_UNLESS>
 
 </div>

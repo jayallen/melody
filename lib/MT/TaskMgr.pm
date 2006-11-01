@@ -94,7 +94,8 @@ sub run_tasks {
                     message => $app->translate("Error during task '[_1]': [_2]", $name, $err)
                 });
             } else {
-                push @completed, $name if defined $status && ($status > 0);
+                push @completed, $name if (defined $status) && ($status ne '') && ($status > 0);
+ 
             }
 
             $sess->start(time);
@@ -238,6 +239,35 @@ Tasks are an excellent way to maximize MT performance and user experience.
 For example, a plugin that may need to retrieve or synchronize data with a
 remote server may choose to operate from a cache that is periodically kept
 up to date using a registered task.
+
+=head1 METHODS
+
+=head2 MT::TaskMgr->add_task($task_obj)
+
+=head2 MT::TaskMgr->add_task(\%task)
+
+Registers a new I<MT::Task> object. If this method is called with a hashref,
+a I<MT::Task> will be constructed using that data.
+
+=head2 MT::TaskMgr->run_tasks
+
+Runs all available pending tasks. If an instance of the TaskMgr is already
+found to be running (through use of a physical file lock mechanism), the
+process will abort.
+
+=head2 MT::TaskMgr->instance
+
+Returns the TaskMgr singleton.
+
+=head1 CALLBACKS
+
+=head2 PeriodicTask
+
+Prior to running any registered tasks, this callback is issued to allow
+any registered MT plugins to add additional tasks to the list or simply
+as a way to signal tasks are about to start. This callback sends no
+parameters, but it is possible to retrieve the active I<MT::TaskMgr>
+instance using the I<instance> method.
 
 =head1 AUTHOR & COPYRIGHTS
 

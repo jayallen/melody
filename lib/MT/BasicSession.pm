@@ -26,3 +26,14 @@ __PACKAGE__->install_properties({
 # }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::BasicSession
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -240,7 +240,7 @@ sub _sync_to_disk {
 sub remove {
     my $tmpl = shift;
     $tmpl->remove_children({ key => 'template_id' });
-    $tmpl->SUPER::remove;
+    $tmpl->SUPER::remove(@_);
 }
 
 sub published_url {
@@ -250,7 +250,8 @@ sub published_url {
     return undef unless ($tmpl->type eq 'index');
     
     my $blog = $tmpl->blog;
-    my $site_url = $blog->site_url;
+    return undef unless $blog;
+    my $site_url = $blog->site_url || '';
     $site_url .= '/' if $site_url !~ m!/$!;
     my $url = $site_url . $tmpl->outfile;
 
@@ -262,7 +263,8 @@ sub published_url {
             return $url;
         }
     } else {
-        my $tmpl_path = File::Spec->catfile($blog->site_path, $tmpl->outfile);
+        my $site_path = $blog->site_path || '';
+        my $tmpl_path = File::Spec->catfile($site_path, $tmpl->outfile);
         if (-f $tmpl_path) {
             return $url;
         }
@@ -337,6 +339,26 @@ If the template is not of type index, or if the index template has not built
 yet (if the template is static), or if the index template does not have
 corresponding FileInfo record (if the template is dynamic), this method
 returns undef.
+
+=head2 $tmpl->blog
+
+Returns the I<MT::Blog> object associated with the template.
+
+=head2 $tmpl->save
+
+Saves the template and if linked to a physical file, updates the file.
+
+=head2 $tmpl->remove
+
+Removes the template object and any related objects in I<MT::TemplateMap>
+and I<MT::FileInfo>.
+
+=head2 $tmpl->set_values
+
+Updates the values of the C<$tmpl> object. When this is called through
+the I<MT::ObjectDriver> classes (upon loading a template object), and if
+the template is linked to a file, it will also load the contents of that
+file, setting the 'text' property.
 
 =head1 DATA ACCESS METHODS
 

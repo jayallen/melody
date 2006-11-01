@@ -81,6 +81,10 @@ as class methods and as object methods.
 
 =head1 USAGE
 
+=head2 Class->new
+
+Constructs a new I<MT::ErrorHandler> instance.
+
 =head2 Class->error($message)
 
 =head2 $object->error($message)

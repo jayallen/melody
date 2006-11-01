@@ -150,7 +150,183 @@ sub slurp {
     $ctx->stash('builder')->build($ctx, $ctx->stash('tokens'), $cond);
 }
 
-1;
+sub compile_category_filter {
+    my ($ctx, $cat_expr, $cats, $param) = @_;
+
+    $param ||= {};
+    $cats ||= [];
+    my $is_and = $param->{'and'} ? 1 : 0;
+    my $children = $param->{'children'} ? 1 : 0;
+
+    if ($cat_expr) {
+        my %cats_used;
+        # sort in descending order by length
+        if ($cat_expr =~ m!/!) {
+            # add extra 'path' expression categories
+            my @path_cats;
+            foreach my $cat (@$cats) {
+                my $catp = $cat->category_label_path;
+                push @path_cats, { label => $catp, id => $cat->id, obj => $cat };
+            }
+            @path_cats = sort {length($b->{label}) <=> length($a->{label})} @path_cats;
+            foreach (@path_cats) {
+                my $cat = $_->{obj};
+                my $catp = $_->{label};
+                my $catid = $_->{id};
+                my $repl;
+                my @cats = ($cat);
+                if ($children) {
+                    my @kids = ($cat);
+                    while (my $c = shift @kids) {
+                        push @cats, $c;
+                        push @kids, ($c->children_categories);
+                    }
+                    $repl = '';
+                    $repl .= '||' . '#'.$_->id for @cats;
+                    $repl = '(' . substr($repl, 2) . ')';
+                } else {
+                    $repl = '#$catid';
+                }
+                if ($cat_expr =~ s/(?<!#)\Q$catp\E/$repl/g) {
+                    $cats_used{$_->id} = $_ for @cats;
+                }
+            }
+        }
+
+        @$cats = sort {length($b->label) <=> length($a->label)} @$cats;
+
+        my %cats_replaced;
+        foreach my $cat (@$cats) {
+            next unless $cat;
+            my $catl = $cat->label;
+            my $catid = $cat->id;
+            my @cats = ($cat);
+            my $repl;
+            if ($children) {
+                my @kids = ($cat);
+                while (my $c = shift @kids) {
+                    push @cats, $c;
+                    push @kids, ($c->children_categories);
+                }
+                $repl = '';
+                $repl .= '||' . '#'.$_->id for @cats;
+                $repl = '(' . substr($repl, 2) . ')';
+            } else {
+                $repl = "#$catid";
+            }
+            if ($cat_expr =~ s/(?<!#)(?:\Q[$catl]\E|\Q$catl\E)/$repl/g) {
+                $cats_used{$_->id} = $_ for @cats;
+            }
+            # for multi blog case
+            if ($cats_replaced{$catl}) {
+                my $last_catid = $cats_replaced{$catl};
+                $cat_expr =~ s/(#$last_catid\b)/($1 OR #$catid)/g;
+                $cats_used{$catid} = $cat;
+            }
+            $cats_replaced{$catl} = $catid;
+            #my $res = ( $cat_expr =~
+            #             s/(?:\Q[$catl]\E|(\b|\s|\A)\Q$catl\E(\b|\s|\Z))/
+            #              $cats_used{$catid} = $cat , "$1(exists \$p->{\$e}{$catid})$2"/gex );
+            #$cats_replaced{$catl} = $catid if $res;
+        }
+        @$cats = values %cats_used;# if $cat_expr !~ m/\bNOT\b/i;
+
+        $cat_expr =~ s/\bAND\b/&&/gi;
+        $cat_expr =~ s/\bOR\b/||/gi;
+        $cat_expr =~ s/\bNOT\b/!/gi;
+        # replace any other 'thing' with '(0)' since it's a
+        # category that doesn't even exist.
+        $cat_expr =~ s/( |#\d+|&&|\|\||!|\(|\))|([^#0-9&|!()]+)/$2?'(0)':$1/ge;
+
+        # strip out all the 'ok' stuff. if anything is left, we have
+        # some invalid data in our expression:
+        my $test_expr = $cat_expr;
+        $test_expr =~ s/!|&&|\|\||\(0\)|\(|\)|\s|#\d+//g;
+        return undef if $test_expr;
+    } else {
+        my %cats_used;
+        $cat_expr = '';
+        foreach my $cat (@$cats) {
+            my $id = $cat->id;
+            $cat_expr .= ($is_and ? '&&' : '||') if $cat_expr ne '';
+            if ($children) {
+                my @kids = ($cat);
+                my @cats;
+                while (my $c = shift @kids) {
+                    push @cats, $c;
+                    push @kids, ($c->children_categories);
+                }
+                my $repl = '';
+                $repl .= '||' . '#'.$_->id for @cats;
+                $cats_used{$_->id} = $_ for @cats;
+                $repl = '(' . substr($repl, 2) . ')';
+                $cat_expr .= $repl;
+            } else {
+                $cats_used{$cat->id} = $cat;
+                $cat_expr .= "#$id";
+            }
+        }
+        @$cats = values %cats_used;
+    }
+
+    $cat_expr =~ s/#(\d+)/(exists \$p->{\$e}{$1})/g;
+    my $expr = 'sub{my($e,$p)=@_;'.$cat_expr.';}';
+    my $cexpr = eval($expr);
+    $@ ? undef : $cexpr;
+}
+
+sub compile_tag_filter {
+    my ($ctx, $tag_expr, $tags) = @_;
+
+    # Sort in descending order by length
+    @$tags = sort {length($b->name) <=> length($a->name)} @$tags;
+
+    # Modify the tag argument, replacing the tag name with '#TagID'
+    # Create a ID-based hash of the tags that are used in the arg
+    my %tags_used;
+    foreach my $tag (@$tags) {
+        my $name = $tag->name;
+        my $id = $tag->id;
+        if ($tag_expr =~ s/(?<!#)\Q$name\E/#$id/g) {
+            $tags_used{$id} = $tag;
+        }
+    }
+    # Populate array ref (passed in by reference) of used tags
+    # but only if expression is positive (i.e. not NOT)
+    @$tags = values %tags_used if $tag_expr !~ m/\bNOT\b/i;
+
+    # Replace logical constructs with their perl equivalents
+    $tag_expr =~ s/\bAND\b/&&/gi;
+    $tag_expr =~ s/\bOR\b/||/gi;
+    $tag_expr =~ s/\bNOT\b/!/gi;
+
+    # Textbook example of the need for the 'x' modifier
+    # It seems to be saying "Find valid stuff followed by invalid stuff 
+    # and swap the elements putting a marker between them".  Huh?
+    $tag_expr =~ s/( |#\d+|&&|\|\||!|\(|\))|([^#0-9&|!()]+)/$2?'(0)':$1/ge;
+
+    # Syntax check on 'tag' argument
+    # Strip out all the valid stuff. if anything is left, we have
+    # some invalid data in our expression:
+    my $test_expr = $tag_expr;
+    $test_expr =~ s/!|&&|\|\||\(0\)|\(|\)|\s|#\d+//g;
+    return undef if ($test_expr);
+
+    # Replace '#TagID' with a hash lookup function.
+    # Function confirms/denies use of tag on entry (by IDs)
+    # Translation: exists( PlacementHashRef->{EntryID}{TagID} )
+    $tag_expr =~ s/#(\d+)/(exists \$p->{\$e}{$1})/g;
+
+    # Create an anonymous subroutine of that lookup function
+    # and return it if all is well.  This code ref will be used
+    # later to test for existence of specified tags in entries.
+    my $expr = 'sub{my($e,$p)=@_;'.$tag_expr.';}';
+    my $cexpr = eval $expr;
+    $@ ? undef : $cexpr;
+}
+
+
+;
 __END__
 
 =head1 NAME

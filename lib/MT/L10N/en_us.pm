@@ -14,6 +14,11 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
 
 %Lexicon = (
     'AUTO DETECT' => 'Auto-detect',
+    '_USER_ENABLE' => 'Enable',
+    '_USER_DISABLE' => 'Disable',
+    '_USER_ENABLED' => 'Enabled',
+    '_USER_DISABLED' => 'Disabled',
+    '_USER_STATUS_CAPTION' => 'status',
     '_external_link_target' => '_top',
     '_BLOG_CONFIG_MODE_BASIC' => 'Basic Mode',
     '_BLOG_CONFIG_MODE_DETAIL' => 'Detailed Mode',
@@ -52,22 +57,28 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
 
     '_USAGE_FEEDBACK_PREFS' => 'This screen allows you to configure the ways that readers can contribute feedback to your blog.',
 
-    '_USAGE_PROFILE' => 'Edit your author profile here. If you change your username or your password, your login credentials will be automatically updated. In other words, you will not need to re-login.',
+     '_USAGE_PROFILE' => 'Edit your user profile here. If you change your username or your password, your login credentials will be automatically updated. In other words, you will not need to re-login.',
+     '_GENL_USAGE_PROFILE' => 'Edit the user\'s profile here. If you change the username or the password, the user\'s login credentials will be automatically updated. In other words, they will not need to re-login.',
+     '_USAGE_GROUP_PROFILE' => 'This screen allows you to edit the group\'s profile.',
     '_USAGE_PASSWORD_RESET' => 'Below, you can initiate password recovery on behalf of this user. If you choose to do so, a new, randomly-generated password will be created and sent directly to their email address: [_1].',
     '_WARNING_PASSWORD_RESET_SINGLE' => 'You are about to reset the password for "[_1]". A new password will be randomly generated and sent directly to their email address ([_2]).  Do you wish to continue?',
     '_WARNING_PASSWORD_RESET_MULTI' => 'You are about to reset the password for the selected users. New passwords will be randomly generated and sent directly to their email address(es).\n\nDo you wish to continue?',
-    '_USAGE_NEW_AUTHOR' => 'From this screen you can create a new author in the system and give them access to particular weblogs.',
+     '_USAGE_NEW_AUTHOR' => 'From this screen you can create a new user in the system.',
+     '_USAGE_ROLES' => 'From this screen you can view the roles you have for your weblogs, and create new roles. You can see the details for the different roles by clicking on their names.',
+     '_USAGE_ROLE_PROFILE' => 'From this screen you can define a role and its permissions.',
+     '_USAGE_ASSOCIATIONS' => 'From this screen you can view associations and create new ones.',
 
     '_USAGE_CATEGORIES' => 'Use categories to group your entries for easier reference, archiving and blog display. You can assign a category to a particular entry when creating or editing entries. To edit an existing category, click the category\'s title. To create a subcategory click the corresponding "Create" button. To move a category, click the corresponding "Move" button.',
+     '_USAGE_CATEGORY_PING_URL' => 'This is the URL that others will use to send TrackBacks to your weblog. If you wish for anyone to send TrackBacks to your weblog when they have a post specific to this category, post this URL publicly. If you choose to only allow a select group of individuals to TrackBack, send this URL to them privately. To include a list of incoming TrackBacks in your Main Index Template, check the documentation for template tags related to TrackBacks.',
 
     '_USAGE_TAGS' => 'Use tags to group your entries for easier reference and blog display.',
 
     '_USAGE_COMMENT' => 'Edit the selected comment. Press SAVE when you are finished. You will need to rebuild for these changes to take effect.',
 
-    '_USAGE_PERMISSIONS_1' => 'You are editing the permissions of <b>[_1]</b>. Below you will find a list of blogs to which you have author-editing access; for each blog in the list, assign permissions to <b>[_1]</b> by checking the boxes for the access permissions you wish to grant.',
+     '_USAGE_PERMISSIONS_1' => 'You are editing the permissions of <b>[_1]</b>. Below you will find a list of blogs to which you have user-editing access; for each blog in the list, assign permissions to <b>[_1]</b> by checking the boxes for the access permissions you wish to grant.',
     '_USAGE_PERMISSIONS_2' => 'To edit permissions for a different user, select a new user from the pull-down menu, then press EDIT.',
-    '_USAGE_PERMISSIONS_3' => 'You have two ways to edit authors and grant/revoke access privileges. For quick access, select a user from the menu below and select edit. Alternatively, you may browse the complete list of authors and, from there, select a person to edit or delete.',
-    '_USAGE_PERMISSIONS_4' => 'Each blog may have multiple authors. To add an author, enter the user\'s information in the forms below. Next, select the blogs which the author will have some sort of authoring privileges.  Once you press SAVE and the user is in the system, you can edit the author\'s privileges.',
+     '_USAGE_PERMISSIONS_3' => 'You have two ways to edit users and grant/revoke access privileges. For quick access, select a user from the menu below and select edit. Alternatively, you may browse the complete list of users and, from there, select a person to edit or delete.',
+     '_USAGE_PERMISSIONS_4' => 'Each blog may have multiple users. To add a user, enter the user\'s information in the forms below. Next, select the blogs on which the user will have some sort of privileges.  Once you press SAVE and the user is in the system, you can edit the user\'s privileges.',
 
     '_USAGE_PLACEMENTS' => 'Use the editing tools below to manage the secondary categories to which this entry is assigned. The list to the left consists of the categories to which this entry is not yet assigned as either a primary or secondary category; the list to the right consists of the secondary categories to which this entry is assigned.',
 
@@ -78,7 +89,10 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
     '_USAGE_EXPORT_2' => 'To export your entries, click on the link below ("Export Entries From [_1]"). To save the exported data to a file, you can hold down the <code>option</code> key on the Macintosh, or the <code>Shift</code> key on a PC, while clicking on the link. Alternatively, you can select all of the data, then copy it into another document. (<a href="#" onclick="openManual(\'importing\', \'export_ie\');return false;">Exporting from Internet Explorer?</a>)',
     '_USAGE_EXPORT_3' => 'Clicking the link below will export all of your current weblog entries to the Tangent server. This is generally a one-time push of your entries, to be done after you have installed the Tangent add-on for Movable Type, but conceivably it could be executed whenever you wish.',
 
-    '_USAGE_AUTHORS' => 'This is a list of all of the users in the Movable Type system. You can edit an author\'s permissions by clicking on his/her name. You can permanently delete authors by checking the checkbox next to their name, then pressing DELETE. NOTE: if you only want to remove an author from a particular blog, edit the author\'s permissions to remove the author; deleting an author using DELETE will remove the author from the system entirely.',
+    '_NO_SUPERUSER_DISABLE' => 'Because you are a system administrator on the Movable Type system, you can not disable yourself.',
+
+     '_USAGE_AUTHORS' => 'This is a list of all of the users in the Movable Type system. You can edit a user\'s profile by clicking on his/her name. You can permanently delete users by checking the checkbox next to their name, then pressing DELETE. NOTE: if you only want to remove a user from a particular blog, delete that association; deleting a user using DELETE will remove the user from the system entirely.',
+    '_USAGE_AUTHORS_1' => 'This is a list of all of the users in the Movable Type system. You can edit a user\'s profile by clicking on his/her name. You can permanently delete users by checking the checkbox next to their name, then pressing DELETE. NOTE: if you only want to remove a user from a particular blog, edit the user\'s permissions to remove the user; deleting a user using DELETE will remove the user from the system entirely.',
 
     '_USAGE_PLUGINS' => 'This is a list of all plugins currently registered with Movable Type.',
 
@@ -145,7 +159,7 @@ the address you provided is correct and belongs to you.',
 
     '_POWERED_BY' => 'Powered by<br /><a href="http://www.sixapart.com/movabletype/"><$MTProductName version="1"$></a>',
     'Blog Administrator' => 'Blog Administrator',
-    'Entry Creation' => 'Entry Creation',
+    'Create Entries' => 'Create Entries',
     'Edit All Entries' => 'Edit All Entries',
     'Manage Templates' => 'Manage Templates',
     'Configure Weblog' => 'Configure Weblog',
@@ -155,7 +169,7 @@ the address you provided is correct and belongs to you.',
     'Add/Manage Categories' => 'Add/Manage Categories',
     'Manage Tags' => 'Manage Tags',
     'Manage Notification List' => 'Manage Notification List',
-    'View Activity Log For This Weblog' => 'View Activity Log For This Weblog',
+    'View This Weblog\'s Activity Log' => 'View This Weblog\'s Activity Log',
     'Publish Entries' => 'Publish Entries',
     'Unpublish Entries' => 'Unpublish Entries',
     'Unpublish TrackBack(s)' => 'Unpublish TrackBack(s)',
@@ -269,6 +283,7 @@ the address you provided is correct and belongs to you.',
 'You used an \'[_1]\' tag outside of the context of a comment; perhaps you mistakenly placed it outside of an \'MTComments\' container?' => 'You used an \'[_1]\' tag outside of the context of a comment; perhaps you mistakenly placed it outside of an \'MTComments\' container?',
 'You used an \'[_1]\' tag outside of the context of an entry; perhaps you mistakenly placed it outside of an \'MTEntries\' container?' => 'You used an \'[_1]\' tag outside of the context of an entry; perhaps you mistakenly placed it outside of an \'MTEntries\' container?',
 'You used an \'[_1]\' tag outside of the context of a ping; perhaps you mistakenly placed it outside of an \'MTPings\' container?' => 'You used an \'[_1]\' tag outside of the context of a ping; perhaps you mistakenly placed it outside of an \'MTPings\' container?',
+     '_WARNING_DELETE_USER' => 'Deleting a user is an irrevocable action which creates orphans of the user\'s entries. If you wish to retire a user or remove their access to the system, disabling their account is the recommended course of action. Are you sure you want to delete the selected user(s)?',
 );
 
 1;

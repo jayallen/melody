@@ -6,9 +6,6 @@ div.warning#version-warning {
     padding: 1em;
     width: 700px;
 }
-div.warning#version-warning input {
-    font-size: xx-large;
-}
 </style>
 
 <script type="text/javascript">
@@ -18,10 +15,19 @@ function dismiss(id) {
         el.style.display = 'none';
     }
 }
+
+function show(id) {
+    var el = getByID(id);
+    if (el) {
+        el.style.display= 'block';
+    }
+}
+
 </script>
 
 <div class="upgrade">
 
+<TMPL_IF NAME=NEEDS_UPGRADE>
 <h2><MT_TRANS phrase="Time to Upgrade!"></h2>
 
 <TMPL_IF NAME=VERSION_WARNING>
@@ -30,7 +36,7 @@ function dismiss(id) {
     <p><MT_TRANS phrase="While Movable Type may run, it is an <strong>untested and unsupported environment</strong>.  We strongly recommend upgrading to at least Perl [_1]." params="<TMPL_VAR NAME=PERL_MINIMUM>"></p>
     <p><MT_TRANS phrase="Do you want to proceed with the upgrade anyway?"></p>
     <form method="get">
-    <p align="center"><input type="button" value=" &nbsp; <MT_TRANS phrase="Yes"> &nbsp;" onclick="dismiss('version-warning')" />
+    <p align="center"><input type="button" value=" &nbsp; <MT_TRANS phrase="Yes"> &nbsp;" onclick="dismiss('version-warning'); show('warning_gone');" />
         &nbsp; &nbsp;
     <input type="button" value=" &nbsp; <MT_TRANS phrase="No"> &nbsp; " onclick="javascript:location.href='mt-check.cgi'" />
     </p>
@@ -38,6 +44,7 @@ function dismiss(id) {
 </div>
 </TMPL_IF>
 
+<div id="warning_gone"<TMPL_IF NAME=VERSION_WARNING> style="display:none;"</TMPL_IF>>
 <TMPL_IF NAME=MT_UPGRADE>
 <p><MT_TRANS phrase="A new version of Movable Type has been installed.  We'll need to complete a few tasks to update your database."></p>
 </TMPL_IF>
@@ -64,6 +71,21 @@ function dismiss(id) {
 </form>
 </div>
 
+<TMPL_ELSE>
+
+<h2><MT_TRANS phrase="Upgrade Check"></h2>
+
+<p><MT_TRANS phrase="Your Movable Type installation is already up to date."></p>
+
+<div class="button-bar">
+<form method="get" action="<TMPL_VAR NAME=MT_URL>">
+<input type="submit" value="<MT_TRANS phrase="Return to Movable Type">" />
+</form>
+</div>
+
+</TMPL_IF>
+
+</div>
 </div>
 
 <TMPL_INCLUDE NAME=footer.tmpl>

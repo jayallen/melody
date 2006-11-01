@@ -2,12 +2,9 @@
 
 <style type="text/css">
 div.warning#version-warning {
-    position: absolute;
+    position: relative;
     padding: 1em;
     width: 700px;
-}
-div.warning#version-warning input {
-    font-size: xx-large;
 }
 </style>
 
@@ -31,6 +28,13 @@ function dismiss(id) {
         el.style.display = 'none';
     }
 }
+
+function show(id) {
+    var el = getByID(id);
+    if (el) {
+        el.style.display= 'block';
+    }
+}
 </script>
 
 <div id="edit-author" class="upgrade">
@@ -43,14 +47,15 @@ function dismiss(id) {
     <p><MT_TRANS phrase="While Movable Type may run, it is an <strong>untested and unsupported environment</strong>.  We strongly recommend upgrading to at least Perl [_1]." params="<TMPL_VAR NAME=PERL_MINIMUM>"></p>
     <p><MT_TRANS phrase="Do you want to proceed with the installation anyway?"></p>
     <form method="get">
-    <p align="center"><input type="button" value=" &nbsp; <MT_TRANS phrase="Yes"> &nbsp;" onclick="dismiss('version-warning')" />
+    <p align="center"><input type="button" value="<MT_TRANS phrase="Yes">" onclick="dismiss('version-warning'); show('warning_gone');" />
         &nbsp; &nbsp;
-    <input type="button" value=" &nbsp; <MT_TRANS phrase="No"> &nbsp; " onclick="javascript:location.href='mt-check.cgi'" />
+    <input type="button" value="<MT_TRANS phrase="No">" onclick="javascript:location.href='mt-check.cgi'" />
     </p>
     </form>
 </div>
 </TMPL_IF>
 
+<div id="warning_gone"<TMPL_IF NAME=VERSION_WARNING> style="display:none;"</TMPL_IF>>
 <p><MT_TRANS phrase="Before you can begin blogging, we need to complete your installation by initializing your database."></p>  
 
 <TMPL_IF NAME=ERROR>
@@ -86,7 +91,7 @@ function dismiss(id) {
     </div>
     <div class="field">
         <input type="text" id="admin_username" name="admin_username" value="<TMPL_VAR NAME=ADMIN_USERNAME ESCAPE=HTML>" />
-        <p><MT_TRANS phrase="The name used by this author to login."></p>
+        <p><MT_TRANS phrase="The name used by this user to login."></p>
     </div>
 </div>
 
@@ -96,19 +101,19 @@ function dismiss(id) {
     </div>
     <div class="field">
         <input type="text" id="admin_email" name="admin_email" value="<TMPL_VAR NAME=ADMIN_EMAIL ESCAPE=HTML>" />
-        <p><MT_TRANS phrase="The author's email address."></p>
+        <p><MT_TRANS phrase="The user's email address."></p>
     </div>
 </div>
 
 <div class="setting">
     <div class="label">
-        <label for="preferred_language"><MT_TRANS phrase="Language:"></label>
+        <label for="preferred_language"><MT_TRANS phrase="Language">:</label>
     </div>
     <div class="field">
                 <select name="preferred_language" id="preferred_language"><TMPL_LOOP NAME=LANGUAGES>
                         <option value="<TMPL_VAR NAME=L_TAG>"<TMPL_IF NAME=L_SELECTED> selected="selected"</TMPL_IF>><TMPL_VAR NAME=L_NAME></option></TMPL_LOOP>
                  </select>
-        <p><MT_TRANS phrase="The author's preferred language."></p>
+        <p><MT_TRANS phrase="The user's preferred language."></p>
     </div>
 </div>
 
@@ -154,6 +159,9 @@ function dismiss(id) {
 </form>
 
 </div>
+
+</div>
+
 </div>
 
 <TMPL_INCLUDE NAME=footer.tmpl>

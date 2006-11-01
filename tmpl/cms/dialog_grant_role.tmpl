@@ -1,0 +1,120 @@
+<TMPL_INCLUDE NAME=header-dialog.tmpl>
+
+<!--
+This dialog presents a list of roles for selection. The user may
+select one and only one role.
+
+If the role selected was a system role, then there is nothing further
+to do.
+
+Upon selecting a non-system role, the user clicks the "Next" button to
+then select one or more weblogs.
+
+possible paths:
+
+creating a new user association
+    list of users -> list of roles -> list of weblogs
+
+creating a new group association
+    list of groups -> list of roles -> list of weblogs
+
+creating a new association for a particular user
+    list of roles -> list of weblogs
+
+creating a new association for a particular group
+    list of roles -> list of weblogs
+
+To facilitate this, I need to create divs for each "page" of the dialog
+all but the first will be hidden. The "continue" button will toggle from
+one page to the following page.
+-->
+
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/client.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/json.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/core.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/dialog.js"></script>
+
+<script type="text/javascript">
+<!--
+var dialog;
+var panels;
+function dialog_closed(ok) {
+    if (ok) {
+        // fill out form and submit to create the association
+        var frm = document['grant'];
+        for (var i = 0; i < dialog.panels.length; i++) {
+            var panel = dialog.panels[i];
+            var fld = frm.elements[panel.name];
+            if (!fld) {
+                alert("can't find field for " + panel.name);
+                continue;
+            }
+            fld.value = panel.selectionList.items().join(",");
+        }
+        // commit!
+        frm.submit();
+    } else {
+        closeDialog();
+    }
+}
+
+function init() {
+    dialog = new Dialog.MultiPanel("assoc");
+    panels = [];
+    var panel;<TMPL_LOOP NAME=PANEL_LOOP>
+    panel = new ListingPanel("<TMPL_VAR NAME=PANEL_TYPE>");
+    panel.pager.setState(<TMPL_VAR NAME=PAGER_JSON>);
+    panels[panels.length] = panel;</TMPL_LOOP>
+    dialog.setPanels(panels);
+    dialog.open({}, dialog_closed);
+}
+
+TC.attachLoadEvent(init);
+//-->
+</script>
+
+<form name="grant" id="grant" method="post" target="_top" action="<TMPL_VAR NAME=SCRIPT_URL>">
+    <input type="hidden" name="__mode" value="grant_role" />
+    <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN ESCAPE=HTML>" />
+    <input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
+    <TMPL_IF NAME=BLOG_ID><input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>" />
+    </TMPL_IF><TMPL_IF NAME=EDIT_AUTHOR_ID><input type="hidden" name="author_id" value="<TMPL_VAR NAME=EDIT_AUTHOR_ID>" />
+    </TMPL_IF><TMPL_IF NAME=GROUP_ID><input type="hidden" name="group_id" value="<TMPL_VAR NAME=GROUP_ID>" />
+    </TMPL_IF><TMPL_IF NAME=ROLE_ID><input type="hidden" name="role_id" value="<TMPL_VAR NAME=ROLE_ID>" />
+    </TMPL_IF><TMPL_LOOP NAME=PANEL_LOOP>
+    <input type="hidden" name="<TMPL_VAR NAME=PANEL_TYPE>" value="" /></TMPL_LOOP>
+</form>
+
+<div class="modal_width dialog" id="dialog-grant-role">
+
+<TMPL_IF NAME=MISSING_DATA>
+<TMPL_IF NAME=MISSING_ROLE>
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="You need to create some roles."></span></h2>
+<MT_TRANS phrase="Before you can do this, you need to create some roles. <a href="javascript:void(0);" onclick="closeDialog('[_1]');">Click here</a> to create a role." params="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_role">
+</TMPL_IF>
+<TMPL_IF NAME=MISSING_GROUP>
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="You need to create some groups."></span></h2>
+<MT_TRANS phrase="Before you can do this, you need to create some groups. <a href="javascript:void(0);" onclick="closeDialog('[_1]');">Click here</a> to create a group." params="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=group">
+</TMPL_IF>
+<TMPL_IF NAME=MISSING_AUTHOR>
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="You need to create some users."></span></h2>
+<MT_TRANS phrase="Before you can do this, you need to create some users. <a href="javascript:void(0);" onclick="closeDialog('[_1]');">Click here</a> to create a user." params="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author">
+</TMPL_IF>
+<TMPL_IF NAME=MISSING_BLOG>
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="You need to create some weblogs."></span></h2>
+<MT_TRANS phrase="Before you can do this, you need to create some weblogs. <a href="javascript:void(0);" onclick="closeDialog('[_1]');">Click here</a> to create a weblog." params="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=blog">
+</TMPL_IF>
+<div class="panel-commands">
+<form onsubmit="return false" onclick="window.focus();">
+<input type="button" class="cancel" value="<MT_TRANS phrase="Close">" />
+</form>
+</div>
+<TMPL_ELSE>
+<TMPL_LOOP NAME=PANEL_LOOP>
+<TMPL_INCLUDE NAME=listing_panel.tmpl>
+</TMPL_LOOP>
+</TMPL_IF>
+
+</div><!-- /modal_width dialog#dialog-grant-role -->
+
+<TMPL_INCLUDE NAME=footer-dialog.tmpl>

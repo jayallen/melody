@@ -23,18 +23,20 @@
 <TMPL_IF NAME=IS_ADMINISTRATOR>
 
 <div class="setting">
-<div class="label"><label><MT_TRANS phrase="Authorship of imported entries:"></label></div>
+<div class="label"><label><MT_TRANS phrase="Ownership of imported entries:"></label></div>
 <div class="field">
-<p><input type="radio" id="import_as_me-on" name="import_as_me" value="1" onclick="hide('setpassworddiv');" checked="checked"> <label for="import_as_me"><MT_TRANS phrase="Import as me"></label> <a href="#" onclick="return openManual('entry_import', 'import_as_me')" class="help">?</a></p>
-<p><input type="radio" id="import_as_me-off" name="import_as_me" value="0" onclick="show('setpassworddiv');"> <label for="setpassword"><MT_TRANS phrase="Preserve original author"></label> <a href="#" onclick="return openManual('entry_import', 'password')" class="help">?</a>
+<p><input type="radio" id="import_as_me-on" name="import_as_me" value="1" <TMPL_IF NAME=PASSWORD_NEEDED>onclick="hide('setpassworddiv');"</TMPL_IF> checked="checked"> <label for="import_as_me"><MT_TRANS phrase="Import as me"></label> <a href="#" onclick="return openManual('entry_import', 'import_as_me')" class="help">?</a></p>
+<p><input type="radio" id="import_as_me-off" name="import_as_me" value="0" <TMPL_IF NAME=PASSWORD_NEEDED>onclick="show('setpassworddiv');"</TMPL_IF>> <label for="setpassword"><MT_TRANS phrase="Preserve original user"></label> <a href="#" onclick="return openManual('entry_import', 'password')" class="help">?</a>
 </p>
 
+<TMPL_IF NAME=PASSWORD_NEEDED>
 <div id="setpassworddiv" style="display:none;">
-<p><MT_TRANS phrase="If you choose to preserve the authorship of the imported entries and any of those authors must be created in this installation, you must define a default password for those new accounts."></p>
+<p><MT_TRANS phrase="If you choose to preserve the ownership of the imported entries and any of those users must be created in this installation, you must define a default password for those new accounts."></p>
 <p class="field">
-<label for="password"><MT_TRANS phrase="Default password for new authors:"></label> <input type="password" name="password" id="password" />
+<label for="password"><MT_TRANS phrase="Default password for new users:"></label> <input type="password" name="password" id="password" />
 </p>
 </div>
+</TMPL_IF>
 </div>
 </div>
 
@@ -50,7 +52,7 @@
 <TMPL_ELSE>
 
 <p class="page-desc"><input type="hidden" name="import_as_me" value="1" />
-<MT_TRANS phrase="You will be assigned the author of all imported entries.  If you wish the original authors to keep ownership, you must contact your MT system administrator to perform the import so that new authors can be created if necessary."></p>
+<MT_TRANS phrase="You will be assigned the user of all imported entries.  If you wish the original user to keep ownership, you must contact your MT system administrator to perform the import so that new users can be created if necessary."></p>
 
 </TMPL_IF>
 

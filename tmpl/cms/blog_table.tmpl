@@ -1,0 +1,62 @@
+<TMPL_LOOP NAME=BLOG_TABLE>
+
+<form method="post" name="list_blog" action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return this['__mode'] ? true : false;">
+<input type="hidden" name="__mode" value="" />
+<input type="hidden" name="_type" value="blog" />
+<input type="hidden" name="action_name" value="" />
+<input type="hidden" name="itemset_action_input" value="" />
+<input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+
+<TMPL_IF NAME=POSITION_ACTIONS_TOP>
+<TMPL_INCLUDE NAME=blog_actions.tmpl>
+</TMPL_IF>
+
+<div class="list" id="selector">
+<table cellspacing="0" <TMPL_IF NAME=IS_ADMINISTRATOR>class="show-admin"</TMPL_IF>>
+
+<thead>
+<tr>
+<th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+<th id="bt-name"><MT_TRANS phrase="Weblog Name"></th>
+<th id="bt-entries"><MT_TRANS phrase="Entries"></th>
+<th id="bt-comments"><MT_TRANS phrase="Comments"></th>
+<th id="bt-trackbacks"><MT_TRANS phrase="TrackBacks"></th>
+<th id="bt-authors"><MT_TRANS phrase="Users"></th>
+<th id="bt-settings"><MT_TRANS phrase="Settings"></th>
+<TMPL_UNLESS NAME=MODE_SEARCH_REPLACE><TMPL_UNLESS NAME=IS_ADMINISTRATOR>
+<th id="bt-delete"><MT_TRANS phrase="Delete"></th>
+</TMPL_UNLESS></TMPL_UNLESS>
+</tr>
+</thead>
+<tbody>
+
+<TMPL_LOOP NAME=OBJECT_LOOP>
+<tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
+<td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" />
+<td><a href="?__mode=menu&amp;blog_id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NAME ESCAPE=HTML></a></td>
+<td align="right"><TMPL_IF NAME=CAN_EDIT_ENTRIES><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_entries&amp;blog_id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NUM_ENTRIES></a><TMPL_ELSE><TMPL_VAR NAME=NUM_ENTRIES></TMPL_IF></td>
+<td align="right"><TMPL_IF NAME=CAN_EDIT_ENTRIES><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_comments&amp;blog_id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NUM_COMMENTS></a><TMPL_ELSE><TMPL_VAR NAME=NUM_COMMENTS></TMPL_IF></td>
+<td align="right"><TMPL_IF NAME=CAN_EDIT_ENTRIES><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_pings&amp;blog_id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NUM_PINGS></a><TMPL_ELSE><TMPL_VAR NAME=NUM_PINGS></TMPL_IF></td>
+<td align="right"><TMPL_VAR NAME=NUM_AUTHORS></td>
+<td><TMPL_IF NAME=CAN_EDIT_CONFIG><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=cfg_prefs&amp;blog_id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Settings"></a><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+<TMPL_UNLESS NAME=MODE_SEARCH_REPLACE><TMPL_UNLESS NAME=IS_ADMINISTRATOR><TMPL_IF NAME=CAN_ADMINISTER_BLOG>
+<td><a href="#" onclick="return doRemoveBlog('<TMPL_VAR NAME=ID>')"><img src="<TMPL_VAR NAME=STATIC_URI>images/nav_icons/mini/delete.gif" width="9" height="11" alt="<MT_TRANS phrase="Delete">" /></a></td>
+<TMPL_ELSE><td>&nbsp;</td></TMPL_IF></TMPL_UNLESS></TMPL_UNLESS>
+</tr>
+
+</TMPL_LOOP>
+
+</tbody>
+</table>
+</div>
+
+<TMPL_IF NAME=POSITION_ACTIONS_BOTTOM>
+<div class="list-actions-footer">
+<TMPL_INCLUDE NAME=blog_actions.tmpl>
+</div>
+</TMPL_IF>
+
+</form>
+
+</TMPL_LOOP>

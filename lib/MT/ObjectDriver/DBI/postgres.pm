@@ -340,3 +340,18 @@ sub create_sequence {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::DBI::postgres
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -935,3 +935,18 @@ sub set_defaults {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::DBM
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

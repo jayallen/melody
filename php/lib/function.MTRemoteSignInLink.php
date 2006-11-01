@@ -21,8 +21,11 @@ function smarty_function_MTRemoteSignInLink($args, &$ctx) {
               '%3f__mode=handle_sign_in%26' .
               ($args['static'] ? 'static=1' : 'static=0') .
               '%26entry_id=' . $entry['entry_id'];
+    $lang = $args['lang'];
+    $lang or $lang = $ctx->mt->config['DefaultLanguage'];
+    $lang or $lang = $blog['blog_language'];
     return $ctx->mt->config['SignOnURL'] .
-        '&amp;lang=' . $blog['blog_language'] .
+        '&amp;lang=' . $lang .
         ((isset($blog['blog_require_comment_emails']) && $blog['blog_require_comment_emails']) ? '&amp;need_email=1' : '') .
         '&amp;t=' . $token .
         '&amp;v=' . $ctx->mt->config['TypeKeyVersion'] .

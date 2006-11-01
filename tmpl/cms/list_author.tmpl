@@ -4,36 +4,156 @@
 
 <script type="text/javascript">
 <!--
+function enableFilterButton() {
+    getByID("filter-button").style.display = "inline";
+}
+function toggleFilter() {
+    var filterActive = getByID("filter-active");
+    if (filterActive.style.display == "none") {
+        filterActive.style.display = "block";
+        getByID("filter-select").style.display = "none";
+    } else {
+        filterActive.style.display = "none";
+        getByID("filter-select").style.display = "block";
+    }
+}
+
+function setFilterCol(choice) {
+    var sel = getByID('filter-select');
+    if (!sel) return;
+    sel.className = "filter-" + choice;
+    if (choice == 'none')
+        getByID('filter-mode').selectedIndex = 0;
+    else {
+        getByID('filter-mode').selectedIndex = 1;
+        var fld = getByID('filter-col');
+        if (choice == 'status')
+            fld.selectedIndex = 0;
+        else if (choice == 'commenter')
+            fld.selectedIndex = 1;
+        col_span = getByID("filter-text-col");
+        if (fld.selectedIndex > -1 && col_span)
+            col_span.innerHTML = '<strong>' +
+                fld.options[fld.selectedIndex].text + '</strong>';
+    }
+}
+
 var tableSelect;
 function init()
 {
 	// setup
 	tableSelect = new TC.TableSelect( "selector" );
 	tableSelect.rowSelect = true;
+	setFilterCol(<TMPL_IF NAME=FILTER>'<TMPL_VAR NAME=FILTER>'<TMPL_ELSE>'none'</TMPL_IF>);<TMPL_IF NAME=FILTER>
+	setFilterVal('<TMPL_VAR NAME=FILTER_VAL>');
+</TMPL_IF>
 }
+	
 TC.attachLoadEvent( init );
 // -->
 </script>
 
-<h2><span class="weblog-title-highlight"><MT_TRANS phrase="System-wide">: </span> <MT_TRANS phrase="Authors"></h2>
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="System-wide">: </span> <MT_TRANS phrase="Users"></h2>
 
-<p class="page-desc"><MT_TRANS phrase="_USAGE_AUTHORS"></p>
+<p class="page-desc">
+<MT_TRANS phrase="_USAGE_AUTHORS_1">
+</p>
 
+<TMPL_IF NAME=SAVED_STATUS_DISABLED>
+<h4 class="message"><MT_TRANS phrase="You have successfully disabled the selected user(s)."></h4>
+</TMPL_IF>
+<TMPL_IF NAME=SAVED_STATUS_ENABLED>
+<h4 class="message"><MT_TRANS phrase="You have successfully enabled the selected user(s)."></h4>
+</TMPL_IF>
 <TMPL_IF NAME=SAVED_DELETED>
-<h4 class="message"><MT_TRANS phrase="You have successfully deleted the authors from the Movable Type system."></h4>
+<h4 class="message"><MT_TRANS phrase="You have successfully deleted the user(s) from the Movable Type system.">
+</h4>
+</TMPL_IF>
+<TMPL_IF NAME=ERROR>
+<h4 class="error-message"><MT_TRANS phrase="An error occured during synchronization.  See the <a href='[_1]'>activity log</a> for detailed information." params="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view_log"></h4>
 </TMPL_IF>
 
 <div class="tabs">
 <ul>
-<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_authors"><MT_TRANS phrase="Authors"></a></li>
+<li<TMPL_IF NAME=TAB_USERS> class="yah"</TMPL_IF>><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_authors"><MT_TRANS phrase="Users"></a></li>
 <TMPL_IF NAME=CAN_CREATE_USER>
 <li class="special">
-<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Create New Author">" width="9" height="9" />
-<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author"><MT_TRANS phrase="Create New Author"></a>
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Create New User">" width="9" height="9" />
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author"><MT_TRANS phrase="Create New User"></a>
 </li>
 </TMPL_IF>
 </ul>
 </div>
+
+
+<!-- begin filter controls -->
+
+<div class="list-filters">
+<div class="inner">
+
+<div id="filter-active">
+
+<div class="rightcol">
+<TMPL_IF NAME=FILTER>
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_authors<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>"><MT_TRANS phrase="Reset"></a>
+</TMPL_IF>
+</div>
+
+<strong><MT_TRANS phrase="Filter">:</strong>
+
+<TMPL_UNLESS NAME=FILTER>
+<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="None."></a> <span class="hint"><MT_TRANS phrase="(Showing all users.)"></span>
+<TMPL_ELSE>
+<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only users whose [_1] is [_2]." params='<span id="filter-text-col">&nbsp;</span>%%<span id="filter-text-val"></span>'></a>
+
+</TMPL_UNLESS>
+
+
+</div>
+
+<form id="filter-form" method="get" action="<TMPL_VAR NAME=MT_URL>">
+<input type="hidden" name="__mode" value="list_authors" />
+<TMPL_IF NAME=BLOG_ID><input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>" />
+</TMPL_IF>
+<input id="filter" type="hidden" name="filter" value="" />
+<input id="filter_val" type="hidden" name="filter_val" value="" />
+</form>
+
+<form id="filter-select" method="get" action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return execFilter(this);" style="display: none">
+
+<MT_TRANS phrase="Show">
+<select id="filter-mode" name="mode" onchange="if (this.options[this.selectedIndex].value == 'all') { setFilterCol('none') } else { setFilterCol('status') } enableFilterButton()">
+<option value="all"><MT_TRANS phrase="all"></option>
+<option value="only"><MT_TRANS phrase="only"></option>
+</select>
+<span id="filter-mode-all" style="display: none">
+<MT_TRANS phrase="users.">
+</span>
+<span id="filter-mode-only" style="display: none">
+<MT_TRANS phrase="users where">
+<select id="filter-col" name="filter" onchange="setFilterCol(this.options[this.selectedIndex].value);enableFilterButton();">
+<option value="status"><MT_TRANS phrase="_USER_STATUS_CAPTION"></option>
+</select>
+<MT_TRANS phrase="is">
+<span id="filter-status" style="display: none">
+<select id="status-val" name="filter_val" onchange="enableFilterButton()">
+<option value="1"><MT_TRANS phrase="enabled"></option>
+<option value="2"><MT_TRANS phrase="disabled"></option>
+</select>
+</span>
+<MT_TRANS phrase=".">
+</span>
+&nbsp;
+<input type="submit" value="<MT_TRANS phrase="Filter">" id="filter-button" style="display: none" />
+<input type="button" value="<MT_TRANS phrase="Cancel">" onclick="toggleFilter()" />
+
+</form>
+
+</div>
+</div>
+
+<!-- end filter controls -->
+
 
 <div class="list-wrapper">
 
@@ -55,27 +175,37 @@ TC.attachLoadEvent( init );
 <thead>
 <tr>
 <th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+<th id="at-flag"><img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/flag.gif" alt="<MT_TRANS phrase="Status">" title="<MT_TRANS phrase="Status">" width="9" height="9" /></th>
 <th id="at-username"><MT_TRANS phrase="Username"></th>
 <th id="at-name"><MT_TRANS phrase="Name"></th>
 <th id="at-email"><MT_TRANS phrase="Email"></th>
 <th id="at-url"><MT_TRANS phrase="URL"></th>
 <th id="at-created"><MT_TRANS phrase="Created By"></th>
 <th id="at-entries"><MT_TRANS phrase="Entries"></th>
-<th id="at-last-entry"><MT_TRANS phrase="Last Entry"></th>
 </tr>
 </thead>
 <tbody>
 
 <TMPL_LOOP NAME=OBJECT_LOOP>
 <tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
-<td class="cb"><TMPL_IF NAME=HAS_EDIT_ACCESS><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /><TMPL_ELSE>&nbsp;</TMPL_IF></td>
-<td><TMPL_IF NAME=IS_ME><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author&amp;id=<TMPL_VAR NAME=ID>"><TMPL_ELSE><TMPL_IF NAME=HAS_EDIT_ACCESS><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_profile&amp;author_id=<TMPL_VAR NAME=ID>"></TMPL_IF></TMPL_IF><TMPL_VAR NAME=NAME ESCAPE=HTML><TMPL_IF NAME=IS_ME></a><TMPL_ELSE><TMPL_IF NAME=HAS_EDIT_ACCESS></a></TMPL_IF></TMPL_IF></td>
+<td class="cb">
+
+<input<TMPL_IF NAME=IS_ADMINISTRATOR><TMPL_IF NAME=IS_ME> id="sysadmin"</TMPL_IF></TMPL_IF> type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" />
+
+</td>
+<td class="<TMPL_IF NAME=STATUS_ENABLED>user-status-enabled<TMPL_ELSE>user-status-disabled</TMPL_IF>">
+<TMPL_IF NAME=STATUS_ENABLED>
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_authors<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;filter=status&amp;filter_val=1" title="<MT_TRANS phrase="Only show enabled users">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="_USER_ENABLED">" width="7" height="9" /></a>
+<TMPL_ELSE>
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_authors<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;filter=status&amp;filter_val=2" title="<MT_TRANS phrase="Only show disabled users">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="_USER_DISABLED">" width="13" height="9" /></a>
+</TMPL_IF>
+</td>
+<td><TMPL_IF NAME=HAS_EDIT_ACCESS><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author&amp;id=<TMPL_VAR NAME=ID>"></TMPL_IF><TMPL_VAR NAME=NAME ESCAPE=HTML><TMPL_IF NAME=HAS_EDIT_ACCESS></a></TMPL_IF></td>
 <td><TMPL_IF NAME=NICKNAME><TMPL_VAR NAME=NICKNAME ESCAPE=HTML><TMPL_ELSE>&nbsp;</TMPL_IF></td>
 <td class="status-email"><TMPL_IF NAME=EMAIL><a href="mailto:<TMPL_VAR NAME=EMAIL ESCAPE=HTML>" title="<TMPL_VAR NAME=EMAIL ESCAPE=HTML>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="Email">" width="16" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF></td>
 <td class="status-link"><TMPL_IF NAME=URL><a href="<TMPL_VAR NAME=URL ESCAPE=HTML>" title="<TMPL_VAR NAME=URL ESCAPE=HTML>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="Link">" width="16" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF></td>
 <td><TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY ESCAPE=HTML><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF></td>
-<td><TMPL_VAR NAME=ENTRY_COUNT ESCAPE=HTML></td>
-<td><span title="<TMPL_VAR NAME=LAST_ENTRY_TIME_FORMATTED>"><TMPL_IF NAME=LAST_ENTRY_RELATIVE><TMPL_IF NAME=DATES_RELATIVE><TMPL_VAR NAME=LAST_ENTRY_RELATIVE><TMPL_ELSE><TMPL_VAR NAME=LAST_ENTRY_FORMATTED></TMPL_IF><TMPL_ELSE><TMPL_VAR NAME=LAST_ENTRY_FORMATTED></TMPL_IF></span></td>
+<td align="right"><TMPL_IF NAME=ENTRY_COUNT><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_entries<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;filter=author_id&amp;filter_val=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=ENTRY_COUNT></a><TMPL_ELSE>&nbsp;</TMPL_IF></td>
 </tr>
 </TMPL_LOOP>
 

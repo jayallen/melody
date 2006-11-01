@@ -101,18 +101,28 @@ sub new {
 
 sub init {
     my $obj = shift;
-    my %arg = @_;
-    my $defaults = $obj->properties->{'defaults'};
-    $obj->{'column_values'} = $defaults ? {%$defaults} : {};
+    $obj->set_defaults();
     $obj;
 }
 
-sub set_defaults {}
+sub set_defaults {
+    my $obj = shift;
+    my $defaults = $obj->properties->{'defaults'};
+    $obj->{'column_values'} = $defaults ? {%$defaults} : {};
+}
 
 sub clone {
     my $obj = shift;
+    my ($param) = @_;
     my $clone = ref($obj)->new();
-    $clone->set_values($obj->column_values);
+    if ($param && $param->{Except}) {
+        my $except = $param->{Except};
+        while (my ($key, $value) = each %{$obj->column_values()}) {
+            $clone->column($key, $value) if !exists($$except{$key});
+        } 
+    } else {
+        $clone->set_values($obj->column_values);
+    }
     $clone;
 }
 
@@ -207,6 +217,7 @@ sub _mk_passthru {
 
 {
     no strict 'refs';
+    *join_on = _mk_passthru('join_on');
     *load = _mk_passthru('load');
     *load_iter = _mk_passthru('load_iter');
     *save = _mk_passthru('save');
@@ -219,31 +230,22 @@ sub _mk_passthru {
 
 sub remove_children {
     my $obj = shift;
+    return 1 unless ref $obj;
+
     my ($param) = @_;
     my $child_classes = $obj->properties->{child_classes} || {};
     my @classes = keys %$child_classes;
-    return unless @classes;
+    return 1 unless @classes;
 
-    my $key = $param->{key};
-
+    $param ||= {};
+    my $key = $param->{key} || $obj->datasource . '_id';
     my $obj_id = $obj->id;
     for my $class (@classes) {
         eval "use $class;";
-        ## We need to loop twice over the objects: first gather, then
-        ## remove, so as not to throw our gathering out of whack by removing
-        ## while we gather. :)
-        my $iter = $class->load_iter({ $key => $obj_id });
-        next unless $iter;
-        my @ids;
-        while (my $obj = $iter->()) {
-            push @ids, $obj->id;
-        }
-        ## The iterator is finished, so we can safely remove.
-        for my $id (@ids) {
-            my $obj = $class->load($id);
-            $obj->remove;
-        }
+        $class->remove({ $key => $obj_id })
+            or die $obj->error($class->errstr);
     }
+    1;
 }
 
 sub get_by_key {
@@ -335,6 +337,14 @@ sub __mangle_def {
     \%def;
 }
 
+sub cache_property {
+    my $obj = shift;
+    my ($key, $code) = @_;
+    return $obj->{__cache}{$key} if exists $obj->{__cache}{$key};
+    return undef unless $code;
+    $obj->{__cache}{$key} = $code->();
+}
+
 sub to_hash {
     my $obj = shift;
     my $hash = {};
@@ -366,15 +376,17 @@ Creating an I<MT::Object> subclass:
     package MT::Foo;
     use strict;
 
-    use MT::Object;
-    @MT::Foo::ISA = qw( MT::Object );
+    use base 'MT::Object';
+
     __PACKAGE__->install_properties({
-        columns => [
-            'id', 'foo',
-        ],
+        columns_defs => {
+            'id'  => 'integer not null auto_increment',
+            'foo' => 'string(255)',
+        },
         indexes => {
             foo => 1,
         },
+        primary_key => 'id',
         datasource => 'foo',
     });
 
@@ -422,19 +434,22 @@ by declaring your class, and inheriting from I<MT::Object>:
     package MT::Foo;
     use strict;
 
-    use MT::Object;
-    @MT::Foo::ISA = qw( MT::Object );
+    use base 'MT::Object';
+
+=item * __PACKAGE__->install_properties($args)
 
 Then call the I<install_properties> method on your class name; an easy way
 to get your class name is to use the special I<__PACKAGE__> variable:
 
     __PACKAGE__->install_properties({
-        columns => [
-            'id', 'foo',
-        ],
+        column_defs => {
+            'id' => 'integer not null auto_increment',
+            'foo' => 'string(255)',
+        },
         indexes => {
             foo => 1,
         },
+        primary_key => 'id',
         datasource => 'foo',
     });
 
@@ -445,7 +460,7 @@ have the following keys:
 
 =over 4
 
-=item * columns
+=item * column_defs
 
 The definition of the columns (fields) in your object. Column names are also
 used for method names for your object, so your column name should not
@@ -453,8 +468,84 @@ contain any strange characters. (It could also be used as part of the name of
 the column in a relational database table, so that is another reason to keep
 column names somewhat sane.)
 
-The value for the I<columns> key should be a reference to an array containing
-the names of your columns.
+The value for the I<columns> key should be a reference to an hashref
+containing the key/value pairs that are names of your columns matched with
+their schema definition.
+
+The type declaration of a column is pseudo-SQL. The data types loosely match
+SQL types, but are vendor-neutral, and each MT::ObjectDriver will map these
+to appropriate types for the database it services. The format of a column
+type is as follows:
+
+    'column_name' => 'type(size) options'
+
+The 'type' part of the declaration can be any one of:
+
+=over 4
+
+=item * string
+
+For storing string data, typically up to 255 characters, but assigned a length identified by '(size)'.
+
+=item * integer
+
+For storing integers, maybe limited to 32 bits.
+
+=item * boolean
+
+For storing boolean values (numeric values of 1 or 0).
+
+=item * smallint
+
+For storing small integers, typically limited to 16 bits.
+
+=item * datetime
+
+For storing a full date and time value.
+
+=item * timestamp
+
+For storing a date and time that automatically updates upon save.
+
+=item * blob
+
+For storing binary data.
+
+=item * text
+
+For storing text data.
+
+=item * float
+
+For storing floating point values.
+
+=back
+
+Note: The physical data storage capacity of these types will vary depending on
+the driver's implementation. Please refer to the documentation of the
+MT::ObjectDriver you're using to determine the actual capacity for these
+types.
+
+The '(size)' element of the declaration is only valid for the 'string' type.
+
+The 'options' element of the declaration is not required, but is used to
+specify additional attributes of the column. Such as:
+
+=over 4
+
+=item * not null
+
+Specify this option when you wish to constrain the column so that it must contain a defined value. This is only enforced by the database itself, not by the MT::ObjectDriver.
+
+=item * auto_increment
+
+Specify for integer columns (typically the primary key) to automatically assign a value.
+
+=item * primary key
+
+Specify for identifying the column as the primary key (only valid for a single column).
+
+=back
 
 =item * indexes
 
@@ -476,8 +567,6 @@ Automatically adds bookkeeping capabilities to your class--each object will
 take on four new columns: I<created_on>, I<created_by>, I<modified_on>, and
 I<modified_by>. These columns will be filled automatically with the proper
 values.
-
-B<NOTE:> I<created_by> and I<modified_by> are not currently used.
 
 =item * datasource
 
@@ -529,11 +618,31 @@ an argument:
 
 This returns the value of the I<foo> column from the I<$foo> object.
 
+=over 4
+
+=item * $obj->init()
+
+=back
+
+This method is used to initialize the object upon construction.
+
+=over 4
+
+=item * $obj->set_defaults()
+
+=back
+
+This method is used by the I<init> method to set the object defaults.
+
 =head2 Saving an object
 
 To save an object using the object driver, call the I<save> method:
 
-    $foo->save;
+=over 4
+
+=item * $foo->save();
+
+=back
 
 On success, I<save> will return some true value; on failure, it will return
 C<undef>, and you can retrieve the error message by calling the I<errstr>
@@ -542,10 +651,18 @@ method on the object:
     $foo->save
         or die "Saving foo failed: ", $foo->errstr;
 
-If you are saving objects in a loop, take a look at the L<Note on Object
-Locking>.
+If you are saving objects in a loop, take a look at the
+L</"Note on object locking">.
 
 =head2 Loading an existing object or objects
+
+=over 4
+
+=item * $obj->load()
+
+=item * $obj->load_iter()
+
+=back
 
 You can load an object from the datastore using the I<load> method. I<load>
 is by far the most complicated method, because there are many different ways
@@ -557,11 +674,11 @@ an iterator to step through the objects (I<load_iter>).
 
 I<load> has the following general form:
 
-    my @objects = CLASS->load(\%terms, \%arguments);
+    my @objects = MT::Foo->load(\%terms, \%arguments);
 
 I<load_iter> has the following general form:
 
-    my $iter = CLASS->load_iter(\%terms, \%arguments);
+    my $iter = MT::Foo->load_iter(\%terms, \%arguments);
 
 Both methods share the same parameters; the only difference is the manner in
 which they return the matching objects.
@@ -575,15 +692,15 @@ I<\%terms> should be either:
 
 =over 4
 
-=item *
+=item * The numeric ID of an object in the datastore.
 
-The numeric ID of an object in the datastore.
+=item * A reference to a hash.
 
-=item *
+The hash should have keys matching column names and the values are the
+values for that column.
 
-A reference to a hash where the keys are column names and the values are
-the values for that column. For example, to load an I<MT::Foo> object where
-the I<foo> column is equal to C<bar>, you could do this:
+For example, to load an I<MT::Foo> object where the I<foo> column is
+equal to C<bar>, you could do this:
 
     my @foo = MT::Foo->load({ foo => 'bar' });
 
@@ -603,7 +720,7 @@ search. The following parameters are allowed:
 =item * sort => "column"
 
 Sort the resulting objects by the column C<column>; C<column> must be an
-indexed column (see L<indexes>, above).
+indexed column (see L</"indexes">, above).
 
 =item * direction => "ascend|descend"
 
@@ -652,24 +769,24 @@ I<MT::Entry> objects, and cannot include columns from I<MT::Comment> objects.
 
 I<join> has the following general syntax:
 
-    join => [ CLASS, JOIN_COLUMN, I<\%terms>, I<\%arguments> ]
+    join => MT::Foo->join_on( JOIN_COLUMN, I<\%terms>, I<\%arguments> )
 
-I<CLASS> is the class with which you are performing the join; I<JOIN_COLUMN>
-is the column joining the two object tables. I<\%terms> and I<\%arguments>
-have the same meaning as they do in the outer I<load> or I<load_iter>
-argument lists: they are used to select the objects with which the join is
-performed.
+Use the actual MT::Object-descended package name and the join_on static method
+providing these parameters: I<JOIN_COLUMN> is the column joining the two
+object tables, I<\%terms> and I<\%arguments> have the same meaning as they do
+in the outer I<load> or I<load_iter> argument lists: they are used to select
+the objects with which the join is performed.
 
 For example, to select the last 10 most recently commmented-upon entries, you
 could use the following statement:
 
     my @entries = MT::Entry->load(undef, {
-        'join' => [ 'MT::Comment', 'entry_id',
+        'join' => MT::Comment->join_on( 'entry_id',
                     { blog_id => $blog_id },
                     { 'sort' => 'created_on',
                       direction => 'descend',
                       unique => 1,
-                      limit => 10 } ]
+                      limit => 10 } )
     });
 
 In this statement, the I<unique> setting ensures that the I<MT::Entry>
@@ -689,10 +806,16 @@ unique.
 
 =head2 Removing an object
 
+=over 4
+
+=item * $foo->remove()
+
+=back
+
 To remove an object from the datastore, call the I<remove> method on an
 object that you have already loaded using I<load>:
 
-    $foo->remove;
+    $foo->remove();
 
 On success, I<remove> will return some true value; on failure, it will return
 C<undef>, and you can retrieve the error message by calling the I<errstr>
@@ -701,15 +824,30 @@ method on the object:
     $foo->remove
         or die "Removing foo failed: ", $foo->errstr;
 
-If you are removing objects in a loop, take a look at the L<Note on Object
-Locking>.
+If you are removing objects in a loop, take a look at the
+L</"Note on object locking">.
+
+=head2 Removing select objects of a particular class
+
+Combining the syntax of the load and remove methods, you can use the
+static version of the remove method to remove particular objects:
+
+    MT::Foo->remove({ bar => 'baz' });
+
+The terms you specify to remove by should be indexed columns. This
+method will load the object and remove it, firing the callback operations
+associated with those operations.
 
 =head2 Removing all of the objects of a particular class
 
 To quickly remove all of the objects of a particular class, call the
 I<remove_all> method on the class name in question:
 
-    MT::Foo->remove_all;
+=over 4
+
+=item * MT::Foo->remove_all();
+
+=back
 
 On success, I<remove_all> will return some true value; on failure, it will
 return C<undef>, and you can retrieve the error message by calling the
@@ -717,6 +855,31 @@ I<errstr> method on the class name:
 
     MT::Foo->remove_all
         or die "Removing all foo objects failed: ", MT::Foo->errstr;
+
+=head2 Removing all the children of an object
+
+=over 4
+
+=item * $obj->remove_children([ \%param ])
+
+=back
+
+If your class has registered 'child_classes' as part of it's properties,
+then this method may be used to remove objects that are associated with
+the active object.
+
+This method is typically used in an overridden 'remove' method.
+
+    sub remove {
+        my $obj = shift;
+        $obj->remove_children({ key => 'object_id' });
+        $obj->SUPER::remove(@_);
+    }
+
+The 'key' parameter specified here lets you identify the field name used by
+the children classes to relate back to the parent class. If unspecified,
+C<remove_children> will assume the key to be the datasource name of the
+current class with an '_id' suffix.
 
 =head2 Getting the count of a number of objects
 
@@ -737,6 +900,12 @@ To check an object for existence in the datastore, use the I<exists> method:
     }
 
 =head2 Counting groups of objects
+
+=over 4
+
+=item * $obj->count_group_by()
+
+=back
 
 The count_group_by method can be used (with SQL-based ObjectDrivers)
 to retrieve a list of all the distinct values that appear in a given
@@ -782,11 +951,23 @@ values.
 
 =head2 Inspecting and Manipulating Object State
 
+=over 4
+
+=item * $obj->column_values()
+
+=back
+
 Use C<column_values> and C<set_values> to get and set the fields of an
 object I<en masse>. The former returns a hash reference mapping column
 names to their values in this object. For example:
 
     $values = $obj->column_values()
+
+=over 4
+
+=item * $obj->set_values()
+
+=back
 
 C<set_values> accepts a similar hash ref, which need not give a value
 for every field. For example:
@@ -795,18 +976,24 @@ for every field. For example:
 
 is equivalent to
 
-  $obj->col1($val1);
-  $obj->col2($val2);
+    $obj->col1($val1);
+    $obj->col2($val2);
 
 =head2 Other Methods
 
 =over 4
 
-=item * $obj->clone()
+=item * $obj->clone([\%param])
 
-Returns a clone of C$<obj>--that is, a distinct object which has all
+Returns a clone of C<$obj>. That is, a distinct object which has all
 the same data stored within it. Changing values within one object does
 not modify the other.
+
+An optional C<Except> parameter may be provided to exclude particular
+columns from the cloning operation. For example, the following would
+clone the elements of the blog except the name attribute.
+
+   $blog->clone({ Except => { name => 1 } });
 
 =item * $obj->column_names()
 
@@ -814,6 +1001,10 @@ Returns a list of the names of columns in C<$obj>; includes all those
 specified to the install_properties method as well as the audit
 properties (C<created_on>, C<modified_on>, C<created_by>,
 C<modified_by>), if those were enabled in install_properties.
+
+=item * $obj->set_driver()
+
+This method sets the object driver to use to link with a database.
 
 =item * MT::Foo->driver()
 
@@ -884,6 +1075,35 @@ matching the given key. There need not be a unique constraint on the
 columns named in the C<$key_hash>; but if not, you should be confident
 that only one object will match the key.
 
+=item * $obj->cache_property($key, $code)
+
+Caches the provided key (e.g. entry, trackback) with the return value
+of the given code reference (which is often an object load call) so
+that the value does not have to be recomputed each time.
+
+=item * $obj->column_def($name)
+
+This method returns the value of the given I<$name> C<column_defs>
+propery.
+
+=item * $obj->column_defs()
+
+This method returns all the C<column_defs> of the property of the
+object.
+
+=item * $obj->to_hash()
+
+TODO - So far I have not divined what this method actually does. Hints?
+
+=item * Class->join_on()
+
+This method returns the list of used by the join arguments parameter
+used by the L<MT::App::CMS/listing> method.
+
+=item * $obj->properties()
+
+TODO - Return the return properties of the object.
+
 =back
 
 =head1 NOTES
@@ -933,6 +1153,12 @@ time.
 
 =head1 CALLBACKS
 
+=over 4
+
+=item * $obj->add_callback()
+
+=back
+
 Most MT::Object operations can trigger callbacks to plugin code. Some
 notable uses of this feature are: to be notified when a database record is
 modified, or to pre- or post-process the data being flowing to the
@@ -941,7 +1167,7 @@ database.
 To add a callback, invoke the C<add_callback> method of the I<MT::Object>
 subclass, as follows:
 
-    MT::Foo->add_callback("pre_save", <priority>, 
+   MT::Foo->add_callback( "pre_save", <priority>, 
                           <plugin object>, \&callback_function);
 
 The first argument is the name of the hook point. Any I<MT::Object>
@@ -990,7 +1216,7 @@ itself:
 
   sub my_callback {
       my ($cb, ...) = @_;
-      
+
       if ( <error condition> ) {
           return $cb->error("Error message");
       }
@@ -1016,6 +1242,15 @@ then it will be called whenever post_save callbacks are called.
 "Any-class" callbacks are called I<after> all class-specific
 callbacks. Note that C<add_callback> must be called on the C<MT> class,
 not on a subclass of C<MT::Object>.
+
+=over 4
+
+=item * $obj->set_callback_routine()
+
+This method just calls the set_callback_routine as defined by the
+MT::ObjectDriver set with the I<set_driver> method.
+
+=back
 
 =head2 Caveat
 

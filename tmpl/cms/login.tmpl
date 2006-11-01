@@ -6,6 +6,17 @@
 
 <script type="text/javascript">
 <!--
+// if this loads within our modal dialog iframe, force the user to
+// login from the 'top' of the browser.
+if (window.top && (window.top.location != window.location)) {
+    // strip any parameters to return them to the main menu,
+    // since leaving them will display the modal dialog in the
+    // full window.
+    var loc = window.location.href;
+    loc = loc.replace(/\?.+/, '');
+    window.top.location.href = loc;
+}
+
 function init() {
     var u = getByID("username");
     if (u.value != '') {
@@ -45,11 +56,11 @@ TC.attachLoadEvent(init);
 <p><label for="password"><MT_TRANS phrase="Password"></label><br />
 <input type="password" name="password" id="password" size="20" /></p>
 
-<p><label><MT_TRANS phrase="Remember me?"> <input type="checkbox" name="remember" value="1" /></label></p>
+<p><label><MT_TRANS phrase="Remember me?"> <input type="checkbox" name="remember" value="1" accesskey="r" /></label></p>
 
 <p><input type="submit" name="submit" value="<MT_TRANS phrase="Log In">" /></p>
 
-<p><a href="#" onclick="window.open('<TMPL_VAR NAME=MT_URL>?__mode=start_recover', 'recover', 'width=370,height=250'); return false"><MT_TRANS phrase="Forgot your password?"></a></p>
+<TMPL_IF NAME=CAN_RECOVER_PASSWORD><p><a href="#" onclick="window.open('<TMPL_VAR NAME=MT_URL>?__mode=start_recover', 'recover', 'width=370,height=250'); return false"><MT_TRANS phrase="Forgot your password?"></a></p></TMPL_IF>
 
 </form>
 

@@ -49,22 +49,48 @@ will help identify errors in the activity log.
 
 =head1 METHODS
 
+=head2 new(\%param) or new(%param)
+
+Constructs a new object, using the given parameters. The parameters
+recognized for a callback object are:
+
 =over 4
 
 =item name
 
+The name of the callback.
+
+=item code
+
+A coderef that is invoked when running the callback.
+
+=item plugin
+
+The L<MT::Plugin> that is associated with this callback.
+
+=item priority
+
+The priority to assign for the callback, which determines the order
+it is invoked when multiple callbacks are tied to the same method.
+
+=item method
+
+The name of the method this callback is associated with.
+
+=back
+
+=head2 $cb->name()
+
 Returns the registered name of the callback.
 
-=item invoke
+=head2 $cb->invoke(@params)
 
 Executes the callback, passing the MT::Callback object as the first
 parameter, followed by any parameters sent to the invoke method.
 
-=item plugin
+=head2 $cb->plugin()
 
 Returns the 'plugin' element associated with the callback object.
-
-=back
 
 =head1 CALLBACK CALLING CONVENTIONS
 
@@ -83,7 +109,7 @@ called.
 An example E<lt>classE<gt>::pre_load might be written as follows:
 
     sub pre_load {
-        my ($eh, $args) = @_;
+        my ($cb, $args) = @_;
         ....
     }
 
@@ -93,7 +119,7 @@ E<lt>classE<gt>::post_load. An example E<lt>classE<gt>::post_load
 function 
     
     sub post_load {
-        my ($eh, $args, $obj) = @_;
+        my ($cb, $args, $obj) = @_;
         ....
     }
 
@@ -106,12 +132,12 @@ that were supplied to the load or load_iter methods.
 Callbacks for the save method might be written as follows:
 
     sub pre_save {
-        my ($eh, $obj, $original) = @_;
+        my ($cb, $obj, $original) = @_;
         ....
     }
 
     sub post_save {
-        my ($eh, $obj, $original) = @_;
+        my ($cb, $obj, $original) = @_;
         ....
     }
 
@@ -129,7 +155,7 @@ are called at the very beginning and very end of the respective
 operations. The callback routine is called as follows:
 
     sub pre_remove {
-        my ($eh, $obj) = @_;
+        my ($cb, $obj) = @_;
         ....
     }
 
@@ -150,12 +176,12 @@ object. You can use this object to return errors to MT.
 To signal an error, just use its error() method:
 
     sub my_callback {
-        my ($eh, $arg2, $arg3) = @_;
+        my ($cb, $arg2, $arg3) = @_;
 
         ....
 
         if (some_condition) {
-            return $eh->error("The foofiddle was invalid.");
+            return $cb->error("The foofiddle was invalid.");
         } 
         ...
     }

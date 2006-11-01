@@ -51,6 +51,7 @@ __PACKAGE__->install_properties({
         basename => 1,
     },
     child_of => 'MT::Blog',
+    child_classes => ['MT::Comment','MT::Placement','MT::Trackback'],
     audit => 1,
     datasource => 'entry',
     primary_key => 'id',
@@ -175,30 +176,26 @@ sub _nextprev {
 
 sub trackback {
     my $entry = shift;
-    if (@_) {
-        $entry->{__trackback} = shift;
-    } elsif (!$entry->{__trackback} && $entry->id) {
-        my $tb = MT::Trackback->load({ entry_id => $entry->id });
-        $entry->{__trackback} = $tb;
-    }
-    $entry->{__trackback};
+    $entry->cache_property('trackback', sub {
+        MT::Trackback->load({ entry_id => $entry->id });
+    });
 }
 
 sub author {
     my $entry = shift;
-    my $req = MT::Request->instance();
-    unless ($entry->{__author}) {
+    $entry->cache_property('author', sub {
+        my $req = MT::Request->instance();
         my $author_cache = $req->stash('author_cache');
-        $entry->{__author} = $author_cache->{$entry->author_id};
-        unless ($entry->{__author}) {
+        my $author = $author_cache->{$entry->author_id};
+        unless ($author) {
             require MT::Author;
-            $entry->{__author} = MT::Author->load($entry->author_id,
-                                                  {cached_ok=>1});
-            $author_cache->{$entry->author_id} = $entry->{__author};
+            $author = MT::Author->load($entry->author_id,
+                                       {cached_ok=>1});
+            $author_cache->{$entry->author_id} = $author;
             $req->stash('author_cache', $author_cache);
         }
-    }
-    $entry->{__author};
+        $author;
+    });
 }
 
 ## To speed up <$MTEntryCategory$> (and category-loading in general),
@@ -251,7 +248,7 @@ sub reset_placement_cache {
 
 sub category {
     my $entry = shift;
-    unless ($entry->{__category}) {
+    $entry->cache_property('category', sub {
         require MT::Category;
         unless (MT::ConfigMgr->instance->NoPlacementCache) {
             my $cache = _placement_cache($entry->blog_id);
@@ -262,41 +259,35 @@ sub category {
             }
         }
         require MT::Placement;
-        $entry->{__category} = MT::Category->load(undef,
-            { 'join' => [ 'MT::Placement', 'category_id',
+        MT::Category->load(undef,
+            { 'join' => MT::Placement->join_on('category_id',
                         { entry_id => $entry->id,
-                          is_primary => 1 } ] },
+                          is_primary => 1 } ) },
         );
-    }
-    $entry->{__category};
+    });
 }
 
 sub categories {
     my $entry = shift;
-    unless ($entry->{__categories}) {
+    $entry->cache_property('categories', sub {
         require MT::Category;
         unless (MT::ConfigMgr->instance->NoPlacementCache) {
             my $cache = _placement_cache($entry->blog_id);
             if (exists $cache->{all}{$entry->id}) {
                 my $p = $cache->{all}{$entry->id} or return;
-                for my $place (@$p) {
-                    push @{ $entry->{__categories} },
-                        MT::Category->load($place, {cached_ok=>1});
-                }
-                $entry->{__categories} = [ sort { $a->label cmp $b->label }
-                                           @{ $entry->{__categories} } ];
-                return $entry->{__categories};
+                my @cats = MT::Category->load({ id => $p });
+                @cats = sort { $a->label cmp $b->label } @cats;
+                return \@cats;
             }
         }
         require MT::Placement;
-        $entry->{__categories} = [ MT::Category->load(undef,
-            { 'join' => [ 'MT::Placement', 'category_id',
-                        { entry_id => $entry->id } ] },
-        ) ];
-        $entry->{__categories} = [ sort { $a->label cmp $b->label }
-                                   @{ $entry->{__categories} } ];
-    }
-    $entry->{__categories};
+        my @cats = MT::Category->load(undef,
+            { 'join' => MT::Placement->join_on('category_id',
+                        { entry_id => $entry->id } ) },
+        );
+        @cats = sort { $a->label cmp $b->label } @cats;
+        \@cats;
+    });
 }
 
 sub is_in_category {
@@ -318,20 +309,17 @@ sub comments {
         $terms->{entry_id} = $entry->id;
         return [ MT::Comment->load( $terms, $args ) ];
     } else {
-        unless ($entry->{__comments}) {
-            $entry->{__comments} = [ MT::Comment->load({
-                entry_id => $entry->id
-            }) ];
-        }
-        $entry->{__comments};
+        $entry->cache_property('comments', sub {
+            [ MT::Comment->load({ entry_id => $entry->id }) ];
+        });
     }
 }
 
 sub comment_latest {
     my $entry = shift;
-    unless ($entry->{__comment_latest}) {
+    $entry->cache_property('comment_latest', sub {
         require MT::Comment;
-        $entry->{__comment_latest} = MT::Comment->load({
+        MT::Comment->load({
             entry_id => $entry->id,
             visible => 1
         }, {
@@ -339,20 +327,18 @@ sub comment_latest {
             direction => 'descend',
             limit => 1,
         });
-    }
-    $entry->{__comment_latest};
+    });
 }
 
 sub comment_count {
     my $entry = shift;
-    unless ($entry->{__comment_count}) {
+    $entry->cache_property('comment_count', sub {
         require MT::Comment;
-        $entry->{__comment_count} = MT::Comment->count({
+        MT::Comment->count({
             entry_id => $entry->id,
             visible => 1
         });
-    }
-    $entry->{__comment_count};
+    });
 }
 
 sub pings {
@@ -363,25 +349,20 @@ sub pings {
         $terms->{entry_id} = $entry->id;
         return [ MT::TBPing->load( $terms, $args ) ];
     } else {
-        unless ($entry->{__pings}) {
-            $entry->{__pings} = [ MT::TBPing->load({
-                entry_id => $entry->id
-            }) ];
-        }
-        $entry->{__pings};
+        $entry->cache_property('pings', sub {
+            [ MT::TBPing->load({ entry_id => $entry->id }) ];
+        });
     }
 }
 
 sub ping_count {
     my $entry = shift;
-    unless ($entry->{__ping_count}) {
+    $entry->cache_property('ping_count', sub {
         require MT::Trackback;
         require MT::TBPing;
         my $tb = MT::Trackback->load({ entry_id => $entry->id });
-        $entry->{__ping_count} = $tb ?
-            MT::TBPing->count({ tb_id => $tb->id, visible => 1 }) : 0;
-    }
-    $entry->{__ping_count};
+        $tb ? MT::TBPing->count({ tb_id => $tb->id, visible => 1 }) : 0;
+    });
 }
 
 sub archive_file {
@@ -627,7 +608,7 @@ sub save {
         ## If there is a TrackBack item for this entry, but
         ## pings are now disabled, make sure that we mark the
         ## object as disabled.
-        if (my $tb = MT::Trackback->load({ entry_id => $entry->id })) {
+        if (my $tb = $entry->trackback) {
             $tb->is_disabled(1);
             $tb->save
                 or return $entry->error($tb->errstr);
@@ -642,44 +623,30 @@ sub save {
 
 sub remove {
     my $entry = shift;
+    $entry->remove_children({ key => 'entry_id' }) or return;
+    if (ref $entry) {
+        $entry->remove_tags;
 
-    my $comments = $entry->comments;
-    $_->remove for @$comments;
-
-    require MT::Placement;
-    my @place = MT::Placement->load({ entry_id => $entry->id });
-    $_->remove for @place;
-
-    require MT::Trackback;
-    my @tb = MT::Trackback->load({ entry_id => $entry->id });
-    $_->remove for @tb;
-
-    $entry->remove_tags;
-
-    # Archive types other than Individual may refer to this entry, but
-    # not essentially.  only the individual A.T. needs to be blottoed.
-    require MT::FileInfo;
-    my @finfos = MT::FileInfo->load({
-        entry_id => $entry->id,
-        archive_type => 'Individual',
-    });
-    $_->remove for @finfos;
-
-    $entry->SUPER::remove;
+        # Archive types other than Individual may refer to this entry, but
+        # not essentially.  only the individual A.T. needs to be blottoed.
+        require MT::FileInfo;
+        MT::FileInfo->remove({
+            entry_id => $entry->id,
+            archive_type => 'Individual',
+        });
+    }
+    $entry->SUPER::remove(@_);
 }
 
 sub blog {
     my ($entry) = @_;
-    my $blog = $entry->{__blog};
-    unless ($blog) {
+    $entry->cache_property('blog', sub {
         my $blog_id = $entry->blog_id;
         require MT::Blog;
-        $blog = MT::Blog->load($blog_id, {cached_ok=>1}) or
-            return $entry->error(MT->translate(
-                                 "Load of blog '[_1]' failed: [_2]", $blog_id, MT::Blog->errstr));
-        $entry->{__blog} = $blog;
-    }
-    return $blog;
+        MT::Blog->load($blog_id, {cached_ok=>1}) or
+            $entry->error(MT->translate(
+            "Load of blog '[_1]' failed: [_2]", $blog_id, MT::Blog->errstr));
+    });
 }
 
 sub to_hash {

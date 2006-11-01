@@ -1,0 +1,230 @@
+<TMPL_INCLUDE NAME="header.tmpl">
+
+<script type="text/javascript">
+<!--
+
+var permsChanged = "no";
+function checkPerms() { permsChanged = "yes"; }
+function permsUnChanged() { permsChanged = "no"; } 
+
+function checkChanged() {
+
+var orig_roleName = "<TMPL_VAR NAME=NAME ESCAPE=HTML>";
+var roleName = getByID('name').value;
+if(permsChanged == "yes") {
+    if(roleName == orig_roleName) {
+        submitFormConfirm(document.role, 'save_role', '<MT_TRANS phrase="You have changed the permissions for this role. This will alter what it is that the users associated with this role will be able to do. If you prefer, you can save this role with a different name.  Otherwise, be aware of any changes to users with this role.">'); 
+    } else {
+        submitForm(document.role, 'save_role');
+    }
+} else {
+    submitForm(document.role, 'save_role');
+}
+}
+
+function allPerms(name, check) {
+    var f = document.forms['role'];
+    var flds = f[name];
+    for (var i = 0; i < flds.length; i++) {
+        flds[i].checked = check;
+        if (!flds[i].className.match(/administer_blog/))
+            flds[i].disabled = check;
+    }
+    return false;
+}
+
+function getParentByClass(n, c) {
+    var result = n;
+    while (!result.className.match(c)
+           && result.nodeName && (result.nodeName != 'body')) {
+       result = result.parentNode;
+    }
+    return result;
+}
+
+function rectify(permContainer, forcibly) {
+    var permCheckboxes = permContainer.getElementsByTagName('input');
+    for (var i=0; i < permCheckboxes.length; i++) {
+        if (permCheckboxes[i].className.match(/administer_blog/)) {
+            isAdmin = permCheckboxes[i].checked;
+        }
+    }
+    for (var i=0; i < permCheckboxes.length; i++) {
+        if (!permCheckboxes[i].className.match(/administer_blog/)) {
+            if (isAdmin) {
+                permCheckboxes[i].disabled = true;
+                permCheckboxes[i].checked = true;
+            } else {
+                if (forcibly) {
+                    permCheckboxes[i].disabled = false;
+                    permCheckboxes[i].checked = false;
+                }
+            }
+        }
+    }
+}
+
+function handleClick(e) {
+    e = e || event;
+    var targ = e.target || e.srcElement;
+    if (!targ || !targ.nodeName) {
+        return;
+    }
+    if (targ.nodeName.toLowerCase() == 'label') {
+        if (targ.getAttribute('for'))
+            targ = getByID(targ.getAttribute('for'));
+        else {
+           var inputs = targ.getElementsByTagName('input');
+           targ = inputs[0];
+        }
+    }
+    if (targ.className.match(/administer_blog/)) {
+        permContainer = getParentByClass(targ, 'permission-list');
+        rectify(permContainer, 1);
+    }
+}
+
+function rectifyAll() {
+    var containers = TC.getElementsByClassName('permission-list');
+    for (var i=0; i < containers.length; i++) {
+        rectify(containers[i]);
+    }
+}
+
+TC.attachLoadEvent( rectifyAll );
+
+//-->
+</script>
+
+<div id="edit-role" onclick="handleClick(event)">
+
+<TMPL_IF NAME=ID>
+<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Role Details"></h2>
+<TMPL_ELSE>
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="Create New Role"></span></h2>
+</TMPL_IF>
+
+<p class="page-desc"><MT_TRANS phrase="_USAGE_ROLE_PROFILE"></p>
+
+<TMPL_IF NAME=SAVED>
+<p class="info"><MT_TRANS phrase="Your changes have been saved."></p>
+</TMPL_IF>
+
+<div class="tabs">
+<ul>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_role&amp;id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Details"></a></li>
+<TMPL_IF NAME=ID>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;role_id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Users/Groups"></a></li>
+</TMPL_IF>
+</ul>
+</div>
+
+<TMPL_IF NAME=ID>
+<form name="role" method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return this['__mode'] ? true : false">
+<TMPL_ELSE>
+<form id="role" name="role" method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
+</TMPL_IF>
+
+<TMPL_IF NAME=ID>
+<input type="hidden" name="id" value="<TMPL_VAR NAME=ID>" />
+</TMPL_IF>
+<input type="hidden" name="__mode" value="save_role" />
+<input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+
+<fieldset>
+
+<h3><MT_TRANS phrase="Role Details"></h3>
+
+<div class="inner">
+
+<div class="setting">
+    <div class="label">
+        <label for="name"><MT_TRANS phrase="Role Name"> (*):</label>
+    </div>
+    <div class="field">
+        <input name="name" id="name" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>" />
+    </div>
+</div>
+
+<div class="setting">
+    <div class="label">
+        <label for="description"><MT_TRANS phrase="Description">:</label>
+    </div>
+    <div class="field">
+        <textarea name="description" id="description" cols="50" rows="2"><TMPL_VAR NAME=DESCRIPTION ESCAPE=HTML></textarea>
+    </div>
+</div>
+
+<TMPL_IF NAME=ID>
+<div class="setting">
+    <div class="label">
+        <label><MT_TRANS phrase="Created by">:</label>
+    </div>
+    <div class="field">
+        <p class="static"><TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF></p>
+    </div>
+</div>
+</TMPL_IF>
+
+</div>
+
+</fieldset>
+
+<fieldset>
+
+<h3><MT_TRANS phrase="Permissions"></h3>
+
+<div class="setting permission-list">
+
+<TMPL_IF NAME=IS_ENABLED>
+<div class="rightcol">
+<p><a href="#" onclick="return allPerms('permission', true)"><MT_TRANS phrase="Check All"></a> |
+<a href="#" onclick="return allPerms('permission', false)"><MT_TRANS phrase="Uncheck All"></a></p>
+</div>
+<br clear="both" />
+</TMPL_IF>
+
+<TMPL_LOOP NAME=PERM_LOOPS>
+<div class="field">
+<ul>
+<TMPL_LOOP NAME=PERM_LOOP>
+<li><label for="permission-<TMPL_VAR NAME=FLAG_NAME>"><input id="permission-<TMPL_VAR NAME=FLAG_NAME>" type="checkbox" onchange="checkPerms();" class="<TMPL_VAR NAME=FLAG_NAME> cb" name="permission" value="<TMPL_VAR NAME=FLAG_NAME>"<TMPL_IF NAME=HAVE_ACCESS> checked="checked"</TMPL_IF><TMPL_IF NAME=ID><TMPL_UNLESS NAME=IS_ENABLED> disabled="disabled"</TMPL_UNLESS></TMPL_IF> /> <MT_TRANS phrase="<TMPL_VAR NAME=PROMPT ESCAPE=HTML>"></label></li>
+</TMPL_LOOP>
+</ul>
+</div>
+</TMPL_LOOP>
+
+</div>
+
+<TMPL_IF NAME=ID>
+<TMPL_IF NAME=SAME_PERM_LOOP>
+<div class="setting">
+    <div class="label">
+        <label for="same_permissions"><MT_TRANS phrase="Roles with the same permissions">:</label>
+    </div>
+    <div class="field">
+        <TMPL_LOOP NAME=SAME_PERM_LOOP>
+        <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_role&amp;id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NAME ESCAPE=HTML></a> 
+        </TMPL_LOOP>
+    </div>
+</div>
+</TMPL_IF>
+</TMPL_IF>
+
+</fieldset>
+
+
+<div style="text-align: center">
+<TMPL_IF NAME=ID>
+<input type="button" onclick="checkChanged();" value="<MT_TRANS phrase="Save Changes">" accesskey="s" title="<MT_TRANS phrase="Save this role">" />
+<TMPL_ELSE>
+<input type="submit" value="<MT_TRANS phrase="Save Changes">" accesskey="s" alt="<MT_TRANS phrase="Save this role">" />
+</TMPL_IF>
+</div>
+
+</form>
+
+</div>
+
+<TMPL_INCLUDE NAME="footer.tmpl">

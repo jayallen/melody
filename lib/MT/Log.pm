@@ -21,6 +21,7 @@ use vars qw(@ISA %Classes);
     'comment' => 'MT::Log::Comment',
 );
 
+use MT::Blog;
 use MT::Object;
 @ISA = qw( MT::Object );
 
@@ -120,6 +121,7 @@ sub description {
         require MT::Util;
         $msg = '<pre>' . MT::Util::encode_html($msg) . '</pre>';
     }
+                            
     $msg;
 }
 
@@ -243,7 +245,7 @@ Extended log example:
     use MT::Log;
     my $log = MT::Log->new;
     $log->message("This is a debug message");
-    $log->level(MT::Log::DEBUG);
+    $log->level(MT::Log::DEBUG());
     $log->save or die $log->errstr;
 
 You can also log directly with the MT package:
@@ -251,7 +253,7 @@ You can also log directly with the MT package:
     MT->log({
         message => "A new entry has been posted.",
         metadata => $entry->id,
-        class => 'MT::Log::Entry'
+        class => 'entry'
     });
 
 =head1 DESCRIPTION
@@ -298,19 +300,32 @@ element should be unique enough to not conflict with other plugins.
 
 =head1 METHODS
 
-=over 4
+=head2 CLASS->new()
 
-=item * class_label
+Creates a new log object.
+
+=head2 $log->init()
+
+Initializes the created_on and modified_on properties of the object
+to the current time (these are overwritten if an object is being loaded
+from the database).
+
+=head2 CLASS->class_label
 
 Returns a string identifying the kind of log record the class is for.
 
-=item * description
+=head2 $log->description
 
 Provides an extended view of the log data; this may contain HTML.
 
-=item * metadata_object
+=head2 $log->metadata_class()
 
-The base C<MT::Log> metadata_object method will return a MT data object that
+Returns a Perl package name for the metadata object related to the
+log record.
+
+=head2 $log->metadata_object
+
+The base I<MT::Log> metadata_object method will return a MT data object that
 is related to this log object in the event that:
 
 =over 4
@@ -318,18 +333,31 @@ is related to this log object in the event that:
 =item 1. The metadata column is populated with a number.
 
 =item 2. The class column has an identifier that maps to a registered
-C<MT::Log> subclass.
+I<MT::Log> subclass.
 
-=item 3. The class identified for the log record has a name that follows this
-pattern: C<BASE::Log::OBJECTCLASS>.
+=item 3. The class identified for the log record is provided by the C<metadata_class> method.
 
 =back
 
 If these conditions are met, this method will attempt to load a record using
-the package name C<BASE::OBJECTCLASS> with the id given in the metadata
-column.
+the package name provided by the C<metadata_class> method with the id given in
+the metadata column.
 
-=back
+=head2 MT::Log->add_class($identifier => $package_name)
+
+Registers a I<MT::Log> subclass with an identifier that is stored in the
+'class' column of log records.
+
+=head2 $log->set_values(\%values)
+
+Overrides the I<MT::Object> set_values method and reblesses the object
+with the appropriate I<MT::Log> subclass based on the identifier in
+the 'class' column.
+
+=head2 $log->to_hash()
+
+Returns a hashref of data that represents the data held by the log
+object and any associated metadata_object that it points to.
 
 =head1 DATA ACCESS METHODS
 

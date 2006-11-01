@@ -112,6 +112,16 @@ function toggleDisplay(id, info) {
 <h2><span class="weblog-title-highlight"><MT_TRANS phrase="System-wide">:</span> <MT_TRANS phrase="Registered Plugins"></h2>
 <p class="page-desc"><MT_TRANS phrase="_USAGE_PLUGINS">  <a href="#" onclick="return openManual('system_settings_plugins', 'index')" class="help">?</a></p>
 
+<TMPL_IF NAME=IS_ADMINISTRATOR>
+<div class="tabs">
+<ul>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=cfg_system"><MT_TRANS phrase="General"></a></li>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=cfg_system_feedback"><MT_TRANS phrase="Feedback"></a></li>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_plugins"><MT_TRANS phrase="Plugins"></a></li>
+</ul>
+</div>
+</TMPL_IF>
+
 <TMPL_IF NAME=SAVED>
 <p class="message"><MT_TRANS phrase="Your plugin settings have been saved."></p></TMPL_IF>
 <TMPL_IF NAME=RESET>

@@ -102,7 +102,7 @@ TC.attachLoadEvent( init );
 <TMPL_UNLESS NAME=FILTER>
 <a href="#" onclick="toggleFilter()"><MT_TRANS phrase="None."></a> <span class="hint"><MT_TRANS phrase="(Showing all log records.)"></span>
 <TMPL_ELSE>
-<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only log records where"> <span id="filter-text-col"></span> <MT_TRANS phrase="is"> <span id="filter-text-val"></span>.</a>
+<a href="#" onclick="toggleFilter()"><MT_TRANS phrase="Showing only log records where"> <span id="filter-text-col">&nbsp;</span> <MT_TRANS phrase="is"> <span id="filter-text-val"></span>.</a>
 <a href="<MT_ACTION mode="export_log" <TMPL_IF NAME=BLOG_ID>blog_id="<TMPL_VAR NAME=BLOG_ID>"</TMPL_IF> magic_token="<TMPL_VAR NAME=MAGIC_TOKEN>" return_args="<TMPL_VAR NAME=RETURN_ARGS>" filter_args="<TMPL_VAR NAME=FILTER_ARGS>">" title="<MT_TRANS phrase="Filtered CSV">"><img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/download.gif" alt="<MT_TRANS phrase="Download CSV">" width="9" height="9" /></a>
 <a href="<TMPL_VAR NAME=FEED_URL ESCAPE=HTML>" title="<MT_TRANS phrase="Filtered"> <TMPL_VAR NAME=FEED_NAME ESCAPE=HTML>"><img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/feed.gif" alt="<MT_TRANS phrase="Activity Feed">" width="9" height="9" /></a>
 </TMPL_UNLESS>

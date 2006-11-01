@@ -142,6 +142,7 @@ sub init_request {
     my $plugin = shift;
     my ($app) = @_;
     delete $plugin->{__config_obj} if exists $plugin->{__config_obj};
+    delete $plugin->{__l10n_handle} if exists $plugin->{__l10n_handle};
     my $app_pkg = ref $app;
     if (my $init = $plugin->{init_request}) {
         if (ref $init eq 'HASH') {
@@ -252,6 +253,7 @@ sub save_config {
         $data->{$_} = exists $param->{$_} ? $param->{$_} : undef;
     }
     $pdata->data($data);
+    delete $plugin->{__config_obj} if exists $plugin->{__config_obj};
     $pdata->save() or die $pdata->errstr;
 }
 
@@ -259,6 +261,7 @@ sub reset_config {
     my $plugin = shift;
     my ($scope) = @_;
     my $obj = $plugin->get_config_obj($scope);
+    delete $plugin->{__config_obj} if exists $plugin->{__config_obj};
     $obj->remove if $obj->id;
 }
 
@@ -521,8 +524,7 @@ __END__
 
 =head1 NAME
 
-MT::Plugin - Movable Type class holding information that describes a
-plugin
+MT::Plugin - Movable Type class that describes a plugin
 
 =head1 SYNOPSIS
 
@@ -894,11 +896,36 @@ package for how to declare an upgrade function.  Here is an example:
         }
     }
 
+=item * icon
+
+Set the icon filename (not including the plugin's static web path).
+
+=item * log_classes
+
+Set the name of the plugin's log classes to use.  For example:
+
+  MT->add_plugin({
+    name => "My custom plugin",
+    log_classes => { customlog => "MyCustomLog" }
+  });
+
+=back
+
 =head1 METHODS
 
 Each of the above arguments to the constructor is also a 'getter'
 method that returns the corresponding value. C<MT::Plugin> also offers
 the following methods:
+
+=head2 MT::Plugin->new
+
+Return a new I<MT::Plugin> instance.  This method calls the I<init> method.
+
+=head2 $plugin->init
+
+This construction helper method registers plugin I<callbacks>,
+I<junk_filters>, I<text_filters>, I<log_classes>, I<template_tags>,
+I<conditional_tags>, I<global_filters>.
 
 =head2 $plugin->init_app
 
@@ -910,12 +937,19 @@ the application starts up.
 For subclassed MT::Plugins that declare this method, it is invoked when
 the application begins handling a new request.
 
+=head2 $plugin->init_tasks
+
+For subclassed MT::Plugins that declare this method, it is invoked when
+the application begins handling a new task.
+
 =head2 $plugin->envelope
 
 Returns the path to the plugin, relative to the MT directory. This is
 determined automatically when the plugin is loaded.
 
 =head2 $plugin->set_config_value($key, $value[, $scope])
+
+See the I<get_config_value> description below.
 
 =head2 $plugin->get_config_value($key[, $scope])
 
@@ -934,6 +968,10 @@ same C<name> as a different plugin.
 
 Retrieves the MT::PluginData object associated with this plugin
 and the scope identified (which defaults to 'system' if unspecified).
+
+=head2 $plugin->apply_default_settings($data[, $scope])
+
+Applies the default plugin settings to the given data.
 
 =head2 $plugin->get_config_hash([$scope])
 
@@ -966,6 +1004,14 @@ Handles saving configuration data from the plugin configuration form.
 
 =head2 $plugin->load_config($param[, $scope])
 
+This method returns the configuration data associated with a plugin (and
+an optional scope) in the given I<param> hash reference.
+
+=head2 $plugin->reset_config($scope)
+
+This method drops the configuration data associated with this plugin
+given the scope identified and reverts to th MT defaults.
+
 Handles loading configuration data from the plugindata table.
 
 =head2 $plugin->load_tmpl($file[, ...])
@@ -974,6 +1020,177 @@ Used to load a HTML::Template object relative to the plugin's directory.
 It will scan both the plugin's directory and a directory named 'tmpl'
 underneath it. It will passthrough parameters that follow the $file
 parameter into the HTML::Template constructor.
+
+=head2 MT::Plugin->select([$class])
+
+Return the list of plugins available for the calling class or of the given
+class name argument.
+
+=head2 $plugin->needs_upgrade()
+
+This method compares any previously stored schema version for the
+plugin to the current plugin schema version number to determine if an
+upgrade is in order.
+
+=head2 $plugin->translate($phrase [, @args])
+
+This method translate the C<$phrase> to the currently selected language
+using the localization module for the plugin. The C<@args> parameters
+are passed through if given.
+
+=head2 $plugin->translate_templatized($text)
+
+This method calls the plugin's I<translate> method on any E<lt>MT_TRANSE<gt>
+tags inside C<$text>.
+
+=head2 $plugin->l10n_filter($text)
+
+This method is an alias for the I<translate_templatized> method.
+
+=head2 $plugin->l10n_class()
+
+This method returns the I<l10n_class> attribute of the plugin or
+I<MT::L10N> if not defined.
+
+=head2 Additional Accessor Methods
+
+The following are plugin attributes with accompanying get/set methods.
+
+=over 4
+
+=item * key
+
+=item * name
+
+=item * author_name
+
+=item * author_link
+
+=item * plugin_link
+
+=item * version
+
+=item * schema_version
+
+=item * config_link
+
+=item * doc_link
+
+=item * description
+
+=item * envelope
+
+=item * settings
+
+=item * icon
+
+=item * callbacks
+
+=item * upgrade_functions
+
+=item * object_classes
+
+=item * junk_filters
+
+=item * text_filters
+
+=item * template_tags
+
+=item * conditional_tags
+
+=item * log_classes
+
+=item * container_tags
+
+=item * global_filters
+
+=item * app_methods
+
+=item * app_action_links
+
+=item * app_itemset_actions
+
+=item * tasks
+
+=back
+
+=head1 LOCALIZATION
+
+Proper localization of a plugin requires a bit of structure and discipline.
+First of all, your plugin should declare a 'l10n_class' element upon
+registration. This defines the base L10N package to use for any translation
+done by the plugin:
+
+    # file l10nplugin.pl, in MT_DIR/plugins/l10nplugin
+
+    my $plugin = new MT::Plugin({
+        name => "My Localized Plugin",
+        l10n_class => "l10nplugin::L10N",
+    });
+
+Then, you should have a file like this in C<MT_DIR/plugins/l10nplugin/lib/l10nplugin>:
+
+    # file L10N.pm, in MT_DIR/plugins/l10nplugin/lib/l10nplugin
+
+    package l10nplugin::L10N;
+    use base 'MT::Plugin::L10N';
+    1;
+
+And then your actual localization modules in C<MT_DIR/plugins/l10nplugin/lib/l10nplugin/L10N>:
+
+    # file en_us.pm, in MT_DIR/plugins/l10nplugin/lib/l10nplugin/L10N
+
+    package l10n::L10N::en_us;
+
+    use base 'l10nplugin::L10N';
+
+    1;
+
+Here's a French module, to localize the plugin name:
+
+    # file fr.pm, in MT_DIR/plugins/l10nplugin/lib/l10nplugin/L10N
+
+    package l10nplugin::L10N::fr;
+
+    use base 'l10nplugin::L10N::en_us';
+
+    our %Lexicon = (
+        "My Localized Plugin" => "Mon Plugin Localisé",
+    );
+
+    1;
+
+And, the following methods of the plugin object are I<automatically>
+translated for you, so you don't need to invoke translate on them
+yourself:
+
+=over 4
+
+=item * name
+
+=item * author_name
+
+=item * description
+
+=back
+
+To translate individual strings of text from within your plugin code
+is done like this:
+
+    my $rebuild_str = $plugin->translate("Rebuild");
+
+Note that if your plugin does not translate a phrase, it may be translated
+by the MT translation matrix if the phrase is found there. So common
+MT phrases like "Weblog", "User", etc., are already handled and you should
+not have to duplicate the translation of such terms in your plugin's
+localization modules.
+
+To translate a template that has embedded E<lt>MT_TRANSE<gt> tags in
+them, use the C<translate_templatized> method of the plugin object.
+
+    $tmpl = $plugin->load_tmpl("my_template.tmpl");
+    $tmpl->param(\%param);
+    my $html = $plugin->translate_templatized($tmpl->output());
 
 =head1 MT::PluginSettings
 
@@ -993,8 +1210,8 @@ Example:
 Settings can be assigned a default value and an applicable 'scope'.
 Currently, recognized scopes are "system" and "blog".
 
-=head1 AUTHOR & COPYRIGHTS
+=head1 AUTHOR & COPYRIGHT
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

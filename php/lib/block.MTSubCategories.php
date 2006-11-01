@@ -29,8 +29,9 @@ function smarty_block_MTSubCategories($args, $content, &$ctx, &$repeat) {
                 require_once("MTUtil.php");
                 $current_cat = cat_path_to_category($args['category'], $blog_id);
             }
-            $current_cat = $current_cat or $ctx->stash('category') or
-                $ctx->stash('archive_category');
+            if ($current_cat == NULL) {
+                $current_cat = $ctx->stash('category') or $ctx->stash('archive_category');
+            }
         }
         if (!$top && !$args['top_level_categories'] && $current_cat) {
             if ($include_current) {
@@ -40,7 +41,8 @@ function smarty_block_MTSubCategories($args, $content, &$ctx, &$repeat) {
                 # Otherwise, use its children
                 $cats = $ctx->mt->db->fetch_categories(array('blog_id' => $blog_id, 'category_id' => $current_cat['category_id'], 'children' => 1, 'show_empty' => 1, 'sort_order' => $sort_order));
             }
-        } else {
+        }
+        if (($top || $args['top_level_categories']) && !$cats) {
             # Otherwise, use the top level categories
             $cats = $ctx->mt->db->fetch_categories(array('blog_id' => $blog_id, 'top_level_categories' => 1, 'show_empty' => 1, 'sort_order' => $sort_order));
         }

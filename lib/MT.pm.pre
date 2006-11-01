@@ -7,12 +7,9 @@
 package MT;
 use strict;
 
-use vars qw( $VERSION $VERSION_ID $SCHEMA_VERSION $PRODUCT_CODE $PRODUCT_NAME );
-$VERSION = '__PRODUCT_VERSION__';
-$VERSION_ID = '__PRODUCT_VERSION_ID__';  
-$SCHEMA_VERSION = '__SCHEMA_VERSION__';
-$PRODUCT_CODE = '__PRODUCT_CODE__';
-$PRODUCT_NAME = '__PRODUCT_NAME__';
+our ($VERSION, $SCHEMA_VERSION) = ('__API_VERSION__', '__SCHEMA_VERSION__');
+our ($PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID) =
+    ('__PRODUCT_NAME__', '__PRODUCT_CODE__', '__PRODUCT_VERSION__', '__PRODUCT_VERSION_ID__');
 
 use MT::ConfigMgr;
 use MT::Object;
@@ -20,7 +17,8 @@ use MT::Blog;
 use MT::Entry;
 use MT::Log;
 use MT::Util qw( start_end_day start_end_week start_end_month start_end_period
-                 archive_file_for get_entry extract_domains );
+                 archive_file_for get_entry extract_domains encode_js
+                 encode_html);
 use File::Spec;
 use File::Basename;
 use Fcntl qw( LOCK_EX );
@@ -37,6 +35,7 @@ sub version_number { $VERSION }
 sub version_id { $VERSION_ID }
 sub product_code { $PRODUCT_CODE }
 sub product_name { $PRODUCT_NAME }
+sub product_version { $PRODUCT_VERSION }
 sub schema_version { $SCHEMA_VERSION }
 
 sub version_slug {
@@ -204,12 +203,22 @@ sub register_junk_filter {
 
 sub add_plugin_action {
     my $class = shift;
-    return MT->instance->add_plugin_action(@_) unless ref $class;
+    if (!ref $class) {
+        my $mt = MT->instance;
+        if ($mt->can('add_plugin_action')) {
+            return $mt->add_plugin_action(@_);
+        }
+    }
 }
 
 sub add_itemset_action {
     my $class = shift;
-    return MT->instance->add_itemset_action(@_) unless ref $class;
+    if (!ref $class) {
+        my $mt = MT->instance;
+        if ($mt->can('add_itemset_action')) {
+            return $mt->add_itemset_action(@_);
+        }
+    }
 }
 
 sub add_log_class {
@@ -252,13 +261,27 @@ sub add_callback {
     require MT::Callback;
     $CallbacksEnabled{$meth} = 1;
     push @{$Plugins{$plugin_sig}{callbacks}}, "$meth Callback" if $plugin_sig;
-    push @{$Callbacks[$priority]->{$meth}}, new MT::Callback(
+    my $cb = new MT::Callback(
         plugin => $plugin, 
         code => $code,
         priority => $priority,
         internal => $internal,
         method => $meth
     );
+    push @{$Callbacks[$priority]->{$meth}}, $cb;
+    $cb;
+}
+
+sub remove_callback {
+    my $class = shift;
+    my ($cb) = @_;
+    my $priority = $cb->{priority};
+    my $method = $cb->{method};
+    my $list = $Callbacks[$priority];
+    return unless $list;
+    my $cbarr = $list->{$method};
+    return unless $cbarr;
+    @$cbarr = grep { $_ != $cb } @$cbarr;
 }
 
 # For use by MT internal code
@@ -589,6 +612,7 @@ sub init_tasks {
 sub init_plugins {
     my $mt = shift;
 
+    require MT::Plugin;
     my $use_plugins = $mt->{cfg}->UsePlugins;
     my @PluginPaths = $mt->{cfg}->PluginPath;
     my $PluginSwitch = $mt->{cfg}->PluginSwitch || {};
@@ -835,7 +859,7 @@ sub ping_and_save {
                 $still_ping{ $res->{url} } = 1;
             }
             push @$pinged, $res->{url} .
-                ($res->{good} ? '' : ' ' . $res->{error});
+                ($res->{good} ? '' : ' ' . MT::I18N::encode_text($res->{error}));
         }
         $entry->pinged_urls(join "\n", @$pinged);
         $entry->to_ping_urls(join "\n", keys %still_ping);
@@ -929,12 +953,19 @@ sub update_ping_list {
             }
             $args{params} = '' unless defined $args{params};
             my @p = map MT::Util::decode_html($_),
-                    split /\s*%%\s*/, $args{params};
+                    split /\s*%%\s*/, $args{params}, -1;
             @p = ('') unless @p;
             my $translation = $mt->translate($args{phrase}, @p);
-            $translation =~ s/([\\'])/\\$1/sg if $args{escape};
+            if (exists $args{escape}) {
+                if (lc($args{escape}) eq 'html') {
+                    $translation = encode_html($translation);
+                } else {
+                    # fallback for js/javascript/singlequotes
+                    $translation = encode_js($translation);
+                }
+            }
             $translation;
-        !ge;
+        !gem;
         $text;
     }
 
@@ -1075,6 +1106,7 @@ sub get_next_sched_post_for_user {
 }
 
 1;
+
 __END__
 
 =head1 NAME
@@ -1195,6 +1227,12 @@ the discovered path of the MT configuration file.
 
 =back
 
+=head2 $mt->init
+
+Initializes the Movable Type instance, including registration of basic
+resources and callbacks. This method also invokes the C<read_config>
+and C<init_plugins> methods.
+
 =head2 MT->instance
 
 MT and all it's subclasses are now singleton classes, meaning you can only
@@ -1204,6 +1242,10 @@ MT->new() is now an alias to instance_of.
 =head2 $class->instance_of
 
 Returns the singleton instance of the MT subclass identified by C<$class>.
+
+=head2 $class->construct
+
+Constructs a new instance of the MT subclass identified by C<$class>.
 
 =head2 MT->set_instance
 
@@ -1230,6 +1272,22 @@ the MT constructor.
 Loads any discoverable plugins that are available. This is called from
 the C<init> method, after the C<read_config> method has loaded the
 configuration settings.
+
+=head2 $mt->init_tasks
+
+Registers the standard set of periodic tasks that Movable Type provides
+and then invokes the C<init_tasks> method for each available plugin.
+
+=head2 MT->add_task
+
+An alias for L<MT::TaskMgr-E<gt>add_task>. Refer to the L<MT::TaskMgr>
+documentation for more information.
+
+=head2 MT->run_tasks
+
+Initializes the tasks, running C<init_tasks> and invokes the task system
+through L<MT::TaskMgr> to run any registered tasks that are pending
+execution. See L<MT::TaskMgr> for further documentation.
 
 =head2 MT->unplug
 
@@ -1266,6 +1324,11 @@ Specifying the C<$setting> parameter will return the value for that setting.
 When passing the C<$value> parameter, this will update the config object,
 assigning that value for the named C<$setting>.
 
+=head2 $mt->user_class
+
+Returns the package name for the class used for user authentication.
+This is typically L<MT::Author>.
+
 =head2 $mt->request([$element[,$data]])
 
 The request method provides a request-scoped storage object. It is an
@@ -1283,6 +1346,16 @@ the request object exists for the lifetime of the process and is
 released when the process ends.
 
 See the L<MT::Request> package for more information.
+
+=head2 MT->new_ua
+
+Returns a new L<LWP::UserAgent> instance that is configured according to the
+Movable Type configuration settings (specifically C<HTTPInterface>, C<HTTPTimeout>, C<HTTPProxy> and C<HTTPNoProxy>). The agent string is set
+to "MovableType/(version)" and is also limited to receiving a response of
+100,000 bytes by default (you can override this by using the 'max_size'
+method on the returned instance). Using this method is recommended for
+any HTTP requests issued by Movable Type since it uses the MT configuration
+settings to prepare the UserAgent object.
 
 =head2 $mt->ping( %args )
 
@@ -1315,6 +1388,33 @@ entry and then saving that entry back to the database.
 
 The I<%args> hash should contain an element named C<Entry> that is a
 reference to a L<MT::Entry> object.
+
+=head2 $mt->needs_ping(%param)
+
+Returns a list of URLs that have not been pinged for a given entry. Named
+parameters for this method are:
+
+=over 4
+
+=item Entry
+
+The L<MT::Entry> object to examine.
+
+=item Blog
+
+The L<MT::Blog> object that is the parent of the entry given.
+
+=back
+
+The return value is an array reference of URLs that have not been pinged
+for the given entry.
+
+An empty list is returned for entries that have a non 'RELEASE' status.
+
+=head2 $mt->update_ping_list($blog)
+
+Returns a list of URLs for ping services that have been configured to
+be notified when posting new entries.
 
 =head2 $mt->set_language($tag)
 
@@ -1397,6 +1497,11 @@ I<MT::Plugin> class.
 
 An alias to the active L<MT::App> instance C<add_plugin_action> method.
 Please refer to the L<MT::App> module for further documentation.
+
+=head2 MT->add_itemset_action(\%options)
+
+An alias to the active L<MT::App::CMS> instance C<add_itemset_action> method.
+Please refer to the L<MT::App::CMS> module for further documentation.
 
 =head2 MT->add_text_filter($key, \%options)
 
@@ -1493,6 +1598,12 @@ I<$entry>, you would use
 
     my $out = MT->apply_text_filters($entry->text, $entry->text_filters);
 
+=head2 MT->add_log_class($class)
+
+Registers a new L<MT::Log> subclass with MT, which is used for presenting
+specific types of log records in the activity log and activity feeds. See
+L<MT::Log> for further documentation on custom log classes.
+
 =head2 MT->add_callback($meth, $priority, $plugin, $code)
 
 Registers a new callback handler for a particular registered callback.
@@ -1509,13 +1620,13 @@ callback. For example:
     MT->add_callback('BuildFile', 1, undef, \&rebuild_file_hdlr);
 
 The code reference should expect to receive an object of type
-MT::Errorhandler as its first argument. This object is used to
+L<MT::Callback> as its first argument. This object is used to
 communicate errors to the caller:
 
     sub rebuild_file_hdlr {
-        my ($eh, ...) = @_;
+        my ($cb, ...) = @_;
         if (something bad happens) {
-            return $eh->error("Something bad happened!");
+            return $cb->error("Something bad happened!");
         }
     }
 
@@ -1524,6 +1635,18 @@ Other parameters to the callback function depend on the callback point.
 The treatment of the error string depends on the callback point.
 Typically, either it is ignored or the user's action fails and the
 error message is displayed.
+
+The value returned from this method is the new L<MT::Callback> object.
+
+=head2 MT->remove_callback($callback)
+
+Removes a callback that was previously registered.
+
+=head2 MT->register_callbacks([...])
+
+Registers several callbacks simultaneously. Each element in the array
+parameter given should be a hashref containing these elements: C<name>, 
+C<priority>, C<plugin> and C<code>.
 
 =head2 MT->run_callbacks($meth[, $arg1, $arg2, ...])
 
@@ -1564,24 +1687,75 @@ Example:
         plugin => $plugin,
     }));
 
+=head2 MT->run_callback($cb[, $arg1, $arg2, ...])
+
+An internal routine used by C<run_callbacks> to invoke a single
+L<MT::Callback>.
+
+=head2 callback_error($str)
+
+This routine is used internally by C<MT::Callback> to set any error response
+that comes from invoking a callback.
+
+=head2 callback_errstr
+
+This internal routine returns the error response stored using the
+C<callback_error> routine.
+
+=head2 MT->product_code
+
+The product code identifying the Movable Type product that is installed.
+This is either 'MTE' for Movable Type Enterprise or 'MT' for the
+non-Enterprise product.
+
+=head2 MT->product_name
+
+The name of the Movable Type product that is installed. This is either
+'Movable Type Enterprise' or 'Movable Type Publishing Platform'.
+
+=head2 MT->product_version
+
+The version number of the product. This is different from the C<version_id>
+and C<version_number> methods as they report the API version information.
+
 =head2 MT->version_id
 
-Returns the version of MT (including any beta/alpha designations).
+Returns the API version of MT (including any beta/alpha designations).
 
 =head2 MT->version_number
 
-Returns the numeric version of MT (without any beta/alpha designations).
+Returns the numeric API version of MT (without any beta/alpha designations).
 For example, if I<version_id> returned C<2.5b1>, I<version_number> would
 return C<2.5>.
 
-=head2 $mt->schema_version
+=head2 MT->schema_version
 
 Returns the version of the MT database schema.
 
+=head2 MT->version_slug
+
+Returns a string of text that is appended to emails sent through the
+C<build_email> method.
+
 =head2 $mt->publisher
 
-Returns the MT::WeblogPublisher object that is used for managing the
+Returns the L<MT::WeblogPublisher> object that is used for managing the
 MT publishing process. See L<MT::WeblogPublisher> for more information.
+
+=head2 $mt->rebuild
+
+An alias to L<MT::WeblogPublisher::rebuild>. See L<MT::WeblogPublisher>
+for documentation of this method.
+
+=head2 $mt->rebuild_entry
+
+An alias to L<MT::WeblogPublisher::rebuild_entry>. See L<MT::WeblogPublisher>
+for documentation of this method.
+
+=head2 $mt->rebuild_indexes
+
+An alias to L<MT::WeblogPublisher::rebuild_indexes>. See
+L<MT::WeblogPublisher> for documentation of this method.
 
 =head2 $mt->build_email($file, $param)
 
@@ -1589,6 +1763,13 @@ Loads a template from the application's 'email' template directory and
 processes it as a HTML::Template. The C<$param> argument is a hash reference
 of parameter data for the template. The return value is the output of the
 template.
+
+=head2 MT::get_next_sched_post_for_user($author_id, @blog_ids)
+
+This is an internal routine used by L<MT::XMLRPCServer> and the
+getNextScheduled XMLRPC method to determine the timestamp for the next
+entry that is scheduled for publishing. The return value is the timestamp
+in UTC time in the format "YYYY-MM-DDTHH:MM:SSZ".
 
 =head1 ERROR HANDLING
 
@@ -1612,11 +1793,12 @@ Movable Type has a variety of hook points at which a plugin can attach
 a callback. The context and calling conventions of each one are
 documented here.
 
-In each case, the first parameter is an MT::ErrorHandler object which
+In each case, the first parameter is an L<MT::Callback> object which
 can be used to pass error information back to the caller.
 
 The app-level callbacks related to rebuilding are documented
-below. The specific apps document the callbacks which they invoke.
+in L<MT::WeblogPublisher>. The specific apps document the callbacks which
+they invoke.
 
 =head1 LICENSE
 

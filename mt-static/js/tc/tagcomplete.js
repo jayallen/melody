@@ -343,8 +343,11 @@ TC.TagCompleteNode.prototype.getStrings = function(str1, str2, outStr)
         if ( this.isLeaf ) 
             outStr.push( str2 );
 
-        for ( var i in this.nodeValue )
+        for ( var i in this.nodeValue ) {
+            if (typeof(this.nodeValue[ i ]) != 'object')
+                continue;
             this.nodeValue[ i ].getStrings( str1, str2 + i, outStr );
+        }
     }
     else
     {

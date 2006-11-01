@@ -5,8 +5,9 @@
 #
 # $Id$
 
-define('VERSION', '__PRODUCT_VERSION__');
+define('VERSION', '__API_VERSION__');
 define('VERSION_ID', '__PRODUCT_VERSION_ID__');
+define('PRODUCT_VERSION', '__PRODUCT_VERSION__');
 define('PRODUCT_NAME', '__PRODUCT_NAME__');
 
 global $Lexicon;
@@ -125,7 +126,7 @@ class MT {
                 // search through the file
                 if (!ereg('^\s*\#',$line)) {
                     // ignore lines starting with the hash symbol
-                    if (preg_match('/^\s*([^ ]+)[ ](.*)(\r|n)?$/', $line, $regs)) {
+                    if (preg_match('/^\s*(\S+)\s+(.*)$/', $line, $regs)) {
                         $key = trim($regs[1]);
                         $value = trim($regs[2]);
                         $cfg[$key] = $value;
@@ -194,10 +195,15 @@ class MT {
                 // search through the file
                 if (!ereg('^\s*\#',$line)) {
                     // ignore lines starting with the hash symbol
-                    if (preg_match('/^\s*([^ ]+)[ ](.*)(\r|n)?$/', $line, $regs)) {
+                    if (preg_match('/^\s*(\S+)\s+(.*)$/', $line, $regs)) {
                         $key = trim($regs[1]);
                         $value = trim($regs[2]);
-                        $cfg[$key] or $cfg[$key] = $value;
+                        if (($key == 'PluginSwitch') || ($key == 'PluginSchemaVersion')) { # special case for hash
+                            if (preg_match('/^(.+)=(.+)$/', $value, $match))
+                                $cfg[$key][trim($match[1])] = trim($match[2]);
+                        } else {
+                            $cfg[$key] or $cfg[$key] = $value;
+                        }
                     }
                 }
             }

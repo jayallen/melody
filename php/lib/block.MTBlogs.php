@@ -2,7 +2,7 @@
 function smarty_block_MTBlogs($args, $content, &$ctx, &$repeat) {
     if (!isset($content)) {
         $ctx->localize(array('_blogs', '_blogs_counter', 'blog', 'blog_id'));
-        $blogs = $ctx->mt->db->load('blog');
+        $blogs = $ctx->mt->db->fetch_blogs($args);
         $ctx->stash('_blogs', $blogs);
         $counter = 0;
     } else {

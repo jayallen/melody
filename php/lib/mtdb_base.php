@@ -100,6 +100,13 @@ class MTDatabaseBase extends ezsql {
         return $data;
     }
 
+    function fetch_blogs($args) {
+
+        $res = $this->get_results('select * from mt_blog order by blog_name',
+            ARRAY_A);
+        return $res;
+    }
+
     function fetch_templates($args) {
         if (isset($args['type'])) {
             $type_filter = 'and template_type = \'' . $this->escape($args['type']) . '\'';
@@ -246,8 +253,8 @@ class MTDatabaseBase extends ezsql {
             $this->_entry_link_cache[$eid.';'.$at] = $url;
         }
         if ($at != 'Individual') {
-            if ($args && !isset($args['no_anchor'])) {
-                $url .= '#' . (isset($args['valid_html']) ? 'a' : '') .
+            if (!$args || !isset($args['no_anchor'])) {
+                $url .= '#' . (!$args || isset($args['valid_html']) ? 'a' : '') .
                         sprintf("%06d", $eid);
             }
         }
@@ -502,7 +509,9 @@ class MTDatabaseBase extends ezsql {
                 (!isset($args['category_id'])) &&
                 (isset($blog))) {
                 if ($days = $blog['blog_days_on_index']) {
-                    $day_filter = 'and ' . $this->limit_by_day_sql('entry_created_on', $days);
+                    if (!isset($args['recently_commented_on'])) {
+                        $day_filter = 'and ' . $this->limit_by_day_sql('entry_created_on', $days);
+                    }
                 } elseif ($posts = $blog['blog_entries_on_index']) {
                     $limit = $posts;
                 }
@@ -510,17 +519,26 @@ class MTDatabaseBase extends ezsql {
         }
 
         $order = 'desc';
-        if (isset($blog) && isset($blog['blog_sort_order_posts'])) {
-            if ($blog['blog_sort_order_posts'] == 'ascend') {
+        if (isset($args['sort_order'])) {
+            if ($args['sort_order'] == 'ascend') {
                 $order = 'asc';
+            }else if ($args['sort_order'] == 'descend') {
+                $order = 'desc';
             }
-        }
-
-        if (!isset($order)) {
-            $order = 'desc';
+            $no_resort = 1;
+        } else {
             if (isset($blog) && isset($blog['blog_sort_order_posts'])) {
                 if ($blog['blog_sort_order_posts'] == 'ascend') {
                     $order = 'asc';
+                }
+            }
+
+            if (!isset($order)) {
+                $order = 'desc';
+                if (isset($blog) && isset($blog['blog_sort_order_posts'])) {
+                    if ($blog['blog_sort_order_posts'] == 'ascend') {
+                        $order = 'asc';
+                    }
                 }
             }
         }
@@ -543,7 +561,7 @@ class MTDatabaseBase extends ezsql {
                    and placement_is_primary = 1,
                    mt_author
              where entry_status = 2
-                   and entry_author_id = author_id
+               and entry_author_id = author_id
                    $blog_filter
                    $entry_filter
                    $author_filter
@@ -551,7 +569,6 @@ class MTDatabaseBase extends ezsql {
                    $day_filter
              order by entry_created_on $order
         ";
-
         if (isset($args['recently_commented_on'])) {
             $rco = $args['recently_commented_on'];
             $sql = $this->entries_recently_commented_on_sql($sql);
@@ -576,8 +593,9 @@ class MTDatabaseBase extends ezsql {
             $e = $this->query_fetch(ARRAY_A);
             if (!isset($e)) break;
             if (count($filters)) {
-                foreach ($filters as $f)
+                foreach ($filters as $f) {
                     if (!$f($e, $ctx)) continue 2;
+                }
             }
             if ($offset && ($j++ < $offset)) continue;
             $e['entry_created_on'] = $this->db2ts($e['entry_created_on']);
@@ -616,7 +634,7 @@ class MTDatabaseBase extends ezsql {
                     $sort_fn = "return strcmp(\$a['$sort_field'],\$b['$sort_field']);";
                 }
                 $sorter = create_function(
-                    $args['sort_order'] == 'ascend' ? '$a,$b' : '$b,$a',
+                    $order == 'asc' ? '$a,$b' : '$b,$a',
                     $sort_fn);
                 usort($entries, $sorter);
             }
@@ -688,6 +706,15 @@ class MTDatabaseBase extends ezsql {
                 $private_filter = '';
             }
         }
+
+
+        $sort_col = isset($args['sort_by']) ? $args['sort_by'] : 'name';
+        $sort_col = "tag_$sort_col";
+        if (isset($args['sort_order']) and $args['sort_order'] == 'descend') {
+            $order = 'desc';
+        } else {
+            $order = 'asc';
+        }
         $sql = "
             select tag_id, tag_name, count(*) as tag_count
              from mt_tag, mt_objecttag, mt_entry
@@ -699,19 +726,24 @@ class MTDatabaseBase extends ezsql {
                    $entry_filter
                    $private_filter
           group by tag_id, tag_name
-          order by tag_name";
+          order by $sort_col $order";
+        if (isset($args['limit'])) {
+            $sql .= ' <LIMIT>';
+            $sql = $this->apply_limit_sql($sql, $args['limit']);
+        }
         $tags = $this->get_results($sql, ARRAY_A);
         if (!isset($args['tag'])) {
-            if ($args['blog_id'])
-                $this->_blog_tag_cache[$args['blog_id']] = $tags;
-            elseif ($args['entry_id'])
+            if ($args['entry_id'])
                 $this->_entry_tag_cache[$args['entry_id']] = $tags;
+            elseif ($args['blog_id'])
+                $this->_blog_tag_cache[$args['blog_id']] = $tags;
         }
         return $tags;
     }
 
     function &fetch_categories($args) {
         # load categories
+
         if (isset($args['blog_id'])) {
             $blog_filter = 'and category_blog_id = '.intval($args['blog_id']);
         }
@@ -739,7 +771,6 @@ class MTDatabaseBase extends ezsql {
             }
         } elseif (isset($args['label'])) {
             $cat_filter = 'and category_label = \''.$this->escape($args['label']).'\'';
-            $limit = 1;
         } else {
             $limit = $args['lastn'];
             if (isset($args['sort_order'])) {
@@ -986,45 +1017,68 @@ class MTDatabaseBase extends ezsql {
         }
     }
 
-    function blog_entry_count($blog_id = null) {
-        if (!$blog_id) {
-            global $mt;
-            $blog_id = $mt->blog_id;
+    function blog_entry_count($args) {
+
+        if (isset($args['blog_id'])) {
+            $blog_id = intval($args['blog_id']);
+            $blog_filter = 'and entry_blog_id = ' . $blog_id;
         }
         $count = $this->get_var("
           select count(*)
             from mt_entry
-           where entry_blog_id = " . intval($blog_id) . "
-             and entry_status = 2");
+           where entry_status = 2
+           $blog_filter
+           ");
         return $count;
     }
 
-    function blog_comment_count($blog_id = null) {
-        if (!$blog_id) {
-            global $mt;
-            $blog_id = $mt->blog_id;
+    function blog_comment_count($args) {
+
+        if (isset($args['blog_id'])) {
+            $blog_id = intval($args['blog_id']);
+            $blog_filter = 'and comment_blog_id = ' . $blog_id;
         }
+
         $count = $this->get_var("
             select count(*)
               from mt_entry, mt_comment
-             where entry_blog_id = " . intval($blog_id) . "
-               and entry_status = 2
+             where entry_status = 2
                and comment_visible = 1
-               and comment_entry_id = entry_id");
+               and comment_entry_id = entry_id
+               $blog_filter
+        ");
         return $count;
     }
 
-    function blog_ping_count($blog_id = null) {
-        if (!$blog_id) {
-            global $mt;
-            $blog_id = $mt->blog_id;
+    function blog_ping_count($args) {
+
+        if (isset($args['blog_id'])) {
+            $blog_id = intval($args['blog_id']);
+            $blog_filter = 'and tbping_blog_id = ' . $blog_id;
         }
+
         $count = $this->get_var("
             select count(*)
               from mt_tbping, mt_trackback
-             where tbping_blog_id = " . intval($blog_id) . "
-               and tbping_visible = 1
-               and tbping_tb_id = trackback_id");
+             where tbping_visible = 1
+               and tbping_tb_id = trackback_id
+                   $blog_filter
+        ");
+        return $count;
+    }
+
+    function blog_category_count($args) {
+
+        if (isset($args['blog_id'])) {
+            $blog_id = intval($args['blog_id']);
+            $blog_filter = 'and category_blog_id = ' . $blog_id;
+       }
+        $count = $this->get_var("
+            select count(*)
+              from mt_category
+             where 1 = 1
+             $blog_filter
+        ");
         return $count;
     }
 
@@ -1034,7 +1088,8 @@ class MTDatabaseBase extends ezsql {
             from mt_objecttag, mt_entry
            where objecttag_tag_id = " . intval($tag_id) . "
              and entry_id = objecttag_object_id and objecttag_object_datasource='entry'
-             and entry_status = 2");
+             and entry_status = 2
+        ");
         return $count;
     }
 

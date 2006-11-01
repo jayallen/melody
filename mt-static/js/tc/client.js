@@ -74,10 +74,14 @@ TC.Client.call = function( param )
     var contents = null;
     if( param['arguments'] )
     {
-        var args = new Array();
-        for( var a in param['arguments'] )
-            args[ args.length ] = a + '=' + escape( param['arguments'][a] );
-        contents = args.join('&');
+        if (typeof param['arguments'] == 'string') {
+            contents = param['arguments'];
+        } else {
+            var args = new Array();
+            for( var a in param['arguments'] )
+                args[ args.length ] = a + '=' + escape( param['arguments'][a] );
+            contents = args.join('&');
+        }
         c.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
     }
     c.send( contents );

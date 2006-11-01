@@ -41,7 +41,37 @@ sub set_password {
 sub magic_token {
     my $auth = shift;
     require MT::Util;
-    MT::Util::perl_sha1_digest_hex($auth->column('password'));
+    my $pw = $auth->column('password');
+    if ($pw eq '(none)') {
+        $pw = $auth->id . ';' . $auth->name . ';' . ($auth->email || '') . ';' . ($auth->hint || '');
+    }
+    require MT::Util;
+    MT::Util::perl_sha1_digest_hex($pw);
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::BasicAuthor
+
+=head1 METHODS
+
+=head2 $author->is_valid_password($pass, $crypted, $error_ref)
+
+Return the value of L<MT::Auth/is_valid_password>
+
+=head2 $author->set_password
+
+Set the I<$author> password with the perl C<crypt> function.
+
+=head2 $author->magic_token()
+
+Return the value of L<MT::Util/perl_sha1_digest_hex> for the I<password> column.
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

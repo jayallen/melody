@@ -61,16 +61,18 @@ sub init_tmpl {
             $perms->can_post || $perms->can_edit_all_posts);
         $tmpl->param(can_search_replace => $perms->can_edit_all_posts);
         $tmpl->param(can_edit_templates => $perms->can_edit_templates);
-        $tmpl->param(can_edit_authors => $perms->can_administer_blog);
+        #$tmpl->param(can_edit_authors => $perms->can_administer_blog);
         $tmpl->param(can_edit_config => $perms->can_edit_config);
         # FIXME: once we have edit_commenters permission
         $tmpl->param(can_edit_commenters => $perms->can_edit_config());
         $tmpl->param(can_rebuild => $perms->can_rebuild);
         $tmpl->param(can_edit_categories => $perms->can_edit_categories);
+        $tmpl->param(can_edit_tags => $perms->can_edit_tags);
         $tmpl->param(can_edit_notifications => $perms->can_edit_notifications);
         $tmpl->param(has_manage_label =>
             $perms->can_edit_templates  || $perms->can_administer_blog ||
-            $perms->can_edit_categories || $perms->can_edit_config);
+            $perms->can_edit_categories || $perms->can_edit_config ||
+            $perms->can_edit_tags);
         $tmpl->param(has_posting_label =>
             $perms->can_post  || $perms->can_edit_all_posts ||
             $perms->can_upload);

@@ -97,6 +97,8 @@ function individualArchivesOnLoad(commenter_name) {
 </MTIfRegistrationRequired>
 </MTIfRegistrationAllowed>
 
+    var mtcmtauth;
+    var mtcmthome;
     if (document.comments_form) {
         if (!commenter_name && (document.comments_form.email != undefined) &&
             (mtcmtmail = getCookie("mtcmtmail")))

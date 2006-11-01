@@ -31,18 +31,19 @@ __PACKAGE__->install_properties({
 
 sub remove {
     my $map = shift;
-    if ($map->is_preferred) {
-        my @all = MT::TemplateMap->load({ blog_id => $map->blog_id,
-                                          archive_type => $map->archive_type });
-        @all = grep { $_->id != $map->id } @all;
-        if (@all) {
-            $all[0]->is_preferred(1);
-            $all[0]->save;
+    if (ref $map) {
+        if ($map->is_preferred) {
+            my @all = MT::TemplateMap->load({ blog_id => $map->blog_id,
+                                              archive_type => $map->archive_type });
+            @all = grep { $_->id != $map->id } @all;
+            if (@all) {
+                $all[0]->is_preferred(1);
+                $all[0]->save;
+            }
         }
     }
-
     $map->remove_children({ key => 'templatemap_id' });
-    $map->SUPER::remove;
+    $map->SUPER::remove(@_);
 }
 
 1;
@@ -141,7 +142,7 @@ I<MT::Object> for more information.
 
 =over 4
 
-=item *
+=item * $obj->remove()
 
 When you remove a I<MT::TemplateMap> object using I<MT::TemplateMap::remove>,
 if the I<$map> object you are removing has the I<is_preferred> flag set to
@@ -151,8 +152,8 @@ set as the preferred object. Its I<is_preferred> flag will be set to true.
 
 =back
 
-=head1 AUTHOR & COPYRIGHTS
+=head1 AUTHOR & COPYRIGHT
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

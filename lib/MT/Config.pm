@@ -19,13 +19,14 @@ __PACKAGE__->install_properties({
 });
 
 1;
-
 __END__
-
-=pod
 
 =head1 NAME
 
 MT::Config - Installation-wide configuration data.
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut

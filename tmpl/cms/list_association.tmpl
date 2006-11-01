@@ -1,0 +1,184 @@
+<TMPL_INCLUDE NAME="header.tmpl">
+
+<div id="list-association">
+
+<script type="text/javascript">
+<!--
+var tableSelect;
+function init() {
+	// setup
+	tableSelect = new TC.TableSelect( "selector" );
+	tableSelect.rowSelect = true;
+}
+TC.attachLoadEvent( init );
+// -->
+</script>
+
+<TMPL_IF NAME=BLOG_ID>
+<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Users"></h2>
+<TMPL_ELSE>
+<TMPL_IF NAME=USER_VIEW>
+<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=EDIT_AUTHOR_NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Associations"></h2>
+
+<TMPL_UNLESS NAME=STATUS_ENABLED>
+<h3 class="user_disabled"><MT_TRANS phrase="User Disabled"></h3>
+</TMPL_UNLESS>
+
+</TMPL_IF>
+<TMPL_IF NAME=ASSOCIATION_VIEW>
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="System-wide">: </span> <MT_TRANS phrase="Associations"></h2>
+</TMPL_IF>
+<TMPL_IF NAME=ROLE_VIEW>
+<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=ROLE_NAME ESCAPE=HTML>: </span> <MT_TRANS phrase="Users"></h2>
+</TMPL_IF>
+</TMPL_IF>
+
+<p class="page-desc"><MT_TRANS phrase="_USAGE_ASSOCIATIONS"></p>
+
+<TMPL_IF NAME=SAVED_DELETED>
+<h4 class="message"><MT_TRANS phrase="You have successfully removed the association(s)."></h4>
+</TMPL_IF>
+<TMPL_IF NAME=SAVED>
+<h4 class="message"><MT_TRANS phrase="You have successfully created the association(s)."></h4>
+</TMPL_IF>
+
+<div class="tabs">
+<ul>
+<TMPL_IF NAME=USER_VIEW>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author&amp;id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>"><MT_TRANS phrase="Profile"></a></li>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>"><MT_TRANS phrase="Associations"></a></li>
+<TMPL_IF NAME=CAN_CREATE_ASSOCIATION>
+<li class="special">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/<TMPL_IF NAME=STATUS_ENABLED>create<TMPL_ELSE>create-disabled</TMPL_IF>.gif" alt="<MT_TRANS phrase="Add user to a weblog">" width="9" height="9" />
+<TMPL_IF NAME=STATUS_ENABLED><a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role', 'author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>%26author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>')"><TMPL_ELSE><span class="no_link" title="<MT_TRANS phrase="You can not create associations for disabled users.">"></TMPL_IF><MT_TRANS phrase="Add [_1] to a weblog" params="<TMPL_VAR NAME=EDIT_AUTHOR_NAME>"><TMPL_IF NAME=STATUS_ENABLED></a><TMPL_ELSE></span></TMPL_IF>
+</li>
+</TMPL_IF>
+</TMPL_IF>
+<TMPL_IF NAME=ROLE_VIEW>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_role&amp;id=<TMPL_VAR NAME=ROLE_ID>"><MT_TRANS phrase="Details"></a></li>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;role_id=<TMPL_VAR NAME=ROLE_ID>"><MT_TRANS phrase="Users"></a></li>
+<TMPL_IF NAME=CAN_CREATE_ASSOCIATION>
+<li class="special">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Assign role to a new user"> width="9" height="9" />
+<a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role', '_type=user&amp;role_id=<TMPL_VAR NAME=ROLE_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>%26role_id=<TMPL_VAR NAME=ROLE_ID>')"><MT_TRANS phrase="Assign Role to User"></a>
+</li>
+</TMPL_IF>
+</TMPL_IF>
+<TMPL_IF NAME=ASSOCIATION_VIEW>
+<TMPL_IF NAME=BLOG_ID>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><MT_TRANS phrase="Users"></a></li>
+<TMPL_ELSE>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations"><MT_TRANS phrase="Associations"></a></li>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_roles"><MT_TRANS phrase="Roles"></a></li>
+</TMPL_IF>
+<TMPL_IF NAME=CAN_CREATE_ASSOCIATION>
+<TMPL_IF NAME=BLOG_VIEW>
+<li class="special">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Add a user to this weblog">" width="9" height="9" />
+<a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role', '_type=user<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Add a user to this weblog"></a>
+</li>
+<TMPL_ELSE>
+<li class="special">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Create a User Association">" width="9" height="9" />
+<a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role', '_type=user<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Create a User Association"></a>
+</li>
+</TMPL_IF>
+</TMPL_IF>
+</TMPL_IF>
+</ul>
+</div>
+
+<div class="list-wrapper">
+<TMPL_IF NAME=OBJECT_LOOP>
+
+<form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return this['__mode'] ? true : false">
+<input type="hidden" name="__mode" value="" />
+<input type="hidden" name="_type" value="association" />
+<input type="hidden" name="action_name" value="" />
+<input type="hidden" name="itemset_action_input" value="" />
+<input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML><TMPL_IF NAME=USER_VIEW>&amp;author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID></TMPL_IF><TMPL_IF NAME=ROLE_VIEW>&amp;role_id=<TMPL_VAR NAME=ROLE_ID></TMPL_IF>" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+<TMPL_IF NAME=USER_VIEW>
+<input type="hidden" name="author_id" value="<TMPL_VAR NAME=EDIT_AUTHOR_ID>" />
+</TMPL_IF><TMPL_IF NAME=BLOG_VIEW>
+<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>" />
+</TMPL_IF><TMPL_IF NAME=ROLE_VIEW>
+<input type="hidden" name="role_id" value="<TMPL_VAR NAME=ROLE_ID>" />
+</TMPL_IF>
+
+<TMPL_IF NAME=POSITION_ACTIONS_TOP>
+<TMPL_INCLUDE NAME=association_actions.tmpl>
+</TMPL_IF>
+
+<div class="list" id="selector">
+<table cellspacing="0" class="<TMPL_IF NAME=VIEW_EXPANDED>expanded<TMPL_ELSE>compact</TMPL_IF>">
+
+<thead>
+<tr>
+<th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+<TMPL_IF NAME=ASSOCIATION_VIEW>
+<th id="pt-name"><MT_TRANS phrase="User"></th>
+</TMPL_IF>
+<TMPL_UNLESS NAME=ROLE_VIEW>
+<th id="pt-role"><MT_TRANS phrase="Role"></th>
+<TMPL_ELSE>
+<th id="pt-name"><MT_TRANS phrase="User"></th>
+</TMPL_UNLESS>
+<TMPL_UNLESS NAME=BLOG_VIEW>
+<th id="pt-weblog"><MT_TRANS phrase="In Weblog"></th>
+<TMPL_ELSE>
+<th id="pt-created-by"><MT_TRANS phrase="Created By"></th>
+</TMPL_UNLESS>
+<th id="pt-created"><MT_TRANS phrase="Created On"></th>
+</tr>
+</thead>
+<tbody>
+
+<TMPL_LOOP NAME=OBJECT_LOOP>
+<tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
+<td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
+<TMPL_IF NAME=ASSOCIATION_VIEW>
+<td><span class="user_id"><img align="top" border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="15"></span> <TMPL_IF NAME=IS_ADMINISTRATOR><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=USER_ID>"></TMPL_IF><TMPL_VAR NAME=USER_NAME ESCAPE=HTML><TMPL_IF NAME=IS_ADMINISTRATOR></a></TMPL_IF></td>
+</TMPL_IF>
+<TMPL_UNLESS NAME=ROLE_VIEW>
+<td><TMPL_IF NAME=IS_ADMINISTRATOR><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;role_id=<TMPL_VAR NAME=ROLE_ID>"></TMPL_IF><TMPL_VAR NAME=ROLE_NAME ESCAPE=HTML><TMPL_IF NAME=IS_ADMINISTRATOR></a></TMPL_IF></td>
+<TMPL_ELSE>
+<td><span class="user_id"><img align="top" border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="15"></span> <TMPL_IF NAME=IS_ADMINISTRATOR><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=USER_ID>"></TMPL_IF><TMPL_VAR NAME=USER_NAME ESCAPE=HTML><TMPL_IF NAME=IS_ADMINISTRATOR></a></TMPL_IF></td>
+</TMPL_UNLESS>
+<TMPL_UNLESS NAME=BLOG_VIEW>
+<td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
+<TMPL_ELSE>
+<td><TMPL_VAR NAME=CREATED_BY ESCAPE=HTML></td>
+</TMPL_UNLESS>
+<td><TMPL_IF NAME=DATES_RELATIVE><TMPL_VAR NAME=CREATED_ON_RELATIVE ESCAPE=HTML><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED ESCAPE=HTML></TMPL_IF></td>
+</tr>
+<TMPL_IF NAME=VIEW_EXPANDED>
+<tr class="<TMPL_IF NAME=__ODD__>odd<TMPL_ELSE>even</TMPL_IF> slave">
+<td<TMPL_IF NAME=ASSOCIATION_VIEW> colspan="2"<TMPL_ELSE></TMPL_IF>>&nbsp;</td><td colspan="3"><div class="detail-inner"><MT_TRANS phrase="Permissions">: <TMPL_LOOP NAME=PERM_LOOP><TMPL_VAR NAME=NAME><TMPL_UNLESS NAME=__LAST__>, </TMPL_UNLESS></TMPL_LOOP></div></td>
+</tr>
+</TMPL_IF>
+</TMPL_LOOP>
+
+</tbody>
+</table>
+
+</div>
+
+<TMPL_IF NAME=POSITION_ACTIONS_BOTTOM>
+<div class="list-actions-footer">
+<TMPL_INCLUDE NAME=association_actions.tmpl>
+</div>
+</TMPL_IF>
+
+</form>
+
+<TMPL_INCLUDE NAME=pager.tmpl>
+
+<TMPL_ELSE>
+<br /><h4 class="message"><MT_TRANS phrase="No associations could be found."></h4>
+</TMPL_IF>
+</div>
+
+</div>
+
+<TMPL_INCLUDE NAME="footer.tmpl">

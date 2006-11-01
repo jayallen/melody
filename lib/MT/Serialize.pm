@@ -293,6 +293,10 @@ Converts a serialized bytestream given back into the original Perl data
 structure.  It returns a reference to whatever data structure was
 reconstructed.
 
+=head2 no_utf8
+
+This function removes UTF-8 from scalars.
+
 =head1 COMPATIBILITY NOTES
 
 Version 2 of the native MT serializer changes the structure of the

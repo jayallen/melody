@@ -1,8 +1,8 @@
 <TMPL_INCLUDE NAME=header.tmpl>
 
 <TMPL_UNLESS NAME=UP_TO_DATE>
-    <script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/client.js"></script>
-    <script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/json.js"></script>
+    <script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/client.js?v=<TMPL_VAR NAME=MT_VERSION ESCAPE=URL>"></script>
+    <script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/json.js?v=<TMPL_VAR NAME=MT_VERSION ESCAPE=URL>"></script>
 
 	<script type="text/javascript">
 	<!--
@@ -53,7 +53,8 @@
         var text = responseText.substr(response_pos);
         text = text.replace(/\s*JSON:(.|\n)*/, '');
         // strip any partial lines. we'll grab 'em next time
-        text = text.replace(/(\r?\n)[^\r\n]*$/, '$1');
+        if (!text.match(/\n$/))
+            text = text.replace(/(\r?\n)[^\r\n]*$/, '$1');
         response_pos += text.length;
         if (!text.length) return;
 

@@ -263,6 +263,11 @@ and you wish to exclude this conditional, you could call I<build> like this:
 
     my $out = $build->build($ctx, $tokens, { EntryIfExtended => 0 });
 
+=head2 $build->syntree2str(\@tokens)
+
+Internal debugging routine to dump a set of template tokens. Returns a
+readable string of contents of the C<$tokens> parameter.
+
 =head1 ERROR HANDLING
 
 On an error, the above methods return C<undef>, and the error message can

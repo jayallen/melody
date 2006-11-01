@@ -102,7 +102,7 @@ sub init_request{
         ($app->{searchparam}{Type} eq 'newcomments' ? 'comments' : 'default');
 
     ## Define alternate user templates from config file
-    if (my @tmpls = $cfg->AltTemplate) {
+    if (my @tmpls = ($cfg->default('AltTemplate'), $cfg->AltTemplate)) {
         for my $tmpl (@tmpls) {
             next unless defined $tmpl;
             my($nickname, $file) = split /\s+/, $tmpl;
@@ -290,6 +290,7 @@ sub execute {
         $ctx->stash('search_string', encode_html($str));
     }
     $ctx->stash('template_id', $app->{searchparam}{Template});
+    $ctx->stash('maxresults', $app->{searchparam}{MaxResults});
 
     my $str;
     if ($include_blog && keys(%$include_blog) == 1) {
@@ -317,6 +318,15 @@ sub execute {
         close FH;
     }
     $str = $app->translate_templatized($str);
+
+    my $ifmax;
+    my $max;
+    if (($app->{searchparam}{MaxResults}) && ($app->{searchparam}{MaxResults} != 9999999)) {
+        $max = $app->{searchparam}{MaxResults};
+        $ifmax = 1;
+    } else {
+        $ifmax = $max = 0;
+    }
 
     ## Compile and build the search template with results.
     require MT::Builder;
@@ -405,7 +415,13 @@ sub _tag_search {
     my $max = $app->{searchparam}{MaxResults}; 
     while (my $entry = $iter->()) {
         my $blog_id = $entry->blog_id;
-        next if $hits{$blog_id} && $hits{$blog_id} >= $max;
+        if ($hits{$blog_id} && $hits{$blog_id} >= $max) {
+            my $blog = $blogs{$blog_id} || MT::Blog->load($blog_id);
+            my @res = @{ $app->{results}{$blog->name} };
+            my $count = $#res;
+            $res[$count]{maxresults} = $max;
+            next;
+        }
         if ($app->_search_hit($entry)) {
             my $blog = $blogs{$blog_id} || MT::Blog->load($blog_id);
             $app->_store_hit_data($blog, $entry, $hits{$blog_id}++);
@@ -463,7 +479,13 @@ sub _straight_search {
     my $max = $app->{searchparam}{MaxResults}; 
     while (my $entry = $iter->()) {
         my $blog_id = $entry->blog_id;
-        next if $hits{$blog_id} && $hits{$blog_id} >= $max;
+        if ($hits{$blog_id} && $hits{$blog_id} >= $max) {
+            my $blog = $blogs{$blog_id} || MT::Blog->load($blog_id);
+            my @res = @{ $app->{results}{$blog->name} };
+            my $count = $#res;
+            $res[$count]{maxresults} = $max;
+            next;
+        }
         if ($app->_search_hit($entry)) {
             my $blog = $blogs{$blog_id} || MT::Blog->load($blog_id);
             $app->_store_hit_data($blog, $entry, $hits{$blog_id}++);
@@ -722,6 +744,9 @@ sub init {
         [ \&MT::Template::Context::_hdlr_pass_tokens, 1 ]);
     $ctx->register_handler(BlogResultFooter =>
         [ \&MT::Template::Context::_hdlr_pass_tokens, 1 ]);
+    $ctx->register_handler(IfMaxResultsCutoff =>
+        [ \&MT::Template::Context::_hdlr_pass_tokens, 1 ]);
+    $ctx->register_handler(MaxResults => \&_hdlr_max_results);
     $ctx->register_handler(SearchIncludeBlogs => \&_hdlr_include_blogs);
     $ctx->register_handler(SearchTemplateID => \&_hdlr_template_id);
     $ctx;
@@ -730,6 +755,7 @@ sub init {
 sub _hdlr_include_blogs { $_[0]->stash('include_blogs') || '' }
 sub _hdlr_search_string { $_[0]->stash('search_string') || '' }
 sub _hdlr_template_id { $_[0]->stash('template_id') || '' }
+sub _hdlr_max_results { $_[0]->stash('maxresults') || '' }
 
 
 sub _hdlr_result_count {
@@ -754,7 +780,11 @@ sub _hdlr_results {
         $ctx->stash('result', $res);
         local $ctx->{current_timestamp} = $res->{entry}->created_on;
         defined(my $out = $build->build($ctx, $tokens,
-            { %$cond, BlogResultHeader => $res->{blogheader} ? 1 : 0, BlogResultFooter => $res->{blogfooter} ? 1 : 0 }
+            { %$cond, 
+                BlogResultHeader => $res->{blogheader} ? 1 : 0, 
+                BlogResultFooter => $res->{blogfooter} ? 1 : 0,
+                IfMaxResultsCutoff => $res->{maxresults} ? 1 : 0,
+            }
             )) or return $ctx->error( $build->errstr );
         $output .= $out;
     }
@@ -788,3 +818,14 @@ sub _hdlr_entry_edit_link {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::App::Search
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

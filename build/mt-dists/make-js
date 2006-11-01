@@ -7,6 +7,7 @@ use MT;
 use MT::Util qw(encode_js);
 
 my $js = `cat mt-static/mt.js`;
+$js .= `cat mt-static/js/dialog.js`;
 
 foreach my $lang (qw(ja de nl fr es)) {
     open(FOUT, ">./mt-static/mt_$lang.js")

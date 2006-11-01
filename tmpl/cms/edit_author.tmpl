@@ -1,3 +1,6 @@
+<TMPL_IF NAME=EDITING_OTHER_PROFILE>
+<TMPL_INCLUDE NAME=edit_profile.tmpl>
+<TMPL_ELSE>
 <TMPL_INCLUDE NAME="header.tmpl">
 
 <script type="text/javascript">
@@ -16,12 +19,26 @@ function tagDelimChoice(sel) {
         hide("tag_delim_input");
     }
 }
+
+function togglePerms(c) {
+    var p = TC.getElementsByTagAndClassName("input", "subPerm", TC.elementOrId("permission-list"));
+    for (var i = 0; i < p.length; i++) {
+        var sc = p[i];
+        if (c.checked) {
+            sc.checked = true;
+            sc.disabled = true;
+        } else {
+            sc.checked = false;
+            sc.disabled = false;
+        }
+    }
+}
 //-->
 </script>
 
 <div id="edit-author">
 
-<form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
+<form name="profile" id="profile" method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
 <input type="hidden" name="__mode" value="save" />
 <input type="hidden" name="_type" value="author" />
 <TMPL_IF NAME=ID>
@@ -29,78 +46,57 @@ function tagDelimChoice(sel) {
 </TMPL_IF>
 <input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+<TMPL_IF NAME=NEW_OBJECT>
+<input type="hidden" id="status" name="status" value="1">
+</TMPL_IF>
 
-<TMPL_IF NAME=ID>
-<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Author Profile"></h2>
+
+<TMPL_UNLESS NAME=NEW_OBJECT>
+<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="User Profile"></h2>
 <p><MT_TRANS phrase="_USAGE_PROFILE"></p>
 <TMPL_ELSE>
-<h2><MT_TRANS phrase="Create New Author"></h2>
+<h2><MT_TRANS phrase="Create New User"></h2>
 <p><MT_TRANS phrase="_USAGE_NEW_AUTHOR"></p>
-</TMPL_IF>
+</TMPL_UNLESS>
 
 <div class="tabs">
 <ul>
-<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author&amp;id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Profile"></a></li>
-<TMPL_IF NAME=IS_SUPERUSER><li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_admin_permissions&amp;author_id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Permissions"></a></li></TMPL_IF>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view&amp;_type=author<TMPL_IF NAME=ID>&amp;id=<TMPL_VAR NAME=ID></TMPL_IF>"><MT_TRANS phrase="Profile"></a></li>
+<TMPL_UNLESS NAME=NEW_OBJECT>
+<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=ID>"><MT_TRANS phrase="Associations"></a></li>
+</TMPL_UNLESS>
 </ul>
 </div>
 
 <TMPL_IF NAME=SAVED>
-<h4 class="message"><MT_TRANS phrase="Your profile has been updated."></h4>
+<h4 class="message"><MT_TRANS phrase="This profile has been updated."></h4>
 </TMPL_IF>
-
 <TMPL_IF NAME=ERROR>
 <div class="error-message"><TMPL_VAR NAME=ERROR></div>
 </TMPL_IF>
 
 <div class="flt-wrppr">
-<TMPL_UNLESS NAME=IS_SUPERUSER>
-<div class="rightcol">
-
-<TMPL_IF NAME=BLOG_LOOP>
-<div class="box permission-box">
-<TMPL_IF NAME=ID>
-<h4><MT_TRANS phrase="Permissions"></h4>
-<TMPL_ELSE>
-<h4><MT_TRANS phrase="Weblog Associations"></h4>
-</TMPL_IF>
-<div class="inner">
-<TMPL_IF NAME=ID>
-<h5><MT_TRANS phrase="General Permissions"></h5>
-<ul>
-<li><input type="checkbox"<TMPL_IF NAME=IS_SUPERUSER> checked="checked"</TMPL_IF> disabled="disabled" /> <MT_TRANS phrase="System Administrator"></li>
-<li><input type="checkbox"<TMPL_IF NAME=CAN_CREATE_BLOG> checked="checked"</TMPL_IF> disabled="disabled" /> <MT_TRANS phrase="Create Weblogs"></li>
-<li><input type="checkbox"<TMPL_IF NAME=CAN_VIEW_LOG> checked="checked"</TMPL_IF> disabled="disabled" /> <MT_TRANS phrase="View Activity Log"></li>
-</ul>
-</TMPL_IF>
-<ul class="last">
-<TMPL_LOOP NAME=BLOG_LOOP>
-<TMPL_IF NAME=ID>
-<li><input type="checkbox" checked="checked" disabled="disabled" /> <strong><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></strong>
-<ul<TMPL_IF NAME=__LAST__> class="last"</TMPL_IF>>
-<TMPL_LOOP NAME=PERMISSION_LOOP>
-<TMPL_IF NAME=HAVE_ACCESS>
-<li><input type="checkbox" checked="checked" disabled="disabled" /> <TMPL_VAR NAME=PROMPT></li>
-</TMPL_IF>
-</TMPL_LOOP>
-</ul></li>
-<TMPL_ELSE>
-<li><input name="add_to_blog" type="checkbox"<TMPL_IF NAME=IS_CHECKED> checked="checked"</TMPL_IF> value="<TMPL_VAR NAME=BLOG_ID>" /> <strong><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></strong></li>
-</TMPL_IF>
-</TMPL_LOOP>
-</ul>
-</div>
-</div>
-</TMPL_IF>
-
-</div>
-</TMPL_UNLESS>
-
-<div class="leftcol">
 
 <fieldset>
 
 <h3><MT_TRANS phrase="Profile"></h3>
+
+<div class="rightcol">
+
+<div class="box permission-box">
+<h4><MT_TRANS phrase="System Permissions"></h4>
+<div class="inner">
+<ul class="last" id="permission-list">
+<li><input name="is_superuser" id="is_superuser" type="checkbox" value="1"<TMPL_UNLESS NAME=NEW_OBJECT><TMPL_IF NAME=PERM_IS_SUPERUSER> checked="checked"</TMPL_IF> disabled="disabled"</TMPL_UNLESS> onclick="togglePerms(this)" /> <label for="is_superuser"><MT_TRANS phrase="System Administrator"></label></li>
+<li><input name="can_create_blog" id="can_create_blog" class="subPerm" type="checkbox" value="1"<TMPL_UNLESS NAME=NEW_OBJECT><TMPL_IF NAME=PERM_CAN_CREATE_BLOG> checked="checked"</TMPL_IF> disabled="disabled"</TMPL_UNLESS> /> <label for="can_create_blog"><MT_TRANS phrase="Create Weblogs"></label></li>
+<li><input name="can_view_log" id="can_view_log" class="subPerm" type="checkbox" value="1"<TMPL_UNLESS NAME=NEW_OBJECT><TMPL_IF NAME=PERM_CAN_VIEW_LOG> checked="checked"</TMPL_IF> disabled="disabled"</TMPL_UNLESS> /> <label for="can_view_log"><MT_TRANS phrase="View Activity Log"></label></li>
+</ul>
+</div>
+</div>
+
+</div>
+
+<div class="leftcol">
 
 <div class="setting">
     <div class="label">
@@ -108,7 +104,13 @@ function tagDelimChoice(sel) {
     </div>
     <div class="field">
         <input name="name" id="name" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>" />
-        <p><MT_TRANS phrase="The name used by this author to login."></p>
+        <p>
+        <TMPL_IF NAME=IS_ME>
+        <MT_TRANS phrase="Your login name.">
+        <TMPL_ELSE>
+        <MT_TRANS phrase="The name used by this user to login.">
+        </TMPL_IF>
+        </p>
     </div>
 </div>
 
@@ -118,7 +120,13 @@ function tagDelimChoice(sel) {
     </div>
     <div class="field">
         <input name="nickname" id="nickname" value="<TMPL_VAR NAME=NICKNAME ESCAPE=HTML>" />
-        <p><MT_TRANS phrase="The author's published name."></p>
+        <p>
+        <TMPL_IF NAME=IS_ME>
+        <MT_TRANS phrase="Your published name.">
+        <TMPL_ELSE>
+        <MT_TRANS phrase="The user's published name.">
+        </TMPL_IF>
+        </p>
     </div>
 </div>
 
@@ -128,29 +136,47 @@ function tagDelimChoice(sel) {
     </div>
     <div class="field">
         <input name="email" id="email" value="<TMPL_VAR NAME=EMAIL ESCAPE=HTML>" />
-        <p><MT_TRANS phrase="The author's email address."></p>
+        <p>
+        <TMPL_IF NAME=IS_ME>
+        <MT_TRANS phrase="Your email address.">
+        <TMPL_ELSE>
+        <MT_TRANS phrase="The user's email address.">
+        </TMPL_IF>
+        </p>
     </div>
 </div>
 
 <div class="setting">
     <div class="label">
-        <label for="url"><MT_TRANS phrase="Website URL:"></label>
+        <label for="url"><MT_TRANS phrase="Website URL">:</label>
     </div>
     <div class="field">
         <input name="url" id="url" value="<TMPL_VAR NAME=URL ESCAPE=HTML>" />
-        <p><MT_TRANS phrase="The URL of this author's website. (Optional)"></p>
+        <p>
+        <TMPL_IF NAME=IS_ME>
+        <MT_TRANS phrase="The URL of your website. (Optional)">
+        <TMPL_ELSE>
+        <MT_TRANS phrase="The URL of this user's website. (Optional)">
+        </TMPL_IF>
+        </p>
     </div>
 </div>
 
 <div class="setting">
     <div class="label">
-        <label for="preferred_language"><MT_TRANS phrase="Language:"></label>
+        <label for="preferred_language"><MT_TRANS phrase="Language">:</label>
     </div>
     <div class="field">
 		<select name="preferred_language" id="preferred_language"><TMPL_LOOP NAME=LANGUAGES>
 			<option value="<TMPL_VAR NAME=L_TAG>"<TMPL_IF NAME=L_SELECTED> selected="selected"</TMPL_IF>><TMPL_VAR NAME=L_NAME></option></TMPL_LOOP>
 		 </select>
-        <p><MT_TRANS phrase="The author's preferred language."></p>
+        <p>
+        <TMPL_IF NAME=IS_ME>
+        <MT_TRANS phrase="Your preferred language.">
+        <TMPL_ELSE>
+        <MT_TRANS phrase="The user's preferred language.">
+        </TMPL_IF>
+        </p>
     </div>
 </div>
 
@@ -160,16 +186,18 @@ function tagDelimChoice(sel) {
     </div>
     <div class="field">
 		<select name="tag_delim" id="tag_delim">
-			<option value=","<TMPL_IF NAME=AUTH_PREF_TAG_DELIM_COMMA> selected="selected"</TMPL_IF>><MT_TRANS phrase="Comma"></option>
-			<option value=" "<TMPL_IF NAME=AUTH_PREF_TAG_DELIM_SPACE> selected="selected"</TMPL_IF>><MT_TRANS phrase="Space"></option>
-<!--   onchange="tagDelimChoice(this)"
-			<option value=""<TMPL_IF NAME=AUTH_PREF_TAG_DELIM_OTHER> selected="selected"</TMPL_IF>><MT_TRANS phrase="Other..."></option>
--->
-		 </select><!-- <span id="tag_delim_input" <TMPL_UNLESS NAME=AUTH_PREF_TAG_DELIM_OTHER>style="display:none"</TMPL_UNLESS>> <input type="text" size="1" name="tag_delim" value="<TMPL_VAR NAME=AUTH_PREF_TAG_DELIM ESCAPE=HTML>" /></span> -->
-        <p><MT_TRANS phrase="The author's preferred delimiter for entering tags."></p>
+			<option value="comma"<TMPL_IF NAME=AUTH_PREF_TAG_DELIM_COMMA> selected="selected"</TMPL_IF>><MT_TRANS phrase="Comma"></option>
+			<option value="space"<TMPL_IF NAME=AUTH_PREF_TAG_DELIM_SPACE> selected="selected"</TMPL_IF>><MT_TRANS phrase="Space"></option>
+		 </select>
+        <p>
+        <TMPL_IF NAME=IS_ME>
+        <MT_TRANS phrase="Your preferred delimiter for entering tags.">
+        <TMPL_ELSE>
+        <MT_TRANS phrase="The user's preferred delimiter for entering tags.">
+        </TMPL_IF>
+        </p>
     </div>
 </div>
-
 </fieldset>
 
 <fieldset>
@@ -194,7 +222,13 @@ function tagDelimChoice(sel) {
     </div>
     <div class="field">
         <input type="password" name="pass" id="pass" value="" />
-        <p><MT_TRANS phrase="Select a password for the author."></p>
+        <p>
+        <TMPL_IF NAME=IS_ME>
+        <MT_TRANS phrase="Select a password for yourself.">
+        <TMPL_ELSE>
+        <MT_TRANS phrase="Select a password for the user.">
+        </TMPL_IF>
+        </p>
     </div>
 </div>
 
@@ -214,7 +248,13 @@ function tagDelimChoice(sel) {
     </div>
     <div class="field">
         <input name="hint" id="hint" value="<TMPL_VAR NAME=HINT ESCAPE=HTML>" />
-        <p><MT_TRANS phrase="This word or phrase will be required to recover your password if you forget it."></p>
+        <p>
+        <TMPL_IF NAME=IS_ME>
+        <MT_TRANS phrase="This word or phrase will be required to recover the password if you forget it.">
+        <TMPL_ELSE>
+        <MT_TRANS phrase="This word or phrase will be required to recover the password if the user forgets it.">
+        </TMPL_IF>
+        </p>
     </div>
 </div>
 
@@ -229,11 +269,10 @@ function tagDelimChoice(sel) {
     </div>
 </div>
 </TMPL_IF>
-
 </fieldset>
 
 <div style="text-align: center;">
-<input type="submit" value="<MT_TRANS phrase="Save Changes">" title="<MT_TRANS phrase="Save this author (s)">" accesskey="s" />
+<input type="submit" value="<MT_TRANS phrase="Save Changes">" title="<MT_TRANS phrase="Save this user (s)">" accesskey="s" />
 </div>
 
 </div>
@@ -244,3 +283,4 @@ function tagDelimChoice(sel) {
 </div>
 
 <TMPL_INCLUDE NAME="footer.tmpl">
+</TMPL_IF>

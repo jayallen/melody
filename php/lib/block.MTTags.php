@@ -4,7 +4,17 @@ function smarty_block_MTTags($args, $content, &$ctx, &$repeat) {
     if (!isset($content)) {
         $ctx->localize($localvars);
         $blog_id = $ctx->stash('blog_id');
-        $tags = $ctx->mt->db->fetch_entry_tags(array(blog_id => $blog_id));
+        $args['blog_id'] = $ctx->stash('blog_id');
+        if (isset($args['sort_by'])) {
+            $s = $args['sort_by'];
+            if (($s == 'rank') || ($s == 'count')) { // Aliased
+                $args['sort_by'] = 'count';
+                $args['sort_order'] or $args['sort_order'] = 'descend'; // Inverted default
+            } elseif (($s != 'name') && ($s != 'id')) {
+                $args['sort_by'] = NULL;
+            }
+        } 
+        $tags = $ctx->mt->db->fetch_entry_tags($args);
         $min = 0; $max = 0;
         $all_count = 0;
         if ($tags) {

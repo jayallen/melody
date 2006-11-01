@@ -49,6 +49,7 @@ sub login {
     return $app->error($app->translate("Error loading [_1]: [_2]",
         $user_class, $@)) if $@;
     my $author = $user_class->load({ name => $username, type => AUTHOR });
+    return undef unless $author->is_active;
     if ($author && (($author->api_password || '') ne '')) {
         my $auth_token = perl_sha1_digest_hex('feed:' . 
             $author->api_password);
@@ -560,6 +561,34 @@ manage elements that have already been added to the feed).
 
 =head1 METHODS
 
+=head2 $app->init
+
+Sets up the Activity Feed application, specifying the template directory
+and defining the core activity feed callbacks.
+
+=head2 $app->init_core_callbacks
+
+Registers the core callbacks for the standard activity feeds.
+
+=head2 $app->login
+
+Method to override L<MT::App->login> to do token based authentication
+for feed clients.
+
+=head2 $app->mode_default
+
+Default application mode handler that handles all feed requests.
+
+=head2 $app->process_log_feed
+
+Method that provides the respones for all core feed types that are based
+on L<MT::Log> records.
+
+=head2 $app->session
+
+Provides a L<MT::Session> record where session-based data can be kept
+for activity feed requests.
+
 =head2 $app->feed_entry(\%param)
 
 =over 4
@@ -638,6 +667,17 @@ implementation. The parameters you can supply in the param hashref are:
 =item title - The title to assign for the feed itself.
 
 =back
+
+=head2 entity_translate($str)
+
+Changes common HTML named entities into numeric equivalents ('&lt;', '&gt;',
+'&amp;', '&quot;', '&apos') for the CDATA blocks produced by the activity
+feeds.
+
+=head2 $app->apply_log_filter(\%params)
+
+Returns a set of MT::Log load terms appropriate for the request parameters
+provided through the \%params.
 
 =head1 AUTHOR & COPYRIGHTS
 

@@ -74,7 +74,9 @@ to the C<add_task> method of the I<MT> class:
         # arguments; see listing of arguments below
     }));
 
-=head1 ARGUMENTS
+=head1 METHODS
+
+=head2 MT::Task->new(\%params)
 
 The following are a list of parameters that can be specified when constructing
 an I<MT::Task> object.
@@ -107,6 +109,26 @@ is a code reference and the routine is given the I<MT::Task> instance
 as a parameter.
 
 =back
+
+=head2 $task->init
+
+Initializes a I<MT::Task> instance.
+
+=head2 $task->run
+
+Called when running the task.
+
+=head2 $task->key([$key])
+
+Gets or sets the unique key registered for the task.
+
+=head2 $task->name([$name])
+
+Gets or sets the name registered for the task.
+
+=head2 $task->frequency([$frequency])
+
+Gets or sets the execution frequency for the task (in seconds). The default frequency is 86400 which is daily.
 
 =head1 AUTHOR & COPYRIGHTS
 

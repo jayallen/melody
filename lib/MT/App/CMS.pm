@@ -39,6 +39,8 @@ my %API = (
     ping_cat => 'MT::TBPing',
     log => 'MT::Log',
     tag => 'MT::Tag',
+    role => 'MT::Role',
+    association => 'MT::Association',
 );
 
 sub init {
@@ -79,10 +81,10 @@ sub init {
         'save_placements' => \&save_placements,
         'delete_confirm' => \&delete_confirm,
         'delete' => \&delete,
-        'edit_permissions' => \&edit_permissions,
-        'save_permissions' => \&save_permissions,
-        'edit_admin_permissions' => \&edit_permissions,
-        'save_admin_permissions' => \&save_permissions,
+        'enable_object' => \&enable_object,
+        'disable_object' => \&disable_object,
+        'edit_role' => \&edit_role,
+        'save_role' => \&save_role,
         'ping' => \&send_pings,
         'rebuild_phase' => \&rebuild_phase,
         'rebuild' => \&rebuild_pages,
@@ -121,22 +123,27 @@ sub init {
         'empty_junk' => \&empty_junk,
         'handle_junk' => \&handle_junk,
         'not_junk' => \&not_junk,
-        'cfg_system' => \&cfg_system_feedback,
+        'cfg_system' => \&cfg_system_general,
         'cfg_system_feedback' => \&cfg_system_feedback,
         'save_plugin_config' => \&save_plugin_config,
         'reset_plugin_config' => \&reset_plugin_config,
         'save_cfg_system_feedback' => \&save_cfg_system_feedback,
+        'save_cfg_system_general' => \&save_cfg_system_general,
         'update_list_prefs' => \&update_list_prefs,
         'update_welcome_message' => \&update_welcome_message,
         'upgrade' => \&upgrade,
         'plugin_control' => \&plugin_control,
-        'edit_profile' => \&edit_profile,
-        'save_profile' => \&save_profile,
         'recover_profile_password' => \&recover_profile_password,
         'js_tag_check' => \&js_tag_check,
         'js_tag_list' => \&js_tag_list,
         'list_tags' => \&list_tags,
         'rename_tag' => \&rename_tag,
+        'list_associations' => \&list_associations,
+        'list_roles' => \&list_roles,
+        'dialog_select_weblog' => \&dialog_select_weblog,
+        'dialog_select_user' => \&dialog_select_user,
+        'dialog_grant_role' => \&dialog_grant_role,
+        'grant_role' => \&grant_role,
     );
     $app->{state_params} = [
         '_type', 'id', 'tab', 'offset', 'filter',
@@ -272,6 +279,16 @@ sub init_core_itemset_actions {
                               code => \&recover_passwords,
                               condition => sub { $app->user->is_superuser() },
                           }, 1);
+    $app->add_itemset_action({type => 'author',
+                              key => "delete_user",
+                              label => "Delete",
+                              continue_prompt =>
+                                "_WARNING_DELETE_USER",
+                              code => \&delete,
+                              condition => sub { 
+                                  $app->user->is_superuser();
+                              },
+                          }, 1);
 }
 
 sub init_core_callbacks {
@@ -325,7 +342,10 @@ sub init_core_callbacks {
         },
         'CMSSaveFilter.banlist' => \&CMSSaveFilter_banlist,
 
-        # author callbacks
+        # associations
+        'CMSDeletePermissionFilter.association' => \&CMSDeletePermissionFilter_association,
+
+        # user callbacks
         'CMSViewPermissionFilter.author' => \&CMSViewPermissionFilter_author,
         'CMSSavePermissionFilter.author' => \&CMSSavePermissionFilter_author,
         'CMSDeletePermissionFilter.author' => \&CMSDeletePermissionFilter_author,
@@ -423,7 +443,7 @@ sub update_welcome_message {
 
     # FIXME: permission check
     my $perms = $app->{perms};
-    return $app->error($app->translate("No permissions"))
+    return $app->errtrans("Permission denied.")
         unless $perms && $perms->can_edit_config;
 
     my $blog_id = $app->param('blog_id');
@@ -500,7 +520,7 @@ sub recover_password {
 sub recover_profile_password {
     my $app = shift;
     $app->validate_magic or return;
-    return $app->error($app->translate("No permissions"))
+    return $app->errtrans("Permission denied.")
         unless $app->user->is_superuser();
 
     my $q = $app->param;
@@ -513,8 +533,8 @@ sub recover_profile_password {
     my ($rc, $res) = $app->reset_password($author, $author->hint, $author->name);
 
     if ($rc){
-        my $url = $app->uri('mode' => 'edit_profile', 
-                            args => { recovered => 1, author_id => $author_id});
+        my $url = $app->uri('mode' => 'view', 
+                            args => { _type => 'author', recovered => 1, id => $author_id});
         $app->redirect($url);
     } else {
         $app->error($res);
@@ -554,12 +574,33 @@ sub reset_password {
         return (0, $errstr);
     }
 
+    $app->log({
+        message => $app->translate("Invalid user name '[_1]' in password recovery attempt", $name),
+        level => MT::Log::SECURITY(),
+        class => 'system',
+        category => 'recover_password',
+    }), return (0, $app->translate("User name or birthplace is incorrect.")) unless $author;
+    return (0, $app->translate(
+        "User has not set birthplace; cannot recover password"))
+        if ($hint && !$author->hint);
+
+    $app->log({
+        message => $app->translate("Invalid attempt to recover password (used birthplace '[_1]')", $hint),
+        level => MT::Log::SECURITY(),
+        class => 'system',
+        category => 'recover_password'
+    }), return (0, $app->translate("User name or birthplace is incorrect."))
+        unless $author->hint eq $hint;
+
+    return (0, $app->translate("User does not have email address"))
+        unless $author->email;
+
     my @pool = ('a'..'z', 0..9);
     my $pass = '';
     for (1..8) { $pass .= $pool[ rand @pool ] }
     $author->set_password($pass);
     $author->save;
-    my $message = $app->translate("Password was reset for user '[_1]' (ID:[_2]) and sent to address: [_3]", $author->name, $author->id, $author->email);
+    my $message = $app->translate("Password was reset for user '[_1]' (user #[_2]). Password was sent to the following address: [_3]", $author->name, $author->id, $author->email);
     $app->log({
         message => $message,
         level => MT::Log::SECURITY(),
@@ -567,9 +608,14 @@ sub reset_password {
         category => 'recover_password'
     });
 
-    my %head = ( To => $author->email,
-                 From => $app->config('EmailAddressMain') || $author->email,
-                 Subject => $app->translate("Password Recovery") );
+    my $address = defined $author->nickname
+        ? $author->nickname .' <'. $author->email .'>'
+        : $author->email;
+    my %head = (
+        To => $address,
+        From => $app->config('EmailAddressMain') || $address,
+        Subject => $app->translate("Password Recovery")
+    );
     my $charset = $app->config('PublishCharset');
     my $mail_enc = uc ($app->config('MailEncoding') || $charset);
     $head{'Content-Type'} = qq(text/plain; charset="$mail_enc");
@@ -593,7 +639,7 @@ sub js_tag_list {
     require MT::Tag;
     my $class = $app->_load_driver_for($type) or return;
     if (my $tag_list = MT::Tag->cache(blog_id => $blog_id,
-        datasource => $class->datasource)) {
+        class => $class)) {
         require JSON;
         $js = JSON::objToJson($tag_list);
     }
@@ -631,7 +677,7 @@ sub recover_passwords {
     my $app = shift;
     my @id = $app->param('id');
 
-    return $app->error($app->translate("No permissions"))
+    return $app->errtrans("Permission denied.")
         unless $app->user->is_superuser();
 
     my $class;
@@ -650,6 +696,393 @@ sub recover_passwords {
     }
 
     $app->build_page('recover_password_result.tmpl', {message_loop => \@msg_loop, return_url => $app->return_uri});
+}
+
+sub listing {
+    my $app = shift;
+    my ($opt) = @_;
+
+    my $type = $opt->{Type};
+    my $tmpl = $opt->{Template} || 'list_' . $type . '.tmpl';
+    my $iter_method = $opt->{Iterator} || 'load_iter';
+    my $param = $opt->{Params} || {};
+    my $hasher = $opt->{Code};
+    my $terms = $opt->{Terms} || {};
+    my $args = $opt->{Args} || {};
+    my $no_html = $opt->{NoHTML};
+    my $json = $app->param('json');
+    $param->{json} = 1 if $json;
+
+    my $class = $app->_load_driver_for($type) or return;
+    my $list_pref = $app->list_pref($type);
+    $param->{$_} = $list_pref->{$_} for keys %$list_pref;
+    my $limit = $list_pref->{rows};
+    my $offset = $app->param('offset') || 0;
+    $args->{offset} = $offset if $offset;
+    $args->{limit} = $limit + 1;
+
+    # handle search parameter
+    if (my $search = $app->param('search')) {
+        $app->param('do_search', 1);
+        my $search_param = $app->do_search_replace();
+        if ($hasher) {
+            my $data = $search_param->{object_loop};
+            if ($data && @$data) {
+                foreach my $row (@$data) {
+                    my $obj = $row->{object};
+                    $row = $obj->column_values();
+                    $hasher->($obj, $row);
+                }
+            }
+        }
+        $param->{$_} = $search_param->{$_} for keys %$search_param;
+        $param->{limit_none} = 1;
+    } else {
+        # handle filter options
+        if ((my $filter_col = $app->param('filter'))
+            && (my $val = $app->param('filter_val')))
+        {
+            if (!exists ($terms->{$filter_col})) {
+                $terms->{$filter_col} = $val;
+                $param->{filter} = $filter_col;
+                $param->{filter_val} = $val;
+                my $url_val = encode_url($val);
+                $param->{filter_args} = "&filter=$filter_col&filter_val=$url_val";
+            }
+        }
+
+        # automagic blog scoping
+        my $blog = $app->blog;
+        if ($blog) {
+            # In blog context, class defines blog_id as a column,
+            # so restrict listing to active blog:
+            if ($class->column_def('blog_id')) {
+                $terms->{blog_id} ||= $blog->id;
+            }
+        }
+
+        my $iter = $class->$iter_method($terms, $args)
+            or return $app->error($class->errstr);
+        my @data;
+        while (my $obj = $iter->()) {
+            my $row = $obj->column_values();
+            $hasher->($obj, $row) if $hasher;
+            push @data, $row;
+            last if scalar @data == $limit;
+        }
+
+        $param->{object_loop} = \@data;
+        $param->{object_type} = $type;
+
+        # handle pagination
+        my $pager = {
+            offset => $offset,
+            limit => $limit,
+            rows => scalar @data,
+            listTotal => $class->count($terms, $args),
+            chronological => $param->{list_noncron} ? 0 : 1,
+            return_args => $app->make_return_args,
+        };
+        require JSON;
+        $param->{pager_json} = $json ? $pager : JSON::objToJson($pager);
+        # pager.rows (number of rows shown)
+        # pager.listTotal (total number of rows in datasource)
+        # pager.offset (offset currently used)
+        # pager.chronological (boolean, whether the listing is chronological or not)
+    }
+
+    my $plural = $type;
+    # entry -> entries; user -> users
+    if ($type =~ m/y$/) {
+        $type =~ s/y$/ies/;
+    } else {
+        $type .= 's';
+    }
+    $param->{object_type_plural} = $app->translate($plural);
+    if ($app->user->is_superuser()) {
+        $param->{is_superuser} = 1;
+    }
+
+    my $plugin_actions = $app->plugin_itemset_actions($type);
+    $param->{plugin_itemset_action_loop} = $plugin_actions || [];
+    my $core_actions = $app->core_itemset_actions($type);
+    $param->{core_itemset_action_loop} = $core_actions || [];
+    $param->{has_itemset_actions} =
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
+
+    if ($json) {
+        my $html = $app->build_page($tmpl, $param);
+        my $data = {
+            html => $html,
+            pager => $param->{pager_json},
+        };
+        $app->send_http_header("text/javascript+json");
+        require JSON;
+        $app->print(JSON::objToJson($data));
+        $app->{no_print_body} = 1;
+    } else {
+        $no_html ? $param : $app->build_page($tmpl, $param);
+    }
+}
+
+sub list_roles {
+    my $app = shift;
+    my $author_id = $app->param('author_id');
+
+    my $pref = $app->list_pref('role');
+    my $all_perms;
+    if ($pref->{view_expanded}) {
+        my @all_perms = @{ MT::Permission->perms() };
+        $all_perms = [ @all_perms ];
+        foreach (@$all_perms) {
+            $_->[2] = $app->translate($_->[2]);
+        }
+    }
+
+    if ($author_id) {
+        unless ($app->user->is_superuser || ($app->user->id == $author_id)) {
+            return $app->errtrans("Permission denied.");
+        }
+        require MT::Author;
+        require MT::Role;
+        require MT::Association;
+        my $user = MT::Author->load($author_id)
+            or return $app->error($app->translate("Invalid user id"));
+        $app->add_breadcrumb($app->translate("Users"),
+            $app->user->is_superuser ? $app->uri(mode => 'list_authors',
+                      args => { author_id => $author_id }) : undef);
+        $app->add_breadcrumb($app->translate("User Roles"));
+        my $hasher = sub {
+            my ($obj, $param) = @_;
+            my $role = $obj->role;
+            $param->{name} = $role->name;
+            my $blog = $obj->blog;
+            $param->{blog_name} = $blog ? $blog->name : '-';
+
+            # populate permissions for the expanded view
+            if ($pref->{view_expanded}) {
+                my @perms;
+                foreach (@$all_perms) {
+                    next unless length($_->[2] || '');
+                    push @perms, { name => $_->[2] } if $obj->has($_->[1]);
+                }
+                $param->{perm_loop} = \@perms;
+            }
+        };
+        $app->listing({
+            Args => { sort => 'name' },
+            Type => 'association',
+            Template => 'list_role.tmpl',
+            Terms => {
+                type => MT::Association::USER_BLOG_ROLE(),
+                author_id => $author_id
+            },
+            Code => $hasher,
+            Params => {
+                nav_authors => 1,
+                edit_author_name => $user->name,
+                edit_author_id => $author_id,
+                list_noncron => 1,
+                can_create_role => $app->user->is_superuser,
+                has_expanded_mode => 1,
+            },
+        });
+    } else {
+        require MT::Association;
+        my $hasher = sub {
+            my ($obj, $row) = @_;
+            my $user_count = MT::Association->count({
+                role_id => $obj->id,
+                author_id => [1, undef],
+            }, {
+                unique => 'author_id',
+                range_incl => { author_id => 1 },
+            });
+            $row->{members} = $user_count;
+            $row->{weblogs} = MT::Association->count({
+                role_id => $obj->id,
+                blog_id => [1, undef],
+            }, {
+                unique => 'blog_id',
+                range_incl => { blog_id => 1 },
+            });
+            if ($obj->created_by) {
+                my $user = MT::Author->load($obj->created_by, { cached_ok => 1 });
+                $row->{created_by} = $user ? $user->name : '';
+            } else {
+                $row->{created_by} = '';
+            }
+
+            # populate permissions for the expanded view
+            if ($pref->{view_expanded}) {
+                my @perms;
+                foreach (@$all_perms) {
+                    next unless length($_->[2] || '');
+                    push @perms, { name => $_->[2] } if $obj->has($_->[1]);
+                }
+                $row->{perm_loop} = \@perms;
+            }
+        };
+        unless ($app->user->is_superuser()) {
+            return $app->errtrans("Permission denied.");
+        }
+        $app->add_breadcrumb($app->translate("Roles"));
+        $app->listing({
+            Args => { sort => 'name' },
+            Type => 'role',
+            Code => $hasher,
+            Params => {
+                nav_privileges => 1,
+                list_noncron => 1,
+                can_create_role => $app->user->is_superuser,
+                has_expanded_mode => 1,
+            },
+        });
+    }
+}
+
+sub list_associations {
+    my $app = shift;
+
+    my $blog_id = $app->param('blog_id');
+    my $author_id = $app->param('author_id');
+    my $role_id = $app->param('role_id');
+
+    my $this_user = $app->user;
+    if (!$this_user->is_superuser) {
+        if ((!$blog_id || !$this_user->permissions($blog_id)->can_administer_blog) &&
+            (!$author_id || ($author_id != $this_user->id))) {
+            return $app->errtrans("Permission denied.")
+        }
+    }
+
+    my ($user, $role);
+    if ($author_id) {
+        $user = MT::Author->load($author_id, { cached_ok => 1 });
+        $app->add_breadcrumb($app->translate('Users'),
+            $app->user->is_superuser ? $app->uri(mode => 'list_authors')
+                                     : undef);
+        $app->add_breadcrumb($user->name,
+            $app->uri(mode => 'view', args => { _type => 'author', id => $author_id })
+        );
+        $app->add_breadcrumb($app->translate('User Associations'));
+    }
+    if ($role_id) {
+        require MT::Role;
+        $role = MT::Role->load($role_id, { cached_ok => 1 });
+        $app->add_breadcrumb($app->translate("Roles"),
+            $app->uri(mode => "list_roles"));
+        $app->add_breadcrumb($role->name,
+            $app->uri(mode => 'edit_role', args => { _type => 'role', id => $role_id })
+        );
+        $app->add_breadcrumb($app->translate("Role Users"));
+    }
+    if (!$role_id && !$author_id) {
+        if ($blog_id) {
+            $app->add_breadcrumb($app->translate("Users"));
+        } else {
+            $app->add_breadcrumb($app->translate("Associations"));
+        }
+    }
+
+    my $pref = $app->list_pref('association');
+    my $all_perms;
+    if ($pref->{view_expanded}) {
+        my @all_perms = @{ MT::Permission->perms() };
+        $all_perms = [ @all_perms ];
+        foreach (@$all_perms) {
+            $_->[2] = $app->translate($_->[2]);
+        }
+    }
+
+    # Supplies additional parameters for the row being listed
+    my %users;
+    $users{$this_user->id} = $this_user;
+    my $hasher = sub {
+        my ($obj, $row) = @_;
+        if (my $user = $obj->user) {
+            $row->{user_id} = $user->id;
+            $row->{user_name} = $user->name;
+        }
+        if (my $role = $obj->role) {
+            $row->{role_name} = $role->name;
+            # populate permissions for the expanded view
+            if ($pref->{view_expanded}) {
+                my @perms;
+                foreach (@$all_perms) {
+                    next unless length($_->[2] || '');
+                    push @perms, { name => $_->[2] } if $role->has($_->[1]);
+                }
+                $row->{perm_loop} = \@perms;
+            }
+        } else {
+            $row->{role_name} = $app->translate("(Custom)");
+        }
+        if (my $blog = $obj->blog) {
+            $row->{blog_name} = $blog->name;
+        }
+        if (my $ts = $obj->created_on) {
+            $row->{created_on_formatted} =
+                format_ts("%Y.%m.%d", $ts); 
+            $row->{created_on_time_formatted} =
+                format_ts("%Y-%m-%d %H:%M:%S", $ts); 
+            $row->{created_on_relative} =
+                relative_date($ts, time, $obj->blog);
+        }
+        if ($row->{created_by}) {
+            my $created_user = $users{$row->{created_by}} ||= MT::Author->load($row->{created_by});
+            if ($created_user) {
+                $row->{created_by} = $created_user->name;
+            } else {
+                $row->{created_by} = $app->translate('(user deleted)');
+            }
+        }
+    };
+    require MT::Association;
+    my $types;
+    if (!$author_id && !$blog_id) {
+        $types = [ MT::Association::USER_BLOG_ROLE(),
+                   MT::Association::USER_ROLE() ];
+    } elsif (!$author_id) {
+        $types = [ MT::Association::USER_BLOG_ROLE() ];
+    } elsif ($author_id) {
+        $types = [ MT::Association::USER_BLOG_ROLE(),
+                   MT::Association::USER_ROLE() ];
+    }
+    $app->listing({
+        Args => { sort => 'created_on', direction => 'descend' },
+        Type => 'association',
+        Code => $hasher,
+        Terms => {
+            type => $types,
+            $author_id ? (author_id => $author_id) : (),
+            $blog_id ? (blog_id => $blog_id) : (),
+            $role_id ? (role_id => $role_id) : (),
+        },
+        Params => {
+            can_create_association => $app->user->is_superuser
+                || ($blog_id && $app->user->permissions($blog_id)->can_administer_blog),
+            has_expanded_mode => 1,
+            nav_privileges => ($author_id || $blog_id ? 0 : 1) || $role_id,
+            nav_authors => ($author_id || $blog_id ? 1 : 0) && !$role_id,
+            blog_view => $blog_id ? 1 : 0,
+            user_view => $author_id ? 1 : 0,
+            role_view => $role_id ? 1 : 0,
+            $role_id ? (
+                role_id => $role_id,
+                role_name => $role->name,
+            ) : (),
+            $author_id ? (
+                edit_author_id => $author_id,
+                edit_author_name => $user->name,
+                status_enabled => $user->is_active ? 1 : 0,
+            ) : (),
+            saved => $app->param('saved') || 0,
+            saved_deleted => $app->param('saved_deleted') || 0,
+            association_view => !$author_id && !$role_id,
+            blog_id => $blog_id,
+        },
+    });
 }
 
 sub list_tags {
@@ -693,43 +1126,41 @@ sub list_tags_for {
     my %param = %$list_pref;
 
     my $limit = $list_pref->{rows};
-    my $offset = $limit eq 'none' ? 0 : ($app->param('offset') || 0);
+    my $offset = $app->param('offset') || 0;
 
     my (%terms, %arg);
 
     require MT::Tag;
     require MT::ObjectTag;
-    my $total = $pkg->tag_count($blog_id ? { blog_id => $blog_id } : undef);
+    my $total = $pkg->tag_count($blog_id ? { blog_id => $blog_id } : undef) || 0;
 
     $arg{'sort'} = 'name';
-    $arg{limit} = $limit + 1 if $limit ne 'none';
+    $arg{limit} = $limit + 1;
     if ($offset > $total - 1) {
-        $arg{offset} = $offset = $total - ($limit eq 'none' ? 1 : $limit);
+        $arg{offset} = $offset = $total - $limit;
     } elsif ($offset < 0) {
         $arg{offset} = $offset = 0;
     } else {
         $arg{offset} = $offset if $offset;
     }
-    $arg{join} = ['MT::ObjectTag', 'tag_id', { object_datasource => $pkg->datasource, ($blog_id ? (blog_id => $blog_id) : ())}, { unique => 1 }];
+    $arg{join} = MT::ObjectTag->join_on('tag_id', { object_datasource => $pkg->datasource, ($blog_id ? (blog_id => $blog_id) : ())}, { unique => 1 });
 
     my $data = $app->build_tag_table( load_args => [ \%terms, \%arg ],
         'package' => $pkg, param => \%param );
     delete $param{tag_table} unless @$data;
 
-    if ($limit ne 'none') {
-        ## We tried to load $limit + 1 entries above; if we actually got
-        ## $limit + 1 back, we know we have another page of entries.
-        my $have_next_entry = @$data > $limit;
-        pop @$data while @$data > $limit;
-        if ($offset) {
-            $param{prev_offset} = 1;
-            $param{prev_offset_val} = $offset - $limit;
-            $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
-        }
-        if ($have_next_entry) {
-            $param{next_offset} = 1;
-            $param{next_offset_val} = $offset + $limit;
-        }
+    ## We tried to load $limit + 1 entries above; if we actually got
+    ## $limit + 1 back, we know we have another page of entries.
+    my $have_next_entry = @$data > $limit;
+    pop @$data while @$data > $limit;
+    if ($offset) {
+        $param{prev_offset} = 1;
+        $param{prev_offset_val} = $offset - $limit;
+        $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
+     }
+    if ($have_next_entry) {
+        $param{next_offset} = 1;
+        $param{next_offset_val} = $offset + $limit;
     }
 
     $param{limit} = $limit;
@@ -741,7 +1172,7 @@ sub list_tags_for {
     $param{list_start} = $offset + 1;
     $param{list_end} = $offset + scalar @$data;
     $param{list_total} = $total;
-    $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+    $param{next_max} = $param{list_total} - $limit;
     $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
     $param{list_noncron} = 1;
 
@@ -758,7 +1189,7 @@ sub rename_tag {
     my $perms = $app->{perms};
     my $blog_id = $app->blog->id if $app->blog;
     ($blog_id && $perms && $perms->can_edit_tags) || ($app->user->is_superuser())
-        or return $app->error($app->translate("No permissions"));
+        or return $app->errtrans("Permission denied.");
     my $id = $app->param('id');
     my $name = $app->param('tag_name');
     require MT::Tag;
@@ -772,7 +1203,7 @@ sub rename_tag {
 
     my $terms = { tag_id => $tag->id };
     $terms->{blog_id} = $blog_id if $blog_id;
-    my $iter = MT::Entry->load_iter(undef, { join => ['MT::ObjectTag', 'object_id', $terms ] });
+    my $iter = MT::Entry->load_iter(undef, { join => MT::ObjectTag->join_on('object_id', $terms) });
     my @entries;
     while (my $entry = $iter->()) {
         $entry->remove_tags($tag->name);
@@ -802,7 +1233,8 @@ sub build_tag_table {
     } elsif ($args{items}) {
         $iter = sub { shift @{ $args{items} } };
     }
-    my $limit = $args{limit} || 'none';
+    return [] unless $iter;
+
     my $param = $args{param} || {};
     my $blog_id = $app->param('blog_id');
     my $pkg = $args{'package'};
@@ -815,6 +1247,7 @@ sub build_tag_table {
            tag_id => $tag->id,
            tag_name => $tag->name,
            tag_count => $count,
+           object => $tag,
         };
         push @data, $row;
     }
@@ -829,11 +1262,11 @@ sub load_itemset_actions {
     my $app = shift;
     my ($type, $param, @p) = @_;
     my $plugin_actions = $app->plugin_itemset_actions($type, @p);
-    $param->{plugin_itemset_action_loop} = $plugin_actions || [];
+    $param->{plugin_itemset_action_loop} = $plugin_actions;
     my $core_actions = $app->core_itemset_actions($type, @p);
-    $param->{core_itemset_action_loop} = $core_actions || [];
+    $param->{core_itemset_action_loop} = $core_actions;
     $param->{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (@$plugin_actions || @$core_actions) ? 1 : 0;
 }
 
 sub is_authorized {
@@ -841,18 +1274,9 @@ sub is_authorized {
     my $blog_id = $app->param('blog_id');
     $app->{perms} = undef;
     return 1 unless $blog_id;
-    return unless my $author = $app->user;
+    return unless my $user = $app->user;
     require MT::Permission;
-    my $perms;
-    $perms = $app->{perms} = MT::Permission->load({
-        author_id => $author->id,
-        blog_id => $blog_id });
-    if (!$perms && $author->is_superuser) {
-        $perms = $app->{perms} = new MT::Permission;
-        $perms->author_id($author->id);
-        $perms->blog_id($blog_id);
-        $perms->set_full_permissions();
-    }
+    my $perms = $app->{perms} = $user->permissions($blog_id);
     $perms ? 1 :
         $app->error($app->translate(
             "You are not authorized to log in to this blog."));
@@ -861,8 +1285,11 @@ sub is_authorized {
 sub build_page {
     my $app = shift;
     my($page, $param) = @_;
-    $param->{mt_news} = $app->{cfg}->NewsURL;
-    $param->{mt_support} = $app->{cfg}->SupportURL;
+
+    my $mode = $app->mode;
+    $param->{mt_portal} = $MT::PORTAL;
+    $param->{mt_news} = $app->config('NewsURL');
+    $param->{mt_support} = $app->config('SupportURL');
     my $lang = lc MT->current_language || 'en_us';
     $param->{language_id} = ($lang !~ /en[_-]us/) ? $lang : '';
     $param->{mode} = $app->mode;
@@ -896,6 +1323,7 @@ sub build_page {
     my $blog_id = $app->param('blog_id');
     my $blog;
     require MT::Blog;
+    $blog ||= MT::Blog->load($blog_id, {cached_ok=>1}) if $blog_id;
     if (my $auth = $app->user) {
         $param->{is_administrator} = $auth->is_superuser;
         $param->{can_create_blog} = $auth->can_create_blog;
@@ -922,7 +1350,6 @@ sub build_page {
         @data = sort { $a->{top_blog_name} cmp $b->{top_blog_name} } @data;
         $param->{top_blog_loop} = \@data;
     }
-    $blog ||= MT::Blog->load($blog_id, {cached_ok=>1}) if $blog_id;
     if ($blog_id && $page ne 'login.tmpl') {
         if ($blog) {
             $param->{blog_name} = $blog->name;
@@ -953,7 +1380,6 @@ sub build_page {
     $param->{agent_mozilla} = ($ENV{HTTP_USER_AGENT} || '') =~ /gecko/i;
     #$param->{have_tangent} = eval { require MT::Tangent; 1 } ? 1 : 0;
     my $type = $app->param('_type') || '';
-    my $mode = $app->mode;
     $param->{plugin_action_loop} ||= $app->plugin_actions($mode) || [];
     $param->{"mode_$mode" . ($type ? "_$type" : '')} = 1;
     $param->{return_args} ||= $app->make_return_args;
@@ -1015,53 +1441,39 @@ sub get_newsbox_content {
 
 sub make_blog_list {
     my $app = shift;
-    my ($blogs, $perms) = @_;
+    my ($blogs) = @_;
 
     require MT::TBPing;
     require MT::Entry;
     require MT::Comment;
     my $author = $app->user;
-    my $can_edit_authors = $author->is_superuser;
     my $data;
     my $i;
     my @blog_ids;
     push @blog_ids, $_->id for @$blogs;
     my ($entry_count, $ping_count, $comment_count);
-    if (MT::Object->driver->can('count_group_by')) {
-        $entry_count = {};
-        my $entry_count_iter =
-            MT::Entry->count_group_by({blog_id => \@blog_ids }, { group => ['blog_id']});
-        while (my ($count, $blog_id) = $entry_count_iter->()) {
-            $entry_count->{$blog_id} = $count;
-        }
-        $ping_count = {};
-        my $ping_count_iter =
-            MT::TBPing->count_group_by({blog_id => \@blog_ids, junk_status => [ 0, 1 ]}, { range_incl => { junk_status => 1 }, group => ['blog_id']});
-        while (my ($count, $blog_id) = $ping_count_iter->()) {
-            $ping_count->{$blog_id} = $count;
-        }
-        $comment_count = {};
-        my $comment_count_iter =
-            MT::Comment->count_group_by({blog_id => \@blog_ids, junk_status => [ 0, 1 ]}, { range_incl => { junk_status => 1 }, group => ['blog_id']});
-        while (my ($count, $blog_id) = $comment_count_iter->()) {
-            $comment_count->{$blog_id} = $count;
-        }
-    }
+    my $can_edit_authors = 1 if $author->is_superuser;
     for my $blog (@$blogs) {
         my $blog_id = $blog->id;
-        my $perms = $author->is_superuser
-                    ? $author->blog_perm($blog_id) : $perms->{ $blog_id };
-        $can_edit_authors = 1 if $perms->can_administer_blog;
-        my $row = { id => $blog->id, name => $blog->name,
-                    description => $blog->description,
-                    site_url => $blog->site_url
-                    };
+        my $perms = $author->permissions($blog_id);
+        my $row = {
+            id => $blog->id,
+            name => $blog->name,
+            description => $blog->description,
+            site_url => $blog->site_url
+        };
         # we should use count by group here...
         $row->{num_entries} = ($entry_count ? $entry_count->{$blog_id} : $entry_count->{$blog_id} = MT::Entry->count({ blog_id => $blog_id })) || 0;
-        $row->{num_comments} = ($comment_count ? $comment_count->{$blog_id} : $comment_count->{$blog_id} = MT::Comment->count({ blog_id => $blog_id, junk_status => [ 0, 1 ] }, { range_incl => { junk_status => 1 }})) || 0;
-        $row->{num_pings} = ($ping_count ? $ping_count->{$blog_id} : $ping_count->{$blog_id} = MT::TBPing->count({ blog_id => $blog_id, junk_status => [ 0, 1 ] }, { range_incl => { junk_status => 1 }})) || 0;
+        $row->{num_comments} = ($comment_count ? $comment_count->{$blog_id} : $comment_count->{$blog_id} = MT::Comment->count({ blog_id => $blog_id, junk_status => [ 0, 1 ] })) || 0;
+        $row->{num_pings} = ($ping_count ? $ping_count->{$blog_id} : $ping_count->{$blog_id} = MT::TBPing->count({ blog_id => $blog_id, junk_status => [ 0, 1 ] })) || 0;
         $row->{num_authors} = 0;
-        my $iter = MT::Permission->load_iter({ blog_id => $blog_id, role_mask => [ 2, undef ] }, { range_incl => { 'role_mask' => 1 }});
+        # FIXME: this isn't efficient
+        my $iter = MT::Permission->load_iter({
+            blog_id => [0, $blog_id],
+            role_mask => [ 2, undef ]
+        }, {
+            range_incl => { 'role_mask' => 1 }
+        });
         while (my $p = $iter->()) {
             $row->{num_authors}++ if $p->can_post;
         }
@@ -1072,7 +1484,91 @@ sub make_blog_list {
         $row->{can_administer_blog} = $perms->can_administer_blog;
         push @$data, $row;
     }
-    return ($data, $can_edit_authors);
+    $data;
+}
+
+sub build_blog_table {
+    my $app = shift;
+    my (%args) = @_;
+
+    require MT::Blog;
+    require MT::TBPing;
+    require MT::Entry;
+    require MT::Comment;
+
+    my $iter;
+    if ($args{load_args}) {
+        my $class = $app->_load_driver_for('blog');
+        $iter = $class->load_iter( @{ $args{load_args} } );
+    } elsif ($args{iter}) {
+        $iter = $args{iter};
+    } elsif ($args{items}) {
+        $iter = sub { pop @{ $args{items} } };
+    }
+    return [] unless $iter;
+    my $param = $args{param};
+
+    my $author = $app->user;
+    my $can_edit_authors = $author->is_superuser;
+    my @data;
+    my $i;
+    my ($entry_count, $ping_count, $comment_count);
+    while (my $blog = $iter->()) {
+        my $blog_id = $blog->id;
+        my $row = {
+            id => $blog->id,
+            name => $blog->name,
+            description => $blog->description,
+            site_url => $blog->site_url
+        };
+        # we should use count by group here...
+        $row->{num_entries} = ($entry_count ? $entry_count->{$blog_id} : $entry_count->{$blog_id} = MT::Entry->count({ blog_id => $blog_id })) || 0;
+        $row->{num_comments} = ($comment_count ? $comment_count->{$blog_id} : $comment_count->{$blog_id} = MT::Comment->count({ blog_id => $blog_id, junk_status => [ 0, 1 ] })) || 0;
+        $row->{num_pings} = ($ping_count ? $ping_count->{$blog_id} : $ping_count->{$blog_id} = MT::TBPing->count({ blog_id => $blog_id, junk_status => [ 0, 1 ] })) || 0;
+        $row->{num_authors} = 0;
+        # FIXME: This isn't efficient
+        my $iter = MT::Permission->load_iter({
+            blog_id => [0, $blog_id],
+            role_mask => [ 2, undef ]
+        }, {
+            range_incl => { 'role_mask' => 1 }
+        });
+        while (my $p = $iter->()) {
+            $row->{num_authors}++ if $p->can_post;
+        }
+        if ($author->is_superuser) {
+            $row->{can_post} = 1;
+            $row->{can_edit_entries} = 1;
+            $row->{can_edit_templates} = 1;
+            $row->{can_edit_config} = 1;
+            $row->{can_administer_blog} = 1;
+        } else {
+            my $perms = $author->permissions($blog_id);
+            $row->{can_post} = $perms->can_post;
+            $row->{can_edit_entries} = $perms->can_post|| $perms->can_edit_all_posts;
+            $row->{can_edit_templates} = $perms->can_edit_templates;
+            $row->{can_edit_config} = $perms->can_edit_config || $perms->can_administer_blog;
+            $row->{can_administer_blog} = $perms->can_administer_blog;
+        }
+        $row->{object} = $blog;
+        push @data, $row;
+    }
+
+    if (@data) {
+        $param->{blog_table}[0]{object_loop} = \@data;
+
+        my $plugin_actions = $app->plugin_itemset_actions('blog');
+        $param->{blog_table}[0]{plugin_itemset_action_loop} = $plugin_actions || [];
+        my $core_actions = $app->core_itemset_actions('blog');
+        $param->{blog_table}[0]{core_itemset_action_loop} = $core_actions || [];
+        $param->{blog_table}[0]{has_itemset_actions} =
+            ($plugin_actions || $core_actions) ? 1 : 0;
+        $param->{blog_table}[0]{plugin_action_loop} = $app->plugin_actions('system_list_blogs') || [];
+
+        $param->{object_loop} = $param->{blog_table}[0]{object_loop};
+    }
+
+    \@data;
 }
 
 ## Application methods
@@ -1085,8 +1581,6 @@ sub list_blogs {
     require MT::Entry;
     require MT::Comment;
     my $author = $app->user;
-    my @perms = MT::Permission->load({ author_id => $author->id });
-    my %perms = map { $_->blog_id => $_ } @perms;
     my %args;
     my $list_pref = $app->list_pref('main_menu');
     if ($list_pref->{'sort'} eq 'name') {
@@ -1099,26 +1593,32 @@ sub list_blogs {
     if ($list_pref->{'order'} eq 'descend') {
         $args{'direction'} = 'descend';
     }
-    $args{join} = ['MT::Permission', 'blog_id',
+    $args{join} = MT::Permission->join_on('blog_id',
                    { author_id => $author->id,
                      role_mask => [1, undef] }, # don't count those with mask 0
-                   { range_incl => {role_mask => 1} }];
+                   { range_incl => {role_mask => 1} });
     my @blogs = MT::Blog->load(undef, \%args);
     my %param = %$list_pref;
     my $i = 1;
 
-    ($param{blog_loop}, $param{can_edit_authors}) = 
-        $app->make_blog_list(\@blogs, \%perms);
+    $param{blog_loop} = $app->make_blog_list(\@blogs);
     delete $param{blog_loop} unless ref $param{blog_loop};
 
     $param{can_create_blog} = $author->can_create_blog;
     $param{can_view_log} = $author->can_view_log;
+    if ($param{blog_loop}) {
+        $param{can_edit_entries} = grep { $_->{can_edit_entries} }
+            @{$param{blog_loop}};
+    } else {
+        $param{can_edit_entries} = $author->is_superuser;
+    }
     $param{can_edit_tags} = $author->is_superuser;
+    $param{can_edit_authors} = $author->is_superuser;
     $param{saved_deleted} = $q->param('saved_deleted');
     if ($author->can_create_blog()) {
         $param{blog_count} = MT::Blog->count();
         $param{blog_count_plural} = $param{blog_count} != 1;
-        $param{author_count} = MT::Author->count({type => AUTHOR});
+        $param{author_count} = MT::Author->count({type => AUTHOR, status => ACTIVE});
         $param{author_count_plural} = $param{author_count} != 1;
         $param{can_view_blog_count} = 1;
     }
@@ -1179,8 +1679,8 @@ sub list_pref {
     if ($updating) {
         my $updated = 0;
         if (my $limit = $app->param('limit')) {
-            $list_pref->{rows} = $limit eq 'none'
-                ? $limit : ($limit > 0 ? $limit : 20);
+            $limit = 20 if $limit eq 'none';
+            $list_pref->{rows} = $limit > 0 ? $limit : 20;
             $updated = 1;
         }
         if (my $view = $app->param('verbosity')) {
@@ -1261,28 +1761,24 @@ sub system_list_blogs {
     my $list_pref = $app->list_pref('blog');
 
     my $limit = $list_pref->{rows};
-    my $offset = $limit eq 'none' ? 0 : ($app->param('offset') || 0);
+    my $offset = $app->param('offset') || 0;
     my $args = { offset => $offset, sort => 'name' };
-    $args->{limit} = $limit + 1 unless $limit eq 'none';
+    $args->{limit} = $limit + 1;
     unless ($author->is_superuser) {
-        $args->{join} = ['MT::Permission', 'blog_id',
-                         { author_id => $author->id }, { unique => 1 } ];
+        $args->{join} = MT::Permission->join_on('blog_id',
+                         { author_id => $author->id }, { unique => 1 } );
     }
     require MT::Blog;
     my %param = %$list_pref;
     my @blogs = MT::Blog->load(undef, $args);
-    my @perms = MT::Permission->load({ author_id => $author->id });
-    my %perms = map { $_->blog_id => $_ } @perms;
-    my $can_edit_authors;
-    ($param{blog_loop}, $can_edit_authors) = 
-        $app->make_blog_list(\@blogs, \%perms);
-    delete $param{blog_loop} unless ref $param{blog_loop};
+    my $can_edit_authors = $author->is_superuser;
+    my $blog_loop = $app->make_blog_list(\@blogs);
 
-    if ($param{blog_loop} && ($limit ne 'none')) {
+    if ($blog_loop) {
         ## We tried to load $limit + 1 entries above; if we actually got
         ## $limit + 1 back, we know we have another page of entries.
-        my $have_next = @{$param{blog_loop}} > $limit;
-        pop @{$param{blog_loop}} while @{$param{blog_loop}} > $limit;
+        my $have_next = @$blog_loop > $limit;
+        pop @$blog_loop while @$blog_loop > $limit;
         if ($offset) {
             $param{prev_offset} = 1;
             $param{prev_offset_val} = $offset - $limit;
@@ -1299,20 +1795,23 @@ sub system_list_blogs {
     delete $args->{limit};
     delete $args->{offset};
     $param{list_total} = MT::Blog->count(undef, $args);
-    $param{list_end} = $offset + (scalar @blogs);
-    $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+    $param{list_end} = $offset + ($blog_loop ? scalar @$blog_loop : 0);
+    $param{next_max} = $param{list_total} - $limit;
     $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
     $param{can_create_blog} = $author->can_create_blog;
     $param{saved_deleted} = $app->param('saved_deleted');
     $param{nav_blogs} = 1;
     $param{list_noncron} = 1;
 
-    my $plugin_actions = $app->plugin_itemset_actions('blog');
-    $param{plugin_itemset_action_loop} = $plugin_actions || [];
-    my $core_actions = $app->core_itemset_actions('blog');
-    $param{core_itemset_action_loop} = $core_actions || [];
-    $param{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+    if ($blog_loop) {
+        $param{blog_table}[0]{object_loop} = $blog_loop;
+        my $plugin_actions = $app->plugin_itemset_actions('blog');
+        $param{blog_table}[0]{plugin_itemset_action_loop} = $plugin_actions || [];
+        my $core_actions = $app->core_itemset_actions('blog');
+        $param{blog_table}[0]{core_itemset_action_loop} = $core_actions || [];
+        $param{blog_table}[0]{has_itemset_actions} =
+            ($plugin_actions || $core_actions) ? 1 : 0;
+    }
 
     $param{feed_name} = $app->translate("Weblog Activity Feed");
     $param{feed_url} = $app->make_feed_link('blog');
@@ -1324,93 +1823,109 @@ sub system_list_blogs {
 sub list_authors {
     my $app = shift;
     my $this_author = $app->user;
+    return $app->errtrans("Permission denied.")
+        unless $this_author->is_superuser();
     my $this_author_id = $this_author->id;
     my $list_pref = $app->list_pref('author');
     my %param = %$list_pref;
     my $limit = $list_pref->{rows};
-    my $offset = $limit eq 'none' ? 0 : ($app->param('offset') || 0);
+    my $offset = $app->param('offset') || 0;
     my $args = { offset => $offset, sort => 'name' };
-    $args->{limit} = $limit + 1 if $limit ne 'none';
+    $args->{limit} = $limit + 1;
     my %author_entry_count;
-    require MT::Entry;
-    if (MT::Object->driver->can('count_group_by')) {
-        # Berkeley DB users don't get the count of entries per author
-        my $author_entry_count_iter =
-            MT::Entry->count_group_by(undef, {group => ['author_id']});
-        while (my ($count, $author_id) = $author_entry_count_iter->()) {
-            $author_entry_count{$author_id} = $count;
+    $param{tab_users} = 1;
+    my ($filter_col, $val, $group_id, $group);
+    $param{filter_args} = "";
+    my %terms = ( type => MT::Author::AUTHOR() );
+    if (($filter_col = $app->param('filter'))
+        && ($val = $app->param('filter_val')))
+    {
+        if (!exists ($terms{$filter_col})) {
+            $terms{$filter_col} = $val;
+            $param{filter} = $filter_col;
+            $param{filter_val} = $val;
+            my $url_val = encode_url($val);
+            $param{filter_args} = "&filter=$filter_col&filter_val=$url_val";
         }
     }
-    $param{can_create_user} = $this_author->is_superuser; # really, "can_edit_authors" when it exists
-    my $author_iter = MT::Author->load_iter({ type => MT::Author::AUTHOR() },
-                                            $args);
-    my (@data, %authors);
+    $param{can_create_user} = $this_author->is_superuser;
+    $param{external_user_management} = $app->config->ExternalUserManagement;
+    $param{synchronized} = 1 if $app->param('synchronized');
+    $param{error} = 1 if $app->param('error');
+    my $author_iter = MT::Author->load_iter(\%terms, $args);
+    my (@data, %authors, %entry_count_refs);
+    require MT::Entry;
     while (my $au = $author_iter->()) {
-        my $has_edit_access = $this_author->is_superuser || $this_author->can_administer($au);
         my $row = $au->column_values;
         $row->{name} = '(unnamed)' if !$row->{name};
         $authors{$au->id} ||= $au;
         $row->{id} = $au->id;
-        $row->{email} = '' unless $au->email =~ /@/;
-        $row->{entry_count} = $author_entry_count{$au->id};
+        $row->{email} = '' unless (!defined $au->email) or ($au->email =~ /@/);
+        $row->{entry_count} = 0;
+        $entry_count_refs{$au->id} = \$row->{entry_count};
         $row->{is_me} = $au->id == $this_author_id;
-        $row->{has_edit_access} = $has_edit_access;
+        $row->{has_edit_access} = $this_author->is_superuser;
+        $row->{status_enabled} = $au->is_active;
         if ($row->{created_by}) {
             my $parent_author = $authors{$au->created_by} ||= MT::Author->load($au->created_by) if $au->created_by;
             if ($parent_author) {
                 $row->{created_by} = $parent_author->name;
             } else {
-                $row->{created_by} = $app->translate('(author deleted)');
-            }
-        }
-        my ($last) = MT::Entry->load({author_id => $au->id},
-                                     {'sort' => 'created_on',
-                                      direction => 'descend',
-                                      limit => 1});
-        if ($last) {
-            if (my $ts = $last->created_on) {
-                $row->{last_entry_formatted} =
-                    format_ts("%Y.%m.%d", $ts); 
-                $row->{last_entry_time_formatted} =
-                    format_ts("%Y-%m-%d %H:%M:%S", $ts); 
-                $row->{last_entry_relative} =
-                    relative_date($ts, time, $last->blog);
+                $row->{created_by} = $app->translate('(user deleted)');
             }
         }
         push @data, $row;
-        last if ($limit ne 'none') && (scalar @data == $limit);
+        last if scalar @data == $limit;
+    }
+    require MT::Entry;
+    if (MT::Object->driver->can('count_group_by')) {
+        # Berkeley DB users don't get the count of entries per user
+        my $author_entry_count_iter = MT::Entry->count_group_by({
+            author_id => [ keys %entry_count_refs ]
+        }, {
+            group => ['author_id']
+        });
+        while (my ($count, $author_id) = $author_entry_count_iter->()) {
+            ${$entry_count_refs{$author_id}} = $count;
+        }
     }
     $param{object_loop} = \@data;
     $param{object_type} = 'author';
-    $param{object_type_plural} = $app->translate('authors');
+    $param{object_type_plural} = $app->translate('users');
     if ($this_author->is_superuser()) {
-        $param{search_type} = $app->translate('Authors');
+        $param{search_type} = $app->translate('Users');
+        $param{is_superuser} = 1;
     }
 
     $param{limit} = $limit;
     $param{list_start} = $offset + 1;
     delete $args->{limit}; delete $args->{offset};
-    $param{list_total} = MT::Author->count({ type => MT::Author::AUTHOR() }, $args);
+    $param{list_total} = MT::Author->count(\%terms, $args);
     $param{list_end} = $offset + (scalar @data);
     $param{next_offset_val} = $offset + (scalar @data);
     $param{next_offset} = $param{next_offset_val} < $param{list_total} ? 1 : 0;
-    $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+    $param{next_max} = $param{list_total} - $limit;
     $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
     if ($offset > 0) {
         $param{prev_offset} = 1;
-        $param{prev_offset_val} = $offset - ($limit eq 'none' ? 0 : $limit);
+        $param{prev_offset_val} = $offset - $limit;
         $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
     }
     $param{list_noncron} = 1;
     $param{saved_deleted} = $app->param('saved_deleted');
+    $param{saved_removed} = $app->param('saved_removed');
+    $param{saved} = $app->param('saved');
+    my $status = $app->param('saved_status');
+    $param{"saved_status_$status"} = 1 if $status;
+    $param{unchanged} = $app->param('unchanged');
     my $plugin_actions = $app->plugin_itemset_actions('author');
     $param{plugin_itemset_action_loop} = $plugin_actions || [];
     my $core_actions = $app->core_itemset_actions('author');
     $param{core_itemset_action_loop} = $core_actions || [];
     $param{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
 
-    $app->add_breadcrumb($app->translate("Authors"));
+    $app->add_breadcrumb($app->translate("Users"));
     $param{nav_authors} = 1;
     $app->build_page('list_author.tmpl', \%param)
 }
@@ -1472,19 +1987,34 @@ sub build_author_table {
     } elsif ($args{items}) {
         $iter = sub { pop @{ $args{items} } };
     }
+    return [] unless $iter;
     my $param = $args{param};
     $param->{has_edit_access} = $app->user->is_superuser();
     $param->{is_administrator} = $app->user->is_superuser();
-    my %blogs;
+    my (%blogs, %entry_count_refs);
     while (my $author = $iter->()) {
         my $row = { author_name => $author->name, author_nickname => $author->nickname,
                     author_email => $author->email, author_url => $author->url,
                     author_created_by => $author->email, author_url => $author->url,
-                    id => $author->id,
+                    status_enabled => $author->is_active,
+                    id => $author->id, entry_count => 0,
                     is_me => ($app->user->id == $author->id ? 1 : 0) };
+        $entry_count_refs{$author->id} = \$row->{entry_count};
+        $row->{object} = $author;
         push @author, $row;
     }
     return [] unless @author;
+    require MT::Entry;
+    if (MT::Object->driver->can('count_group_by')) {
+        my $author_entry_count_iter = MT::Entry->count_group_by({
+            author_id => [ keys %entry_count_refs ]
+        }, {
+            group => ['author_id']
+        });
+        while (my ($count, $author_id) = $author_entry_count_iter->()) {
+            ${$entry_count_refs{$author_id}} = $count;
+        }
+    }
     $param->{author_table}[0]{object_loop} = \@author;
 
     my $plugin_actions = $app->plugin_itemset_actions('author');
@@ -1494,6 +2024,7 @@ sub build_author_table {
     $param->{author_table}[0]{has_itemset_actions} =
         ($plugin_actions || $core_actions) ? 1 : 0;
     $param->{author_table}[0]{plugin_action_loop} = $app->plugin_actions('list_authors') || [];
+    $param->{object_loop} = $param->{author_table}[0]{object_loop};
 
     \@author;
 }
@@ -1546,9 +2077,9 @@ sub view_log {
     require MT::Log;
     my $list_pref = $app->list_pref('log');
     my $limit = $list_pref->{rows};
-    my $offset = $limit eq 'none' ? 0 : ($app->param('offset') || 0);
+    my $offset = $app->param('offset') || 0;
     my $terms = { $blog_id ? (blog_id => $blog_id) : () };
-    my $cfg = $app->{cfg};
+    my $cfg = $app->config;
     my %param = ( %$list_pref );
     my ($filter_col, $val);
     $param{filter_args} = "";
@@ -1568,7 +2099,7 @@ sub view_log {
            ('sort' => 'created_on')),
            'direction' => 'descend',
           'offset' => $offset,
-          $limit ne 'none' ? ('limit' => $limit) : () });
+          'limit' => $limit });
 
     my @class_loop;
     foreach (keys %MT::Log::Classes) {
@@ -1593,7 +2124,7 @@ sub view_log {
     if ($blog) {
         $so = $blog->server_offset;
     } else {
-        $so = $app->{cfg}->TimeOffset;
+        $so = $app->config('TimeOffset');
     }
     if ($so) {
         my $partial_hour_offset = 60 * abs($so - int($so));
@@ -1610,11 +2141,11 @@ sub view_log {
     $param{offset} = $offset;
     $param{next_offset_val} = $offset + (scalar @$log);
     $param{next_offset} = $param{next_offset_val} < $param{list_total} ? 1 : 0;
-    $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+    $param{next_max} = $param{list_total} - $limit;
     $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
     if ($offset > 0) {
         $param{prev_offset} = 1;
-        $param{prev_offset_val} = $offset - ($limit eq 'none' ? 0 : $limit);
+        $param{prev_offset_val} = $offset - $limit;
         $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
     }
     $param{'reset'} = $app->param('reset');
@@ -1648,6 +2179,7 @@ sub build_log_table {
     } elsif ($args{items}) {
         $iter = sub { pop @{ $args{items} } };
     }
+    return [] unless $iter;
     my $param = $args{param};
     my %blogs;
     while (my $log = $iter->()) {
@@ -1685,9 +2217,7 @@ sub reset_log {
     require MT::Log;
     if (my $blog_id = $app->param('blog_id')) {
         my $blog = MT::Blog->load($blog_id, { cache_ok => 1 });
-        my @obj = MT::Log->load({ blog_id => $blog_id });
-        if (@obj) {
-            $_->remove foreach @obj;
+        if (MT::Log->remove({ blog_id => $blog_id })) {
             $app->log({
                 message => $app->translate("Activity log for blog '[_1]' (ID:[_2]) reset by '[_3]'", $blog->name, $blog_id, $author->name),
                 level => MT::Log::INFO(),
@@ -1803,8 +2333,9 @@ sub start_import {
             @data;
     $param{category_loop} = \@data;
     $param{nav_import} = 1;
-    $param{can_edit_authors} = $app->{perms}->can_administer_blog;
+    #$param{can_edit_authors} = $app->{perms}->can_administer_blog;
     $param{encoding_names} = const('ENCODING_NAMES');
+    $param{password_needed} = 1;
     $app->add_breadcrumb($app->translate('Import/Export'));
     $app->build_page('import.tmpl', \%param);
 }
@@ -1819,30 +2350,30 @@ sub show_admin {
     require MT::Blog;
     $param{blog_count} = MT::Blog->count();
 
-    # active author count: someone who has posted within 90 days
-    require MT::Author;
-    require MT::Entry;
-    my $to = time + (60*60*24);
+    # active author count: someone who has logged in within 90 days
+    require MT::Session;
     my $from = time - (60*60*24*90 + 60*60*24);
-    my $to_ts = epoch2ts(undef, $to);
-    my $from_ts = epoch2ts(undef, $from);
-    $param{active_author_count} = MT::Author->count( { type => MT::Author::AUTHOR() },
-        { join => [ 'MT::Entry', 'author_id', { created_on => [ $from_ts, $to_ts ] }, { unique => 1, range_incl => { created_on => 1 } } ] } );
+    MT::Session->remove({ kind => 'UA', start => [undef, $from] }, { range => { start => 1 }});
+    $param{active_author_count} = MT::Session->count({ kind => 'UA' });
 
-    $param{author_count} = MT::Author->count( { type => MT::Author::AUTHOR() });
+    require MT::Author;
+    $param{author_count} = MT::Author->count( { type => MT::Author::AUTHOR(), status => MT::Author::ACTIVE() });
 
     require MT::Entry;
     $param{entry_count} = MT::Entry->count();
 
     require MT::Comment;
-    $param{comment_count} = MT::Comment->count( { junk_status => [0, 1] }, { range_incl => { junk_status => 1 } } );
+    $param{comment_count} = MT::Comment->count( { junk_status => [0, 1] });
 
     require MT::TBPing;
-    $param{trackback_count} = MT::TBPing->count( { junk_status => [0, 1] }, { range_incl => { junk_status => 1 } } );
+    $param{trackback_count} = MT::TBPing->count( { junk_status => [0, 1] });
 
     $param{nav_info} = 1;
     $param{news_html} = $app->get_newsbox_content()||'';
     $param{quick_search} = 0;
+    my $lang = $app->current_language;
+    $lang =~ s/[-_].+//;
+    $param{"language_$lang"} = 1;
     $app->build_page('admin.tmpl', \%param);
 }
 
@@ -1860,20 +2391,20 @@ sub show_status {
     require MT::Author;
     my $to = time;
     my $from = epoch2ts(undef, time - (60*60*24*90 + 1));
-    $param{active_author_count} = MT::Author->count( { type => MT::Author::AUTHOR() },
-        { join => [ 'MT::Entry', 'author_id', { created_on => [ $from, $to ] }, { unique => 1, range_incl => { created_on => 1 } } ] } );
+    $param{active_author_count} = MT::Author->count( { type => MT::Author::AUTHOR(), status => MT::Author::ACTIVE() },
+        { join => MT::Entry->join_on('author_id', { created_on => [ $from, $to ] }, { unique => 1, range_incl => { created_on => 1 } } ) } );
 
     require MT::Author;
-    $param{author_count} = MT::Author->count( { type => MT::Author::AUTHOR() });
+    $param{author_count} = MT::Author->count( { type => MT::Author::AUTHOR(), status => MT::Author::ACTIVE() });
 
     require MT::Entry;
     $param{entry_count} = MT::Entry->count();
 
     require MT::Comment;
-    $param{comment_count} = MT::Comment->count( { junk_status => [0, 1] }, { range_incl => { junk_status => 1 } } );
+    $param{comment_count} = MT::Comment->count( { junk_status => [0, 1] } );
 
     require MT::TBPing;
-    $param{trackback_count} = MT::TBPing->count( { junk_status => [0, 1] }, { range_incl => { junk_status => 1 } } );
+    $param{trackback_count} = MT::TBPing->count( { junk_status => [0, 1] } );
 
     $param{nav_info} = 1;
     $param{quick_search} = 0;
@@ -1883,7 +2414,7 @@ sub show_status {
 sub show_menu {
     my $app = shift;
     my $perms = $app->{perms}
-        or return $app->error($app->translate("No permissions"));
+        or return $app->errtrans("Permission denied.");
     require MT::Comment;
     require MT::TBPing;
     require MT::Trackback;
@@ -1919,7 +2450,7 @@ sub show_menu {
     $iter = MT::Comment->load_iter({ blog_id => $blog_id, junk_status => [ 0, 1 ] },
         { 'sort' => 'created_on',
           direction => 'descend',
-          limit => 5, range_incl => { junk_status => 1 } });
+          limit => 5 });
     my @c_data;
     $i = 1;
     my $max_len = const('DISPLAY_LENGTH_MENU_TITLE');
@@ -1939,7 +2470,7 @@ sub show_menu {
     $iter = MT::TBPing->load_iter({ blog_id => $blog_id, junk_status => [ 0, 1 ] },
         { 'sort' => 'created_on',
           direction => 'descend',
-          limit => 5, range_incl => { junk_status => 1 } });
+          limit => 5 });
     my @p_data;
     $i = 1;
     while (my $ping = $iter->()) {
@@ -1968,16 +2499,13 @@ sub show_menu {
     }
     my %param = (entry_loop => \@e_data, comment_loop => \@c_data,
                  ping_loop => \@p_data);
-    require MT::Entry;
-    my $future_entry = MT::Entry->load({blog_id => $blog_id,
-                                        author_id => $author_id,
-                                        status => MT::Entry::FUTURE()});
     $param{plugin_action_loop} = $app->plugin_actions('blog') || [];
     $param{blog_description} = $blog->description;
     $param{welcome} = $blog->welcome_msg;
     $param{num_entries} = MT::Entry->count({ blog_id => $blog_id });
     $param{num_comments} = MT::Comment->count({ blog_id => $blog_id });
     $param{num_authors} = 0;
+    $param{quick_search} = 0 unless $perms->can_post;
     $param{has_edit_access} = $perms->can_post || $perms->can_edit_all_posts;
     $param{feed_name} = $app->translate("Weblog Activity Feed");
     $param{feed_url} = $app->make_feed_link('blog', { blog_id => $blog_id });
@@ -2004,7 +2532,7 @@ sub edit_object {
     my $author = $app->user;
     my $cfg = $app->config;
     $param{styles} = '';
-    return $app->error($app->translate("No permissions"))
+    return $app->errtrans("Permission denied.")
         if !$perms && $id && $type ne 'author';
 
     my $class = $app->_load_driver_for($type) or return;
@@ -2090,8 +2618,7 @@ sub edit_object {
                 my $iter = MT::TBPing->load_iter({ tb_id => $tb->id,
                     'junk_status' => [ 0, 1 ] },
                     { 'sort' => 'created_on',
-                      direction => 'descend',
-                      'range_incl' => { 'junk_status' => 1 } });
+                      direction => 'descend' });
                 $tb_data = $app->build_ping_table( iter => $iter, param => \%param );
             } else {
                 $tb_data = [];
@@ -2152,8 +2679,7 @@ sub edit_object {
                 my $iter = MT::TBPing->load_iter({ tb_id => $tb->id,
                     'junk_status' => [ 0, 1 ] },
                     { 'sort' => 'created_on',
-                      direction => 'descend',
-                      'range_incl' => { 'junk_status' => 1 } });
+                      direction => 'descend' });
                 my $data = $app->build_ping_table( iter => $iter, param => \%param );
                 $param{ping_table}[0]{object_loop} = $data;
                 $app->load_itemset_actions('ping', $param{ping_table}[0], 'pings');
@@ -2418,6 +2944,13 @@ sub edit_object {
             $param{search_type} = $app->translate('TrackBacks');
             $param{object_type} = 'ping';
 
+            my $plugin_actions = $app->plugin_itemset_actions($type);
+            $param{plugin_itemset_action_loop} = $plugin_actions || [];
+            my $core_actions = $app->core_itemset_actions($type);
+            $param{core_itemset_action_loop} = $core_actions || [];
+            $param{has_itemset_actions} =
+                ($plugin_actions || $core_actions) ? 1 : 0;
+
             # since MT::App::build_page clobbers it:
             $param{source_blog_name} = $param{blog_name};
         } elsif ($type eq 'comment') {
@@ -2478,53 +3011,37 @@ sub edit_object {
             $param{search_type} = $app->translate('Comments');
             $param{object_type} = 'comment';
 
+            my $plugin_actions = $app->plugin_itemset_actions($type);
+            $param{plugin_itemset_action_loop} = $plugin_actions || [];
+            my $core_actions = $app->core_itemset_actions($type);
+            $param{core_itemset_action_loop} = $core_actions || [];
+            $param{has_itemset_actions} =
+                ($plugin_actions || $core_actions) ? 1 : 0;
         } elsif ($type eq 'author') {
             # TODO: Populate permissions / blogs for this user
             # populate blog_loop, permission_loop
-
-            # General permissions...
-            $param{can_create_blog} = $obj->can_create_blog;
-            $param{can_view_log} = $obj->can_view_log;
+            $param{is_me} = 1 if $id == $author->id;
+            $param{editing_other_profile} = 1
+                if !$param{is_me} && $author->is_superuser;
+ 
             require MT::Permission;
-            my $all_perms = MT::Permission->perms;
-            my @perms = MT::Permission->load( { 'author_id' => $id } );
-            my @blogs;
-            my %perms;
-            if (@perms) {
-                foreach my $perm (@perms) {
-                    my $blog = MT::Blog->load( $perm->blog_id, {cached_ok=>1} );
-                    push @blogs, $blog;
-                    $perms{$perm->blog_id} = $perm;
-                }
-            }
-            #@blogs = sort { $_->name } @blogs;
-            my @blog_loop;
-            foreach my $blog (@blogs) {
-                my $perm = $perms{$blog->id};
-                if ($perm && $perm->role_mask) {
-                    my @p_data;
-                    for my $ref (@$all_perms) {
-                        next if $ref->[1] =~ /comment/;
-                        my $meth = 'can_' . $ref->[1];
-                        push @p_data, { have_access => $perm->$meth(),
-                                        prompt => $app->translate($ref->[2]),
-                                        blog_id => $blog->id,
-                                        author_id => $id,
-                                        mask => $ref->[0] };
-                    }
-                    push @blog_loop, {
-                        blog_id => $blog->id,
-                        blog_name => $blog->name,
-                        permission_loop => \@p_data,
-                    };
-                }
-            }
-            @blog_loop = sort { $a->{blog_name} cmp $b->{blog_name} } @blog_loop;
-            $param{blog_loop} = \@blog_loop;
+            # General permissions...
+            # my $sys_perms = MT::Permission->perms('system');
+            # foreach (@$sys_perms) {
+            #     $param{'perm_can_' . $_->[1]} = $obj->permissions->has($_->[1]);
+            # }
+            $param{perm_is_superuser} = $obj->is_superuser;
+            $param{perm_can_create_blog} = $obj->can_create_blog;
+            $param{perm_can_view_log} = $obj->can_view_log;
+            $param{status_enabled} = $obj->is_active ? 1 : 0;
+
             if ($app->user->is_superuser) {
-                $param{search_type} = $app->translate('Authors');
+                $param{search_type} = $app->translate('Users');
                 $param{object_type} = 'author';
             }
+            $param{can_edit_username} = 1;
+            $param{can_recover_password} = 1;
+            $param{languages} = $app->languages_list($obj->preferred_language);
         } elsif ($type eq 'commenter') {
             $app->add_breadcrumb($app->translate("Authenticated Commenters"),
                 $app->uri(mode => 'list_commenters',
@@ -2541,7 +3058,7 @@ sub edit_object {
                 #$param{core_itemset_action_loop} = $core_actions
                 #    if $core_actions;
                 # no native actions for this screen.
-                $param{has_itemset_actions} = $plugin_actions ? 1 : 0;
+                $param{has_itemset_actions} = @$plugin_actions ? 1 : 0;
                 $param{is_email_hidden} = $obj->is_email_hidden;
                 $param{status} = {PENDING => "pending",
                                   APPROVED => "approved",
@@ -2560,7 +3077,6 @@ sub edit_object {
                 $terms{commenter_id} = $id;
                 if ($tab eq 'comments') {
                     $terms{junk_status} = [ 0, 1 ];
-                    $arg{range_incl} = { junk_status => 1 };
                 } elsif ($tab eq 'junk') {
                     $terms{junk_status} = -1;
                 }
@@ -2569,20 +3085,18 @@ sub edit_object {
                 my $iter = MT::Comment->load_iter(\%terms, \%arg);
                 my $loop = $app->build_comment_table( iter => $iter,
                     param => \%param );
-                if ($limit ne 'none') {
-                    ## We tried to load $limit + 1 entries above; if we actually got
-                    ## $limit + 1 back, we know we have another page of entries.
-                    my $have_next = @$loop > $limit;
-                    pop @$loop while @$loop > $limit;
-                    if ($offset) {
-                        $param{prev_offset} = 1;
-                        $param{prev_offset_val} = $offset - $limit;
-                        $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
-                    }
-                    if ($have_next) {
-                        $param{next_offset} = 1;
-                        $param{next_offset_val} = $offset + $limit;
-                    }
+                ## We tried to load $limit + 1 entries above; if we actually got
+                ## $limit + 1 back, we know we have another page of entries.
+                my $have_next = @$loop > $limit;
+                pop @$loop while @$loop > $limit;
+                if ($offset) {
+                    $param{prev_offset} = 1;
+                    $param{prev_offset_val} = $offset - $limit;
+                    $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
+                }
+                if ($have_next) {
+                    $param{next_offset} = 1;
+                    $param{next_offset_val} = $offset + $limit;
                 }
                 $param{limit} = $limit;
                 $param{offset} = $offset;
@@ -2594,7 +3108,7 @@ sub edit_object {
                 delete $arg{limit}; delete $arg{offset};
                 $param{list_total} = MT::Comment->count(\%terms, \%arg);
                 if ($param{list_total}) {
-                    $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+                    $param{next_max} = $param{list_total} - $limit;
                     $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
                 }
                 # These are stubs for the commenter-scoped itemset references
@@ -2699,21 +3213,7 @@ sub edit_object {
             }
         } elsif ($type eq 'author') {
             require MT::Permission;
-            my @perms = MT::Permission->load({'author_id'=>$app->user->id });
-            my @blogs;
-            if (@perms) {
-                foreach my $perm (@perms) {
-                    next unless $perm->can_administer_blog;
-                    my $blog = MT::Blog->load( $perm->blog_id, {cached_ok=>1} );
-                    my $row = { blog_id => $blog->id, blog_name => $blog->name };
-                    if ($param{checked_blog_ids} && $param{checked_blog_ids}{$blog->id}) {
-                        $row->{is_checked} = 1;
-                    }
-                    push @blogs, $row;
-                }
-            }
-            @blogs = sort { $a->{blog_name} cmp $b->{blog_name} } @blogs;
-            $param{blog_loop} = \@blogs;
+            # $param{editing_other_profile} = 1;
         } elsif ($type eq 'template') {
             my $template_type = $q->param('type')
                    || return $app->errtrans("Create template requires type");
@@ -2798,15 +3298,15 @@ sub edit_object {
 
                 require MT::ObjectTag;
                 my $count = MT::Tag->count(undef,
-                    { 'join' => ['MT::ObjectTag', 'tag_id',
+                    { 'join' => MT::ObjectTag->join_on('tag_id',
                     { blog_id => $blog_id, object_datasource => MT::Entry->datasource },
-                    { unique => 1 } ]
+                    { unique => 1 } )
                 });
                 if ($count > 1000) {  # FIXME: Configurable limit?
                     $param{defer_tag_load} = 1;
                 } else {
                     require JSON;
-                    $param{tags_js} = JSON::objToJson(MT::Tag->cache(blog_id => $blog_id, datasource => MT::Entry->datasource));
+                    $param{tags_js} = JSON::objToJson(MT::Tag->cache(blog_id => $blog_id, class => 'MT::Entry'));
                 }
             }
         }
@@ -2838,7 +3338,7 @@ sub edit_object {
 
         if ($q->param('tags')) {
             $param{tags} = $q->param('tags');
-        }else{
+        } else {
             if ($obj) {
                 my $tag_delim = chr($app->user->entry_prefs->{tag_delim});
                 require MT::Tag;
@@ -2924,27 +3424,18 @@ sub edit_object {
             $param{site_url} .= 'WEBLOG-NAME/';
         }
     } elsif ($type eq 'author') {
-        $app->add_breadcrumb($app->translate("Authors"),
-                             $app->uri(mode => 'list_authors'));
+        $app->add_breadcrumb($app->translate("Users"),
+             $app->user->is_superuser ? $app->uri(mode => 'list_authors') : undef);
+        my $auth_prefs;
         if ($obj) {
             $app->add_breadcrumb($obj->name);
+            $param{languages} = $app->languages_list($obj->preferred_language);
+            $auth_prefs = $obj->entry_prefs;
         } else {
-            $app->add_breadcrumb($app->translate("Create New Author"));
+            $app->add_breadcrumb($app->translate("Create New User"));
+            $param{languages} = $app->languages_list($app->config('DefaultUserLanguage'));
+            $auth_prefs = { tag_delim => $app->config->DefaultUserTagDelimiter };
         }
-        my $langs = $app->supported_languages;
-        my @data;
-        my $preferred = $obj && $obj->preferred_language ?
-            $obj->preferred_language : $app->config('DefaultLanguage');
-        $preferred = 'en-us' if (lc($preferred) eq 'en_us');
-        for my $tag (keys %$langs) {
-            (my $name = $langs->{$tag}) =~ s/\w+ English/English/;
-            my $row = { l_tag => $tag, l_name => $app->translate($name) };
-            $row->{l_selected} = 1 if $preferred eq $tag;
-            push @data, $row;
-        }
-        $param{languages} = [ sort { $a->{l_name} cmp $b->{l_name} }
-                              @data ];
-        my $auth_prefs = $author->entry_prefs;
         my $delim = chr($auth_prefs->{tag_delim});
         if ($delim eq ',') {
             $param{'auth_pref_tag_delim_comma'} = 1;
@@ -3079,31 +3570,72 @@ sub load_template_prefs {
     \%param;
 }
 
+sub _parse_entry_prefs {
+    my $app = shift;
+    my ($prefs, $param) = @_;
+
+    my @p = split /,/, $prefs;
+    for my $p (@p) {
+        if ($p =~ m/^(.+?):(\d+)$/) {
+            my ($name, $num) = ($1, $2);
+            if ($num) {
+                $num = $app->config->DefaultEntryPrefs->{Height}
+                    if $name eq 'extended' && $num == 1;
+                $param->{'disp_prefs_height_' . $name} = $num;
+            }
+            $param->{'disp_prefs_show_' . $name} = 1;
+        } else {
+            if (($p eq 'Basic') || ($p eq 'Advanced') || ($p eq 'Default')) {
+                $param->{'disp_prefs_' . $p} = 1;
+            } else {
+                $param->{'disp_prefs_show_' . $p} = 1;
+            }
+        }
+    }
+}
+
 sub load_entry_prefs {
     my $app = shift;
     my ($prefs) = @_;
     my %param;
+    my $pos;
     my $is_from_db = 1;
     # defaults:
     if (!$prefs) {
         $prefs = $app->load_default_entry_prefs;
+        ($prefs, $pos) = split /\|/, $prefs;
         $is_from_db = 0;
-    }
-    ($prefs, my($pos)) = split /\|/, $prefs;
-    $pos ||= 'Bottom';
-    my @p = split /,/, $prefs;
-    for my $p (@p) {
-        if ($p =~ m/^(.+?):(\d+)$/) {
-            $param{'disp_prefs_height_' . $1} = $2 if $is_from_db;
-            $param{'disp_prefs_show_' . $1} = 1;
-        } else {
-            if (($p eq 'Basic') || ($p eq 'Advanced')) {
-                $param{'disp_prefs_' . $p} = 1;
-            } else {
-                $param{'disp_prefs_show_' . $p} = 1;
+        $param{'disp_prefs_Default'} = 1;
+        $app->_parse_entry_prefs($prefs, \%param);
+        my @fields;
+        foreach (keys %param) {
+            if (m/^disp_prefs_show_(.+)/) {
+                push @fields, { name => $1 };
             }
         }
+        $param{disp_prefs_default_fields} = \@fields;
+    } else {
+        ($prefs, $pos) = split /\|/, $prefs;
     }
+    $app->_parse_entry_prefs($prefs, \%param);
+    if ($is_from_db) {
+        my $default_prefs = $app->load_default_entry_prefs;
+        ($default_prefs, my($default_pos)) = split /\|/, $default_prefs;
+        $pos ||= $default_pos;
+        $app->_parse_entry_prefs($default_prefs, \my %def_param);
+        my @fields;
+        foreach (keys %def_param) {
+            if (m/^disp_prefs_show_(.+)/) {
+                push @fields, { name => $1 };
+            }
+        }
+        if ($param{disp_prefs_Default}) {
+            # apply default settings
+            %param = (%def_param, %param);
+        }
+        $param{disp_prefs_default_fields} = \@fields;
+    }
+    $pos ||= 'Bottom';
     if ($param{'disp_prefs_Basic'}) {
         my @all = qw( category extended excerpt convert_breaks
                       allow_comments authored_on allow_pings 
@@ -3119,7 +3651,7 @@ sub load_entry_prefs {
             $param{'disp_prefs_show_' . $p} ||= 1;
         }
     } else {
-        $param{'disp_prefs_custom'} = 1;
+        $param{'disp_prefs_Custom'} = 1;
     }
     if ($pos eq 'Both') {
         $param{'position_buttons_top'} = 1;
@@ -3265,21 +3797,34 @@ sub CMSViewPermissionFilter_ping {
 sub CMSSaveFilter_author {
     my ($eh, $app) = @_;
 
+    my $status = $app->param('status');
+    return 1 if $status and $status == MT::Author::INACTIVE();
+
     my $name = $app->param('name');
     if (defined $name) {
         $name =~ s/(^\s+|\s+$)//g;
         $app->param('name', $name);
     }
-    return $eh->error($app->translate("Author requires username"))
+    return $eh->error($app->translate("User requires username"))
         if (!$name);
+
+    require MT::Author;
+    my $existing = MT::Author->load({ name => $name,
+                                      type => MT::Author::AUTHOR});
+    my $id = $app->param('id');
+    if ($existing && (($id && $existing->id ne $id) || !$id)) {
+        return $eh->error($app->translate("A user with the same name already exists."));
+    }
+
     if (!$app->param('id')) {  # it's a new object
-        return $eh->error($app->translate("Author requires password"))
+        return $eh->error($app->translate("User requires password"))
             if (!$app->param('pass'));
-        return $eh->error($app->translate("Author requires password recovery word/phrase"))
+        return $eh->error($app->translate("User requires password recovery word/phrase"))
             if (!$app->param('hint'));
     }
     return $eh->error(MT->translate("Email Address is required for password recovery"))
         unless $app->param('email');
+
     1;
 }
 
@@ -3394,7 +3939,7 @@ sub CMSPreSave_comment {
 
 sub CMSPreSave_author {
     my $eh = shift;
-    my ($app, $obj) = @_;
+    my ($app, $obj, $original) = @_;
     # Authors should only be of type AUTHOR when created from
     # the CMS app; COMMENTERs are created from the Comments app.
     $obj->type(MT::Author::AUTHOR);
@@ -3405,7 +3950,15 @@ sub CMSPreSave_author {
     }
 
     my ($delim, $delim2) = $app->param('tag_delim');
-    $obj->entry_prefs('tag_delim' => $delim ? ord($delim) : ord($delim2));
+    $delim = $delim ? $delim : $delim2;
+    if ($delim =~ m/comma/i) {
+        $delim = ord(',');
+    } elsif ($delim =~ m/space/i) {
+        $delim = ord(' ');
+    } else {
+        $delim = ord(',');
+    }
+    $obj->entry_prefs('tag_delim' => $delim);
 
     unless ($obj->id) {
         $obj->created_by($app->user->id);
@@ -3457,12 +4010,6 @@ sub CMSPreSave_template {
         }
     }
     1;
-}
-
-sub init_blog {
-    my ($obj, $preferred_lang) = @_;
-    $obj->set_defaults();
-    $obj->language($preferred_lang || 'en');
 }
 
 sub CMSPreSave_blog {
@@ -3784,19 +4331,19 @@ sub CMSPostSave_author {
             my $pe = MT::Permission->new;
             $pe->blog_id($blog_id);
             $pe->author_id($author_id);
-            # By default, a new author can post and comment
+            # By default, a new user can post and comment
             $pe->can_post(1);
             $pe->can_comment(1);
             $pe->save;
         }
     } else {
         if ($app->user->id == $obj->id) {
-            ## If this is an author editing his/her profile, $id will be
-            ## some defined value; if so we should update the author's
+            ## If this is a user editing his/her profile, $id will be
+            ## some defined value; if so we should update the user's
             ## cookie to reflect any changes made to username and password.
             ## Otherwise, this is a new user, and we shouldn't update the
             ## cookie.
-            $app->{author} = $obj;
+            $app->user($obj);
             if (($obj->name ne $original->name) ||
                 ($app->param('pass'))) {
                 $app->start_session();
@@ -3929,15 +4476,31 @@ sub CMSSavePermissionFilter_banlist {
     $app->{perms}->can_edit_config;
 }
 
+sub CMSDeletePermissionFilter_association {
+    my ($eh, $app, $obj) = @_;
+
+    my $blog_id = $app->param('blog_id');
+    my $user = $app->user;
+    if (!$user->is_superuser) {
+        if (!$blog_id || !$user->permissions($blog_id)->can_administer_blog) {
+            return $eh->error(MT->translate("Permission denied."));
+        }
+        if ($obj->author_id == $user->id) {
+            return $eh->error(MT->translate("You cannot delete your own association."));
+        }
+    }
+    1;
+}
+
 sub CMSDeletePermissionFilter_author {
     my ($eh, $app, $obj) = @_;
     my $author = $app->user;
     if ($author->id == $obj->id) {
-        return $eh->error(MT->translate("You cannot delete your own author record."));
+        return $eh->error(MT->translate("You cannot delete your own user record."));
     }
     return 1 if $author->is_superuser();
     if (!($obj->created_by && $obj->created_by == $author->id)) {
-        return $eh->error(MT->translate("You have no permission to delete the author [_1].", $obj->name))
+        return $eh->error(MT->translate("You have no permission to delete the user [_1].", $obj->name))
     }
 }
 
@@ -3946,10 +4509,7 @@ sub CMSDeletePermissionFilter_blog {
     my $author = $app->user;
     return 1 if $author->is_superuser();
     require MT::Permission;
-    my $perms = MT::Permission->load({
-        author_id => $author->id,
-        blog_id => $_[0]->id,
-    });
+    my $perms = $author->permissions($obj->id);
     ($perms && $perms->can_administer_blog);
 }
 
@@ -3967,10 +4527,7 @@ sub CMSDeletePermissionFilter_comment {
     require MT::Entry;
     my $entry = MT::Entry->load($obj->entry_id, {cached_ok=>1});
     if (!$perms || $perms->blog_id != $entry->blog_id) {
-        $perms ||= MT::Permission->load({
-            author_id => $author->id,
-            blog_id => $entry->blog_id,
-        });
+        $perms ||= $author->permissions($entry->blog_id);
     }
     ($perms && $perms->can_edit_entry($entry, $author));
 }
@@ -3979,11 +4536,7 @@ sub CMSDeletePermissionFilter_commenter {
     my ($eh, $app, $obj) = @_;
     my $author = $app->user;
     return 1 if $author->is_superuser();
-    require MT::Permission;
-    my $perms = MT::Permission->load({
-        author_id => $author->id,
-        blog_id => $_[0]->id,
-    });
+    my $perms = $author->permissions($obj->blog_id);
     ($perms && $perms->can_administer_blog);
 }
 
@@ -3993,10 +4546,7 @@ sub CMSDeletePermissionFilter_entry {
     return 1 if $author->is_superuser();
     my $perms = $app->{perms};
     if (!$perms || $perms->blog_id != $obj->blog_id) {
-        $perms ||= MT::Permission->load({
-            author_id => $author->id,
-            blog_id => $obj->blog_id,
-        });
+        $perms ||= $author->permissions($obj->blog_id);
     }
     ($perms && $perms->can_edit_entry($obj, $author));
 }
@@ -4007,16 +4557,17 @@ sub CMSDeletePermissionFilter_ping {
     return 1 if $author->is_superuser();
     my $perms = $app->{perms};
     require MT::Trackback;
-    require MT::Entry;
     my $tb = MT::Trackback->load($obj->tb_id, {cached_ok=>1});
-    my $entry = MT::Entry->load($tb->entry_id, {cached_ok=>1});
-    if (!$perms || $perms->blog_id != $entry->blog_id) {
-        $perms ||= MT::Permission->load({
-            author_id => $author->id,
-            blog_id => $entry->blog_id,
-        });
+    if (my $entry = $tb->entry) {
+        if (!$perms || $perms->blog_id != $entry->blog_id) {
+            $perms ||= $author->permissions($entry->blog_id);
+        }
+        return ($perms && $perms->can_edit_entry($entry, $author));
+    } elsif ($tb->category_id) {
+        $perms ||= $author->permissions($tb->blog_id);
+        return ($perms && $perms->can_edit_categories());
     }
-    ($perms && $perms->can_edit_entry($entry, $author));
+    0;
 }
 
 sub CMSDeletePermissionFilter_tag {
@@ -4152,6 +4703,7 @@ sub save_object {
     my $q = $app->param;
     my $type = $q->param('_type');
     my $id = $q->param('id');
+    $q->param('allow_pings', 0) if ($type eq 'category') && !defined($q->param('allow_pings'));
 
     $app->validate_magic() or return;
     my $author = $app->user;
@@ -4161,13 +4713,13 @@ sub save_object {
 
     if (!$author->is_superuser) {
         if ($type ne 'author') {  # for authors, blog-ctx $perms is not relevant
-            return $app->errtrans("No permissions")
+            return $app->errtrans("Permisison denied.")
                 if !$perms && $id;
         } 
 
         MT->run_callbacks('CMSSavePermissionFilter.' . $type, $app, $id)
             || return $app->error($app->translate("Permission denied.")
-                                  . MT->errstr());
+                                  . " " . MT->errstr());
     }
 
     my $filter_result = MT->run_callbacks('CMSSaveFilter.' . $type, $app);
@@ -4176,9 +4728,10 @@ sub save_object {
         my %param;
         $param{error} = MT->errstr;
         $param{return_args} = $app->param('return_args');
+
         if (($type eq 'notification') || ($type eq 'banlist')) {
             return $app->list_objects(\%param);
-        } elsif ($app->param('cfg_screen') eq 'cfg_archives') {
+        } elsif (($app->param('cfg_screen') || '') eq 'cfg_archives') {
             return $app->cfg_archives(\%param);
         } else {
             return $app->edit_object(\%param);
@@ -4186,51 +4739,35 @@ sub save_object {
     }
 
     if ($type eq 'author') {
-        ## If we are saving an author profile, we need to do some
+        ## If we are saving a user profile, we need to do some
         ## password maintenance. First make sure that the two
         ## passwords match...
+        my $editing_other_profile;
+        if ($id && ($author->id != $id) && ($author->is_superuser)) {
+            $editing_other_profile = 1;
+        }
         my %param;
-        if ($q->param('pass') ne $q->param('pass_verify')) {
-            $param{error} = $app->translate('Passwords do not match.');
-        } else {
-            if ($q->param('pass') && $id) {
-                my $auth = MT::Author->load($id, {cached_ok=>1});
-                if (!$auth->is_valid_password($q->param('old_pass'))) {
-                    $param{error} = $app->translate('Failed to verify current password.');
+        unless ($editing_other_profile) {
+            require MT::Auth;
+            my $error = MT::Auth->sanity_check($app);
+            if ($error) {
+                $param{error} = $error;
+                require MT::Log;
+                $app->log({
+                    message => $error,
+                    level => MT::Log::ERROR(),
+                    class => 'system',
+                    category => 'save_author_profile'
+                });
+            }
+            if ($param{error}) {
+                $param{return_args} = $app->param('return_args');
+                my $qual = $id ? '' : 'author_state_';
+                for my $f (qw( name nickname email url state )) {
+                    $param{$qual . $f} = $q->param($f);
                 }
+                return $app->edit_object(\%param);
             }
-        }
-        my $hint = $q->param('hint') || '';
-        $hint =~ s!^\s+|\s+$!!gs;
-        unless ($hint) {
-            $param{error} = $app->translate('Password recovery word/phrase is required.');
-        }
-        if ($param{error}) {
-            $param{return_args} = $app->param('return_args');
-            my $qual = $id ? '' : 'author_state_';
-            for my $f (qw( name nickname email url )) {
-                $param{$qual . $f} = $q->param($f);
-            }
-            $param{checked_blog_ids} = { map { $_ => 1 }
-                                         $q->param('add_to_blog') };
-            return $app->edit_object(\%param);
-        }
-
-        ## ... then check to make sure that the author isn't trying
-        ## to change his/her username to one that already exists.
-        my $name = $app->param('name');
-        my $existing = MT::Author->load({ name => $name,
-                                          type => MT::Author::AUTHOR});
-        if ($existing && (!$q->param('id') ||
-            $existing->id != $q->param('id'))) {
-            my %param = (error => $app->translate('An author by that name already exists.'));
-            my $qual = $id ? '' : 'author_state_';
-            for my $f (qw( name email url )) {
-                $param{$qual . $f} = $q->param($f);
-            }
-            $param{checked_blog_ids} = { map { $_ => 1 }
-                                         $q->param('add_to_blog') };
-            return $app->edit_object(\%param);
         }
     }
 
@@ -4246,6 +4783,21 @@ sub save_object {
     my $names = $obj->column_names;
     my %values = map { $_ => (scalar $q->param($_)) } @$names;
 
+    if ($type eq 'author') {
+        my @cols = qw(is_superuser can_create_blog can_view_log status);
+        if (!$author->is_superuser) {
+            delete $values{$_} for @cols;
+        } else {
+            if (!$id || ($author->id != $id)) {
+                if ($values{'status'} == MT::Author::ACTIVE()) {
+                    foreach (@cols) {
+                        $values{$_} = 0 unless defined $values{$_};
+                    }
+                }
+            }
+        }
+    }
+
     if ($type eq 'comment') {
         require MT::Entry;
         my $entry = MT::Entry->load($obj->entry_id, {cached_ok=>1});
@@ -4258,13 +4810,18 @@ sub save_object {
         ## If this is a new blog, set the preferences and archive
         ## settings to the defaults.
         if (!$obj->id) {
-            init_blog($obj, $app->user->preferred_language);
+            $obj->language($app->user->preferred_language);
         }
         
         $values{file_extension} =~ s/^\.*// if $q->param('file_extension') ne '';
     }
-        
+
     $obj->set_values(\%values);
+
+    if ($obj->properties->{audit}) {
+        $obj->created_by($author->id) unless $obj->id;
+        $obj->modified_by($author->id);
+    }
 
     MT->run_callbacks('CMSPreSave.' . $type, $app, $obj, $original)
         || return $app->edit_object({ error => $app->translate("Save failed: [_1]", MT->errstr) });
@@ -4289,19 +4846,10 @@ sub save_object {
 
     # TODO: convert this to use $app->call_return(); 
     # then templates can determine the page flow.
-    if ($type eq 'author' && !$id) {
-        return $app->redirect($app->uri('mode' => 'edit_permissions',
-            args => { 'author_id' => $obj->id }));
-    } elsif ($type eq 'notification') {
+    if ($type eq 'notification') {
         return $app->redirect($app->uri('mode' => 'list',
             args => { '_type' => 'notification', blog_id => $blog_id,
                       saved => $obj->email }));
-    } elsif ($type eq 'ping') {
-        $app->add_return_arg('saved_ping' => 1);
-        return $app->call_return;
-    } elsif ($type eq 'comment') {
-        $app->add_return_arg('saved_comment' => 1);
-        return $app->call_return;
     } elsif (my $cfg_screen = $q->param('cfg_screen')) {
         if ($cfg_screen eq 'cfg_templatemaps') {
             $cfg_screen = 'cfg_archives';
@@ -4313,8 +4861,6 @@ sub save_object {
         }
         $app->add_return_arg( no_writedir => 1 )
             unless $fmgr->exists($site_path) && $fmgr->can_write($site_path);
-        $app->add_return_arg( saved => 1 );
-        return $app->call_return;
     } elsif ($type eq 'banlist') {
         return $app->redirect($app->uri('mode' => 'list',
             args => {'_type' => 'banlist', blog_id => $blog_id,
@@ -4327,11 +4873,10 @@ sub save_object {
     } elsif ($type eq 'blog') {
         return $app->redirect($app->uri('mode' => 'cfg_prefs',
             args => { blog_id => $blog_id, saved => 1}));
-    } else {
-        return $app->redirect($app->uri('mode' => 'view',
-            args => { '_type' => $type, id => $obj->id,
-            blog_id => $blog_id, saved => 1}));
     }
+    $app->add_return_arg('id' => $obj->id) if !$original->id;
+    $app->add_return_arg('saved' => 1);
+    $app->call_return;
 }
 
 sub list_objects {
@@ -4340,13 +4885,12 @@ sub list_objects {
     my $q = $app->param;
     my $type = $q->param('_type');
     my $perms = $app->{perms};
-    return $app->error($app->translate("No permissions"))
-        unless $type eq 'author' || $perms;
+    return $app->errtrans("Permission denied.")
+        unless $perms;
     if ($perms &&
         (($type eq 'blog' && !$perms->can_edit_config) ||
          ($type eq 'template' && !$perms->can_edit_templates) ||
-         ($type eq 'notification' && !$perms->can_edit_notifications) ||
-         ($type eq 'author' && !$perms->can_administer_blog))) {
+         ($type eq 'notification' && !$perms->can_edit_notifications))) {
         return $app->error($app->translate("Permission denied."));
     }
     my $id = $q->param('id');
@@ -4357,18 +4901,15 @@ sub list_objects {
     %param = ( %param, %$list_pref );
     my $cols = $class->column_names;
     my $limit = $list_pref->{rows};
-    my $offset = $limit eq 'none' ? 0 : ($app->param('offset') || 0);
+    my $offset = $app->param('offset') || 0;
     for my $name (@$cols) {
         $terms{blog_id} = $blog_id, last
             if $name eq 'blog_id';
     }
-    if ($type eq 'author') {
-        $terms{type} = AUTHOR;
-    }
     if ($type eq 'notification') {
         $args{direction} = 'descend';
         $args{offset} = $offset;
-        $args{limit} = $limit + 1 if $limit ne 'none';
+        $args{limit} = $limit + 1;
     } elsif ($type eq 'banlist') {
         $limit = 0;
     }
@@ -4384,12 +4925,6 @@ sub list_objects {
             $row->{created_on_formatted} = format_ts("%Y.%m.%d", $ts);
             $row->{created_on_time_formatted} = format_ts("%Y.%m.%d %H:%M:%S", $ts);
             $row->{created_on_relative} = relative_date($ts, time, $blog);
-        }
-        if ($type eq 'author') {
-            $authors{ $obj->id } = $obj->name;
-            if ($obj->id == $app->user->id) {
-                $row->{is_me} = 1;
-            }
         }
         if ($type eq 'template') {
             $row->{name} = '' if !defined $row->{name};
@@ -4416,7 +4951,7 @@ sub list_objects {
             }
             $param{search_type} = $app->translate('Templates');
         } else {
-            if ($limit && $limit ne 'none' && (scalar @data == $limit)) {
+            if ($limit && (scalar @data == $limit)) {
                 $param{next_offset} = 1;
                 last;
             }
@@ -4436,21 +4971,6 @@ sub list_objects {
             }
         }
     } # end loop over the set of objects;
-    if ($type eq 'author') {
-        $app->add_breadcrumb($app->translate('Authors'));
-        my $this_author_id = $app->user->id;
-        for my $row (@data) {
-            $row->{added_by} = $authors{$row->{created_by}}
-                if $row->{created_by};
-            $row->{has_edit_access} = 1
-                if ($row->{created_by} &&
-                   $row->{created_by} == $this_author_id);
-        }
-        $param{object_type} = 'author';
-        $param{object_type_plural} = $app->translate('authors');
-        $param{search_type} = $app->translate('Authors');
-        $param{list_noncron} = 1;
-    }
     # NOW transform the @data array
     if ($type eq 'notification') {
         $app->add_breadcrumb($app->translate('Notification List'));
@@ -4504,11 +5024,11 @@ sub list_objects {
         $param{list_end} = $offset + (scalar @data);
         $param{next_offset_val} = $offset + (scalar @data);
         #$param{next_offset} = $param{next_offset_val} < $param{list_total} ? 1 : 0;
-        $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+        $param{next_max} = $param{list_total} - $limit;
         $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
         if ($offset > 0) {
             $param{prev_offset} = 1;
-            $param{prev_offset_val} = $offset - ($limit eq 'none' ? 0 : $limit);
+            $param{prev_offset_val} = $offset - $limit;
             $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
         }
     }
@@ -4559,7 +5079,7 @@ sub delete {
     return $app->error($app->translate("Can't delete that way"))
         if $app->request_method() ne 'POST';
 
-    $app->validate_magic() or return $app->errtrans("Your login session has expired.");
+    $app->validate_magic() or return;
 
     my($entry_id, $cat_id, $author_id) = ("", "", "");
     my %rebuild_entries;
@@ -4571,8 +5091,8 @@ sub delete {
         my $obj = $class->load($id, {cached_ok=>1});
         next unless $obj;
         MT->run_callbacks('CMSDeletePermissionFilter.' . $type, $app, $obj)
-            || return $app->error($app->translate("Permission denied.")
-                          . MT->errstr());
+            || return $app->error($app->translate("Permission denied: [_1]", 
+                          MT->errstr()));
 
         if ($type eq 'comment') {
             $entry_id = $obj->entry_id;
@@ -4655,6 +5175,63 @@ sub delete {
     $app->call_return;
 }
 
+sub enable_object  { shift->set_object_status( MT::Author::ACTIVE() ) }
+sub disable_object { shift->set_object_status( MT::Author::INACTIVE()) }
+sub set_object_status {
+    my $app = shift;
+    my ($new_status) = @_;
+
+    $app->validate_magic() or return;
+    return $app->error($app->translate('Permission denied.'))
+        unless $app->user->is_superuser;
+    return $app->error($app->translate("Invalid request."))
+        if $app->request_method ne 'POST';
+
+    my $q = $app->param;
+    my $type = $q->param('_type');
+    return $app->error($app->translate('Invalid type'))
+        unless ($type eq 'author');
+
+    my $class = $app->_load_driver_for($type);
+
+    my @sync;
+    my $saved = 0;
+    for my $id ($q->param('id')) {
+        next unless $id; # avoid 'empty' ids
+        my $obj = $class->load($id, { cached_ok => 1 });
+        next unless $obj;
+        if (($obj->id == $app->user->id) && ($type eq 'author')) {
+            next;
+        }
+        next if $new_status == $obj->status;
+        $obj->status($new_status);
+        $obj->save;
+        $saved++;
+        if ($type eq 'author') {
+            if ($new_status == MT::Author::ACTIVE()) {
+                push @sync, $obj;
+            }
+        }
+    }
+    my $unchanged = 0;
+    if (@sync) {
+        MT::Auth->synchronize_author(User => \@sync);
+        foreach (@sync) {
+            if ($_->status != MT::Author::ACTIVE()) {
+                $unchanged++;
+            }
+        }
+    }
+    if ($saved && ($saved > $unchanged)) {
+        $app->add_return_arg(saved_status => ($new_status == MT::Author::ACTIVE()) ? 'enabled' : 'disabled');
+    }
+    $app->add_return_arg(is_power_edit => 1)
+        if $q->param('is_power_edit');
+    $app->add_return_arg(unchanged => $unchanged)
+        if $unchanged;
+    $app->call_return;
+}
+
 sub _load_driver_for {
     my $app = shift;
     my($type) = @_;
@@ -4662,9 +5239,17 @@ sub _load_driver_for {
         return $app->error($app->translate("Unknown object type [_1]",
             $type));
     eval "use $class;";
-    return $app->error($app->translate(
-        "Loading object driver [_1] failed: [_2]", $class, $@)) if $@;
+    if (my $err = $@) {
+        return $app->error($app->translate(
+            "Loading object driver [_1] failed: [_2]", $class, $err));
+    }
     $class;
+}
+
+sub register_type {
+    my $app = shift;
+    my ($type, $param) = @_;
+    $API{$type} = $param;
 }
 
 sub show_upload_html {
@@ -4864,9 +5449,9 @@ sub save_commenter_perm {
         require MT::Comment;
         my $iter = MT::Entry->load_iter(undef,
                                         { join =>
-                                              [ 'MT::Comment', 'entry_id',
+                                              MT::Comment->join_on('entry_id',
                                                 {commenter_id => $cmntr->id}
-                                              ]
+                                              )
                                         });
         my $e;
         while ($e = $iter->()) {
@@ -5063,8 +5648,7 @@ sub set_item_visible {
                 } else {
                     if (!$author->is_superuser) {
                         if (!$perms || $perms->blog_id != $obj->blog_id) {
-                            $perms = MT::Permission->load({ author_id => $author->id,
-                                blog_id => $obj->blog_id });
+                            $perms = $author->permissions($obj->blog_id);
                         }
                         if (!$perms || (!$perms->can_edit_all_posts()
                             && $obj_parent->author_id != $author->id)) {
@@ -5079,8 +5663,7 @@ sub set_item_visible {
                     || return $app->error($app->translate("Comment on missing entry!"));
                 if (!$author->is_superuser) {
                     if (!$perms || $perms->blog_id != $obj->blog_id) {
-                        $perms = MT::Permission->load({ author_id => $author->id,
-                            blog_id => $obj->blog_id });
+                        $perms = $author->permissions($obj->blog_id);
                     }
                     if (!$perms || (!$perms->can_edit_all_posts()
                         && $entry->author_id != $author->id)) {
@@ -5114,10 +5697,10 @@ sub list_commenters {
     my $offset = $q->param('offset') || 0;
     my %arg;
     require MT::Comment;
-    $arg{'join'} = ['MT::Comment', 'commenter_id',
+    $arg{'join'} = MT::Comment->join_on('commenter_id',
                     { ( $blog_id ? (blog_id => $blog_id) : () ) },
                     { 'sort' => 'created_on',
-                      direction => 'descend', unique => 1 }];
+                      direction => 'descend', unique => 1 });
     my ($filter_col, $val);
     $param{filter_args} = "";
     if (($filter_col = $q->param('filter'))
@@ -5130,8 +5713,8 @@ sub list_commenters {
                      : $val eq 'approved' ? 1
                      : $val eq 'banned' ? 2048 : 0);
                 $arg{join} = 
-                    ['MT::Permission', 'author_id', 
-                     {role_mask => $role_mask, blog_id => $blog_id}];
+                    MT::Permission->join_on('author_id', 
+                     {role_mask => $role_mask, blog_id => $blog_id});
             } else {
                 $terms{$filter_col} = $val;
             }
@@ -5143,20 +5726,20 @@ sub list_commenters {
         }
     }
     $arg{'offset'} = $offset if $offset;
-    $arg{'limit'} = $limit + 1 if $limit ne 'none';
+    $arg{'limit'} = $limit + 1;
     my $terms = \%terms;
     my $arg = \%arg;
     my $iter = MT::Author->load_iter($terms, $arg);
 
     my $data = $app->build_commenter_table(iter => $iter, param => \%param);
-    if ($limit ne 'none' && @$data > $limit) {
+    if (@$data > $limit) {
         pop @$data;
         $param{next_offset} = 1;
-        $param{next_offset_val} = $offset + ($limit eq 'none' ? 0 : $limit);
+        $param{next_offset_val} = $offset + $limit;
     }
     if ($offset > 0) {
         $param{prev_offset} = 1;
-        $param{prev_offset_val} = $offset - ($limit eq 'none' ? 0 : $limit);
+        $param{prev_offset_val} = $offset - $limit;
         $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
     }
 
@@ -5170,7 +5753,7 @@ sub list_commenters {
     delete $arg->{limit}; delete $arg->{offset};
     $param{list_total} = MT::Author->count($terms, $arg);
     if ($param{list_total}) {
-        $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+        $param{next_max} = $param{list_total} - $limit;
         $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
     }
     $app->add_breadcrumb($app->translate('Authenticated Commenters'));
@@ -5195,6 +5778,7 @@ sub build_commenter_table {
     } elsif ($args{items}) {
         $iter = sub { pop @{ $args{items} } };
     }
+    return [] unless $iter;
 
     my $app_user = $app->user;
     my $user_perm = $app->{perms};
@@ -5248,6 +5832,7 @@ sub build_commenter_table {
         $row->{profile_page} .= "/" unless $row->{profile_page} =~ m|/$|;
         $row->{profile_page} .= $cmtr->name();
         $row->{has_edit_access} = $user_perm->can_edit_config();
+        $row->{object} = $cmtr;
         push @data, $row;
     }
     return [] unless @data;
@@ -5320,7 +5905,7 @@ sub list_comments {
     }
     my %terms2 = ();
     my $limit = $list_pref->{rows};
-    my $offset = $limit eq 'none' ? 0 : ($app->param('offset') || 0);
+    my $offset = $app->param('offset') || 0;
     ## We load $limit + 1 records so that we can easily tell if we have a
     ## page of next entries to link to. Obviously we only display $limit
     ## entries.
@@ -5332,7 +5917,6 @@ sub list_comments {
         $terms{'junk_status'} = -1;
     } else {
         $terms{'junk_status'} = [ 0, 1 ];
-        $arg{'range_incl'} = {'junk_status' => 1};
     }
 
     my $cmtr_filter = undef;
@@ -5377,9 +5961,9 @@ sub list_comments {
 
     # FIXME this offset logic breaks if you filter the iterator as below.
     my $total = MT::Comment->count(\%terms, \%arg);
-    $arg{limit} = $limit + 1 if $limit ne 'none';
+    $arg{limit} = $limit + 1;
     if ($offset > $total - 1) {
-        $arg{offset} = $offset = $total - ($limit eq 'none' ? 1 : $limit);
+        $arg{offset} = $offset = $total - $limit;
     } elsif ($offset < 0) {
         $arg{offset} = $offset = 0;
     } elsif ($offset) {
@@ -5403,20 +5987,18 @@ sub list_comments {
 
     my $loop = $app->build_comment_table( iter => $iter, param => \%param );
 
-    if ($limit ne 'none') {
-        ## We tried to load $limit + 1 entries above; if we actually got
-        ## $limit + 1 back, we know we have another page of entries.
-        my $have_next_entry = @$loop > $limit;
-        pop @$loop while @$loop > $limit;
-        if ($offset) {
-            $param{prev_offset} = 1;
-            $param{prev_offset_val} = $offset - $limit;
-            $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
-        }
-        if ($have_next_entry) {
-            $param{next_offset} = 1;
-            $param{next_offset_val} = $offset + $limit;
-        }
+    ## We tried to load $limit + 1 entries above; if we actually got
+    ## $limit + 1 back, we know we have another page of entries.
+    my $have_next_entry = @$loop > $limit;
+    pop @$loop while @$loop > $limit;
+    if ($offset) {
+        $param{prev_offset} = 1;
+        $param{prev_offset_val} = $offset - $limit;
+        $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
+    }
+    if ($have_next_entry) {
+        $param{next_offset} = 1;
+        $param{next_offset_val} = $offset + $limit;
     }
     $param{is_ip_filter} = (($q->param('filter') || "") eq 'ip');
     $param{filter_val} = $q->param('filter_val');
@@ -5440,7 +6022,7 @@ sub list_comments {
     $param{list_end} = $offset + scalar @$loop;
     $param{list_total} = $total;
     if ($param{list_total}) {
-        $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+        $param{next_max} = $param{list_total} - $limit;
         $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
     }
     $param{plugin_action_loop} = $app->plugin_actions('list_comments') || [];
@@ -5462,6 +6044,8 @@ sub build_template_table {
 
     my $perms = $app->{perms};
     my $list_pref = $app->list_pref('template');
+    my $limit = $args{limit};
+    my $param = $args{param} || {};
     my $iter;
     if ($args{load_args}) {
         my $class = $app->_load_driver_for('template');
@@ -5470,15 +6054,15 @@ sub build_template_table {
         $iter = $args{iter};
     } elsif ($args{items}) {
         $iter = sub { pop @{ $args{items} } };
+        $limit = scalar @{$args{items}};
     }
-    my $limit = $args{limit} || 'none';
-    my $param = $args{param} || {};
+    return [] unless $iter;
 
     my @data;
     my $i;
     my %blogs;
     while (my $tmpl = $iter->()) {
-        my $blog = $blogs{$tmpl->blog_id} ||= MT::Blog->load($tmpl->blog_id);
+        my $blog = $blogs{$tmpl->blog_id} ||= MT::Blog->load($tmpl->blog_id, { cached_ok => 1 });
         my $row = $tmpl->column_values;
         $row->{name} = '' if !defined $row->{name};
         $row->{name} =~ s/^\s+|\s+$//g;
@@ -5486,10 +6070,15 @@ sub build_template_table {
             if $row->{name} eq '';
         my $published_url = $tmpl->published_url;
         $row->{published_url} = $published_url if $published_url;
-        push @data, $row;
         $row->{can_delete} = 1 if $tmpl->type =~ m/(custom|index|archive|individual|category)/;
-        $row->{blog_name} = $blog->name;
-        last if ($limit ne 'none') && (@data > $limit);
+        if ($blog) {
+            $row->{blog_name} = $blog->name;
+        } else {
+            $row->{blog_name} = '* ' . $app->translate('Orphaned') . ' *';
+        }
+        $row->{object} = $tmpl;
+        push @data, $row;
+        last if @data > $limit;
     }
     return [] unless @data;
 
@@ -5521,7 +6110,8 @@ sub build_comment_table {
     } elsif ($args{items}) {
         $iter = sub { pop @{ $args{items} } };
     }
-    my $limit = $args{limit} || 'none';
+    return [] unless $iter;
+    my $limit = $args{limit};
     my $param = $args{param} || {};
 
     my @data;
@@ -5566,7 +6156,6 @@ sub build_comment_table {
         }
         if ($cmntr) {
             $row->{email_hidden} = $cmntr && $cmntr->is_email_hidden();
-            require MT::Permission;
 
             my $status = $cmntr->status($obj->blog_id);
             $row->{commenter_approved} = ($cmntr->status($obj->blog_id)== APPROVED);
@@ -5583,14 +6172,19 @@ sub build_comment_table {
         if ($author->is_superuser()) {
             $row->{has_edit_access} = 1;
         } else {
-            my $perms = $perms{$obj->blog_id} ||= MT::Permission->load({ author_id => $author->id, blog_id => $obj->blog_id }, { cached_ok => 1 });
+            my $perms = $perms{$obj->blog_id} ||= $author->permissions($obj->blog_id);
             $row->{has_edit_access} = ($perms && $perms->can_edit_all_posts)
                                       || $author->id == $entry->author_id;
         }
-        $row->{weblog_id} = $blog->id;
-        $row->{weblog_name} = $blog->name;
+        if ($blog) {
+            $row->{weblog_id} = $blog->id;
+            $row->{weblog_name} = $blog->name;
+        } else {
+            $row->{weblog_name} = '* ' . $app->translate('Orphaned comment') . ' *';
+        }
+        $row->{object} = $obj;
         push @data, $row;
-        last if ($limit ne 'none') && (@data > $limit);
+        last if $limit and @data > $limit;
     }
     return [] unless @data;
 
@@ -5639,13 +6233,14 @@ sub list_plugins {
     $param{can_config} = $app->user->is_superuser();
     $param{use_plugins} = $cfg->UsePlugins;
     $app->build_plugin_table(param => \%param, scope => 'system');
+    $param{nav_config} = 1;
+    $param{nav_settings} = 1;
     $param{nav_plugins} = 1;
     $param{switched} = 1 if $app->param('switched');
     $param{'reset'} = 1 if $app->param('reset');
     $param{saved} = 1 if $app->param('saved');
     $param{mod_perl} = 1 if $ENV{MOD_PERL};
-    $app->add_breadcrumb($app->translate("Plugins"));
-    $param{nav_plugins} = 1;
+    $app->add_breadcrumb($app->translate("Plugin Settings"));
     $app->build_page('list_plugin.tmpl', \%param);
 }
 
@@ -5880,7 +6475,7 @@ sub list_pings {
     }
     my $cols = $class->column_names;
     my $limit = $list_pref->{rows};
-    my $offset = $limit eq 'none' ? 0 : ($app->param('offset') || 0);
+    my $offset = $app->param('offset') || 0;
     my $sort_direction = $q->param('sortasc') ? 'ascend' : 'descend';
 
     ## We load $limit + 1 records so that we can easily tell if we have a
@@ -5891,7 +6486,6 @@ sub list_pings {
         $terms{'junk_status'} = -1;
     } else {
         $terms{'junk_status'} = [ 0, 1 ];
-        $arg{'range_incl'} = {'junk_status' => 1};
     }
 
     my @val = $q->param('filter_val');
@@ -5930,9 +6524,9 @@ sub list_pings {
     my @rows = MT::TBPing->load(\%terms, \%arg);
     $arg{'sort'} = 'created_on';
     $arg{direction} = $sort_direction;
-    $arg{limit} = $limit + 1 if $limit ne 'none';
+    $arg{limit} = $limit + 1;
     if ($offset > $total - 1) {
-        $arg{offset} = $offset = $total - ($limit eq 'none' ? 1 : $limit);
+        $arg{offset} = $offset = $total - $limit;
     } elsif ($offset < 0) {
         $arg{offset} = $offset = 0;
     } elsif ($offset) {
@@ -5942,20 +6536,18 @@ sub list_pings {
     my $iter = $class->load_iter(\%terms, \%arg);
     my $data = $app->build_ping_table( iter => $iter, param => \%param );
 
-    if ($limit ne 'none') {
-        ## We tried to load $limit + 1 entries above; if we actually got
-        ## $limit + 1 back, we know we have another page of entries.
-        my $have_next_entry = @$data > $limit;
-        pop @$data while @$data > $limit;
-        if ($offset) {
-            $param{prev_offset} = 1;
-            $param{prev_offset_val} = $offset - $limit;
-            $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
-        }
-        if ($have_next_entry) {
-            $param{next_offset} = 1;
-            $param{next_offset_val} = $offset + $limit;
-        }
+    ## We tried to load $limit + 1 entries above; if we actually got
+    ## $limit + 1 back, we know we have another page of entries.
+    my $have_next_entry = @$data > $limit;
+    pop @$data while @$data > $limit;
+    if ($offset) {
+        $param{prev_offset} = 1;
+        $param{prev_offset_val} = $offset - $limit;
+        $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
+    }
+    if ($have_next_entry) {
+        $param{next_offset} = 1;
+        $param{next_offset_val} = $offset + $limit;
     }
 
     $param{ping_count} = scalar @$data;
@@ -5975,7 +6567,7 @@ sub list_pings {
     $param{list_start} = $offset + 1;
     $param{list_end} = $offset + scalar @$data;
     $param{list_total} = $total;
-    $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit) if $param{list_total};
+    $param{next_max} = $param{list_total} - $limit if $param{list_total};
     $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
     $param{plugin_action_loop} = $app->plugin_actions('list_pings') || $app->plugin_actions('list_ping') || [];
     $param{nav_trackbacks} = 1;
@@ -6014,7 +6606,8 @@ sub build_ping_table {
     } elsif ($args{items}) {
         $iter = sub { pop @{ $args{items} } };
     }
-    my $limit = $args{limit} || 'none';
+    return [] unless $iter;
+    my $limit = $args{limit};
     my $param = $args{param};
 
     my @data;
@@ -6036,6 +6629,7 @@ sub build_ping_table {
         $row->{title} = break_up_text($row->{title}, $title_max_len);
         $row->{excerpt} = break_up_text($row->{excerpt}, $title_max_len);
         $row->{blog_name} = break_up_text($row->{blog_name}, $title_max_len);
+        $row->{object} = $obj;
         push @data, $row;
 
         my $tb_center = MT::Trackback->load($obj->tb_id);
@@ -6066,11 +6660,13 @@ sub build_ping_table {
         if ($blog) {
             $row->{weblog_id} = $blog->id;
             $row->{weblog_name} = $blog->name;
+        } else {
+            $row->{weblog_name} = '* ' . $app->translate('Orphaned TrackBack') . ' *';
         }
         if ($author->is_superuser()) {
             $row->{has_edit_access} = 1;
         } else {
-            my $perms = $perms{$obj->blog_id} ||= MT::Permission->load({ author_id => $author->id, blog_id => $obj->blog_id }, { cached_ok => 1 });
+            my $perms = $perms{$obj->blog_id} ||= $author->permissions($obj->blog_id);
             $row->{has_edit_access} = (
                     ($perms && (($entry && $perms->can_edit_all_posts)
                                 || ($cat && $perms->can_edit_categories)))
@@ -6099,9 +6695,8 @@ sub list_entries {
     my $app = shift;
     my $q = $app->param;
     my $perms = $app->{perms};
-    #    or return $app->error($app->translate("No permissions"));
     if ($perms && (!$perms->can_edit_all_posts && !$perms->can_post)) {
-        return $app->error($app->translate("Permission denied."));
+        return $app->errtrans("Permission denied.");
     }
 
     require MT::Entry;
@@ -6112,7 +6707,7 @@ sub list_entries {
     my %terms;
     $terms{blog_id} = $blog_id if $blog_id;
     my $limit = $list_pref->{rows};
-    my $offset = $limit eq 'none' ? 0 : ($app->param('offset') || 0);
+    my $offset = $app->param('offset') || 0;
 
     if (!$blog_id && !$app->user->is_superuser) {
         require MT::Permission;
@@ -6128,8 +6723,8 @@ sub list_entries {
     if ($filter_col && $filter_val) {
         if (!exists ($terms{$filter_col})) {
             if ($filter_col eq 'category_id') {
-                $arg{'join'} = ['MT::Placement', 'entry_id',
-                    { category_id => $filter_val }, { unique => 1 }];
+                $arg{'join'} = MT::Placement->join_on('entry_id',
+                    { category_id => $filter_val }, { unique => 1 });
             } elsif (($filter_col eq 'normalizedtag') || ($filter_col eq 'exacttag')) {
                 my $normalize = ($filter_col eq 'normalizedtag');
                 require MT::Tag;
@@ -6150,8 +6745,8 @@ sub list_entries {
                     }
                 }
                 @tag_ids = ( 0 ) unless @tags;
-                $arg{'join'} = ['MT::ObjectTag', 'object_id',
-                    { tag_id => \@tag_ids, object_datasource => MT::Entry->datasource }, { unique => 1 } ];
+                $arg{'join'} = MT::ObjectTag->join_on('object_id',
+                    { tag_id => \@tag_ids, object_datasource => MT::Entry->datasource }, { unique => 1 } );
             } else {
                 $terms{$filter_col} = $filter_val;
             }
@@ -6171,7 +6766,7 @@ sub list_entries {
                 $filter_name = $app->translate('Tag');
                 $filter_value = $filter_val;
             } elsif ($filter_col eq 'author_id') {
-                $filter_name = $app->translate('Author');
+                $filter_name = $app->translate('User');
                 my $author = MT::Author->load($filter_val);
                 return $app->errtrans("Load failed: [_1]", MT::Author->errstr)
                     unless $author;
@@ -6194,9 +6789,9 @@ sub list_entries {
     my $total = MT::Entry->count(\%terms, \%arg);
     $arg{'sort'} = 'created_on';
     $arg{direction} = 'descend';
-    $arg{limit} = $limit + 1 if $limit ne 'none';
+    $arg{limit} = $limit + 1;
     if ($offset > $total - 1) {
-        $arg{offset} = $offset = $total - ($limit eq 'none' ? 1 : $limit);
+        $arg{offset} = $offset = $total - $limit;
     } elsif ($offset < 0) {
         $arg{offset} = $offset = 0;
     } else {
@@ -6215,35 +6810,42 @@ sub list_entries {
     my $data = $app->build_entry_table( iter => $iter,
         is_power_edit => $is_power_edit, param => \%param );
     delete $param{entry_table} unless @$data;
-    if ($limit ne 'none') {
-        ## We tried to load $limit + 1 entries above; if we actually got
-        ## $limit + 1 back, we know we have another page of entries.
-        my $have_next_entry = @$data > $limit;
-        pop @$data while @$data > $limit;
-        if ($offset) {
-            $param{prev_offset} = 1;
-            $param{prev_offset_val} = $offset - $limit;
-            $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
-        }
-        if ($have_next_entry) {
-            $param{next_offset} = 1;
-            $param{next_offset_val} = $offset + $limit;
-        }
+    ## We tried to load $limit + 1 entries above; if we actually got
+    ## $limit + 1 back, we know we have another page of entries.
+    my $have_next_entry = @$data > $limit;
+    pop @$data while @$data > $limit;
+    if ($offset) {
+        $param{prev_offset} = 1;
+        $param{prev_offset_val} = $offset - $limit;
+        $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
+    }
+    if ($have_next_entry) {
+        $param{next_offset} = 1;
+        $param{next_offset_val} = $offset + $limit;
     }
 
-    $iter = MT::Author->load_iter({type => MT::Author::AUTHOR},
-                                  {join => ['MT::Permission', 'author_id',
-                                            {$blog_id ? (blog_id => $blog_id)
-                                                 : ()}, { 'unique' => 1 }],
-                                   'sort' => 'name'});
+    $iter = MT::Author->load_iter({ type => MT::Author::AUTHOR }, {
+        'join' => MT::Entry->join_on(
+                    'author_id',
+                    { $blog_id ? ( blog_id => $blog_id ) : () },
+                    { 'unique' => 1,
+                      'sort' => 'created_on',
+                      direction => 'descend' } ),
+    });
     my %seen;
+    my @authors;
     while (my $au = $iter->()) {
         next if $seen{$au->id};
         $seen{$au->id} = 1;
         my $row = {author_name => $au->name,
                      author_id => $au->id };
-        push @{$param{entry_author_loop}}, $row;
+        push @authors, $row;
+        if (@authors == 50) {
+            $iter->('finish');
+            last;
+        }
     }
+    $param{entry_author_loop} = \@authors;
 
     $param{plugin_action_loop} = $app->plugin_actions('list_entries') || [];
     $param{can_power_edit} = $blog_id && !$is_power_edit;
@@ -6258,7 +6860,7 @@ sub list_entries {
     $param{list_start} = $offset + 1;
     $param{list_end} = $offset + scalar @$data;
     $param{list_total} = $total;
-    $param{next_max} = $param{list_total} - ($limit eq 'none' ? 0 : $limit);
+    $param{next_max} = $param{list_total} - $limit;
     $param{next_max} = 0 if ($param{next_max} || 0) < $offset + 1;
     $param{nav_entries} = 1;
     $param{feed_name} = $app->translate("Entry Activity Feed");
@@ -6290,7 +6892,8 @@ sub build_entry_table {
     } elsif ($args{items}) {
         $iter = sub { shift @{ $args{items} } };
     }
-    my $limit = $args{limit} || 'none';
+    return [] unless $iter;
+    my $limit = $args{limit};
     my $is_power_edit = $args{is_power_edit} || 0;
     my $param = $args{param} || {};
 
@@ -6298,7 +6901,7 @@ sub build_entry_table {
     ## pulldown on power edit page).
     my($c_data, %cats);
     my $blog_id = $app->param('blog_id');
-    if ($blog_id) {
+    if ($blog_id && $is_power_edit) {
         $c_data = $app->_build_category_list(blog_id => $blog_id);
         my $i = 0;
         for my $row (@$c_data) {
@@ -6311,23 +6914,26 @@ sub build_entry_table {
         $param->{category_loop} = $c_data;
     }
     
-    ## Load list of authors for display in filter pulldown (and selection
+    ## Load list of users for display in filter pulldown (and selection
     ## pulldown on power edit page).
     my(@a_data, %authors);
-    my $auth_iter = MT::Author->load_iter({type => AUTHOR}, {
-        'join' => [ 'MT::Permission', 'author_id',
-                    { blog_id => $blog_id } ] });
-    while (my $author = $auth_iter->()) {
-        $authors{ $author->id } = $author->name;
-        push @a_data, { author_id => $author->id,
-                        author_name => encode_js($author->name) };
+    if ($is_power_edit) {
+        # FIXME: Scaling issue for lots of authors on one blog
+        my $auth_iter = MT::Author->load_iter({type => AUTHOR}, {
+            'join' => MT::Permission->join_on('author_id',
+                        { blog_id => $blog_id } ) });
+        while (my $author = $auth_iter->()) {
+            $authors{ $author->id } = $author->name;
+            push @a_data, { author_id => $author->id,
+                            author_name => encode_js($author->name) };
+        }
+        @a_data = sort { $a->{author_name} cmp $b->{author_name} } @a_data;
+        my $i = 0;
+        for my $row (@a_data) {
+            $row->{author_index} = $i++;
+        }
+        $param->{author_loop} = \@a_data;
     }
-    @a_data = sort { $a->{author_name} cmp $b->{author_name} } @a_data;
-    my $i = 0;
-    for my $row (@a_data) {
-        $row->{author_index} = $i++;
-    }
-    $param->{author_loop} = \@a_data;
 
     my(@cat_list, @auth_list);
     if ($is_power_edit) {
@@ -6336,7 +6942,6 @@ sub build_entry_table {
     }
 
     my @data;
-    $i = 1;
     my %blogs;
     require MT::Blog;
     my $title_max_len = const('DISPLAY_LENGTH_EDIT_ENTRY_TITLE');
@@ -6347,7 +6952,7 @@ sub build_entry_table {
     while (my $obj = $iter->()) {
         my $blog_perms;
         if (!$app_author->is_superuser()) {
-            $blog_perms = $blog_perms{$obj->blog_id} || MT::Permission->load({ author_id => $app_author->id, blog_id => $obj->blog_id });
+            $blog_perms = $blog_perms{$obj->blog_id} || $app_author->blog_perm($obj->blog_id);
         }
 
         my $row = $obj->column_values;
@@ -6360,7 +6965,7 @@ sub build_entry_table {
                 relative_date($ts, time, $obj->blog);
         }
         my $author = $obj->author;
-        $row->{author_name} = $author ? $author->name : $app->translate('(author deleted)');
+        $row->{author_name} = $author ? $author->name : $app->translate('(user deleted)');
         $row->{category_name} = $obj->category ? $obj->category->label : '';
         $row->{title_short} = $obj->title;
         if (!defined($row->{title_short}) || $row->{title_short} eq '') {
@@ -6386,16 +6991,15 @@ sub build_entry_table {
         $row->{status_text} =
             $app->translate(MT::Entry::status_text($obj->status));
         $row->{"status_" . MT::Entry::status_text($obj->status)} = 1;
-        $row->{entry_odd} = $i++ % 2 ? 1 : 0;
         $row->{has_edit_access} = $app_author->is_superuser ||
             ($blog_perms && $blog_perms->can_edit_entry($obj, $app_author));
         if ($is_power_edit) {
             $row->{is_editable} = $row->{has_edit_access};
 
             ## This is annoying. In order to generate and pre-select the
-            ## category, author, and status pull down menus, we need to
+            ## category, user, and status pull down menus, we need to
             ## have a separate *copy* of the list of categories and
-            ## authors for every entry listed, so that each row in the list
+            ## users for every entry listed, so that each row in the list
             ## can "know" whether it is selected for this entry or not.
             my @this_c_data;
             my $this_category_id = $obj->category ? $obj->category->id : undef;
@@ -6423,6 +7027,7 @@ sub build_entry_table {
         if ($obj->status == MT::Entry::RELEASE) {
             $row->{entry_permalink} = $obj->permalink;
         }
+        $row->{object} = $obj;
         push @data, $row;
     }
     return [] unless @data;
@@ -6440,10 +7045,9 @@ sub build_entry_table {
 
 sub save_entries {
     my $app = shift;
-    my $perms = $app->{perms}
-        or return $app->error($app->translate("No permissions"));
-    return $app->error($app->translate("Permission denied."))
-        unless $perms->can_post || $perms->can_edit_all_posts;
+    my $perms = $app->{perms};
+    return $app->errtrans("Permission denied.")
+        unless $perms && ($perms->can_post || $perms->can_edit_all_posts);
     
     $app->validate_magic() or return;
 
@@ -6529,10 +7133,10 @@ sub save_entry {
                                   args => { blog_id => $app->param('blog_id')}));
     }
     my $perms = $app->{perms}
-        or return $app->error($app->translate("No permissions"));
+        or return $app->errtrans("Permission denied.");
     my $id = $q->param('id');
     if (!$id) {
-        return $app->error($app->translate("Permission denied."))
+        return $app->errtrans("Permission denied.")
             unless $perms->can_post;
     }
 
@@ -6788,12 +7392,12 @@ sub _finish_rebuild_ping {
 sub edit_placements {
     my $app = shift;
     my $perms = $app->{perms}
-        or return $app->error($app->translate("No permissions"));
+        or return $app->errtrans("Permission denied.");
     my $q = $app->param;
     my $entry_id = $q->param('entry_id');
     require MT::Entry;
     my $entry = MT::Entry->load($entry_id);
-    return $app->error($app->translate("Permission denied."))
+    return $app->errtrans("Permission denied.")
         unless $perms->can_edit_entry($entry, $app->user);
     my %param;
     require MT::Category;
@@ -6835,7 +7439,7 @@ sub save_placements {
     my $app = shift;
     my $q = $app->param;
     my $perms = $app->{perms}
-        or return $app->error($app->translate("No permissions"));
+        or return $app->errtrans("Permission denied.");
     
     $app->validate_magic() or return;
 
@@ -6843,7 +7447,7 @@ sub save_placements {
     my $blog_id = $q->param('blog_id');
     require MT::Entry;
     my $entry = MT::Entry->load($entry_id);
-    return $app->error($app->translate("Permission denied."))
+    return $app->errtrans("Permission denied.")
         unless $perms->can_edit_entry($entry, $app->user);
     my @cat_ids = $q->param('category_id');
     require MT::Placement;
@@ -6909,7 +7513,7 @@ sub _build_category_list {
 
         if (MT::Object->driver->can('count_group_by')) {
             $placement_counts = {};
-            # Berkeley DB users don't get the count of entries per author
+            # Berkeley DB users don't get the count of entries per user
             my $cat_entry_count_iter =
                 MT::Placement->count_group_by({ blog_id => $blog_id }, {group => ['category_id']});
             while (my ($count, $category_id) = $cat_entry_count_iter->()) {
@@ -6917,7 +7521,7 @@ sub _build_category_list {
             }
 
             $tb_counts = {};
-            my $tb_count_iter = MT::TBPing->count_group_by({ blog_id => $blog_id, junk_status => [0, 1] }, { range_incl => { junk_status => 1 }, group => ['tb_id']});
+            my $tb_count_iter = MT::TBPing->count_group_by({ blog_id => $blog_id, junk_status => [0, 1] }, { group => ['tb_id']});
             while (my ($count, $tb_id) = $tb_count_iter->()) {
                 $tb_counts->{$tb_id} = $count;
             }
@@ -6956,7 +7560,7 @@ sub _build_category_list {
                 $row->{category_tbcount} = $tb_counts
                     ? ($tb_counts->{$tb->id} || 0) : MT::TBPing->count({
                         tb_id => $tb->id,
-                        junk_status => [0,1] }, { range_incl => { junk_status => 1 }});
+                        junk_status => [0,1] });
             }
         }
         $row->{category_is_expanded} = 1 if $expanded{$obj->id};
@@ -6971,10 +7575,9 @@ sub _build_category_list {
 sub list_categories {
     my $app = shift;
     my $q = $app->param;
-    my $perms = $app->{perms}
-        or return $app->error($app->translate("No permissions"));
-    return $app->error($app->translate("Permission denied."))
-        unless $perms->can_edit_categories;
+    my $perms = $app->{perms};
+    return $app->errtrans("Permission denied.")
+        unless $perms && $perms->can_edit_categories;
     require MT::Category;
     require MT::Placement;
     require MT::Trackback;
@@ -7022,10 +7625,9 @@ sub move_category {
 sub save_category {
     my $app = shift;
     my $q = $app->param;
-    my $perms = $app->{perms} or
-        return $app->error ($app->translate ("No permissions"));
-    return $app->error ($app->translate ("Permission denied."))
-        unless $perms->can_edit_categories;
+    my $perms = $app->{perms};
+    return $app->errtrans("Permission denied.")
+        unless $perms && $perms->can_edit_categories;
   
     $app->validate_magic() or return;
   
@@ -7405,14 +8007,71 @@ sub cfg_archives_do_add {
         blog_id => $blog_id, saved_added => 1}));
 }
 
-sub cfg_system_feedback {
+sub cfg_system_general {
     my $app = shift;
     my %param;
     return $app->errtrans("Permission denied.")
         unless $app->user->is_superuser();
     my $cfg = $app->config;
+    $app->add_breadcrumb($app->translate('General Settings'));
     $param{nav_config} = 1;
-    $app->add_breadcrumb($app->translate('Settings'));
+    $param{nav_settings} = 1;
+    $param{languages} = $app->languages_list($app->config('DefaultUserLanguage'));
+    my $tag_delim = $app->config('DefaultUserTagDelimiter') || 'comma';
+    $param{"tag_delim_$tag_delim"} = 1;
+
+    (my $tz = $app->config('DefaultTimezone')) =~ s![-\.]!_!g;
+    $tz =~ s!_00$!!;
+    $param{'server_offset_' . $tz} = 1;
+
+    $param{default_site_root} = $app->config('DefaultSiteRoot');
+    $param{default_site_url} = $app->config('DefaultSiteURL');
+    $param{saved} = $app->param('saved');
+    $param{error} = $app->param('error');
+    $app->build_page('cfg_system_general.tmpl', \%param);
+}
+
+sub save_cfg_system_general {
+    my $app = shift;
+    $app->validate_magic or return;
+    return $app->errtrans("Permission denied.")
+        unless $app->user->is_superuser();
+
+    my $tmpl_blog_id = $app->param('new_user_template_blog_id') || '';
+    if ($tmpl_blog_id =~ m/^\d+$/) {
+        MT::Blog->load($tmpl_blog_id)
+            or return $app->error($app->translate("Invalid ID given for personal weblog clone source ID."));
+    } else {
+        if ($tmpl_blog_id ne '') {
+            return $app->error($app->translate("Invalid ID given for personal weblog clone source ID."));
+        }
+    }
+
+    my $cfg = $app->config;
+    my $tz = $app->param('default_time_zone');
+    $app->config('DefaultTimezone', $tz || undef, 1);
+    $app->config('DefaultSiteRoot', $app->param('default_site_root') || undef, 1);
+    $app->config('DefaultSiteURL', $app->param('default_site_url') || undef, 1);
+    $app->config('NewUserTemplateBlogId', $tmpl_blog_id || undef, 1);
+    $app->config('DefaultUserLanguage', $app->param('default_language'), 1);
+    $app->config('DefaultUserTagDelimiter', $app->param('default_user_tag_delimiter') || undef, 1);
+    $cfg->save_config();
+    my $args = {};
+    $args->{saved} = 1;
+
+    $app->redirect($app->uri('mode' => 'cfg_system',
+                             args => $args));
+}
+
+sub cfg_system_feedback {
+    my $app = shift;
+    my %param;
+    return $app->errtrans("Permission denied.")
+        unless $app->user->is_superuser();
+
+    my $cfg = $app->config;
+    $param{nav_config} = 1;
+    $app->add_breadcrumb($app->translate('Feedback Settings'));
     $param{nav_settings} = 1;
     $param{comment_disable} = $cfg->AllowComments ? 0 : 1;
     $param{ping_disable} = $cfg->AllowPings ? 0 : 1;
@@ -7433,6 +8092,9 @@ sub cfg_system_feedback {
 
 sub save_cfg_system_feedback {
     my $app = shift;
+    return $app->errtrans("Permission denied.")
+        unless $app->user->is_superuser();
+
     $app->validate_magic or return;
     my $cfg = $app->config;
     $cfg->AllowComments(($app->param('comment_disable') ? 0 : 1), 1);
@@ -7688,7 +8350,8 @@ sub object_edit_uri {
     eval "require " . $API{$type};
     my $obj = $API{$type}->load($id) 
         or die "object_edit_uri could not find $type object $id";
-    $app->uri('mode' => 'view', args => { '_type' => $type, blog_id => $obj->blog_id, id => $_[1]});
+    my $blog_id = $obj->column('blog_id');
+    $app->uri('mode' => 'view', args => { '_type' => $type, ($blog_id ? (blog_id => $blog_id) : ()), id => $_[1]});
 }
 
 sub rebuild_pages {
@@ -7750,7 +8413,7 @@ sub rebuild_pages {
         $app->rebuild_indexes( BlogID => $blog_id, Template => $tmpl_saved,
                                Force => 1 )
             or return;
-        $order = "index template $tmpl_saved->name";
+        $order = $app->translate("index template '[_1]'", $tmpl_saved->name);
     } elsif ($type =~ /^entry-(\d+)$/) {
         my $entry_id = $1;
         require MT::Entry;
@@ -7932,295 +8595,134 @@ sub send_pings {
     $app->_finish_rebuild_ping($entry, scalar $q->param('is_new'), $has_errors);
 }
 
-sub edit_permissions {
+sub edit_role {
     my $app = shift;
     my %param = $_[0] ? %{ $_[0] } : ();
     my $q = $app->param;
     my $author = $app->user;
-    my $author_id = $q->param('author_id');
-    $param{edit_author_id} = $author_id;
+    my $id = $q->param('id');
 
-    require MT::Blog;
     require MT::Permission;
-    ## @accessible is a list of things that identify the blogs the
-    ## active user has some access to. These things can be Blog records
-    ## or Permission records.
-    my @accessible = $author->is_superuser
-                       ? MT::Blog->load()
-                       : MT::Permission->load({ author_id => $author->id });
-
-    if ($author->id == $author_id && !($author->is_superuser())) {
-        return $app->error($app->translate("You cannot modify your own permissions."));
-    }
-    my $this_author = MT::Author->load($author_id);
-    return $app->error($app->translate("Invalid author_id"))
-        if !$this_author || $this_author->type != AUTHOR || !$author_id;
     if (!$author->is_superuser) {
-        my $has_edit_access = $author->can_administer($this_author);
-        if (!$has_edit_access && (!$this_author->created_by ||
-                                  ($this_author->created_by != $author->id))) {
-            return $app->error($app->translate("You are not allowed to edit the permissions of this author."));
-        }
+        return $app->error($app->translate("Invalid request."));
     }
-    $param{toplevel_edit_access} = $author->is_superuser;
-    $param{selected_author_name} = $this_author->name;
-    if ($param{toplevel_edit_access}) {
-        $param{perm_superuser} = $this_author->is_superuser;
-        $param{perm_can_view_log} = $this_author->can_view_log;
-        $param{perm_can_create_blog} = $this_author->can_create_blog;
+    my $role;
+    if ($id) {
+        require MT::Role;
+        $role = MT::Role->load($id);
+        # $param{is_enabled} = $role->is_active;
+        $param{is_enabled} = 1;
+        $param{name} = $role->name;
+        $param{description} = $role->description;
+        $param{id} = $role->id;
+        require MT::Author;
+        my $creator = MT::Author->load($role->created_by, { cached_ok => 1 })
+            if $role->created_by;
+        $param{created_by} = $creator ? $creator->name : '';
+        my @masks = grep { m/^role_mask/ } @{ MT::Role->column_names };
+        my %match = map { $_ => $role->column($_) } @masks;
+        $match{id} = [ $id ];
+        my $iter = MT::Role->load_iter(\%match, { not => { id => 1 } });
+        my @same_perms;
+        while (my $other_role = $iter->()) {
+            push @same_perms, {
+                name => $other_role->name,
+                id => $other_role->id,
+            };
+        }
+        $param{same_perm_loop} = \@same_perms if @same_perms;
     }
-    $param{email} = $this_author->email;
 
-    my $all_perm_flags = MT::Permission->perms;
+    my $all_perm_flags = MT::Permission->perms('blog');
 
-    my(@data, @o_data);
-    my $has_permission = 0;
-    for my $accessible (@accessible) {
-        if ($accessible->isa('MT::Permission')) {
-            next unless $accessible->can_administer_blog;
-        }
-        $has_permission++;
-        my $blog = $accessible->isa('MT::Blog') ? $accessible
-                      : MT::Blog->load($accessible->blog_id);
-        my $row = { blog_name => $blog->name, blog_id => $blog->id,
-                    author_id => $author_id };
-        if ($param{checked_blog_ids} && $param{checked_blog_ids}{$blog->id}) {
-            $row->{is_checked} = 1;
-        }
-        my $p = MT::Permission->load({ blog_id => $blog->id,
-                                       author_id => $author_id });
-
-        my @p_data;
-        for my $ref (@$all_perm_flags) {
-            next if $ref->[1] =~ /comment/;
-            push @p_data, { have_access => $p && $p->has($ref->[1]),
-                            flag_name => $ref->[1],
-                            prompt => $app->translate($ref->[2]),
-                            blog_id => $blog->id,
-                            author_id => $author_id,
-                            mask => $ref->[0] };
-        }
-        my $break = @p_data % 3 ? int(@p_data / 3) + 1 : @p_data / 3;
-        my $set = 0;
-        $row->{'perm_loops'} = [];
-        while (@p_data) {
-            $set++;
-            my $last = $#p_data;
-            $last = $break - 1 if $break - 1 < $last;
-            push @{$row->{"perm_loops"}}, { perm_loop => [ @p_data[0..$last] ] };
-            @p_data = $last == $#p_data ? () : @p_data[$last+1..$#p_data];
-        }
-        if ($p && ($p->role_mask > 0)) {
-            push @data, $row;
-        } else {
-            push @o_data, $row;
-        }
+    my @p_data;
+    for my $ref (@$all_perm_flags) {
+        next if $ref->[1] =~ /comment/;
+        push @p_data, {
+            have_access => $role && $role->has($ref->[1]),
+            flag_name => $ref->[1],
+            prompt => $app->translate($ref->[2]),
+            mask => $ref->[0],
+            bucket => $ref->[3],
+        };
     }
-    return $app->error($app->translate("Permission denied."))
-        unless $has_permission;
-    $param{blog_loop} = \@data;
-    $param{blog_no_access_loop} = \@o_data;
-    @o_data = sort { $a->{blog_name} cmp $b->{blog_name} } @o_data;
-    @data = sort { $a->{blog_name} cmp $b->{blog_name} } @data;
-    $param{saved_add_to_blog} = $q->param('saved_add_to_blog');
+    my $break = @p_data % 3 ? int(@p_data / 3) + 1 : @p_data / 3;
+    my $set = 0;
+    $param{'perm_loops'} = [];
+    while (@p_data) {
+        $set++;
+        my $last = $#p_data;
+        $last = $break - 1 if $break - 1 < $last;
+        push @{$param{"perm_loops"}}, { perm_loop => [ @p_data[0..$last] ] };
+        @p_data = $last == $#p_data ? () : @p_data[$last+1..$#p_data];
+    }
     $param{saved} = $q->param('saved');
-    $param{nav_authors} = 1;
-    if ($app->mode eq 'edit_admin_permissions') {
-        $param{search_type} = $app->translate('Authors');
-        $param{object_type} = 'author';
-        $app->add_breadcrumb($app->translate('Authors'),
-                             $app->uri(mode => 'list_authors'));
-        $app->add_breadcrumb($author->name);
-        $app->build_page('edit_admin_permissions.tmpl', \%param);
+    $param{nav_privileges} = 1;
+    $app->add_breadcrumb($app->translate('Roles'),
+                         $app->uri(mode => 'list_roles'));
+    if ($id) {
+        $app->add_breadcrumb($role->name);
     } else {
-        $app->add_breadcrumb($app->translate('Authors'),
-                             $app->uri(mode => 'list_authors'));
-        $app->add_breadcrumb($app->translate('Edit Permissions'));
-        $app->build_page('edit_permissions.tmpl', \%param);
+        $app->add_breadcrumb($app->translate('Create New Role'));
     }
+    $app->build_page('edit_role.tmpl', \%param);
 }
 
-sub save_permissions {
+sub save_role {
     my $app = shift;
     my $q = $app->param;
-    my $admin_auth = $app->user;
-    my $admin_auth_id = $admin_auth->id;
-    my $author_id = $q->param('author_id');
-    my $author = MT::Author->load($author_id, {cached_ok=>1});
-
     $app->validate_magic() or return;
+    $app->user->is_superuser or return $app->errtrans("Invalid request.");
 
-    if ($admin_auth->is_superuser()) {
-        $author->can_create_blog($q->param('can_create_blog') || 0);
-        $author->is_superuser($q->param('is_superuser') || 0);
-        $author->can_view_log($q->param('can_view_log') || 0);
-        if (my $new_email = $q->param('email')) {
-            $author->email($new_email);
-        }
-        $author->save;
+    my $id = $q->param('id');
+    my @perms = $q->param('permission');
+    my $role;
+    require MT::Role;
+    $role = $id ? MT::Role->load($id) : MT::Role->new;
+    my $name = $q->param('name') || '';
+    $name =~ s/(^\s+|\s+$)//g;
+    return $app->errtrans("Role name cannot be blank.")
+        if $name eq '';
+    my $role_by_name = MT::Role->load({ name => $name });
+    if ($role_by_name && (($id && ($role->id != $id)) || !$id)) {
+        return $app->errtrans("Another role already exists by that name.");
     }
-    
-    require MT::Permission;
-    for my $p ($q->param) {
-        if ($p =~ /^role_mask-(\d+)$/) {
-            my($blog_id) = ($1);
-            if (!$admin_auth->is_superuser) {
-                my $admin_perms = MT::Permission->load({author_id => $admin_auth_id,
-                                                        blog_id => $blog_id},
-                                                       {cached_ok => 1});
-                return $app->error($app->translate("Permission denied."))
-                    unless ($admin_perms && $admin_perms->can_administer_blog);
-            }
-
-            my $pe = MT::Permission->load({ author_id => $author_id,
-                                            blog_id => $blog_id },
-                                          {cached_ok => 1});
-            my $mask = 0;
-            for my $val ($q->param($p)) {
-                $mask += $val;
-            }
-
-            if (!$pe) {
-                next if $mask == 0;    # Don't create a new record if it's empty
-                $pe = MT::Permission->new;
-                $pe->blog_id($blog_id);
-                $pe->author_id($author_id);
-            } elsif (!$mask) {
-                $pe->remove;
-                next;
-            }
-            $pe->role_mask($mask);
-            $pe->save;
-        }
+    if (!@perms) {
+        return $app->errtrans("You cannot define a role without permissions.");
     }
+
+    $role->name($q->param('name'));
+    $role->description($q->param('description'));
+    $role->clear_full_permissions;
+    $role->set_these_permissions(@perms);
+    if ($role->id) {
+        $role->modified_by($app->user->id);
+    } else {
+        $role->created_by($app->user->id);
+    }
+    $role->save or return $app->error($role->errstr);
+
     my $url;
-    if ($app->mode eq 'save_admin_permissions') {
-        $url = $app->uri('mode' => 'edit_admin_permissions',
-                         args => { author_id => $author_id, saved => 1});
-    } else {
-        $url = $app->uri('mode' => 'edit_permissions',
-                         args => { author_id => $author_id, saved => 1});
-    }
-    #if (my $blog_id = $q->param('add_role_mask')) {
-    #    my $pe = MT::Permission->load({ author_id => $author_id,
-    #                                    blog_id => $blog_id });
-    #    if (!$pe) {
-    #        $pe = MT::Permission->new;
-    #        $pe->blog_id($blog_id);
-    #        $pe->author_id($author_id);
-    #    }
-    #    $pe->can_post(1);
-    #    $pe->can_comment(1);
-    #    $pe->save;
-    #    require MT::Blog;
-    #    my $blog = MT::Blog->load($blog_id);
-    #    $url .= '&saved_add_to_blog=' . $blog->name;
-    #}
+    $url = $app->uri('mode' => 'edit_role',
+                     args => { id => $role->id, saved => 1});
     $app->redirect($url);
 }
 
-sub edit_profile {
+sub languages_list {
     my $app = shift;
-    my %param = $_[0] ? %{ $_[0] } : ();
-    my $q = $app->param;
-    my $author = $app->user;
-    my $author_id = $q->param('author_id');
-    $param{edit_author_id} = $author_id;
+    my ($curr) = @_;
 
-    if ($author->id == $author_id) {
-        return $app->error($app->translate("You cannot modify your own permissions."));
+    my $langs = $app->supported_languages;
+    my @data;
+    $curr ||= $app->config('DefaultLanguage');
+    $curr = 'en-us' if (lc($curr) eq 'en_us');
+    for my $tag (keys %$langs) {
+        (my $name = $langs->{$tag}) =~ s/\w+ English/English/;
+        my $row = { l_tag => $tag, l_name => $app->translate($name) };
+        $row->{l_selected} = 1 if $curr eq $tag;
+        push @data, $row;
     }
-    my $this_author = MT::Author->load($author_id);
-    return $app->error($app->translate("Invalid author_id"))
-        if !$this_author || $this_author->type != AUTHOR || !$author_id;
-    if (!$author->is_superuser) {
-        my $has_edit_access = $author->can_administer($this_author);
-        if (!$has_edit_access && (!$this_author->created_by ||
-                                  ($this_author->created_by != $author->id))) {
-            return $app->error($app->translate("You are not allowed to edit the permissions of this author."));
-        }
-    }
-    $param{toplevel_edit_access} = $author->is_superuser;
-    $param{selected_author_name} = $this_author->name;
-    if ($param{toplevel_edit_access}) {
-        $param{perm_superuser} = $this_author->is_superuser;
-        $param{perm_can_view_log} = $this_author->can_view_log;
-        $param{perm_can_create_blog} = $this_author->can_create_blog;
-
-        $param{name} = $this_author->name;
-        $param{nickname} = $this_author->nickname;
-        $param{url} = $this_author->url;
-        $param{hint} = $this_author->hint;
-        
-        my $langs = $app->supported_languages;
-        my @data;
-        my $preferred = $this_author && $this_author->preferred_language ?
-            $this_author->preferred_language : $app->config('DefaultLanguage');
-        $preferred = 'en-us' if (lc($preferred) eq 'en_us');
-        for my $tag (keys %$langs) {
-            (my $name = $langs->{$tag}) =~ s/\w+ English/English/;
-            my $row = { l_tag => $tag, l_name => $app->translate($name) };
-            $row->{l_selected} = 1 if $preferred eq $tag;
-            push @data, $row;
-        }
-        $param{languages} = [ sort { $a->{l_name} cmp $b->{l_name} }
-                              @data ];
-    }
-    $param{email} = $this_author->email;
-
-    $param{saved} = $q->param('saved');
-    $param{recovered} = $q->param('recovered');
-    $param{nav_authors} = 1;
-    if ($app->user->is_superuser) {
-        $param{search_type} = $app->translate('Authors');
-        $param{object_type} = 'author';
-    }
-    $app->add_breadcrumb($app->translate('Authors'),
-                         $app->uri(mode => 'list_authors'));
-    $app->add_breadcrumb($app->translate('Edit Profile'));
-    $app->build_page('edit_profile.tmpl', \%param);
-}
-
-sub save_profile {
-    my $app = shift;
-    my $q = $app->param;
-    my $admin_auth = $app->user;
-    my $admin_auth_id = $admin_auth->id;
-    my $author_id = $q->param('author_id');
-    my $author = MT::Author->load($author_id, {cached_ok=>1});
-
-    $app->validate_magic() or return;
-
-    if ($admin_auth->is_superuser()) {
-        if (my $new_email = $q->param('email')) {
-            $author->email($new_email);
-        }
-        if (my $new_name = $q->param('name')) {
-            if ($new_name ne $author->name) {
-                my $existing = MT::Author->load({ name => $new_name,
-                                          type => MT::Author::AUTHOR});
-                if ($existing) {
-                    return $app->error($app->translate('An author by that name already exists.'));
-                }
-            }
-            $author->name($new_name);
-        }
-        if (my $new_nickname = $q->param('nickname')){
-            $author->nickname($new_nickname);
-        }
-        if (my $new_url = $q->param('url')){
-            $author->url($new_url);
-        }
-        if (my $new_language = $q->param('preferred_language')){
-            $author->preferred_language($new_language);
-        }
-
-        $author->save;
-    }
-    
-    my $url = $app->uri('mode' => 'edit_profile', 
-                        args => { author_id => $author_id, saved => 1});
-    $app->redirect($url);
+    [ sort { $a->{l_name} cmp $b->{l_name} } @data ];
 }
 
 sub send_notify {
@@ -8236,7 +8738,7 @@ sub send_notify {
     my $blog = MT::Blog->load($entry->blog_id, {cached_ok=>1});
     my $author = $entry->author;
     return $app->error($app->translate(
-        "No email address for author '[_1]'", $author->name))
+        "No email address for user '[_1]'", $author->name))
         unless $author->email;
 
     my $cols = 72;
@@ -8285,12 +8787,18 @@ sub send_notify {
     my $body = $app->build_email('notify-entry.tmpl', \%params);
 
     my $subj = $app->translate("[_1] Update: [_2]", $blog->name, $entry->title);
-    if ($app->current_language ne 'ja') {  # FIXME
+    if ($app->current_language ne 'ja') {  # FIXME perhaps move to MT::I18N
         $subj =~ s![\x80-\xFF]!!g;
     }
-    my %head = ( To => $author->email, From => $author->email,
-                 Subject => $subj,
-                 'Content-Transfer-Encoding' => '8bit' );
+    my $address = defined $author->nickname
+        ? $author->nickname .' <'. $author->email .'>'
+        : $author->email;
+    my %head = (
+        To => $address,
+        From => $address,
+        Subject => $subj,
+        'Content-Transfer-Encoding' => '8bit',
+    );
     my $charset = $app->config('MailEncoding') ||
                   $app->config('PublishCharset');
     $head{'Content-Type'} = qq(text/plain; charset="$charset");
@@ -8594,6 +9102,13 @@ sub _write_upload {
 
 sub search_replace {
     my $app = shift;
+    my $res = $app->do_search_replace(@_);
+    $app->add_breadcrumb($app->translate('Search & Replace'));
+    $app->build_page('search_replace.tmpl', $res);
+}
+
+sub do_search_replace {
+    my $app = shift;
     my $q = $app->param;
     my $blog_id = $q->param('blog_id');
     my $author = $app->user;
@@ -8675,8 +9190,7 @@ sub search_replace {
             'perm_check' => sub {
                 my ($obj) = @_;
                 return 1 if $author->can_view_log;
-                my $perm = MT::Permission->load({author_id => $author->id,
-                                                 blog_id => $obj->blog_id});
+                my $perm = $author->permissions($obj->blog_id);
                 return $perm->can_view_blog_log;
             },
             'search_cols' => [ qw(ip message) ],
@@ -8687,8 +9201,7 @@ sub search_replace {
             'perm_check' => sub { 
                 return 1 if $author->is_superuser;
                 if ($blog_id) {
-                    require MT::Permission;
-                    my $perm = MT::Permission->load({author_id => $author->id, blog_id => $blog_id});
+                    my $perm = $author->permissions($blog_id);
                     return $perm->can_administer_blog;
                 }
                 return 0;
@@ -8697,6 +9210,18 @@ sub search_replace {
             'can_replace' => 0,
             'can_search_by_date' => 0,
         },
+        'blog' => {
+            'perm_check' => sub {
+                return 1 if $author->is_superuser;
+                my ($obj) = @_;
+                my $perm = $author->permissions($obj->id);
+                $perm && ($perm->can_administer_blog || $perm->can_edit_config);
+            },
+            'search_cols' => [ qw(name site_url site_path description) ],
+            'replace_cols' => [ qw(name site_url site_path description) ],
+            'can_replace' => $author->is_superuser(),
+            'can_search_by_date' => 0,
+        }
     };
 
     my($search, $replace, $do_replace, $case, $is_regex, $is_limited, $type, $is_junk, $is_dateranged, $ids, $datefrom_year, $datefrom_month, $datefrom_day, $dateto_year, $dateto_month, $dateto_day, $from, $to, $show_all, $do_search, $orig_search) =
@@ -8772,24 +9297,26 @@ sub search_replace {
         my %args;
         if ($type eq 'author') {
             $terms{'type'} = MT::Author::AUTHOR();
-            if ($blog_id) {
-                $args{'join'} = [ 'MT::Permission', 'author_id', { blog_id => $blog_id } ];
+            if ('dialog_grant_role' eq $app->param('__mode')) {
+                @cols = qw(name) ;
+            } elsif ($blog_id) {
+                $args{'join'} = MT::Permission->join_on('author_id', { blog_id => $blog_id } );
             }
-        } elsif ($type ne 'commenter') {
+        } elsif ($type eq 'blog') {
+        } elsif ($type eq 'commenter') {
+            $terms{'type'} = MT::Author::COMMENTER();
+            $args{'join'} = MT::Permission->join_on('author_id', { blog_id => $blog_id } );
+        } else {
             %terms = $blog_id ? ( blog_id => $blog_id ) : ();
             if ($type ne 'template') {
                 %args = ( 'sort' => 'created_on', direction => 'descend' );
             }
-        } else {
-            $terms{'type'} = MT::Author::COMMENTER();
-            $args{'join'} = [ 'MT::Permission', 'author_id', { blog_id => $blog_id } ];
         }
         if (($type eq 'ping') || ($type eq 'comment'))  {
             if ($is_junk) {
                 $terms{junk_status} = -1;
             } else {
                 $terms{junk_status} = [ 0, 1 ];
-                $args{range_incl}{junk_status} = 1;
             }
         }
         if ($is_dateranged) {
@@ -8807,10 +9334,14 @@ sub search_replace {
                     $class->load($id);
                 }
             };
-        } elsif ($blog_id) {
+        } elsif ($type eq 'blog') {
+            $args{sort} = 'name';
+            $args{direction} = 'ascend';
             $iter = $class->load_iter(\%terms, \%args) or die $class->errstr;
         } elsif ($type eq 'log') {
-            $iter = $class->load_iter(\%terms, \%args);
+            $iter = $class->load_iter(\%terms, \%args) or die $class->errstr;
+        } elsif ($blog_id) {
+            $iter = $class->load_iter(\%terms, \%args) or die $class->errstr;
         } else {
             # Get an iter for each accessible blog
             my @streams;
@@ -8878,7 +9409,7 @@ sub search_replace {
             unless ($show_all) {
                 for my $col (@cols) {
                     next if $do_replace && !$replace_cols{$col};
-                    my $text = $obj->$col();
+                    my $text = $obj->column($col);
                     $text = '' unless defined $text;
                     if ($do_replace) {
                         if ($text =~ s!$re!$replace!g) {
@@ -8961,8 +9492,7 @@ sub search_replace {
     $res{'tab_junk'} = 1 if $is_junk;
     $res{'search_cols_' . $_} = 1 foreach @cols;
     $res{nav_search} = 1;
-    $app->add_breadcrumb($app->translate('Search & Replace'), '');
-    $app->build_page('search_replace.tmpl', \%res);
+    \%res;
 }
 
 sub export {
@@ -9010,16 +9540,15 @@ sub do_import {
 
     my $import_as_me = $q->param('import_as_me');
 
-    ## Determine the author as whom we will import the entries.
+    ## Determine the user as whom we will import the entries.
     my $author = $app->user;
     my $author_id = $author->id;
     if (!$author->is_superuser) {
-        my $perms = MT::Permission->load({ author_id => $author_id,
-                                           blog_id => $blog_id });
+        my $perms = $author->permissions($blog_id);
         return $app->error($app->translate("You do not have import permissions"))
-            unless $perms && $perms->can_edit_config;
+            unless $perms && ($perms->can_edit_config || $perms->can_administer_blog);
         if (!$import_as_me) {
-            return $app->error($app->translate("You do not have permission to create authors"))
+            return $app->error($app->translate("You do not have permission to create users"))
                 unless $perms->can_administer_blog;
         }
     }
@@ -9076,10 +9605,6 @@ sub do_import {
     require MT::Comment;
     require MT::TBPing;
 
-    if (UNIVERSAL::isa($MT::Object::DRIVER, 'MT::ObjectDriver::DBM')) {
-        $MT::Object::DRIVER->no_build_indexes(1);
-    }
-
     require MT::ImportExport;
     my $import_result = MT::ImportExport->do_import(
         Blog => $blog,
@@ -9094,18 +9619,6 @@ sub do_import {
         TitleEnd => $app->param('title_end'),
         DefaultStatus => $app->param('default_status'),
     );
-
-    if (UNIVERSAL::isa($MT::Object::DRIVER, 'MT::ObjectDriver::DBM')) {
-        $MT::Object::DRIVER->rebuild_indexes('MT::Entry', 1);
-        $MT::Object::DRIVER->rebuild_indexes('MT::Comment', 1);
-        $MT::Object::DRIVER->rebuild_indexes('MT::TBPing', 1);
-        $MT::Object::DRIVER->rebuild_indexes('MT::Category', 1);
-        $MT::Object::DRIVER->rebuild_indexes('MT::Trackback', 1);
-        $MT::Object::DRIVER->rebuild_indexes('MT::Placement', 1);
-        $MT::Object::DRIVER->rebuild_indexes('MT::Permission', 1);
-        $MT::Object::DRIVER->rebuild_indexes('MT::Author', 1);
-        $MT::Object::DRIVER->no_build_indexes(0);
-    }
 
     $param->{import_success} = $import_result;
     $param->{error} = MT::ImportExport->errstr unless $import_result;
@@ -9123,6 +9636,12 @@ sub show_entry_prefs {
     my $perms = $app->{perms}
         or return $app->error($app->translate("No permissions"));
     my %param = ( %{ $app->load_entry_prefs($perms->entry_prefs) } );
+    if ($param{disp_prefs_Default}) {
+        $param{disp_prefs_Basic} = 0;
+        $param{disp_prefs_All} = 0;
+        $param{disp_prefs_Advanced} = 0;
+        $param{disp_prefs_Custom} = 0;
+    }
     $param{entry_id} = $app->param('entry_id');
     $app->add_breadcrumb($app->translate('Preferences'));
     $app->build_page('entry_prefs.tmpl', \%param);
@@ -9536,24 +10055,16 @@ sub empty_junk {
     my $perms = $app->{perms};
     my $user = $app->user;
     my $blog_id = $app->param('blog_id');
-    return $app->error($app->translate("Permission denied"))
+    return $app->errtrans("Permission denied.")
         if (!$blog_id && !$user->is_superuser()) ||
-            ($perms && !$perms->can_administer_blog);
+            ($perms && !($perms->can_administer_blog || $perms->can_edit_all_posts));
 
     my $type = $app->param('_type');
     my $class = $app->_load_driver_for($type);
     my $arg = {};
     $arg->{junk_status} = -1;
     $arg->{blog_id} = $blog_id if $blog_id;
-    my $iter = $class->load_iter($arg);
-    my @list;
-    while (my $obj = $iter->()) {
-        push @list, $obj->id;
-    }
-    foreach (@list) {
-        my $obj = $class->load($_);
-        $obj->remove;
-    }
+    $class->remove($arg);
     $app->add_return_arg('emptied' => 1);
     $app->call_return;
 }
@@ -9627,102 +10138,11 @@ sub not_junk {
     $app->rebuild_these(\%rebuild_set, how => NEW_PHASE);
 }
 
-sub comment_to_row {
-    my ($obj, $text_limit)  = @_;
-    my $row = $obj->column_values;
-    $row->{author_display} = $row->{author};
-    $row->{author_display} = substr($row->{author_display}, 0, 25) . '...'
-        if $row->{author_display} && $row->{author_display} =~ m(\S{25,});
-    $row->{comment_short} = (substr($obj->text(), 0, $text_limit)
-                             . (length($obj->text) > $text_limit ? "..." : ""));
-    $row->{visible} = $obj->visible();
-    $row->{entry_id} = $obj->entry_id();
-    my $max_len = const('DISPLAY_LENGTH_EDIT_COMMENT_TITLE');
-    require MT::Entry;
-    my $entry = MT::Entry->load($obj->entry_id, {cached_ok=>1});
-    $row->{entry_title} = $entry->title() || $entry->text || "";
-    $row->{entry_title} = substr_text($row->{entry_title}, 0, $max_len) . '...'
-        if $row->{entry_title} && length_text($row->{entry_title}) > $max_len;
-    $row->{commenter_id} = $obj->commenter_id() if $obj->commenter_id();
-    my %urls = MT::Util::extract_urls( join "\n",
-        ($obj->text() || '') .
-        ($obj->url() || '') .
-        ($obj->author() || '')
-    );
-    my %domains;
-    $domains{$_} = 1 foreach values %urls;
-    my @domains = map { domain => $_ }, sort keys %domains;
-    $row->{domains} = \@domains;
-    my $cmntr = MT::Author->load({ id => $obj->commenter_id(),
-                                   type => MT::Author::COMMENTER });
-    if ($cmntr) {
-        $row->{email_hidden} = $cmntr && $cmntr->is_email_hidden();
-        require MT::Permission;
-        my $blog_id = $obj->blog_id;
-        my $status = $cmntr->status($blog_id);
-        $row->{commenter_approved} = ($cmntr->status($blog_id)== APPROVED);
-        $row->{commenter_banned} = ($cmntr->status($blog_id) == BANNED);
-    }
-    $row->{created_on_time_formatted} =
-        format_ts("%Y-%m-%d %H:%M:%S", $obj->created_on());     
-    return $row;
-}
-
 sub _cb_notjunktest_filter {
     my ($eh, $app, $obj) = @_;
     require MT::JunkFilter;
     MT::JunkFilter->filter($obj);
     $obj->is_junk ? 0 : 1;
-}
-
-sub find_junk {
-    my $app = shift;
-    my $blog_id = $app->param('blog_id');
-    my $offset = $app->param('offset') || 0;
-    my $iter = MT::Comment->load_iter({ blog_id => $blog_id,
-                                        is_junk => 0 }, { offset => $offset });
-    my @spam_comments;
-    my $i;
-
-    my $start = time;
-    my $cmt;
-    my %param;
-    my $count = 0;
-    require MT::Entry;
-    my $trim_length = $app->config('ShowIPInformation')
-                    ? const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_SHORT')
-                    : const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
-    while ($cmt = $iter->()) {
-        last if @spam_comments == 20;
-        $count++;
-        my $subject = $cmt->clone;
-        if (!MT->run_callbacks('NotJunkTest', $app, $subject)) {
-            my $err = MT->errstr;
-            my $row = comment_to_row($cmt, $trim_length);
-            my $entry = MT::Entry->load($cmt->entry_id, {cached_ok=>1});
-            $row->{has_edit_access} = $app->{perms}->can_edit_all_posts
-                || $app->user->id == $entry->author_id;
-            my $log = $subject->junk_log || '';
-            $log =~ s!\n!<br />!g;
-            $row->{reason} = $log; # $err;
-            push @spam_comments, $row;
-        }
-        $offset++;
-        last if time - $start > 60;
-    }
-    if ((@spam_comments) && ($cmt)) {
-        $param{more} = 1;
-    }
-    if (!@spam_comments) {
-        $param{scan_count} = $count;
-        $param{redirect} = 1;
-    }
-    $param{offset} = $offset;
-    if ((!@spam_comments) && (!$param{redirect})) {
-        $app->redirect($app->uri('mode' => 'list_comments', args => { ($blog_id ? (blog_id => $blog_id) : () ), no_junk_found => 1}));
-    }
-    $param{object_loop} = \@spam_comments;
-    $app->build_page('junk_results.tmpl', \%param);    
 }
 
 sub add_itemset_action {
@@ -9805,6 +10225,217 @@ sub remove_tags_from_entries {
     $app->call_return;
 }
 
+# This mode can be called to service a number of views
+# Adding roles->blogs for a user
+# Adding users->roles->blogs
+sub dialog_grant_role {
+    my $app = shift;
+
+    my $author_id = $app->param('author_id');
+    my $blog_id = $app->param('blog_id');
+    my $role_id = $app->param('role_id');
+
+    my $this_user = $app->user;
+    if (!$this_user->is_superuser) {
+        if (!$blog_id || !$this_user->permissions($blog_id)->can_administer_blog) {
+            return $app->errtrans("Permission denied.")
+        }
+    }
+
+    my $type = $app->param('_type');
+    my ($grp, $user, $role);
+    if ($author_id) {
+        $user = MT::Author->load($author_id, { cached_ok => 1 });
+    }
+    if ($role_id) {
+        require MT::Role;
+        $role = MT::Role->load($role_id, { cached_ok => 1 });
+    }
+
+    my $hasher = sub {
+        my ($obj, $row) = @_;
+        $row->{label} = $row->{name};
+        $row->{description} = $row->{nickname} if exists $row->{nickname};
+    };
+
+    if ($app->param('search') || $app->param('json')) {
+        $app->listing({
+            Type => $type,
+            Code => $hasher,
+            Params => {
+                panel_type => $type,
+                list_noncron => 1,
+                panel_multi => 1,
+            },
+            Template => 'listing_panel.tmpl',
+        });
+    } else {
+        # traditional, full-screen listing
+        my $params = {
+            $author_id ? (
+                edit_author_name => $user->name,
+                edit_author_id => $user->id,
+            ) : (),
+            $role_id ? (
+                role_name => $role->name,
+                role_id => $role->id,
+            ) : (),
+        };
+
+        my @panels;
+        if (!$role_id) {
+            push @panels, 'role';
+        }
+        if (!$blog_id) {
+            push @panels, 'blog';
+        }
+        if (!$author_id) {
+            if ($type eq 'user') {
+                unshift @panels, 'author';
+            }
+        }
+
+        my $panel_info = {
+            'blog' => {
+                panel_title => $app->translate("Select Weblogs"),
+                panel_label => $app->translate("Weblog Name"),
+                items_prompt => $app->translate("Weblogs Selected"),
+                search_prompt => $app->translate("Type a weblog name to filter the choices below."),
+                panel_description => $app->translate("Description"),
+            },
+            'author' => {
+                panel_title => $app->translate("Select Users"),
+                panel_label => $app->translate("Username"),
+                items_prompt => $app->translate("Users Selected"),
+                search_prompt => $app->translate("Type a username to filter the choices below."),
+                panel_description => $app->translate("Name"),
+            },
+            'role' => {
+                panel_title => $app->translate("Select Roles"),
+                panel_label => $app->translate("Role Name"),
+                items_prompt => $app->translate("Roles Selected"),
+                search_prompt => $app->translate(""),
+                panel_description => $app->translate("Description"),
+            },
+        };
+
+        $params->{blog_id} = $blog_id;
+        $params->{dialog_title} = $app->translate("Create an Association");
+        $params->{panel_loop} = [];
+        $params->{panel_multi} = 1;
+
+        for (my $i = 0; $i <= $#panels; $i++) {
+            my $source = $panels[$i];
+            my $panel_params = {
+                panel_type => $source,
+                %{$panel_info->{$source}},
+                list_noncron => 1,
+                panel_last => $i == $#panels,
+                panel_first => $i == 0,
+                panel_number => $i + 1,
+                panel_total => $#panels + 1,
+                panel_has_steps => ($#panels == '0' ? 0 : 1), 
+                panel_searchable => ($source eq 'role' ? 0 : 1),
+            };
+
+            # Only show active users.
+            my $terms = {};
+            if ($source eq 'author') {
+                $terms->{status} = MT::Author::ACTIVE();
+            }
+
+            $app->listing({
+                NoHTML => 1,
+                Code => $hasher,
+                Type => $source,
+                Params => $panel_params,
+                Terms => $terms,
+                Args => { sort => 'name' },
+            });
+            if (!$panel_params->{object_loop} ||
+                ($panel_params->{object_loop} && @{$panel_params->{object_loop}} < 1)
+            ) {
+                $params->{"missing_$source"} = 1;
+                $params->{"missing_data"} = 1;
+            }
+            push @{$params->{panel_loop}}, $panel_params;
+        }
+        # save the arguments from whence we came...
+        $params->{return_args} = $app->return_args;
+        $app->build_page('dialog_grant_role.tmpl', $params);
+    }
+}
+
+sub grant_role {
+    my $app = shift;
+
+    my $user = $app->user;
+
+    my $blogs = $app->param('blog') || '';
+    my $authors = $app->param('author') || '';
+    my $roles = $app->param('role') || '';
+    my $author_id = $app->param('author_id');
+    my $blog_id = $app->param('blog_id');
+    my $role_id = $app->param('role_id');
+
+    my @blogs = split /,/, $blogs;
+    my @authors = split /,/, $authors;
+    my @roles = split /,/, $roles;
+
+    require MT::Blog;
+    require MT::Role;
+
+    foreach (@blogs) {
+        my $id = $_;
+        $id =~ s/\D//g;
+        $_ = MT::Blog->load($id, { cached_ok => 1 });
+    }
+    foreach (@roles) {
+        my $id = $_;
+        $id =~ s/\D//g;
+        $_ = MT::Role->load($id, { cached_ok => 1 });
+    }
+    foreach (@authors) {
+        my $id = $_;
+        $id =~ s/\D//g;
+        $_ = MT::Author->load($id, { cached_ok => 1 });
+    }
+
+    if ($author_id) {
+        push @authors, MT::Author->load($author_id, { cached_ok => 1 });
+    }
+    if ($blog_id) {
+        push @blogs, MT::Blog->load($blog_id, { cached_ok => 1 });
+    }
+    if ($role_id) {
+        push @roles, MT::Role->load($role_id, { cached_ok => 1 });
+    }
+
+    if (!$user->is_superuser) {
+        if ((scalar @blogs != 1)
+            || (!$user->permissions($blogs[0])->can_administer_blog)) {
+            return $app->errtrans("Permission denied.");
+        }
+    }
+
+    require MT::Association;
+
+    # TBD: handle case for associating system roles to users
+    foreach my $blog (@blogs) {
+        next unless ref $blog;
+        foreach my $u (@authors) {
+            next unless ref $u;
+            foreach my $role (@roles) {
+                next unless ref $role;
+                MT::Association->link($u => $role => $blog);
+            }
+        }
+    }
+
+    $app->add_return_arg(saved => 1);
+    $app->call_return;
+}
+
 1;
 __END__
 
@@ -9814,8 +10445,927 @@ MT::App::CMS
 
 =head1 SYNOPSIS
 
-The application-level callbacks of the C<MT::App::CMS> application are
-documented here.
+The I<MT::App::CMS> module is the primary application module for
+Movable Type. It is the administrative interface that is used to
+manage blogs, entries, comments, trackbacks, templates, etc.
+
+=head1 METHODS
+
+=head2 $app->init
+
+Initializes the application, defining the modes that are serviced and
+core callbacks and itemset actions.
+
+=head2 $app->init_request
+
+Initializes the application to handle the request. The CMS also does a
+schema version check to make certain the schema is up-to-date. If it is
+not, it forces a direct to the configured UpgradeScript application
+(typically mt-upgrade.cgi).
+
+=head2 $app->init_plugins
+
+Overrides I<MT::init_plugins> to call L<init_core_callbacks> before other
+plugins are run (since init_core_callbacks defines some remapped callback
+names plugins may rely on).
+
+=head2 $app->init_core_callbacks
+
+Registers a set of application callbacks that are unique to the CMS.
+
+=head2 $app->init_core_itemset_actions
+
+Registers the core application itemset actions.
+
+=head2 $app->add_itemset_action(\%param)
+
+Registers an itemset action with the CMS. The parameters accepted are:
+
+=over 4
+
+=item * type
+
+Specifies a data type to associate this action with. This is one of the types
+registered with the application (see the L<register_type> method). Standard
+types include: C<blog>, C<entry>, C<author>, C<comment>, C<ping>, C<template>,
+C<notification>, C<templatemap>, C<commenter>, C<banlist>, C<category>,
+C<ping_cat>, C<log>, C<tag>, C<role>, C<association>.
+
+=item * key
+
+A unique identifier for this action. If you are registering a plugin itemset
+action, please prefix all your action 'key' names with a common prefix that
+will be unique itself.
+
+=item * label
+
+The name to display for this action. It should be an active verb and should
+not be wrapped in a "translate" call. These actions are registered at the
+start of the application and at that time, the active user's language is
+unknown. This text will be translated at the time it is used.
+
+=item * continue_prompt
+
+For actions that require a form of confirmation, the continue_prompt
+parameter allows you to prompt the user before the action is invoked.
+This text should be in the form of a question, where an affirmative response
+will invoke the action. The text of this parameter should not be wrapped in a
+"translate" call. These actions are registered at the start of the application
+and at that time, the active user's language is unknown. This text will be
+translated at the time it is used.
+
+=item * input_label
+
+For actions that require textual input, this parameter can be given to
+prompt the user to input something into a text field. This value is then
+communicated to the server in the 'itemset_action_input' parameter.
+
+=item * code
+
+This is a coderef that is invoked when the action is taken. The coderef
+is passed the application instance as the only parameter.
+
+=item * condition
+
+This is a coderef that is used to condition the inclusion of the itemset
+action. This coderef is invoked at the time the list of actions are gathered
+for display, so the current user and other contextual information is available
+for the condition routine to use to determine if the action can be displayed
+or not. The active user can be retrieved using the $app-E<gt>user method
+and the active mode is available from $app-E<gt>mode. The condition routine
+should return 1 to include the action or 0 or undef to exclude it.
+
+=item * min
+
+This parameter lets you specify the minimum number of items that must be
+selected on the listing page to allow the action to be invoked. For instance,
+if your action requires 2 and only 2 items to be selected, you can specify a
+'min' of 2 and a 'max' of 2.
+
+=item * max
+
+This parameter lets you specify the maximum number of items that must be
+selected on the listing page to allow the action to be invoked. For instance,
+if your action only operates on single items, you could specify a 'max'
+of 1 to enforce this rule.
+
+=back
+
+Itemset actions are rendered using the itemset_action_widget.tmpl
+application template.
+
+=head2 $app->apply_log_filter(\%param)
+
+Returns terms suitable for filtering L<MT::Log> based on the parameters
+given. 'filter', 'filter_val' and 'blog_id' are recognized parameters.
+'filter' may be one of 'level' or 'class'. Valid 'filter_val' values for
+a 'filter' of 'level' is any number between 1 and 2^16, being a bitmask.
+Valid 'filter_val' values for a 'filter' of 'class' include any of the
+register L<MT::Log> class names. See L<MT::Log> for further information.
+
+=head2 $app->build_author_table(%args)
+
+=head2 $app->build_blog_table(%args)
+
+=head2 $app->build_comment_table(%args)
+
+=head2 $app->build_commenter_table(%args)
+
+=head2 $app->build_entry_table(%args)
+
+=head2 $app->build_junk_table(%args)
+
+=head2 $app->build_log_table(%args)
+
+=head2 $app->build_ping_table(%args)
+
+=head2 $app->build_tag_table(%args)
+
+=head2 $app->build_template_table(%args)
+
+Each of these routines have a similar interface and function. They
+load data for the E<lt>typeE<gt>_table.tmpl application template.
+Parameters for these routine are:
+
+=over 4
+
+=item * param
+
+The parameter hash to populate. This is eventually applied to
+the application template.
+
+=item * load_args
+
+An array reference containing the terms and arguments that are to be passed
+on to Class-E<gt>load_iter method to load the data.
+
+=item * iter
+
+An existing iterator that can be used to load the records.
+
+=item * items
+
+An array of objects used to populate the listing.
+
+=back
+
+Only one of these arguments is allowed: param, load_args, iter. Upon return,
+the hashref provided in the 'param' element is populated with the data
+necessary to build the template.
+
+These routines are called by their listing modes (where a 'load_args'
+parameter is given) and also from the search_replace mode when displaying
+search results (where it passes an 'items' element).
+
+=head2 $app->build_page($tmpl_file, \%param)
+
+Overridden method for L<MT::App::build_page> that adds additional
+template parameters that are common to CMS application templates.
+
+=head2 $app->build_plugin_table(%opt)
+
+Populates template parameters necessary for rendering the list_plugin.tmpl
+for the blog-centric and system-overview views.
+
+=head2 $app->core_itemset_actions($type, @param)
+
+Returns an array reference of core itemset actions appropriate for the
+C<$type> requested. Any @param data given here is passed through to
+the itemset action's "condition" coderef, if registered.
+
+=head2 $app->do_search_replace
+
+Utility method used to do the physical search and replace operation
+invoked with the 'search_replace' application mode. This method is also
+used by the 'listing' method when a 'search' parameter is sent in the
+request.
+
+=head2 $app->get_newsbox_content
+
+Handles the task of retrieving the "Movable Type News" from sixapart.com.
+This request is done at most once per day since the data is cached
+after retrieval. This operation can be disabled by setting the
+C<NewsboxURL> to "disable".
+
+=head2 $app->is_authorized
+
+Determines if the active user is authorized to access the blog being
+requested. If a blog-level request is active, this method sets the
+$app-E<gt>{perms} member which is used to query active permissions for
+the blog.
+
+=head2 $app->itemset_actions($which, $type, @param)
+
+Utility method to handle the selection of itemset actions for a given
+C<$type>. Any @param data given here is passed through to the itemset
+action's "condition" coderef, if registered.
+
+=head2 $app->languages_list($lang)
+
+Returns a list of supported languages in a format suitable for the
+edit_author.tmpl, edit_profile.tmpl and cfg_system_general.tmpl application
+templates. The C<$lang> parameter pre-selects that language in the
+list.
+
+=head2 $app->list_tags_for(%param)
+
+Generates a listing screen for L<MT::Tag> objects that are attached
+to a given 'taggable' package. The parameters for this method are:
+
+=over 4
+
+=item * Package
+
+The Perl package name of a class that supports the L<MT::Taggable>
+interface that the listing is for.
+
+=item * TagObjectType
+
+The registered type (see the 'register_type' method) of data these
+tags are associated with.
+
+=item * TagObjectTypePlural
+
+The plural form of the associated data type.
+
+=back
+
+To list tags for the L<MT::Entry> package, you would use this:
+
+    $app->list_tags_for(
+        Package => 'MT::Entry',
+        TagObjectType => 'entry',
+        TagObjectTypePlural => $app->translate("entries")
+    );
+
+This method uses the list_tags.tmpl application template to
+render the tag listing view.
+
+=head2 $app->load_default_entry_prefs
+
+=head2 $app->load_entry_prefs
+
+=head2 $app->load_itemset_actions
+
+=head2 $app->list_pref($type)
+
+Returns a hashref of listing preferences suitable for the pager.tmpl
+application template. It will also update new listing preference settings
+if it sees the current request is posting them.
+
+=head2 $app->listing(\%param)
+
+This is a method for generating a typical listing screen. It is configured
+through the parameter hash passed to it. The accepted parameters include:
+
+=over 4
+
+=item * Type
+
+Specifies a data type to be processed. This is one of the types registered
+with the application (see the L<register_type> method). Standard types
+include: C<blog>, C<entry>, C<author>, C<comment>, C<ping>, C<template>,
+C<notification>, C<templatemap>, C<commenter>, C<banlist>, C<category>,
+C<ping_cat>, C<log>, C<tag>, C<role>, C<association>.
+
+The Type parameter provides a reference to the actual Perl package to be
+used for loading the data for the listing. L<MT::App::CMS> uses it's
+C<_load_driver_for> method to retrieve the package name and load the
+module if necessary. The module provided should be a MT::Object descendant.
+
+=item * Template
+
+The application template filename to be used to generate the page.
+If unspecified, the default is named after the 'Type' parameter:
+"list_E<lt>typeE<gt>.tmpl". Note that this parameter is not used when
+the 'NoHTML' parameter is specified.
+
+=item * Params
+
+A hashref of parameters that will be passed to the application template
+without further modification.
+
+=item * Code
+
+A coderef that is invoked for each row data displayed. This routine is passed
+two parameters: the object being processed and a hashref of parameter data
+for that row. This is typically used to further customize the row-level
+parameter data before the application template is processed.
+
+=item * Terms
+
+This is a hashref that is passed to the C<load_iter> method of the package
+that is providing the data for the listing. The Terms parameter provides a
+way of filtering the data retrieved. Refer to the L<MT::Object> documentation
+of the C<load> and C<load_iter> methods for more information about this
+parameter.
+
+=item * Args
+
+This is a hashref that is passed to the C<load_iter> method of the package
+that is providing the data for the listing. The Args parameter can be used
+to specify a sort order, a join operation and other operations that are
+applied upon loading the data for the listing. Refer to the L<MT::Object>
+documentation of the C<load> and C<load_iter> methods for more information
+about this parameter.
+
+=item * Iterator
+
+The default value for this parameter is 'load_iter'. This is a standard
+method for all L<MT::Object> type packages. So, for instance, if your 'Type'
+parameter is 'author', the package that will be used is 'MT::Author',
+so the listing method will call MT::Author-E<gt>load_iter to fetch the data.
+But the L<MT::Author> package provides some convenient iterators for fetching
+other things that are related to the author, such as roles they are assigned.
+So, for invoking the 'role_iter' iterator method, you'd specify 'role_iter' as
+the value for the Iterator parameter.
+
+=item * NoHTML
+
+Specify this parameter (with a true value, such as '1') to cause the
+listing method to simply return the hashref of data it would have given
+to the application template to return.
+
+=back
+
+The listing method is also aware of many of the query parameters common to
+the Movable Type CMS listings. It will automatically recognize the following
+query parameters:
+
+=over 4
+
+=item * offset
+
+A number specifying the number of rows to skip when displaying the listing.
+
+=item * search
+
+A string to use for a search query of the data displayed. This parameter
+is only useful for data types supported by the CMS search function: currently,
+C<blog>, C<author>, C<entry>, C<comment>, C<template>, C<ping>.
+
+=item * filter, filter_val
+
+Used to filter the listing for a particular value. This will supplement
+the Terms parameter given to the listing method, adding a term for
+C<filter>=C<filter_val>.
+
+=back
+
+The listing method is also aware of the list preferences saved for the
+'Type' identified.
+
+=head3 Examples
+
+This will produce a listing page (using the "list_entry.tmpl" application
+template) of all entries created by the currently logged-in user.
+
+    return $app->listing({
+        Type => 'entry',
+        Terms => {
+            author_id => $app->user->id,
+        },
+    });
+
+
+=head2 $app->load_template_prefs
+
+Returns as hashref of the template edit screen preferences for the active
+user.
+
+=head2 $app->make_blog_list(\@blogs)
+
+Takes an array of blogs and returns an array reference of data that is
+suitable for the list_blog.tmpl and system_list_blog.tmpl application
+templates.
+
+=head2 $app->object_edit_uri($type, $id)
+
+A convenience method for returning an application URI that can be used
+to direct the user to an edit operation for the C<$type> and object C<$id>
+given. This method assumes the type given is serviced through the 'view'
+application mode.
+
+=head2 $app->plugin_itemset_actions($type, @param)
+
+Returns an array reference of plugin itemset actions appropriate for the
+C<$type> requested. Any @param data given here is passed through to
+the itemset action's "condition" coderef, if registered.
+
+=head2 $app->pre_run
+
+Handles the menial task of localizing the stock "Convert Line Breaks" text
+filter for the current user.
+
+=head2 $app->update_dynamicity($blog)
+
+When saving the weblog's configuration settings regarding dynamic publishing,
+this method is called to update the blog's templates to match the dynamic
+configuration (if specifying no dynamic publishing, all templates are
+configured to be statically published, when specifying 'dynamic archives',
+archive templates are configured to be dynamically published and all
+other templates are set to static).
+
+Also, the '.htaccess' file in the blog's root path is updated to include
+rules that invoke the dynamic publishing engine. If this file cannot be
+written or updated, the user is notified of this problem.
+
+=head2 $app->user_blog_prefs
+
+Returns a hashref of the current user's blog preferences (such as their
+tag delimiter choice).
+
+=head2 $app->user_can_admin_commenters
+
+A utility method used by commenter-based itemset actions to condition
+their display based on whether or not the active user has permissions
+to administer commenters for the current blog.
+
+=head2 $app->validate_magic
+
+Verifies the 'magic_token' POST parameter that is placed in forms that
+are submitted to the application. This token is used as a safety device
+to protect against CSRF (cross-site request forgery) style attacks.
+
+=head1 MODE HANDLERS
+
+The CMS mode handlers typically do a permission test to verify the user
+has permission to invoke the mode, then process the request and return
+the response using an application template.
+
+=over 4
+
+=item * add_tags_to_entries
+
+Applies a set of tags to one or more entries.
+
+=item * approve_item
+
+Approves a comment or trackback for publication.
+
+=item * ban_commenter
+
+Bans a commenter for a particular blog.
+
+=item * ban_commenter_by_comment
+
+Bans commenters on a blog based on a selection of one or more comments.
+
+=item * bookmarklets
+
+Displays the QuickPost bookmarklet creation screen.
+
+=item * category_add
+
+Displays the popup window (used on the entry composition screen) for
+adding a new category.
+
+=item * category_do_add
+
+Processes the creation of a new category and returns the JavaScript that
+adds the category to the category drop down list on the entry composition
+screen.
+
+=item * cc_return
+
+Handles the Creative Commons license data returned from their license
+selection process.
+
+=item * cfg_archives
+
+Handler for the Weblog Archives configuration screen.
+
+=item * cfg_archives_do_add
+
+Handles the creation of a new template archive map.
+
+=item * cfg_archives_save
+
+Invoked from the save button of the Weblog Archives configuration screen.
+
+=item * cfg_blog
+
+Handles the display of the general settings for the weblog.
+
+=item * cfg_entries
+
+Handles the display of the "New Entry Defaults" tab of the weblog settings
+screen.
+
+=item * cfg_feedback
+
+Handles the display of the "Feedback" tab of the weblog setting screen.
+
+=item * cfg_plugins
+
+Handles the display of the "Plugins" tab of the weblog setting screen.
+
+=item * cfg_prefs
+
+Handles the display of the "Customize Entry display preferences" screen.
+
+=item * cfg_system_feedback
+
+Handles the display of the "System-Wide Feedback Settings" screen.
+
+=item * cfg_system_general
+
+Handles the display of the "System-Wide: General Settings" screen.
+
+=item * delete
+
+Handles the deletion of registered data types.
+
+=item * delete_confirm
+
+Deprecated routine to confirm the deletion of an object.
+
+=item * dialog_grant_role
+
+Handles display of the modal dialog for granting roles.
+
+=item * disable_object
+
+Handles the request to disable a user.
+
+=item * do_import
+
+Handles the request to process entry import file(s).
+
+=item * draft_entries
+
+Handles the request to unpublish existing entries.
+
+=item * edit_object
+
+Handles the display of editing registered data types.
+
+=item * edit_placements
+
+Deprecated routine used to edit secondary categories for an entry.
+
+=item * edit_role
+
+Handles the display of editing a particular role.
+
+=item * empty_junk
+
+Handles the request to empty the junk folder for comments or trackbacks.
+
+=item * enable_object
+
+Handles the request to enable a user.
+
+=item * export
+
+Handles the request to export the data for a weblog.
+
+=item * export_authors
+
+Handles the request to export the MT authors in a CSV format.
+
+=item * export_log
+
+Handles the request to export activity log data in a CSV format.
+
+=item * grant_role
+
+Handles the request from the "Grant Role" modal dialog to grant a role
+to a user.
+
+=item * handle_junk
+
+Handles the request to junk a given comment or trackback.
+
+=item * handshake
+
+Handles the response from TypeKey for assigning the TypeKey token to
+a particular blog.
+
+=item * itemset_action
+
+Generic application mode handler used by all itemset actions. This handler
+will locate the actual coderef to be run to service the itemset action and
+if found, calls it.
+
+=item * js_tag_check
+
+Ajax-style handler for testing whether a particular tag name exists or not.
+
+=item * js_tag_list
+
+Ajax-style handler for returning the tags that exist on a particular blog.
+
+=item * list_associations
+
+Handler for displaying the associations listing (either all associations,
+associations for a particular user, role or blog).
+
+=item * list_authors
+
+Handler for displaying a list of authors.
+
+=item * list_blogs
+
+Handler for the front screen of MT, where the user's associated blogs
+are listed.
+
+=item * list_categories
+
+Handler for displaying the categories for a particular blog.
+
+=item * list_commenters
+
+Handler for displaying a list of authenticated commenters for a particular
+blog.
+
+=item * list_comments
+
+Handler for displaying a list of comments (either blog-level or system-wide).
+
+=item * list_entries
+
+Handler for displaying a list of entries (either blog-level or system-wide).
+
+=item * list_objects
+
+Handler for displaying the installed templates for a particular blog (this
+used to be a routine called for most listings, but they have been broken out
+into separate handlers).
+
+=item * list_pings
+
+Handler for displaying a list of trackbacks (either blog-level or
+system-wide).
+
+=item * list_plugins
+
+Handler for displaying all installed plugins (the system-overview view of
+plugins).
+
+=item * list_roles
+
+Handler for displaying the role listing.
+
+=item * list_tags
+
+Handler for displaying a list of tags (either blog-level or system-wide).
+
+=item * logout
+
+Handler for logging the active user out of the application, ending their
+session.
+
+=item * make_bm_link
+
+Handler for displaying the QuickPost bookmarklet that the user has created.
+
+The parameters that control which elements of the form are displayed are:
+
+=item * move_category
+
+Handles the request for moving a category from one parent to another (or
+to the top level).
+
+=item * not_junk
+
+Handler for approving previously junked comments or TrackBack objects.
+
+=item * pinged_urls
+
+Handler for displaying the list of URLs that have been pinged for
+a particular entry.
+
+=item * plugin_control
+
+Handler for the request to enable/disable a particular plugin or all
+plugins.
+
+=item * preview_entry
+
+Handler for displaying an entry preview (invoked from the entry
+composition screen).
+
+=item * publish_entries
+
+Itemset handler for the request to publish a selection of entries.
+
+=item * rebuild_confirm
+
+Handler for displaying the list of rebuild options in the rebuild site
+popup window.
+
+=item * rebuild_new_phase
+
+Displays the "rebuilding.tmpl" page and invokes a "rebuild_phase"
+mode request to process the rebuild of a set of entries/templates.
+
+=item * rebuild_pages
+
+Primary rebuild handler for the rebuild site process.
+
+=item * rebuild_phase
+
+Handler for rebuilding entries/templates selected from the listings. Rebuilds
+the requested set of items and returns to the originally viewed listing.
+
+=item * recover_password
+
+Handler for displaying the password recovery screen.
+
+=item * recover_passwords
+
+Handler for resetting the passwords for one or more users.
+
+=item * recover_profile_password
+
+Handler for the password reset request invoked by a system administrator
+from the user profile screen.
+
+=item * reg_bm_js
+
+Handler for returning the JavaScript code for displaying the QuickPost
+composition page for Internet Explorer users that have installed the
+QuickPost Windows registry file.
+
+=item * reg_file
+
+Handler that returns the "mt.reg" for enabling a conext-menu QuickPost item
+that is suitable for Internet Explorer.
+
+=item * remove_tags_from_entries
+
+Itemset handler for removing a list of tags from one or more entries.
+
+=item * rename_tag
+
+Handler for renaming a I<MT::Tag>, or merging with another tag if one
+exists by that name.
+
+=item * reset_blog_templates
+
+Handler for resetting a given blogs templates back to their default
+configuration.
+
+=item * reset_log
+
+Handler for resetting the system-wide activity log.
+
+=item * reset_password
+
+=item * reset_plugin_config
+
+=item * save_category
+
+=item * save_cfg_system_feedback
+
+=item * save_cfg_system_general
+
+=item * save_commenter_perm
+
+=item * save_entries
+
+=item * save_entry
+
+=item * save_entry_prefs
+
+=item * save_object
+
+=item * save_placements
+
+=item * save_plugin_config
+
+=item * save_role
+
+=item * search_replace
+
+=item * send_notify
+
+=item * send_pings
+
+=item * set_item_visible
+
+=item * set_object_status
+
+=item * show_admin
+
+=item * show_entry_prefs
+
+=item * show_menu
+
+=item * show_status
+
+=item * show_upload_html
+
+=item * start_import
+
+=item * start_rebuild_pages
+
+=item * start_recover
+
+=item * start_upload
+
+=item * start_upload_entry
+
+=item * system_list_blogs
+
+Handler for the display of the system-wide list of blogs.
+
+=item * trust_commenter
+
+=item * trust_commenter_by_comment
+
+=item * unapprove_item
+
+=item * unban_commenter
+
+=item * unban_commenter_by_comment
+
+=item * untrust_commenter
+
+=item * untrust_commenter_by_comment
+
+=item * update_list_prefs
+
+Handler for saving changes to the user's list preferences.
+
+=item * update_welcome_message
+
+Handler for saving the change to the blog's welcome message.
+
+=item * upgrade
+
+Transient mode handler used to redirect user to the mt-upgrade script
+for either installation of upgrade of their database.
+
+=item * upload_file
+
+=item * view_log
+
+Handler for viewing the activity log (either blog-level or system-wide).
+
+=back
+
+=head1 UTILITY FUNCTIONS
+
+=head2 listify(\@array)
+
+Utility function that takes an array reference of strings and returns
+an array reference of hashes. So this:
+
+    listify(['a','b','c'])
+
+yields this:
+
+    [{name => 'a'},{name => 'b'},{name => 'c'}]
+
+This is handy for presenting a simple list of things in an HTML::Template
+template.
+
+=head2 $app->make_feed_link($view, $params)
+
+Utility method for constructing an Activity Feed link based on the current
+view. This routine requires the user have an API password assigned to
+their profile.
+
+=head2 $app->map_comment_to_commenter(\@comments)
+
+Utility method for retrieving the unique set of commenter_id and blog_id
+values for the set of comments given. The return value from this method
+is an list of array references that each have the commenter_id and blog_id
+in them.
+
+=head2 $app->ping_continuation
+
+Utility method that returns a response to show the "Pinging..." status
+page (pinging.tmpl application template).
+
+=head2 $app->rebuild_these(\%rebuild_set, %options)
+
+Utility method for rebuilding a set of entries. If C<$options{how}> is
+passed and it is set to the C<NEW_PHASE> constant, the handler returns
+the 'rebuilding.tmpl' application template to kick off the actual
+rebuild operation with a separate request. Otherwise, the entries
+are rebuilt immediately.
+
+=head2 $app->register_type($type, $package)
+
+Registers a new "API" type that goes into the C<%API> hash. This registry
+is used by the C<_load_driver_for> method and other generic handlers
+that expect a '_type' parameter to be passed in the request.
+
+=head2 RegistrationAffectsArchives($blog_id, $archive_type)
+
+Private utility routine to test if a particular archive type is affected
+by changes to commenter registration settings. Returns true if particular
+tags are in use (namely, MTIfRegistrationRequired,
+MTIfRegistrationNotRequired, MTIfRegistrationAllowed).
+
+=head2 $app->update_entry_status($new_status, @id_list)
+
+Called by the draft_entries and publish_entries handlers to actually
+apply the updates to the entries identified and republish pages that
+are necessary.
 
 =head1 CUSTOM REBUILD OPTIONS
 
@@ -9823,7 +11373,7 @@ The pop-up rebuild dialog that you see in Movable Type has a drop-down
 list of rebuild options. This list can be populated with custom options
 provided through a plugin. For example, a plugin might want to provide
 the user with an option to rebuild a template identified for creating
-author archives.
+user archives.
 
 =head2 $app->add_rebuild_option(\%param)
 
@@ -9851,11 +11401,14 @@ that are unique to the active user or weblog.
 
 =head1 CALLBACKS
 
+The application-level callbacks of the C<MT::App::CMS> application are
+documented here.
+
 =over 4
 
 =item RebuildOptions
 
-    callback($eh, $app, \@options)
+    callback($cb, $app, \@options)
 
 The RebuildOptions callback provides control over an array of additional
 custom rebuild options that are displayed in MT's rebuild window. The array
@@ -9884,7 +11437,7 @@ Called when an entry has been saved, after all of its constituent
 parts (for example, category placements) have been saved. An 
 CMSPostEntrySave callback would have the following signature:
 
-    sub cms_post_entry_save($eh, $app, $entry, $original)
+    sub cms_post_entry_save($cb, $app, $entry, $original)
     {
         ...
     }
@@ -9898,8 +11451,8 @@ aliases to C<CMSPostSave.entry>.
 
 Every object "type" has a suite of callbacks defined for that type, as
 below. Each item in the list below forms a callback name by appending
-the object "type" after an underscore,
-e.g. C<CMSViewPermissionFilter_blog>, C<CMSPostSave_template>,
+the object "type" after a period,
+e.g. C<CMSViewPermissionFilter.blog>, C<CMSPostSave.template>,
 etc. The "type" values come from the same space as passed to the CMS
 app's C<_type> query parameter. If you're not sure what C<_type>
 corresponds to a certain MT::Object subclass, consult the following list:
@@ -9928,6 +11481,10 @@ corresponds to a certain MT::Object subclass, consult the following list:
 
 =item ping_cat         => MT::TBPing
 
+=item role             => MT::Role
+
+=item association      => MT::Association
+
 =back
 
 Callbacks that apply to these object types are as follows:
@@ -9938,7 +11495,7 @@ Callbacks that apply to these object types are as follows:
     
 Calling convention is:
 
-    callback($eh, $app, $id, $obj_promise)
+    callback($cb, $app, $id, $obj_promise)
 
 Where C<$id> is the ID of an object, if it already exists, or
 C<undef> if the user will be creating a new object of this type.
@@ -9952,14 +11509,13 @@ the user that s/he doesn't have permission to view the object.
 
 =item CMSDeletePermissionFilter
 
-    callback($eh, $app, $obj)
-
+    callback($cb, $app, $obj)
 
 =item CMSSavePermissionFilter
     
 Calling convention is:
 
-    callback($eh, $app, $id)
+    callback($cb, $app, $id)
     
 Where C<$id> is the ID of the object, if it already exists, or
 C<undef> if it is a new object with this request.
@@ -9979,10 +11535,10 @@ This callback gives you the chance to "decline" for reasons other than lack of p
 
 The routine is called as follows:
     
-    callback($eh, $app)
+    callback($cb, $app)
 
 Returning a false value will decline the request. It is advisibable to
-return an error via the C<$eh> object in order to signal to the user
+return an error via the C<$cb> object in order to signal to the user
 what went wrong.
 
 Note that the new object has not been constructed yet. The operation
@@ -9994,7 +11550,7 @@ database.
 
 =item CMSPreSave
 
-    callback($eh, $app, $obj, $original)
+    callback($cb, $app, $obj, $original)
 
 C<$obj> and C<$original> hold the object which is about to be saved,
 and the object as it was when this request began, respectively. This
@@ -10006,7 +11562,7 @@ on that class.
 
 =item CMSPostSave
 
-    callback($eh, $app, $obj, $original)
+    callback($cb, $app, $obj, $original)
 
 C<$obj> and C<$original> hold the object which is about to be saved,
 and the object as it was when this request began, respectively. When
@@ -10016,7 +11572,7 @@ follow-up actions, such as notification and static-page rebuilds.
 
 =item CMSPostDelete
 
-    callback($eh, $app, $obj)
+    callback($cb, $app, $obj)
 
 C<$obj> holds the object that has just been removed from the database.
 This callback is useful when removing data that is associated with
@@ -10024,7 +11580,7 @@ the object being removed.
 
 =item CMSUploadFile
 
-    callback($eh, %params)
+    callback($cb, %params)
 
 This callback is invoked for each file the user uploads to the weblog.
 It is called for each file, regardless of type. If the user uploads an

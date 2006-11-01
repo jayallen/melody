@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 'lib';
-use Test::More tests => 91;
+use Test::More tests => 82;
 use_ok 'MT';
 use_ok 'MT::App';
 use_ok 'MT::App::ActivityFeeds';

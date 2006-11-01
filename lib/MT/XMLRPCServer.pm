@@ -114,7 +114,8 @@ sub _login {
     $pass = encode_text($pass, 'utf-8', $enc);
     require MT::Author;
     my $author = MT::Author->load({ name => $user, type => 1 }) or return;
-    die _fault(MT->translate("No web services password assigned.  Please see your author profile to set it.")) unless $author->api_password;
+    die _fault(MT->translate("No web services password assigned.  Please see your user profile to set it.")) unless $author->api_password;
+    die _fault(MT->translate("Failed login attempt by disabled user '[_1]'")) unless $author->is_active;
     my $auth = $author->api_password eq $pass;
     $auth ||= crypt($pass, $author->api_password) eq $author->api_password;
     return unless $auth;
@@ -525,7 +526,7 @@ sub getCategoryList {
     my $mt = MT::XMLRPCServer::Util::mt_new();   ## Will die if MT->new fails.
     my($author, $perms) = $class->_login($user, $pass, $blog_id);
     die _fault(MT->translate("Invalid login")) unless $author;
-    die _fault(MT->translate("Author does not have privileges"))
+    die _fault(MT->translate("User does not have privileges"))
         unless $perms && $perms->can_post;
     require MT::Category;
     my $iter = MT::Category->load_iter({ blog_id => $blog_id });
@@ -545,7 +546,7 @@ sub getTagList {
     my $mt = MT::XMLRPCServer::Util::mt_new();   ## Will die if MT->new fails.
     my($author, $perms) = $class->_login($user, $pass, $blog_id);
     die _fault(MT->translate("Invalid login")) unless $author;
-    die _fault(MT->translate("Author does not have privileges"))
+    die _fault(MT->translate("User does not have privileges"))
         unless $perms && $perms->can_post;
     require MT::Tag;
     require MT::ObjectTag;
@@ -847,7 +848,9 @@ This callback is invoked for each file the user uploads to the weblog.
 This callback is similar to the CMSUploadFile callback found in
 C<MT::App::CMS>.
 
-=head3 Parameters
+=back
+
+=head2 Parameters
 
 =over 4
 
@@ -866,8 +869,6 @@ For this callback, this value is currently always 'file'.
 =item Blog
 
 The C<MT::Blog> object associated with the newly uploaded file.
-
-=back
 
 =back
 

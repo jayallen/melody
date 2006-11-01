@@ -45,3 +45,14 @@ sub new_with_entry {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::Atom
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -300,5 +300,39 @@ class MTViewer extends Smarty {
         smarty_core_load_plugins($params, $this);
         return true;
     }
+
+    function register_tag_handler($tag, $fn, $type) {
+        if (substr($tag, 0, 2) != 'MT') {
+            $tag = 'MT' . $tag;
+        }
+        if ($type == 'block')
+            $this->register_block($tag, $fn);
+        elseif ($type == 'function')
+            $this->register_function($tag, $fn);
+        $old_handler = $this->_handlers[$tag];
+        $this->_handlers[$tag] = array( $fn, $type );
+        if ($old_handler) {
+            $fn = $old_handler[0];
+        } else {
+            if ($type == 'block')
+                $fn = create_function('$args, $content, &$ctx, &$repeat', 'if (!isset($content)) @require_once "block.' . $tag . '.php"; if (function_exists("smarty_block_' . $tag . '")) { return smarty_block_' . $tag . '($args, $content, $ctx, $repeat); } $repeat = false; return "";');
+            elseif ($type == 'function') {
+                $fn = create_function('$args, &$ctx', '@require_once "function.' . $tag . '.php"; if (function_exists("smarty_function_' . $tag . '")) { return smarty_function_' . $tag . '($args, $ctx); } return "";');
+            }
+        }
+        return $fn;
+    }
+    function add_container_tag($tag, $fn = null) {
+        return $this->register_tag_handler($tag, $fn, 'block');
+    }
+    function add_tag($tag, $fn) {
+        return $this->register_tag_handler($tag, $fn, 'function');
+    }
+    function handler_for($tag) {
+        if (isset($this->_handlers[$tag]))
+            return $this->_handlers[$tag];
+        else
+            return null;
+    }
 }
 ?>

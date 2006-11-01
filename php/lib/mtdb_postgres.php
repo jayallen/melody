@@ -35,11 +35,13 @@ class MTDatabase_postgres extends MTDatabaseBase {
 
     function entries_recently_commented_on_sql($subsql) {
         $sql = "
-            select distinct on (entry_id)
-                subs.*, comment_created_on
-            from ($subsql) as subs
-                inner join mt_comment on comment_entry_id = entry_id and comment_visible = 1
-            order by entry_id desc";
+            select main.* from (
+                select distinct on (entry_id)
+                    subs.*, comment_created_on
+                from ($subsql) as subs
+                    inner join mt_comment on comment_entry_id = entry_id and comment_visible = 1
+                order by entry_id desc
+            ) as main order by comment_created_on desc";
 
         return $sql;
     }
