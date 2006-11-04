@@ -595,7 +595,14 @@ sub _migrate_permission_to_role {
         $perm->remove;
         return;
     }
+    # Don't bother with non-AUTHOR types
+    return unless $user->type == 1;
+
     my $role_mask = $perm->role_mask;
+
+    # '0' permission, not used for permissions, just prefs
+    return unless $role_mask;
+
     my $name = MT->translate($perm_role_names->{$role_mask});
     $name ||= MT->translate("Custom ([_1])", $role_mask);
     require MT::Role;
