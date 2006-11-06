@@ -2782,7 +2782,7 @@ use vars qw( @ISA %Lexicon );
     'Open a Help Ticket' => 'Open a Help Ticket',
     'Paid License Required' => 'Paid License Required',
     'http://www.sixapart.com/pronet/plugins/' => 'http://www.sixapart.jp/movabletype/plugins/',
-    'https://secure.sixapart.com/t/help?__mode=kb' => 'http://www.sixapart.jp/support/faq_mt_technical.html',
+    'http://www.sixapart.com/movabletype/kb/' => 'http://www.sixapart.jp/support/faq_mt_technical.html',
     'Knowledge Base' => '技術的なよくある質問 (FAQ)',
     'http://www.sixapart.com/pronet/' => 'http://www.sixapart.com/pronet/',
     'Professional Network' => 'ProNet (英語)',

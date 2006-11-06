@@ -1135,7 +1135,7 @@ sub encoding { 'utf-8' }
     'Paid License Required' => 'Se necesita una licencia de pago',
     'http://www.sixapart.com/movabletype/' => 'http://www.sixapart.com/movabletype/', # Translate - Previous (5)
     'http://www.sixapart.com/pronet/plugins/' => 'http://www.sixapart.com/pronet/plugins/', # Translate - Previous (6)
-    'https://secure.sixapart.com/t/help?__mode=kb' => 'https://secure.sixapart.com/t/help?__mode=kb', # Translate - Previous (8)
+    'http://www.sixapart.com/movabletype/kb/' => 'http://www.sixapart.com/movabletype/kb/', # Translate - Previous (8)
     'Knowledge Base' => 'Base de conocimiento',
     'http://www.sixapart.com/pronet/' => 'http://www.sixapart.com/pronet/', # Translate - Previous (5)
     'Professional Network' => 'Professional Network', # Translate - Previous (2)

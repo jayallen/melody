@@ -1138,7 +1138,7 @@ Opzoekingen houden IP adressen van oorsprong en hyperlinks in de gaten van alle 
     'Paid License Required' => 'Betaalde licentie vereist',
     'http://www.sixapart.com/movabletype/' => 'http://www.movabletype.org/sitenl',
     'http://www.sixapart.com/pronet/plugins/' => 'http://www.sixapart.com/pronet/plugins/', # Translate - Previous (6)
-    'https://secure.sixapart.com/t/help?__mode=kb' => 'https://secure.sixapart.com/t/help?__mode=kb&portal=nl',
+    'http://www.sixapart.com/movabletype/kb/' => 'http://www.sixapart.com/movabletype/kb/',
     'Knowledge Base' => 'Kennisdatabank',
     'http://www.sixapart.com/pronet/' => 'http://www.sixapart.com/pronet/', # Translate - Previous (5)
     'Professional Network' => 'Professional Network', # Translate - Previous (2)
