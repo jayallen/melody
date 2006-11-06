@@ -456,9 +456,12 @@ sub seed {
         $param{config} = $app->serialize_config(%param);
     }
 
-    $param{static_web_path} = $app->param->param('set_static_uri_to');
-    $param{static_uri} = $app->param->param('set_static_uri_to');
-    $param{cgi_path} = $app->cgipath;
+    require URI;
+    my $uri = URI->new($app->cgipath);
+    $param{cgi_path} = $uri->path;
+    $uri = URI->new($app->param->param('set_static_uri_to'));
+    $param{static_web_path} = $uri->path;
+    $param{static_uri} = $uri->path;
 
     # unserialize database configuration
     if (my $dbtype = $param{dbtype}) {
