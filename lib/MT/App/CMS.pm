@@ -4739,35 +4739,49 @@ sub save_object {
     }
 
     if ($type eq 'author') {
-        ## If we are saving a user profile, we need to do some
+        ## If we are saving an author profile, we need to do some
         ## password maintenance. First make sure that the two
         ## passwords match...
-        my $editing_other_profile;
-        if ($id && ($author->id != $id) && ($author->is_superuser)) {
-            $editing_other_profile = 1;
-        }
         my %param;
-        unless ($editing_other_profile) {
-            require MT::Auth;
-            my $error = MT::Auth->sanity_check($app);
-            if ($error) {
-                $param{error} = $error;
-                require MT::Log;
-                $app->log({
-                    message => $error,
-                    level => MT::Log::ERROR(),
-                    class => 'system',
-                    category => 'save_author_profile'
-                });
-            }
-            if ($param{error}) {
-                $param{return_args} = $app->param('return_args');
-                my $qual = $id ? '' : 'author_state_';
-                for my $f (qw( name nickname email url state )) {
-                    $param{$qual . $f} = $q->param($f);
+        if ($q->param('pass') ne $q->param('pass_verify')) {
+            $param{error} = $app->translate('Passwords do not match.');
+        } else {
+            if ($q->param('pass') && $id) {
+                my $auth = MT::Author->load($id, {cached_ok=>1});
+                if (!$auth->is_valid_password($q->param('old_pass'))) {
+                    $param{error} = $app->translate('Failed to verify current password.');
                 }
-                return $app->edit_object(\%param);
             }
+        }
+        my $hint = $q->param('hint') || '';
+        $hint =~ s!^\s+|\s+$!!gs;
+        unless ($hint) {
+            $param{error} = $app->translate('Password recovery word/phrase is required.');
+        }
+        if ($param{error}) {
+            $param{return_args} = $app->param('return_args');
+            my $qual = $id ? '' : 'author_state_';
+            # TBD: make sure all parameters are restored here. and this
+            # is repetitive
+            for my $f (qw( name nickname email url )) {
+                $param{$qual . $f} = $q->param($f);
+            }
+            return $app->edit_object(\%param);
+        }
+
+        ## ... then check to make sure that the author isn't trying
+        ## to change his/her username to one that already exists.
+        my $name = $app->param('name');
+        my $existing = MT::Author->load({ name => $name,
+                                          type => MT::Author::AUTHOR});
+        if ($existing && (!$q->param('id') ||
+            $existing->id != $q->param('id'))) {
+            my %param = (error => $app->translate('An author by that name already exists.'));
+            my $qual = $id ? '' : 'author_state_';
+            for my $f (qw( name email url )) {
+                $param{$qual . $f} = $q->param($f);
+            }
+            return $app->edit_object(\%param);
         }
     }
 
