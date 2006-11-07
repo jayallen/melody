@@ -36,7 +36,6 @@ use strict;
 use warnings;
 use Archive::Tar;
 use Cwd;
-use ExtUtils::Install 1.37_02;
 use File::Basename;
 use File::Copy;
 use File::Path;
@@ -627,6 +626,11 @@ sub export {
 sub plugin_export {
     my $self = shift;
     return unless $self->{'plugin=s@'};
+
+    my $prereq = 'ExtUtils::Install 1.37_02';
+    eval "use $prereq";
+    die( "ERROR: Can't handle plugin directory manipulation: $@" )
+        if ref($@) or $@ ne '';
 
     # Change to the export directory, if we are exporting.
     chdir( $self->{'export-dir=s'} ) or
