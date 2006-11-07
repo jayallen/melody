@@ -57,7 +57,7 @@ MT::Task - Movable Type class for registering runnable tasks.
     MT->add_task(new MT::Task({
         name => "My Task",
         key => "Task001",
-        frequency => 360, # at most, once per hour
+        frequency => 3600, # at most, once per hour
         code => \&runner
     }));
 
