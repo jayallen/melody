@@ -793,7 +793,7 @@ sub read_conf {
 sub inject_footer {
     my $self = shift;
     $self->verbose( 'Entered inject_footer()' );
-    return if $self->{'prod'} || $self->{'debug'};
+    return if $self->{'prod'} || $self->{'debug'} || $self->{'make'};
 
     my $file = $self->{'export!'}
         ? File::Spec->catdir( $self->{'export-dir=s'}, $self->{'footer-tmpl=s'} )
@@ -805,6 +805,8 @@ sub inject_footer {
     my $fh = IO::File->new( $file );
     my $contents = <$fh>;
     $fh->close();
+
+    return if $contents =~ m/\Q$self->{'footer=s'}\E/;
 
     $contents =~ s/Reserved.\n/Reserved.\n$self->{'footer=s'}/;
 
