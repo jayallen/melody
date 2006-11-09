@@ -21,12 +21,14 @@ function doHandleMode (f, mode, type) {
 </TMPL_IF>
     if (f.wrap_text.checked) {
         url += '&wrap_text=1&alignment=';
-        if (f.alignment[0].checked) {
-            url += f.alignment[0].value;
-        } else {
-            url += f.alignment[1].value;
+        for (i=0; i<f.alignment.length; i++) {
+            if (f.alignment[i].checked) {
+                url += f.alignment[i].value;
+            }
         }
     }
+    if (f.image_settings.checked)
+        url += '&image_settings=1';
     if (type == 'start_upload_entry') {
         window.opener.location = url;
         window.close();
@@ -118,7 +120,6 @@ function adjustWidthHeight (f, width) {
 
 <TMPL_IF NAME=IS_IMAGE>
 <p>
-<label>
 <input type="checkbox" name="wrap_text" value="1" /> <MT_TRANS phrase="Wrap text">:
 <input type="radio" name="alignment" value="left" checked="checked" /> <MT_TRANS phrase="Left">
 <input type="radio" name="alignment" value="right" /> <MT_TRANS phrase="Right">
