@@ -6,29 +6,34 @@
 function doClick (f, mode) {
 <TMPL_IF NAME=CAN_POST>
     if (f.new_entry[0].checked)
-        doStartEntry(f, mode);
+        doHandleMode(f, mode, 'start_upload_entry');
     else
 </TMPL_IF>
-        doShowHTML(f, mode);
+      doHandleMode(f, mode, 'show_upload_html');
 }
 
-function doShowHTML (f, mode) {
-    var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=show_upload_html&blog_id=<TMPL_VAR NAME=BLOG_ID>&url=<TMPL_VAR NAME=URL ESCAPE=URL>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>&' + mode;
+function doHandleMode (f, mode, type) {
+    var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=' + type;
+    url += '&blog_id=<TMPL_VAR NAME=BLOG_ID>&url=<TMPL_VAR NAME=URL ESCAPE=URL>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>&' + mode;
 <TMPL_IF NAME=DO_THUMB>
     if (f.thumb.checked)
         url += '&thumb=1&' + calcGeometry(f);
 </TMPL_IF>
-    window.location = url;
-}
-
-function doStartEntry (f, mode) {
-    var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=start_upload_entry&blog_id=<TMPL_VAR NAME=BLOG_ID>&url=<TMPL_VAR NAME=URL ESCAPE=URL>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>&' + mode;
-<TMPL_IF NAME=DO_THUMB>
-    if (f.thumb.checked)
-        url += '&thumb=1&' + calcGeometry(f);
-</TMPL_IF>
-    window.opener.location = url;
-    window.close();
+    if (f.wrap_text.checked) {
+        url += '&wrap_text=1&alignment=';
+        if (f.alignment[0].checked) {
+            url += f.alignment[0].value;
+        } else {
+            url += f.alignment[1].value;
+        }
+    }
+    if (type == 'start_upload_entry') {
+        window.opener.location = url;
+        window.close();
+    }
+    else if (type == 'show_upload_html') {
+        window.location = url;
+    }
 }
 
 <TMPL_IF NAME=DO_THUMB>
@@ -108,6 +113,15 @@ function adjustWidthHeight (f, width) {
 <p>
 <label><input type="radio" name="new_entry" value="1" checked="checked" /> <MT_TRANS phrase="Create a new entry using this uploaded file"></label> <a href="#" onclick="return openManual('file_upload', 'creating_a_new_entry')" class="help">?</a><br />
 <label><input type="radio" name="new_entry" value="0"> <MT_TRANS phrase="Show me the HTML"></label>
+</p>
+</TMPL_IF>
+
+<TMPL_IF NAME=IS_IMAGE>
+<p>
+<label>
+<input type="checkbox" name="wrap_text" value="1" /> <MT_TRANS phrase="Wrap text">:
+<input type="radio" name="alignment" value="left" checked="checked" /> <MT_TRANS phrase="Left">
+<input type="radio" name="alignment" value="right" /> <MT_TRANS phrase="Right">
 </p>
 </TMPL_IF>
 

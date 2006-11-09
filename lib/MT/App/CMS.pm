@@ -5286,6 +5286,15 @@ sub _process_post_upload {
     my $app = shift;
     my $q = $app->param;
     my($url, $width, $height) = map $q->param($_), qw( url width height );
+    my $wrap_style = '';
+    if($q->param('wrap_text')) {
+        if($q->param('alignment') eq 'left') {
+            $wrap_style = 'style="float: left; margin: 0px 5px 5px 0px;"';
+        } else {
+            $wrap_style = 'style="float: right; margin: 0px 0px 5px 5px;"';
+        }
+    }
+
     my ($base_url, $fname) = $url =~ m|(.*)/([^/]*)|;
     $url = $base_url . '/' . $fname; # no need to re-encode filename; url is already encoded
     my $blog_id = $q->param('blog_id');
@@ -5399,11 +5408,11 @@ HTML
     } elsif ($q->param('include')) {
         if ($thumb) {
             return <<"HTML";
-<a href="$url"><img alt="$fname" src="$thumb" width="$thumb_width" height="$thumb_height" /></a>
+<a href="$url"><img alt="$fname" src="$thumb" width="$thumb_width" height="$thumb_height" $wrap_style /></a>
 HTML
         } else {
             return <<"HTML";
-<img alt="$fname" src="$url" width="$width" height="$height" />
+<img alt="$fname" src="$url" width="$width" height="$height" $wrap_style />
 HTML
         }
     } elsif ($q->param('link')) {
