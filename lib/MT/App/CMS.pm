@@ -760,13 +760,37 @@ sub listing {
         if ((my $filter_col = $app->param('filter'))
             && (my $val = $app->param('filter_val')))
         {
-            if (!exists ($terms->{$filter_col})) {
+            if ((($filter_col eq 'normalizedtag') || ($filter_col eq 'exacttag'))
+                && ($class->isa('MT::Taggable'))) {
+                my $normalize = ($filter_col eq 'normalizedtag');
+                require MT::Tag;
+                require MT::ObjectTag;
+                my $tag_delim = chr($app->user->entry_prefs->{tag_delim});
+                my @filter_vals = MT::Tag->split($tag_delim, $val);
+                my @filter_tags = @filter_vals;
+                if ($normalize) {
+                    push @filter_tags, MT::Tag->normalize($_) foreach @filter_vals;
+                }
+                my @tags = MT::Tag->load({ name => [ @filter_tags ] }, { binary => { name => 1 }});
+                my @tag_ids;
+                foreach (@tags) {
+                    push @tag_ids, $_->id;
+                    if ($normalize) {
+                        my @more = MT::Tag->load({ n8d_id => $_->n8d_id ? $_->n8d_id : $_->id });
+                        push @tag_ids, $_->id foreach @more;
+                    }
+                }
+                @tag_ids = ( 0 ) unless @tags;
+                $args->{'join'} = MT::ObjectTag->join_on('object_id',
+                    { tag_id => \@tag_ids, object_datasource => $class->datasource }, { unique => 1 } );
+            } elsif (!exists ($terms->{$filter_col})) {
                 $terms->{$filter_col} = $val;
-                $param->{filter} = $filter_col;
-                $param->{filter_val} = $val;
-                my $url_val = encode_url($val);
-                $param->{filter_args} = "&filter=$filter_col&filter_val=$url_val";
             }
+            $param->{filter} = $filter_col;
+            $param->{filter_val} = $val;
+            my $url_val = encode_url($val);
+            $param->{filter_args} = "&filter=$filter_col&filter_val=$url_val";
+            $param->{"filter_col_$filter_col"} = 1;
         }
 
         # automagic blog scoping
@@ -855,15 +879,17 @@ sub list_assets {
             unless $app->user->is_superuser || $app->{perms}->role_mask;
     }
 
+    require MT::Asset;
+    my %terms;
+    my %args = ( sort => 'created_on', direction => 'descend' );
+
     my $type_filter;
-    if (($app->param('filter') || '') eq 'archive_type') {
+    my $filter = ($app->param('filter') || '');
+    if ($filter eq 'archive_type') {
         $type_filter = $app->param('filter_val');
-        $type_filter =~ s/^asset://;
     }
 
     $app->add_breadcrumb($app->translate("Assets"));
-    my %terms;
-    my %args = ( sort => 'created_on', direction => 'descend' );
     if ($blog_id) {
         $terms{blog_id} = $blog_id;
     } else {
@@ -919,24 +945,18 @@ sub list_assets {
         }
     };
 
-    require MT::Asset;
-    my @types = map { "asset:$_" } keys %MT::Asset::Types;
-    push @types, 'asset';
-    if (!$type_filter) {
-        $terms{archive_type} = \@types;
-    }
+    $terms{archive_type} ||= MT::Asset->types;
 
     # identifier => name
-    my $types = MT::Asset->types;
+    my $types = MT::Asset->type_names;
     my @type_loop;
-    foreach my $type (@$types) {
-        my $cls = MT::Asset->type_class($type) or next;
-        $type = 'asset:' . $type unless $type eq 'asset';
+    foreach my $type (keys %$types) {
         push @type_loop, {
             type_id => $type,
-            type_name => $cls->type_name,
+            type_name => $types->{$type},
         };
     }
+    # Now, sort it
     @type_loop = sort { $a->{type_name} cmp $b->{type_name} } @type_loop;
 
     $app->listing({

@@ -1,16 +1,15 @@
+# Copyright 2001-2006 Six Apart. This code cannot be redistributed without
+# permission from www.sixapart.com.  For more information, consult your
+# Movable Type license.
+#
+# $Id$
+
 package MT::Asset::Image;
 
 use base 'MT::Asset';
 
-sub init {
-    my $asset = shift;
-    $asset->SUPER::init(@_);
-    $asset->archive_type('asset:image');
-    $asset;
-}
-
 sub type {
-    'image';
+    'asset:image';
 }
 
 sub type_name {
@@ -19,8 +18,7 @@ sub type_name {
 
 sub metadata {
     my $obj = shift;
-    my %meta = ( height => $obj->image_height, width => $obj->image_width );
-    \%meta;
+    { height => $obj->image_height, width => $obj->image_width };
 }
 
 1;

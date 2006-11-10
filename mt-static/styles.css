@@ -1249,6 +1249,23 @@ li {
 #list-entry table.expanded #en-category { width: 23% }
 #list-entry table.expanded.show-weblog #en-category { width: 20% }
 
+/* tmpl/cms/list_asset.tmpl */
+/* system overview: 1 + 1 + 26 + 10 + 20 + 10 + 15 + 16 + 1 = 100 */
+/* blog view: 1 + 1 + 36 + 15 + 10 + 20 + 16 + 1 = 100  */
+#list-asset table th.cb { width: 1% min-width: 10px; }
+#list-asset table th#as-file-status { width: 1%; min-width: 10px; }
+#list-asset table th#as-file-name { width: 36%; }
+#list-asset table.show-weblog th#as-file-name { width: 26%; }
+#list-asset table th#as-asset-type { width: 15%; }
+#list-asset table.show-weblog th#as-asset-type { width: 10%; }
+#list-asset table th#as-weblog { width: 20%; }
+#list-asset table th#as-file-size { width: 10%; text-align: right; }
+#list-asset table td.as-file-size { width: 10%; text-align: right; }
+#list-asset table th#as-created-by { width: 20%; }
+#list-asset table.show-weblog th#as-created-by { width: 15%; }
+#list-asset table th#as-created-on { width: 16%; }
+#list-asset table th#as-view { width: 1%; min-width: 10px; ;}
+
 /* tmpl/cms/list_comment.tmpl */
 
 /* global */
