@@ -20,7 +20,7 @@
 <TMPL_IF NAME=HAS_MANAGE_LABEL>
 <li><MT_TRANS phrase="Configure">
 <ul class="sub">
-<TMPL_IF NAME=CAN_EDIT_AUTHORS><li><a<TMPL_IF NAME=NAV_AUTHORS> class="here"</TMPL_IF> id="nav-users" title="<MT_TRANS phrase="List Users">" href="<TMPL_VAR NAME=MT_URL>?__mode=list_associations&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><MT_TRANS phrase="Users"></a></li></TMPL_IF>
+<TMPL_IF NAME=CAN_EDIT_AUTHORS><li><a<TMPL_IF NAME=NAV_AUTHORS> class="here"</TMPL_IF> id="nav-user" title="<MT_TRANS phrase="List Users">" href="<TMPL_VAR NAME=MT_URL>?__mode=list_associations&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><MT_TRANS phrase="Users"></a></li></TMPL_IF>
 <TMPL_IF NAME=CAN_EDIT_TEMPLATES><li><a<TMPL_IF NAME=NAV_TEMPLATES> class="here"</TMPL_IF> id="nav-templates" title="<MT_TRANS phrase="List &amp; Edit Templates">" href="<TMPL_VAR NAME=MT_URL>?__mode=list&amp;_type=template&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><MT_TRANS phrase="Templates"></a></li></TMPL_IF>
 <TMPL_IF NAME=CAN_EDIT_CATEGORIES><li><a<TMPL_IF NAME=NAV_CATEGORIES> class="here"</TMPL_IF> id="nav-categories" title="<MT_TRANS phrase="Edit Categories">" href="<TMPL_VAR NAME=MT_URL>?__mode=list_cat&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><MT_TRANS phrase="Categories"></a></li></TMPL_IF>
 <TMPL_IF NAME=CAN_EDIT_TAGS><li><a<TMPL_IF NAME=NAV_TAGS> class="here"</TMPL_IF> id="nav-tags" title="<MT_TRANS phrase="Edit Tags">" href="<TMPL_VAR NAME=MT_URL>?__mode=list_tags&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><MT_TRANS phrase="Tags"></a></li></TMPL_IF>

@@ -197,8 +197,8 @@ h5 {
 
 
 .box ul.nav li#nav-weblogs { background-image: url(images/nav_icons/color/weblogs.gif); }
-.box ul.nav li#nav-authors { background-image: url(images/nav_icons/color/authors.gif); }
-.box ul.nav li#nav-users { background-image: url(images/nav_icons/color/authors.gif); }
+.box ul.nav li#nav-authors { background-image: url(images/nav_icons/color/user.gif); }
+.box ul.nav li#nav-user { background-image: url(images/nav_icons/color/user.gif); }
 .box ul.nav li#nav-privileges { background-image: url(images/nav_icons/color/privileges.gif); }
 .box ul.nav li#nav-roles { background-image: url(images/nav_icons/color/roles.gif); }
 .box ul.nav li#nav-plugins { background-image: url(images/nav_icons/color/plugins.gif); }
@@ -560,8 +560,8 @@ html>body .sub a { width: 80px; }
 .sub a#nav-rebuild.rebuilding { background-image: url(images/ani-rebuild.gif) !important }
 .sub a#nav-view-site { background-image: url(images/nav_icons/color/view-site.gif); }
 .sub a#nav-weblogs { background-image: url(images/nav_icons/color/weblogs.gif); }
-.sub a#nav-authors { background-image: url(images/nav_icons/color/authors.gif); }
-.sub a#nav-users { background-image: url(images/nav_icons/color/authors.gif); }
+.sub a#nav-authors { background-image: url(images/nav_icons/color/user.gif); }
+.sub a#nav-user { background-image: url(images/nav_icons/color/user.gif); }
 .sub a#nav-privileges { background-image: url(images/nav_icons/color/privileges.gif); }
 .sub a#nav-roles { background-image: url(images/nav_icons/color/roles.gif); }
 .sub a#nav-plugins { background-image: url(images/nav_icons/color/plugins.gif); }
