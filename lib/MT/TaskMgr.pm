@@ -33,6 +33,10 @@ sub add_task {
 
 sub run_tasks {
     my $mgr = shift;
+    my (@tasks_to_run) = @_;
+
+    @tasks_to_run = values %Tasks unless @tasks_to_run;
+
     if (!ref($mgr)) {
         $mgr = $mgr->instance;
     }
@@ -65,7 +69,10 @@ sub run_tasks {
         require MT::Log;
         require MT::Session;
         my @completed;
-        foreach my $task (values %Tasks) {
+
+        foreach my $task_name (@tasks_to_run) {
+            my $task = $Tasks{$task_name} or next;
+
             my $name = $app->translate($task->name || $task->key);
             my $sess = MT::Session->load({
                 id => 'Task:' . $task->key ,
