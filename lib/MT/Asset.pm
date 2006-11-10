@@ -12,17 +12,21 @@ use base qw(MT::FileInfo MT::Taggable);
 
 # A registry of mappings between asset identifiers and packages.
 our %Classes = (
-    'MT::Asset::Image' => 'image',
+    'MT::Asset::Image' => 'asset:image',
 );
 our %Types = (
     'asset:image' => 'MT::Asset::Image',
 );
 
-# Returns the list of registered asset identifiers, including the generic
-# one.
+# Returns the list of registered asset identifiers for this class
+# and those that derive from it. Also includes the type of the package
+# invoked.
 sub types {
+    my $pkg = shift;
+    my $this_type = $pkg->type;
     my @types = keys %Types;
-    push @types, 'asset';
+    @types = grep { m/^\Q$this_type\E:/ } @types;
+    push @types, $this_type;
     \@types;
 }
 
@@ -56,7 +60,7 @@ sub type_class {
 }
 
 # Returns a hashref of asset identifiers mapped to the localized string
-# used to name them. (Ie, image => 'Image').
+# used to name them. (Ie, asset:image => 'Image').
 sub type_names {
     my $pkg = shift;
     my %names = ($pkg->type => $pkg->type_name);

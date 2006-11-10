@@ -945,7 +945,12 @@ sub list_assets {
         }
     };
 
-    $terms{archive_type} ||= MT::Asset->types;
+    if ($type_filter) {
+        my $asset_pkg = MT::Asset->type_class($type_filter);
+        $terms{archive_type} = $asset_pkg->types;
+    } else {
+        $terms{archive_type} = MT::Asset->types;
+    }
 
     # identifier => name
     my $types = MT::Asset->type_names;
@@ -5493,7 +5498,8 @@ sub _process_post_upload {
         $thumb = $url . encode_url($base . '-thumb' . $ext);
 
         require MT::Asset;
-        my $asset = new MT::Asset;
+        my $img_pkg = MT::Asset->type_class('asset:image');
+        my $asset = new $img_pkg;
         $asset->blog_id($blog_id);
         $asset->url($thumb);
         $asset->file_path($t_file);
@@ -5565,7 +5571,8 @@ sub _process_post_upload {
             $rel_url_ext =~ s!^/!!;
             $url .= $rel_url_ext;
 
-            my $asset = new MT::Asset;
+            my $img_pkg = MT::Asset->type_class('asset:image');
+            my $asset = new $img_pkg;
             $asset->blog_id($blog_id);
             $asset->url($url);
             $asset->file_path($abs_file_path);
@@ -9269,7 +9276,8 @@ sub upload_file {
     }
 
     require MT::Asset;
-    my $asset = new MT::Asset;
+    my $img_pkg = MT::Asset->type_class($param{is_image} ? 'asset:image' : 'asset');
+    my $asset = new $img_pkg;
     $asset->blog_id($blog_id);
     $asset->url($url);
     $asset->file_path($local_file);
