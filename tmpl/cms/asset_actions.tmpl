@@ -1,0 +1,20 @@
+<div class="list-actions">
+
+<div class="button-bar">
+<TMPL_IF NAME=CAN_DELETE_FILES>
+<input
+   type="button"
+   name="delete_assets"
+   accesskey="x"
+   title="<MT_TRANS phrase="Delete selected assets (x)">"
+   value="<MT_TRANS phrase="Delete">"
+   onclick="doRemoveItems(this.form, '<MT_TRANS phrase="asset">', '<MT_TRANS phrase="assets">')"
+/>
+</TMPL_IF>
+</div>
+
+<div class="button-bar-alt">
+<TMPL_INCLUDE NAME="itemset_action_widget.tmpl">
+</div>
+
+</div> 

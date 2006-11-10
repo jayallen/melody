@@ -17,6 +17,7 @@
 <li><MT_TRANS phrase="Aggregate">
 <ul class="sub">
 <li><a<TMPL_IF NAME=NAV_ENTRIES> class="here"</TMPL_IF> id="nav-entries" title="<MT_TRANS phrase="List Entries">" href="<TMPL_VAR NAME=MT_URL>?__mode=list_entries"><MT_TRANS phrase="Entries"></a></li>
+<li><a<TMPL_IF NAME=NAV_ASSETS> class="here"</TMPL_IF> id="nav-assets" title="<MT_TRANS phrase="List uploaded files">" href="<TMPL_VAR NAME=MT_URL>?__mode=list_assets"><MT_TRANS phrase="Assets"></a></li>
 <TMPL_IF NAME=IS_ADMINISTRATOR>
 <li><a<TMPL_IF NAME=NAV_TAGS> class="here"</TMPL_IF> id="nav-tags" title="<MT_TRANS phrase="List Tags">" href="<TMPL_VAR NAME=MT_URL>?__mode=list_tags"><MT_TRANS phrase="Tags"></a></li>
 </TMPL_IF>

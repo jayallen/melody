@@ -41,6 +41,7 @@ my %API = (
     tag => 'MT::Tag',
     role => 'MT::Role',
     association => 'MT::Association',
+    asset => 'MT::Asset',
 );
 
 sub init {
@@ -59,6 +60,7 @@ sub init {
         'list_comments' => \&list_comments,
         'list_authors' => \&list_authors,
         'list_commenters' => \&list_commenters,
+        'list_assets' => \&list_assets,
         'save_commenter_perm' => \&save_commenter_perm,
         'trust_commenter' => \&trust_commenter,
         'ban_commenter' => \&ban_commenter,
@@ -222,6 +224,22 @@ sub init_core_itemset_actions {
                               code => \&remove_tags_from_entries,
                               input => 1,
                               input_label => 'Tags to remove from selected entries',
+                              condition => sub { $app->user->is_superuser() || ($app->param('blog_id') && $app->{perms}->can_edit_all_posts) },
+                          }, 1);
+    $app->add_itemset_action({type => 'asset',
+                              key => "add_tags",
+                              label => "Add Tags...",
+                              code => \&add_tags_to_assets,
+                              input => 1,
+                              input_label => 'Tags to add to selected assets',
+                              condition => sub { $app->user->is_superuser() || ($app->param('blog_id') && $app->{perms}->can_edit_all_posts) },
+                          }, 1);
+    $app->add_itemset_action({type => 'asset',
+                              key => "remove_tags",
+                              label => "Remove Tags...",
+                              code => \&remove_tags_from_assets,
+                              input => 1,
+                              input_label => 'Tags to remove from selected assets',
                               condition => sub { $app->user->is_superuser() || ($app->param('blog_id') && $app->{perms}->can_edit_all_posts) },
                           }, 1);
     $app->add_itemset_action({type => 'ping',
@@ -794,9 +812,9 @@ sub listing {
     my $plural = $type;
     # entry -> entries; user -> users
     if ($type =~ m/y$/) {
-        $type =~ s/y$/ies/;
+        $plural =~ s/y$/ies/;
     } else {
-        $type .= 's';
+        $plural .= 's';
     }
     $param->{object_type_plural} = $app->translate($plural);
     if ($app->user->is_superuser()) {
@@ -823,6 +841,120 @@ sub listing {
     } else {
         $no_html ? $param : $app->build_page($tmpl, $param);
     }
+}
+
+sub list_assets {
+    my $app = shift;
+
+    my $blog_id = $app->param('blog_id');
+    my $blog;
+    if ($blog_id) {
+        $blog = MT::Blog->load($blog_id)
+            or return $app->errtrans("Invalid request.");
+        return $app->errtrans("Permission denied.")
+            unless $app->user->is_superuser || $app->{perms}->role_mask;
+    }
+
+    my $type_filter;
+    if (($app->param('filter') || '') eq 'archive_type') {
+        $type_filter = $app->param('filter_val');
+        $type_filter =~ s/^asset://;
+    }
+
+    $app->add_breadcrumb($app->translate("Assets"));
+    my %terms;
+    my %args = ( sort => 'created_on', direction => 'descend' );
+    if ($blog_id) {
+        $terms{blog_id} = $blog_id;
+    } else {
+        unless ($app->user->is_superuser) {
+            $args{join} = MT::Permission->join_on('blog_id', {
+                author_id => $app->user->id,
+            });
+        }
+    }
+
+    my %blogs;
+    require File::Basename;
+    my $auth_prefs = $app->user->entry_prefs;
+    my $tag_delim = chr($auth_prefs->{tag_delim});
+
+    my $hasher = sub {
+        my ($obj, $row) = @_;
+        my $blog;
+        unless ($blog_id) {
+            $blog = $blogs{$obj->blog_id} ||= MT::Blog->load($obj->blog_id, { cached_ok => 1 });
+        } else {
+            $blog = $app->blog;
+        }
+        $row->{blog_name} = $blog ? $blog->name : '-';
+        $row->{file_name} = File::Basename::basename($row->{file_path});
+        if (-f $row->{file_path}) {
+            my @stat = stat($row->{file_path});
+            my $size = $stat[7];
+            $row->{asset_type} = $app->translate($obj->type_name);
+            $row->{file_size} = $size;
+            $row->{tags} = MT::Tag->join($tag_delim, $obj->tags);
+            if ($size < 1024) {
+            } elsif ($size < 1024000) {
+                $row->{file_size_formatted} = sprintf("%.1f KB", $size / 1024);
+            } else {
+                $row->{file_size_formatted} = sprintf("%.1f MB", $size / 1024000);
+            }
+            my $ts = $obj->created_on;
+            unless ($ts) {
+                $ts = $stat[10];
+                $ts = epoch2ts($blog, $ts);
+            }
+            if ($ts) {
+                $row->{created_on_formatted} =
+                    format_ts("%Y.%m.%d", $ts); 
+                $row->{created_on_time_formatted} =
+                    format_ts("%Y-%m-%d %H:%M:%S", $ts); 
+                $row->{created_on_relative} =
+                    relative_date($ts, time, $blog);
+            }
+        } else {
+            $row->{file_is_missing} = 1;
+        }
+    };
+
+    require MT::Asset;
+    my @types = map { "asset:$_" } keys %MT::Asset::Types;
+    push @types, 'asset';
+    if (!$type_filter) {
+        $terms{archive_type} = \@types;
+    }
+
+    # identifier => name
+    my $types = MT::Asset->types;
+    my @type_loop;
+    foreach my $type (@$types) {
+        my $cls = MT::Asset->type_class($type) or next;
+        $type = 'asset:' . $type unless $type eq 'asset';
+        push @type_loop, {
+            type_id => $type,
+            type_name => $cls->type_name,
+        };
+    }
+    @type_loop = sort { $a->{type_name} cmp $b->{type_name} } @type_loop;
+
+    $app->listing({
+        Terms => \%terms,
+        Args => \%args,
+        Type => 'asset',
+        Code => $hasher,
+        Params => {
+            ($blog ? (
+                blog_id => $blog_id,
+                blog_name => $blog->name,
+                edit_blog_id => $blog_id,
+            ) : ()),
+            type_loop => \@type_loop,
+            can_delete_files => $app->user->is_superuser,
+            nav_assets => 1,
+        },
+    });
 }
 
 sub list_roles {
@@ -5329,6 +5461,7 @@ sub _process_post_upload {
         require File::Basename;
         my($base, $path, $ext) = File::Basename::fileparse($i_file, '\.[^.]*');
         my $t_file = $path . $base . '-thumb' . $ext;
+        my $basename = $base . '-thumb' . $ext;
         $fmgr->put_data($blob, $t_file, 'upload')
             or return $app->error($app->translate(
                 "Error writing to '[_1]': [_2]", $t_file, $fmgr->errstr));
@@ -5338,12 +5471,28 @@ sub _process_post_upload {
         $url .= '/' unless $url =~ m!/$!;
         $url .= $file;
         $thumb = $url . encode_url($base . '-thumb' . $ext);
+
+        require MT::Asset;
+        my $asset = new MT::Asset;
+        $asset->blog_id($blog_id);
+        $asset->url($thumb);
+        $asset->file_path($t_file);
+        $asset->file_name($basename);
+        my $ext2 = $ext;
+        $ext2 =~ s/^\.//;
+        $asset->file_ext($ext2);
+        $asset->image_width($thumb_width);
+        $asset->image_height($thumb_height);
+        $asset->save;
+
         MT->run_callbacks('CMSUploadFile',
                           File => $t_file, Url => $thumb, Size => length($blob),
+                          Asset => $asset,
                           Type => 'thumbnail',
                           Blog => $blog);
         MT->run_callbacks('CMSUploadImage',
                           File => $t_file, Url => $thumb,
+                          Asset => $asset,
                           Width => $thumb_width, Height => $thumb_height,
                           ImageType => $image_type,
                           Size => length($blob),
@@ -5395,8 +5544,18 @@ sub _process_post_upload {
             $url .= '/' unless $url =~ m!/$!;
             $rel_url_ext =~ s!^/!!;
             $url .= $rel_url_ext;
+
+            my $asset = new MT::Asset;
+            $asset->blog_id($blog_id);
+            $asset->url($url);
+            $asset->file_path($abs_file_path);
+            $asset->file_name($basename);
+            $asset->file_ext($blog->file_extension);
+            $asset->save;
+
             MT->run_callbacks('CMSUploadFile',
                           File => $abs_file_path, Url => $url,
+                          Asset => $asset,
                           Size => length($popup),
                           Type => 'popup',
                           Blog => $blog);
@@ -9082,15 +9241,37 @@ sub upload_file {
     $url .= $relative_url;
     $param{url} = $url;
     $param{is_image} = defined($w) && defined($h);
+    require File::Basename;
+    my $basename = File::Basename::basename($local_file);
+    my $ext = '';
+    if ($local_file =~ m/\.([A-Za-z]+)$/) {
+        $ext = $1;
+    }
+
+    require MT::Asset;
+    my $asset = new MT::Asset;
+    $asset->blog_id($blog_id);
+    $asset->url($url);
+    $asset->file_path($local_file);
+    $asset->file_name($basename);
+    $asset->file_ext($ext);
+    if ($param{is_image}) {
+        $asset->image_width($w);
+        $asset->image_height($h);
+    }
+    $asset->save;
+
     if ($param{is_image}) {
         eval { require MT::Image; MT::Image->new or die; };
         $param{do_thumb} = !$@ ? 1 : 0;
         MT->run_callbacks('CMSUploadFile',
                           File => $local_file, Url => $url, Size => $bytes,
+                          Asset => $asset,
                           Type => 'image',
                           Blog => $blog);
         MT->run_callbacks('CMSUploadImage',
                           File => $local_file, Url => $url, Size => $bytes,
+                          Asset => $asset,
                           Height => $h, Width => $w,
                           Type => 'image',
                           ImageType => $id,
@@ -9098,6 +9279,7 @@ sub upload_file {
     } else {
         MT->run_callbacks('CMSUploadFile',
                           File => $local_file, Url => $url, Size => $bytes,
+                          Asset => $asset,
                           Type => 'file',
                           Blog => $blog);
     }
@@ -10234,6 +10416,8 @@ sub remove_tags_from_entries {
     my @tags = MT::Tag->split($tag_delim, $tags);
     return $app->call_return unless @tags;
 
+    require MT::Entry;
+
     my $user = $app->user;
     foreach my $id (@id) {
         next unless $id;
@@ -10242,6 +10426,61 @@ sub remove_tags_from_entries {
             $app->{perms}->can_edit_entry($entry, $user);
         $entry->remove_tags(@tags);
         $entry->save or return $app->trans_error("Error saving entry: [_1]", $entry->errstr);
+    }
+
+    $app->add_return_arg('saved' => 1);
+    $app->call_return;
+}
+
+sub add_tags_to_assets {
+    my $app = shift;
+
+    my @id = $app->param('id');
+
+    require MT::Tag;
+    my $tags = $app->param('itemset_action_input');
+    my $tag_delim = chr($app->user->entry_prefs->{tag_delim});
+    my @tags = MT::Tag->split($tag_delim, $tags);
+    return $app->call_return unless @tags;
+
+    require MT::Asset;
+
+    my $user = $app->user;
+    foreach my $id (@id) {
+        next unless $id;
+        my $asset = MT::Asset->load($id) or next;
+        next unless $user->is_superuser; # ||
+            #$app->{perms}->can_edit_entry($entry, $user);
+
+        $asset->add_tags(@tags);
+        $asset->save or return $app->trans_error("Error saving asset: [_1]", $asset->errstr);
+    }
+
+    $app->add_return_arg('saved' => 1);
+    $app->call_return;
+}
+
+sub remove_tags_from_assets {
+    my $app = shift;
+
+    my @id = $app->param('id');
+
+    require MT::Tag;
+    my $tags = $app->param('itemset_action_input');
+    my $tag_delim = chr($app->user->entry_prefs->{tag_delim});
+    my @tags = MT::Tag->split($tag_delim, $tags);
+    return $app->call_return unless @tags;
+
+    require MT::Asset;
+
+    my $user = $app->user;
+    foreach my $id (@id) {
+        next unless $id;
+        my $asset = MT::Asset->load($id) or next;
+        next unless $user->is_superuser; # ||
+            # $app->{perms}->can_edit_entry($entry, $user);
+        $asset->remove_tags(@tags);
+        $asset->save or return $app->trans_error("Error saving asset: [_1]", $asset->errstr);
     }
 
     $app->add_return_arg('saved' => 1);

@@ -544,6 +544,7 @@ html>body .sub a { width: 80px; }
 .sub a#nav-new-entry { background-image: url(images/nav_icons/color/new-entry.gif); }
 .sub a#nav-entries { background-image: url(images/nav_icons/color/entries.gif); }
 .sub a#nav-upload { background-image: url(images/nav_icons/color/upload.gif); }
+.sub a#nav-assets { background-image: url(images/nav_icons/color/assets.gif); }
 .sub a#nav-comments { background-image: url(images/nav_icons/color/comments.gif); }
 .sub a#nav-commenters { background-image: url(images/nav_icons/color/commenters.gif); }
 .sub a#nav-trackbacks { background-image: url(images/nav_icons/color/trackbacks.gif); }
@@ -676,6 +677,7 @@ html>body .sub a { width: 80px; }
 .list table tr td img.status-create { background-image: url(images/status_icons/create.gif); }
 .list table tr td.status-disabled img { background-image: url(images/status_icons/neutral.gif); }
 .list table tr td.status-details img { background-image: url(images/spinner-big-right.gif); }
+.list table td.status-missing img { background-image: url(images/status_icons/warning.gif); }
 
 .list table tr.selected { background-color: #26566E; }
 
@@ -715,6 +717,7 @@ html>body .sub a { width: 80px; }
 .list table tr.selected td img.status-create { background-image: url(images/status_icons/invert-create.gif); }
 .list table tr.selected td.status-disabled img { background-image: url(images/status_icons/invert-neutral.gif); }
 .list table tr.active td.status-details img { background-image: url(images/spinner-big-bottom.gif); }
+.list table tr.selected td.status-missing img { background-image: url(images/status_icons/invert-warning.gif); }
 
 /* modal popup styles */
 .modal_column_header {
@@ -2967,6 +2970,7 @@ form.filter-normalizedtag #filter-mode-only,
 form.filter-author_id #filter-mode-only,
 form.filter-class #filter-mode-only,
 form.filter-level #filter-mode-only,
+form.filter-archive_type #filter-mode-only,
 form.filter-commenter #filter-mode-only {
     display: inline !important
 }
@@ -2977,6 +2981,7 @@ form.filter-commenter #filter-mode-only {
 #filter-author_id,
 #filter-class,
 #filter-level,
+#filter-archive_type,
 #filter-commenter {
     display: none
 }
@@ -2987,6 +2992,7 @@ form.filter-normalizedtag #filter-normalizedtag,
 form.filter-author_id #filter-author_id,
 form.filter-class #filter-class,
 form.filter-level #filter-level,
+form.filter-archive_type #filter-archive_type,
 form.filter-commenter #filter-commenter {
     display: inline !important
 }
