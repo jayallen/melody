@@ -35,7 +35,6 @@ __PACKAGE__->install_properties({
         url => 1,
         file_path => 1,
         archive_type => 1,
-        file_type => 1,
     },
     audit => 1,
     datasource => 'fileinfo',
