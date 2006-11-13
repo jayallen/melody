@@ -3482,3 +3482,22 @@ table td .link { float: right; vertical-align: text-top; margin-right:12px; }
 table td .link img { background-image: url(images/status_icons/view.gif); }
 table tr.selected .link img { background-image: url(images/status_icons/invert-view.gif); }
 table td .float_desc { float: left; }
+
+/* layout for preview of aligned images via upload */
+.display_img_left {
+    float: left;
+    margin-right: 10px;
+}
+
+.display_img_center {
+    text-align: center;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
+}
+
+.display_img_right {
+    float: right;
+    margin-left: 10px;
+}
