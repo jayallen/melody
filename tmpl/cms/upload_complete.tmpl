@@ -27,8 +27,6 @@ function doHandleMode (f, mode, type) {
             }
         }
     }
-    if (f.image_settings.checked)
-        url += '&image_settings=1';
     if (type == 'start_upload_entry') {
         window.opener.location = url;
         window.close();
