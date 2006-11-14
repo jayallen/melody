@@ -16,19 +16,22 @@ var topZIndex = 10;
 
 function checkName() {
         widgetname = document.getElementById('name').value;
+        if (!widgetname) {
+            alert('<MT_TRANS phrase="Please use a unique name for this widget manager." escape="js">');
+            return false;
+        }
+
         oldname = document.getElementById('old_name').value;
 
         var1 = "<TMPL_LOOP NAME=WIDGETMANAGERS><TMPL_VAR NAME=widgetmanager>,</TMPL_LOOP>"
         var2 = var1.split(",")
 
         for (var i=0; i < var2.length; i++) {
-
             if (var2[i] == widgetname && (widgetname != oldname)) {
                 alert('<MT_TRANS phrase="You already have a widget manager named [_1]. Please use a unique name for this widget manager." params="$name" escape="js">'.replace(/\$name/, widgetname));
                 return false;
-            } 
+            }
         }
-
 }
 
 
