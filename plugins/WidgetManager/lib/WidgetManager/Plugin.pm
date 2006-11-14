@@ -19,7 +19,14 @@ sub _hdlr_widget_manager {
     my $blog_id = $ctx->stash('blog_id');
 
     my $modulesets = $plugin->load_selected_modules($blog_id);
-    return unless $modulesets && $modulesets->{$args->{name}};                                                             
+
+    return $ctx->error($plugin->translate(
+        "No WidgetManager modules exist for blog '[_1]'.", $blog_id
+    )) unless $modulesets;
+    return $ctx->error($plugin->translate(
+        "WidgetManager '[_1]' has no installed widgets.", $args->{name}
+    )) unless $modulesets->{$args->{name}};
+
     my @selected = split(",",$modulesets->{$args->{name}});
 
     my $res = "";
@@ -31,7 +38,7 @@ sub _hdlr_widget_manager {
             or return $ctx->error($plugin->translate(
                 "Can't find included template module '[_1]'", $mid ));
         $args->{module} = $tmpl->name;
-    	$res .= MT::Template::Context::_hdlr_include($ctx,$args);
+        $res .= MT::Template::Context::_hdlr_include($ctx,$args);
     }
     return $res;
 }
