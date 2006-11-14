@@ -106,7 +106,7 @@ sub add_class {
     }
 }
 
-sub class_label { "System" }
+sub class_label { MT->translate("System") }
 sub description {
     my $log = shift;
     my $msg = '';
@@ -177,7 +177,7 @@ package MT::Log::Entry;
 
 @MT::Log::Entry::ISA = qw(MT::Log);
 
-sub class_label { "Entries" }
+sub class_label { MT->translate("Entries") }
 sub description {
     my $log = shift;
     my $msg;
@@ -194,7 +194,7 @@ package MT::Log::Comment;
 
 @MT::Log::Comment::ISA = qw(MT::Log);
 
-sub class_label { "Comments" }
+sub class_label { MT->translate("Comments") }
 sub description {
     my $log = shift;
     my $cmt = $log->metadata_object;
@@ -211,7 +211,7 @@ package MT::Log::TBPing;
 
 @MT::Log::TBPing::ISA = qw(MT::Log);
 
-sub class_label { "TrackBacks" }
+sub class_label { MT->translate("TrackBacks") }
 sub description {
     my $log = shift;
     my $id = int($log->metadata);
@@ -312,7 +312,8 @@ from the database).
 
 =head2 CLASS->class_label
 
-Returns a string identifying the kind of log record the class is for.
+Returns a localized string identifying the kind of log record the class is
+for.
 
 =head2 $log->description
 
