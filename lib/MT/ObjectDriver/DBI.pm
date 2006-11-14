@@ -252,9 +252,9 @@ sub save {
     $driver->run_callbacks($class . '::pre_save', $obj, $original);
     my $result;
     if ($driver->exists($obj)) {
-        $result = $driver->update($obj);
+        $result = $driver->update($obj, $original);
     } else {
-        $result = $driver->insert($obj);
+        $result = $driver->insert($obj, $original);
     }
     delete $object_cache{$class}->{$obj->id} if $obj->id && exists $object_cache{$class}->{$obj->id}; # invalidate the cache
     $original->id($obj->id);
@@ -268,7 +268,9 @@ sub save {
 
 sub insert {
     my $driver = shift;
-    my($obj) = @_;
+    my($obj, $original) = @_;
+    my $class = ref($obj);
+    $driver->run_callbacks($class . '::pre_insert', $obj, $original);
     my $cols = $obj->column_names;
     unless ($obj->id) {
         ## If we don't already have an ID assigned for this object, we
@@ -325,6 +327,7 @@ sub insert {
     unless ($obj->id) {
         $obj->id($driver->fetch_id($sth));
     }
+    $driver->run_callbacks($class . '::post_insert', $obj, $original);
     1;
 }
 
@@ -342,8 +345,11 @@ sub _static_update {
 
 sub update {
     my $driver = shift;
-    my($obj) = @_;
-    return $driver->_static_update(@_) unless ref $obj;
+    my($obj, $original) = @_;
+    my $class = ref($obj);
+    return $driver->_static_update(@_) unless $class;
+
+    $driver->run_callbacks($class . '::pre_update', $obj, $original);
 
     my $cols = $obj->column_names;
     $cols = [ grep $_ ne 'id', @$cols ];
@@ -383,6 +389,7 @@ sub update {
     $sth->execute()
         or return $driver->error(MT->translate("Update failed on SQL error [_1]", $dbh->errstr));
     $sth->finish;
+    $driver->run_callbacks($class . '::post_update', $obj, $original);
     1;
 }
 

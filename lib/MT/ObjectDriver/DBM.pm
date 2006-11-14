@@ -639,16 +639,23 @@ sub save {
     my $driver = shift;
     my($original) = @_;
     my $obj = $original->clone();
-    $driver->run_callbacks((ref$obj) . "::pre_save", $obj, $original);
+    my $class = ref($obj);
+    $driver->run_callbacks($class . "::pre_save", $obj, $original);
     my $db_file = _db_data($driver, $obj);
     my($DB, $db, $unlock) = $driver->_tie_db_file($db_file, $DB_BTREE, 'rw')
         or return $driver->error(MT->translate(
             "Tie '[_1]' failed: [_2]", $db_file, "$!" ));
+    my $new_object = !$obj->id;
     unless ($obj->id || ($obj->id($driver->generate_id($obj)))) {
         return $driver->error(MT->translate(
             "Failed to generate unique ID: [_1]", $driver->errstr ));
     }
     my $id = $obj->id;
+    if ($new_object) {
+        $driver->run_callbacks($class . "::pre_insert", $obj, $original);
+    } else {
+        $driver->run_callbacks($class . "::pre_update", $obj, $original);
+    }
     my $class = ref $obj;
     delete $object_cache{$class}->{$id} if $id && exists $object_cache{$class}->{$id}; # invalidate the cache
     $original->id($id);
@@ -677,7 +684,12 @@ sub save {
     if (!$no_build_indexes) {
         $driver->rebuild_index_for_item($obj, $old);
     }
-    $driver->run_callbacks((ref $obj) . "::post_save", $obj, $original);
+    if ($new_object) {
+        $driver->run_callbacks($class . "::post_insert", $obj, $original);
+    } else {
+        $driver->run_callbacks($class . "::post_update", $obj, $original);
+    }
+    $driver->run_callbacks($class . "::post_save", $obj, $original);
     1;
 }
 

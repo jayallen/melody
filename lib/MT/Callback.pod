@@ -154,6 +154,34 @@ then it is a new object.
 Callback issued after to saving C<$obj> to the database. C<$original> is
 the instance that was invoked to be saved.
 
+=item * <package>::pre_update
+
+    callback($cb, $obj, $original)
+
+Callback issued prior to saving an existing C<$obj> to the database.
+C<$original> is the instance that was invoked to be saved.
+
+=item * <package>::post_update
+
+    callback($cb, $obj, $original)
+
+Callback issued after saving an existing C<$obj> to the database.
+C<$original> is the instance that was invoked to be saved.
+
+=item * <package>::pre_insert
+
+    callback($cb, $obj, $original)
+
+Callback issued prior to saving a new C<$obj> to the database. C<$original> is
+the instance that was invoked to be saved.
+
+=item * <package>::post_insert
+
+    callback($cb, $obj, $original)
+
+Callback issued after to saving a new C<$obj> to the database. C<$original> is
+the instance that was invoked to be saved.
+
 =item * <package>::pre_load
 
     callback($cb, \@params)
