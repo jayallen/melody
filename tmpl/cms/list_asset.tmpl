@@ -5,16 +5,16 @@
 .asset-detail-panel {
     display: none;
     position: relative;
-    top: -25px;
+    top: -45px;
 }
 .asset-detail-panel-inner {
     position: absolute;
     background-color: white;
-    border: 1px solid blue;
+    border: 1px solid #8faebe;
     padding: 5px;
-    left: 140px;
-    width: 300px;
-    height: 250px;
+    left: 100px;
+    width: 381px;
+    height: 242px;
     z-index: 5;
 }
 .asset-detail-panel img.preview {
@@ -28,6 +28,10 @@
 var assets = {};
 <TMPL_LOOP NAME=OBJECT_LOOP>
 assets[<TMPL_VAR NAME=ID>] = {
+    name: '<TMPL_VAR NAME=FILE_NAME ESCAPE=JS>',
+    size: '<TMPL_IF NAME=FILE_SIZE_FORMATTED><TMPL_VAR NAME=FILE_SIZE_FORMATTED ESCAPE=JS><TMPL_ELSE><TMPL_VAR NAME=FILE_SIZE ESCAPE=JS></TMPL_IF>',
+    added_by: '<TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY ESCAPE=JS><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF>',
+    date: '<TMPL_IF NAME=CREATED_ON_RELATIVE><TMPL_IF NAME=DATES_RELATIVE><TMPL_VAR NAME=CREATED_ON_RELATIVE ESCAPE=JS><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED ESCAPE=JS></TMPL_IF><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED ESCAPE=JS></TMPL_IF>',
     url: '<TMPL_VAR NAME=URL ESCAPE=JS>',
     file: '<TMPL_VAR NAME=FILE_PATH ESCAPE=JS>',
     kind: '<TMPL_VAR NAME=ARCHIVE_TYPE ESCAPE=JS>',
@@ -42,17 +46,25 @@ function displayAssetDetails(id) {
     var detail_inner = getByID("asset-" + id + "-detail-inner");
     var asset = assets[id];
     var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\">Close</a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img align=\"bottom\" src=\"/mt-static/images/close.gif\" width=\"9\" height=\"9\"></a>";
     var preview;
     if (asset.kind == 'asset:image') {
         preview = "<img src=\"" + asset.url + "\" class=\"preview\" width=\"150\" />";
     } else {
-        preview = "<span class=\"asset-icon asset-icon-" + asset.ext + "\">&nbsp;</span>";
+        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><img border=\"0\" width=\"90\" height=\"96\" src=\"/mt-static/images/filetype_icons/" + asset.ext + "_lg.gif\"></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\">Click to see uploaded file.</a>";
+//        preview = "<div class=\"asset-icon asset-icon-" + asset.ext + "\">&nbsp;</div>";
     }
-    detail_inner.innerHTML = preview + "<br />"
-        + "<MT_TRANS phrase="URL">: " + asset.url + "<br />"
-        + "<MT_TRANS phrase="File">: " + asset.file + "<br />"
-        + "<MT_TRANS phrase="Tags">: " + asset.tags + "<br />"
-        + close_link;
+    detail_inner.innerHTML = "<div class=\"asset_detail_left\">" + preview + "</div>"
+        + "<div class=\"asset_detail_right\">"
+        + "<div class=\"close_asset_detail\">" + close_link + " " + close_icon + "</div>"
+        + "<h2><span class=\"weblog-title-highlight\">" + asset.name +"</span></h2>"
+        + "<b>Size:</b> " + asset.size +"<br />"
+        + "<b>Added By:</b> " + asset.added_by + "<br />"
+        + "<b>Date:</b> " + asset.date + "<br />"
+        + "<p><b><MT_TRANS phrase="File path">:</b><br /> " + asset.file + "<br /></p>"
+        + "<p><b><MT_TRANS phrase="URL">:</b><br /> " + asset.url + "<br /></p>"
+        + "<b><MT_TRANS phrase="Tags">:</b> " + asset.tags + "<br />"
+        + "</div>";
     show("asset-" + id + "-detail");
     return false;
 }

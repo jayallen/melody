@@ -1266,6 +1266,17 @@ li {
 #list-asset table th#as-created-on { width: 16%; }
 #list-asset table th#as-view { width: 1%; min-width: 10px; ;}
 
+.asset_detail_left { float: left; text-align: center; margin-left: auto; margin-right: auto; width: 166px; }
+.asset_detail_right { float: right; width: 205px; }
+.close_asset_detail { font-size: 9px; color: #999; text-transform: uppercase; float: right; }
+.close_asset_detail a,
+.close_asset_detail a:link,
+.close_asset_detail a:visited { text-decoration: underline; color: #999; }
+.close_asset_detail img { text-decoration: none; border:0; }
+.asset-icon-area { width: 164px; height: 164px; border: 1px solid #d7e3f5; text-align: center; }
+.asset-icon-layout { margin-top: 23px;  }
+.asset-icon .asset-icon-pdf { background-image: url(images/filetype_icons/pdf_lg.gif); }
+
 /* tmpl/cms/list_comment.tmpl */
 
 /* global */
