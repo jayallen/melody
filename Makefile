@@ -41,7 +41,7 @@ check:
 		echo updated build-language-stamp;             \
 	fi
 
-lib/MT.pm: %: %.pre build-language-stamp
+lib/MT.pm: %: %.pre build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk
 	sed -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
 	    -e 's!__PRODUCT_CODE__!$(PRODUCT_CODE)!g' \
 	    -e 's!__PRODUCT_NAME__!$(PRODUCT_NAME)!g' \
@@ -65,7 +65,7 @@ lib/MT/ConfigMgr.pm: %: %.pre build-language-stamp
 	    -e 's!__PUBLISH_CHARSET__!$(PUBLISH_CHARSET)!g' \
 	    $< > $@
 
-php/mt.php: %: %.pre build-language-stamp
+php/mt.php: %: %.pre build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk
 	sed -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
 	    -e 's!__PUBLISH_CHARSET__!$(PUBLISH_CHARSET)!g' \
 	    -e 's!__PRODUCT_NAME__!$(PRODUCT_NAME)!g' \
