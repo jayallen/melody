@@ -1787,6 +1787,32 @@ Or, called on an object:
     $mt->rebuild(BlogID => $blog_id)
         or die $mt->errstr;
 
+=head1 DEBUGGING
+
+MT has a package variable C<$MT::DebugMode> which is assigned through
+your MT configuration file (DebugMode setting). If this is set to
+any non-zero value, MT applications will display any C<warn>'d
+statements to a panel that is displayed within the app.
+
+The DebugMode is a bit-wise setting and offers the following options:
+
+    1 - Display debug messages
+    2 - Display a stack trace for messages captured
+    4 - Lists queries issued by MT::ObjectDriver
+    8 - Reports on MT templates that take more than 1/4 second to build*
+
+These can be combined, so if you want to display queries and debug messages,
+use a DebugMode of 5 for instance.
+
+You may also use the local statement to temporarily apply a particular bit,
+if you want to scope the debug messages you receive to a block of code:
+
+    local $MT::DebugMode |= 4;  # show me the queries for the following
+    my $obj = MT::Entry->load({....});
+
+*DebugMode bit 8 actually outputs it's messages to STDERR (which typically
+is sent to your web server's error log).
+
 =head1 CALLBACKS
 
 Movable Type has a variety of hook points at which a plugin can attach
