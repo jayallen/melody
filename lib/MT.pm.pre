@@ -395,8 +395,8 @@ sub run_callbacks {
     my $first_error;
 
     foreach my $callback_sheaf (@Callbacks) {
-        for (@methods) {
-            if (my $set = $callback_sheaf->{$_}) {
+        for my $meth (@methods) {
+            if (my $set = $callback_sheaf->{$meth}) {
                 for my $cb (@$set) {
                     my $result = $class->run_callback($cb, @args);
                     $filter_value &&= $result;
@@ -408,7 +408,6 @@ sub run_callbacks {
                             $first_error = $cb->errstr();
                         }
                     }
-                    next unless $result;
                 }
             }
         }
