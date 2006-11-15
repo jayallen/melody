@@ -3477,6 +3477,99 @@ body#mt-wizard #topnav-img {
     margin: 5px 0px;
 }
 
+.upload-data-wrapper { 
+    font-size:11px;
+    width: 618px; 
+    height: 305px;
+    border-top: 1px solid #D7E3F5;
+    border-bottom: 1px solid #D7E3F5;
+}
+
+.upload_button_spacing {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #999;
+    font-weight: bold;
+    text-align: right;
+}
+
+.upload_indent_choices {
+    margin-left: 13px;
+    margin-bottom: 25px;
+}
+
+.uploading_file {
+    font-size: 11px;
+    font-weight: bold;
+    text-decoration: none;
+    color: #BDA239;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+#percent_uploaded {
+    font-size: 11px;
+    font-weight: bold;
+    padding-left: 4px;
+}
+
+#upload-indicator {
+    position: relative;
+    top: 100px;
+    background-image: url(images/indicator.gif);
+    background-repeat: no-repeat;
+    width: 66px;
+    height: 66px;
+    margin: 0 auto;
+}
+
+.align_left_icon {
+    background-image: url(images/align_left.gif);
+    background-repeat: no-repeat;
+    margin-left: 5px;
+}
+
+.align_center_icon {
+    background-image: url(images/align_center.gif);
+    background-repeat: no-repeat;
+    margin-left: 15px;
+    width: 16px;
+    height: 15px;
+}
+
+.align_right_icon {
+    background-image: url(images/align_right.gif);
+    background-repeat: no-repeat;
+    margin-left: 15px;
+}
+
+#upload_tag-list {
+    margin-top: 3px;
+    font-size: 11px;
+    max-height: 90px;
+    width: 577px;
+    overflow: auto;
+    display: none;
+}
+
+#upload_tags_completion {
+    display: none;
+    position: absolute;
+    width: 591px;
+    border: 1px solid gray;
+    background-color: #eaf2ff;
+    z-index: 20;
+}
+
+#upload_tags_completion .complete-highlight {
+    color: #fff;
+    overflow:hidden;
+    width: 591px;
+    font-weight: bold;
+    background-color: #8faebe;
+    z-index: 20;
+}
+
 .pager {
     margin-top: 10px;
     font-size: 11px;
