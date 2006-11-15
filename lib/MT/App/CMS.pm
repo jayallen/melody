@@ -9269,7 +9269,7 @@ sub upload_file {
     $param{url} = $url;
     $param{is_image} = defined($w) && defined($h);
     require File::Basename;
-    my $basename = File::Basename::basename($local_file);
+    $basename = File::Basename::basename($local_file);
     my $ext = '';
     if ($local_file =~ m/\.([A-Za-z]+)$/) {
         $ext = $1;
