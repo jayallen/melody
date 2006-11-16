@@ -84,7 +84,7 @@ function togglePerms(c) {
 <div class="rightcol">
 
 <div class="box permission-box">
-<h4><MT_TRANS phrase="System Permissions"></h4>
+<h4><MT_TRANS phrase="System Permissions"> <a href="#" onclick="return openManual('author_permissions', 'introduction')" class="help_invert">?</a></h4>
 <div class="inner">
 <ul class="last" id="permission-list">
 <li><input name="is_superuser" id="is_superuser" type="checkbox" value="1"<TMPL_UNLESS NAME=NEW_OBJECT><TMPL_IF NAME=PERM_IS_SUPERUSER> checked="checked"</TMPL_IF> disabled="disabled"</TMPL_UNLESS> onclick="togglePerms(this)" /> <label for="is_superuser"><MT_TRANS phrase="System Administrator"></label></li>

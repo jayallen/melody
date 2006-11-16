@@ -886,10 +886,10 @@ sub list_assets {
     my %terms;
     my %args = ( sort => 'created_on', direction => 'descend' );
 
-    my $type_filter;
+    my $class_filter;
     my $filter = ($app->param('filter') || '');
-    if ($filter eq 'archive_type') {
-        $type_filter = $app->param('filter_val');
+    if ($filter eq 'class') {
+        $class_filter = $app->param('filter_val');
     }
 
     $app->add_breadcrumb($app->translate("Assets"));
@@ -905,6 +905,7 @@ sub list_assets {
 
     my %blogs;
     require File::Basename;
+    require JSON;
     my $auth_prefs = $app->user->entry_prefs;
     my $tag_delim = chr($auth_prefs->{tag_delim});
 
@@ -918,12 +919,14 @@ sub list_assets {
         }
         $row->{blog_name} = $blog ? $blog->name : '-';
         $row->{file_name} = File::Basename::basename($row->{file_path});
+        my $meta = $obj->metadata;
         if (-f $row->{file_path}) {
             my @stat = stat($row->{file_path});
             my $size = $stat[7];
-            $row->{asset_type} = $app->translate($obj->type_name);
+            $row->{thumbnail_url} = $meta->{thumbnail_url} =
+                $obj->thumbnail_url(Height => 230, Width => 164);
+            $row->{asset_class} = $obj->class_label;
             $row->{file_size} = $size;
-            $row->{tags} = MT::Tag->join($tag_delim, $obj->tags);
             if ($size < 1024) {
             } elsif ($size < 1024000) {
                 $row->{file_size_formatted} = sprintf("%.1f KB", $size / 1024);
@@ -934,6 +937,10 @@ sub list_assets {
             unless ($ts) {
                 $ts = $stat[10];
                 $ts = epoch2ts($blog, $ts);
+            }
+            if (my $by = $obj->created_by) {
+                my $user = MT::Author->load($by, { cached_ok => 1 });
+                $row->{created_by} = $user ? $user->name : '';
             }
             if ($ts) {
                 $row->{created_on_formatted} =
@@ -946,26 +953,27 @@ sub list_assets {
         } else {
             $row->{file_is_missing} = 1;
         }
+        $row->{metadata_json} = JSON::objToJson($meta);
     };
 
-    if ($type_filter) {
-        my $asset_pkg = MT::Asset->type_class($type_filter);
-        $terms{archive_type} = $asset_pkg->types;
+    if ($class_filter) {
+        my $asset_pkg = MT::Asset->class_handler($class_filter);
+        $terms{class} = $asset_pkg->classes;
     } else {
-        $terms{archive_type} = MT::Asset->types;
+        $terms{class} = MT::Asset->classes;
     }
 
     # identifier => name
-    my $types = MT::Asset->type_names;
-    my @type_loop;
-    foreach my $type (keys %$types) {
-        push @type_loop, {
-            type_id => $type,
-            type_name => $types->{$type},
+    my $classes = MT::Asset->class_labels;
+    my @class_loop;
+    foreach my $class (keys %$classes) {
+        push @class_loop, {
+            class_id => $class,
+            class_label => $classes->{$class},
         };
     }
     # Now, sort it
-    @type_loop = sort { $a->{type_name} cmp $b->{type_name} } @type_loop;
+    @class_loop = sort { $a->{class_label} cmp $b->{class_label} } @class_loop;
 
     $app->listing({
         Terms => \%terms,
@@ -978,9 +986,10 @@ sub list_assets {
                 blog_name => $blog->name,
                 edit_blog_id => $blog_id,
             ) : ()),
-            type_loop => \@type_loop,
+            class_loop => \@class_loop,
             can_delete_files => $app->user->is_superuser,
             nav_assets => 1,
+            has_expanded_mode => 1,
         },
     });
 }
@@ -2265,7 +2274,7 @@ sub view_log {
     foreach (keys %MT::Log::Classes) {
         push @class_loop, {
             class_name => $_,
-            class_label => $app->translate($MT::Log::Classes{$_}->class_label),
+            class_label => $MT::Log::Classes{$_}->class_label,
         };
     }
     push @class_loop, {
@@ -2725,6 +2734,12 @@ sub edit_object {
             $param{$col} = defined $q->param($col) ?
                 $q->param($col) : $obj->$col();
         }
+        # Make certain any blog-specific element matches the blog we're
+        # dealing with. If not, call shenanigans.
+        if (defined($blog_id) && (exists $param{blog_id}) && ($blog_id != $obj->blog_id)) {
+            return $app->error($app->translate("Invalid parameter"));
+        }
+
         # Set type-specific display parameters
         if ($type eq 'entry') {
             $param{nav_entries} = 1;
@@ -3109,7 +3124,7 @@ sub edit_object {
             my $core_actions = $app->core_itemset_actions($type);
             $param{core_itemset_action_loop} = $core_actions || [];
             $param{has_itemset_actions} =
-                ($plugin_actions || $core_actions) ? 1 : 0;
+                (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
 
             # since MT::App::build_page clobbers it:
             $param{source_blog_name} = $param{blog_name};
@@ -3176,7 +3191,7 @@ sub edit_object {
             my $core_actions = $app->core_itemset_actions($type);
             $param{core_itemset_action_loop} = $core_actions || [];
             $param{has_itemset_actions} =
-                ($plugin_actions || $core_actions) ? 1 : 0;
+                (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
         } elsif ($type eq 'author') {
             # TODO: Populate permissions / blogs for this user
             # populate blog_loop, permission_loop
@@ -5212,7 +5227,7 @@ sub list_objects {
     my $core_actions = $app->core_itemset_actions($type);
     $param{core_itemset_action_loop} = $core_actions || [];
     $param{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
 
     $param{saved} = $q->param('saved');
     $param{saved_deleted} = $q->param('saved_deleted');
@@ -5501,10 +5516,10 @@ sub _process_post_upload {
         $thumb = $url . encode_url($base . '-thumb' . $ext);
 
         require MT::Asset;
-        my $img_pkg = MT::Asset->type_class('asset:image');
+        my $img_pkg = MT::Asset->class_handler('image');
         my $asset = new $img_pkg;
         $asset->blog_id($blog_id);
-        $asset->url($thumb);
+        #$asset->url($thumb);
         $asset->file_path($t_file);
         $asset->file_name($basename);
         my $ext2 = $ext;
@@ -5512,6 +5527,7 @@ sub _process_post_upload {
         $asset->file_ext($ext2);
         $asset->image_width($thumb_width);
         $asset->image_height($thumb_height);
+        $asset->created_by($app->user->id);
         $asset->save;
 
         MT->run_callbacks('CMSUploadFile',
@@ -5574,13 +5590,14 @@ sub _process_post_upload {
             $rel_url_ext =~ s!^/!!;
             $url .= $rel_url_ext;
 
-            my $img_pkg = MT::Asset->type_class('asset:image');
+            my $img_pkg = MT::Asset->class_handler('image');
             my $asset = new $img_pkg;
             $asset->blog_id($blog_id);
             $asset->url($url);
             $asset->file_path($abs_file_path);
             $asset->file_name($basename);
             $asset->file_ext($blog->file_extension);
+            $asset->created_by($app->user->id);
             $asset->save;
 
             MT->run_callbacks('CMSUploadFile',
@@ -6055,7 +6072,7 @@ sub build_commenter_table {
     my $core_actions = $app->core_itemset_actions('commenter');
     $param->{commenter_table}[0]{core_itemset_action_loop} = $core_actions || [];
     $param->{commenter_table}[0]{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
     $param->{commenter_table}[0]{plugin_action_loop} = $app->plugin_actions('list_commenters') || [];
     \@data;
 }
@@ -6303,7 +6320,7 @@ sub build_template_table {
     my $core_actions = $app->core_itemset_actions('template');
     $param->{template_table}[0]{core_itemset_action_loop} = $core_actions || [];
     $param->{template_table}[0]{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
     \@data;
 }
 
@@ -6410,7 +6427,7 @@ sub build_comment_table {
     my $core_actions = $app->core_itemset_actions('comment', $junk_tab ? 'junk' : 'comments');
     $param->{comment_table}[0]{core_itemset_action_loop} = $core_actions || [];
     $param->{comment_table}[0]{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
     \@data;
 }
 
@@ -6899,7 +6916,7 @@ sub build_ping_table {
     my $core_actions = $app->core_itemset_actions('ping', $junk_tab ? 'junk' : 'pings');
     $param->{ping_table}[0]{core_itemset_action_loop} = $core_actions || [];
     $param->{ping_table}[0]{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
     \@data;
 }
 
@@ -7251,7 +7268,7 @@ sub build_entry_table {
     my $core_actions = $app->core_itemset_actions('entry');
     $param->{entry_table}[0]{core_itemset_action_loop} = $core_actions || [];
     $param->{entry_table}[0]{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
     \@data;
 }
 
@@ -7363,6 +7380,8 @@ sub save_entry {
     if ($id) {
         $obj = MT::Entry->load($id)
             || return $app->error($app->translate("No such entry."));
+        return $app->error($app->translate("Invalid parameter"))
+            unless $obj->blog_id == $blog_id;
         return $app->error($app->translate("Permission denied."))
             unless $perms->can_edit_entry($obj, $author);
         $orig_obj = $obj->clone;
@@ -7806,7 +7825,7 @@ sub list_categories {
     my $core_actions = $app->core_itemset_actions('category');
     $param{core_itemset_action_loop} = $core_actions || [];
     $param{has_itemset_actions} =
-        ($plugin_actions || $core_actions) ? 1 : 0;
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
     $param{nav_categories} = 1;
     $app->add_breadcrumb($app->translate('Categories'));
     $app->build_page('edit_categories.tmpl', \%param);
@@ -9272,24 +9291,25 @@ sub upload_file {
     $param{url} = $url;
     $param{is_image} = defined($w) && defined($h);
     require File::Basename;
-    $basename = File::Basename::basename($local_file);
+    my $local_basename = File::Basename::basename($local_file);
     my $ext = '';
     if ($local_file =~ m/\.([A-Za-z]+)$/) {
         $ext = $1;
     }
 
     require MT::Asset;
-    my $img_pkg = MT::Asset->type_class($param{is_image} ? 'asset:image' : 'asset');
+    my $img_pkg = MT::Asset->class_handler($param{is_image} ? 'image' : 'file');
     my $asset = new $img_pkg;
     $asset->blog_id($blog_id);
     $asset->url($url);
     $asset->file_path($local_file);
-    $asset->file_name($basename);
+    $asset->file_name($local_basename);
     $asset->file_ext($ext);
     if ($param{is_image}) {
         $asset->image_width($w);
         $asset->image_height($h);
     }
+    $asset->created_by($app->user->id);
     $asset->save;
 
     if ($param{is_image}) {
@@ -9519,6 +9539,8 @@ sub do_search_replace {
     ## we look for a comma (not a valid character in a column name) and split
     ## on it if it's there.
     if (defined $search) {
+        my $enc = MT::ConfigMgr->instance->PublishCharset;
+        $search = MT::I18N::encode_text($search, 'utf-8', $enc) if ($enc !~ m/utf-?8/i) && ('dialog_grant_role' eq $app->param('__mode'));
         $search = quotemeta($search) unless $is_regex;
         $search = '(?i)' . $search unless $case;
     }
@@ -9534,7 +9556,7 @@ sub do_search_replace {
         if ($type eq 'author') {
             $terms{'type'} = MT::Author::AUTHOR();
             if ('dialog_grant_role' eq $app->param('__mode')) {
-                @cols = qw(name) ;
+                @cols = qw(name nickname email url);
             } elsif ($blog_id) {
                 $args{'join'} = MT::Permission->join_on('author_id', { blog_id => $blog_id } );
             }

@@ -372,6 +372,25 @@ a.help:active {
     background-color: #3F658C;
 }
 
+a.help_invert:link,
+a.help_invert:visited {
+    border: 1px solid #FFF;
+    padding: 0 3px;
+    color: #FFF;
+    font-size: 10px;
+    font-weight: normal;
+    text-decoration: none;
+}
+
+a.help_invert:hover,
+a.help_invert:active {
+    border-color: #FFF;
+    color: #FFF;
+    background-color: #3F658C;
+    font-weight: normal;
+    text-decoration: none;
+}
+
 p {
     font-size: 11px;
     line-height: 130%;
@@ -1034,6 +1053,12 @@ fieldset .field .static {
     color: #333;
     font-size: 11px;
     font-weight: normal;
+}
+
+fieldset .field .static a,
+fieldset .field .static a:link,
+fieldset .field .static a:visited {
+    margin: 5px 5px 0 5px;
 }
 
 fieldset .field p {

@@ -430,6 +430,7 @@ sub _tags_for_blog {
     my $tag_cache = $r->stash('blog_tag_cache:' . $type) || {};
     my @tags;
     my $cache_id;
+    my $all_count;
     if (ref $terms->{blog_id} eq 'ARRAY') {
         $cache_id = join ',', @{$terms->{blog_id}};
         $cache_id = '!' . $cache_id if $args->{not}{blog_id};
@@ -471,6 +472,7 @@ sub _tags_for_blog {
                 $tags{$tag_id}->{__entry_count} = $count;
                 $min = $count if ($count && ($count < $min)) || $min == 0;
                 $max = $count if $count && ($count > $max);
+                $all_count += $count;
             }
         } else {
             foreach my $tag (@tags) {
@@ -487,12 +489,14 @@ sub _tags_for_blog {
                 $tag->{__entry_count} = $count;
                 $min = $count if ($count && ($count < $min)) || $min == 0;
                 $max = $count if $count && ($count > $max);
+                $all_count += $count;
             }
         }
         $tag_cache->{$cache_id}{min} = $min;
         $tag_cache->{$cache_id}{max} = $max;
+        $tag_cache->{$cache_id}{all_count} = $all_count;
     }
-    ($tag_cache->{$cache_id}{tags}, $tag_cache->{$cache_id}{min}, $tag_cache->{$cache_id}{max});
+    ($tag_cache->{$cache_id}{tags}, $tag_cache->{$cache_id}{min}, $tag_cache->{$cache_id}{max}), $tag_cache->{$cache_id}{all_count};
 }
 
 sub _hdlr_tags {
@@ -507,7 +511,7 @@ sub _hdlr_tags {
     my (%blog_terms, %blog_args);
     $blog_terms{blog_id} = $blog_id;
     my @tag_filter;
-    my ($tags, $min, $max) = _tags_for_blog($ctx, \%blog_terms, \%blog_args, $type);
+    my ($tags, $min, $max, $all_count) = _tags_for_blog($ctx, \%blog_terms, \%blog_args, $type);
 
     my $builder = $ctx->stash('builder');
     my $tokens = $ctx->stash('tokens');
@@ -537,12 +541,11 @@ sub _hdlr_tags {
 
     my $column = $args->{sort_by} || 'name';
     $args->{sort_order} ||= '';
-    if ($column eq 'name') {
-        @$tags = grep { $_->{__entry_count} }
-            $args->{sort_order} eq 'descend'
-                ? sort { $b->{column_values}{$column} cmp $a->{column_values}{$column} } @$tags
-                : sort { $a->{column_values}{$column} cmp $b->{column_values}{$column} } @$tags;
-    } elsif ($column eq 'rank' or $column eq 'count') {
+    @$tags = grep { $_->{__entry_count} }
+        $args->{sort_order} eq 'descend'
+            ? sort { lc $b->{column_values}{name} cmp lc $a->{column_values}{name} } @$tags
+            : sort { lc $a->{column_values}{name} cmp lc $b->{column_values}{name} } @$tags;
+    if ($column eq 'rank' or $column eq 'count') {
         @$tags = grep { $_->{__entry_count} }
             $args->{sort_order} eq 'ascend'
                 ? sort { $a->{__entry_count} <=> $b->{__entry_count} } @$tags
@@ -553,16 +556,22 @@ sub _hdlr_tags {
                 ? sort { $b->{column_values}{$column} <=> $a->{column_values}{$column} } @$tags
                 : sort { $a->{column_values}{$column} <=> $b->{column_values}{$column} } @$tags;
     }
-    @$tags = @$tags[ 0 .. $args->{limit} - 1 ]
-        if defined $args->{limit} && $args->{limit} > 0;
+    my $tags_length = @$tags;
+    my @slice_tags;
+    if (defined $args->{limit} && $args->{limit} > 0 && $tags_length > $args->{limit}){
+        @slice_tags = @$tags[ 0 .. $args->{limit} - 1 ];
+    } else {
+        @slice_tags = @$tags;
+    }
 
     local $ctx->{__stash}{tag_min_count} = $min;
     local $ctx->{__stash}{tag_max_count} = $max;
-    foreach my $tag (@$tags) {
+    foreach my $tag (@slice_tags) {
         local $ctx->{__stash}{Tag} = $tag;
         local $ctx->{__stash}{entries} = $tag->{__entries}
             if exists $tag->{__entries};
         local $ctx->{__stash}{tag_entry_count} = $tag->{__entry_count};
+        local $ctx->{__stash}{all_tag_count} = $all_count;
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error( $builder->errstr );
         $res .= $glue if $res ne '';
@@ -612,7 +621,7 @@ sub _hdlr_tag_rank {
     my $min = $ctx->stash('tag_min_count');
     my $max = $ctx->stash('tag_max_count');
     unless (defined $min && defined $max) {
-        (my $tags, $min, $max) = _tags_for_blog($ctx, \%blog_terms, \%blog_args, MT::Entry->datasource);
+        (my $tags, $min, $max, my $all_count) = _tags_for_blog($ctx, \%blog_terms, \%blog_args, MT::Entry->datasource);
         $ctx->stash('tag_max_count', $max);
         $ctx->stash('tag_min_count', $min);
     }
@@ -702,7 +711,7 @@ sub _hdlr_tag_id {
 
 sub _hdlr_tag_count {
     my ($ctx, $args, $cond) = @_;
-    my $count = $ctx->stash('tag_count');
+    my $count = $ctx->stash('tag_entry_count');
     my $tag = $ctx->stash('Tag');
     my $blog_id = $ctx->stash('blog_id');
     return 0 unless $tag;
@@ -1120,31 +1129,59 @@ sub _hdlr_blogs {
     }
     $res;
 }
-sub _hdlr_blog_id { $_[0]->stash('blog')->id }
-sub _hdlr_blog_name { $_[0]->stash('blog')->name }
+
+sub _hdlr_blog_id {
+    my ($ctx, $args, $cond) = @_;
+    $ctx->stash('blog')->id;
+}
+
+sub _hdlr_blog_name {
+    my ($ctx, $args, $cond) = @_;
+    my $name = $ctx->stash('blog')->name;
+    defined $name ? $name : '';
+}
+
 sub _hdlr_blog_description {
-    my $d = $_[0]->stash('blog')->description;
+    my ($ctx, $args, $cond) = @_;
+    my $d = $ctx->stash('blog')->description;
     defined $d ? $d : '';
 }
+
 sub _hdlr_blog_url {
-    my $url = $_[0]->stash('blog')->site_url;
+    my ($ctx, $args, $cond) = @_;
+    my $url = $ctx->stash('blog')->site_url;
+    return '' unless defined $url;
     $url .= '/' unless $url =~ m!/$!;
     $url;
 }
+
 sub _hdlr_blog_site_path {
-    my $path = $_[0]->stash('blog')->site_path;
+    my ($ctx, $args, $cond) = @_;
+    my $path = $ctx->stash('blog')->site_path;
+    return '' unless defined $path;
     $path .= '/' unless $path =~ m!/$!;
     $path;
 }
-sub _hdlr_blog_archive_url { $_[0]->stash('blog')->archive_url }
+
+sub _hdlr_blog_archive_url {
+    my ($ctx, $args, $cond) = @_;
+    my $url = $ctx->stash('blog')->archive_url;
+    return '' unless defined $url;
+    $url .= '/' unless $url =~ m!/$!;
+    $url;
+}
+
 sub _hdlr_blog_relative_url {
-    my $host = $_[0]->stash('blog')->site_url;
+    my ($ctx, $args, $cond) = @_;
+    my $host = $ctx->stash('blog')->site_url;
+    return '' unless defined $host;
     if ($host =~ m!^https?://[^/]+(/.*)$!) {
         return $1;
     } else {
         return '';
     }
 }
+
 sub _hdlr_blog_timezone {
     my $so = $_[0]->stash('blog')->server_offset;
     my $no_colon = $_[1]->{no_colon};
@@ -1153,14 +1190,16 @@ sub _hdlr_blog_timezone {
             abs($so), $no_colon ? '' : ':',
             $partial_hour_offset);
 }
+
 {
     my %real_lang = (cz => 'cs', dk => 'da', jp => 'ja', si => 'sl');
 sub _hdlr_blog_language {
-    my $lang_tag = $_[0]->stash('blog')->language || '';
+    my ($ctx, $args, $cond) = @_;
+    my $lang_tag = $ctx->stash('blog')->language || '';
     $lang_tag = ($real_lang{$lang_tag} || $lang_tag);
-    if ($_[1]->{'locale'}) {
+    if ($args->{'locale'}) {
         $lang_tag =~ s/^(..)([-_](..))?$/$1 . '_' . uc($3||$1)/e;
-    } elsif ($_[1]->{"ietf"}) {
+    } elsif ($args->{"ietf"}) {
         # http://www.ietf.org/rfc/rfc3066.txt
         $lang_tag =~ s/_/-/;
     }
@@ -1169,18 +1208,20 @@ sub _hdlr_blog_language {
 }
 
 sub _hdlr_blog_host {
-    my $host = $_[0]->stash('blog')->site_url;
+    my ($ctx, $args, $cond) = @_;
+    my $host = $ctx->stash('blog')->site_url;
     if ($host =~ m!^https?://([^/:]+)(:\d+)?/!) {
-        return $_[1]->{exclude_port} ? $1 : $1 . ($2 || '');
+        return $args->{exclude_port} ? $1 : $1 . ($2 || '');
     } else {
         return '';
     }
 }
 
 sub _hdlr_cgi_host {
+    my ($ctx, $args, $cond) = @_;
     my $path = _hdlr_cgi_path(@_);
     if ($path =~ m!^https?://([^/:]+)(:\d+)?/!) {
-        return $_[1]->{exclude_port} ? $1 : $1 . ($2 || '');
+        return $args->{exclude_port} ? $1 : $1 . ($2 || '');
     } else {
         return '';
     }
@@ -1313,13 +1354,20 @@ sub _hdlr_entries {
                 children => $args->{include_subcategories} ? 1 : 0 });
         } else {
             if (($category_arg !~ m/\b(AND|OR|NOT)\b|[(|&]/i) && (!$args->{include_subcategories})) {
-                my $cat = cat_path_to_category($category_arg, $blog_id);
-                $cats = [ $cat ] if $cat;
+                my @cats = cat_path_to_category($category_arg, $blog_id);
+                if (@cats) {
+                    $cats = \@cats;
+                    $cexpr = $ctx->compile_category_filter(undef, $cats, { 'and' => 0 });
+                }
             } else {
                 my @cats = MT::Category->load({blog_id => $blog_id});
-                $cats = \@cats; # if @cats;
+                if (@cats) {
+                    $cats = \@cats;
+                    $cexpr = $ctx->compile_category_filter($category_arg, $cats,
+                        { children => $args->{include_subcategories} ? 1 : 0 });
+                }
             }
-            $cexpr = $ctx->compile_category_filter($category_arg, $cats,
+            $cexpr ||= $ctx->compile_category_filter($category_arg, $cats,
                 { children => $args->{include_subcategories} ? 1 : 0 });
         }
         if ($cexpr) {
@@ -1412,6 +1460,7 @@ sub _hdlr_entries {
         $args{direction} = 'descend';
         if (!@filters) {
             if (my $last = $args->{lastn}) {
+                $args{direction} = $args->{sort_order} || 'descend';
                 $args{limit} = $last;
             }
             $args{offset} = $args->{offset} if $args->{offset};
@@ -3891,7 +3940,7 @@ sub _hdlr_sub_categories {
         # Use explicit category or category context
         if ($args->{category}) {
             # user specified category; list from this category down
-            $current_cat = cat_path_to_category($args->{category}, $ctx->stash('blog_id'));
+            ($current_cat) = cat_path_to_category($args->{category}, $ctx->stash('blog_id'));
         } else {
             $current_cat = $ctx->stash('category') || $ctx->stash('archive_category');
         }
@@ -4050,18 +4099,26 @@ sub cat_path_to_category {
     @cat_path = map { $_ =~ s/^\[(.*)\]$/$1/; $_ } @cat_path;       # remove any []
     my $last_cat_id = 0;
     my $cat;
-    for my $label (@cat_path) {
-        $cat = MT::Category->load({ label => $label,
-                                    parent => $last_cat_id,
-                                    blog_id => $blog_id })
-            or last;
-        $last_cat_id = $cat->id;
+
+    my $top = shift @cat_path;
+    my @cats = MT::Category->load({ label => $top,
+                                    parent => 0,
+                                    blog_id => $blog_id });
+    if (@cats) {
+        for my $label (@cat_path) {
+            my @parents = map { $_->id } @cats;
+            @cats = MT::Category->load({ label => $label,
+                                         parent => \@parents,
+                                         blog_id => $blog_id })
+                    or last;
+        }
     }
-    if (!$cat && $path) {
-        $cat = (MT::Category->load({ label => $path,
-                                     blog_id => $blog_id }));
+    if (!@cats && $path) {
+        @cats = (MT::Category->load({
+            label => $path,
+            blog_id => $blog_id }));
     }
-    $cat;
+    @cats;
 }
 
 sub _hdlr_entries_with_sub_categories {

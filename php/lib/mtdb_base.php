@@ -383,10 +383,15 @@ class MTDatabaseBase extends ezsql {
             require_once("MTUtil.php");
             if (!preg_match('/\b(AND|OR|NOT)\b|\(|\)/i', $category_arg)) {
                 $not_clause = false;
-                $cat = cat_path_to_category($category_arg, $blog_id);
-                if ($cat) {
-                    $cats = array($cat);
-                    $category_arg = '(#' . $cat['category_id'] . ')';
+                $cats = cat_path_to_category($category_arg, $blog_id);
+                if (count($cats)) {
+                    $category_arg = '';
+                    foreach ($cats as $cat) {
+                        if ($category_arg != '')
+                            $category_arg .= '|| ';
+                        $category_arg .= '#' . $cat['category_id'];
+                    }
+                    $category_arg = '(' . $category_arg . ')';
                 }
             } else {
                 $not_clause = preg_match('/\bNOT\b/i', $category_arg);
@@ -429,6 +434,9 @@ class MTDatabaseBase extends ezsql {
                 }
             }
         }
+        if ((0 == count($filters)) && (isset($args['show_empty']) && (1 == $args['show_empty']))) {
+            return null;
+        }
 
         # Adds a tag filter to the filters list.
         # TBD:
@@ -440,7 +448,17 @@ class MTDatabaseBase extends ezsql {
             } else {
                 $not_clause = preg_match('/\bNOT\b/i', $tag_arg);
             }
-            $tags =& $this->fetch_entry_tags(array('blog_id' => $blog_id, 'tag' => $tag_arg));
+
+            require_once("MTUtil.php");
+            $include_private = 0;
+            $tag_array = tag_split($tag_arg);
+            foreach ($tag_array as $tag) {
+                if ($tag && (substr($tag,0,1) == '@')) {
+                    $include_private = 1;
+                }
+            }
+            
+            $tags =& $this->fetch_entry_tags(array('blog_id' => $blog_id, 'tag' => $tag_arg, 'include_private' => $include_private));
             if (!is_array($tags)) $tags = array();
             $cexpr = create_tag_expr_function($tag_arg, $tags);
 
@@ -715,6 +733,14 @@ class MTDatabaseBase extends ezsql {
         } else {
             $order = 'asc';
         }
+        $id_order = '';
+        if ($sort_col == 'tag_name') {
+            $sort_col = 'lower(tag_name)';
+        }else{
+            $id_order = ', lower(tag_name)';
+        }
+
+
         $sql = "
             select tag_id, tag_name, count(*) as tag_count
              from mt_tag, mt_objecttag, mt_entry
@@ -725,12 +751,8 @@ class MTDatabaseBase extends ezsql {
                    $tag_filter
                    $entry_filter
                    $private_filter
-          group by tag_id, tag_name
-          order by $sort_col $order";
-        if (isset($args['limit'])) {
-            $sql .= ' <LIMIT>';
-            $sql = $this->apply_limit_sql($sql, $args['limit']);
-        }
+            group by tag_id, tag_name
+            order by $sort_col $order $id_order";
         $tags = $this->get_results($sql, ARRAY_A);
         if (!isset($args['tag'])) {
             if ($args['entry_id'])
@@ -748,7 +770,12 @@ class MTDatabaseBase extends ezsql {
             $blog_filter = 'and category_blog_id = '.intval($args['blog_id']);
         }
         if (isset($args['parent'])) {
-            $parent_filter = 'and category_parent = '.intval($args['parent']);
+            $parent = $args['parent'];
+            if (is_array($parent)) {
+                $parent_filter = 'and category_parent in (' . implode(',', $parent) . ')';
+            } else {
+                $parent_filter = 'and category_parent = '.intval($parent);
+            }
         }
         if (isset($args['category_id'])) {
             if (isset($args['children'])) {
@@ -1253,10 +1280,13 @@ class MTDatabaseBase extends ezsql {
         $entry_id = $args['entry_id'];
         # load pings  
 
-        $order = 'asc';
+        $order = isset($args['lastn']) ? 'desc' : 'asc';
         if (isset($args['sort_order'])) {
-            if ($args['sort_order'] == 'descend')
+            if ($args['sort_order'] == 'descend') {
                 $order = 'desc';
+            } elseif ($args['sort_order'] == 'ascend') {
+                $order = 'asc';
+            }
         }
         if ($entry_id)
             $entry_filter = 'and trackback_entry_id = ' . intval($entry_id);

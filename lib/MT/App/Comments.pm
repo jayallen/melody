@@ -632,7 +632,7 @@ sub _make_commenter {
     my $app = shift;
     my %params = @_;
     require MT::Author;
-    my $cmntr = MT::Author->load({ name => $params{nickname},
+    my $cmntr = MT::Author->load({ name => $params{name},
                                    type => MT::Author::COMMENTER });
     if (!$cmntr) {
         $cmntr = MT::Author->new();
@@ -646,7 +646,7 @@ sub _make_commenter {
         $cmntr->save();
     } else {
         $cmntr->set_values({email => $params{email},
-                            nickname => $params{name},
+                            nickname => $params{nickname},
                             password => "(none)",
                             type => MT::Author::COMMENTER,
                             url => $params{url},

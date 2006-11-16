@@ -177,7 +177,9 @@ sub _nextprev {
 sub trackback {
     my $entry = shift;
     $entry->cache_property('trackback', sub {
-        MT::Trackback->load({ entry_id => $entry->id });
+        if ($entry->id) {
+            return scalar MT::Trackback->load({ entry_id => $entry->id });
+        }
     });
 }
 

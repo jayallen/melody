@@ -104,7 +104,7 @@ TC.attachLoadEvent( rectifyAll );
 <h2><span class="weblog-title-highlight"><MT_TRANS phrase="Create New Role"></span></h2>
 </TMPL_IF>
 
-<p class="page-desc"><MT_TRANS phrase="_USAGE_ROLE_PROFILE"></p>
+<p class="page-desc"><MT_TRANS phrase="_USAGE_ROLE_PROFILE"> <a href="#" onclick="return openManual('author_permissions', 'permissions')" class="help">?</a></p>
 
 <TMPL_IF NAME=SAVED>
 <p class="info"><MT_TRANS phrase="Your changes have been saved."></p>
@@ -204,9 +204,11 @@ TC.attachLoadEvent( rectifyAll );
         <label for="same_permissions"><MT_TRANS phrase="Roles with the same permissions">:</label>
     </div>
     <div class="field">
+        <div class="static">
         <TMPL_LOOP NAME=SAME_PERM_LOOP>
         <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=edit_role&amp;id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NAME ESCAPE=HTML></a> 
         </TMPL_LOOP>
+        </div>
     </div>
 </div>
 </TMPL_IF>

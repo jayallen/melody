@@ -18,8 +18,13 @@
     z-index: 5;
 }
 .asset-detail-panel img.preview {
-    width: 150px;
-    height: auto;
+}
+.asset-icon-jpg, .asset-icon-jpeg, .asset-icon-gif, .asset-icon-png {
+    background-image: url(<TMPL_VAR NAME=STATIC_URI>images/stock_icons/image.jpg);
+    background-repeat: none;
+}
+.asset-icon {
+    display: block;
 }
 </style>
 
@@ -27,17 +32,7 @@
 <!--
 var assets = {};
 <TMPL_LOOP NAME=OBJECT_LOOP>
-assets[<TMPL_VAR NAME=ID>] = {
-    name: '<TMPL_VAR NAME=FILE_NAME ESCAPE=JS>',
-    size: '<TMPL_IF NAME=FILE_SIZE_FORMATTED><TMPL_VAR NAME=FILE_SIZE_FORMATTED ESCAPE=JS><TMPL_ELSE><TMPL_VAR NAME=FILE_SIZE ESCAPE=JS></TMPL_IF>',
-    added_by: '<TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY ESCAPE=JS><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF>',
-    date: '<TMPL_IF NAME=CREATED_ON_RELATIVE><TMPL_IF NAME=DATES_RELATIVE><TMPL_VAR NAME=CREATED_ON_RELATIVE ESCAPE=JS><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED ESCAPE=JS></TMPL_IF><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED ESCAPE=JS></TMPL_IF>',
-    url: '<TMPL_VAR NAME=URL ESCAPE=JS>',
-    file: '<TMPL_VAR NAME=FILE_PATH ESCAPE=JS>',
-    kind: '<TMPL_VAR NAME=ARCHIVE_TYPE ESCAPE=JS>',
-    ext: '<TMPL_VAR NAME=FILE_EXT ESCAPE=JS>',
-    tags: '<TMPL_VAR NAME=TAGS ESCAPE=JS>'
-};
+assets[<TMPL_VAR NAME=ID>] = <TMPL_VAR NAME=METADATA_JSON>;
 </TMPL_LOOP>
 
 function displayAssetDetails(id) {
@@ -46,24 +41,34 @@ function displayAssetDetails(id) {
     var detail_inner = getByID("asset-" + id + "-detail-inner");
     var asset = assets[id];
     var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\">Close</a>";
-    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img align=\"bottom\" src=\"/mt-static/images/close.gif\" width=\"9\" height=\"9\"></a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/close.gif\" width=\"9\" height=\"9\"></a>";
     var preview;
-    if (asset.kind == 'asset:image') {
-        preview = "<img src=\"" + asset.url + "\" class=\"preview\" width=\"150\" />";
+    if (asset.thumbnail_url) {
+        preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
     } else {
-        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><img border=\"0\" width=\"90\" height=\"96\" src=\"/mt-static/images/filetype_icons/" + asset.ext + "_lg.gif\"></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\">Click to see uploaded file.</a>";
+        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><img border=\"0\" width=\"90\" height=\"96\" src=\"<TMPL_VAR NAME=STATIC_URI>images/filetype_icons/" + asset.ext + "_lg.gif\"></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\">Click to see uploaded file.</a>";
 //        preview = "<div class=\"asset-icon asset-icon-" + asset.ext + "\">&nbsp;</div>";
     }
+    var metadata = '';
+    var meta_names = [];
+    var meta_name;
+    for (meta_name in asset) {
+        if (meta_name.match(/^[a-z_]/)) continue;
+        if (!asset[meta_name]) continue;
+        meta_names[meta_names.length] = meta_name;
+    }
+    meta_names.sort();
+    var i;
+    for (i = 0; i < meta_names.length; i++) {
+        meta_name = meta_names[i];
+        metadata += '<dt>' + meta_name + "</dt><dd>" + asset[meta_name] + "</dd>";
+    }
+
     detail_inner.innerHTML = "<div class=\"asset_detail_left\">" + preview + "</div>"
         + "<div class=\"asset_detail_right\">"
         + "<div class=\"close_asset_detail\">" + close_link + " " + close_icon + "</div>"
         + "<h2><span class=\"weblog-title-highlight\">" + asset.name +"</span></h2>"
-        + "<b>Size:</b> " + asset.size +"<br />"
-        + "<b>Added By:</b> " + asset.added_by + "<br />"
-        + "<b>Date:</b> " + asset.date + "<br />"
-        + "<p><b><MT_TRANS phrase="File path">:</b><br /> " + asset.file + "<br /></p>"
-        + "<p><b><MT_TRANS phrase="URL">:</b><br /> " + asset.url + "<br /></p>"
-        + "<b><MT_TRANS phrase="Tags">:</b> " + asset.tags + "<br />"
+        + "<dl>" + metadata + "</dl>"
         + "</div>";
     show("asset-" + id + "-detail");
     return false;
@@ -93,7 +98,7 @@ function setFilterCol(choice) {
     else {
         getByID('filter-mode').selectedIndex = 1;
         var fld = getByID('filter-col');
-        if (choice == 'archive_type')
+        if (choice == 'class')
             fld.selectedIndex = 0;
         else if (choice == 'exacttag')
             fld.selectedIndex = 1;
@@ -144,7 +149,7 @@ TC.attachLoadEvent( init );
 
 <div class="rightcol">
 <TMPL_UNLESS NAME=FILTER>
-<MT_TRANS phrase="Quickfilter:"> <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>&amp;filter=archive_type&amp;filter_val=asset:image"><MT_TRANS phrase="Show images."></a>
+<MT_TRANS phrase="Quickfilter:"> <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>&amp;filter=class&amp;filter_val=image"><MT_TRANS phrase="Show images."></a>
 <TMPL_ELSE>
 <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>"><MT_TRANS phrase="Reset"></a>
 </TMPL_UNLESS>
@@ -171,7 +176,7 @@ TC.attachLoadEvent( init );
 
 <form id="filter-select" method="get" action="<TMPL_VAR NAME=MT_URL>" onsubmit="return execFilter(this)" style="display: none">
 <MT_TRANS phrase="Show">
-<select id="filter-mode" name="mode" onchange="if (this.options[this.selectedIndex].value == 'all') { setFilterCol('none') } else { setFilterCol('archive_type') } enableFilterButton()">
+<select id="filter-mode" name="mode" onchange="if (this.options[this.selectedIndex].value == 'all') { setFilterCol('none') } else { setFilterCol('class') } enableFilterButton()">
 <option value="all"><MT_TRANS phrase="all"></option>
 <option value="only"><MT_TRANS phrase="only"></option>
 </select>
@@ -181,15 +186,15 @@ TC.attachLoadEvent( init );
 <span id="filter-mode-only" style="display: none">
 <MT_TRANS phrase="assets where">
 <select id="filter-col" name="filter" onchange="setFilterCol(this.options[this.selectedIndex].value);enableFilterButton()">
-<option value="archive_type"><MT_TRANS phrase="type"></option>
+<option value="class"><MT_TRANS phrase="type"></option>
 <option value="exacttag"><MT_TRANS phrase="tag (exact match)"></option>
 <option value="normalizedtag"><MT_TRANS phrase="tag (fuzzy match)"></option>
 </select>
 <MT_TRANS phrase="is">
-<span id="filter-archive_type" style="display: none">
-<select id="archive_type-val" name="filter_val" onchange="enableFilterButton()">
-<TMPL_LOOP NAME=TYPE_LOOP>
-<option value="<TMPL_VAR NAME=TYPE_ID>"><TMPL_VAR NAME=TYPE_NAME ESCAPE=HTML></option>
+<span id="filter-class" style="display: none">
+<select id="class-val" name="filter_val" onchange="enableFilterButton()">
+<TMPL_LOOP NAME=CLASS_LOOP>
+<option value="<TMPL_VAR NAME=CLASS_ID>"><TMPL_VAR NAME=CLASS_LABEL ESCAPE=HTML></option>
 </TMPL_LOOP>
 </select>
 </span>
@@ -251,7 +256,7 @@ TC.attachLoadEvent( init );
 <td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
 <td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /</td>
 <td><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="return displayAssetDetails('<TMPL_VAR NAME=ID>');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner" class="asset-detail-panel-inner"></div></div></td>
-<td><TMPL_VAR NAME=ASSET_TYPE ESCAPE=HTML></td>
+<td><TMPL_VAR NAME=ASSET_CLASS ESCAPE=HTML></td>
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
 <td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
 </TMPL_UNLESS>

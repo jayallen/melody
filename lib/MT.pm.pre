@@ -1815,15 +1815,14 @@ is sent to your web server's error log).
 =head1 CALLBACKS
 
 Movable Type has a variety of hook points at which a plugin can attach
-a callback. The context and calling conventions of each one are
-documented here.
+a callback.
 
 In each case, the first parameter is an L<MT::Callback> object which
 can be used to pass error information back to the caller.
 
 The app-level callbacks related to rebuilding are documented
-in L<MT::WeblogPublisher>. The specific apps document the callbacks which
-they invoke.
+in L<MT::WeblogPublisher>. The specific apps document the callbacks
+which they invoke.
 
 =head1 LICENSE
 

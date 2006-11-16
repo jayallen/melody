@@ -52,8 +52,9 @@ package MT::Image::ImageMagick;
 sub load_driver {
     my $image = shift;
     eval { require Image::Magick };
-    return $image->error(MT->translate("Can't load Image::Magick: [_1]", $@))
-        if $@;
+    if (my $err = $@) {
+        return $image->error(MT->translate("Can't load Image::Magick: [_1]", $err));
+    }
     1;
 }
 
@@ -101,8 +102,9 @@ package MT::Image::NetPBM;
 sub load_driver {
     my $image = shift;
     eval { require IPC::Run };
-    return $image->error(MT->translate("Can't load IPC::Run: [_1]", $@))
-        if $@;
+    if (my $err = $@) {
+        return $image->error(MT->translate("Can't load IPC::Run: [_1]", $err));
+    }
     my $pbm = $image->_find_pbm or return;
     1;
 }

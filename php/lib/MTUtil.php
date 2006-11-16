@@ -936,7 +936,6 @@ function tag_split_delim($delim, $str) {
     $tags = array();
     $str = trim($str);
     while (strlen($str) && (preg_match("/^(((['\"])(.*?)\3[^$delim]*?|.*?)($delim\s*|$))/s", $str, $match))) {
-        print_r($match);
         $str = substr($str, strlen($match[1]));
         $tag = isset($match[4]) ? $match[4] : $match[2];
         $tag = trim($tag);
@@ -950,21 +949,12 @@ function tag_split_delim($delim, $str) {
 
 function tag_split($str) {
     return tag_split_delim(',', $str);
-    /*
-    $list = preg_split('/[,;]/', $str);
-    $tags = array();
-    foreach ($list as $tag) {
-        $tag = preg_replace('/(^\s+|\s+$)/s', '', $tag);
-        $tag = preg_replace('/\s+/s', ' ', $tag);
-        if ($tag == '') continue;
-        $tag = preg_replace('/[;,]+$/', '', $tag);
-        $tag = preg_replace('/^"(.+?)"$/', '$1', $tag);
-        $tag = preg_replace("/^'(.+?)'\$/", '$1', $tag);
-        $n8d_tag = tag_normalize($tag);
-        if (($n8d_tag != '') && ($tag != '')) $tags[] = $tag;
-    }
-    return $tags;
-    */
+}
+
+function catarray_path_length_sort($a, $b) {
+	$al = strlen($a['category_label_path']);
+	$bl = strlen($b['category_label_path']);
+	return $al == $bl ? 0 : $al < $bl ? 1 : -1;
 }
 
 # sorts by length of category label, from longest to shortest
@@ -987,51 +977,67 @@ function create_cat_expr_function($expr, &$cats, $param) {
     $orig_expr = $expr;
 
     $include_children = $param['children'] ? 1 : 0;
+    $cats_used = array();
 
-    # handle path category expressions too?
-	usort($cats, 'catarray_length_sort');
-	$cats_replaced = array();
-    foreach ($cats as $cat) {
-        $catl = $cat['category_label'];
-        $catid = $cat['category_id'];
-        $catre = preg_quote($catl, "/");
-        if (!preg_match("/(?:(?<!#)\[$catre\]|$catre)|(?:#$catid\b)/", $expr))
-            continue;
-        if ($include_children) {
-            $kids = array($cat);
-            $child_cats = array();
-            while ($c = array_shift($kids)) {
-                $child_cats[$c['category_id']] = $c;
-                $children = $mt->db->fetch_categories(array('category_id' => $c['category_id'], 'children' => 1, 'show_empty' => 1));
-                if ($children) {
-                    foreach ($children as $child)
-                        $kids[] = $child;
+    if (preg_match('/\//', $expr)) {
+        foreach ($cats as $id => $cat) {
+            $catp = category_label_path($cat);
+            $cats[$id]['category_label_path'] = $catp;
+        }
+        $cols = array('category_label_path', 'category_label');
+    } else {
+        $cols = array('category_label');
+    }
+    foreach ($cols as $col) {
+        if ($col == 'category_label_path') {
+            usort($cats, 'catarray_path_length_sort');
+        } else {
+            usort($cats, 'catarray_length_sort');
+        }
+        $cats_replaced = array();
+        foreach ($cats as $cat) {
+            $catl = $cat[$col];
+            $catid = $cat['category_id'];
+            $catre = preg_quote($catl, "/");
+            if (!preg_match("/(?:(?<!#)\[$catre\]|$catre)|(?:#$catid\b)/", $expr))
+                continue;
+            if ($include_children) {
+                $kids = array($cat);
+                $child_cats = array();
+                while ($c = array_shift($kids)) {
+                    $child_cats[$c['category_id']] = $c;
+                    $children = $mt->db->fetch_categories(array('category_id' => $c['category_id'], 'children' => 1, 'show_empty' => 1));
+                    if ($children) {
+                        foreach ($children as $child)
+                            $kids[] = $child;
+                    }
                 }
+                $repl = '';
+                foreach ($child_cats as $ccid => $cc) {
+                    $repl .= '||#' . $ccid;
+                }
+                if (strlen($repl)) $repl = substr($repl, 2);
+                $repl = '(' . $repl . ')';
+            } else {
+                $repl = "(#$catid)";
             }
-            $repl = '';
-            foreach ($child_cats as $ccid => $cc) {
-                $repl .= '||#' . $ccid;
+            if (isset($cats_replaced[$catl])) {
+                $last_catid = $cats_replaced[$catl];
+                $expr = preg_replace("/(#$last_catid\b)/", '($1 || #' . $catid . ')', $expr);
+            } else {
+        	    $expr = preg_replace("/(?:(?<!#)(?:\[$catre\]|$catre))|#$catid\b/", $repl,
+                    $expr);
+                $cats_replaced[$catl] = $catid;
             }
-            if (strlen($repl)) $repl = substr($repl, 2);
-            $repl = '(' . $repl . ')';
-        } else {
-            $repl = "(#$catid)";
-        }
-        if (isset($cats_replaced[$catl])) {
-            $last_catid = $cats_replaced[$catl];
-            $expr = preg_replace("/(#$last_catid\b)/", '($1 || #' . $catid . ')', $expr);
-        } else {
-    	    $expr = preg_replace("/(?:(?<!#)(?:\[$catre\]|$catre))|#$catid\b/", $repl,
-                $expr);
-            $cats_replaced[$catl] = $catid;
-        }
-        if ($include_children) {
-            foreach ($child_cats as $ccid => $cc)
-                $cats_used[$ccid] = $cc;
-        } else {
-            $cats_used[$catid] = $cat;
+            if ($include_children) {
+                foreach ($child_cats as $ccid => $cc)
+                    $cats_used[$ccid] = $cc;
+            } else {
+                $cats_used[$catid] = $cat;
+            }
         }
     }
+
     $expr = preg_replace('/\bAND\b/i', '&&', $expr);
     $expr = preg_replace('/\bOR\b/i', '||', $expr);
     $expr = preg_replace('/\bNOT\b/i', '!', $expr);
@@ -1044,7 +1050,6 @@ function create_cat_expr_function($expr, &$cats, $param) {
         echo "Invalid category filter: $orig_expr";
         return;
     }
-
 	if (!preg_match('/!/', $expr))
 	    $cats = array_values($cats_used);
 
@@ -1058,6 +1063,23 @@ function create_cat_expr_function($expr, &$cats, $param) {
     return $fn;
 }
 
+function category_label_path($cat) {
+    global $mt;
+    $mtdb =& $mt->db;
+    if (isset($cat['__label_path']))
+        return $cat['__label_path'];
+    $result = preg_match('/\//', $cat['category_label']) ? '[' . $cat['category_label'] . ']' : $cat['category_label'];
+    while ($cat) {
+        $cat = $cat['category_parent'] ? $mtdb->fetch_category($cat['category_parent']) : null;
+        if ($cat)
+            $result = (preg_match('/\//', $cat['category_label']) ? '[' . $cat['category_label'] . ']' : $cat['category_label']) . '/' . $result;
+    }
+    # caching this information may be problematic IF
+    # parent category labels are changed.
+    $cat['__label_path'] = $result;
+    return $result;
+}
+
 function cat_path_to_category($path, $blog_id = 0) {
     global $mt;
     if (!$blog_id)
@@ -1069,21 +1091,24 @@ function cat_path_to_category($path, $blog_id = 0) {
         for ($i = 0; $i < count($cat_path); $i++) {
             $cat_path[$i] = preg_replace('/^\[(.*)\]$/', '\1', $cat_path[$i]);       # remove any []
         }
-        $last_cat_id = 0;
+        $last_cat_ids = array(0);
         foreach ($cat_path as $label) {
-            $cats = $mtdb->fetch_categories(array('label' => $label, 'parent' => $last_cat_id, 'blog_id' => $blog_id, 'show_empty' => 1));
-            if (!$cats || (count($cats) != 1))
+            $cats = $mtdb->fetch_categories(array('blog_id' => $blog_id, 'label' => $label, 'parent' => $last_cat_ids, 'show_empty' => 1));
+            if (!$cats)
                 break;
-            $cat = $cats[0];
-            $last_cat_id = $cat['category_id'];
+            $last_cat_ids = array();
+            foreach ($cats as $cat)
+                $last_cat_ids[] = $cat['category_id'];
         }
     }
-    if (!$cat && $path) {
-        $cats = $mtdb->fetch_categories(array('label' => $path, 'blog_id' => $blog_id, 'show_empty' => 1));
-        if ($cats && (count($cats) == 1))
-            return $cats[0];
+    if ($cats)
+        return $cats;
+    if (!$cats && $path) {
+        $cats = $mtdb->fetch_categories(array_merge($blogs, array('label' => $path, 'show_empty' => 1)));
+        if ($cats)
+            return $cats;
     }
-    return $cat;
+    return null;
 }
 
 # sorts by length of tag name, from longest to shortest

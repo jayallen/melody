@@ -2,7 +2,7 @@
 function smarty_block_MTCategories($args, $content, &$ctx, &$repeat) {
     // status: incomplete
     // parameters: show_empty
-    $localvars = array('_categories', '_categories_counter', 'category', 'inside_mt_categories', 'entries', '_categories_glue');
+    $localvars = array('_categories', '_categories_counter', 'category', 'inside_mt_categories', 'entries', '_categories_glue', 'show_empty');
     if (!isset($content)) {
         $ctx->localize($localvars);
         $args['blog_id'] = $ctx->stash('blog_id');
@@ -11,6 +11,7 @@ function smarty_block_MTCategories($args, $content, &$ctx, &$repeat) {
         $ctx->stash('_categories_glue', $glue);
         $ctx->stash('_categories', $categories);
         $ctx->stash('inside_mt_categories', 1);
+        $ctx->stash('show_empty', isset($args['show_empty']) ? $args['show_empty'] : '0');
         $counter = 0;
     } else {
         $categories = $ctx->stash('_categories');

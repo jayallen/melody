@@ -89,7 +89,7 @@ TC.attachLoadEvent(init);
 
 <div class="rightcol">
 <div class="box permission-box">
-<h4><MT_TRANS phrase="System Permissions"></h4>
+<h4><MT_TRANS phrase="System Permissions"> <a href="#" onclick="return openManual('author_permissions', 'introduction')" class="help_invert">?</a></h4>
 <div class="inner">
 <ul class="last" id="permission-list">
 <li><input name="is_superuser" id="is_superuser" type="checkbox"<TMPL_IF NAME=PERM_IS_SUPERUSER> checked="checked"</TMPL_IF> value="1" onclick="togglePerms(this)" <TMPL_IF NAME=ID><TMPL_UNLESS NAME=STATUS_ENABLED>disabled="disabled"</TMPL_UNLESS></TMPL_IF> /> <label for="is_superuser"><MT_TRANS phrase="System Administrator"></label></li>

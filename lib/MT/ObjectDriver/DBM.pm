@@ -656,7 +656,6 @@ sub save {
     } else {
         $driver->run_callbacks($class . "::pre_update", $obj, $original);
     }
-    my $class = ref $obj;
     delete $object_cache{$class}->{$id} if $id && exists $object_cache{$class}->{$id}; # invalidate the cache
     $original->id($id);
     if ($obj->properties->{audit}) {

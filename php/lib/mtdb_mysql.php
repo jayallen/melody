@@ -150,6 +150,14 @@ class MTDatabase_mysql extends MTDatabaseBase {
         } else {
             $order = 'asc';
         }
+        $id_order = '';
+        if ($sort_col == 'tag_name') {
+            $sort_col = 'lower(tag_name)';
+        } else {
+            $id_order = ', lower(tag_name)';
+        }
+
+
         $sql = "
             select tag_id, tag_name, count(distinct entry_id) as tag_count
               from mt_tag left join mt_objecttag on objecttag_tag_id = tag_id
@@ -161,11 +169,7 @@ class MTDatabase_mysql extends MTDatabaseBase {
                    $entry_filter
                    $private_filter
           group by tag_id, tag_name
-          order by $sort_col $order";
-        if (isset($args['limit'])) {
-            $sql .= ' <LIMIT>';
-            $sql = $this->apply_limit_sql($sql, $args['limit']);
-        }
+          order by $sort_col $order $id_order";
         $tags = $this->get_results($sql, ARRAY_A);
         return $tags;
     }

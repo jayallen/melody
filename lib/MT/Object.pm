@@ -341,10 +341,21 @@ sub __mangle_def {
 
 sub cache_property {
     my $obj = shift;
-    my ($key, $code) = @_;
-    return $obj->{__cache}{$key} if exists $obj->{__cache}{$key};
-    return undef unless $code;
-    $obj->{__cache}{$key} = $code->();
+    my $key = shift;
+    my $code = shift;
+    if (ref $key eq 'CODE') {
+        ($key, $code) = ($code, $key);
+    }
+    $key ||= (caller(1))[3];
+
+    if (@_) {
+        $obj->{__cache}{$key} = $_[0];
+    } else {
+        if ((!defined $obj->{__cache}{$key}) && $code) {
+            $obj->{__cache}{$key} = $code->($obj, @_);
+        }
+    }
+    return exists $obj->{__cache}{$key} ? $obj->{__cache}{$key} : undef;
 }
 
 sub to_hash {

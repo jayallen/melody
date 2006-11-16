@@ -29,7 +29,7 @@ sub BEGIN {
                                            PluginData Session TBPing Template
                                            TemplateMap Trackback Config
                                            Tag ObjectTag Role
-                                           Association );
+                                           Association Asset );
 
     %functions = (
         # standard routines

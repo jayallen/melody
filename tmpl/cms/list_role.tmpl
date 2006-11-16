@@ -17,7 +17,7 @@ TC.attachLoadEvent( init );
 
 <h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_GROUP_ID><TMPL_VAR NAME=GROUP_NAME ESCAPE=HTML><TMPL_ELSE><TMPL_IF NAME=EDIT_AUTHOR_ID><TMPL_VAR NAME=EDIT_AUTHOR_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF></TMPL_IF>: </span> <MT_TRANS phrase="Roles"></h2>
 
-<p class="page-desc"><MT_TRANS phrase="_USAGE_ROLES"></p>
+<p class="page-desc"><MT_TRANS phrase="_USAGE_ROLES"> <a href="#" onclick="return openManual('author_permissions', 'roles')" class="help">?</a></p>
 
 <TMPL_IF NAME=SAVED_DELETED>
 <h4 class="message"><MT_TRANS phrase="You have successfully deleted the role(s)."></h4>

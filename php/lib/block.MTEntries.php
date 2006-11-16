@@ -43,6 +43,12 @@ function smarty_block_MTEntries($args, $content, &$ctx, &$repeat) {
         }
         if ($cat = $ctx->stash('category')) {
             $args['category'] or $args['categories'] or $args['category_id'] = $cat['category_id'];
+            if ($ctx->stash('inside_mt_categories')) {
+                $args['category_id'] = $cat['category_id'];
+                $args['show_empty'] = $ctx->stash('show_empty');
+            } else {
+                $args['category'] or $args['categories'] or $args['category_id'] = $cat['category_id'];
+            }
         }
         if ($tag = $ctx->stash('Tag')) {
             $args['tag'] or $args['tags'] or $args['tags'] = is_array($tag) ? $tag['tag_name'] : $tag;

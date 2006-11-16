@@ -24,6 +24,9 @@ function smarty_block_MTTags($args, $content, &$ctx, &$repeat) {
                 if ($count < $min or $min == 0) $min = $count;
                 $all_count += $count;
             }
+            if (isset($args['limit'])) {
+                $tags = array_slice($tags, 0, $args['limit']);
+            }
         }
         $ctx->stash('tag_min_count', $min);
         $ctx->stash('tag_max_count', $max);
@@ -34,6 +37,7 @@ function smarty_block_MTTags($args, $content, &$ctx, &$repeat) {
         $tags = $ctx->stash('_tags');
         $counter = $ctx->stash('_tags_counter');
     }
+
     if ($counter < count($tags)) {
         $tag = $tags[$counter];
         $ctx->stash('Tag', $tag);

@@ -7,7 +7,7 @@ function smarty_function_MTCommentBody($args, &$ctx) {
     if (!$blog['blog_allow_comment_html']) {
         $text = strip_tags($text);
     }
-    $cb = $blog['blog_convert_paras_comments'];
+    $cb = isset($args['convert_breaks']) ? $args['convert_breaks'] : $blog['blog_convert_paras_comments'];
     if ($cb == '1' || $cb == '__default__') {
         $cb = 'convert_breaks';
     }

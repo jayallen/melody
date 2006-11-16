@@ -159,22 +159,18 @@ sub compile_category_filter {
     my $children = $param->{'children'} ? 1 : 0;
 
     if ($cat_expr) {
+        my @cols = $cat_expr =~ m!/! ? qw(category_label_path label) : qw(label);
         my %cats_used;
-        # sort in descending order by length
-        if ($cat_expr =~ m!/!) {
-            # add extra 'path' expression categories
-            my @path_cats;
+        foreach my $col (@cols) {
+            my %cats_replaced;
+            @$cats = sort {length($b->$col) <=> length($a->$col)} @$cats;
+
             foreach my $cat (@$cats) {
-                my $catp = $cat->category_label_path;
-                push @path_cats, { label => $catp, id => $cat->id, obj => $cat };
-            }
-            @path_cats = sort {length($b->{label}) <=> length($a->{label})} @path_cats;
-            foreach (@path_cats) {
-                my $cat = $_->{obj};
-                my $catp = $_->{label};
-                my $catid = $_->{id};
-                my $repl;
+                next unless $cat;
+                my $catl = $cat->$col;
+                my $catid = $cat->id;
                 my @cats = ($cat);
+                my $repl;
                 if ($children) {
                     my @kids = ($cat);
                     while (my $c = shift @kids) {
@@ -185,51 +181,20 @@ sub compile_category_filter {
                     $repl .= '||' . '#'.$_->id for @cats;
                     $repl = '(' . substr($repl, 2) . ')';
                 } else {
-                    $repl = '#$catid';
+                    $repl = "#$catid";
                 }
-                if ($cat_expr =~ s/(?<!#)\Q$catp\E/$repl/g) {
+                if ($cat_expr =~ s/(?<!#)(?:\Q$catl\E)/$repl/g) {
                     $cats_used{$_->id} = $_ for @cats;
                 }
-            }
-        }
-
-        @$cats = sort {length($b->label) <=> length($a->label)} @$cats;
-
-        my %cats_replaced;
-        foreach my $cat (@$cats) {
-            next unless $cat;
-            my $catl = $cat->label;
-            my $catid = $cat->id;
-            my @cats = ($cat);
-            my $repl;
-            if ($children) {
-                my @kids = ($cat);
-                while (my $c = shift @kids) {
-                    push @cats, $c;
-                    push @kids, ($c->children_categories);
+                if ($cats_replaced{$catl}) {
+                    my $last_catid = $cats_replaced{$catl};
+                    $cat_expr =~ s/(#$last_catid\b)/($1 OR #$catid)/g;
+                    $cats_used{$catid} = $cat;
                 }
-                $repl = '';
-                $repl .= '||' . '#'.$_->id for @cats;
-                $repl = '(' . substr($repl, 2) . ')';
-            } else {
-                $repl = "#$catid";
+                $cats_replaced{$catl} = $catid;
             }
-            if ($cat_expr =~ s/(?<!#)(?:\Q[$catl]\E|\Q$catl\E)/$repl/g) {
-                $cats_used{$_->id} = $_ for @cats;
-            }
-            # for multi blog case
-            if ($cats_replaced{$catl}) {
-                my $last_catid = $cats_replaced{$catl};
-                $cat_expr =~ s/(#$last_catid\b)/($1 OR #$catid)/g;
-                $cats_used{$catid} = $cat;
-            }
-            $cats_replaced{$catl} = $catid;
-            #my $res = ( $cat_expr =~
-            #             s/(?:\Q[$catl]\E|(\b|\s|\A)\Q$catl\E(\b|\s|\Z))/
-            #              $cats_used{$catid} = $cat , "$1(exists \$p->{\$e}{$catid})$2"/gex );
-            #$cats_replaced{$catl} = $catid if $res;
         }
-        @$cats = values %cats_used;# if $cat_expr !~ m/\bNOT\b/i;
+        @$cats = values %cats_used;
 
         $cat_expr =~ s/\bAND\b/&&/gi;
         $cat_expr =~ s/\bOR\b/||/gi;

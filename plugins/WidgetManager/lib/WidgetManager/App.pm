@@ -69,6 +69,7 @@ sub init_tmpl {
         $tmpl->param(can_edit_categories => $perms->can_edit_categories);
         $tmpl->param(can_edit_tags => $perms->can_edit_tags);
         $tmpl->param(can_edit_notifications => $perms->can_edit_notifications);
+        $tmpl->param(can_edit_authors => $perms->can_administer_blog);
         $tmpl->param(has_manage_label =>
             $perms->can_edit_templates  || $perms->can_administer_blog ||
             $perms->can_edit_categories || $perms->can_edit_config ||
@@ -120,7 +121,7 @@ sub init_tmpl {
     $tmpl->param(mtscript_url      => $app->{mtscript_url});
     $tmpl->param(mmscript_url      => $app->{mmscript_url});
     $tmpl->param(static_uri        => $spath);
-    $tmpl->param(script_url        => File::Spec->catdir($apppath,'widget-manager.cgi'));
+    $tmpl->param(script_url        => $app->app_uri);
     $tmpl->param(blog_url          => $app->blog->site_url);
     if (my $lang_id = $app->current_language) {
         $tmpl->param(local_lang_id => lc $lang_id) if $lang_id !~ m/^en/i;
