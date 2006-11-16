@@ -5461,15 +5461,6 @@ sub _process_post_upload {
     my $app = shift;
     my $q = $app->param;
     my($url, $width, $height) = map $q->param($_), qw( url width height );
-    my $wrap_style = '';
-    if($q->param('wrap_text')) {
-        if($q->param('alignment') eq 'left') {
-            $wrap_style = 'style="float: left; margin: 0px 5px 5px 0px;"';
-        } else {
-            $wrap_style = 'style="float: right; margin: 0px 0px 5px 5px;"';
-        }
-    }
-
     my ($base_url, $fname) = $url =~ m|(.*)/([^/]*)|;
     $url = $base_url . '/' . $fname; # no need to re-encode filename; url is already encoded
     my $blog_id = $q->param('blog_id');
@@ -5612,13 +5603,15 @@ sub _process_post_upload {
 <a href="$url" onclick="window.open('$url','popup','width=$width,height=$height,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false">$link</a>
 HTML
     } elsif ($q->param('include')) {
+        my $wrap_style = $q->param('wrap_text') && $q->param('alignment')
+            ? 'class="display_img_'. $q->param('alignment') .'" ' : '';
         if ($thumb) {
             return <<"HTML";
-<a href="$url"><img alt="$fname" src="$thumb" width="$thumb_width" height="$thumb_height" $wrap_style /></a>
+<a href="$url"><img alt="$fname" src="$thumb" width="$thumb_width" height="$thumb_height" $wrap_style/></a>
 HTML
         } else {
             return <<"HTML";
-<img alt="$fname" src="$url" width="$width" height="$height" $wrap_style />
+<img alt="$fname" src="$url" width="$width" height="$height" $wrap_style/>
 HTML
         }
     } elsif ($q->param('link')) {
