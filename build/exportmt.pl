@@ -1,10 +1,7 @@
 #!/usr/bin/perl
-
 # $Id$
-
 use strict;
 use warnings;
-
 use lib 'build';
 use Build;
 
