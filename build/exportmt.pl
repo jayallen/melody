@@ -1,9 +1,13 @@
 #!/usr/bin/perl
+
 # $Id$
+
 use strict;
 use warnings;
+
 use lib 'build';
 use Build;
+
 use Data::Dumper;
 $Data::Dumper::Indent = $Data::Dumper::Terse = $Data::Dumper::Sortkeys = 1;
 
