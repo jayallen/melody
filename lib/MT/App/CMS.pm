@@ -1456,7 +1456,6 @@ sub build_page {
     my($page, $param) = @_;
 
     my $mode = $app->mode;
-    $param->{mt_portal} = $MT::PORTAL;
     $param->{mt_news} = $app->config('NewsURL');
     $param->{mt_support} = $app->config('SupportURL');
     my $lang = lc MT->current_language || 'en_us';
