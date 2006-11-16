@@ -137,7 +137,9 @@ TC.attachLoadEvent( init );
 <ul>
 <li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>"><MT_TRANS phrase="Assets"></a></li>
 <TMPL_IF NAME=EDIT_BLOG_ID>
-<li class="special"><a href="#" onclick="window.open('<TMPL_VAR NAME=MT_URL>?__mode=start_upload&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>', 'upload', 'width=400,height=450,resizable=yes,scrollbars=yes')">Upload File</a></li>
+<li class="special">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New File">" width="9" height="9" />
+<a href="#" onclick="window.open('<TMPL_VAR NAME=MT_URL>?__mode=start_upload&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>', 'upload', 'width=400,height=450,resizable=yes,scrollbars=yes')">Upload New File</a></li>
 </TMPL_IF>
 </ul>
 </div>
