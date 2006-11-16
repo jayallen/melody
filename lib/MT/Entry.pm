@@ -669,6 +669,72 @@ sub to_hash {
     $hash;
 }
 
+sub children_to_xml {
+    my $obj = shift;
+    my $xml = '';
+
+    $xml .= $obj->_entry_child_to_xml('MT::Placement');
+
+    require MT::ObjectTag;
+    my $offset = 0;
+    while (1) {
+        my @objecttags = MT::ObjectTag->load(
+            { object_id => $obj->id, },
+            { offset => $offset, limit => 50, }
+        );
+        last unless @objecttags;
+        $offset += scalar @objecttags;
+        for my $objecttag (@objecttags) {
+            $xml .= $objecttag->to_xml . "\n" if $objecttag->to_backup;
+        }
+    }
+    
+    require MT::Trackback;
+    my $tb = MT::Trackback->load({ entry_id => $obj->id });
+    if ($tb) {
+        require MT::TBPing;
+        my $offset = 0;
+        while (1) {
+            my @pings = MT::TBPing->load(
+                { tb_id => $tb->id, },
+                { offset => $offset, limit => 50, }
+            );
+            last unless @pings;
+            $offset += scalar @pings;
+            for my $ping (@pings) {
+                $xml .= $ping->to_xml . "\n" if $ping->to_backup;
+            }
+        }
+    }
+    
+    $xml .= $obj->_entry_child_to_xml('MT::Comment');
+    
+    $xml;
+}
+
+sub _entry_child_to_xml {
+    my $obj = shift;
+    my ($child_class) = @_;
+    my $xml = '';
+    
+    eval "require $child_class";
+    my $err = $@;
+    return $err if defined($err) && $err;
+
+    my $offset = 0;
+    while (1) {
+        my @objects = $child_class->load(
+            { entry_id => $obj->id, },
+            { offset => $offset, limit => 50, }
+        );
+        last unless @objects;
+        $offset += scalar @objects;
+        for my $object (@objects) {
+            $xml .= $object->to_xml . "\n" if $object->to_backup;
+        }
+    }
+    $xml;
+}
 1;
 __END__
 

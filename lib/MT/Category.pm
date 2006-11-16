@@ -392,6 +392,40 @@ sub is_descendant {
     $possible_parent->is_ancestor($cat);
 }
 
+sub to_backup {
+    $_[0]->parent ? 0 : 1;
+}
+
+sub children_to_xml {
+    my $obj = shift;
+    my $xml = '';
+
+    require MT::Trackback;
+    my $tb = MT::Trackback->load({ category_id => $obj->id });
+    if ($tb) {
+        require MT::TBPing;
+        my $offset = 0;
+        while (1) {
+            my @pings = MT::TBPing->load(
+                { tb_id => $tb->id, },
+                { offset => $offset, limit => 50, }
+            );
+            last unless @pings;
+            $offset += scalar @pings;
+            for my $ping (@pings) {
+                $xml .= $ping->to_xml . "\n" if $ping->to_backup;
+            }
+        }
+    }
+ 
+    my @children = $obj->children_categories;
+    return $xml unless @children;
+    for my $child (@children) {
+        $xml .= $child->to_xml . "\n";
+    }
+    $xml;
+}
+
 1;
 __END__
 

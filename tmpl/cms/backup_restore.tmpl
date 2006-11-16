@@ -1,0 +1,111 @@
+<TMPL_INCLUDE NAME="header.tmpl">
+
+<script type="text/javascript">
+
+function highlightSwitch(selection) {
+    var customizePanel = getByID('customize-panel');
+    var descriptionObject = getByID('backup-what-description');
+    if (customizePanel) {
+        if (selection.value == 'custom') {
+            customizePanel.style.display = '';
+            descriptionObject.innerHTML = '<MT_TRANS phrase="This option allows you to choose exactly what you want to backup.">';
+        } else if (selection.value == 'allentries') {
+            customizePanel.style.display = 'none';
+            descriptionObject.innerHTML = '<MT_TRANS phrase="This option will backup Entries, Categories, and Templates as well as related objects such as Comments and Authors.">';
+        } else {
+            customizePanel.style.display = 'none';
+            descriptionObject.innerHTML = '<MT_TRANS phrase="This option will backup Users, Roles, Associations, Weblogs, Entries, Categories, Templates and Tags.">';
+        }
+    }
+    return false;
+}
+</script>
+<h2><span class="weblog-title-highlight"><TMPL_IF NAME=BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>:</span> <MT_TRANS phrase="Backup / Restore"></h2>
+
+<p class="page-desc"><MT_TRANS phrase="_BACKUP_RESTORE_DESCRIPTION"></p>
+
+<div class="tabs">
+<ul>
+<li class="yah" id="backup-tab"><a href="#" onclick="tabToggle('backup',Array('backup','restore'))" title="<MT_TRANS phrase="Backup System Objects">"><MT_TRANS phrase="Backup"></a></li>
+<li id="restore-tab"><a href="#" onclick="tabToggle('restore',Array('backup','restore'))" title="<MT_TRANS phrase="Restore System Objects">"><MT_TRANS phrase="Restore"></a></li>
+</ul>
+</div>
+                                                                                         
+<div id="backup-panel">
+
+<p class="page-desc"><MT_TRANS phrase="_USAGE_BACKUP"></p> 
+
+<form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
+<input type="hidden" name="__mode" value="backup" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+
+<fieldset style="margin-top: 0px;">
+
+<div class="setting">
+<div class="label"><label><MT_TRANS phrase="What to backup">:</label></div>
+<div class="field">
+<select name="backup_what" id="backup_what" onchange="highlightSwitch(this)">
+<option value="everything" selected="selected"><MT_TRANS phrase="Everything"></option>
+<option value="allentries"><MT_TRANS phrase="All entries from all weblogs"></option>
+<option value="custom"><MT_TRANS phrase="Choose what to backup"></option>
+</select>
+<p id="customize-panel" style="display:none;">
+<input type="radio" id="users" name="users" value="0"> <label for="users"><MT_TRANS phrase="Users"></label><br />
+<input type="radio" id="roles" name="roles" value="1"> <label for="roles"><MT_TRANS phrase="Roles"></label><br />
+<input type="radio" id="associations" name="associations" value="2"> <label for="associations"><MT_TRANS phrase="Associations"></label><br />
+<input type="radio" id="weblogs" name="weblogs" value="3"> <label for="weblogs"><MT_TRANS phrase="Weblogs"></label><br />
+<input type="radio" id="entries" name="entries" value="0"> <label for="entries"><MT_TRANS phrase="Entries"></label><br />
+<input type="radio" id="categories" name="categories" value="1"> <label for="categories"><MT_TRANS phrase="Categories"></label><br />
+<input type="radio" id="notifications" name="notifications" value="2"> <label for="notifications"><MT_TRANS phrase="Notifications"></label><br />
+<input type="radio" id="templates" name="templates" value="3"> <label for="templates"><MT_TRANS phrase="Templates"></label><br />
+<input type="radio" id="tags" name="tags" value="3"> <label for="tags"><MT_TRANS phrase="Tags"></label><br />
+</p>
+<p><span id="backup-what-description"><MT_TRANS phrase="This option will backup Users, Roles, Associations, Weblogs, Entries, Categories, Templates and Tags."></span>
+<a href="#" onclick="return openManual('backup_restore', 'backup_what')" class="help">?</a></p>
+</div>
+</div>
+<div class="setting">
+<div class="label"><label><MT_TRANS phrase="Type of archive format">:</label></div>
+<div class="field">
+<p><input type="radio" id="tar.gz" name="backup_archive_format" value="0" checked="checked"> <label for="tar.gz"><MT_TRANS phrase="tar.gz"></label>
+<input type="radio" id="zip" name="backup_archive_format" value="1"> <label for="zip"><MT_TRANS phrase="zip"></label></p>
+</div>
+</div>
+<div class="setting">
+<div class="label"><label for="num_items"><MT_TRANS phrase="Number of Items per file">:</label></div>
+<div class="field">
+<input name="num_items" id="num_items" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>" size="30" />
+<p><MT_TRANS phrase="How many items are in a single file."> <a href="#" onclick="return openManual('backup_restore', 'backup_num_items')" class="help">?</a></p>
+</div>
+</div>
+<p style="text-align: center;"><input type="submit" value="<MT_TRANS phrase="Make Backup">" title="<MT_TRANS phrase="Make Backup (b)">" accesskey="b" /></p>
+
+</fieldset>
+</form>
+</div>
+<div id="restore-panel" style="display: none;">
+
+<p class="page-desc"><MT_TRANS phrase="_USAGE_RESTORE"></p> 
+
+<form method="post" enctype="multipart/form-data" action="<TMPL_VAR NAME=SCRIPT_URL>">
+<input type="hidden" name="__mode" value="restore" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+
+<fieldset style="margin-top: 0px;">
+<div class="setting">
+<div class="label"><label><MT_TRANS phrase="Upload backup file: (optional)"></label></div>
+<div class="field">
+<input name="file" id="file" type="file" />
+<p><MT_TRANS phrase="If your backup file is located on your computer, you can upload it here.  Otherwise, Movable Type will automatically look in the <code>import</code> folder of your Movable Type directory."> <a href="#" onclick="return openManual('backup_restore', 'source_file')" class="help">?</a><br /></p>
+</div>
+</div>
+
+<p style="text-align: center;"><input type="submit" value="<MT_TRANS phrase="Restore">" title="<MT_TRANS phrase="Restore (r)">" accesskey="r" /></p>
+
+</fieldset>
+</form>
+
+</div>
+<div id="bottom"></div>
+
+<TMPL_INCLUDE NAME="footer.tmpl">

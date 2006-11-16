@@ -9,6 +9,8 @@ use strict;
 
 use MT::ObjectDriver;
 use MT::ErrorHandler;
+use MT::Util qw(epoch2ts);
+use HTTP::Date qw(time2isoz);
 @MT::Object::ISA = qw( MT::ErrorHandler );
 
 ## Magic.
@@ -360,6 +362,46 @@ sub to_hash {
         $hash->{"${pfx}.$_"} = $blog_hash->{$_} foreach keys %$blog_hash;
     }
     $hash;
+}
+
+sub _is_element {
+    my $obj = shift;
+    my ($def) = @_;
+    return (('text' eq $def->{type}) || (('string' eq $def->{type}) && (255 < $def->{size}))) ? 1 : 0;
+}
+
+sub to_backup { 1; }
+sub children_to_xml { ''; }
+
+sub to_xml {
+    my $obj = shift;
+
+    my $coldefs = $obj->column_defs;
+    my $colnames = $obj->column_names;
+    my $xml;
+
+    $xml = '<' . $obj->datasource;
+
+    my @elements;
+    for my $name (@$colnames) {
+        if ($obj->column($name)) {
+            if ($obj->_is_element($coldefs->{$name})) {
+                push @elements, $name;
+                next;
+            } elsif (('datetime' eq $coldefs->{$name}{type}) || ('timestamp' eq $coldefs->{$name}{type})) {
+                my $ts_iso = HTTP::Date::time2isoz(MT::Util::ts2epoch(undef, $obj->column($name)));
+                $ts_iso =~ s/ /T/;
+                $xml .= " $name='" . $ts_iso . "'";
+                next;
+            }
+            $xml .= " $name='" . MT::Util::encode_xml($obj->column($name), 1) . "'";
+        }
+    }
+    $xml .= '>';
+    $xml .= "<$_>" . MT::Util::encode_xml($obj->column($_), 1) . "</$_>" foreach @elements;
+    $xml .= $obj->children_to_xml;
+    $xml .= '</' . $obj->datasource . '>';
+    $xml;
 }
 
 1;
@@ -1103,6 +1145,10 @@ used by the L<MT::App::CMS/listing> method.
 =item * $obj->properties()
 
 TODO - Return the return properties of the object.
+
+=item * $obj->to_xml()
+
+TODO - Return the XML representation of the object.
 
 =back
 

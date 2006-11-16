@@ -81,6 +81,9 @@
 <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=search_replace"><MT_TRANS phrase="Search &amp; Replace"></a><br />
 <MT_TRANS phrase="Find everything. Replace anything.">
 </li>
+<TMPL_IF NAME=IS_ADMINISTRATOR>
+<li><a<TMPL_IF NAME=NAV_BACKUP> class="here"</TMPL_IF> id="nav-backup" title="<MT_TRANS phrase="Backup &amp; Restore">" href="<TMPL_VAR NAME=MT_URL>?__mode=backup_restore"><MT_TRANS phrase="Backup &amp; Restore"></a></li>
+</TMPL_IF>
 <TMPL_IF NAME=CAN_VIEW_LOG>
 <li id="nav-log">
 <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=view_log"><MT_TRANS phrase="Activity Log"></a><br />

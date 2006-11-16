@@ -146,6 +146,9 @@ sub init {
         'dialog_select_user' => \&dialog_select_user,
         'dialog_grant_role' => \&dialog_grant_role,
         'grant_role' => \&grant_role,
+        'backup_restore' => \&backup_restore,
+        'backup' => \&backup,
+        'restore' => \&restore,
     );
     $app->{state_params} = [
         '_type', 'id', 'tab', 'offset', 'filter',
@@ -10726,6 +10729,109 @@ sub grant_role {
     $app->call_return;
 }
 
+sub backup_restore {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+
+    my %param = ();
+    $app->add_breadcrumb($app->translate('Backup & Restore'));
+    $param{system_overview_nav} = 1;
+    $param{nav_backup} = 1;
+    $app->build_page('backup_restore.tmpl', \%param);
+}
+
+sub backup {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+    
+    my $q = $app->param;
+
+    my $what = $q->param('backup_what');
+    return $app->errtrans("What to backup must be selected.") if !$what;
+
+    my $meth = "backup_$what";
+    $app->$meth(@_);
+}
+
+sub backup_everything {
+    my $app = shift;
+    my $user = $app->user;
+    
+    my $enc = $app->config('PublishCharset') || 'utf-8';
+    my $file = '';
+    my @ts = gmtime(time);
+    my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d",
+        $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
+    $file .= "Movable_Type-$ts" . '-Backup.xml';
+    $app->{no_print_body} = 1;
+    $app->set_header("Content-Disposition" => "attachment; filename=$file");
+    $app->send_http_header($enc ? "text/xml; charset=$enc"
+                                : 'text/xml');
+
+    my %obj_to_backup = (
+        'MT::Author' => 1,
+        'MT::Role' => 1,
+        'MT::Association' => 1,
+        'MT::Tag' => 1,
+        'MT::Category' => 1,
+        'MT::Blog' => 1,
+    );
+
+    $app->print("<?xml version='1.0' encoding='$enc'?>\n") if $enc !~ m/utf-?8/i;
+    $app->print("<movabletype xmlns='http://www.sixapart.com/ns/movabletype'>\n");
+    for my $class (keys %obj_to_backup) {
+        eval "require $class; ";
+        my $err = $@;
+        if ($err) {
+            $app->print("$err\n");
+            next;
+        }
+        my $offset = 0;
+        while (1) {
+            my @objects = $class->load(undef, { offset => $offset, limit => 50, });
+            last unless @objects;
+            $offset += scalar @objects;
+            for my $object (@objects) {
+                $app->print($object->to_xml . "\n") if $object->to_backup;
+                my $xml = MT->run_callbacks('CMSBackup.' . $object->datasource, $app, $object)
+                    or $app->print($app->error(MT->errstr()));
+                $app->print($xml . "\n") if $xml ne '1';
+            }
+        }
+    }
+    $app->print('</movabletype>');
+}
+
+sub backup_allentries {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+
+    $app->errtrans("Not implemented yet");
+}
+
+sub backup_custom {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+
+    $app->errtrans("Not implemented yet");
+}
+
+sub restore {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+
+    $app->errtrans("Not implemented yet");
+}
+
 1;
 __END__
 
@@ -11593,6 +11699,18 @@ for either installation of upgrade of their database.
 =item * view_log
 
 Handler for viewing the activity log (either blog-level or system-wide).
+
+=item * backup_restore
+
+Handler for the display of the backup/restore screen.
+
+=item * backup
+
+Handler for the system backup function.
+
+=item * backup_restore
+
+Handler for the system restore function.
 
 =back
 
