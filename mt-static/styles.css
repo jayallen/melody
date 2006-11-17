@@ -209,6 +209,7 @@ h5 {
 .box ul.nav li#nav-settings { background-image: url(images/nav_icons/color/settings.gif); }
 .box ul.nav li#nav-search { background-image: url(images/nav_icons/color/search.gif); }
 .box ul.nav li#nav-log { background-image: url(images/nav_icons/color/log.gif); }
+.box ul.nav li#nav-backup { background-image: url(images/nav_icons/color/backup.gif); }
 .box ul.nav li#nav-status { background-image: url(images/nav_icons/color/status.gif); }
 .box ul.nav li#nav-quickpost { background-image: url(images/nav_icons/color/quickpost.gif); }
 
@@ -575,6 +576,7 @@ html>body .sub a { width: 80px; }
 .sub a#nav-search { background-image: url(images/nav_icons/color/search.gif); }
 .sub a#nav-log { background-image: url(images/nav_icons/color/log.gif); }
 .sub a#nav-import { background-image: url(images/nav_icons/color/import.gif); }
+.sub a#nav-backup { background-image: url(images/nav_icons/color/backup.gif); }
 .sub a#nav-rebuild { background-image: url(images/nav_icons/color/rebuild.gif); }
 .sub a#nav-rebuild.rebuilding { background-image: url(images/ani-rebuild.gif) !important }
 .sub a#nav-view-site { background-image: url(images/nav_icons/color/view-site.gif); }
