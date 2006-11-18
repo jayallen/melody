@@ -93,9 +93,10 @@ sub blog {
         [ 8192,  'view_blog_log', 'View Activity Log', 1, 'blog'],
         # 32 is deprecated; reserved for future use
         [ 128,   'rebuild', 'Rebuild Files', 1, 'blog'],
-        # Not a real permission but a denial thereeof; unlisted because it
+        # Not a real permission but a denial thereof; unlisted because it
         # has no label.
         [ 2048,  'not_comment', '', 1, 'blog'],
+        [ 32768, 'save_image_defaults', '', 1, 'blog'],
     );
 
     sub add_permissions {

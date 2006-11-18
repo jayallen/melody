@@ -14,19 +14,26 @@ function doClick (f, mode) {
 
 function doHandleMode (f, mode, type) {
     var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=' + type;
-    url += '&blog_id=<TMPL_VAR NAME=BLOG_ID>&url=<TMPL_VAR NAME=URL ESCAPE=URL>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>&' + mode;
+    url += '&blog_id=<TMPL_VAR NAME=BLOG_ID>&url=<TMPL_VAR NAME=URL ESCAPE=URL>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>';
+    url += mode;
 <TMPL_IF NAME=DO_THUMB>
     if (f.thumb.checked)
-        url += '&thumb=1&' + calcGeometry(f);
+        url += '&thumb=1' + calcGeometry(f);
+        url += '&thumb_width_type=' + f.thumb_width_type.options[f.thumb_width_type.selectedIndex].value;
+        url += '&thumb_height_type=' + f.thumb_height_type.options[f.thumb_height_type.selectedIndex].value;
+        if (f.constrain.checked)
+            url += '&constrain=1';
 </TMPL_IF>
     if (f.wrap_text.checked) {
-        url += '&wrap_text=1&alignment=';
-        for (i=0; i<f.alignment.length; i++) {
-            if (f.alignment[i].checked) {
-                url += f.alignment[i].value;
+        url += '&wrap_text=1&align=';
+        for (i=0; i<f.align.length; i++) {
+            if (f.align[i].checked) {
+                url += f.align[i].value;
             }
         }
     }
+    if (f.image_defaults.checked)
+        url += '&image_defaults=1';
     if (type == 'start_upload_entry') {
         window.opener.location = url;
         window.close();
@@ -41,7 +48,8 @@ function doHandleMode (f, mode, type) {
 function calcGeometry (f) {
     var w = calcDim(f.thumb_width, f.thumb_width_type, f.full_width.value);
     var h = calcDim(f.thumb_height, f.thumb_height_type, f.full_height.value);
-    return 'thumb_width=' + w + '&thumb_height=' + h;
+    var url = '&thumb_width=' + w + '&thumb_height=' + h;
+    return url;
 }
 
 function calcDim (val, type, full) {
@@ -118,52 +126,76 @@ function adjustWidthHeight (f, width) {
 
 <TMPL_IF NAME=IS_IMAGE>
 <p>
-<input type="checkbox" name="wrap_text" value="1" /> <MT_TRANS phrase="Wrap text">:
-<input type="radio" name="alignment" value="left" checked="checked" /> <MT_TRANS phrase="Left">
-<input type="radio" name="alignment" value="right" /> <MT_TRANS phrase="Right">
+<input type="checkbox" name="wrap_text" value="1" <TMPL_IF NAME=WRAP_TEXT>checked="checked"</TMPL_IF>/>
+<MT_TRANS phrase="Wrap text">:
+<input type="radio" name="align" value="left" <TMPL_IF NAME=ALIGN_LEFT>checked="checked"</TMPL_IF>/>
+<MT_TRANS phrase="Left">
+<input type="radio" name="align" value="center" <TMPL_IF NAME=ALIGN_CENTER>checked="checked"</TMPL_IF>/>
+<MT_TRANS phrase="Center">
+<input type="radio" name="align" value="right" <TMPL_IF NAME=ALIGN_RIGHT>checked="checked"</TMPL_IF>/>
+<MT_TRANS phrase="Right">
 </p>
 </TMPL_IF>
 
 <TMPL_IF NAME=DO_THUMB>
 <h4><MT_TRANS phrase="Image Thumbnail"></h4>
 
-<p><label><input type="checkbox" name="thumb" value="1"> <MT_TRANS phrase="Create a thumbnail for this image"></label> <a href="#" onclick="return openManual('file_upload', 'creating_thumbnails')" class="help">?</a></p>
+<p>
+<label>
+<input type="checkbox" name="thumb" value="1" <TMPL_IF NAME=MAKE_THUMB>checked="checked"</TMPL_IF> />
+<MT_TRANS phrase="Create a thumbnail for this image">
+</label>
+<a href="#" onclick="return openManual('file_upload', 'creating_thumbnails')" class="help">?</a>
+</p>
 
 <blockquote>
 
 <p>
 <label for="thumb_width"><MT_TRANS phrase="Width:"></label>
-<input name="thumb_width" id="thumb_width" value="<TMPL_VAR NAME=WIDTH>" onchange="adjustWidthHeight(this.form, 1)" size="4" />
+<input name="thumb_width" id="thumb_width" value="<TMPL_VAR NAME=THUMB_WIDTH>" onchange="adjustWidthHeight(this.form, 1)" size="4" />
 <select name="thumb_width_type" onchange="adjustPixelsPct(this.form, 1)">
-<option value="pixels" selected="selected"><MT_TRANS phrase="Pixels"></option>
-<option value="percent"><MT_TRANS phrase="Percent"></option>
+<option value="pixels" <TMPL_IF NAME=UNIT_WPIXELS>selected="selected"</TMPL_IF>><MT_TRANS phrase="Pixels"></option>
+<option value="percent" <TMPL_IF NAME=UNIT_WPERCENT>selected="selected"</TMPL_IF>><MT_TRANS phrase="Percent"></option>
 </select>
 </p>
 
 <p>
 <label for="thumb_height"><MT_TRANS phrase="Height:"></label>
-<input name="thumb_height" value="<TMPL_VAR NAME=HEIGHT>" onchange="adjustWidthHeight(this.form, 0)" size="4" />
+<input name="thumb_height" value="<TMPL_VAR NAME=THUMB_HEIGHT>" onchange="adjustWidthHeight(this.form, 0)" size="4" />
 <select name="thumb_height_type" onchange="adjustPixelsPct(this.form, 0)">
-<option value="pixels" selected="selected"><MT_TRANS phrase="Pixels"></option>
-<option value="percent"><MT_TRANS phrase="Percent"></option>
+<option value="pixels" <TMPL_IF NAME=UNIT_HPIXELS>selected="selected"</TMPL_IF>><MT_TRANS phrase="Pixels"></option>
+<option value="percent" <TMPL_IF NAME=UNIT_HPERCENT>selected="selected"</TMPL_IF>><MT_TRANS phrase="Percent"></option>
 </select>
 </p>
 
-<p><label><input type="checkbox" name="constrain" value="1" checked="checked"> <MT_TRANS phrase="Constrain proportions"></p>
+<p>
+<label>
+<input type="checkbox" name="constrain" value="1" <TMPL_IF NAME=CONSTRAIN>checked="checked"</TMPL_IF>/>
+<MT_TRANS phrase="Constrain proportions">
+</label>
+</p>
 
 </blockquote>
 </TMPL_IF>
 
-<p><MT_TRANS phrase="Would you like this file to be a:"></p>
-
 <div>
+<p><MT_TRANS phrase="Would you like this file to be a:"></p>
 <TMPL_IF NAME=IS_IMAGE>
-<input type="button" onclick="doClick(this.form, 'popup=1&amp;width=<TMPL_VAR NAME=WIDTH>&amp;height=<TMPL_VAR NAME=HEIGHT>&amp;image_type=<TMPL_VAR NAME=IMAGE_TYPE>')" value="<MT_TRANS phrase="Popup Image">" />
-<input type="button" onclick="doClick(this.form, 'include=1&width=<TMPL_VAR NAME=WIDTH>&height=<TMPL_VAR NAME=HEIGHT>&image_type=<TMPL_VAR NAME=IMAGE_TYPE>')" value="<MT_TRANS phrase="Embedded Image">" />
+<input type="button" onclick="doClick(this.form, '&popup=1&amp;width=<TMPL_VAR NAME=WIDTH>&amp;height=<TMPL_VAR NAME=HEIGHT>&amp;image_type=<TMPL_VAR NAME=IMAGE_TYPE>')" value="<MT_TRANS phrase="Popup Image">" />
+<input type="button" onclick="doClick(this.form, '&include=1&width=<TMPL_VAR NAME=WIDTH>&height=<TMPL_VAR NAME=HEIGHT>&image_type=<TMPL_VAR NAME=IMAGE_TYPE>')" value="<MT_TRANS phrase="Embedded Image">" />
 <TMPL_ELSE>
-<input type="button" onclick="doClick(this.form, 'link=1')" value="<MT_TRANS phrase="Link">" />
+<input type="button" onclick="doClick(this.form, '&link=1')" value="<MT_TRANS phrase="Link">" />
 </TMPL_IF>
 </div>
+
+<TMPL_IF NAME=CAN_SAVE_IMAGE_DEFAULTS>
+<p>
+<label>
+<input type="checkbox" name="image_defaults" value="1" />
+<MT_TRANS phrase="Remember these settings">
+</label>
+</p>
+</TMPL_IF>
 
 </form>
 

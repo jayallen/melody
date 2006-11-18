@@ -73,6 +73,15 @@ __PACKAGE__->install_properties({
         'archive_tmpl_monthly' => 'string(255)',
         'archive_tmpl_category' => 'string(255)',
         'archive_tmpl_individual' => 'string(255)',
+        'image_default_wrap_text' => 'boolean',
+        'image_default_align' => 'string(10)',
+        'image_default_thumb' => 'boolean',
+        'image_default_width' => 'integer',
+        'image_default_wunits' => 'string(10)',
+        'image_default_height' => 'integer',
+        'image_default_hunits' => 'string(10)',
+        'image_default_constrain' => 'boolean',
+        'image_default_popup' => 'boolean',
     },
     indexes => {
         name => 1,
@@ -88,6 +97,12 @@ __PACKAGE__->install_properties({
     datasource => 'blog',
     primary_key => 'id',
 });
+
+# Image upload defaults.
+use constant ALIGN => 'left';
+use constant WIDTH => 100;
+use constant HEIGHT => 100;
+use constant UNITS => 'pixels';
 
 sub set_defaults {
     my $blog = shift;
@@ -129,7 +144,18 @@ sub set_defaults {
     $blog->server_offset(MT->config('DefaultTimezone') || 0);
     # something far in the future to force dynamic side to read it.
     $blog->children_modified_on('20101231120000');
-    $blog;
+    # Image upload default settings.
+    $blog->image_default_wrap_text(0);
+    $blog->image_default_align('left');
+    $blog->image_default_thumb(0);
+    $blog->image_default_width(0);
+    $blog->image_default_height(0);
+    $blog->image_default_wunits('pixels');
+    $blog->image_default_hunits('pixels');
+    $blog->image_default_constrain(1);
+    $blog->image_default_popup(0);
+
+    return $blog;
 }
 
 sub create_default_blog {

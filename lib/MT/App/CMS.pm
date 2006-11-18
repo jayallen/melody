@@ -5466,6 +5466,22 @@ sub _process_post_upload {
     require MT::Blog;
     my $blog = MT::Blog->load($blog_id, {cached_ok=>1});
     my($thumb, $thumb_width, $thumb_height);
+    # Save new defaults if requested.
+    if($q->param('image_defaults')) {
+        return $app->error($app->translate(
+            'Permission denied setting image defaults for blog #[_2]', $blog_id
+        )) unless $app->{perms}->can_save_image_defaults;
+        $blog->image_default_wrap_text($q->param('wrap_text') ? 1 : 0);
+        $blog->image_default_align($q->param('align') || MT::Blog::ALIGN());
+        $blog->image_default_thumb($q->param('thumb') ? 1 : 0);
+        $blog->image_default_width($q->param('thumb_width') || MT::Blog::WIDTH());
+        $blog->image_default_wunits($q->param('thumb_width_type') || MT::Blog::UNITS());
+        $blog->image_default_height($q->param('thumb_height') || MT::Blog::HEIGHT());
+        $blog->image_default_hunits($q->param('thumb_height_type') || MT::Blog::UNITS());
+        $blog->image_default_constrain($q->param('constrain') ? 1 : 0);
+        $blog->image_default_popup($q->param('popup') ? 1 : 0);
+        $blog->save;
+    }
     if ($thumb = $q->param('thumb')) {
         require MT::Image;
         my $base_path = $q->param('site_path') ?
@@ -5602,8 +5618,8 @@ sub _process_post_upload {
 <a href="$url" onclick="window.open('$url','popup','width=$width,height=$height,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false">$link</a>
 HTML
     } elsif ($q->param('include')) {
-        my $wrap_style = $q->param('wrap_text') && $q->param('alignment')
-            ? 'class="display_img_'. $q->param('alignment') .'" ' : '';
+        my $wrap_style = $q->param('wrap_text') && $q->param('align')
+            ? 'class="display_img_'. $q->param('align') .'" ' : '';
         if ($thumb) {
             return <<"HTML";
 <a href="$url"><img alt="$fname" src="$thumb" width="$thumb_width" height="$thumb_height" $wrap_style/></a>
@@ -9307,6 +9323,21 @@ sub upload_file {
     if ($param{is_image}) {
         eval { require MT::Image; MT::Image->new or die; };
         $param{do_thumb} = !$@ ? 1 : 0;
+        # Pass image default settings along.
+        $param{make_thumb} = $blog->image_default_thumb() ? 1 : 0;
+        $param{wrap_text} = $blog->image_default_wrap_text() ? 1 : 0;
+        $param{align_left} = $blog->image_default_align() eq 'left' ? 1 : 0;
+        $param{align_center} = $blog->image_default_align() eq 'center' ? 1 : 0;
+        $param{align_right} = $blog->image_default_align() eq 'right' ? 1 : 0;
+        $param{thumb_width} = $blog->image_default_width() || $w;
+        $param{unit_wpixels} = $blog->image_default_wunits() eq 'pixels' ? 1 : 0;
+        $param{unit_wpercent} = $blog->image_default_wunits() eq 'percent' ? 1 : 0;
+        $param{thumb_height} = $blog->image_default_height() || $h;
+        $param{unit_hpixels} = $blog->image_default_hunits() eq 'pixels' ? 1 : 0;
+        $param{unit_hpercent} = $blog->image_default_hunits() eq 'percent' ? 1 : 0;
+        $param{constrain} = $blog->image_default_constrain() ? 1 : 0;
+        $param{popup_image} = $blog->image_default_popup() ? 1 : 0;
+        $param{can_save_image_defaults} = $perms->can_save_image_defaults() ? 1 : 0;
         MT->run_callbacks('CMSUploadFile',
                           File => $local_file, Url => $url, Size => $bytes,
                           Asset => $asset,
