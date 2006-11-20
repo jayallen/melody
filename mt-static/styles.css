@@ -1293,6 +1293,25 @@ li {
 #list-asset table th#as-created-on { width: 16%; }
 #list-asset table th#as-view { width: 1%; min-width: 10px; ;}
 
+#list-asset table tr.selected td .asset-detail-panel {
+    color: #333;
+}
+
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:link, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:visited, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:active, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:hover {
+    color: #3F658C;
+}
+
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail a:link, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail a:visited, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail a:active, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail a:hover {
+    color: #999;
+}
+
 .asset_detail_left { float: left; text-align: center; margin-left: auto; margin-right: auto; width: 166px; }
 .asset_detail_right { float: right; width: 205px; }
 .close_asset_detail { font-size: 9px; color: #999; text-transform: uppercase; float: right; }
@@ -1319,6 +1338,11 @@ li {
 .asset-icon-area .asset-icon-layout .asset-icon-fla { background-image: url(images/filetype_icons/fla_lg.gif); background-repeat: no-repeat; }
 
 .close_asset_icon { background-image: url(images/close.gif); }
+
+.metadata { width: 205px; height: 200px; overflow: auto; }
+.metadata dl { margin-top: 0px; }
+.metadata dt { font-weight: bold; }
+.metadata dd { margin-left: 0px; }
 
 /* tmpl/cms/list_comment.tmpl */
 

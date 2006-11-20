@@ -56,14 +56,14 @@ function displayAssetDetails(id) {
     var i;
     for (i = 0; i < meta_names.length; i++) {
         meta_name = meta_names[i];
-        metadata += '<dt>' + meta_name + "</dt><dd>" + asset[meta_name] + "</dd>";
+        metadata += '<dt>' + meta_name + ":</dt> <dd>" + asset[meta_name] + "</dd>";
     }
 
     detail_inner.innerHTML = "<div class=\"asset_detail_left\">" + preview + "</div>"
         + "<div class=\"asset_detail_right\">"
         + "<div class=\"close_asset_detail\">" + close_link + " " + close_icon + "</div>"
         + "<h2><span class=\"weblog-title-highlight\">" + asset.name +"</span></h2>"
-        + "<dl>" + metadata + "</dl>"
+        + "<div class=\"metadata\"><dl>" + metadata + "</dl></div>"
         + "</div>";
     show("asset-" + id + "-detail");
     return false;
