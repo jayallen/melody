@@ -19,10 +19,6 @@
 }
 .asset-detail-panel img.preview {
 }
-.asset-icon-jpg, .asset-icon-jpeg, .asset-icon-gif, .asset-icon-png {
-    background-image: url(<TMPL_VAR NAME=STATIC_URI>images/stock_icons/image.jpg);
-    background-repeat: none;
-}
 .asset-icon {
     display: block;
 }
@@ -41,13 +37,12 @@ function displayAssetDetails(id) {
     var detail_inner = getByID("asset-" + id + "-detail-inner");
     var asset = assets[id];
     var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\">Close</a>";
-    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/close.gif\" width=\"9\" height=\"9\"></a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
     var preview;
     if (asset.thumbnail_url) {
         preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
     } else {
-        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><img border=\"0\" width=\"90\" height=\"96\" src=\"<TMPL_VAR NAME=STATIC_URI>images/filetype_icons/" + asset.ext + "_lg.gif\"></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\">Click to see uploaded file.</a>";
-//        preview = "<div class=\"asset-icon asset-icon-" + asset.ext + "\">&nbsp;</div>";
+        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><div class=\"asset-icon-" + asset.ext + "\"><img src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"90\" height=\"96\"></div></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\">Click to see uploaded file.</a>";
     }
     var metadata = '';
     var meta_names = [];
