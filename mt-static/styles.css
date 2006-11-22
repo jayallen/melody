@@ -64,7 +64,7 @@ h2#breadcrumbs {
     font-family: "Trebuchet MS", Trebuchet, Verdana, Arial, sans-serif;
     font-size: 11px;
     font-weight: bold;
-    line-height: 11px;
+    line-height: 1.2;
     color: #333;
 }
 
@@ -83,7 +83,7 @@ h2 {
     margin: 10px 0 5px 0;
     font-size: 16px;
     font-weight: bold;
-    line-height: 20px;
+    line-height: 1.5;
     color: #999;
 }
 
@@ -98,7 +98,7 @@ h2 .title-highlight {
 .body-pop h2, .body-dialog h2 {
     border-bottom: 1px solid #93B06B;
     font-size: 14px;
-    line-height: 16px;
+    line-height: 1.3;
 }
 
 h4 {
@@ -113,7 +113,7 @@ h4.tight {
 .body-pop h4, .body-dialog h4 {
     margin-top: 15px;
     font-size: 13px;
-    line-height: 15px;
+    line-height: 1.3;
 }
 
 h5 {
@@ -166,7 +166,7 @@ h5 {
     margin: 5px 0;
     padding: 0;
     font-size: 11px;
-    line-height: 13px;
+    line-height: 1.3;
 }
 
 .box ul.nav li {
@@ -174,7 +174,7 @@ h5 {
     color: #999;
     font-size: 10px;
     font-weight: bold;
-    line-height: 12px;
+    line-height: 1.2;
     background-repeat: no-repeat;
 }
 
@@ -394,7 +394,7 @@ a.help_invert:active {
 
 p {
     font-size: 11px;
-    line-height: 130%;
+    line-height: 1.3;
     margin: 10px 0;
 }
 
@@ -521,7 +521,7 @@ p.page-desc {
     font-size: 11px;
     font-weight: bold;
     font-family: "Trebuchet MS", Trebuchet, Verdana, Arial, sans-serif;
-    line-height: 100%;
+    line-height: 1.0;
     padding: 2px 5px 1px 5px;
     margin: 0;
 }
@@ -529,7 +529,7 @@ p.page-desc {
 .sub li {
     margin: 0 -5px;
     padding: 0;
-    line-height: 150%;
+    line-height: 1.5;
     font-family: "Trebuchet MS", Trebuchet, Verdana, Arial, sans-serif;
 }
 
@@ -544,7 +544,7 @@ p.page-desc {
     text-decoration: none;
     text-transform: uppercase;
     font-size: 9px;
-    line-height: 16px;
+    line-height: 1.8;
     background-position: 3px 3px;
     width: 110px;
     voice-family: "\"}\"";
@@ -612,7 +612,7 @@ html>body .sub a { width: 80px; }
 
 .list table {
     font-size: 11px;
-    line-height: 13px;
+    line-height: 1.2;
     padding: 0;
     width: 100%;
     border-bottom: 1px solid #D7E3F5;
@@ -1154,7 +1154,7 @@ img.align-middle {
     font-family: Verdana, Arial, sans-serif;
     font-size: x-small;
     color: #666;
-    line-height: 13px;
+    line-height: 1.2;
     font-weight: bold;
     margin: 0 0 10px 0;
     border: 1px #6C3 solid;
@@ -1170,7 +1170,7 @@ img.align-middle {
     font-family: Verdana, Arial, sans-serif;
     font-size: x-small;
     color: #666;
-    line-height: 13px;
+    line-height: 1.2;
     font-weight: bold;
     margin: 0 0 10px 0;
     border: 1px #D44 solid;
@@ -1194,7 +1194,7 @@ img.align-middle {
 .body-dialog .error-message {
     margin: 10px 0;
     font-size: x-small;
-    line-height: 13px;
+    line-height: 1.2;
 }
 
 .alert-error-inline,
@@ -1215,7 +1215,7 @@ img.align-middle {
 li {
     font-size: x-small;
     margin: 6px 0 0 0;
-    line-height: 14px;
+    line-height: 1.3;
 }
 
 .padded-box {
@@ -2367,7 +2367,7 @@ a.spinner,
     #quickpost #assign-multiple {
         display: block;
         font-size: 10px;
-        line-height: 12px;
+        line-height: 1.1;
     }
 
     #quickpost #assign_multiple_div a {
@@ -3172,7 +3172,7 @@ form.filter-commenter #filter-commenter {
         border-style: solid;
         border-color: #fff;
         background-color: #fff;
-        line-height: 1.8em;
+        line-height: 1.8;
     }
 
         div.active#display-options .display-options-popup {
@@ -3211,7 +3211,7 @@ form.filter-commenter #filter-commenter {
         margin: 5px 0 3px 0;
         color: #666;
         font-size: 11px;
-        line-height: 11px;
+        line-height: 1.1;
         text-transform: uppercase;
     }
 
@@ -3253,7 +3253,7 @@ form.filter-commenter #filter-commenter {
     margin-bottom: 20px;
     border-bottom: 1px solid #93B06B;
     font-size: 20px;
-    line-height: 22px;
+    line-height: 1.2;
 }
 
 .upgrade h3 {
@@ -3264,7 +3264,7 @@ form.filter-commenter #filter-commenter {
     margin-bottom: 20px;
     color: #666;
     font-size: 14px;
-    line-height: 16px;
+    line-height: 1.5;
 }
 
 .upgrade .upgrade-process {
