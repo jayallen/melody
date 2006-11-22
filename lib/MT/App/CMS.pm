@@ -563,10 +563,7 @@ sub recover_profile_password {
 }
 
 sub reset_password {
-    my $app = shift;
-    my ($author) = $_[0];
-    my $hint = $_[1];
-    my $name = $_[2];
+    my ($app, $author, $hint, $name) = @_;
     
     require MT::Log;
     my ($errstr, $log_msg);
@@ -4918,7 +4915,8 @@ sub save_object {
         ## password maintenance. First make sure that the two
         ## passwords match...
         my %param;
-        if ($q->param('pass') ne $q->param('pass_verify')) {
+        if ($q->param('pass') && $q->param('pass_verify') &&
+            $q->param('pass') ne $q->param('pass_verify')) {
             $param{error} = $app->translate('Passwords do not match.');
         } else {
             if ($q->param('pass') && $id) {
@@ -4928,9 +4926,9 @@ sub save_object {
                 }
             }
         }
-        my $hint = $q->param('hint') || '';
-        $hint =~ s!^\s+|\s+$!!gs;
-        unless ($hint) {
+        if ($q->param('hint')) {
+            my $hint = $q->param('hint') || '';
+            $hint =~ s!^\s+|\s+$!!gs;
             $param{error} = $app->translate('Password recovery word/phrase is required.');
         }
         if ($param{error}) {
