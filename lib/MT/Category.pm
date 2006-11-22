@@ -417,13 +417,73 @@ sub children_to_xml {
             }
         }
     }
- 
+
+    my $offset = 0;
+    while (1) {
+        my @placements = MT::Placement->load(
+            { 'category_id' => $obj->id, },
+            { offset => $offset, limit => 50, }
+        );
+        last unless @placements;
+        $offset += scalar @placements;
+        for my $placement (@placements) {
+            $xml .= $placement->to_xml . "\n" if $placement->to_backup;
+        }
+    }
+
     my @children = $obj->children_categories;
     return $xml unless @children;
     for my $child (@children) {
         $xml .= $child->to_xml . "\n";
     }
     $xml;
+}
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        tbping => 'MT::TBPing',
+        category => 'MT::Category',
+        placement => 'MT::Placement',
+    };
+    $children;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $children = {
+        blog => 'MT::Blog',
+        author => 'MT::Author',
+    };
+    $children;
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $parent_names = $obj->parent_names;
+
+    my $done = -1;
+    for my $parent_element_name (keys %$parent_names) {
+        my $parent_class_name = $parent_names->{$parent_element_name};
+        my $old_id = $data->{$parent_element_name . '_id'};
+        my $new_obj = $objects->{"$parent_class_name#$old_id"};
+        next if !(defined($new_obj) && $new_obj);
+        $data->{$parent_element_name . '_id'} = $new_obj->id;
+        $done++;
+    }
+    my $old_id = $data->{'parent'};
+    if (defined($old_id) && ($old_id > 0)) {
+        my $new_obj = $objects->{"MT::Category#$old_id"};
+        if (defined($new_obj) && $new_obj) {
+            $data->{'parent'} = $new_obj->id;
+            $done++;
+        }
+    } else {
+        $done++;
+    }
+    (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
 }
 
 1;

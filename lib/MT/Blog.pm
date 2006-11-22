@@ -665,39 +665,19 @@ sub clone_with_children {
     $new_blog;
 }
 
-sub children_to_xml {
+sub children_names {
     my $obj = shift;
-    my $xml = '';
-
-    $xml .= $obj->_blog_child_to_xml('MT::Notification');
-    $xml .= $obj->_blog_child_to_xml('MT::Template');
-    $xml .= $obj->_blog_child_to_xml('MT::Association');
-    $xml .= $obj->_blog_child_to_xml('MT::Entry');
-    $xml;
-}
-
-sub _blog_child_to_xml {
-    my $obj = shift;
-    my ($child_class) = @_;
-    my $xml = '';
-    
-    eval "require $child_class";
-    my $err = $@;
-    return $err if defined($err) && $err;
-
-    my $offset = 0;
-    while (1) {
-        my @objects = $child_class->load(
-            { blog_id => $obj->id, },
-            { offset => $offset, limit => 50, }
-        );
-        last unless @objects;
-        $offset += scalar @objects;
-        for my $object (@objects) {
-            $xml .= $object->to_xml . "\n" if $object->to_backup;
-        }
-    }
-    $xml;
+    my $children = {
+        placement => 'MT::Placement',
+        permission => 'MT::Permission',
+        notification => 'MT::Notification',
+        template => 'MT::Template',
+        association => 'MT::Association',
+        #entry => 'MT::Entry',  ## A blog is a parent of an entry but an entry is not a child of a blog
+                                ## otherwise entries duplicate in restore operation.
+                                ## Also, <blog> must come before <entry>.
+    };
+    $children;
 }
 
 1;

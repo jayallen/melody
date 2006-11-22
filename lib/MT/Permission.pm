@@ -326,7 +326,6 @@ sub rebuild {
         $perm->remove if $perm->id;
     }
 }
-
 sub to_hash {
     my $perms = shift;
     my $hash = {}; # $perms->SUPER::to_hash(@_);
@@ -336,6 +335,11 @@ sub to_hash {
         $hash->{"permission.can_$perm"} = $perms->has($perm);
     }
     $hash;
+}
+
+sub parent_names {
+    my $obj = shift;
+    { author => 'MT::Author', blog => 'MT::Blog' };
 }
 
 1;

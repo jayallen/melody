@@ -238,6 +238,52 @@ sub to_hash {
     $hash;
 }
 
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+    };
+    $parents;
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $parent_names = $obj->parent_names;
+
+    my $done = -1;
+    for my $parent_element_name (keys %$parent_names) {
+        my $parent_class_name = $parent_names->{$parent_element_name};
+        my $old_id = $data->{$parent_element_name . '_id'};
+        my $new_obj = $objects->{"$parent_class_name#$old_id"};
+        next if !(defined($new_obj) && $new_obj);
+        $data->{$parent_element_name . '_id'} = $new_obj->id;
+        $done++;
+    }
+    my $old_tb_id = $data->{'tb_id'};
+    my $new_tb;
+    require MT::Trackback;
+    my $tb = MT::Trackback->load($old_tb_id);
+    if (my $cid = $tb->category_id) {
+        my $new_obj = $objects->{"MT::Category#" . $cid};
+        if (defined($new_obj) && $new_obj) {
+            $new_tb = MT::Trackback->load({ category_id => $new_obj->id });
+            return 0 if (!defined($new_tb) || !$new_tb);
+        }   
+    } elsif (my $eid = $tb->entry_id) {
+        my $new_obj = $objects->{"MT::Entry#" . $eid};
+        if (defined($new_obj) && $new_obj) {
+            $new_tb = MT::Trackback->load({ entry_id => $new_obj->id });
+            return 0 if (!defined($new_tb) || !$new_tb);
+        }
+    }
+    if (defined($new_tb) && $new_tb) {
+        $data->{'tb_id'} = $new_tb->id;
+        $done++;
+    }
+    (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
+}
 1;
 __END__
 

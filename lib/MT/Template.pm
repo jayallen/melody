@@ -272,6 +272,22 @@ sub published_url {
     undef;
 }
 
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        templatemap => 'MT::TemplateMap',
+    };
+    $children;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+    };
+    $parents;
+}
+
 1;
 __END__
 

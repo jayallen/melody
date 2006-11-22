@@ -126,6 +126,16 @@ sub objects_to_terms {
     $terms;
 }
 
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+        author => 'MT::Author',
+        role => 'MT::Role',
+    };
+    $parents;
+}
+
 1;
 
 __END__

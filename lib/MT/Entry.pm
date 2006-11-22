@@ -737,6 +737,28 @@ sub _entry_child_to_xml {
     }
     $xml;
 }
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        objecttag => 'MT::ObjectTag',
+        comment => 'MT::Comment',
+        tbping => 'MT::TBPing',
+        placement => 'MT::Placement',
+    };
+    $children;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $children = {
+        blog => 'MT::Blog',
+        author => 'MT::Author',
+    };
+    $children;
+}
+
+
 1;
 __END__
 

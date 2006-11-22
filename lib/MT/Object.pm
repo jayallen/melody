@@ -382,7 +382,34 @@ sub _is_element {
 }
 
 sub to_backup { 1; }
-sub children_to_xml { ''; }
+
+sub children_to_xml {
+    my $obj = shift;
+
+    my $children = $obj->children_names;
+    my @children_classes = values %$children;
+    my $xml = '';
+
+    for my $child_class (@children_classes) {
+        eval "require $child_class";
+        my $err = $@;
+        return $err if defined($err) && $err;
+
+        my $offset = 0;
+        while (1) {
+            my @objects = $child_class->load(
+                { $obj->datasource . '_id' => $obj->id, },
+                { offset => $offset, limit => 50, }
+            );
+            last unless @objects;
+            $offset += scalar @objects;
+            for my $object (@objects) {
+                $xml .= $object->to_xml . "\n" if $object->to_backup;
+            }
+        }
+    }
+    $xml;
+}
 
 sub to_xml {
     my $obj = shift;
@@ -395,15 +422,15 @@ sub to_xml {
 
     my @elements;
     for my $name (@$colnames) {
-        if ($obj->column($name)) {
+        if ($obj->column($name) || ('0' eq $obj->column($name))) {
             if ($obj->_is_element($coldefs->{$name})) {
                 push @elements, $name;
                 next;
-            } elsif (('datetime' eq $coldefs->{$name}{type}) || ('timestamp' eq $coldefs->{$name}{type})) {
-                my $ts_iso = HTTP::Date::time2isoz(MT::Util::ts2epoch(undef, $obj->column($name)));
-                $ts_iso =~ s/ /T/;
-                $xml .= " $name='" . $ts_iso . "'";
-                next;
+                #} elsif (('datetime' eq $coldefs->{$name}{type}) || ('timestamp' eq $coldefs->{$name}{type})) {
+                #    my $ts_iso = MT::Util::ts2iso(undef, $obj->column($name));
+                #    $ts_iso =~ s/ /T/;
+                #    $xml .= " $name='" . $ts_iso . "'";
+                #    next;
             }
             $xml .= " $name='" . MT::Util::encode_xml($obj->column($name), 1) . "'";
         }
@@ -413,6 +440,125 @@ sub to_xml {
     $xml .= $obj->children_to_xml;
     $xml .= '</' . $obj->datasource . '>';
     $xml;
+}
+
+sub children_names {
+    my $obj = shift;
+    {};
+}
+
+sub parent_names {
+    my $obj = shift;
+    {};
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $parent_names = $obj->parent_names;
+
+    my $done = 0;
+    for my $parent_element_name (keys %$parent_names) {
+        my $parent_class_name = $parent_names->{$parent_element_name};
+        my $old_id = $data->{$parent_element_name . '_id'};
+        my $new_obj = $objects->{"$parent_class_name#$old_id"};
+        next if !(defined($new_obj) && $new_obj);
+        $data->{$parent_element_name . '_id'} = $new_obj->id;
+        $done++;
+    }
+    (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
+}
+
+sub from_xml {
+    my $class = shift;
+    my (%param) = @_;
+    my $xp = $param{XPath};
+    my $element = $param{XmlNode};
+    my $objects = $param{Objects};
+    my $error = $param{Error};
+    my $cb = $param{Callback};
+
+    if (ref($class)) {
+        $class = ref($class);
+    }
+
+    my $err = $@;
+    if (defined($err) && $err) {
+        $cb->($err . "\n");
+        return undef;
+    }
+
+    my $obj = $class->new;
+    if (!$obj || !($obj->isa('MT::Object'))) {
+        $cb->(MT->translate("Invalid XML element to restore: [_1]\n", $class));
+        return undef;
+    }
+
+    my %data;
+    my $coldefs = $obj->column_defs;
+    my $attributes = $element->getAttributeNodes;
+    for my $attribute (@$attributes) {
+        my $colname = $attribute->getLocalName;
+        if (('datetime' eq $coldefs->{$colname}{type}) || ('timestamp' eq $coldefs->{$colname}{type})) {
+            $data{$colname} = MT::Util::iso2ts(undef, $attribute->getNodeValue);
+        } else {
+            $data{$colname} = $attribute->getNodeValue;
+        }
+    }
+
+    my $success = 1;
+    my $parent_names = $obj->parent_names;
+    $success = $obj->restore_parent_ids(\%data, $objects) if scalar(keys %$parent_names);
+    if (!$success) {
+        $cb->(MT->translate("Restoring [_1] (ID: [_2]) was deferred because its parents objects have not been restored yet.\n", $class, $data{id}));
+        return undef;
+    }
+
+    $cb->(MT->translate("Restoring [_1]...\n", $class));
+
+    my $child_element_names = $obj->children_names;
+    my $nodeset = $xp->find("*", $element);
+    for my $index (1..$nodeset->size()) {
+        my $node = $nodeset->get_node($index);
+        next if !($node->isa('XML::XPath::Node::Element'));
+
+        if (!exists($child_element_names->{$node->getLocalName})) {
+            $data{$node->getLocalName} = MT::Util::decode_xml($node->string_value);
+        }
+    }
+
+    my $old_id = $data{id};
+    delete $data{id};
+    $obj->set_values(\%data);
+    $obj->save;
+    $cb->(MT->translate("[_1] [_2] (ID: [_3]) has been restored successfully with new ID: [_4]\n",
+            $element->getLocalName =~ m/^[aeiou]/i ? 'An' : 'A',
+            $element->getLocalName,
+            $old_id,
+            $obj->id)
+    );
+    my $key = "$class#$old_id";
+    $objects->{$key} = $obj;
+
+    for my $name (keys %$child_element_names) {
+        my $children_set = $xp->find("*[local-name()='$name']", $element);
+        for my $index2 (1..$children_set->size()) {
+            my $node = $children_set->get_node($index2);
+            $param{XmlNode} = $node;
+            my $class = $child_element_names->{$name};
+            eval "require $class;";
+            my $child = $class->from_xml(%param);
+            next if !defined($child);
+            my $child_old_id = $node->getAttribute('id');
+            my $grand_children_names = $child->children_names;
+            if (scalar(keys %$grand_children_names)) {
+                my $child_key = "$class#$child_old_id";
+                $objects->{$child_key} = $child;
+            }
+        }
+    }
+    $obj;
 }
 
 1;
@@ -1157,9 +1303,41 @@ used by the L<MT::App::CMS/listing> method.
 
 TODO - Return the return properties of the object.
 
+=item * $obj->to_backup()
+
+Returns true if the object in question is to be backup, false if not.
+
+=item * $obj->children_names()
+
+TODO - Should be overridden by subclasses to return correct hash
+whose keys are xml element names of the object's children classes,
+and values are class names of them.
+
+=item * $obj->children_to_xml()
+
+Returns the XML representation of the object's children objects.
+
 =item * $obj->to_xml()
 
-TODO - Return the XML representation of the object.
+TODO - Returns the XML representation of the object.
+
+=item * $obj->restore_parent_ids()
+
+TODO - Backup file contains parent objects' ids (foreign keys).  However,
+when parent objcects are restored, their ids will be changed.  This method
+is to match the old and new ids of parent objects for children objects to be
+correctly associated.
+
+=item * $obj->parent_names()
+
+TODO - Should be overridden by subclasses to return correct hash
+whose keys are xml element names of the object's parent objects
+and values are class names of them.
+
+=item * $obj->from_xml()
+
+TODO - A factory method which creates and returns a new object from 
+its XML representation.
 
 =back
 

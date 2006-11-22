@@ -148,7 +148,7 @@ sub init {
         'grant_role' => \&grant_role,
         'backup_restore' => \&backup_restore,
         'backup' => \&backup,
-        'restore' => \&restore,
+        'restore_single' => \&restore_single,
     );
     $app->{state_params} = [
         '_type', 'id', 'tab', 'offset', 'filter',
@@ -10816,18 +10816,18 @@ sub backup_everything {
     $app->send_http_header($enc ? "text/xml; charset=$enc"
                                 : 'text/xml');
 
-    my %obj_to_backup = (
-        'MT::Author' => 1,
-        'MT::Role' => 1,
-        'MT::Association' => 1,
-        'MT::Tag' => 1,
-        'MT::Category' => 1,
-        'MT::Blog' => 1,
+    my @obj_to_backup = (
+        'MT::Tag',
+        'MT::Author',
+        'MT::Blog',
+        'MT::Role',
+        'MT::Category',
+        'MT::Entry',
     );
 
     $app->print("<?xml version='1.0' encoding='$enc'?>\n") if $enc !~ m/utf-?8/i;
     $app->print("<movabletype xmlns='http://www.sixapart.com/ns/movabletype'>\n");
-    for my $class (keys %obj_to_backup) {
+    for my $class (@obj_to_backup) {
         eval "require $class; ";
         my $err = $@;
         if ($err) {
@@ -10868,13 +10868,121 @@ sub backup_custom {
     $app->errtrans("Not implemented yet");
 }
 
-sub restore {
+sub restore_single {
     my $app = shift;
     my $user = $app->user;
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    $app->errtrans("Not implemented yet");
+    my $q = $app->param;
+
+    my($fh, $no_upload);
+    if ($ENV{MOD_PERL}) {
+        my $up = $q->upload('file');
+        $no_upload = !$up || !$up->size;
+        $fh = $up->fh if $up;
+    } else {
+        ## Older versions of CGI.pm didn't have an 'upload' method.
+        eval { $fh = $q->upload('file') };
+        if ($@ && $@ =~ /^Undefined subroutine/) {
+            $fh = $q->param('file');
+        }
+        $no_upload = !$fh;
+    }
+
+    my $stream;
+    my $encoding;
+    my $param = {};
+
+    if ($no_upload) {
+        $param->{restore_upload} = 0;
+        return $app->restore_directory($param);
+    }
+    $param->{restore_upload} = 1;
+    $app->add_breadcrumb($app->translate('Backup & Restore'), $app->uri(mode => 'backup_restore'));
+    $app->add_breadcrumb($app->translate('Restore'));
+    $param->{system_overview_nav} = 1;
+    $param->{nav_backup} = 1;
+    return $app->do_restore($fh, $param);
+}
+
+sub _process_backup_header {
+    my $app = shift;
+    my ($fh) = @_;
+
+    if (ref($fh) eq 'Fh') {
+        seek($fh, 0, 0) or return undef;
+        require XML::XPath;
+        my $xp = XML::XPath->new($fh) or return undef;
+        my $root = $xp->find("/*[local-name()='movabletype'][1]");
+        if ($root && ('movabletype' eq $root->get_node(1)->getLocalName)) {
+            return $xp;
+        }
+    }
+    return undef;
+
+}
+
+sub do_restore {
+    my $app = shift;
+    my ($fh, $param) = @_;
+    my $q = $app->param;
+
+    $app->{no_print_body} = 1;
+
+    local $| = 1;
+    my $charset = MT::ConfigMgr->instance->PublishCharset;
+    $app->send_http_header('text/html' .
+        ($charset ? "; charset=$charset" : ''));
+
+    $app->print($app->build_page('restore_start.tmpl', $param));
+
+    my $xp = $app->_process_backup_header($fh);
+    if (!defined($xp)) {
+        close $fh;
+        $param->{error} = $app->translate('Uploaded file was not a valid Movable Type backup file.');
+        $param->{restore_success} = 0;
+        $app->print($app->build_page("restore_end.tmpl", $param));
+        return 1;
+    }
+
+    my @obj_to_restore = (    ## Beware the order of keys is important.
+        {tag => 'MT::Tag'},
+        {author => 'MT::Author'},
+        {blog => 'MT::Blog'},
+        {role => 'MT::Role'},
+        {category => 'MT::Category'},
+        {entry => 'MT::Entry'},
+    );
+    my %objects;
+    my $error;
+
+    my $root_path = "/*[local-name()='movabletype']";
+    for my $name_hash (@obj_to_restore) {
+        my @keys = keys %$name_hash;
+        my $name = $keys[0];
+        my $nodeset = $xp->find("$root_path/*[local-name()='$name']");
+        for my $index (1..$nodeset->size()) {
+            my $node = $nodeset->get_node($index);
+            next if !($node->isa('XML::XPath::Node::Element'));
+
+            my $class = $name_hash->{$node->getLocalName};
+            eval "require $class;";
+            $class->from_xml(
+                XPath => $xp,
+                XmlNode => $node, 
+                Objects => \%objects, 
+                Error => \$error, 
+                Callback => sub { $app->print(@_); }
+            );
+        }
+    }
+
+    $param->{restore_success} = $error ? 0 : 1;
+    $param->{error} = $error if $error;
+    $app->print($app->build_page("restore_end.tmpl", $param));
+    close $fh;
+    1;
 }
 
 1;
