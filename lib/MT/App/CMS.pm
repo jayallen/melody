@@ -7024,7 +7024,7 @@ sub list_entries {
     require MT::Category;
     require MT::Placement;
 
-    my $total = MT::Entry->count(\%terms, \%arg);
+    my $total = MT::Entry->count(\%terms, \%arg) || 0;
     $arg{'sort'} = 'created_on';
     $arg{direction} = 'descend';
     $arg{limit} = $limit + 1;
