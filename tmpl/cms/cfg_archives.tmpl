@@ -71,6 +71,45 @@ function is_valid_path(path_){
     }
     return true;
 }
+
+function disableFields(path1,path2) {
+    var url_is = "<TMPL_VAR NAME=SITE_URL>"
+    var path_is = "<TMPL_VAR NAME=SITE_PATH>"
+    if (url_is.match(/WEBLOG-NAME/)) {
+        var daURL = getByID(path1);
+        var lock = path1 +"-lock";
+        var lock_img = getByID(lock);
+        daURL.disabled = false;
+        lock_img.style.display = 'none';
+    } else {
+    }
+    if (path_is.match(/WEBLOG-NAME/)) {
+        var daPath = getByID(path2);
+        var lock = path2 +"-lock";
+        var lock_img = getByID(lock);
+        daPath.disabled = false;
+        lock_img.style.display = 'none';
+    } else {
+    }
+    return;
+}
+
+function toggleFile(path) {
+    var fld = getByID(path);
+    if (fld) {
+        fld.disabled = false;
+        fld.focus();
+        var which_warning = path + "-warning";
+        var urlwarn = getByID(which_warning);
+        if (urlwarn) urlwarn.style.display = "block";
+    }
+    var which_lock = path + "-lock";
+    var img = getByID(which_lock);
+    if (img)
+        img.style.display = 'none';
+    return false;
+}
+
 //-->
 </script>
 
@@ -158,8 +197,11 @@ function is_valid_path(path_){
 <div class="setting">
 <div class="label"><label for="site_url"><MT_TRANS phrase="Site URL">:</label></div>
 <div class="field">
-<input name="site_url" id="site_url" value="<TMPL_VAR NAME=SITE_URL ESCAPE=HTML>" size="50" />
-<p><MT_TRANS phrase="Enter the URL of your website. Do not include a filename (i.e. exclude index.html)."><br /><MT_TRANS phrase="Example:"> <strong>http://www.example.com/weblog/</strong>
+<input name="site_url" id="site_url" disabled="disabled" value="<TMPL_VAR NAME=SITE_URL ESCAPE=HTML>" size="50" /> <a href="#" title="<MT_TRANS phrase="Unlock this weblog's site URL for editing">" onclick="return toggleFile('site_url')"><img src="<TMPL_VAR NAME=STATIC_URI>images/locked.gif" alt="Site URL Lock" id="site_url-lock" height="14" width="14" /></a>
+
+<p class="alert-warning-inline" id="site_url-warning" style="display: none"> <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/warning.gif" alt="<MT_TRANS phrase="Warning">" width="9" height="9" /> <MT_TRANS phrase="Warning: Changing the site URL can result in breaking all the links in your weblog.">
+
+<p><MT_TRANS phrase="The URL of your website. Do not include a filename (i.e. exclude index.html)."><br /><MT_TRANS phrase="Example:"> <strong>http://www.example.com/weblog/</strong>
 <a href="#" onclick="return openManual('blog_settings_publishing', 'site_url')" class="help">?</a></p>
 </div>
 </div>
@@ -167,11 +209,16 @@ function is_valid_path(path_){
 <div class="setting">
 <div class="label"><label for="site_path"><MT_TRANS phrase="Site Root">:</label></div>
 <div class="field">
-<input name="site_path" id="site_path" value="<TMPL_VAR NAME=SITE_PATH ESCAPE=HTML>" size="50" />
-<p><MT_TRANS phrase="Enter the path where your index files will be published. An absolute path (starting with '/') is preferred, but you can also use a path relative to the Movable Type directory."><br /><MT_TRANS phrase="Example:"> <strong>/home/melody/public_html/weblog</strong>
+<input name="site_path" id="site_path" disabled="disabled" value="<TMPL_VAR NAME=SITE_PATH ESCAPE=HTML>" size="50" /> <a href="#" title="<MT_TRANS phrase="Unlock this weblog's site path for editing">" onclick="return toggleFile('site_path')"><img src="<TMPL_VAR NAME=STATIC_URI>images/locked.gif" alt="Site Root Lock" id="site_path-lock" height="14" width="14" /></a>
+
+<p class="alert-warning-inline" id="site_path-warning" style="display: none"> <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/warning.gif" alt="<MT_TRANS phrase="Warning">" width="9" height="9" /> <MT_TRANS phrase="Warning: Changing the site root can result in breaking all the links in your weblog.">
+
+<p><MT_TRANS phrase="The path where your index files will be published. An absolute path (starting with '/') is preferred, but you can also use a path relative to the Movable Type directory."><br /><MT_TRANS phrase="Example:"> <strong>/home/melody/public_html/weblog</strong>
 <a href="#" onclick="return openManual('blog_settings_publishing', 'site_root')" class="help">?</a></p>
 </div>
 </div>
+
+<script type="text/javascript">disableFields('site_url','site_path');</script>
 
 <div class="setting">
 <div class="label"><label for="archive_url"><MT_TRANS phrase="Advanced Archive Publishing:"></label></div>
