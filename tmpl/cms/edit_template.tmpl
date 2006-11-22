@@ -104,6 +104,11 @@ function init()
 <TMPL_IF NAME=MESSAGE>
 <div class="message"><TMPL_VAR NAME=MESSAGE></div>
 </TMPL_IF>
+<TMPL_IF NAME=SAVED_REBUILD>
+<div class="message">
+<MT_TRANS phrase="Your [_1] has been rebuilt." params="<TMPL_VAR NAME=NAME>">
+</div>
+</TMPL_IF>
 
 <form name="entry_form" id="entry_form" method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
 <input type="hidden" name="id" value="<TMPL_VAR NAME=ID>" />

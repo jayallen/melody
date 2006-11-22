@@ -2904,6 +2904,7 @@ sub edit_object {
             $param{object_type} = 'template';
             my $published_url = $obj->published_url;
             $param{published_url} = $published_url if $published_url;
+            $param{saved_rebuild} = 1 if $q->param('saved_rebuild');
         } elsif ($type eq 'blog') {
             require MT::IPBanList;
             my $output = $param{output} || '';
@@ -8798,7 +8799,7 @@ sub rebuild_pages {
                 my $type = $q->param('type');
                 $type =~ /index-(\d+)/;
                 my $tmpl_id = $1;
-                return $app->redirect($app->uri('mode' => 'view', args => {'_type' => 'template', id => $tmpl_id, blog_id => $blog->id}));
+                return $app->redirect($app->uri('mode' => 'view', args => {'_type' => 'template', id => $tmpl_id, blog_id => $blog->id, saved_rebuild => 1}));
             } else {                     # popup--just go to cnfrmn. page
                 return $app->build_page('rebuilt.tmpl', \%param);
             }
