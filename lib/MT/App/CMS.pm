@@ -6198,7 +6198,7 @@ sub list_comments {
     my($iter, $iter1);
 
     # FIXME this offset logic breaks if you filter the iterator as below.
-    my $total = MT::Comment->count(\%terms, \%arg);
+    my $total = MT::Comment->count(\%terms, \%arg) || 0;
     $arg{limit} = $limit + 1;
     if ($offset > $total - 1) {
         $arg{offset} = $offset = $total - $limit;
@@ -6758,7 +6758,7 @@ sub list_pings {
         $param{is_ip_filter} = $filter_col eq "ip";
     }
 
-    my $total = MT::TBPing->count(\%terms, \%arg);
+    my $total = MT::TBPing->count(\%terms, \%arg) || 0;
     my @rows = MT::TBPing->load(\%terms, \%arg);
     $arg{'sort'} = 'created_on';
     $arg{direction} = $sort_direction;
