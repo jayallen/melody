@@ -4929,7 +4929,8 @@ sub save_object {
         if ($q->param('hint')) {
             my $hint = $q->param('hint') || '';
             $hint =~ s!^\s+|\s+$!!gs;
-            $param{error} = $app->translate('Password recovery word/phrase is required.');
+            $param{error} = $app->translate('Password recovery word/phrase is required.')
+                unless $hint;
         }
         if ($param{error}) {
             $param{return_args} = $app->param('return_args');
