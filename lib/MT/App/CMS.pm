@@ -1491,7 +1491,6 @@ sub build_page {
     my $blog_id = $app->param('blog_id');
     my $blog;
     require MT::Blog;
-    $blog ||= MT::Blog->load($blog_id, {cached_ok=>1}) if $blog_id;
     if (my $auth = $app->user) {
         $param->{is_administrator} = $auth->is_superuser;
         $param->{can_create_blog} = $auth->can_create_blog;
@@ -1518,6 +1517,7 @@ sub build_page {
         @data = sort { $a->{top_blog_name} cmp $b->{top_blog_name} } @data;
         $param->{top_blog_loop} = \@data;
     }
+    $blog ||= MT::Blog->load($blog_id, {cached_ok=>1}) if $blog_id;
     if ($blog_id && $page ne 'login.tmpl') {
         if ($blog) {
             $param->{blog_name} = $blog->name;
