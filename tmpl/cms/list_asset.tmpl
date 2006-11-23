@@ -36,13 +36,13 @@ function displayAssetDetails(id) {
     var detail = getByID("asset-" + id + "-detail");
     var detail_inner = getByID("asset-" + id + "-detail-inner");
     var asset = assets[id];
-    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\">Close</a>";
+    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><MT_TRANS phrase="Close"></a>";
     var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
     var preview;
     if (asset.thumbnail_url) {
         preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
     } else {
-        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><div class=\"asset-icon-" + asset.ext + "\"><img src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"90\" height=\"96\"></div></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\">Click to see uploaded file.</a>";
+        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><div class=\"asset-icon-" + asset.ext + "\"><img src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"90\" height=\"96\"></div></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\" target=\"view_uploaded\"><MT_TRANS phrase="Click to see uploaded file."></a>";
     }
     var metadata = '';
     var meta_names = [];
@@ -265,7 +265,7 @@ TC.attachLoadEvent( init );
 </TMPL_IF>
 <td><TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF></td>
 <td><span title="<TMPL_VAR NAME=CREATED_ON_FORMATTED>"><TMPL_IF NAME=CREATED_ON_RELATIVE><TMPL_IF NAME=DATES_RELATIVE><TMPL_VAR NAME=CREATED_ON_RELATIVE><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED></TMPL_IF><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED></TMPL_IF></span></td>
-<td class="status-view"><TMPL_IF NAME=URL><a href="<TMPL_VAR NAME=URL>" target="<MT_TRANS phrase="_external_link_target">" title="<MT_TRANS phrase="View File">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="View File">" width="13" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+<td class="status-view"><TMPL_IF NAME=URL><a href="<TMPL_VAR NAME=URL>" target="view_uploaded" title="<MT_TRANS phrase="View File">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="View File">" width="13" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF></td>
 </tr>
 </TMPL_LOOP>
 
