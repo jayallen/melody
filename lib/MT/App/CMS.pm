@@ -626,7 +626,8 @@ sub reset_password {
         category => 'recover_password'
     });
 
-    my $address = defined $author->nickname
+    # column method needed for BasicAuthor
+    my $address = defined $author->column('nickname')
         ? $author->nickname .' <'. $author->email .'>'
         : $author->email;
     my %head = (
