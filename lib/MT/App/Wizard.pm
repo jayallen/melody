@@ -172,7 +172,7 @@ sub start {
         return $app->build_page("packages.tmpl", \%param);
     }
 
-    my %param = ( 'success' => 1 );
+    my %param = ( 'success' => 1, 'config' => $q->param('config') );
     return $app->build_page("packages.tmpl", \%param);
 }
 
@@ -192,7 +192,9 @@ sub configure {
     $cfg_mode =~ s/_save//;
     if (!$q->param('back')) {
         foreach (@{ $keys->{$cfg_mode} }) {
-            $param{$_} = $q->param($_);
+            if ($q->param($_)) {
+                $param{$_} = $q->param($_);
+            }
         }
     }
     
@@ -311,7 +313,9 @@ sub cfg_dir {
     my $keys = $app->config_keys;
     if (!$q->param('back')) {
         foreach (@{ $keys->{$dir_mode} }) {
-            $param{$_} = $q->param($_);
+            if ($q->param($_)) {
+                $param{$_} = $q->param($_);
+            }
         }
     }
     $param{set_static_uri_to} = $q->param('set_static_uri_to');
@@ -373,7 +377,9 @@ sub optional {
     my $keys = $app->config_keys;
     if (!$q->param('back')) {
         foreach (@{ $keys->{$opt_mode} }) {
-            $param{$_} = $q->param($_);
+            if ($q->param($_)) {
+                $param{$_} = $q->param($_);
+            }
         }
     }
     $param{set_static_uri_to} = $q->param('set_static_uri_to');
@@ -562,7 +568,6 @@ sub unserialize_config {
 sub cgipath {
     my $app = shift;
 
-    # these work for Apache... need to test for IIS...
     my $host = $ENV{SERVER_NAME} || $ENV{HTTP_HOST};
     $host =~ s/:\d+//; # eliminate any port that may be present
     my $port = $ENV{SERVER_PORT};
