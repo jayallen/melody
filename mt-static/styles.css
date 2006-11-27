@@ -1312,6 +1312,24 @@ li {
     color: #999;
 }
 
+.asset-detail-panel {
+    display: none;
+    position: relative;
+    top: -45px;
+}
+.asset-detail-panel-inner {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #8faebe;
+    padding: 5px;
+    left: 100px;
+    width: 381px;
+    height: 242px;
+    z-index: 5;
+}
+.asset-icon {
+    display: block;
+}
 .asset_detail_left { float: left; text-align: center; margin-left: auto; margin-right: auto; width: 166px; }
 .asset_detail_right { float: right; width: 205px; }
 .close_asset_detail { font-size: 9px; color: #999; text-transform: uppercase; float: right; }

@@ -1,28 +1,6 @@
 <TMPL_INCLUDE NAME="header.tmpl">
 
 <div id="list-asset">
-<style type="text/css">
-.asset-detail-panel {
-    display: none;
-    position: relative;
-    top: -45px;
-}
-.asset-detail-panel-inner {
-    position: absolute;
-    background-color: white;
-    border: 1px solid #8faebe;
-    padding: 5px;
-    left: 100px;
-    width: 381px;
-    height: 242px;
-    z-index: 5;
-}
-.asset-detail-panel img.preview {
-}
-.asset-icon {
-    display: block;
-}
-</style>
 
 <script type="text/javascript">
 <!--
@@ -42,6 +20,17 @@ function displayAssetDetails(id) {
     if (asset.thumbnail_url) {
         preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
     } else {
+        ext = asset.ext;
+        var icons = ("doc,eps,fla,gif,jpg,mp3,mpeg,pdf,png,ppt,psd,txt,xls,zip");
+        var icon_array = icons.split(",");
+        for (var loop=0; loop < icon_array.length; loop++) {
+            if (ext == icon_array[loop]){
+                asset.ext = ext;
+                break;
+            } else {
+                asset.ext = "default";
+            }
+        }
         preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><div class=\"asset-icon-" + asset.ext + "\"><img src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"90\" height=\"96\"></div></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\" target=\"view_uploaded\"><MT_TRANS phrase="Click to see uploaded file."></a>";
     }
     var metadata = '';
@@ -130,7 +119,7 @@ TC.attachLoadEvent( init );
 
 <div class="tabs">
 <ul>
-<li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>"><MT_TRANS phrase="Assets"></a></li>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>"><MT_TRANS phrase="Assets"></a></li>
 <TMPL_IF NAME=EDIT_BLOG_ID>
 <li class="special">
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New File">" width="9" height="9" />
