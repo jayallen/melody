@@ -283,6 +283,28 @@ sub init_default_handlers {
         Ignore => [ sub { '' }, 1 ],
 
         HTTPContentType => \&_hdlr_http_content_type,
+
+        # Asset handlers
+        Assets => [\&_hdlr_assets, 1],
+        AssetTags => [\&_hdlr_asset_tags, 1],
+
+        AssetID => \&_hdlr_asset_id,
+        AssetFileName => \&_hdlr_asset_file_name,
+        AssetURL => \&_hdlr_asset_url,
+        AssetType => \&_hdlr_asset_type,
+        AssetMimeType => \&_hdlr_asset_mime_type,
+        AssetFilePath => \&_hdlr_asset_file_path,
+        AssetDateAdded => \&_hdlr_asset_date_added,
+        AssetAddedBy => \&_hdlr_asset_added_by,
+        AssetProperty => \&_hdlr_asset_property,
+        AssetFileExt => \&_hdlr_asset_file_ext,
+        AssetThumbnailURL => \&_hdlr_asset_thumbnail_url,
+        AssetLink => \&_hdlr_asset_link,
+        AssetThumbnailLink => \&_hdlr_asset_thumbnail_link,
+
+        AssetCount => \&_hdlr_asset_count,
+
+        AssetIfTagged => [\&_hdlr_asset_if_tagged, 2],
     );
 }
 
@@ -4300,6 +4322,372 @@ sub _hdlr_http_content_type {
     my $type = $args->{type};
     $ctx->stash('content_type', $type);
     return qq{};
+}
+
+### for Asset
+sub _hdlr_assets {
+    my($ctx, $args, $cond) = @_;
+
+    my $assets = $ctx->stash('assets');
+    local $ctx->{__stash}{assets};
+    my (@filters, %terms, %args);
+    my $blog_id = $ctx->stash('blog_id');
+    $terms{blog_id} = $blog_id;
+
+    # Adds an author filter to the filters list.
+    if (my $author_name = $args->{author}) {
+        require MT::Author;
+        my $author = MT::Author->load({ name => $author_name }) or
+            return $ctx->error(MT->translate(
+                "No such user '[_1]'", $author_name ));
+        if ($assets) {
+            push @filters, sub { $_[0]->author_id == $author->id };
+        } else {
+            $terms{created_by} = $author->id;
+        }
+    }
+
+    # Added a type filter to the filters list.
+    if (my $type = $args->{type}) {
+        my @types = split(',', $args->{type});
+        if (!$assets) {
+            push @filters, sub { my $a =$_[0]->class; grep(m/$a/, @types) };
+        } else {
+            $terms{class} = \@types;
+        }
+    }
+
+    # Added a file_ext filter to the filters list.
+    if (my $ext = $args->{file_ext}) {
+        my @exts = split(',', $args->{file_ext});
+        if (!$assets) {
+            push @filters, sub { my $a =$_[0]->file_ext; grep(m/$a/, @exts) };
+        } else {
+            $terms{file_ext} = \@exts;
+        }
+    }
+
+    require MT::Asset;
+    my $no_resort = 0;
+    my @assets;
+
+    if (!$assets) {
+        my ($start, $end) = ($ctx->{current_timestamp},
+                            $ctx->{current_timestamp_end});
+        if ($start && $end) {
+            $terms{created_on} = [$start, $end];
+            $args{range_incl}{created_on} = 1;
+        }
+        if (my $days = $args->{days}) {
+            my @ago = offset_time_list(time - 3600 * 24 * $days,
+                        $ctx->stash('blog_id'));
+            my $ago = sprintf "%04d%02d%02d%02d%02d%02d",
+                        $ago[5]+1900, $ago[4]+1, @ago[3,2,1,0];
+            $terms{created_on} = [ $ago ];
+            $args{range_incl}{created_on} = 1;
+        }
+        $args{'sort'} = 'created_on';
+        $args{direction} = 'descend';
+        if (!@filters) {
+            if (my $last = $args->{lastn}) {
+                $args{direction} = $args->{sort_order} || 'descend';
+                $args{limit} = $last;
+            }
+            $args{offset} = $args->{offset} if $args->{offset};
+            @assets = MT::Asset->load(\%terms, \%args);
+        } else {
+            my $iter = MT::Asset->load_iter(\%terms, \%args);
+            my $i = 0; my $j = 0;
+            my $off = $args->{offset} || 0;
+            my $n = $args->{lastn};
+            ASSET: while (my $e = $iter->()) {
+                for (@filters) {
+                    next ASSET unless $_->($e);
+                }
+                next if $off && $j++ < $off;
+                push @assets, $e;
+                $i++;
+                last if $n && $i >= $n;
+            }
+        }
+    } else {
+        my $so = $args->{sort_order} || $ctx->stash('blog')->sort_order_posts || '';
+        my $col = $args->{sort_by} || 'created_on';
+        # TBD: check column being sorted; if it is numeric, use numeric sort
+        @$assets = $so eq 'ascend' ?
+            sort { $a->$col() cmp $b->$col() } @$assets :
+            sort { $b->$col() cmp $a->$col() } @$assets;
+        $no_resort = 1;
+        if (@filters) {
+            my $i = 0; my $j = 0;
+            my $off = $args->{offset} || 0;
+            my $n = $args->{lastn};
+            ASSET2: foreach my $e (@$assets) {
+                for (@filters) {
+                    next ASSET2 unless $_->($e);
+                }
+                next if $off && $j++ < $off;
+                push @assets, $e;
+                $i++;
+                last if $n && $i >= $n;
+            }
+        } else {
+            my $offset;
+            if ($offset = $args->{offset}) {
+                if ($offset < scalar @$assets) {
+                    @assets = @$assets[$offset..$#$assets];
+                } else {
+                    @assets = ();
+                }
+            } else {
+                @assets = @$assets;
+            }
+            if (my $last = $args->{lastn}) {
+                if (scalar @assets > $last) {
+                    @assets = @assets[0..$last-1];
+                }
+            }
+        }
+    }
+
+    unless ($no_resort) {
+        my $so = $args->{sort_order} || '';
+        my $col = $args->{sort_by} || 'created_on';
+        # TBD: check column being sorted; if it is numeric, use numeric sort
+        @assets = $so eq 'ascend' ?
+            sort { $a->$col() cmp $b->$col() } @assets :
+            sort { $b->$col() cmp $a->$col() } @assets;
+    }
+
+    my $res = '';
+    my $tok = $ctx->stash('tokens');
+    my $builder = $ctx->stash('builder');
+
+    for my $a (@assets) {
+        local $ctx->{__stash}{asset} = $a;
+        my $out = $builder->build($ctx, $tok, {
+            %$cond,
+        });
+        $res .= $out;
+    }
+
+    $res;
+}
+
+sub _hdlr_asset_tags {
+    my ($ctx, $args, $cond) = @_;
+
+    require MT::ObjectTag;
+    require MT::Asset;
+    my $asset = $ctx->stash('asset');
+    return '' unless $asset;
+    my $glue = $args->{glue} || '';
+
+    local $ctx->{__stash}{tag_max_count} = undef;
+    local $ctx->{__stash}{tag_min_count} = undef;
+
+    my $iter = MT::Tag->load_iter(undef, { 'sort' => 'name',
+            'join' => MT::ObjectTag->join_on('tag_id',
+                    { object_id => $asset->id,
+                      blog_id => $asset->blog_id,
+                      object_datasource => MT::Asset->datasource },
+                    { unique => 1 } )});
+    my $builder = $ctx->stash('builder');
+    my $tokens = $ctx->stash('tokens');
+    my $res = '';
+    while (my $tag = $iter->()) {
+        next if $tag->is_private;
+        local $ctx->{__stash}{Tag} = $tag;
+        local $ctx->{__stash}{tag_count} = undef;
+        local $ctx->{__stash}{tag_asset_count} = undef;
+        defined(my $out = $builder->build($ctx, $tokens, $cond))
+            or return $ctx->error( $builder->errstr );
+        $res .= $glue if $res ne '';
+        $res .= $out;
+    }
+
+    $res;
+}
+
+sub _hdlr_asset_id {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetID');
+    $args && $args->{pad} ? (sprintf "%06d", $a->id) : $a->id;
+}
+
+sub _hdlr_asset_file_name {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetFileName');
+    $a->file_name;
+}
+
+sub _hdlr_asset_url {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetURL');
+    $a->url;
+}
+
+sub _hdlr_asset_type {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetType');
+    $a->class_label;
+}
+
+sub _hdlr_asset_mime_type {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetMimeType');
+    $a->mime_type || '';
+}
+
+sub _hdlr_asset_file_path {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetFilePath');
+    $a->file_path;
+}
+
+sub _hdlr_asset_date_added {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetDateAdded');
+    $args->{ts} = $a->created_on;
+    _hdlr_date($_[0], $args);
+}
+
+sub _hdlr_asset_added_by {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetAddedBy');
+    
+    require MT::Author;
+    my $author = MT::Author->load($a->created_by,
+                                  {cached_ok=>1});
+    return '' unless $author;
+    $author->name;
+}
+
+sub _hdlr_asset_property {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetProperty');
+    my $prop = $args->{property};
+    return '' unless $prop;
+
+    my $ret;
+    if ($prop =~ m/file_size/i) {
+        my @stat = stat($a->file_path);
+        my $size = $stat[7];
+        my $format = $args->{format};
+        $format = 1 if !defined $format;
+
+        if ($format eq '1') {
+            if ($size < 1024) {
+                $ret = sprintf("%s Bytes", $size);
+            } elsif ($size < 1024000) {
+                $ret = sprintf("%.1f KB", $size / 1024);
+            } else {
+                $ret = sprintf("%.1f MB", $size / 1048576);
+            }
+        } elsif ($format =~ m/k/i) {
+                $ret =  sprintf("%.1f", $size / 1024);
+        } elsif ($format =~ m/m/i) {
+                $ret = sprintf("%.1f", $size / 1048576);
+        } else {
+            $ret = $size;
+        }
+    } elsif (($prop =~ m/^image_/) && $a->class_label ne 'Image') {
+        $ret = 0;
+    } else {
+        $ret = $a->$prop || '';
+    }
+
+    $ret;
+}
+
+sub _hdlr_asset_file_ext {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetFileExt');
+    $a->file_ext || '';
+}
+
+sub _hdlr_asset_thumbnail_url {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetThumbnailURL');
+    $a->thumbnail_url || '';
+}
+
+sub _hdlr_asset_link {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetLink');
+
+    my $ret = sprintf qq(<a href="%s"), $a->url;
+    if ($args->{new_window}) {
+        $ret .= qq( target="_brank");
+    }
+    $ret .= sprintf qq(>%s</a>), $a->file_name;
+    $ret;
+}
+
+sub _hdlr_asset_thumbnail_link {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetThumbnailLink');
+    return '' if $a->class_label ne 'Image';
+
+    # Load thumbnail asset
+    require MT::Asset;
+    my $thumb = MT::Asset->load({
+            parent => $a->id,
+            class => 'image',
+        }) or return '';
+
+    my $ret = sprintf qq(<a href="%s"), $a->url;
+    if ($args->{new_window}) {
+        $ret .= qq( target="_brank");
+    }
+    $ret .= sprintf qq(><img src="%s" width="%d" height="%d"></a>), $thumb->thumbnail_url, $thumb->image_width, $thumb->image_height;
+    $ret;
+}
+
+sub _hdlr_asset_count {
+    my ($ctx, $args, $cond) = @_;
+    my (%terms, %args);
+    $terms{blog_id} = $ctx->stash('blog_id') if $ctx->stash('blog_id');
+    $terms{class} = $args->{type} if $args->{type};
+    MT::Asset->count(\%terms, \%args);
+}
+ 
+sub _hdlr_asset_if_tagged {
+    my $args = $_[1];
+    my $a = $_[0]->stash('asset')
+        or return $_[0]->_no_asset_error('MTAssetIfTagged');
+
+    if (exists $args->{tag}) {
+        my $tag = defined $args->{tag} ? $args->{tag} : '';
+        return 0 unless $tag ne '';
+        $a->has_tag($tag);
+    } else {
+        my @tags = $a->tags;
+        @tags = grep /^[^@]/, @tags;
+        return @tags ? 1 : 0;
+    }
+}
+
+
+sub _no_asset_error {
+    return $_[0]->error(MT->translate(
+        "You used an '[_1]' tag outside of the context of an asset; " .
+        "perhaps you mistakenly placed it outside of an 'MTAssets' container?",
+        $_[1]));
+
 }
 
 1;
