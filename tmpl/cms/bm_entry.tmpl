@@ -320,7 +320,7 @@ if (canFormat) {
 </div>
 </div>
 <div class="textarea-wrapper">
-<textarea name="text" id="text" rows="<TMPL_IF NAME=SHOW_TEXT_MORE>6<TMPL_ELSE>10</TMPL_IF>" onkeypress="mtShortCuts(event)"><TMPL_VAR NAME=TEXT ESCAPE=HTML></textarea>
+<textarea name="text" id="text" rows="<TMPL_IF NAME=SHOW_TEXT_MORE>6<TMPL_ELSE>10</TMPL_IF>" onkeydown="mtShortCuts(event)"><TMPL_VAR NAME=TEXT ESCAPE=HTML></textarea>
 </div>
 </div>
 
@@ -346,7 +346,7 @@ if (canFormat) {
 </div>
 </div>
 <div class="textarea-wrapper">
-<textarea name="text_more" id="text_more" rows="8" onkeypress="mtShortCuts(event)"></textarea>
+<textarea name="text_more" id="text_more" rows="8" onkeydown="mtShortCuts(event)"></textarea>
 </div>
 </div>
 </TMPL_IF>
