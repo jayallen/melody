@@ -414,7 +414,7 @@ sub _rebuild_entry_archive_type {
     
     my $fmgr = $blog->file_mgr;
     my $arch_root = $blog->archive_path;
-    return $mt->error(MT->translate("You did not set your Local Archive Path"))
+    return $mt->error(MT->translate("You did not set your weblog Archive Path"))
         unless $arch_root;
     
     my ($start, $end) = ($at ne 'Category') ? 
@@ -645,7 +645,7 @@ sub rebuild_indexes {
     }
     local *FH;
     my $site_root = $blog->site_path;
-    return $mt->error(MT->translate("You did not set your Local Site Path"))
+    return $mt->error(MT->translate("You did not set your weblog Site Root"))
         unless $site_root;
     my $fmgr = $blog->file_mgr;
     while (my $tmpl = $iter->()) {
