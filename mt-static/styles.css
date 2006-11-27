@@ -1320,7 +1320,7 @@ li {
 .close_asset_detail a:visited { text-decoration: underline; color: #999; }
 .close_asset_detail img { text-decoration: none; border:0; }
 .asset-icon-area { width: 164px; height: 164px; border: 1px solid #d7e3f5; text-align: center; }
-.asset-icon-layout { margin-top: 23px; margin-left: 27px; }
+.asset-icon-layout { margin-top: 23px; margin-left: 34px; }
 
 .asset-icon-area .asset-icon-layout .asset-icon-pdf { background-image: url(images/filetype_icons/pdf_lg.gif); background-repeat: no-repeat; }
 .asset-icon-area .asset-icon-layout .asset-icon-mpeg { background-image: url(images/filetype_icons/eps_lg.gif); background-repeat: no-repeat; }
