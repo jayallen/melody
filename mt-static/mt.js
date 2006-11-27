@@ -400,17 +400,31 @@ function formatStr (e, v) {
 
 function mtShortCuts(e) {
     e = e || event;
-    if (!e || (!e.ctrlKey)) return;
-    /* we have to add 64 to keyCode since the user hit a control key */
-    var code = (e.keyCode) ? (e.keyCode + 64) :
-               ((e.which) ? e.which : 0);
-    var ch = String.fromCharCode(code);
+    var code;
+    if (e.keyCode) code = e.keyCode;
+    else if (e.which) code = e.which;
     el = e.target || e.srcElement;
     if (el.nodeType == 3) el = el.parentNode; // Safari bug
-    if (ch == 'A') insertLink(el, false);
-    if (ch == 'B') formatStr(el, 'strong');
-    if (ch == 'I') formatStr(el, 'em');
-    if (ch == 'U') formatStr(el, 'u');
+    if (e.ctrlKey) {
+        switch(e.keyCode) {
+            case 66: // b
+            case 73: // i
+            case 85: // u
+            disableCtrlDefault(e);
+            if (code == '66') formatStr(el, 'strong');
+            if (code == '73') formatStr(el, 'em');
+            if (code == '85') formatStr(el, 'u');
+        }
+    }
+}
+
+function disableCtrlDefault(e) {
+    if(e.preventDefault) {
+        e.preventDefault();
+    } else {
+        e.returnValue = false;
+    }
+    return;
 }
 
 function insertLink (e, isMail) {
