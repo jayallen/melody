@@ -10791,6 +10791,7 @@ sub backup_restore {
     $param{system_overview_nav} = 1;
     $param{nav_backup} = 1;
     eval "require Archive::Tar;";
+    eval "require Compress::Zlib;";
     $param{targz} = $@ ? 0 : 1;
     eval "require Archive::Zip;";
     $param{zip} = $@ ? 0 : 1;
@@ -10859,19 +10860,61 @@ sub backup_everything {
         $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
     $file .= "Movable_Type-$ts" . '-Backup';
 
+    if ('1' eq $archive) {
+        eval "require Archive::Tar;";
+        return $app->errtrans('Archive::Tar is required to archive in tar.gz format.') if $@;
+        eval "require Compress::Zlib;";
+        return $app->errtrans('Compress::Zlib is required to archive in tar.gz format.') if $@;
+    } elsif ('2' eq $archive) {
+        eval "require Archive::Zip;";
+        return $app->errtrans('Archive::Zip is required to archive in zip format.') if $@;
+        eval "require IO::String;";
+        return $app->errtrans('IO::String is required to archive in zip format.') if $@;
+    }
+
     my $printer;
     my $splitter;
     my $finisher;
     my $fh;
+    my $arc_buf;
     if (!$number) {
         $app->{no_print_body} = 1;
-        $app->set_header("Content-Disposition" => "attachment; filename=$file.xml");
-        $app->send_http_header($enc ? "text/xml; charset=$enc"
-                                    : 'text/xml');
-        $printer = sub { $app->print(@_); };
         $splitter = sub {};
-        $finisher = sub {};
-    } elsif ('0' eq $archive) {
+        if ('0' eq $archive) {
+            $app->set_header("Content-Disposition" => "attachment; filename=$file.xml");
+            $app->send_http_header($enc ? "text/xml; charset=$enc"
+                                        : 'text/xml');
+            $printer = sub { $app->print(@_); };
+            $finisher = sub {};
+        } elsif ('1' eq $archive) { # tar.gz
+            require Archive::Tar;
+            require Compress::Zlib;
+            $app->set_header("Content-Disposition" => "attachment; filename=$file.tar.gz");
+            $app->send_http_header('application/x-tar-gz');
+            $printer = sub { $arc_buf .= $_[0]; };
+            $finisher = sub {
+                my $arc = Archive::Tar->new;
+                $arc->add_data("$file.xml", $arc_buf);
+                require Compress::Zlib;
+                my $dest = Compress::Zlib::memGzip($arc->write);
+                $app->print($dest);
+            }
+        } elsif ('2' eq $archive) { # zip
+            require Archive::Zip;
+            $app->set_header("Content-Disposition" => "attachment; filename=$file.zip");
+            $app->send_http_header('application/zip');
+            $printer = sub { $arc_buf .= $_[0]; };
+            $finisher = sub {
+                my $arc = Archive::Zip->new;
+                $arc->addString($arc_buf, "$file.xml");
+                my $buf;
+                require IO::String;
+                my $ios = IO::String->new(\$buf);
+                $arc->writeToFileHandle($ios);
+                $app->print($buf);
+            };
+        }
+    } else {
         my $temp_dir = $app->config('TempDir');
         my @files;
         my $filename = File::Spec->catfile($temp_dir, $file . "-1.xml");
@@ -10904,17 +10947,43 @@ sub backup_everything {
             print $fh "</manifest>\n";
             close $fh;
             push @files, { filename => "$file.manifest" };
-            my $param = {};
-            $app->add_breadcrumb($app->translate('Backup & Restore'), $app->uri(mode => 'backup_restore'));
-            $app->add_breadcrumb($app->translate('Backup'));
-            $param->{system_overview_nav} = 1;
-            $param->{nav_backup} = 1;
-            $param->{files_loop} = \@files;
-            $param->{tempdir} = $temp_dir;
-            $app->build_page('backup_files.tmpl', $param);
+            if ('0' eq $archive) {
+                my $param = {};
+                $app->add_breadcrumb($app->translate('Backup & Restore'), $app->uri(mode => 'backup_restore'));
+                $app->add_breadcrumb($app->translate('Backup'));
+                $param->{system_overview_nav} = 1;
+                $param->{nav_backup} = 1;
+                $param->{files_loop} = \@files;
+                $param->{tempdir} = $temp_dir;
+                $app->build_page('backup_files.tmpl', $param);
+            } elsif ('1' eq $archive) { # tar.gz
+                require Archive::Tar;
+                my $arc = Archive::Tar->new;
+                for my $f (@files) {
+                    $arc->add_files(File::Spec->catfile($temp_dir, $f->{filename}));
+                }
+                require Compress::Zlib;
+                my $dest = Compress::Zlib::memGzip($arc->write);
+                $app->{no_print_body} = 1;
+                $app->set_header("Content-Disposition" => "attachment; filename=$file.tar.gz");
+                $app->send_http_header('application/x-tar-gz');
+                $app->print($dest);
+            } elsif ('2' eq $archive) { # zip
+                require Archive::Zip;
+                my $arc = Archive::Zip->new;
+                $app->{no_print_body} = 1;
+                $app->set_header("Content-Disposition" => "attachment; filename=$file.zip");
+                $app->send_http_header('application/zip');
+                for my $f (@files) {
+                    $arc->addFile(File::Spec->catfile($temp_dir, $f->{filename}), $f->{filename});
+                }
+                my $buf;
+                require IO::String;
+                my $ios = IO::String->new(\$buf);
+                $arc->writeToFileHandle($ios);
+                $app->print($buf);
+            }
         };
-    } else {
-        return $app->errtrans('Not implemented yet.');
     }
 
     my @obj_to_backup = (
@@ -11030,8 +11099,64 @@ sub restore {
         my $dir = $app->config('ImportPath');
         $result = $app->restore_directory($dir, \$error);
     } else {
-        $param->{restore_upload} = 1;
-        $result = $app->restore_file($fh, \$error);
+        my $uploaded = $q->param('file');
+        my ($volume, $directories, $uploaded_filename) = File::Spec->splitpath($uploaded) if defined($uploaded);
+        if ($uploaded_filename =~ /^.+\.xml$/i) {
+            $param->{restore_upload} = 1;
+            $result = $app->restore_file($fh, \$error);
+        } elsif ($uploaded_filename =~ /^.+\.tar\.gz$/i) {
+            eval "require Archive::Tar;";
+            eval "require Compress::Zlib;";
+            eval "require IO::String;";
+            if ($@) {
+                $result = 0;
+                $error = 'Required modules (Archive::Tar, IO::String, and/or Compress::Zlib) are missing.';
+            } else {
+                my $temp_dir = $app->config('TempDir');
+                require File::Temp;;
+                my $tmp = File::Temp::tempdir($uploaded_filename . 'XXXX', DIR => $temp_dir, CLEANUP => 1);
+                my $buffer;
+                while (read $fh, my($chunk), 8192) {
+                    $buffer .= $chunk;
+                }
+                my $dest = Compress::Zlib::memGunzip($buffer);
+                my $ios = IO::String->new(\$dest);
+                my $tar = Archive::Tar->new($ios);
+                for my $file ($tar->list_files) {
+                    my ($vol, $dir, $fn) = File::Spec->splitpath($file);
+                    my $f = File::Spec->catfile($tmp, $fn);
+                    $tar->extract_file($file, $f);
+                }
+                $result = $app->restore_directory($tmp, \$error);
+            }
+        } elsif ($uploaded_filename =~ /^.+\.zip$/i) {
+            eval "require Archive::Zip;";
+            eval "require IO::String;";
+            if ($@) {
+                $result = 0;
+                $error = 'Required modules (Archive::Zip and/or IO::String) are missing.';
+            } else {
+                my $temp_dir = $app->config('TempDir');
+                require File::Temp;;
+                my $tmp = File::Temp::tempdir($uploaded_filename . 'XXXX', DIR => $temp_dir, CLEANUP => 1);
+                my $buffer;
+                while (read $fh, my($chunk), 8192) {
+                    $buffer .= $chunk;
+                }
+                require IO::String;
+                my $ios = IO::String->new(\$buffer);
+                my $zip = Archive::Zip->new;
+                my $s = $zip->readFromFileHandle($ios);
+                for my $member ($zip->memberNames) {
+                    my $f = File::Spec->catfile($tmp, $member);
+                    $zip->extractMember($member, $f);
+                }
+                $result = $app->restore_directory($tmp, \$error);
+            }
+        } elsif ($uploaded_filename =~ /^.+\.manifest$/i) {
+            $result = 0;
+            $error = $app->translate('Upload manifest file via the other form.');
+        }
     }
     $param->{restore_success} = $result;
     $param->{error} = $error if !$result;
@@ -11370,14 +11495,6 @@ sub dialog_restore_upload {
         return $app->build_page('dialog_restore_upload.tmpl', $param);
     }
 
-    my @obj_to_restore = (    ## Beware the order of keys is important.
-        {tag => 'MT::Tag'},
-        {author => 'MT::Author'},
-        {blog => 'MT::Blog'},
-        {role => 'MT::Role'},
-        {category => 'MT::Category'},
-        {entry => 'MT::Entry'},
-    );
     my $error;
     my $objects;
     my $deferred;
@@ -11430,16 +11547,16 @@ sub dialog_restore_upload {
 
     my @files = split(',', $files);
     my @assets;
-    my $file_next = shift @files if defined(@files) && scalar(@files);
+    my $file_next = shift @files if scalar(@files);
     if (!defined($file_next)) {
         @assets = split(',', $assets);
-        $file_next = shift @assets if defined(@assets) && scalar(@assets);
+        $file_next = shift @assets if scalar(@assets);
     }
 
     $param->{files} = join(',', @files);
     $param->{assets} = join(',', @assets);
     $param->{name} = $file_next;
-    $param->{last} = (defined(@files) && scalar(@files)) || (defined(@assets) && scalar(@assets)) ? 0 : 1;
+    $param->{last} = (scalar(@files) || scalar(@assets)) ? 0 : 1;
     $param->{is_dirty} = scalar(keys %$deferred);
     if ($last) {
         $sess_restore->remove;

@@ -225,6 +225,14 @@ my @OPT = (
     [ 'MIME::Base64', 0, 0, translate('MIME::Base64 is required in order to enable comment registration.')],
 
     [ 'XML::Atom', 0, 0, translate('XML::Atom is required in order to use the Atom API.')],
+
+    [ 'Archive::Tar', 0, 0, translate('Archive::Tar is required in order to archive files in backup/restore operation.')],
+
+    [ 'Compress::Zlib', 0, 0, translate('Compress::Zlib is required in order to compress/decompress files in backup/restore operation.')],
+
+    [ 'IO::String', 0, 0, translate('IO::String is required in order to archive files in backup/restore operation.')],
+
+    [ 'Archive::Zip', 0, 0, translate('Archive::Zip is required in order to archive files in backup/restore operation.')],
 );
 
 use Cwd;
