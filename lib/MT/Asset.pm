@@ -232,8 +232,8 @@ sub metadata {
     my $asset = shift;
     return {
         MT->translate("Tags") => MT::Tag->join(',', $asset->tags),
-        url => $asset->url,
-        file => $asset->file_path,
+        MT->translate("URL") => $asset->url,
+        MT->translate("Location") => $asset->file_path,
         name => $asset->file_name,
         'class' => $asset->class,
         ext => $asset->file_ext,

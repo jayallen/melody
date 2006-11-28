@@ -20,7 +20,7 @@ sub class_label {
 sub metadata {
     my $obj = shift;
     my $meta = $obj->SUPER::metadata(@_);
-    $meta->{MT->translate("Dimensions")} = MT->translate("[_1] wide, [_2] high",
+    $meta->{MT->translate("Actual Dimensions")} = MT->translate("[_1] wide x [_2] high",
         $obj->image_width, $obj->image_height);
     $meta;
 }
@@ -62,7 +62,7 @@ sub thumbnail_file {
     #     scale the horizontal to fit
     # 100000px tall image, 10px wide => 164x230
     #     scale the vertical to fit
-    # 100000px wide/tall => 164x230
+    # 100000px wide/tall => 164x164
     #     scale the horizontal to fit
 
     # find the longest dimension of the image:
@@ -86,7 +86,7 @@ sub thumbnail_file {
     }
     if ($scale eq 'h') {
         # scale by height
-        $n_w = int($i_h * $h / $i_h);
+        $n_w = int($i_w * $h / $i_h);
         $n_h = $h;
     } elsif ($scale eq 'w') {
         # scale by width
