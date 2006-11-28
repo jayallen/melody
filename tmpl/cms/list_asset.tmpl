@@ -21,7 +21,7 @@ function displayAssetDetails(id) {
         preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
     } else {
         ext = asset.ext;
-        var icons = ("doc,eps,fla,gif,jpg,mp3,mpeg,pdf,png,ppt,psd,txt,xls,zip");
+        var icons = ("doc,eps,fla,gif,jpg,mp3,mpg,pdf,png,ppt,psd,txt,xls,zip");
         var icon_array = icons.split(",");
         for (var loop=0; loop < icon_array.length; loop++) {
             if (ext == icon_array[loop]){
