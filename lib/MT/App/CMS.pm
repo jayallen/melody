@@ -11007,8 +11007,6 @@ sub restore {
         $no_upload = !$fh;
     }
 
-    my $stream;
-    my $encoding;
     my $param = {};
 
     $app->add_breadcrumb($app->translate('Backup & Restore'), $app->uri(mode => 'backup_restore'));
@@ -11046,7 +11044,7 @@ sub _process_backup_header {
     my $app = shift;
     my ($fh) = @_;
 
-    if (ref($fh) eq 'Fh') {
+    if ((ref($fh) eq 'Fh') || (ref($fh) eq 'GLOB')){
         seek($fh, 0, 0) or return undef;
         require XML::XPath;
         my $xp = XML::XPath->new($fh) or return undef;
@@ -11151,11 +11149,101 @@ sub restore_file {
     1;
 }
 
+sub restore_directory {
+    my $app = shift;
+    my ($dir, $error) = @_;
+
+    if (!-d $dir) {
+        $$error = $app->translate('[_1] is not a directory.', $dir);
+        return 0;
+    }
+    my $manifest;
+    my @files;
+    opendir my $dh, $dir or $$error = $app->translate("Can't open directory '[_1]': [_2]", $dir, "$!"), return 0;
+    for my $f (readdir $dh) {
+        next if $f !~ /^.+\.manifest$/i;
+        $manifest = File::Spec->catfile($dir, $f);
+        last;
+    }
+    closedir $dh;
+    unless ($manifest) {
+        $$error = $app->translate("No manifest file could be found in your import directory [_1].", $dir);
+        return 0;
+    }
+
+    my $fh = gensym;
+    open $fh, "<$manifest" or $$error = $app->translate('[_1] cannot open.'), return 0;
+    my $backups = $app->_process_manifest($fh);
+    close $fh;
+    unless($backups) {
+        $$error = $app->translate("Manifest file [_1] was not a valid Movable Type backup manifest file.", $manifest);
+        return 0;
+    }
+
+    $app->print($app->translate("Manifest file: [_1]\n", $manifest));
+
+    my @obj_to_restore = (    ## Beware the order of keys is important.
+        {tag => 'MT::Tag'},
+        {author => 'MT::Author'},
+        {blog => 'MT::Blog'},
+        {role => 'MT::Role'},
+        {category => 'MT::Category'},
+        {entry => 'MT::Entry'},
+    );
+    my %objects;
+    my %deferred;
+    my $errormsg;
+
+    my $files = $backups->{files};
+    for my $file (@$files) {
+        $fh = gensym;
+        my $filepath = File::Spec->catfile($dir, $file);
+        open $fh, "<$filepath" or $$error = $app->translate('[_1] cannot open.'), return 0;
+        my $xp = $app->_process_backup_header($fh);
+        if (!defined($xp)) {
+            $$error = $app->translate('The file [_1] was not a valid Movable Type backup file.', $filepath);
+            return 0;
+        }
+
+        my $result = $app->_restore_process_single_file(
+            $fh, \@obj_to_restore, \%objects, \%deferred, \$errormsg);
+
+        close $fh;
+    }
+
+    if (scalar(keys %deferred)) {
+        my @names = keys %deferred;
+        my $data = '';
+        $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
+        $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
+        my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
+        $app->log({
+            message => $message,
+            level => MT::Log::WARNING(),
+            class => 'system',
+            category => 'restore',
+            metadata => $data,
+        });
+        my $log_url = $app->uri(mode => 'view_log', args => {});
+        $$error = $message . '  '
+            . $app->translate('Detailed information is in the <a href="[_1]">activity log</a>.', $log_url);
+        return 0;
+    }
+
+    $app->log({
+        message => $app->translate("Successfully restored objects to Movable Type system by user '[_1]'", $app->user->name),
+        level => MT::Log::INFO(),
+        class => 'system',
+        category => 'restore'
+    });
+    1;
+}
+
 sub _process_manifest {
     my $app = shift;
     my ($stream) = @_;
 
-    if (ref($stream) eq 'Fh') {
+    if ((ref($stream) eq 'Fh') || (ref($stream) eq 'GLOB')){
         seek($stream, 0, 0) or return undef;
         require XML::XPath;
         my $xp = XML::XPath->new($stream) or return undef;
