@@ -1,0 +1,75 @@
+<TMPL_INCLUDE NAME=header-dialog.tmpl>
+
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/client.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/json.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/core.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/dialog.js"></script>
+
+<script type="text/javascript">
+<!--
+var dialog;
+var panels;
+function dialog_closed(ok) {
+    if (ok) {
+        var frm = document['restore'];
+        frm.submit();
+    } else {
+<TMPL_IF NAME=IS_DIRTY>
+        var a = confirm('<MT_TRANS phrase="Canceling the process will create orphaned objects.  Are you sure you want to cancel the restore operation?">');
+        if (!a) {
+            return false;
+        }
+        closeDialog('<TMPL_VAR NAME=SCRIPT_URL>?__mode=restore_premature_cancel&magic_token=<TMPL_VAR NAME=MAGIC_TOKEN>');
+<TMPL_ELSE>
+        closeDialog();
+</TMPL_IF>
+    }
+}
+
+function init() {
+    dialog = new Dialog.MultiPanel("restore");
+    panels = [];
+    var panel;
+    panel = new ListingPanel("<TMPL_VAR NAME=NAME>");
+    panel.label = "<TMPL_VAR NAME=NAME>";
+    panels[panels.length] = panel;
+    dialog.setPanels(panels);
+    dialog.open({}, dialog_closed);
+
+    var next = TC.getElementsByTagAndClassName("input", "next", getByID('<TMPL_VAR NAME=NAME>-panel'));
+    if (next) {
+        this.nextButton = next[0];
+        this.nextButton.onclick = function() {
+            document['restore_form'].submit();
+        };
+    }
+}
+
+TC.attachLoadEvent(init);
+//-->
+</script>
+
+<div id="<TMPL_VAR NAME=NAME>-panel" class="hidden panel">
+  <h2><span class="weblog-title-highlight"><MT_TRANS phrase="Restore Multiple Files"></span>: Upload <TMPL_VAR NAME=NAME></h2>
+<TMPL_IF NAME=ERROR>
+<div class="error-message"><TMPL_VAR NAME=ERROR></div>
+</TMPL_IF>
+<form name="restore_form" id="restore_form" method="post" enctype="multipart/form-data" action="<TMPL_VAR NAME=SCRIPT_URL>">
+<input type="hidden" name="__mode" value="dialog_restore_upload" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+<input type="hidden" name="files" value="<TMPL_VAR NAME=FILES>" />
+<input type="hidden" name="assets" value="<TMPL_VAR NAME=ASSETS>" />
+<input type="hidden" name="current_file" value="<TMPL_VAR NAME=NAME>" />
+<input type="hidden" name="last" value="<TMPL_VAR NAME=LAST>" />
+
+<label><MT_TRANS phrase="Upload:"></label>
+<input name="file" id="file" type="file" size="50" />
+</form>
+<div class="panel-commands">
+    <form action="" method="get" onsubmit="return false" onclick="window.focus();">
+        <input type="button" class="cancel" value="<MT_TRANS phrase="Cancel">" />
+        <input type="button" class="next" value="<MT_TRANS phrase="Continue">" />
+    </form>
+</div>
+</div>
+<TMPL_INCLUDE NAME=footer-dialog.tmpl>

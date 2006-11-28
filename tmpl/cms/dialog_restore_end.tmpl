@@ -1,0 +1,52 @@
+</pre>
+</div>
+
+<script type="text/javascript">
+<!--
+var progress = getByID("progress-bar");
+if (progress) {
+    progress.style.display = "none";
+}
+// -->
+
+<TMPL_IF NAME=RESTORE_END>
+</script>
+<TMPL_IF NAME=ERROR>
+<p><strong><MT_TRANS phrase="An error occurred during the restore process: [_1] Please check your restore file." params="<TMPL_VAR NAME=ERROR>"></strong></p>
+<div class="panel-commands">
+    <form action="" method="get" onsubmit="return false" onclick="window.focus();">
+        <input type="button" value="<MT_TRANS phrase="View Activity Log">" onclick="return closeDialog('<TMPL_VAR NAME=ERROR_URL>')" />
+    </form>
+</div>
+<TMPL_ELSE>
+<p><strong><MT_TRANS phrase="All data restored successfully!"></strong></p>
+<div class="panel-commands">
+    <form action="" method="get" onsubmit="return false" onclick="window.focus();">
+        <input type="button" value="<MT_TRANS phrase="OK">" onclick="return closeDialog()" />
+    </form>
+</div>
+</TMPL_IF>
+
+<TMPL_ELSE>
+function init() {
+    var url = "<TMPL_VAR NAME=SCRIPT_URL>";
+    url += "?__mode=<TMPL_VAR NAME=NEXT_MODE>&magic_token=<TMPL_VAR NAME=MAGIC_TOKEN>";
+    url += "&files=<TMPL_VAR NAME=FILES>&assets=<TMPL_VAR NAME=ASSETS>";
+    url += "&current_file=<TMPL_VAR NAME=NAME>&last=<TMPL_VAR NAME=LAST>";
+    url += "&redirect=1";
+    url += "&is_dirty=<TMPL_VAR NAME=IS_DIRTY>";
+    document.location = url;
+}
+
+var timer;
+timer = window.setTimeout("init()", 3000);
+
+function stopTimer() {
+    window.clearTimeout(timer);
+    var p = getByID("message");
+    p.innerHTML = "<MT_TRANS phrase="Click <a href='[_1]'>here</a> to move on to the next page." params="<TMPL_VAR NAME=SCRIPT_URL>?__mode=<TMPL_VAR NAME=NEXT_MODE>&magic_token=<TMPL_VAR NAME=MAGIC_TOKEN>&files=<TMPL_VAR NAME=FILES>&assets=<TMPL_VAR NAME=ASSETS>&current_file=<TMPL_VAR NAME=NAME>&last=<TMPL_VAR NAME=LAST>&redirect=1&is_dirty=<TMPL_VAR NAME=IS_DIRTY>">";
+}
+</script>
+<p id="message"><MT_TRANS phrase="The page will redirect to a new page in 3 seconds.  Click <a href='javascript:void(0)' onclick='return stopTimer()'>here</a> to stop the timer."></p>
+</TMPL_IF>
+<TMPL_INCLUDE NAME=footer-dialog.tmpl>

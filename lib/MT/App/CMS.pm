@@ -22,6 +22,8 @@ use MT::Author qw(:constants);
 use MT::Permission;
 @MT::App::CMS::ISA = qw( MT::App );
 
+use constant NS_MOVABLETYPE => 'http://www.sixapart.com/ns/movabletype';
+
 my @RebuildOptions = ();
 
 my %API = (
@@ -148,7 +150,11 @@ sub init {
         'grant_role' => \&grant_role,
         'backup_restore' => \&backup_restore,
         'backup' => \&backup,
-        'restore_single' => \&restore_single,
+        'restore' => \&restore,
+        'backup_download' => \&backup_download,
+        'restore_upload_manifest' => \&restore_upload_manifest,
+        'dialog_restore_upload' => \&dialog_restore_upload,
+        'restore_premature_cancel' => \&restore_premature_cancel,
     );
     $app->{state_params} = [
         '_type', 'id', 'tab', 'offset', 'filter',
@@ -10784,6 +10790,10 @@ sub backup_restore {
     $app->add_breadcrumb($app->translate('Backup & Restore'));
     $param{system_overview_nav} = 1;
     $param{nav_backup} = 1;
+    eval "require Archive::Tar;";
+    $param{targz} = $@ ? 0 : 1;
+    eval "require Archive::Zip;";
+    $param{zip} = $@ ? 0 : 1;
     $app->build_page('backup_restore.tmpl', \%param);
 }
 
@@ -10802,20 +10812,110 @@ sub backup {
     $app->$meth(@_);
 }
 
+sub _loop_through_objects {
+    my $app = shift;
+    my ($printer, $splitter, $number, $obj_to_backup) = @_;
+
+    my $counter = 0;
+    for my $class (@$obj_to_backup) {
+        eval "require $class; ";
+        my $err = $@;
+        if ($err) {
+            $printer->("$err\n");
+            next;
+        }
+        my $offset = 0;
+        while (1) {
+            my @objects = $class->load(undef, { offset => $offset, limit => 50, });
+            last unless @objects;
+            $offset += scalar @objects;
+            for my $object (@objects) {
+                $counter++;
+                if ($number && ($counter % $number == 0)) {
+                    $splitter->(int($counter / $number + 1));
+                }
+                $printer->($object->to_xml . "\n") if $object->to_backup;
+                my $xml = MT->run_callbacks('CMSBackup.' . $object->datasource, $app, $object)
+                    or $printer->($app->error(MT->errstr()));
+                $printer->($xml . "\n") if $xml ne '1';
+            }
+        }
+    }
+}
+
 sub backup_everything {
     my $app = shift;
     my $user = $app->user;
     
+    my $q = $app->param;
+    my $number = $q->param('num_items') || 0;
+    return $app->errtrans('[_1] is not a number.', $number)
+        if $number !~ /^\d+$/;
+    my $archive = $q->param('backup_archive_format');
     my $enc = $app->config('PublishCharset') || 'utf-8';
     my $file = '';
     my @ts = gmtime(time);
     my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d",
         $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
-    $file .= "Movable_Type-$ts" . '-Backup.xml';
-    $app->{no_print_body} = 1;
-    $app->set_header("Content-Disposition" => "attachment; filename=$file");
-    $app->send_http_header($enc ? "text/xml; charset=$enc"
-                                : 'text/xml');
+    $file .= "Movable_Type-$ts" . '-Backup';
+
+    my $printer;
+    my $splitter;
+    my $finisher;
+    my $fh;
+    if (!$number) {
+        $app->{no_print_body} = 1;
+        $app->set_header("Content-Disposition" => "attachment; filename=$file.xml");
+        $app->send_http_header($enc ? "text/xml; charset=$enc"
+                                    : 'text/xml');
+        $printer = sub { $app->print(@_); };
+        $splitter = sub {};
+        $finisher = sub {};
+    } elsif ('0' eq $archive) {
+        my $temp_dir = $app->config('TempDir');
+        my @files;
+        my $filename = File::Spec->catfile($temp_dir, $file . "-1.xml");
+        $fh = gensym();
+        open $fh, ">$filename";
+        push @files, { filename => $file . "-1.xml" };
+        $printer = sub { print $fh $_[0]; };
+        $splitter = sub {
+            my ($findex) = @_;
+            print $fh '</movabletype>';
+            close $fh;
+            my $filename = File::Spec->catfile($temp_dir, $file . "-$findex.xml");
+            $fh = gensym();
+            open $fh, ">$filename";
+            push @files, { filename => $file . "-$findex.xml" };
+            my $header .= "<movabletype xmlns='" . NS_MOVABLETYPE . "'>\n";
+            $header = "<?xml version='1.0' encoding='$enc'?>\n$header" if $enc !~ m/utf-?8/i;
+            print $fh $header;
+        };
+        $finisher = sub {
+            close $fh;
+            my $filename = File::Spec->catfile($temp_dir, "$file.manifest");
+            $fh = gensym();
+            open $fh, ">$filename";
+            print $fh "<manifest xmlns='" . NS_MOVABLETYPE . "'>\n";
+            for my $file (@files) {
+                my $name = $file->{filename};
+                print $fh "<file type='backup' name='$name' />\n";
+            }
+            print $fh "</manifest>\n";
+            close $fh;
+            push @files, { filename => "$file.manifest" };
+            my $param = {};
+            $app->add_breadcrumb($app->translate('Backup & Restore'), $app->uri(mode => 'backup_restore'));
+            $app->add_breadcrumb($app->translate('Backup'));
+            $param->{system_overview_nav} = 1;
+            $param->{nav_backup} = 1;
+            $param->{files_loop} = \@files;
+            $param->{tempdir} = $temp_dir;
+            $app->build_page('backup_files.tmpl', $param);
+        };
+    } else {
+        return $app->errtrans('Not implemented yet.');
+    }
 
     my @obj_to_backup = (
         'MT::Tag',
@@ -10826,29 +10926,14 @@ sub backup_everything {
         'MT::Entry',
     );
 
-    $app->print("<?xml version='1.0' encoding='$enc'?>\n") if $enc !~ m/utf-?8/i;
-    $app->print("<movabletype xmlns='http://www.sixapart.com/ns/movabletype'>\n");
-    for my $class (@obj_to_backup) {
-        eval "require $class; ";
-        my $err = $@;
-        if ($err) {
-            $app->print("$err\n");
-            next;
-        }
-        my $offset = 0;
-        while (1) {
-            my @objects = $class->load(undef, { offset => $offset, limit => 50, });
-            last unless @objects;
-            $offset += scalar @objects;
-            for my $object (@objects) {
-                $app->print($object->to_xml . "\n") if $object->to_backup;
-                my $xml = MT->run_callbacks('CMSBackup.' . $object->datasource, $app, $object)
-                    or $app->print($app->error(MT->errstr()));
-                $app->print($xml . "\n") if $xml ne '1';
-            }
-        }
-    }
-    $app->print('</movabletype>');
+    my $header .= "<movabletype xmlns='" . NS_MOVABLETYPE . "'>\n";
+    $header = "<?xml version='1.0' encoding='$enc'?>\n$header" if $enc !~ m/utf-?8/i;
+    $printer->($header);
+
+    $app->_loop_through_objects($printer, $splitter, $number, \@obj_to_backup);
+
+    $printer->('</movabletype>');
+    $finisher->();
 }
 
 sub backup_allentries {
@@ -10869,7 +10954,38 @@ sub backup_custom {
     $app->errtrans("Not implemented yet");
 }
 
-sub restore_single {
+sub backup_download {
+    my $app = shift;
+    my $user = $app->user;
+
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+
+    my $file = $app->param('file');
+    return $app->errtrans("Filename is needed to download.") if !defined($file) || !$file;
+    my $temp_dir = $app->config('TempDir');
+    my $filename = File::Spec->catfile($temp_dir, $file);
+
+    return $app->errtrans("[_1] is not found.", $file) if (!(-f $filename));
+        
+    my $enc = $app->config('PublishCharset') || 'utf-8';
+    $app->{no_print_body} = 1;
+    $app->set_header("Content-Disposition" => "attachment; filename=$file");
+    $app->send_http_header($enc ? "text/xml; charset=$enc"
+                                    : 'text/xml');
+    my $fh = gensym();
+    open $fh, "<$filename";
+    my $data;
+    binmode $fh;
+    while (read $fh, my($chunk), 8192) {
+        $data .= $chunk;
+    }
+    close $fh;
+    $app->print($data);
+    1;
+}
+
+sub restore {
     my $app = shift;
     my $user = $app->user;
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
@@ -10895,39 +11011,10 @@ sub restore_single {
     my $encoding;
     my $param = {};
 
-    if ($no_upload) {
-        $param->{restore_upload} = 0;
-        return $app->restore_directory($param);
-    }
-    $param->{restore_upload} = 1;
     $app->add_breadcrumb($app->translate('Backup & Restore'), $app->uri(mode => 'backup_restore'));
     $app->add_breadcrumb($app->translate('Restore'));
     $param->{system_overview_nav} = 1;
     $param->{nav_backup} = 1;
-    return $app->do_restore($fh, $param);
-}
-
-sub _process_backup_header {
-    my $app = shift;
-    my ($fh) = @_;
-
-    if (ref($fh) eq 'Fh') {
-        seek($fh, 0, 0) or return undef;
-        require XML::XPath;
-        my $xp = XML::XPath->new($fh) or return undef;
-        my $root = $xp->find("/*[local-name()='movabletype'][1]");
-        if ($root && ('movabletype' eq $root->get_node(1)->getLocalName)) {
-            return $xp;
-        }
-    }
-    return undef;
-
-}
-
-sub do_restore {
-    my $app = shift;
-    my ($fh, $param) = @_;
-    my $q = $app->param;
 
     $app->{no_print_body} = 1;
 
@@ -10938,28 +11025,56 @@ sub do_restore {
 
     $app->print($app->build_page('restore_start.tmpl', $param));
 
+    my $error = '';
+    my $result;
+    if ($no_upload) {
+        $param->{restore_upload} = 0;
+        my $dir = $app->config('ImportPath');
+        $result = $app->restore_directory($dir, \$error);
+    } else {
+        $param->{restore_upload} = 1;
+        $result = $app->restore_file($fh, \$error);
+    }
+    $param->{restore_success} = $result;
+    $param->{error} = $error if !$result;
+    $app->print($app->build_page("restore_end.tmpl", $param));
+    close $fh if !$no_upload;
+    1;
+}
+
+sub _process_backup_header {
+    my $app = shift;
+    my ($fh) = @_;
+
+    if (ref($fh) eq 'Fh') {
+        seek($fh, 0, 0) or return undef;
+        require XML::XPath;
+        my $xp = XML::XPath->new($fh) or return undef;
+        my $root;
+        eval {
+            $root = $xp->find("/*[local-name()='movabletype'][1]");
+        };
+        return undef if $@;
+        if ($root && ('movabletype' eq $root->get_node(1)->getLocalName)) {
+            return $xp;
+        }
+    }
+    return undef;
+
+}
+
+sub _restore_process_single_file {
+    my $app = shift;
+    my ($fh, $obj_to_restore, $objects, $deferred, $error) = @_;
+    
     my $xp = $app->_process_backup_header($fh);
     if (!defined($xp)) {
-        close $fh;
-        $param->{error} = $app->translate('Uploaded file was not a valid Movable Type backup file.');
-        $param->{restore_success} = 0;
-        $app->print($app->build_page("restore_end.tmpl", $param));
-        return 1;
+        $$error = $app->translate('Uploaded file was not a valid Movable Type backup file.');
+        return 0;
     }
-
-    my @obj_to_restore = (    ## Beware the order of keys is important.
-        {tag => 'MT::Tag'},
-        {author => 'MT::Author'},
-        {blog => 'MT::Blog'},
-        {role => 'MT::Role'},
-        {category => 'MT::Category'},
-        {entry => 'MT::Entry'},
-    );
-    my %objects;
-    my $error;
-
+    
     my $root_path = "/*[local-name()='movabletype']";
-    for my $name_hash (@obj_to_restore) {
+    for my $name_hash (@$obj_to_restore) {
         my @keys = keys %$name_hash;
         my $name = $keys[0];
         my $nodeset = $xp->find("$root_path/*[local-name()='$name']");
@@ -10972,18 +11087,355 @@ sub do_restore {
             $class->from_xml(
                 XPath => $xp,
                 XmlNode => $node, 
-                Objects => \%objects, 
-                Error => \$error, 
+                Objects => $objects, 
+                Deferred => $deferred,
+                Error => $error, 
                 Callback => sub { $app->print(@_); }
             );
         }
     }
+}
 
-    $param->{restore_success} = $error ? 0 : 1;
-    $param->{error} = $error if $error;
-    $app->print($app->build_page("restore_end.tmpl", $param));
-    close $fh;
+sub restore_file {
+    my $app = shift;
+    my ($fh, $errormsg) = @_;
+    my $q = $app->param;
+
+    my $xp = $app->_process_backup_header($fh);
+    if (!defined($xp)) {
+        $$errormsg = $app->translate('Uploaded file was not a valid Movable Type backup file.');
+        return 0;
+    }
+
+    my @obj_to_restore = (    ## Beware the order of keys is important.
+        {tag => 'MT::Tag'},
+        {author => 'MT::Author'},
+        {blog => 'MT::Blog'},
+        {role => 'MT::Role'},
+        {category => 'MT::Category'},
+        {entry => 'MT::Entry'},
+    );
+    my %objects;
+    my %deferred;
+    my $error;
+
+    my $result = $app->_restore_process_single_file(
+        $fh, \@obj_to_restore, \%objects, \%deferred, \$error);
+
+    if (scalar(keys %deferred)) {
+        my @names = keys %deferred;
+        my $data = '';
+        $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
+        $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
+        my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
+        $app->log({
+            message => $message,
+            level => MT::Log::WARNING(),
+            class => 'system',
+            category => 'restore',
+            metadata => $data,
+        });
+        my $log_url = $app->uri(mode => 'view_log', args => {});
+        $$errormsg = $message . '  '
+            . $app->translate('Detailed information is in the <a href="[_1]">activity log</a>.', $log_url);
+        return 0;
+    }
+
+    $app->log({
+        message => $app->translate("Successfully restored objects to Movable Type system by user '[_1]'", $app->user->name),
+        level => MT::Log::INFO(),
+        class => 'system',
+        category => 'restore'
+    });
+
     1;
+}
+
+sub _process_manifest {
+    my $app = shift;
+    my ($stream) = @_;
+
+    if (ref($stream) eq 'Fh') {
+        seek($stream, 0, 0) or return undef;
+        require XML::XPath;
+        my $xp = XML::XPath->new($stream) or return undef;
+        my $root;
+        eval {
+            $root = $xp->find("/*[local-name()='manifest'][1]");
+        };
+        return undef if $@;
+        if ($root && ('manifest' eq $root->get_node(1)->getLocalName)) {
+            my $backups = {
+                files => [],
+                assets => [],
+            };
+            my $nodeset = $xp->find("*", $root->get_node(1));
+            for my $index (1..$nodeset->size()) {
+                my $node = $nodeset->get_node($index);
+                next if !($node->isa('XML::XPath::Node::Element'));
+                if ('backup' eq $node->getAttribute('type')) {
+                    push @{$backups->{files}}, $node->getAttribute('name');
+                } elsif ('asset' eq $node->getAttribute('type')) {
+                    push @{$backups->{assets}}, $node->getAttribute('name');
+                }
+            }
+            return $backups;
+        }
+        return undef;
+    }
+    return undef;
+}
+
+sub restore_upload_manifest {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+
+    my $q = $app->param;
+
+    my($fh, $no_upload);
+    if ($ENV{MOD_PERL}) {
+        my $up = $q->upload('file');
+        $no_upload = !$up || !$up->size;
+        $fh = $up->fh if $up;
+    } else {
+        ## Older versions of CGI.pm didn't have an 'upload' method.
+        eval { $fh = $q->upload('file') };
+        if ($@ && $@ =~ /^Undefined subroutine/) {
+            $fh = $q->param('file');
+        }
+        $no_upload = !$fh;
+    }
+    return $app->errtrans("No manifest file was uploaded.") if $no_upload;
+
+    my $backups = $app->_process_manifest($fh);
+    return $app->errtrans("Uploaded file was not a valid Movable Type backup manifest file.") if !defined($backups);
+
+    require MT::Session;
+    MT::Session->remove({ kind => 'RS', name => $app->user->id });
+
+    my $files = $backups->{files};
+    my $assets = $backups->{assets};
+    my $file_next = shift @$files if defined($files) && scalar(@$files);
+    if (!defined($file_next)) {
+        $file_next = shift @$assets if defined($assets) && scalar(@$assets);
+    }
+    my $param = {
+        'files' => join(',', @$files),
+        'assets' => join(',', @$assets),
+        'filename' => $file_next,
+        'open_dialog' => 1,
+    };
+    $app->build_page('backup_restore.tmpl', $param);
+    #close $fh if !$no_upload;
+}
+
+sub dialog_restore_upload {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+
+    my $q = $app->param;
+
+    my $current = $app->param('current_file');
+    my $last = $app->param('last');
+    my $files = $app->param('files');
+    my $assets = $app->param('assets');
+
+    my($fh, $no_upload);
+    if ($ENV{MOD_PERL}) {
+    my $up = $q->upload('file');
+        $no_upload = !$up || !$up->size;
+        $fh = $up->fh if $up;
+    } else {
+        ## Older versions of CGI.pm didn't have an 'upload' method.
+        eval { $fh = $q->upload('file') };
+        if ($@ && $@ =~ /^Undefined subroutine/) {
+            $fh = $q->param('file');
+        }
+        $no_upload = !$fh;
+    }
+
+    my $uploaded = $q->param('file');
+    my ($volume, $directories, $uploaded_filename) = File::Spec->splitpath($uploaded) if defined($uploaded);
+    close $fh, return $app->build_page('dialog_restore_upload.tmpl', {
+        files => $files,
+        assets => $assets,
+        name => $current,
+        last => $last,
+        error => $app->translate('Please upload [_1] in this page.[_2]', $current, $q->param('file')),
+        redirect => 1,
+    }) if defined($uploaded) && ($current ne $uploaded_filename);
+
+    my $param = {};
+    $param->{name} = $current;
+    if ($no_upload) {
+        $param->{files} = $files;
+        $param->{assets} = $assets;
+        $param->{name} = $current;
+        $param->{last} = $last;
+        $param->{error} = $app->translate('File was not uploaded.') if !($q->param('redirect'));
+        $param->{redirect} = 1;
+        $param->{is_dirty} = $q->param('is_dirty');
+        return $app->build_page('dialog_restore_upload.tmpl', $param);
+    }
+
+    my @obj_to_restore = (    ## Beware the order of keys is important.
+        {tag => 'MT::Tag'},
+        {author => 'MT::Author'},
+        {blog => 'MT::Blog'},
+        {role => 'MT::Role'},
+        {category => 'MT::Category'},
+        {entry => 'MT::Entry'},
+    );
+    my $error;
+    my $objects;
+    my $deferred;
+    require MT::Session;
+    my $sess_restore = MT::Session->load({ kind => 'RS', name => $app->user->id });
+    require MT::Serialize;
+    my $ser = MT::Serialize->new($app->{cfg}->Serializer);
+    if (!$sess_restore) {
+        $sess_restore = MT::Session->new;
+        $sess_restore->id($app->make_magic_token());
+        $sess_restore->kind('RS'); # RS == ReStore
+        $sess_restore->name($app->user->id);
+        $sess_restore->start(time);
+        $objects = {};
+        $deferred = {};
+    } else {
+        my $objects_stored = $sess_restore->get('objects');
+        for my $key (keys %$objects_stored) {
+            eval "require $key;";
+            next if $@;
+            my $value = $objects_stored->{$key};
+            my @objs = $key->load({ id => $value });
+            for my $obj (@objs) {
+                my $newkey = $key . '#' . $obj->id;
+                $objects->{$newkey} = $obj;
+            }
+        }
+        $deferred = $sess_restore->get('deferred');
+    }
+    my @obj_to_restore = (    ## Beware the order of keys is important.
+        {tag => 'MT::Tag'},
+        {author => 'MT::Author'},
+        {blog => 'MT::Blog'},
+        {role => 'MT::Role'},
+        {category => 'MT::Category'},
+        {entry => 'MT::Entry'},
+    );
+
+    $app->{no_print_body} = 1;
+
+    local $| = 1;
+    my $charset = MT::ConfigMgr->instance->PublishCharset;
+    $app->send_http_header('text/html' .
+        ($charset ? "; charset=$charset" : ''));
+
+    $app->print($app->build_page('dialog_restore_start.tmpl', $param));
+
+    my $result = $app->_restore_process_single_file(
+        $fh, \@obj_to_restore, $objects, $deferred, \$error);
+
+    my @files = split(',', $files);
+    my @assets;
+    my $file_next = shift @files if defined(@files) && scalar(@files);
+    if (!defined($file_next)) {
+        @assets = split(',', $assets);
+        $file_next = shift @assets if defined(@assets) && scalar(@assets);
+    }
+
+    $param->{files} = join(',', @files);
+    $param->{assets} = join(',', @assets);
+    $param->{name} = $file_next;
+    $param->{last} = (defined(@files) && scalar(@files)) || (defined(@assets) && scalar(@assets)) ? 0 : 1;
+    $param->{is_dirty} = scalar(keys %$deferred);
+    if ($last) {
+        $sess_restore->remove;
+        $param->{restore_end} = 1;
+        if ($param->{is_dirty}) {
+            my @names = keys %$deferred;
+            my $data = '';
+            $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
+            $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
+            my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
+            $app->log({
+                message => $message,
+                level => MT::Log::WARNING(),
+                class => 'system',
+                category => 'restore',
+                metadata => $data,
+            });
+            my $log_url = $app->uri(mode => 'view_log', args => {});
+            $param->{error} = $message;
+            $param->{error_url} = $log_url;
+        }
+
+        $app->log({
+            message => $app->translate("Successfully restored objects to Movable Type system by user '[_1]'", $app->user->name),
+            level => MT::Log::INFO(),
+            class => 'system',
+            category => 'restore'
+        });
+    } else {
+        my %objects_storable;
+        for my $key (keys %$objects) {
+            my ($newkey, $id) = split '#', $key;
+            if (exists $objects_storable{$newkey}) {
+                push @{$objects_storable{$newkey}}, $id;
+            } else {
+                $objects_storable{$newkey} = [ $id ];
+            }
+        }
+
+        $sess_restore->set('objects', \%objects_storable);
+        $sess_restore->set('deferred', $deferred);
+        $sess_restore->save;
+    
+        $param->{error} => $error if $error;
+        $param->{next_mode} = 'dialog_restore_upload';
+    }
+
+    $app->print($app->build_page('dialog_restore_end.tmpl', $param));
+    close $fh if !$no_upload;
+}
+
+sub restore_premature_cancel {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+    
+    require MT::Session;
+    my $sess_restore = MT::Session->load({ kind => 'RS', name => $app->user->id });
+    require MT::Serialize;
+    my $ser = MT::Serialize->new($app->{cfg}->Serializer);
+    my $deferred = $sess_restore->get('deferred');
+    MT::Session->remove({ kind => 'RS', name => $app->user->id });
+
+    my $param = { restore_success => 1 };
+    if (scalar(keys %$deferred)) {
+        my @names = keys %$deferred;
+        my $data = '';
+        $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
+        $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
+        my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
+        $app->log({
+            message => $message,
+            level => MT::Log::WARNING(),
+            class => 'system',
+            category => 'restore',
+            metadata => $data,
+        });
+        my $log_url = $app->uri(mode => 'view_log', args => {});
+        $param->{restore_success} = 0;
+        $param->{error} = $message . '  '
+            . $app->translate("Detailed information is in the <a href='javascript:void(0)' onclick='closeDialog(\"[_1]\")'>activity log</a>.", $log_url);
+    }
+    $app->redirect($app->uri( mode => 'view_log', args => {} ));
 }
 
 1;

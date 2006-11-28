@@ -476,6 +476,7 @@ sub from_xml {
     my $xp = $param{XPath};
     my $element = $param{XmlNode};
     my $objects = $param{Objects};
+    my $deferred = $param{Deferred};
     my $error = $param{Error};
     my $cb = $param{Callback};
 
@@ -512,6 +513,7 @@ sub from_xml {
     $success = $obj->restore_parent_ids(\%data, $objects) if scalar(keys %$parent_names);
     if (!$success) {
         $cb->(MT->translate("Restoring [_1] (ID: [_2]) was deferred because its parents objects have not been restored yet.\n", $class, $data{id}));
+        $deferred->{$class . '#' . $data{id}} = 1;
         return undef;
     }
 
@@ -539,6 +541,7 @@ sub from_xml {
             $obj->id)
     );
     my $key = "$class#$old_id";
+    delete $deferred->{$key} if exists $deferred->{$key};
     $objects->{$key} = $obj;
 
     for my $name (keys %$child_element_names) {

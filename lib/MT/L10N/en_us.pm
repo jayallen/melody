@@ -21,6 +21,7 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
     '_USER_STATUS_CAPTION' => 'status',
     '_external_link_target' => '_top',
     '_BACKUP_RESTORE_DESCRIPTION' => 'TBD',
+    '_BACKUP_FILES_DESCRIPTION' => 'TBD',
     '_BLOG_CONFIG_MODE_BASIC' => 'Basic Mode',
     '_BLOG_CONFIG_MODE_DETAIL' => 'Detailed Mode',
     '_SEARCH_SIDEBAR' => 'Search',
@@ -43,7 +44,9 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
     '_USAGE_FORGOT_PASSWORD_2' => 'You should be able to log in to Movable Type using this new password. Once you have logged in, you should change your password to something more memorable.',
 
     '_USAGE_BACKUP' => 'TBD',
+    '_USAGE_BACKUP_FILES' => 'TBD',
     '_USAGE_RESTORE' => 'TBD',
+    '_BACKUP_TEMPDIR_WARNING' => 'Requesed data backed up successfully.  Make sure that you download and <strong>then delete</strong> files listed above from [_1] <strong>immediately</strong> because backup files contain sensitive information.',
     '_USAGE_BOOKMARKLET_1' => 'Setting up QuickPost to post to Movable Type allows you to perform one-click posting and publishing without ever entering through the main Movable Type interface.',
     '_USAGE_BOOKMARKLET_2' => 'Movable Type\'s QuickPost structure allows you to customize the layout and fields on your QuickPost page. For example, you may wish to add the ability to add excerpts through the QuickPost window. By default, a QuickPost window will always have: a pulldown menu for the weblog to post to; a pulldown menu to select the Post Status (Draft or Publish) of the new entry; a text entry box for the Title of the entry; and a text entry box for the entry body.',
     '_USAGE_BOOKMARKLET_3' => 'To install the Movable Type QuickPost bookmark, drag the following link to your browser\'s menu or Favorites toolbar:',
