@@ -1340,20 +1340,21 @@ li {
 .asset-icon-area { width: 164px; height: 164px; border: 1px solid #d7e3f5; text-align: center; }
 .asset-icon-layout { margin-top: 23px; margin-left: 34px; }
 
-.asset-icon-area .asset-icon-layout .asset-icon-pdf { background-image: url(images/filetype_icons/pdf_lg.gif); background-repeat: no-repeat; }
-.asset-icon-area .asset-icon-layout .asset-icon-mpeg { background-image: url(images/filetype_icons/eps_lg.gif); background-repeat: no-repeat; }
-.asset-icon-area .asset-icon-layout .asset-icon-psd { background-image: url(images/filetype_icons/psd_lg.gif); background-repeat: no-repeat; }
-.asset-icon-area .asset-icon-layout .asset-icon-xls { background-image: url(images/filetype_icons/xls_lg.gif); background-repeat: no-repeat; }
-.asset-icon-area .asset-icon-layout .asset-icon-default { background-image: url(images/filetype_icons/default_lg.gif); background-repeat: no-repeat; }
 .asset-icon-area .asset-icon-layout .asset-icon-doc { background-image: url(images/filetype_icons/doc_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-eps { background-image: url(images/filetype_icons/eps_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-fla { background-image: url(images/filetype_icons/fla_lg.gif); background-repeat: no-repeat; }
 .asset-icon-area .asset-icon-layout .asset-icon-gif { background-image: url(images/filetype_icons/gif_lg.gif); background-repeat: no-repeat; }
-.asset-icon-area .asset-icon-layout .asset-icon-ppt { background-image: url(images/filetype_icons/ppt_lg.gif); background-repeat: no-repeat; }
-.asset-icon-area .asset-icon-layout .asset-icon-zip { background-image: url(images/filetype_icons/zip_lg.gif); background-repeat: no-repeat; }
 .asset-icon-area .asset-icon-layout .asset-icon-jpg { background-image: url(images/filetype_icons/jpg_lg.gif); background-repeat: no-repeat; }
 .asset-icon-area .asset-icon-layout .asset-icon-mp3 { background-image: url(images/filetype_icons/mp3_lg.gif); background-repeat: no-repeat; }
-.asset-icon-area .asset-icon-layout .asset-icon-txt { background-image: url(images/filetype_icons/txt_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-mpg { background-image: url(images/filetype_icons/mpeg_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-pdf { background-image: url(images/filetype_icons/pdf_lg.gif); background-repeat: no-repeat; }
 .asset-icon-area .asset-icon-layout .asset-icon-png { background-image: url(images/filetype_icons/gif_lg.gif); background-repeat: no-repeat; }
-.asset-icon-area .asset-icon-layout .asset-icon-fla { background-image: url(images/filetype_icons/fla_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-ppt { background-image: url(images/filetype_icons/ppt_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-psd { background-image: url(images/filetype_icons/psd_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-txt { background-image: url(images/filetype_icons/txt_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-xls { background-image: url(images/filetype_icons/xls_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-zip { background-image: url(images/filetype_icons/zip_lg.gif); background-repeat: no-repeat; }
+.asset-icon-area .asset-icon-layout .asset-icon-default { background-image: url(images/filetype_icons/default_lg.gif); background-repeat: no-repeat; }
 
 .close_asset_icon { background-image: url(images/close.gif); }
 
@@ -3690,3 +3691,19 @@ table td .float_desc { float: left; }
     float: right;
     margin-left: 10px;
 }
+
+.show-icon-doc { background-image: url(images/filetype_icons/doc_sm.gif); background-repeat: no-repeat; }
+.show-icon-eps { background-image: url(images/filetype_icons/eps_sm.gif); background-repeat: no-repeat; }
+.show-icon-fla { background-image: url(images/filetype_icons/fla_sm.gif); background-repeat: no-repeat; }
+.show-icon-gif { background-image: url(images/filetype_icons/gif_sm.gif); background-repeat: no-repeat; }
+.show-icon-jpg { background-image: url(images/filetype_icons/jpg_sm.gif); background-repeat: no-repeat; }
+.show-icon-mp3 { background-image: url(images/filetype_icons/mp3_sm.gif); background-repeat: no-repeat; }
+.show-icon-mpg { background-image: url(images/filetype_icons/mpg_sm.gif); background-repeat: no-repeat; }
+.show-icon-pdf { background-image: url(images/filetype_icons/pdf_sm.gif); background-repeat: no-repeat; }
+.show-icon-png { background-image: url(images/filetype_icons/png_sm.gif); background-repeat: no-repeat; }
+.show-icon-ppt { background-image: url(images/filetype_icons/ppt_sm.gif); background-repeat: no-repeat; }
+.show-icon-psd { background-image: url(images/filetype_icons/psd_sm.gif); background-repeat: no-repeat; }
+.show-icon-txt { background-image: url(images/filetype_icons/txt_sm.gif); background-repeat: no-repeat; }
+.show-icon-xls { background-image: url(images/filetype_icons/xls_sm.gif); background-repeat: no-repeat; }
+.show-icon-zip { background-image: url(images/filetype_icons/zip_sm.gif); background-repeat: no-repeat; }
+.show-icon-default { background-image: url(images/filetype_icons/default_sm.gif); background-repeat: no-repeat; }
