@@ -11425,9 +11425,6 @@ sub restore_upload_manifest {
     my $backups = $app->_process_manifest($fh);
     return $app->errtrans("Uploaded file was not a valid Movable Type backup manifest file.") if !defined($backups);
 
-    require MT::Session;
-    MT::Session->remove({ kind => 'RS', name => $app->user->id });
-
     my $files = $backups->{files};
     my $assets = $backups->{assets};
     my $file_next = shift @$files if defined($files) && scalar(@$files);
@@ -11452,11 +11449,17 @@ sub dialog_restore_upload {
 
     my $q = $app->param;
 
-    my $current = $app->param('current_file');
-    my $last = $app->param('last');
-    my $files = $app->param('files');
-    my $assets = $app->param('assets');
+    my $current = $q->param('current_file');
+    my $last = $q->param('last');
+    my $files = $q->param('files');
+    my $assets = $q->param('assets');
 
+    my $objects = {};
+    my $deferred = {}; 
+    require JSON;
+    my $objects_json = $q->param('objects_json') if $q->param('objects_json');
+    $deferred = JSON::jsonToObj($q->param('deferred_json')) if $q->param('deferred_json');
+    
     my($fh, $no_upload);
     if ($ENV{MOD_PERL}) {
     my $up = $q->upload('file');
@@ -11471,59 +11474,31 @@ sub dialog_restore_upload {
         $no_upload = !$fh;
     }
 
-    my $uploaded = $q->param('file');
-    my ($volume, $directories, $uploaded_filename) = File::Spec->splitpath($uploaded) if defined($uploaded);
-    close $fh, return $app->build_page('dialog_restore_upload.tmpl', {
-        files => $files,
-        assets => $assets,
-        name => $current,
-        last => $last,
-        error => $app->translate('Please upload [_1] in this page.[_2]', $current, $q->param('file')),
-        redirect => 1,
-    }) if defined($uploaded) && ($current ne $uploaded_filename);
-
     my $param = {};
     $param->{name} = $current;
+    $param->{files} = $files;
+    $param->{assets} = $assets;
+    $param->{name} = $current;
+    $param->{last} = $last;
+    $param->{redirect} = 1;
+    $param->{is_dirty} = $q->param('is_dirty');
+    $param->{objects_json} = $objects_json if defined($objects_json);
+    $param->{deferred_json} = JSON::objToJson($deferred) if defined($deferred);
+
+    my $uploaded = $q->param('file');
+    my ($volume, $directories, $uploaded_filename) = File::Spec->splitpath($uploaded) if defined($uploaded);
+    if (defined($uploaded) && ($current ne $uploaded_filename)) {
+        close $fh;
+        $param->{error} = $app->translate('Please upload [_1] in this page.[_2]', $current, $q->param('file'));
+        return $app->build_page('dialog_restore_upload.tmpl', $param);
+    }
+
     if ($no_upload) {
-        $param->{files} = $files;
-        $param->{assets} = $assets;
-        $param->{name} = $current;
-        $param->{last} = $last;
         $param->{error} = $app->translate('File was not uploaded.') if !($q->param('redirect'));
-        $param->{redirect} = 1;
-        $param->{is_dirty} = $q->param('is_dirty');
         return $app->build_page('dialog_restore_upload.tmpl', $param);
     }
 
     my $error;
-    my $objects;
-    my $deferred;
-    require MT::Session;
-    my $sess_restore = MT::Session->load({ kind => 'RS', name => $app->user->id });
-    require MT::Serialize;
-    my $ser = MT::Serialize->new($app->{cfg}->Serializer);
-    if (!$sess_restore) {
-        $sess_restore = MT::Session->new;
-        $sess_restore->id($app->make_magic_token());
-        $sess_restore->kind('RS'); # RS == ReStore
-        $sess_restore->name($app->user->id);
-        $sess_restore->start(time);
-        $objects = {};
-        $deferred = {};
-    } else {
-        my $objects_stored = $sess_restore->get('objects');
-        for my $key (keys %$objects_stored) {
-            eval "require $key;";
-            next if $@;
-            my $value = $objects_stored->{$key};
-            my @objs = $key->load({ id => $value });
-            for my $obj (@objs) {
-                my $newkey = $key . '#' . $obj->id;
-                $objects->{$newkey} = $obj;
-            }
-        }
-        $deferred = $sess_restore->get('deferred');
-    }
     my @obj_to_restore = (    ## Beware the order of keys is important.
         {tag => 'MT::Tag'},
         {author => 'MT::Author'},
@@ -11542,6 +11517,35 @@ sub dialog_restore_upload {
 
     $app->print($app->build_page('dialog_restore_start.tmpl', $param));
 
+    if (defined $objects_json) {
+        my $objects_tmp = JSON::jsonToObj($objects_json);
+        my %class2ids;
+        # { MT::CLASS#OLD_ID => NEW_ID }
+        for my $key (keys %$objects_tmp) {
+            my ($class, $old_id) = split '#', $key;
+            if (exists $class2ids{$class}) {
+                my $newids = $class2ids{$class}->{newids};
+                push @$newids, $objects_tmp->{$key};
+                my $keymaps = $class2ids{$class}->{keymaps};
+                push @$keymaps, { newid => $objects_tmp->{$key}, oldid => $old_id };
+            } else {
+                $class2ids{$class} = { newids => [ $objects_tmp->{$key} ], keymaps => [ { newid => $objects_tmp->{$key}, oldid => $old_id } ] };
+            }
+        }
+        for my $class (keys %class2ids) {
+            eval "require $class;";
+            next if $@;
+            my $newids = $class2ids{$class}->{newids};
+            my $keymaps = $class2ids{$class}->{keymaps};
+            my @objs = $class->load({ id => $newids });
+            for my $obj (@objs) {
+                my @old_ids = grep { $_->{newid} eq $obj->id } @$keymaps;
+                my $old_id = $old_ids[0]->{oldid};
+                $objects->{"$class#$old_id"} = $obj;
+            }
+        }
+    }
+
     my $result = $app->_restore_process_single_file(
         $fh, \@obj_to_restore, $objects, $deferred, \$error);
 
@@ -11559,7 +11563,6 @@ sub dialog_restore_upload {
     $param->{last} = (scalar(@files) || scalar(@assets)) ? 0 : 1;
     $param->{is_dirty} = scalar(keys %$deferred);
     if ($last) {
-        $sess_restore->remove;
         $param->{restore_end} = 1;
         if ($param->{is_dirty}) {
             my @names = keys %$deferred;
@@ -11577,28 +11580,19 @@ sub dialog_restore_upload {
             my $log_url = $app->uri(mode => 'view_log', args => {});
             $param->{error} = $message;
             $param->{error_url} = $log_url;
+        } else {
+            $app->log({
+                message => $app->translate("Successfully restored objects to Movable Type system by user '[_1]'", $app->user->name),
+                level => MT::Log::INFO(),
+                class => 'system',
+                category => 'restore'
+            });
         }
-
-        $app->log({
-            message => $app->translate("Successfully restored objects to Movable Type system by user '[_1]'", $app->user->name),
-            level => MT::Log::INFO(),
-            class => 'system',
-            category => 'restore'
-        });
     } else {
-        my %objects_storable;
-        for my $key (keys %$objects) {
-            my ($newkey, $id) = split '#', $key;
-            if (exists $objects_storable{$newkey}) {
-                push @{$objects_storable{$newkey}}, $id;
-            } else {
-                $objects_storable{$newkey} = [ $id ];
-            }
-        }
-
-        $sess_restore->set('objects', \%objects_storable);
-        $sess_restore->set('deferred', $deferred);
-        $sess_restore->save;
+        my %objects_json;
+        %objects_json = map { $_ => $objects->{$_}->id } keys %$objects;
+        $param->{objects_json} = JSON::objToJson(\%objects_json);
+        $param->{deferred_json} = JSON::objToJson($deferred);
     
         $param->{error} => $error if $error;
         $param->{next_mode} = 'dialog_restore_upload';
@@ -11614,15 +11608,10 @@ sub restore_premature_cancel {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
     
-    require MT::Session;
-    my $sess_restore = MT::Session->load({ kind => 'RS', name => $app->user->id });
-    require MT::Serialize;
-    my $ser = MT::Serialize->new($app->{cfg}->Serializer);
-    my $deferred = $sess_restore->get('deferred');
-    MT::Session->remove({ kind => 'RS', name => $app->user->id });
-
+    require JSON;
+    my $deferred = JSON::jsonToObj($app->param('deferred_json')) if $app->param('deferred_json');
     my $param = { restore_success => 1 };
-    if (scalar(keys %$deferred)) {
+    if (defined $deferred && (scalar(keys %$deferred))) {
         my @names = keys %$deferred;
         my $data = '';
         $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
@@ -11639,6 +11628,13 @@ sub restore_premature_cancel {
         $param->{restore_success} = 0;
         $param->{error} = $message . '  '
             . $app->translate("Detailed information is in the <a href='javascript:void(0)' onclick='closeDialog(\"[_1]\")'>activity log</a>.", $log_url);
+    } else {
+        $app->log({
+            message => $app->translate('[_1] has canceled the multiple files restore operation prematurely.', $app->user->name),
+            level => MT::Log::WARNING(),
+            class => 'system',
+            category => 'restore',
+        });
     }
     $app->redirect($app->uri( mode => 'view_log', args => {} ));
 }
