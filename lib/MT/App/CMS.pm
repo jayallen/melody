@@ -11598,7 +11598,7 @@ sub dialog_restore_upload {
         $param->{objects_json} = JSON::objToJson(\%objects_json);
         $param->{deferred_json} = JSON::objToJson($deferred);
     
-        $param->{error} => $error if $error;
+        $param->{error} = $error if $error;
         $param->{next_mode} = 'dialog_restore_upload';
     }
 
