@@ -34,6 +34,10 @@ my @OPT = (
     [ 'Crypt::DSA', 0, 0, 'Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.', 'Crypt DSA'],
     [ 'MIME::Base64', 0, 0, 'MIME::Base64 is required in order to enable comment registration.', 'MIME Base64'],
     [ 'XML::Atom', 0, 0, 'XML::Atom is required in order to use the Atom API.', 'XML Atom'],
+    [ 'Archive::Tar', 0, 0, 'Archive::Tar is required in order to archive files in backup/restore operation.', 'Archive Tar'],
+    [ 'Compress::Zlib', 0, 0, 'Compress::Zlib is required in order to compress/decompress files in backup/restore operation.', 'Compress Zlib'],
+    [ 'IO::String', 0, 0, 'IO::String is required in order to archive files in backup/restore operation.', 'I/O String'],
+    [ 'Archive::Zip', 0, 0, 'Archive::Zip is required in order to archive files in backup/restore operation.', 'Archive Zip'],
 );
 
 my %drivers = (
