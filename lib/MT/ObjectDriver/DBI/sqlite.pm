@@ -256,6 +256,26 @@ sub _cast_column {
     return "${ds}_$name";
 }
 
+sub _static_remove {
+    my $driver = shift;
+    my $pkg = shift;
+    my ($terms, $args) = @_;
+    my $iter = $driver->load_iter($pkg, $terms, $args)
+        or return 1;
+    my @ids;
+    while (my $obj = $iter->()) {
+        push @ids, $obj->id;
+    }
+    ## The iterator is finished, so we can safely remove.
+    for my $id (@ids) {
+        my $obj = $driver->load($pkg, $id);
+        $obj->remove
+            or return $iter->('finish'),
+            $driver->error($obj->errstr);
+    }
+    1;
+}
+
 1;
 __END__
 
