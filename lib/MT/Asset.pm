@@ -266,6 +266,43 @@ sub thumbnail_url {
     return $asset->stock_icon_url(@_);
 }
 
+sub children_to_xml {
+    my $obj = shift;
+    my $xml = '';
+
+    require MT::ObjectTag;
+    my $offset = 0;
+    while (1) {
+        my @objecttags = MT::ObjectTag->load(
+            { object_id => $obj->id, object_datasource => $obj->datasource },
+            { offset => $offset, limit => 50, }
+        );
+        last unless @objecttags;
+        $offset += scalar @objecttags;
+        for my $objecttag (@objecttags) {
+            $xml .= $objecttag->to_xml . "\n" if $objecttag->to_backup;
+        }
+    }
+    
+    $xml;
+}
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        objecttag => 'MT::ObjectTag',
+    };
+    $children;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+    };
+    $parents;
+}
+
 1;
 
 __END__

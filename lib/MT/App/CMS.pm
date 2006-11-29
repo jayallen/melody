@@ -10992,6 +10992,7 @@ sub backup_everything {
         'MT::Blog',
         'MT::Role',
         'MT::Category',
+        'MT::Asset',
         'MT::Entry',
     );
 
@@ -11236,6 +11237,7 @@ sub restore_file {
         {blog => 'MT::Blog'},
         {role => 'MT::Role'},
         {category => 'MT::Category'},
+        {asset => 'MT::Asset'},
         {entry => 'MT::Entry'},
     );
     my %objects;
@@ -11313,6 +11315,7 @@ sub restore_directory {
         {blog => 'MT::Blog'},
         {role => 'MT::Role'},
         {category => 'MT::Category'},
+        {asset => 'MT::Asset'},
         {entry => 'MT::Entry'},
     );
     my %objects;
@@ -11505,6 +11508,7 @@ sub dialog_restore_upload {
         {blog => 'MT::Blog'},
         {role => 'MT::Role'},
         {category => 'MT::Category'},
+        {asset => 'MT::Asset'},
         {entry => 'MT::Entry'},
     );
 

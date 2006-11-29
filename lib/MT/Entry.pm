@@ -681,7 +681,7 @@ sub children_to_xml {
     my $offset = 0;
     while (1) {
         my @objecttags = MT::ObjectTag->load(
-            { object_id => $obj->id, },
+            { object_id => $obj->id, object_datasource => $obj->datasource },
             { offset => $offset, limit => 50, }
         );
         last unless @objecttags;
@@ -751,11 +751,11 @@ sub children_names {
 
 sub parent_names {
     my $obj = shift;
-    my $children = {
+    my $parents = {
         blog => 'MT::Blog',
         author => 'MT::Author',
     };
-    $children;
+    $parents;
 }
 
 
