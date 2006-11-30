@@ -135,6 +135,9 @@ sub _get_ids {
     elsif ($args && $args->{limit}) {    ## Lookup with limit
         @ids = $driver->_get_ids_limit($DB, $db, $class, $terms, $args);
     }
+    elsif ($args && $args->{offset}) {    ## Lookup with offset
+        @ids = $driver->_get_ids_limit($DB, $db, $class, $terms, $args);
+    }
     elsif ($terms) {                  ## Lookup using index or ID
         if (ref($terms) eq 'HASH') {
             @ids = %$terms ?
@@ -353,7 +356,8 @@ sub _get_ids_from_index {
 sub _get_ids_limit {
     my $driver = shift;
     my($DB, $db, $class, $terms, $args) = @_;
-    my $n = $args->{limit};
+    my $n = 2147483647;
+    $n = $args->{limit} if $args->{limit};
     my $this_db = $DB;
     my $idx;
     my(%ids, @ids);
