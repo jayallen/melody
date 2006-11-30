@@ -151,7 +151,6 @@ sub init {
         'backup_restore' => \&backup_restore,
         'backup' => \&backup,
         'restore' => \&restore,
-        'backup_download' => \&backup_download,
         'restore_upload_manifest' => \&restore_upload_manifest,
         'dialog_restore_upload' => \&dialog_restore_upload,
         'restore_premature_cancel' => \&restore_premature_cancel,
@@ -10824,7 +10823,7 @@ sub backup {
 
 sub _loop_through_objects {
     my $app = shift;
-    my ($printer, $splitter, $number, $obj_to_backup) = @_;
+    my ($printer, $splitter, $number, $obj_to_backup, $files) = @_;
 
     my $counter = 0;
     for my $class (@$obj_to_backup) {
@@ -10844,7 +10843,12 @@ sub _loop_through_objects {
                 if ($number && ($counter % $number == 0)) {
                     $splitter->(int($counter / $number + 1));
                 }
-                $printer->($object->to_xml . "\n") if $object->to_backup;
+                if ($class eq 'MT::Asset') {
+                    $printer->($object->to_xml . "\n") if $object->to_backup;
+                    $files->{$object->id} = [$object->url, $object->file_path, $object->file_name];
+                } else {
+                    $printer->($object->to_xml . "\n") if $object->to_backup;
+                }
                 my $xml = MT->run_callbacks('CMSBackup.' . $object->datasource, $app, $object)
                     or $printer->($app->error(MT->errstr()));
                 $printer->($xml . "\n") if $xml ne '1';
@@ -10881,12 +10885,14 @@ sub backup_everything {
         return $app->errtrans('IO::String is required to archive in zip format.') if $@;
     }
 
+    require MT::Asset;
+    my $num_assets = MT::Asset->count();
     my $printer;
     my $splitter;
     my $finisher;
     my $fh;
     my $arc_buf;
-    if (!$number) {
+    if (!($number || $num_assets)) {
         $app->{no_print_body} = 1;
         $splitter = sub {};
         if ('0' eq $archive) {
@@ -10894,7 +10900,7 @@ sub backup_everything {
             $app->send_http_header($enc ? "text/xml; charset=$enc"
                                         : 'text/xml');
             $printer = sub { $app->print(@_); };
-            $finisher = sub {};
+            $finisher = sub { my ($asset_files) = @_; 1; };
         } elsif ('1' eq $archive) { # tar.gz
             require Archive::Tar;
             require Compress::Zlib;
@@ -10902,8 +10908,12 @@ sub backup_everything {
             $app->send_http_header('application/x-tar-gz');
             $printer = sub { $arc_buf .= $_[0]; };
             $finisher = sub {
+                my ($asset_files) = @_;
                 my $arc = Archive::Tar->new;
                 $arc->add_data("$file.xml", $arc_buf);
+                $arc->add_data(
+                    "$file.manifest",
+                    "<manifest xmlns='" . NS_MOVABLETYPE . "'><file type='backup' name='$file.xml' /></manifest>"); 
                 require Compress::Zlib;
                 my $dest = Compress::Zlib::memGzip($arc->write);
                 $app->print($dest);
@@ -10914,8 +10924,12 @@ sub backup_everything {
             $app->send_http_header('application/zip');
             $printer = sub { $arc_buf .= $_[0]; };
             $finisher = sub {
+                my ($asset_files) = @_;
                 my $arc = Archive::Zip->new;
                 $arc->addString($arc_buf, "$file.xml");
+                $arc->addString(
+                    "<manifest xmlns='" . NS_MOVABLETYPE . "'><file type='backup' name='$file.xml' /></manifest>", 
+                    "$file.manifest");
                 my $buf;
                 require IO::String;
                 my $ios = IO::String->new(\$buf);
@@ -10944,6 +10958,7 @@ sub backup_everything {
             print $fh $header;
         };
         $finisher = sub {
+            my ($asset_files) = @_;
             close $fh;
             my $filename = File::Spec->catfile($temp_dir, "$file.manifest");
             $fh = gensym();
@@ -10952,6 +10967,15 @@ sub backup_everything {
             for my $file (@files) {
                 my $name = $file->{filename};
                 print $fh "<file type='backup' name='$name' />\n";
+            }
+            for my $id (keys %$asset_files) {
+                print $fh "<file type='asset' name='$asset_files->{$id}->[2]' asset_id='" . $id . "' />\n";
+                push @files, {
+                    filename => $asset_files->{$id}->[2], 
+                    url=> $asset_files->{$id}->[0], 
+                    path => $asset_files->{$id}->[1],
+                    asset_id => $id,
+                };
             }
             print $fh "</manifest>\n";
             close $fh;
@@ -10969,7 +10993,15 @@ sub backup_everything {
                 require Archive::Tar;
                 my $arc = Archive::Tar->new;
                 for my $f (@files) {
-                    $arc->add_files(File::Spec->catfile($temp_dir, $f->{filename}));
+                    if (defined $f->{path}) {
+                        my @arc_files = $arc->add_files($f->{path});
+                        $arc_files[0]->rename($f->{asset_id} . '-' . $f->{filename}) if scalar(@arc_files);
+                    } else {
+                        my $tmp_filename = File::Spec->catfile($temp_dir, $f->{filename});
+                        my @arc_files = $arc->add_files($tmp_filename);
+                        $arc_files[0]->rename($f->{filename});
+                        unlink $tmp_filename;
+                    }
                 }
                 require Compress::Zlib;
                 my $dest = Compress::Zlib::memGzip($arc->write);
@@ -10984,12 +11016,20 @@ sub backup_everything {
                 $app->set_header("Content-Disposition" => "attachment; filename=$file.zip");
                 $app->send_http_header('application/zip');
                 for my $f (@files) {
-                    $arc->addFile(File::Spec->catfile($temp_dir, $f->{filename}), $f->{filename});
+                    if (defined $f->{path}) {
+                        $arc->addFile($f->{path}, $f->{asset_id} . '-' . $f->{filename});
+                    } else {
+                        my $tmp_filename = File::Spec->catfile($temp_dir, $f->{filename});
+                        $arc->addFile($tmp_filename, $f->{filename});
+                    }
                 }
                 my $buf;
                 require IO::String;
                 my $ios = IO::String->new(\$buf);
                 $arc->writeToFileHandle($ios);
+                for my $f (@files) {
+                    unlink File::Spec->catfile($temp_dir, $f->{filename}) if !defined($f->{path});
+                }
                 $app->print($buf);
             }
         };
@@ -11009,10 +11049,11 @@ sub backup_everything {
     $header = "<?xml version='1.0' encoding='$enc'?>\n$header" if $enc !~ m/utf-?8/i;
     $printer->($header);
 
-    $app->_loop_through_objects($printer, $splitter, $number, \@obj_to_backup);
+    my $files = {};
+    $app->_loop_through_objects($printer, $splitter, $number, \@obj_to_backup, $files);
 
     $printer->('</movabletype>');
-    $finisher->();
+    $finisher->($files);
 }
 
 sub backup_allentries {
@@ -11031,37 +11072,6 @@ sub backup_custom {
     $app->validate_magic() or return;
 
     $app->errtrans("Not implemented yet");
-}
-
-sub backup_download {
-    my $app = shift;
-    my $user = $app->user;
-
-    return $app->errtrans("Permission denied.") if !$user->is_superuser;
-    $app->validate_magic() or return;
-
-    my $file = $app->param('file');
-    return $app->errtrans("Filename is needed to download.") if !defined($file) || !$file;
-    my $temp_dir = $app->config('TempDir');
-    my $filename = File::Spec->catfile($temp_dir, $file);
-
-    return $app->errtrans("[_1] is not found.", $file) if (!(-f $filename));
-        
-    my $enc = $app->config('PublishCharset') || 'utf-8';
-    $app->{no_print_body} = 1;
-    $app->set_header("Content-Disposition" => "attachment; filename=$file");
-    $app->send_http_header($enc ? "text/xml; charset=$enc"
-                                    : 'text/xml');
-    my $fh = gensym();
-    open $fh, "<$filename";
-    my $data;
-    binmode $fh;
-    while (read $fh, my($chunk), 8192) {
-        $data .= $chunk;
-    }
-    close $fh;
-    $app->print($data);
-    1;
 }
 
 sub restore {
@@ -11133,8 +11143,7 @@ sub restore {
                 my $ios = IO::String->new(\$dest);
                 my $tar = Archive::Tar->new($ios);
                 for my $file ($tar->list_files) {
-                    my ($vol, $dir, $fn) = File::Spec->splitpath($file);
-                    my $f = File::Spec->catfile($tmp, $fn);
+                    my $f = File::Spec->catfile($tmp, $file);
                     $tar->extract_file($file, $f);
                 }
                 $result = $app->restore_directory($tmp, \$error);
@@ -11285,6 +11294,51 @@ sub restore_file {
     1;
 }
 
+sub _restore_asset {
+    my $app = shift;
+    my ($tmp, $asset_element, $objects, $errors) = @_;
+
+    my $id = $asset_element->{asset_id};
+    next if !defined($id);
+    next if !(exists $objects->{"MT::Asset#$id"});
+    my $asset = $objects->{"MT::Asset#$id"};
+    my $path = $asset->file_path;
+    next if !defined($path);
+    my ($vol, $dir, $fn) = File::Spec->splitpath($path);
+    if (!-w "$vol$dir") {
+        $errors->{$id} = $app->translate('[_1] is not writable.', "$vol$dir");
+        next;
+    }
+    my $filename = "$id-" . $asset_element->{name};
+    $app->print($app->translate("Copying [_1] to [_2]...", $filename, $path));
+    my $file;
+    if (defined($tmp)) {
+        $file = File::Spec->catfile($tmp, $filename) if defined($tmp);
+    } else {
+        $file = $asset_element->{fh};
+    }
+    copy($file, $path)
+        or $errors->{$id} = $!;
+    $app->print(exists($errors->{$id}) ?
+        $app->translate("Failed: [_1]\n", $errors->{$id}) :
+        $app->translate("Done.\n")
+    );
+}
+
+sub _restore_assets {
+    my $app = shift;
+    my ($tmp, $backups, $objects) = @_;
+    my $assets = $backups->{assets};
+    my $errors = {};
+    return $errors if !defined($assets);
+    use File::Copy;
+    require File::Spec;
+    for my $asset_element (@$assets) {
+        $app->_restore_asset($tmp, $asset_element, $objects, $errors);
+    }
+    $errors;
+}
+
 sub restore_directory {
     my $app = shift;
     my ($dir, $error) = @_;
@@ -11347,6 +11401,24 @@ sub restore_directory {
 
         close $fh;
     }
+    
+    my $error_assets = $app->_restore_assets($dir, $backups, \%objects) if defined($backups->{assets});
+
+    if (defined($error_assets) && scalar(keys %$error_assets)) {
+        my $data;
+        while (my ($key, $value) = each %$error_assets) {
+            $data .= $app->translate("Actual file for an asset (ID: [_1]) could not be restored: [_2]\n", $key, $value);
+        }
+        my $message = 'Some of the actual files for assets could not be restored.';
+        $app->log({
+            message => $message,
+            level => MT::Log::WARNING(),
+            class => 'system',
+            category => 'restore',
+            metadata => $data,
+        });
+        $$error .= $message;
+    }    
 
     if (scalar(keys %deferred)) {
         my @names = keys %deferred;
@@ -11362,10 +11434,11 @@ sub restore_directory {
             metadata => $data,
         });
         my $log_url = $app->uri(mode => 'view_log', args => {});
-        $$error = $message . '  '
+        $$error .= $message . '  '
             . $app->translate('Detailed information is in the <a href="[_1]">activity log</a>.', $log_url);
-        return 0;
     }
+
+    return 0 if $$error;
 
     $app->log({
         message => $app->translate("Successfully restored objects to Movable Type system by user '[_1]'", $app->user->name),
@@ -11401,7 +11474,10 @@ sub _process_manifest {
                 if ('backup' eq $node->getAttribute('type')) {
                     push @{$backups->{files}}, $node->getAttribute('name');
                 } elsif ('asset' eq $node->getAttribute('type')) {
-                    push @{$backups->{assets}}, $node->getAttribute('name');
+                    push @{$backups->{assets}}, { 
+                        name => $node->getAttribute('name'),
+                        asset_id => $node->getAttribute('asset_id'),
+                    };
                 }
             }
             return $backups;
@@ -11440,15 +11516,22 @@ sub restore_upload_manifest {
     my $files = $backups->{files};
     my $assets = $backups->{assets};
     my $file_next = shift @$files if defined($files) && scalar(@$files);
+    my $assets_json;
+    my $param = {};
     if (!defined($file_next)) {
-        $file_next = shift @$assets if defined($assets) && scalar(@$assets);
+        if (scalar(@$assets)) {
+            my $asset = shift @$assets;
+            $file_next = $asset->{name};
+            $param->{is_asset} = 1;
+        }
     }
-    my $param = {
-        'files' => join(',', @$files),
-        'assets' => join(',', @$assets),
-        'filename' => $file_next,
-        'open_dialog' => 1,
-    };
+    require JSON;
+    $assets_json = MT::Util::encode_html(JSON::objToJson($assets)) if scalar(@$assets);
+    $param->{files} = join(',', @$files);
+    $param->{assets} = $assets_json;
+    $param->{filename} = $file_next;
+    $param->{open_dialog} = 1;
+
     $app->build_page('backup_restore.tmpl', $param);
     #close $fh if !$no_upload;
 }
@@ -11464,7 +11547,8 @@ sub dialog_restore_upload {
     my $current = $q->param('current_file');
     my $last = $q->param('last');
     my $files = $q->param('files');
-    my $assets = $q->param('assets');
+    my $assets_json = $q->param('assets');
+    my $is_asset = $q->param('is_asset') || 0;
 
     my $objects = {};
     my $deferred = {}; 
@@ -11487,10 +11571,10 @@ sub dialog_restore_upload {
     }
 
     my $param = {};
+    $param->{is_asset} = $is_asset;
     $param->{name} = $current;
     $param->{files} = $files;
-    $param->{assets} = $assets;
-    $param->{name} = $current;
+    $param->{assets} = $assets_json;
     $param->{last} = $last;
     $param->{redirect} = 1;
     $param->{is_dirty} = $q->param('is_dirty');
@@ -11559,21 +11643,40 @@ sub dialog_restore_upload {
         }
     }
 
-    my $result = $app->_restore_process_single_file(
-        $fh, \@obj_to_restore, $objects, $deferred, \$error);
+    my $assets = JSON::jsonToObj(MT::Util::decode_html($assets_json)) if defined($assets_json);
+    my $asset;
+    if ($is_asset) {
+        $asset = shift @$assets;
+        my $error_assets = {};
+        $asset->{fh} = $fh;
+        $app->_restore_asset(undef, $asset, $objects, $error_assets);
+        if (defined($error_assets->{$asset->{asset_id}})) {
+            $app->log({
+                message => $app->translate('Restoring an actual file for an asset failed: [_1]', $error_assets->{$asset->{asset_id}}),
+                level => MT::Log::WARNING(),
+                class => 'system',
+                category => 'restore',
+            });
+        }
+    } else {
+        $app->_restore_process_single_file(
+            $fh, \@obj_to_restore, $objects, $deferred, \$error);
+    }
 
     my @files = split(',', $files);
-    my @assets;
     my $file_next = shift @files if scalar(@files);
     if (!defined($file_next)) {
-        @assets = split(',', $assets);
-        $file_next = shift @assets if scalar(@assets);
+        if (scalar(@$assets)) {
+            $asset = $assets->[0];
+            $file_next = $asset->{asset_id} . '-' . $asset->{name};
+            $param->{is_asset} = 1;
+        }
     }
 
     $param->{files} = join(',', @files);
-    $param->{assets} = join(',', @assets);
+    $param->{assets} = MT::Util::encode_html(JSON::objToJson($assets));
     $param->{name} = $file_next;
-    $param->{last} = (scalar(@files) || scalar(@assets)) ? 0 : 1;
+    $param->{last} = (scalar(@files) || (scalar(@$assets) - 1)) ? 0 : 1;
     $param->{is_dirty} = scalar(keys %$deferred);
     if ($last) {
         $param->{restore_end} = 1;

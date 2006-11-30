@@ -56,10 +56,11 @@ TC.attachLoadEvent(init);
 <input type="hidden" name="__mode" value="dialog_restore_upload" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 <input type="hidden" name="files" value="<TMPL_VAR NAME=FILES>" />
-<input type="hidden" name="assets" value="<TMPL_VAR NAME=ASSETS>" />
+<input type="hidden" name="assets" value="<TMPL_VAR NAME=ASSETS ESCAPE=HTML>" />
 <input type="hidden" name="current_file" value="<TMPL_VAR NAME=NAME>" />
 <input type="hidden" name="last" value="<TMPL_VAR NAME=LAST>" />
 <input type="hidden" name="is_dirty" value="<TMPL_VAR NAME=IS_DIRTY>" />
+<input type="hidden" name="is_asset" value="<TMPL_VAR NAME=IS_ASSET>" />
 <input type="hidden" name="objects_json" value="<TMPL_VAR NAME=OBJECTS_JSON ESCAPE=HTML>" />
 <input type="hidden" name="deferred_json" value="<TMPL_VAR NAME=DEFERRED_JSON ESCAPE=HTML>" />
 
