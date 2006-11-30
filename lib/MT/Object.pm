@@ -422,7 +422,7 @@ sub to_xml {
 
     my @elements;
     for my $name (@$colnames) {
-        if ($obj->column($name) || ('0' eq $obj->column($name))) {
+        if ($obj->column($name) || (defined($obj->column($name)) && ('0' eq $obj->column($name)))) {
             if ($obj->_is_element($coldefs->{$name})) {
                 push @elements, $name;
                 next;
