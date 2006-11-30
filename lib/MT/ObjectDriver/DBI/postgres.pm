@@ -129,6 +129,9 @@ sub _prepare_from_where {
             $n =~ s/\D//g;   ## Get rid of any non-numerics.
             $w_sql .= sprintf "limit %d%s\n", $n,
                 ($args->{offset} ? " offset $args->{offset}" : "");
+        } elsif (my $o = $j_args->{offset}) {
+            $o =~ s/\D//g;   ## Get rid of any non-numerics.
+            $w_sql .= sprintf "limit all offset %d\n", $o;                                                 
         }
     } else {
         $sql = "from $tbl_name\n";
@@ -140,6 +143,9 @@ sub _prepare_from_where {
     if (my $n = $args->{limit}) {
         $sql .= sprintf "limit %d%s\n", $n,
             ($args->{offset} ? " offset $args->{offset}" : "");
+    } elsif (my $o = $args->{offset}) {
+        $o =~ s/\D//g;   ## Get rid of any non-numerics.
+        $sql .= sprintf "limit all offset %d\n", $o;
     }
     ($class->datasource, $sql, \@bind);
 }
