@@ -10603,8 +10603,16 @@ sub dialog_grant_role {
         $row->{description} = $row->{nickname} if exists $row->{nickname};
     };
 
+    # Only show active users who are not commenters.
+    my $terms = {};
+    if ($type eq 'author') {
+        $terms->{status} = MT::Author::ACTIVE();
+        $terms->{type} = MT::Author::AUTHOR();
+    }
+
     if ($app->param('search') || $app->param('json')) {
         $app->listing({
+            Term => $terms,
             Type => $type,
             Code => $hasher,
             Params => {
@@ -10683,10 +10691,11 @@ sub dialog_grant_role {
                 panel_searchable => ($source eq 'role' ? 0 : 1),
             };
 
-            # Only show active users.
+            # Only show active users who are not commenters.
             my $terms = {};
             if ($source eq 'author') {
                 $terms->{status} = MT::Author::ACTIVE();
+                $terms->{type} = MT::Author::AUTHOR();
             }
 
             $app->listing({
