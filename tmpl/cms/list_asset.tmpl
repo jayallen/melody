@@ -123,7 +123,11 @@ TC.attachLoadEvent( init );
 <TMPL_IF NAME=EDIT_BLOG_ID>
 <li class="special">
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New File">" width="9" height="9" />
-<a href="#" onclick="window.open('<TMPL_VAR NAME=MT_URL>?__mode=start_upload&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>', 'upload', 'width=400,height=450,resizable=yes,scrollbars=yes')">Upload New File</a></li>
+
+<a href="javascript:void(0)" onclick="return openDialog(this.form, 'start_upload', '__type=asset&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New File"></a></li>
+
+<!-- <a href="#" onclick="window.open('<TMPL_VAR NAME=MT_URL>?__mode=start_upload&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>', 'upload', 'width=400,height=450,resizable=yes,scrollbars=yes')">Upload New File</a></li> -->
+
 </TMPL_IF>
 </ul>
 </div>

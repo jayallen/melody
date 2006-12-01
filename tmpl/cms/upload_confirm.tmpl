@@ -1,4 +1,4 @@
-<TMPL_INCLUDE NAME="header-popup.tmpl">
+<TMPL_INCLUDE NAME="header-dialog.tmpl">
 
 <form method="get" action="<TMPL_VAR NAME=SCRIPT_URL>">
 <input type="hidden" name="__mode" value="upload_file" />
@@ -10,17 +10,30 @@
 <input type="hidden" name="middle_path" value="<TMPL_VAR NAME=MIDDLE_PATH ESCAPE=HTML>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 
-<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Upload File"></h2>
+<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Upload New File"></h2>
 
-<div class="message-warning">
-<p><MT_TRANS phrase="A file named '[_1]' already exists. Do you want to overwrite this file?" params="<TMPL_VAR NAME=FNAME ESCAPE=HTML>"></p>
+<div class="items-wrapper">
+    <span class="modal_added">&nbsp;</span>
 </div>
 
-<div>
-<input type="submit" name="overwrite_no" value="<MT_TRANS phrase="No">" />
-<input type="submit" name="overwrite_yes" value="<MT_TRANS phrase="Yes">" />
+<p class="page-desc"><img border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="5"></p>
+
+<div class="selector list">
+    <div class="upload-data-wrapper">
+        <div class="error-message">
+        <p><MT_TRANS phrase="A file named '[_1]' already exists. Do you want to overwrite this file?" params="<TMPL_VAR NAME=FNAME ESCAPE=HTML>"></p>
+        </div>
+    </div>
+</div>
+
+
+<div class="upload_button_spacing">&nbsp;</div>
+
+<div class="panel-commands">
+    <input type="submit" name="overwrite_no" value="<MT_TRANS phrase="No">" />
+    <input type="submit" name="overwrite_yes" value="<MT_TRANS phrase="Yes">" />
 </div>
 
 </form>
 
-<TMPL_INCLUDE NAME="footer-popup.tmpl">
+<TMPL_INCLUDE NAME="footer-dialog.tmpl">

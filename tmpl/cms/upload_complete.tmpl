@@ -1,15 +1,20 @@
-<TMPL_INCLUDE NAME="header-popup.tmpl">
+<TMPL_INCLUDE NAME="header-dialog.tmpl">
 
 <script type="text/javascript">
 <!--
 
 function doClick (f, mode) {
 <TMPL_IF NAME=CAN_POST>
-    if (f.new_entry[0].checked)
+    if (f.new_entry.checked) {
         doHandleMode(f, mode, 'start_upload_entry');
-    else
+   } else if (!f.new_entry.checked) { 
+        doHandleMode(f, mode, 'list_assets');
+   } else {
 </TMPL_IF>
-      doHandleMode(f, mode, 'show_upload_html');
+        doHandleMode(f, mode, 'list_assets');
+<TMPL_IF NAME=CAN_POST>
+    }
+</TMPL_IF>
 }
 
 function doHandleMode (f, mode, type) {
@@ -17,14 +22,23 @@ function doHandleMode (f, mode, type) {
     url += '&blog_id=<TMPL_VAR NAME=BLOG_ID>&url=<TMPL_VAR NAME=URL ESCAPE=URL>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>';
     url += mode;
 <TMPL_IF NAME=DO_THUMB>
-    if (f.thumb.checked)
+    if (f.thumb.checked) {
         url += '&thumb=1' + calcGeometry(f);
-        url += '&thumb_width_type=' + f.thumb_width_type.options[f.thumb_width_type.selectedIndex].value;
-        url += '&thumb_height_type=' + f.thumb_height_type.options[f.thumb_height_type.selectedIndex].value;
-        if (f.constrain.checked)
-            url += '&constrain=1';
+        url += '&thumb_width_type=pixels';
+        url += '&thumb_height_type=pixels';
+        url += '&constrain=1';
+    }
 </TMPL_IF>
-    if (f.wrap_text.checked) {
+<TMPL_IF NAME=IS_IMAGE>
+    if (f.include.checked) { 
+        url += '&include=1';
+    } else {
+        url += '&link=1';
+    }
+    url += '&width=<TMPL_VAR NAME=WIDTH>';
+    url += '&height=<TMPL_VAR NAME=HEIGHT>';
+    url += '&image_type=<TMPL_VAR NAME=IMAGE_TYPE>';
+    if (f.include.checked) {
         url += '&wrap_text=1&align=';
         for (i=0; i<f.align.length; i++) {
             if (f.align[i].checked) {
@@ -32,14 +46,18 @@ function doHandleMode (f, mode, type) {
             }
         }
     }
-    if (f.image_defaults.checked)
-        url += '&image_defaults=1';
-    if (type == 'start_upload_entry') {
-        window.opener.location = url;
-        window.close();
+    
+    if (f.popup.checked) { 
+        url += '&popup=1';
     }
-    else if (type == 'show_upload_html') {
-        window.location = url;
+    if (f.image_defaults.checked) {
+        url += '&image_defaults=1';
+    }
+</TMPL_IF>
+    if (type == 'start_upload_entry') {
+          closeDialog(url);
+    } else if (type == 'list_assets') {
+          closeDialog(url);
     }
 }
 
@@ -53,14 +71,11 @@ function calcGeometry (f) {
 }
 
 function calcDim (val, type, full) {
-    if (type.options[type.selectedIndex].value == 'pixels')
-        return val.value;
-    else
-        return Math.floor(full * val.value / 100);
+    return val.value;
 }
 
 function adjustPixelsPct (f, width) {
-    if (!f.constrain.checked) return;
+//    if (!f.constrain.checked) return;
     var e, s, full;
     if (width) {
         e = f.thumb_width;
@@ -71,15 +86,12 @@ function adjustPixelsPct (f, width) {
         s = f.thumb_height_type;
         full = f.full_height.value;
     }
-    if (s.options[s.selectedIndex].value == 'pixels')
-        e.value = Math.floor(full * e.value / 100);
-    else
-        e.value = Math.floor(e.value / full * 100);
+    e.value = Math.floor(full * e.value / 100);
     return true;
 }
 
 function adjustWidthHeight (f, width) {
-    if (!f.constrain.checked) return;
+//    if (!f.constrain.checked) return;
     var w = f.thumb_width;
     var wt = f.thumb_width_type;
     var wf = f.full_width.value;
@@ -88,17 +100,11 @@ function adjustWidthHeight (f, width) {
     var hf = f.full_height.value;
     var pct;
     var s = width ? wt : ht;
-    if (s.options[s.selectedIndex].value == 'pixels')
-        pct = width ? (w.value / wf) : (h.value / hf);
-    else
-        pct = width ? w.value / 100 : h.value / 100;
+    pct = width ? (w.value / wf) : (h.value / hf);
     var e = width ? h : w;
     var s = width ? ht : wt;
     var full = width ? hf : wf;
-    if (s.options[s.selectedIndex].value == 'pixels')
-        e.value = Math.floor(pct * full);
-    else
-        e.value = Math.floor(pct * 100);
+    e.value = Math.floor(pct * full);
     return true;
 }
 
@@ -110,93 +116,80 @@ function adjustWidthHeight (f, width) {
 <form action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return false;">
 <TMPL_IF NAME=DO_THUMB>
 <input type="hidden" name="full_width" value="<TMPL_VAR NAME=WIDTH>" />
-<input type="hidden" name="full_height" value="<TMPL_VAR NAME=HEIGHt>" />
+<input type="hidden" name="full_height" value="<TMPL_VAR NAME=HEIGHT>" />
 </TMPL_IF>
 
 <h2><span class="weblog-title-highlight"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Upload File"></h2>
 
-<p><MT_TRANS phrase="The file named '[_1]' has been uploaded. Size: [quant,_2,byte]." params="<TMPL_VAR NAME=FNAME ESCAPE=HTML>%%<TMPL_VAR NAME=BYTES>"></p>
-
-<TMPL_IF NAME=CAN_POST>
-<p>
-<label><input type="radio" name="new_entry" value="1" checked="checked" /> <MT_TRANS phrase="Create a new entry using this uploaded file"></label> <a href="#" onclick="return openManual('file_upload', 'creating_a_new_entry')" class="help">?</a><br />
-<label><input type="radio" name="new_entry" value="0"> <MT_TRANS phrase="Show me the HTML"></label>
-</p>
-</TMPL_IF>
-
-<TMPL_IF NAME=IS_IMAGE>
-<p>
-<input type="checkbox" name="wrap_text" value="1" <TMPL_IF NAME=WRAP_TEXT>checked="checked"</TMPL_IF>/>
-<MT_TRANS phrase="Wrap text">:
-<input type="radio" name="align" value="left" <TMPL_IF NAME=ALIGN_LEFT>checked="checked"</TMPL_IF>/>
-<MT_TRANS phrase="Left">
-<input type="radio" name="align" value="center" <TMPL_IF NAME=ALIGN_CENTER>checked="checked"</TMPL_IF>/>
-<MT_TRANS phrase="Center">
-<input type="radio" name="align" value="right" <TMPL_IF NAME=ALIGN_RIGHT>checked="checked"</TMPL_IF>/>
-<MT_TRANS phrase="Right">
-</p>
-</TMPL_IF>
-
-<TMPL_IF NAME=DO_THUMB>
-<h4><MT_TRANS phrase="Image Thumbnail"></h4>
-
-<p>
-<label>
-<input type="checkbox" name="thumb" value="1" <TMPL_IF NAME=MAKE_THUMB>checked="checked"</TMPL_IF> />
-<MT_TRANS phrase="Create a thumbnail for this image">
-</label>
-<a href="#" onclick="return openManual('file_upload', 'creating_thumbnails')" class="help">?</a>
-</p>
-
-<blockquote>
-
-<p>
-<label for="thumb_width"><MT_TRANS phrase="Width:"></label>
-<input name="thumb_width" id="thumb_width" value="<TMPL_VAR NAME=THUMB_WIDTH>" onchange="adjustWidthHeight(this.form, 1)" size="4" />
-<select name="thumb_width_type" onchange="adjustPixelsPct(this.form, 1)">
-<option value="pixels" <TMPL_IF NAME=UNIT_WPIXELS>selected="selected"</TMPL_IF>><MT_TRANS phrase="Pixels"></option>
-<option value="percent" <TMPL_IF NAME=UNIT_WPERCENT>selected="selected"</TMPL_IF>><MT_TRANS phrase="Percent"></option>
-</select>
-</p>
-
-<p>
-<label for="thumb_height"><MT_TRANS phrase="Height:"></label>
-<input name="thumb_height" value="<TMPL_VAR NAME=THUMB_HEIGHT>" onchange="adjustWidthHeight(this.form, 0)" size="4" />
-<select name="thumb_height_type" onchange="adjustPixelsPct(this.form, 0)">
-<option value="pixels" <TMPL_IF NAME=UNIT_HPIXELS>selected="selected"</TMPL_IF>><MT_TRANS phrase="Pixels"></option>
-<option value="percent" <TMPL_IF NAME=UNIT_HPERCENT>selected="selected"</TMPL_IF>><MT_TRANS phrase="Percent"></option>
-</select>
-</p>
-
-<p>
-<label>
-<input type="checkbox" name="constrain" value="1" <TMPL_IF NAME=CONSTRAIN>checked="checked"</TMPL_IF>/>
-<MT_TRANS phrase="Constrain proportions">
-</label>
-</p>
-
-</blockquote>
-</TMPL_IF>
-
-<div>
-<p><MT_TRANS phrase="Would you like this file to be a:"></p>
-<TMPL_IF NAME=IS_IMAGE>
-<input type="button" onclick="doClick(this.form, '&popup=1&amp;width=<TMPL_VAR NAME=WIDTH>&amp;height=<TMPL_VAR NAME=HEIGHT>&amp;image_type=<TMPL_VAR NAME=IMAGE_TYPE>')" value="<MT_TRANS phrase="Popup Image">" />
-<input type="button" onclick="doClick(this.form, '&include=1&width=<TMPL_VAR NAME=WIDTH>&height=<TMPL_VAR NAME=HEIGHT>&image_type=<TMPL_VAR NAME=IMAGE_TYPE>')" value="<MT_TRANS phrase="Embedded Image">" />
-<TMPL_ELSE>
-<input type="button" onclick="doClick(this.form, '&link=1')" value="<MT_TRANS phrase="Link">" />
-</TMPL_IF>
+<div class="items-wrapper">
+    <span class="modal_added"><MT_TRANS phrase="The file named '[_1]' has been uploaded. Size: [quant,_2,byte]." params="<TMPL_VAR NAME=FNAME ESCAPE=HTML>%%<TMPL_VAR NAME=BYTES>"></span>
 </div>
 
-<TMPL_IF NAME=CAN_SAVE_IMAGE_DEFAULTS>
-<p>
-<label>
-<input type="checkbox" name="image_defaults" value="1" />
-<MT_TRANS phrase="Remember these settings">
-</label>
-</p>
-</TMPL_IF>
+<p class="page-desc"><img border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="5"></p>
+
+<div class="selector list">
+    <div class="upload-data-wrapper">
+    <TMPL_IF NAME=IS_IMAGE>
+    <b><MT_TRANS phrase="Image Options"></b>
+    <TMPL_ELSE>
+    <b><MT_TRANS phrase="File Options"></b>
+    </TMPL_IF>
+    <div class="upload_indent_choices">
+        <TMPL_IF NAME=CAN_POST>
+        <p><label><input type="checkbox" name="new_entry" value="1" checked="checked" onclick="toggleSubPrefs(this); return true;" /> <MT_TRANS phrase="Create a new entry using this uploaded file."></label> <a href="#" onclick="return openManual('file_upload', 'creating_a_new_entry')" class="help">?</a><br /></p>
+        </TMPL_IF>
+    </div>
+
+
+    <TMPL_IF NAME=IS_IMAGE>
+        <div id="new_entry_prefs" style="display:block;">
+        <b><MT_TRANS phrase="Display Options"></b>
+
+            <div class="upload_indent_choices">
+            <p><label><input type="checkbox" name="include" value="1" checked="checked" onclick="toggleSubPrefs(this); return true;" /> <MT_TRANS phrase="Display Image in Entry"></label></p>
+
+                <div id="include_prefs" style="display:block;">
+
+                <input type="hidden" name="wrap_text" value="1" />
+                <p><MT_TRANS phrase="Alignment">: <span class="align_left_icon"><img align="absbottom" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="Align Image Left"> width="16" height="17" /></span> <input type="radio" name="align" value="left" <TMPL_IF NAME=ALIGN_LEFT>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Left"> <span class="align_center_icon"><img align="absbottom" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="Align Image Center"> width="16" height="17" /></span> <input type="radio" name="align" value="center" <TMPL_IF NAME=ALIGN_CENTER>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Center"> <span class="align_right_icon"><img align="absbottom" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="Align Image Right"> width="16" height="17" /></span> <input type="radio" name="align" value="right" <TMPL_IF NAME=ALIGN_RIGHT>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Right"></p>
+
+                <TMPL_IF NAME=DO_THUMB>
+                <p><input type="checkbox" name="thumb" value="1" <TMPL_IF NAME=MAKE_THUMB>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Create Thumbnail"> <a href="#" onclick="return openManual('file_upload', 'creating_thumbnails')" class="help">?</a>
+                <label for="thumb_width"><MT_TRANS phrase="Width">:</label>
+                <input name="thumb_width" id="thumb_width" value="<TMPL_VAR NAME=THUMB_WIDTH>" onchange="adjustWidthHeight(this.form, 1)" size="4" />
+                <label for="thumb_height"><MT_TRANS phrase="Height">:</label>
+                <input name="thumb_height" value="<TMPL_VAR NAME=THUMB_HEIGHT>" onchange="adjustWidthHeight(this.form, 0)" size="4" />
+                <MT_TRANS phrase="Pixels">
+                </p>
+                </TMPL_IF>
+
+                <p><input type="checkbox" name="popup" value="1" /> <MT_TRANS phrase="Link image to full-size version in a popup window."></p>
+                <TMPL_IF NAME=CAN_SAVE_IMAGE_DEFAULTS>
+                <p><input type="checkbox" name="image_defaults" value="1" /> <MT_TRANS phrase="Remember these settings"></p>
+                </TMPL_IF>
+
+                </div>
+
+            </div>
+        </div>
+    </TMPL_IF>
+
+</div>
+
+<div class="upload_button_spacing">&nbsp</div>
+
+<div class="panel-commands">
+
+    <input onclick="closeDialog()" type="button" value="<MT_TRANS phrase="Cancel">" />
+
+    <TMPL_IF NAME=IS_IMAGE>
+    <input type="button" onclick="doClick(this.form, '&foo=bar');" value="<MT_TRANS phrase="Finish">" />
+    <TMPL_ELSE>
+    <input type="button" onclick="doClick(this.form, '&link=1');" value="<MT_TRANS phrase="Finish">" />
+    </TMPL_IF>
+
+</div>
 
 </form>
 
-<TMPL_INCLUDE NAME="footer-popup.tmpl">
+<TMPL_INCLUDE NAME="footer-dialog.tmpl">
