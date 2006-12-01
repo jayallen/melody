@@ -385,6 +385,13 @@ sub to_backup { 1; }
 
 sub children_to_xml {
     my $obj = shift;
+    my ($args) = @_;
+
+    my $t = {};
+    if (defined($args)) {
+        my $j = $args->{'join'};
+        $t = $j->[2] if defined($j);
+    }
 
     my $children = $obj->children_names;
     my @children_classes = values %$children;
@@ -395,10 +402,15 @@ sub children_to_xml {
         my $err = $@;
         return $err if defined($err) && $err;
 
+        my $terms = { 
+            $obj->datasource . '_id' => $obj->id,
+            %$t,
+        };
+        
         my $offset = 0;
         while (1) {
             my @objects = $child_class->load(
-                { $obj->datasource . '_id' => $obj->id, },
+                $terms,
                 { offset => $offset, limit => 50, }
             );
             last unless @objects;
@@ -413,6 +425,7 @@ sub children_to_xml {
 
 sub to_xml {
     my $obj = shift;
+    my ($args) = @_;
 
     my $coldefs = $obj->column_defs;
     my $colnames = $obj->column_names;
@@ -437,7 +450,7 @@ sub to_xml {
     }
     $xml .= '>';
     $xml .= "<$_>" . MT::Util::encode_xml($obj->column($_), 1) . "</$_>" foreach @elements;
-    $xml .= $obj->children_to_xml;
+    $xml .= $obj->children_to_xml($args);
     $xml .= '</' . $obj->datasource . '>';
     $xml;
 }

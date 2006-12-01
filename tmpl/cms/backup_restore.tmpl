@@ -3,17 +3,16 @@
 <script type="text/javascript">
 
 function highlightSwitch(selection) {
-    var customizePanel = getByID('customize-panel');
     var descriptionObject = getByID('backup-what-description');
-    if (customizePanel) {
+    if (descriptionObject) {
         if (selection.value == 'custom') {
-            customizePanel.style.display = '';
+            openDialog(this.form, 'dialog_select_weblog');
             descriptionObject.innerHTML = '<MT_TRANS phrase="This option allows you to choose exactly what you want to backup.">';
-        } else if (selection.value == 'allentries') {
-            customizePanel.style.display = 'none';
-            descriptionObject.innerHTML = '<MT_TRANS phrase="This option will backup Entries, Categories, and Templates as well as related objects such as Comments and Authors.">';
         } else {
-            customizePanel.style.display = 'none';
+            var el_id = getByID('selected_blog_ids');
+            if (el_id) el_id.value = '';
+            var el_name = getByID('selected_blogs');
+            if (el_name) el_name.innerHTML = '(<MT_TRANS phrase="None Selected.">)';
             descriptionObject.innerHTML = '<MT_TRANS phrase="This option will backup Users, Roles, Associations, Weblogs, Entries, Categories, Templates and Tags.">';
         }
     }
@@ -46,20 +45,10 @@ function highlightSwitch(selection) {
 <div class="field">
 <select name="backup_what" id="backup_what" onchange="highlightSwitch(this)">
 <option value="everything" selected="selected"><MT_TRANS phrase="Everything"></option>
-<option value="allentries"><MT_TRANS phrase="All entries from all weblogs"></option>
-<option value="custom"><MT_TRANS phrase="Choose what to backup"></option>
+<option value="custom"><MT_TRANS phrase="Choose weblogs to backup"></option>
 </select>
-<p id="customize-panel" style="display:none;">
-<input type="radio" id="users" name="users" value="0"> <label for="users"><MT_TRANS phrase="Users"></label><br />
-<input type="radio" id="roles" name="roles" value="1"> <label for="roles"><MT_TRANS phrase="Roles"></label><br />
-<input type="radio" id="associations" name="associations" value="2"> <label for="associations"><MT_TRANS phrase="Associations"></label><br />
-<input type="radio" id="weblogs" name="weblogs" value="3"> <label for="weblogs"><MT_TRANS phrase="Weblogs"></label><br />
-<input type="radio" id="entries" name="entries" value="0"> <label for="entries"><MT_TRANS phrase="Entries"></label><br />
-<input type="radio" id="categories" name="categories" value="1"> <label for="categories"><MT_TRANS phrase="Categories"></label><br />
-<input type="radio" id="notifications" name="notifications" value="2"> <label for="notifications"><MT_TRANS phrase="Notifications"></label><br />
-<input type="radio" id="templates" name="templates" value="3"> <label for="templates"><MT_TRANS phrase="Templates"></label><br />
-<input type="radio" id="tags" name="tags" value="3"> <label for="tags"><MT_TRANS phrase="Tags"></label><br />
-</p>
+<input type="hidden" id="selected_blog_ids" name="selected_blog_ids" value="" />
+<p><strong><span id="selected_blogs">(<MT_TRANS phrase="None selected.">)</span>
 <p><span id="backup-what-description"><MT_TRANS phrase="This option will backup Users, Roles, Associations, Weblogs, Entries, Categories, Templates and Tags."></span>
 <a href="#" onclick="return openManual('backup_restore', 'backup_what')" class="help">?</a></p>
 </div>

@@ -143,7 +143,6 @@ sub init {
         'list_associations' => \&list_associations,
         'list_roles' => \&list_roles,
         'dialog_select_weblog' => \&dialog_select_weblog,
-        'dialog_select_user' => \&dialog_select_user,
         'dialog_grant_role' => \&dialog_grant_role,
         'grant_role' => \&grant_role,
         'backup_restore' => \&backup_restore,
@@ -10815,18 +10814,15 @@ sub backup {
     my $what = $q->param('backup_what');
     return $app->errtrans("What to backup must be selected.") if !$what;
 
-    my $meth = "backup_$what";
-    $app->$meth(@_);
-}
-
-sub backup_everything {
-    my $app = shift;
-    my $user = $app->user;
-    
-    my $q = $app->param;
     my $number = $q->param('num_items') || 0;
     return $app->errtrans('[_1] is not a number.', $number)
         if $number !~ /^\d+$/;
+
+    my $blog_ids = $q->param('selected_blog_ids') if $what eq 'custom';
+    return $app->errtrans('Choose weblogs to backup.') if $what eq 'custom' && (!defined($blog_ids) || !$blog_ids);
+
+    my @blog_ids = split ',', $blog_ids;
+
     my $archive = $q->param('backup_archive_format');
     my $enc = $app->config('PublishCharset') || 'utf-8';
     my $file = '';
@@ -11004,25 +11000,8 @@ sub backup_everything {
                     or $printer->($app->error(MT->errstr()));
         };
 
-    MT::BackupRestore->backup_everything($printer, $splitter, $finisher, $callback, $number, $enc);
-}
-
-sub backup_allentries {
-    my $app = shift;
-    my $user = $app->user;
-    return $app->errtrans("Permission denied.") if !$user->is_superuser;
-    $app->validate_magic() or return;
-
-    $app->errtrans("Not implemented yet");
-}
-
-sub backup_custom {
-    my $app = shift;
-    my $user = $app->user;
-    return $app->errtrans("Permission denied.") if !$user->is_superuser;
-    $app->validate_magic() or return;
-
-    $app->errtrans("Not implemented yet");
+    MT::BackupRestore->backup(
+        \@blog_ids, $printer, $splitter, $finisher, $callback, $number, $enc);
 }
 
 sub restore {
@@ -11487,6 +11466,37 @@ sub restore_premature_cancel {
         });
     }
     $app->redirect($app->uri( mode => 'view_log', args => {} ));
+}
+
+sub dialog_select_weblog {
+    my $app = shift;
+    return $app->errtrans("Permission denied.")
+        unless $app->user->is_superuser;
+
+    my $hasher = sub {
+        my ($obj, $row) = @_;
+        $row->{label} = $row->{name};
+        $row->{'link'} = $row->{site_url};
+    };
+
+    $app->listing({
+        Type => 'blog',
+        Code => $hasher,
+        Template => 'dialog_select_weblog.tmpl',
+        Params => {
+            dialog_title => $app->translate("Select Weblog"),
+            items_prompt => $app->translate("Selected Weblog"),
+            search_prompt => $app->translate("Type a weblog name to filter the choices below."),
+            panel_label => $app->translate("Weblog Name"),
+            panel_description => $app->translate("Description"),
+            panel_type => 'blog',
+            panel_multi => 1,
+            panel_searchable => 1,
+            panel_first => 1,
+            panel_last => 1,
+            list_noncron => 1,
+        },
+    });
 }
 
 1;
@@ -12365,9 +12375,9 @@ Handler for the display of the backup/restore screen.
 
 Handler for the system backup function.
 
-=item * backup_restore
+=item * restore
 
-Handler for the system restore function.
+Handler for the system backup function.
 
 =back
 

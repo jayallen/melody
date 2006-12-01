@@ -16,25 +16,66 @@ use constant NS_MOVABLETYPE => 'http://www.sixapart.com/ns/movabletype';
 use File::Spec;
 use File::Copy;
 
-sub backup_everything {
+sub backup {
     my $class = shift;
-    my ($printer, $splitter, $finisher, $callback, $number, $enc) = @_;
-    my @obj_to_backup = (
-        'MT::Tag',
-        'MT::Author',
-        'MT::Blog',
-        'MT::Role',
-        'MT::Category',
-        'MT::Asset',
-        'MT::Entry',
-    );
+    my ($blog_ids, $printer, $splitter, $finisher, $callback, $number, $enc) = @_;
+    my $obj_to_backup = [];
+
+    if (defined($blog_ids) && scalar(@$blog_ids)) {
+        push @$obj_to_backup, {'MT::Tag' => {
+            term => undef, 
+            args => { 'join' =>
+                [ 'MT::ObjectTag', 'tag_id', { blog_id => $blog_ids }, undef ]
+            }}};
+        push @$obj_to_backup, {'MT::Author' => {
+            term => undef, 
+            args => { 'join' => 
+                [ 'MT::Association', 'author_id', { blog_id => $blog_ids }, undef ]
+            }}};
+        ## Author has two different ways to associate to a weblog...
+        push @$obj_to_backup, {'MT::Author' => {
+            term => undef, 
+            args => { 'join' => 
+                [ 'MT::Permission', 'author_id', { blog_id => $blog_ids }, undef ]
+            }}};
+        push @$obj_to_backup, {'MT::Blog' => { 
+            term => { 'id' => $blog_ids }, 
+            args => undef
+            }};
+        push @$obj_to_backup, {'MT::Role' => {
+            term => undef,
+            args => { 'join' => 
+                [ 'MT::Association', 'role_id', { blog_id => $blog_ids }, undef ]
+            }}};
+        push @$obj_to_backup, {'MT::Category' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
+        push @$obj_to_backup, {'MT::Asset' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
+        push @$obj_to_backup, {'MT::Entry' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
+    } else {
+        push @$obj_to_backup, {'MT::Tag' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Author' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Blog' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Role' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Category' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Asset' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Entry' => { term => undef, args => undef }};
+    }
 
     my $header .= "<movabletype xmlns='" . NS_MOVABLETYPE . "'>\n";
     $header = "<?xml version='1.0' encoding='$enc'?>\n$header" if $enc !~ m/utf-?8/i;
     $printer->($header);
 
     my $files = {};
-    _loop_through_objects($printer, $splitter, $finisher, $callback, $number, \@obj_to_backup, $files);
+    _loop_through_objects(
+        $printer, $splitter, $finisher, $callback, $number, $obj_to_backup, $files);
 
     $printer->('</movabletype>');
     $finisher->($files);
@@ -44,28 +85,40 @@ sub _loop_through_objects {
     my ($printer, $splitter, $finisher, $callback, $number, $obj_to_backup, $files) = @_;
 
     my $counter = 0;
-    for my $class (@$obj_to_backup) {
-        eval "require $class; ";
+    my %author_ids_seen;
+    for my $class_hash (@$obj_to_backup) {
+        my ($class, $term_arg) = each(%$class_hash);
+        eval "require $class;";
+        my $children = $class->children_names || {};
+        for my $child_class (values %$children) {
+            eval "require $child_class;";
+        }
         my $err = $@;
         if ($err) {
             $printer->("$err\n");
             next;
         }
         my $offset = 0;
+        my $term = $term_arg->{term} || {};
+        my $args = $term_arg->{args};
         while (1) {
-            my @objects = $class->load(undef, { offset => $offset, limit => 50, });
+            $args->{offset} = $offset;
+            $args->{limit} = 50;
+            my @objects = $class->load($term, $args);
             last unless @objects;
             $offset += scalar @objects;
             for my $object (@objects) {
+                next if ($class eq 'MT::Author') && exists($author_ids_seen{$object->id});
                 $counter++;
                 if ($number && ($counter % $number == 0)) {
                     $splitter->(int($counter / $number + 1));
                 }
-                if ($class eq 'MT::Asset') {
-                    $printer->($object->to_xml . "\n") if $object->to_backup;
+                $printer->($object->to_xml($args) . "\n") if $object->to_backup;
+                if ($class eq 'MT::Author') {
+                    # MT::Author may be duplicated because of how terms and args are created.
+                    $author_ids_seen{$object->id} = 1;
+                } elsif ($class eq 'MT::Asset') {
                     $files->{$object->id} = [$object->url, $object->file_path, $object->file_name];
-                } else {
-                    $printer->($object->to_xml . "\n") if $object->to_backup;
                 }
                 my $xml = $callback->($object)
                     or $printer->(MT->errstr());
