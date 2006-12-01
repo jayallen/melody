@@ -22,8 +22,6 @@ use MT::Author qw(:constants);
 use MT::Permission;
 @MT::App::CMS::ISA = qw( MT::App );
 
-use constant NS_MOVABLETYPE => 'http://www.sixapart.com/ns/movabletype';
-
 my @RebuildOptions = ();
 
 my %API = (
@@ -10821,42 +10819,6 @@ sub backup {
     $app->$meth(@_);
 }
 
-sub _loop_through_objects {
-    my $app = shift;
-    my ($printer, $splitter, $number, $obj_to_backup, $files) = @_;
-
-    my $counter = 0;
-    for my $class (@$obj_to_backup) {
-        eval "require $class; ";
-        my $err = $@;
-        if ($err) {
-            $printer->("$err\n");
-            next;
-        }
-        my $offset = 0;
-        while (1) {
-            my @objects = $class->load(undef, { offset => $offset, limit => 50, });
-            last unless @objects;
-            $offset += scalar @objects;
-            for my $object (@objects) {
-                $counter++;
-                if ($number && ($counter % $number == 0)) {
-                    $splitter->(int($counter / $number + 1));
-                }
-                if ($class eq 'MT::Asset') {
-                    $printer->($object->to_xml . "\n") if $object->to_backup;
-                    $files->{$object->id} = [$object->url, $object->file_path, $object->file_name];
-                } else {
-                    $printer->($object->to_xml . "\n") if $object->to_backup;
-                }
-                my $xml = MT->run_callbacks('CMSBackup.' . $object->datasource, $app, $object)
-                    or $printer->($app->error(MT->errstr()));
-                $printer->($xml . "\n") if $xml ne '1';
-            }
-        }
-    }
-}
-
 sub backup_everything {
     my $app = shift;
     my $user = $app->user;
@@ -10885,6 +10847,7 @@ sub backup_everything {
         return $app->errtrans('IO::String is required to archive in zip format.') if $@;
     }
 
+    require MT::BackupRestore;
     require MT::Asset;
     my $num_assets = MT::Asset->count();
     my $printer;
@@ -10913,7 +10876,7 @@ sub backup_everything {
                 $arc->add_data("$file.xml", $arc_buf);
                 $arc->add_data(
                     "$file.manifest",
-                    "<manifest xmlns='" . NS_MOVABLETYPE . "'><file type='backup' name='$file.xml' /></manifest>"); 
+                    "<manifest xmlns='" . MT::BackupRestore::NS_MOVABLETYPE() . "'><file type='backup' name='$file.xml' /></manifest>"); 
                 require Compress::Zlib;
                 my $dest = Compress::Zlib::memGzip($arc->write);
                 $app->print($dest);
@@ -10928,7 +10891,7 @@ sub backup_everything {
                 my $arc = Archive::Zip->new;
                 $arc->addString($arc_buf, "$file.xml");
                 $arc->addString(
-                    "<manifest xmlns='" . NS_MOVABLETYPE . "'><file type='backup' name='$file.xml' /></manifest>", 
+                    "<manifest xmlns='" . MT::BackupRestore::NS_MOVABLETYPE() . "'><file type='backup' name='$file.xml' /></manifest>", 
                     "$file.manifest");
                 my $buf;
                 require IO::String;
@@ -10953,7 +10916,7 @@ sub backup_everything {
             $fh = gensym();
             open $fh, ">$filename";
             push @files, { filename => $file . "-$findex.xml" };
-            my $header .= "<movabletype xmlns='" . NS_MOVABLETYPE . "'>\n";
+            my $header .= "<movabletype xmlns='" . MT::BackupRestore::NS_MOVABLETYPE() . "'>\n";
             $header = "<?xml version='1.0' encoding='$enc'?>\n$header" if $enc !~ m/utf-?8/i;
             print $fh $header;
         };
@@ -10963,7 +10926,7 @@ sub backup_everything {
             my $filename = File::Spec->catfile($temp_dir, "$file.manifest");
             $fh = gensym();
             open $fh, ">$filename";
-            print $fh "<manifest xmlns='" . NS_MOVABLETYPE . "'>\n";
+            print $fh "<manifest xmlns='" . MT::BackupRestore::NS_MOVABLETYPE() . "'>\n";
             for my $file (@files) {
                 my $name = $file->{filename};
                 print $fh "<file type='backup' name='$name' />\n";
@@ -11035,25 +10998,13 @@ sub backup_everything {
         };
     }
 
-    my @obj_to_backup = (
-        'MT::Tag',
-        'MT::Author',
-        'MT::Blog',
-        'MT::Role',
-        'MT::Category',
-        'MT::Asset',
-        'MT::Entry',
-    );
+    my $callback = sub {
+            my ($object) = @_;
+            return MT->run_callbacks('CMSBackup.' . $object->datasource, $app, $object)
+                    or $printer->($app->error(MT->errstr()));
+        };
 
-    my $header .= "<movabletype xmlns='" . NS_MOVABLETYPE . "'>\n";
-    $header = "<?xml version='1.0' encoding='$enc'?>\n$header" if $enc !~ m/utf-?8/i;
-    $printer->($header);
-
-    my $files = {};
-    $app->_loop_through_objects($printer, $splitter, $number, \@obj_to_backup, $files);
-
-    $printer->('</movabletype>');
-    $finisher->($files);
+    MT::BackupRestore->backup_everything($printer, $splitter, $finisher, $callback, $number, $enc);
 }
 
 sub backup_allentries {
@@ -11184,89 +11135,16 @@ sub restore {
     1;
 }
 
-sub _process_backup_header {
-    my $app = shift;
-    my ($fh) = @_;
-
-    if ((ref($fh) eq 'Fh') || (ref($fh) eq 'GLOB')){
-        seek($fh, 0, 0) or return undef;
-        require XML::XPath;
-        my $xp = XML::XPath->new($fh) or return undef;
-        my $root;
-        eval {
-            $root = $xp->find("/*[local-name()='movabletype'][1]");
-        };
-        return undef if $@;
-        if ($root && ('movabletype' eq $root->get_node(1)->getLocalName)) {
-            return $xp;
-        }
-    }
-    return undef;
-
-}
-
-sub _restore_process_single_file {
-    my $app = shift;
-    my ($fh, $obj_to_restore, $objects, $deferred, $error) = @_;
-    
-    my $xp = $app->_process_backup_header($fh);
-    if (!defined($xp)) {
-        $$error = $app->translate('Uploaded file was not a valid Movable Type backup file.');
-        return 0;
-    }
-    
-    my $root_path = "/*[local-name()='movabletype']";
-    for my $name_hash (@$obj_to_restore) {
-        my @keys = keys %$name_hash;
-        my $name = $keys[0];
-        my $nodeset = $xp->find("$root_path/*[local-name()='$name']");
-        for my $index (1..$nodeset->size()) {
-            my $node = $nodeset->get_node($index);
-            next if !($node->isa('XML::XPath::Node::Element'));
-
-            my $class = $name_hash->{$node->getLocalName};
-            eval "require $class;";
-            $class->from_xml(
-                XPath => $xp,
-                XmlNode => $node, 
-                Objects => $objects, 
-                Deferred => $deferred,
-                Error => $error, 
-                Callback => sub { $app->print(@_); }
-            );
-        }
-    }
-}
-
 sub restore_file {
     my $app = shift;
     my ($fh, $errormsg) = @_;
     my $q = $app->param;
 
-    my $xp = $app->_process_backup_header($fh);
-    if (!defined($xp)) {
-        $$errormsg = $app->translate('Uploaded file was not a valid Movable Type backup file.');
-        return 0;
-    }
+    require MT::BackupRestore;
+    my $deferred = MT::BackupRestore->restore_file($fh, $errormsg, sub { $app->print(@_); });
 
-    my @obj_to_restore = (    ## Beware the order of keys is important.
-        {tag => 'MT::Tag'},
-        {author => 'MT::Author'},
-        {blog => 'MT::Blog'},
-        {role => 'MT::Role'},
-        {category => 'MT::Category'},
-        {asset => 'MT::Asset'},
-        {entry => 'MT::Entry'},
-    );
-    my %objects;
-    my %deferred;
-    my $error;
-
-    my $result = $app->_restore_process_single_file(
-        $fh, \@obj_to_restore, \%objects, \%deferred, \$error);
-
-    if (scalar(keys %deferred)) {
-        my @names = keys %deferred;
+    if (!defined($deferred) || scalar(keys %$deferred)) {
+        my @names = keys %$deferred;
         my $data = '';
         $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
         $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
@@ -11294,51 +11172,6 @@ sub restore_file {
     1;
 }
 
-sub _restore_asset {
-    my $app = shift;
-    my ($tmp, $asset_element, $objects, $errors) = @_;
-
-    my $id = $asset_element->{asset_id};
-    next if !defined($id);
-    next if !(exists $objects->{"MT::Asset#$id"});
-    my $asset = $objects->{"MT::Asset#$id"};
-    my $path = $asset->file_path;
-    next if !defined($path);
-    my ($vol, $dir, $fn) = File::Spec->splitpath($path);
-    if (!-w "$vol$dir") {
-        $errors->{$id} = $app->translate('[_1] is not writable.', "$vol$dir");
-        next;
-    }
-    my $filename = "$id-" . $asset_element->{name};
-    $app->print($app->translate("Copying [_1] to [_2]...", $filename, $path));
-    my $file;
-    if (defined($tmp)) {
-        $file = File::Spec->catfile($tmp, $filename) if defined($tmp);
-    } else {
-        $file = $asset_element->{fh};
-    }
-    copy($file, $path)
-        or $errors->{$id} = $!;
-    $app->print(exists($errors->{$id}) ?
-        $app->translate("Failed: [_1]\n", $errors->{$id}) :
-        $app->translate("Done.\n")
-    );
-}
-
-sub _restore_assets {
-    my $app = shift;
-    my ($tmp, $backups, $objects) = @_;
-    my $assets = $backups->{assets};
-    my $errors = {};
-    return $errors if !defined($assets);
-    use File::Copy;
-    require File::Spec;
-    for my $asset_element (@$assets) {
-        $app->_restore_asset($tmp, $asset_element, $objects, $errors);
-    }
-    $errors;
-}
-
 sub restore_directory {
     my $app = shift;
     my ($dir, $error) = @_;
@@ -11347,66 +11180,19 @@ sub restore_directory {
         $$error = $app->translate('[_1] is not a directory.', $dir);
         return 0;
     }
-    my $manifest;
-    my @files;
-    opendir my $dh, $dir or $$error = $app->translate("Can't open directory '[_1]': [_2]", $dir, "$!"), return 0;
-    for my $f (readdir $dh) {
-        next if $f !~ /^.+\.manifest$/i;
-        $manifest = File::Spec->catfile($dir, $f);
-        last;
-    }
-    closedir $dh;
-    unless ($manifest) {
-        $$error = $app->translate("No manifest file could be found in your import directory [_1].", $dir);
+
+    my %error_assets;
+    require MT::BackupRestore;
+    my $deferred = MT::BackupRestore->restore_directory(
+        $dir, $error, \%error_assets, sub { $app->print(@_); });
+
+    if (!defined($deferred) && $$error) {
         return 0;
     }
 
-    my $fh = gensym;
-    open $fh, "<$manifest" or $$error = $app->translate('[_1] cannot open.'), return 0;
-    my $backups = $app->_process_manifest($fh);
-    close $fh;
-    unless($backups) {
-        $$error = $app->translate("Manifest file [_1] was not a valid Movable Type backup manifest file.", $manifest);
-        return 0;
-    }
-
-    $app->print($app->translate("Manifest file: [_1]\n", $manifest));
-
-    my @obj_to_restore = (    ## Beware the order of keys is important.
-        {tag => 'MT::Tag'},
-        {author => 'MT::Author'},
-        {blog => 'MT::Blog'},
-        {role => 'MT::Role'},
-        {category => 'MT::Category'},
-        {asset => 'MT::Asset'},
-        {entry => 'MT::Entry'},
-    );
-    my %objects;
-    my %deferred;
-    my $errormsg;
-
-    my $files = $backups->{files};
-    for my $file (@$files) {
-        $fh = gensym;
-        my $filepath = File::Spec->catfile($dir, $file);
-        open $fh, "<$filepath" or $$error = $app->translate('[_1] cannot open.'), return 0;
-        my $xp = $app->_process_backup_header($fh);
-        if (!defined($xp)) {
-            $$error = $app->translate('The file [_1] was not a valid Movable Type backup file.', $filepath);
-            return 0;
-        }
-
-        my $result = $app->_restore_process_single_file(
-            $fh, \@obj_to_restore, \%objects, \%deferred, \$errormsg);
-
-        close $fh;
-    }
-    
-    my $error_assets = $app->_restore_assets($dir, $backups, \%objects) if defined($backups->{assets});
-
-    if (defined($error_assets) && scalar(keys %$error_assets)) {
+    if (scalar(keys %error_assets)) {
         my $data;
-        while (my ($key, $value) = each %$error_assets) {
+        while (my ($key, $value) = each %error_assets) {
             $data .= $app->translate("Actual file for an asset (ID: [_1]) could not be restored: [_2]\n", $key, $value);
         }
         my $message = 'Some of the actual files for assets could not be restored.';
@@ -11420,8 +11206,8 @@ sub restore_directory {
         $$error .= $message;
     }    
 
-    if (scalar(keys %deferred)) {
-        my @names = keys %deferred;
+    if (scalar(keys %$deferred)) {
+        my @names = keys %$deferred;
         my $data = '';
         $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
         $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
@@ -11449,44 +11235,6 @@ sub restore_directory {
     1;
 }
 
-sub _process_manifest {
-    my $app = shift;
-    my ($stream) = @_;
-
-    if ((ref($stream) eq 'Fh') || (ref($stream) eq 'GLOB')){
-        seek($stream, 0, 0) or return undef;
-        require XML::XPath;
-        my $xp = XML::XPath->new($stream) or return undef;
-        my $root;
-        eval {
-            $root = $xp->find("/*[local-name()='manifest'][1]");
-        };
-        return undef if $@;
-        if ($root && ('manifest' eq $root->get_node(1)->getLocalName)) {
-            my $backups = {
-                files => [],
-                assets => [],
-            };
-            my $nodeset = $xp->find("*", $root->get_node(1));
-            for my $index (1..$nodeset->size()) {
-                my $node = $nodeset->get_node($index);
-                next if !($node->isa('XML::XPath::Node::Element'));
-                if ('backup' eq $node->getAttribute('type')) {
-                    push @{$backups->{files}}, $node->getAttribute('name');
-                } elsif ('asset' eq $node->getAttribute('type')) {
-                    push @{$backups->{assets}}, { 
-                        name => $node->getAttribute('name'),
-                        asset_id => $node->getAttribute('asset_id'),
-                    };
-                }
-            }
-            return $backups;
-        }
-        return undef;
-    }
-    return undef;
-}
-
 sub restore_upload_manifest {
     my $app = shift;
     my $user = $app->user;
@@ -11510,28 +11258,13 @@ sub restore_upload_manifest {
     }
     return $app->errtrans("No manifest file was uploaded.") if $no_upload;
 
-    my $backups = $app->_process_manifest($fh);
-    return $app->errtrans("Uploaded file was not a valid Movable Type backup manifest file.") if !defined($backups);
-
-    my $files = $backups->{files};
-    my $assets = $backups->{assets};
-    my $file_next = shift @$files if defined($files) && scalar(@$files);
-    my $assets_json;
     my $param = {};
-    if (!defined($file_next)) {
-        if (scalar(@$assets)) {
-            my $asset = shift @$assets;
-            $file_next = $asset->{name};
-            $param->{is_asset} = 1;
-        }
-    }
-    require JSON;
-    $assets_json = MT::Util::encode_html(JSON::objToJson($assets)) if scalar(@$assets);
-    $param->{files} = join(',', @$files);
-    $param->{assets} = $assets_json;
-    $param->{filename} = $file_next;
-    $param->{open_dialog} = 1;
 
+    require MT::BackupRestore;
+    my $error = MT::BackupRestore->restore_upload_manifest($fh, $param);
+    return $app->error($error) if $error;
+    
+    $param->{open_dialog} = 1;
     $app->build_page('backup_restore.tmpl', $param);
     #close $fh if !$no_upload;
 }
@@ -11645,11 +11378,12 @@ sub dialog_restore_upload {
 
     my $assets = JSON::jsonToObj(MT::Util::decode_html($assets_json)) if defined($assets_json);
     my $asset;
+    require MT::BackupRestore;
     if ($is_asset) {
         $asset = shift @$assets;
         my $error_assets = {};
         $asset->{fh} = $fh;
-        $app->_restore_asset(undef, $asset, $objects, $error_assets);
+        MT::BackupRestore->restore_asset(undef, $asset, $objects, $error_assets, sub { $app->print(@_); });
         if (defined($error_assets->{$asset->{asset_id}})) {
             $app->log({
                 message => $app->translate('Restoring an actual file for an asset failed: [_1]', $error_assets->{$asset->{asset_id}}),
@@ -11659,8 +11393,8 @@ sub dialog_restore_upload {
             });
         }
     } else {
-        $app->_restore_process_single_file(
-            $fh, \@obj_to_restore, $objects, $deferred, \$error);
+        MT::BackupRestore->restore_process_single_file(
+            $fh, \@obj_to_restore, $objects, $deferred, \$error, sub { $app->print(@_) });
     }
 
     my @files = split(',', $files);
