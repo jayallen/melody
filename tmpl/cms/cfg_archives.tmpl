@@ -44,6 +44,8 @@ function doRemoveTemplateMap(id) {
     return false;
 }
 function validate (f) {
+    f.site_url.disabled = false;
+    f.site_path.disabled = false;
     if (!f.site_path.value) {
         alert('<MT_TRANS phrase="You must set your Local Site Path." escape="singlequotes">');
         return false;
