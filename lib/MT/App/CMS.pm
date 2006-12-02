@@ -5486,6 +5486,19 @@ sub _process_post_upload {
         $blog->image_default_popup($q->param('popup') ? 1 : 0);
         $blog->save;
     }
+    else {
+        $blog->image_default_set(0);
+        $blog->image_default_wrap_text(0);
+        $blog->image_default_align(MT::Blog::ALIGN());
+        $blog->image_default_thumb(0);
+        $blog->image_default_width(0);
+        $blog->image_default_wunits(MT::Blog::UNITS());
+        $blog->image_default_height(0);
+        $blog->image_default_hunits(MT::Blog::UNITS());
+        $blog->image_default_constrain(1);
+        $blog->image_default_popup(0);
+        $blog->save;
+    }
     if ($thumb = $q->param('thumb')) {
         require MT::Image;
         my $base_path = $q->param('site_path') ?
