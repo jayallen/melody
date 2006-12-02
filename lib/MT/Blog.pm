@@ -82,6 +82,7 @@ __PACKAGE__->install_properties({
         'image_default_hunits' => 'string(10)',
         'image_default_constrain' => 'boolean',
         'image_default_popup' => 'boolean',
+        'image_default_set' => 'boolean',
     },
     indexes => {
         name => 1,
@@ -101,7 +102,6 @@ __PACKAGE__->install_properties({
 # Image upload defaults.
 use constant ALIGN => 'left';
 use constant WIDTH => 100;
-use constant HEIGHT => 100;
 use constant UNITS => 'pixels';
 
 sub set_defaults {

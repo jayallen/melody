@@ -5474,12 +5474,13 @@ sub _process_post_upload {
         return $app->error($app->translate(
             'Permission denied setting image defaults for blog #[_2]', $blog_id
         )) unless $app->{perms}->can_save_image_defaults;
+        $blog->image_default_set(1);
         $blog->image_default_wrap_text($q->param('wrap_text') ? 1 : 0);
         $blog->image_default_align($q->param('align') || MT::Blog::ALIGN());
         $blog->image_default_thumb($q->param('thumb') ? 1 : 0);
         $blog->image_default_width($q->param('thumb_width') || MT::Blog::WIDTH());
         $blog->image_default_wunits($q->param('thumb_width_type') || MT::Blog::UNITS());
-        $blog->image_default_height($q->param('thumb_height') || MT::Blog::HEIGHT());
+        $blog->image_default_height($q->param('thumb_height') || MT::Blog::WIDTH());
         $blog->image_default_hunits($q->param('thumb_height_type') || MT::Blog::UNITS());
         $blog->image_default_constrain($q->param('constrain') ? 1 : 0);
         $blog->image_default_popup($q->param('popup') ? 1 : 0);
@@ -9327,6 +9328,7 @@ sub upload_file {
         eval { require MT::Image; MT::Image->new or die; };
         $param{do_thumb} = !$@ ? 1 : 0;
         # Pass image default settings along.
+        $param{image_defaults} = $blog->image_default_set() ? 1 : 0;
         $param{make_thumb} = $blog->image_default_thumb() ? 1 : 0;
         $param{wrap_text} = $blog->image_default_wrap_text() ? 1 : 0;
         $param{align_left} = $blog->image_default_align() eq 'left' ? 1 : 0;
