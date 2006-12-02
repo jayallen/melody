@@ -84,8 +84,9 @@ sub blog {
         [ 64,    'edit_config', 'Configure Weblog', 1, 'blog'],
         [ 8,     'edit_all_posts', 'Edit All Entries', 1, 'blog'],
         [ 16,    'edit_templates', 'Manage Templates', 1, 'blog'],
-        [ 4,     'upload', 'Upload File', 1, 'blog'],
+        [ 32768, 'save_image_defaults', 'Save Image Defaults', 1, 'blog'],
         [ 2,     'post', 'Create Entries', 1, 'blog'],
+        [ 4,     'upload', 'Upload File', 1, 'blog'],
         [ 512,   'edit_categories', 'Add/Manage Categories', 1, 'blog'],
         [ 16384, 'edit_tags', 'Manage Tags', 1, 'blog'],
         [ 1024,  'edit_notifications', 'Manage Notification List', 1, 'blog'],
@@ -96,7 +97,6 @@ sub blog {
         # Not a real permission but a denial thereof; unlisted because it
         # has no label.
         [ 2048,  'not_comment', '', 1, 'blog'],
-        [ 32768, 'save_image_defaults', '', 1, 'blog'],
     );
 
     sub add_permissions {
