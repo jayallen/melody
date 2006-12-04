@@ -12,6 +12,7 @@ use vars qw( $DB_DIR $T_CFG );
 use lib 't';
 
 use XML::XPath;
+use MT::BackupRestore;
 use Data::Dumper;
 
 system("rm t/db/* 2>null");
@@ -31,7 +32,7 @@ my %objects;
 my $error;
 
 my $blog = MT::Blog->load(1);
-my $xml = $blog->to_xml;
+my $xml = $blog->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
 
 my $xp = XML::XPath->new(xml => $xml);
 my $current_path = "/*[local-name()='blog']";
@@ -47,7 +48,9 @@ for my $index (1..$nodeset->size()) {
         XmlNode => $node, 
         Objects => \%objects, 
         Error => \$error, 
-        Callback => sub { print(@_); }
+        Callback => sub { print(@_); },
+        Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
+        
     );
 
     ok($blog2->id != $blog->id);
@@ -151,7 +154,7 @@ for my $index (1..$nodeset->size()) {
 
 my @authors = MT::Author->load();
 for my $author (@authors) {
-    my $xml2 = $author->to_xml;
+    my $xml2 = $author->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
 
     my $xp2 = XML::XPath->new(xml => $xml2);
     my $current_path2 = "/*[local-name()='author']";
@@ -167,7 +170,8 @@ for my $author (@authors) {
             XmlNode => $node, 
             Objects => \%objects, 
             Error => \$error, 
-            Callback => sub { print(@_); }
+            Callback => sub { print(@_); },
+            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
         );
         ok($author2->id != $author->id);
         ok($author2->name eq $author->name);
@@ -202,7 +206,7 @@ for my $author (@authors) {
 }
 
 my $role = MT::Role->load({ name => 'Weblog Administrator' });
-my $xml3 = $role->to_xml;
+my $xml3 = $role->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
 my $xp3 = XML::XPath->new(xml => $xml3);
 my $current_path3 = "/*[local-name()='role']";
 my $nodeset3 = $xp3->find($current_path3);
@@ -217,7 +221,8 @@ for my $index3 (1..$nodeset3->size()) {
         XmlNode => $node, 
         Objects => \%objects, 
         Error => \$error, 
-        Callback => sub { print(@_); }
+        Callback => sub { print(@_); },
+        Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
     );
     isnt($role2->id, $role->id);
     is($role2->name, $role->name);
@@ -232,7 +237,7 @@ for my $index3 (1..$nodeset3->size()) {
 
 my @categories = MT::Category->load({ blog_id => $blog->id, author_id => $chuck->id });
 for my $category (@categories) {
-    my $xml4 = $category->to_xml;
+    my $xml4 = $category->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
     my $xp4 = XML::XPath->new(xml => $xml4);
     my $nodeset4 = $xp4->find("/*[local-name()='category']");
 
@@ -246,7 +251,8 @@ for my $category (@categories) {
             XmlNode => $node, 
             Objects => \%objects, 
             Error => \$error, 
-            Callback => sub { print(@_); }
+            Callback => sub { print(@_); },
+            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
         );
         isnt($category2->id, $category->id);
         is($category2->label, $category->label);
@@ -275,7 +281,7 @@ for my $category (@categories) {
 
 my @entries = MT::Entry->load({ blog_id => $blog->id, author_id => [ $chuck->id, $bob->id ] });
 for my $entry (@entries) {
-    my $xml5 = $entry->to_xml;
+    my $xml5 = $entry->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
     my $xp5 = XML::XPath->new(xml => $xml5);
     my $nodeset5 = $xp5->find("/*[local-name()='entry']");
 
@@ -289,7 +295,8 @@ for my $entry (@entries) {
             XmlNode => $node, 
             Objects => \%objects, 
             Error => \$error, 
-            Callback => sub { print(@_); }
+            Callback => sub { print(@_); },
+            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
         );
         isnt($entry2->id, $entry->id);
         is($entry2->status, $entry->status);
@@ -314,7 +321,7 @@ for my $entry (@entries) {
 
 my @tags = MT::Tag->load();
 for my $tag (@tags) {
-    my $xml6 = $tag->to_xml;
+    my $xml6 = $tag->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
     my $xp6 = XML::XPath->new(xml => $xml6);
     my $nodeset6 = $xp6->find("/*[local-name()='tag']");
 
@@ -328,7 +335,8 @@ for my $tag (@tags) {
             XmlNode => $node, 
             Objects => \%objects, 
             Error => \$error, 
-            Callback => sub { print(@_); }
+            Callback => sub { print(@_); },
+            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
         );
         isnt($tag2->id, $tag->id);
         is($tag2->name, $tag->name);
