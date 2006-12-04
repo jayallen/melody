@@ -1551,6 +1551,10 @@ class MTDatabaseBase extends ezsql {
         if (isset($args['author']))
             $author_filter = 'and author_name = \''.$this->escape($args['author']) . "'";
 
+        # Adds an ID filter
+        if (isset($args['id']))
+            $id_filter = 'and asset_id = '.$args['id'];
+
         # Adds a days filter
         if (isset($args['days'])) {
             $day_filter = 'and ' . $this->limit_by_day_sql('asset_created_on', intval($args['days']));
@@ -1586,6 +1590,7 @@ class MTDatabaseBase extends ezsql {
             from mt_asset, mt_author
             where
                 asset_created_by = author_id
+                $id_filter
                 $blog_filter
                 $author_filter
                 $day_filter

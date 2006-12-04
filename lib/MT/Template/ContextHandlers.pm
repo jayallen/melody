@@ -288,6 +288,7 @@ sub init_default_handlers {
         # Asset handlers
         Assets => [\&_hdlr_assets, 1],
         AssetTags => [\&_hdlr_asset_tags, 1],
+        Asset => [\&_hdlr_asset, 1],
 
         AssetID => \&_hdlr_asset_id,
         AssetFileName => \&_hdlr_asset_file_name,
@@ -4539,6 +4540,29 @@ sub _hdlr_assets {
     }
 
     $res;
+}
+
+sub _hdlr_asset {
+    my ($ctx, $args, $cond) = @_;
+    my $assets = $ctx->stash('assets');
+    local $ctx->{__stash}{assets};
+    return '' if !defined $args->{id};
+    return '' if $assets;
+
+    require MT::Asset;
+    my $out = '';
+    my $asset = MT::Asset->load({ id => $args->{id} });
+
+    if ($asset) {
+        my $tok = $ctx->stash('tokens');
+        my $builder = $ctx->stash('builder');
+
+        local $ctx->{__stash}{asset} = $asset;
+        $out = $builder->build($ctx, $tok, {
+                %$cond,
+        });
+    }
+    $out;
 }
 
 sub _hdlr_asset_tags {
