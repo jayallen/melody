@@ -5484,7 +5484,6 @@ sub _process_post_upload {
         $blog->image_default_hunits($q->param('thumb_height_type') || MT::Blog::UNITS());
         $blog->image_default_constrain($q->param('constrain') ? 1 : 0);
         $blog->image_default_popup($q->param('popup') ? 1 : 0);
-        $blog->save;
     }
     else {
         $blog->image_default_set(0);
@@ -5497,8 +5496,8 @@ sub _process_post_upload {
         $blog->image_default_hunits(MT::Blog::UNITS());
         $blog->image_default_constrain(1);
         $blog->image_default_popup(0);
-        $blog->save;
     }
+    $blog->save;
     if ($thumb = $q->param('thumb')) {
         require MT::Image;
         my $base_path = $q->param('site_path') ?
