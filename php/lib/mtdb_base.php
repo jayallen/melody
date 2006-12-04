@@ -19,6 +19,8 @@ class MTDatabaseBase extends ezsql {
     var $_archive_link_cache = array();
     var $_entry_tag_cache = array();
     var $_blog_tag_cache = array();
+    var $_asset_tag_cache = array();
+    var $_blog_asset_tag_cache = array();
     var $serializer;
     var $id;
 
@@ -763,6 +765,78 @@ class MTDatabaseBase extends ezsql {
         return $tags;
     }
 
+    function &fetch_asset_tags($args) {
+
+        # load tags by asset
+        if (!isset($args['include_private'])) {
+            $private_filter = 'and (tag_is_private = 0 or tag_is_private is null)';
+        }
+
+        if (isset($args['asset_id'])) {
+            if (isset($args['tags'])) {
+                if (isset($this->_asset_tag_cache[$args['asset_id']]))
+                    return $this->_asset_tag_cache[$args['asset_id']];
+            }
+            $asset_filter = 'and objecttag_object_id = '.intval($args['asset_id']);
+        }
+        
+        if (isset($args['blog_id'])) {
+            if (!isset($args['tags'])) {
+                if (isset($this->_blog_asset_tag_cache[$args['blog_id']]))
+                    return $this->_blog_asset_tag_cache[$args['blog_id']];
+            }
+            $blog_filter = 'and objecttag_blog_id = '.intval($args['blog_id']);
+        }
+
+        if (isset($args['tags']) && ($args['tags'] != '')) {
+            $tag_list = '';
+            require_once("MTUtil.php");
+            $tag_array = tag_split($args['tags']);
+            foreach ($tag_array as $tag) {
+                if ($tag_list != '') $tag_list .= ',';
+                $tag_list .= "'" . $this->escape($tag) . "'";
+            }
+            if ($tag_list != '') {
+                $tag_filter = 'and (tag_name in (' . $tag_list . '))';
+                $private_filter = '';
+            }
+        }
+
+        $sort_col = isset($args['sort_by']) ? $args['sort_by'] : 'name';
+        $sort_col = "tag_$sort_col";
+        if (isset($args['sort_order']) and $args['sort_order'] == 'descend')
+            $order = 'desc';
+        else
+            $order = 'asc';
+
+        $id_order = '';
+        if ($sort_col == 'tag_name')
+            $sort_col = 'lower(tag_name)';
+        else
+            $id_order = ', lower(tag_name)';
+
+        $sql = "
+            select tag_id, tag_name, count(*) as tag_count
+            from mt_tag, mt_objecttag, mt_asset
+            where objecttag_tag_id = tag_id
+                and asset_id = objecttag_object_id and objecttag_object_datasource='asset'
+                $blog_filter
+                $private_filter
+                $tag_filter
+                $asset_filter
+            group by tag_id, tag_name
+            order by $sort_col $order $id_order
+        ";
+        $tags = $this->get_results($sql, ARRAY_A);
+        if (isset($args['tags'])) {
+            if ($args['asset_id'])
+                $this->_asset_tag_cache[$args['asset_id']] = $tags;
+            elseif ($args['blog_id'])
+                $this->_blog_asset_tag_cache[$args['blog_id']] = $tags;
+        }
+        return $tags;
+    }
+
     function &fetch_categories($args) {
         # load categories
 
@@ -1162,12 +1236,22 @@ class MTDatabaseBase extends ezsql {
         if (empty($id_list))
             return;
         $id_list = substr($id_list, 1);
+
+        $filter = '';
+        $datasource = 'entry';
+        if (isset($args['datasource'])) {
+            $datasource = $args['datasource'];
+            if ($datasource == 'entry') {
+                $filter = 'and entry_status = 2';
+            }
+        }
+
         $sql = "
             select mt_objecttag.*
-              from mt_objecttag, mt_entry
+              from mt_objecttag, mt_" . $datasource ."
               where objecttag_tag_id in ($id_list)
-                and entry_id = objecttag_object_id
-                and entry_status = 2
+                and " . $datasource . "_id = objecttag_object_id
+                $filter
         ";
         $results = $this->get_results($sql, ARRAY_A);
         return $results;
@@ -1410,6 +1494,127 @@ class MTDatabaseBase extends ezsql {
             }
         }
         return $results;
+    }
+
+    function fetch_assets($args) {
+        # load assets
+
+        if (isset($args['blog_id'])) {
+            $blog_filter = 'and asset_blog_id = '.intval($args['blog_id']);
+        }
+
+        # Adds a tag filter to the filters list.
+        if (isset($args['tags']) or isset($args['tag'])) {
+            $tag_arg = isset($args['tag']) ? $args['tag'] : $args['tags'];
+            require_once("MTUtil.php");
+            if (!preg_match('/\b(AND|OR|NOT)\b|\(|\)/i', $tag_arg)) {
+                $not_clause = false;
+            } else {
+                $not_clause = preg_match('/\bNOT\b/i', $tag_arg);
+            }
+
+            require_once("MTUtil.php");
+            $include_private = 0;
+            $tag_array = tag_split($tag_arg);
+            foreach ($tag_array as $tag) {
+                if ($tag && (substr($tag,0,1) == '@')) {
+                    $include_private = 1;
+                }
+            }
+
+            $tags =& $this->fetch_asset_tags(array('blog_id' => $blog_id, 'tag' => $tag_arg, 'include_private' => $include_private));
+            if (!is_array($tags)) $tags = array();
+            $cexpr = create_tag_expr_function($tag_arg, $tags, 'asset');
+
+            if ($cexpr) {
+                $tmap = array();
+                $tag_list = array();
+                foreach ($tags as $tag) {
+                    $tag_list[] = $tag['tag_id'];
+                }
+                $ot =& $this->fetch_objecttags(array('tag_id' => $tag_list, 'datasource' => 'asset'));
+                if ($ot) {
+                    foreach ($ot as $o) {
+                        $tmap[$o['objecttag_object_id']][$o['objecttag_tag_id']]++;
+                        if (!$not_clause)
+                            $asset_list[$o['objecttag_object_id']] = 1;
+                    }
+                }
+                $ctx['t'] =& $tmap;
+                $filters[] = $cexpr;
+            } else {
+                return null;
+            }
+        }
+
+        # Adds an author filter
+        if (isset($args['author']))
+            $author_filter = 'and author_name = \''.$this->escape($args['author']) . "'";
+
+        # Adds a days filter
+        if (isset($args['days'])) {
+            $day_filter = 'and ' . $this->limit_by_day_sql('asset_created_on', intval($args['days']));
+        }
+
+        # Adds a type filter
+        if (isset($args['type'])) {
+            $type_filter = "and asset_class ='" . $args['type'] . "'";
+        }
+
+        # Adds a file extension filter
+        if (isset($args['file_ext'])) {
+            $ext_filter = "and asset_file_ext ='" . $args['file_ext'] . "'";
+        }
+
+        # Addes sort order
+        $order = 'desc';
+        $sort_by = 'asset_created_on';
+        if (isset($args['sort_order'])) {
+            if ($args['sort_order'] == 'ascend')
+                $order = 'asc';
+            else if ($args['sort_order'] == 'descend')
+                $order = 'desc';
+        }
+        
+        if (isset($args['sort_by'])) {
+            $sort_by = 'asset_' . $args['sort_by'];
+        }
+
+        # Build SQL
+        $sql = "
+            select mt_asset.*, mt_author.*
+            from mt_asset, mt_author
+            where
+                asset_created_by = author_id
+                $blog_filter
+                $author_filter
+                $day_filter
+                $type_filter
+                $ext_filter
+            order by
+                $sort_by $order
+                <LIMIT>
+        ";
+
+        # Added Limit and offset
+        $sql = $this->apply_limit_sql($sql, $args['lastn'], $args['offset']);
+
+        # Fetch resultset
+        $result = $this->query_start($sql);
+        if (!$result) return null;
+        $assets = array();
+        while (true) {
+            $e = $this->query_fetch(ARRAY_A);
+            if (!isset($e)) break;
+            if (count($filters)) {
+                foreach ($filters as $f) {
+                    if (!$f($e, $ctx)) continue 2;
+                }
+            }
+            $assets[] = $e;
+        }
+
+        return $assets;
     }
 
     function archive_list_sql($args) {

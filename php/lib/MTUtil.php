@@ -937,7 +937,7 @@ function tag_split_delim($delim, $str) {
     $str = trim($str);
     while (strlen($str) && (preg_match("/^(((['\"])(.*?)\3[^$delim]*?|.*?)($delim\s*|$))/s", $str, $match))) {
         $str = substr($str, strlen($match[1]));
-        $tag = isset($match[4]) ? $match[4] : $match[2];
+        $tag = (isset($match[4]) && $match[4] != '') ? $match[4] : $match[2];
         $tag = trim($tag);
         $tag = preg_replace('/\s+/', ' ', $tag);
         $n8d_tag = tag_normalize($tag);
@@ -1118,7 +1118,7 @@ function tagarray_length_sort($a, $b) {
 	return $al == $bl ? 0 : $al < $bl ? 1 : -1;
 }
 
-function create_tag_expr_function($expr, &$tags) {
+function create_tag_expr_function($expr, &$tags, $datasource = 'entry') {
     $tags_used = array();
     $orig_expr = $expr;
     
@@ -1160,12 +1160,13 @@ function create_tag_expr_function($expr, &$tags) {
 
     # Replace '#TagID' with a hash lookup function.
     # Function confirms/denies use of tag on entry (by IDs)
-    $expr = preg_replace('/#(\d+)/', "array_key_exists('\\1', \$c['t'][\$e['entry_id']])", $expr);
+    $column_name = $datasource . '_id';
+    $expr = preg_replace('/#(\d+)/', "array_key_exists('\\1', \$c['t'][\$e[$column_name]])", $expr);
 
     # Create a PHP-blessed function of that code and return it
     # if all is well.  This function will be used later to 
     # test for existence of specified tags in entries.
-    $expr = 'return array_key_exists($e["entry_id"], $c["t"])?' . $expr .
+    $expr = 'return array_key_exists($e["'.$datasource.'_id"], $c["t"])?' . $expr .
         ':FALSE;';
     $fn = create_function('&$e,&$c', $expr);
     if ($fn === FALSE) {
@@ -1182,5 +1183,78 @@ function tag_normalize($str) {
     $str = strtolower($str);
     if ($private) $str = '@' . $str;
     return $str;
+}
+
+function get_thumbnail_file($filename, $width = 0, $height = 0, $scale = 0) {
+    # Get source image information
+    list($src_w, $src_h, $src_type, $src_attr) = getimagesize($filename);
+
+    # Load source image
+    $src_img;
+
+    switch($src_type) {
+    case 1: #GIF
+        $src_img = @imagecreatefromgif($file_name);
+        break;
+    case 2: #JPEG
+        $src_img = @imagecreatefromjpeg($filename);
+        break;
+    case 3: #PNG
+        $src_img = @imagecreatefrompng($filename);
+        break;
+    default: #Unsupported format
+        return '';
+    }
+
+    if (!$src_img) {
+        return '';
+    }
+
+    # Calculate thumbnail size
+    $thumb_w = $src_w;
+    $thumb_h = $src_h;
+
+    if ($scale > 0) {
+        $thumb_w = $src_w * $scale / 100;
+        $thumb_h = $src_h * $scale / 100;
+    } else {
+        $x = $width; if ($width > 0) $thumb_w;
+        $y = $height; if ($height >= 0) $thumb_h;
+        $pct = $width ? ($x / $thumb_w) : ($y / $thumb_h);
+        $thumb_w = (int)($thumb_w * $pct);
+        $thumb_h = (int)($thumb_h * $pct);
+    }
+
+    # Retrieve thumbnail
+    # Sunset-thumb-thumb-90x120.jpg
+    $path_parts = pathinfo($filename);
+    $dirname = $path_parts['dirname'];
+    list($basename) = split("\.", $path_parts['basename']);
+    $thumb_name = $dirname . "/" . $basename . "-thumb-"
+                . $thumb_h . "x" . $thumb_w . "." . $path_parts['extension'];
+
+    if(!file_exists($thumb_name)) {
+        # Create thumbnail
+        $dst_img = imagecreatetruecolor ( $thumb_w, $thumb_h );
+        $result = imagecopyresampled ( $dst_img, $src_img, 0, 0, 0, 0,
+                    $thumb_w, $thumb_h, $src_w, $src_h);
+
+        switch($src_type) {
+            case 1: #GIF
+            imagegif($dst_img, $thumb_name);
+            break;
+        case 2: #JPEG
+            imagejpeg($dst_img, $thumb_name);
+            break;
+        case 3: #PNG
+            imagepng($dst_img, $thumb_name);
+            break;
+        }
+        imagedestroy($dst_img);
+    }
+
+    imagedestroy($src_img);
+
+    return array($thumb_name, $thumb_w, $thumb_h);
 }
 ?>

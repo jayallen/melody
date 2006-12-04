@@ -21,6 +21,7 @@ use MT::Promise qw(lazy delay force);
 use MT::Category;
 use MT::Entry;
 use MT::I18N qw( first_n_text const );
+use MT::Asset;
 
 sub init_default_handlers {
     %MT::Template::Context::Handlers = (
@@ -305,6 +306,8 @@ sub init_default_handlers {
         AssetCount => \&_hdlr_asset_count,
 
         AssetIfTagged => [\&_hdlr_asset_if_tagged, 2],
+        AssetIsFirstInRow => [ \&_hdlr_pass_tokens, 1 ],
+        AssetIsLastInRow => [ \&_hdlr_pass_tokens, 1 ],
     );
 }
 
@@ -538,26 +541,43 @@ sub _hdlr_tags {
     my $builder = $ctx->stash('builder');
     my $tokens = $ctx->stash('tokens');
     my $needs_entries = ($ctx->stash('uncompiled') =~ /<\$?MTEntries/) ? 1 : 0;
+    my $needs_assets = ($ctx->stash('uncompiled') =~ /<\$?MTAssets/) ? 1 : 0;
     my $glue = $args->{glue} || '';
     my $res = '';
     local $ctx->{__stash}{all_tag_count} = undef;
     local $ctx->{inside_mt_tags} = 1;
 
-    if ($needs_entries) {
+    if ($needs_entries || $needs_assets) {
         foreach my $tag (@$tags) {
-            my @args = (
-                { blog_id => $blog_id,
-                  status => MT::Entry::RELEASE(), %blog_terms },
-                { sort      => 'created_on',
-                  direction => 'descend',
-                  'join'    => MT::ObjectTag->join_on('object_id',
-                      { tag_id => $tag->id, object_datasource => $type, %blog_terms },
-                      { unique => 1, %blog_args },
-                  ),
-                  %blog_args,
-                }
-            );
-            $tag->{__entries} = delay(sub { my @e = MT::Entry->load(@args); \@e });
+            if ($needs_entries) {
+                my @args = (
+                    { blog_id => $blog_id,
+                      status => MT::Entry::RELEASE(), %blog_terms },
+                    { sort      => 'created_on',
+                      direction => 'descend',
+                      'join'    => MT::ObjectTag->join_on('object_id',
+                          { tag_id => $tag->id, object_datasource => $type, %blog_terms },
+                          { unique => 1, %blog_args },
+                      ),
+                      %blog_args,
+                    }
+                );
+                $tag->{__entries} = delay(sub { my @e = MT::Entry->load(@args); \@e });
+            } elsif ($needs_assets) {
+                my @args = (
+                    { blog_id => $blog_id,
+                      %blog_terms },
+                    { sort      => 'created_on',
+                      direction => 'descend',
+                      'join'    => MT::ObjectTag->join_on('object_id',
+                          { tag_id => $tag->id, object_datasource => 'asset', %blog_terms },
+                          { unique => 1, %blog_args },
+                      ),
+                      %blog_args,
+                    }
+                );
+                $tag->{__assets} = delay(sub { my @e = MT::Asset->load(@args); \@e });
+            }
         }
     }
 
@@ -592,6 +612,8 @@ sub _hdlr_tags {
         local $ctx->{__stash}{Tag} = $tag;
         local $ctx->{__stash}{entries} = $tag->{__entries}
             if exists $tag->{__entries};
+        local $ctx->{__stash}{assets} = $tag->{__assets}
+            if exists $tag->{__assets};
         local $ctx->{__stash}{tag_entry_count} = $tag->{__entry_count};
         local $ctx->{__stash}{all_tag_count} = $all_count;
         defined(my $out = $builder->build($ctx, $tokens, $cond))
@@ -4367,6 +4389,38 @@ sub _hdlr_assets {
         }
     }
 
+    # Adds a tag filter to the filters list.
+    if (my $tag_arg = $args->{tag} || $args->{tags}) {
+        require MT::Tag;
+        require MT::ObjectTag;
+
+        my $terms;
+        if ($tag_arg !~ m/\b(AND|OR|NOT)\b|\(|\)/i) {
+            my @tags = MT::Tag->split(',', $tag_arg);
+            $terms = { name => \@tags };
+            $tag_arg = join " or ", @tags;
+        }
+        my $tags = [ MT::Tag->load($terms, {
+                    binary => { name => 1 },
+                    join => ['MT::ObjectTag', 'tag_id', { blog_id => $blog_id, object_datasource => MT::Asset->datasource }]
+        }) ];
+        my $cexpr = $ctx->compile_tag_filter($tag_arg, $tags);
+
+        if ($cexpr) {
+            my %map;
+            for my $tag (@$tags) {
+                my $iter = MT::ObjectTag->load_iter({ tag_id => $tag->id, blog_id => $blog_id, object_datasource => MT::Asset->datasource });
+                while (my $et = $iter->()) {
+                    $map{$et->object_id}{$tag->id}++;
+                }
+                                                                                                                                                                                    }
+            push @filters, sub { $cexpr->($_[0]->id, \%map) };
+        } else {
+            return $ctx->error(MT->translate("You have an error in your 'tag' attribute: [_1]", $args->{tag} || $args->{tags}));
+        }
+    }
+
+
     require MT::Asset;
     my $no_resort = 0;
     my @assets;
@@ -4462,13 +4516,26 @@ sub _hdlr_assets {
     my $res = '';
     my $tok = $ctx->stash('tokens');
     my $builder = $ctx->stash('builder');
+    my $per_row = $args->{assets_per_row} || 0;
+    $per_row -= 1 if $per_row;
+    my $row_count = 0;
+    my $i = 0;
+    my $total_count = @assets;
 
     for my $a (@assets) {
         local $ctx->{__stash}{asset} = $a;
+        my $f = $row_count == 0;
+        my $l = $row_count == $per_row;
+        $l = 1 if (($i + 1) == $total_count);
         my $out = $builder->build($ctx, $tok, {
             %$cond,
+            AssetIsFirstInRow => $f,
+            AssetIsLastInRow => $l,
         });
         $res .= $out;
+        $row_count++;
+        $row_count = 0 if $row_count > $per_row;
+        $i++;
     }
 
     $res;
@@ -4568,7 +4635,7 @@ sub _hdlr_asset_added_by {
     my $author = MT::Author->load($a->created_by,
                                   {cached_ok=>1});
     return '' unless $author;
-    $author->name;
+    $author->nickname || $author->name;
 }
 
 sub _hdlr_asset_property {
@@ -4620,7 +4687,24 @@ sub _hdlr_asset_thumbnail_url {
     my $args = $_[1];
     my $a = $_[0]->stash('asset')
         or return $_[0]->_no_asset_error('MTAssetThumbnailURL');
-    $a->thumbnail_url || '';
+    return '' if $a->class_label ne 'Image';
+    
+    # Load MT::Image
+    require MT::Image;
+    my $img = new MT::Image(Filename => $a->file_path)
+        or return $_[0]->error(MT->translate(MT::Image->errstr));
+
+    # Get dimensions
+    my %arg;
+    if ($args->{scale}) {
+        $arg{Scale} = $args->{scale};
+    } else {
+        $arg{Width} = $args->{width};
+        $arg{Height} = $args->{height};
+    }
+    my ($w, $h) = $img->get_dimensions(%arg);
+
+    $a->thumbnail_url(Height => $h, Width => $w);
 }
 
 sub _hdlr_asset_link {
@@ -4642,18 +4726,27 @@ sub _hdlr_asset_thumbnail_link {
         or return $_[0]->_no_asset_error('MTAssetThumbnailLink');
     return '' if $a->class_label ne 'Image';
 
-    # Load thumbnail asset
-    require MT::Asset;
-    my $thumb = MT::Asset->load({
-            parent => $a->id,
-            class => 'image',
-        }) or return '';
+    # Load MT::Image
+    require MT::Image;
+    my $img = new MT::Image(Filename => $a->file_path)
+        or return $_[0]->error(MT->translate(MT::Image->errstr));
+
+    # Get dimensions
+    my %arg;
+    if ($args->{scale}) {
+        $arg{Scale} = $args->{scale};
+    } else {
+        $arg{Width} = $args->{width};
+        $arg{Height} = $args->{height};
+    }
+    my ($w, $h) = $img->get_dimensions(%arg);
+    my $url = $a->thumbnail_url(Height => $h, Width => $w);
 
     my $ret = sprintf qq(<a href="%s"), $a->url;
     if ($args->{new_window}) {
         $ret .= qq( target="_brank");
     }
-    $ret .= sprintf qq(><img src="%s" width="%d" height="%d"></a>), $thumb->thumbnail_url, $thumb->image_width, $thumb->image_height;
+    $ret .= sprintf qq(><img src="%s" width="%d" height="%d"></a>), $url, $w, $h;
     $ret;
 }
 

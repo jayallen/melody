@@ -22,7 +22,7 @@ class MTDatabase_postgres extends MTDatabaseBase {
         $limitStr = '';
         if ($limit == -1) $limit = 0;
         if ($limit || $offset) {
-            if (!$limit) $limit = 2147483647;
+            if (!$limit) $limit = 'all';
             $limitStr = ($offset ? 'offset ' . $offset : '') . ' limit '
              . $limit;
         }
