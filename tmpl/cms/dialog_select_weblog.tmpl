@@ -1,0 +1,62 @@
+<TMPL_UNLESS NAME=JSON>
+<TMPL_INCLUDE NAME=header-dialog.tmpl>
+
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/client.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/json.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/dialog.js"></script>
+    
+<script type="text/javascript">
+<!--
+var dialog;
+
+var win = window.parent;
+function returnBlogSelection(ok) {
+    if (!ok) // user cancelled
+        return closeDialog();
+
+    var el_id = getByID("selected_blog_ids", win.document);
+    var el_name = getByID("selected_blogs", win.document);
+    var ids = new Array();
+    var names = new Array();
+    if (el_id && el_name) {
+        var inputs = dialog.panels[0].tableSelect.selected();
+        for (var i = 0; i < inputs.length; ++i) {
+            var inp = inputs[i];
+            var row = TC.getParentByTagName( inp, "tr" );
+            if (!row) continue;
+            var labels = row.getElementsByTagName('label');
+            if (labels.length == 0) continue;
+            names.push(labels[0].innerHTML + ' (' + inp.value + ')');
+            ids.push(inp.value);
+        }
+        el_id.value = ids.join(',');
+        el_name.innerHTML = names.join(',');
+        closeDialog();
+    } else {
+        alert("couldn't find required form elements");
+    }
+}
+
+function init() {
+    // setup
+    dialog = new Dialog.MultiPanel("select-weblog");
+    var blogPanel = new ListingPanel("blog");
+    blogPanel.pager.setState(<TMPL_VAR NAME=PAGER_JSON>);
+    dialog.setPanels([blogPanel]);
+    dialog.open({}, returnBlogSelection);
+}
+
+TC.attachLoadEvent( init );
+//-->
+</script>
+
+<div class="modal_width" id="select-weblog-dialog">
+
+</TMPL_UNLESS>
+<TMPL_INCLUDE NAME=listing_panel.tmpl>
+<TMPL_UNLESS NAME=JSON>
+
+</div><!-- /modal_width#dialog-select-weblog -->
+
+<TMPL_INCLUDE NAME=footer-dialog.tmpl>
+</TMPL_UNLESS>
