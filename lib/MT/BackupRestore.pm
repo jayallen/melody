@@ -18,7 +18,7 @@ use File::Copy;
 
 sub backup {
     my $class = shift;
-    my ($blog_ids, $printer, $splitter, $finisher, $callback, $number, $enc) = @_;
+    my ($blog_ids, $printer, $splitter, $finisher, $number, $enc) = @_;
     my $obj_to_backup = [];
 
     if (defined($blog_ids) && scalar(@$blog_ids)) {
@@ -75,14 +75,17 @@ sub backup {
 
     my $files = {};
     _loop_through_objects(
-        $printer, $splitter, $finisher, $callback, $number, $obj_to_backup, $files);
+        $printer, $splitter, $finisher, $number, $obj_to_backup, $files);
+
+    my $else_xml = MT->run_callbacks('Backup.else');
+    $printer->($else_xml) if $else_xml ne '1';
 
     $printer->('</movabletype>');
     $finisher->($files);
 }
 
 sub _loop_through_objects {
-    my ($printer, $splitter, $finisher, $callback, $number, $obj_to_backup, $files) = @_;
+    my ($printer, $splitter, $finisher, $number, $obj_to_backup, $files) = @_;
 
     my $counter = 0;
     my %author_ids_seen;
@@ -113,16 +116,13 @@ sub _loop_through_objects {
                 if ($number && ($counter % $number == 0)) {
                     $splitter->(int($counter / $number + 1));
                 }
-                $printer->($object->to_xml($args) . "\n") if $object->to_backup;
+                $printer->($object->to_xml(undef, $args) . "\n") if $object->to_backup;
                 if ($class eq 'MT::Author') {
                     # MT::Author may be duplicated because of how terms and args are created.
                     $author_ids_seen{$object->id} = 1;
                 } elsif ($class eq 'MT::Asset') {
                     $files->{$object->id} = [$object->url, $object->file_path, $object->file_name];
                 }
-                my $xml = $callback->($object)
-                    or $printer->(MT->errstr());
-                $printer->($xml . "\n") if $xml ne '1';
             }
         }
     }
@@ -196,6 +196,9 @@ sub restore_process_single_file {
             my $node = $nodeset->get_node($index);
             next if !($node->isa('XML::XPath::Node::Element'));
 
+            my $ns = $node->getNamespace($node->getPrefix);
+            next if ($ns && (NS_MOVABLETYPE ne $ns->getExpanded));
+
             my $class = $name_hash->{$node->getLocalName};
             eval "require $class;";
             $class->from_xml(
@@ -204,9 +207,20 @@ sub restore_process_single_file {
                 Objects => $objects, 
                 Deferred => $deferred,
                 Error => $error, 
-                Callback => $callback
+                Callback => $callback,
+                Namespace => NS_MOVABLETYPE,
             );
         }
+    }
+    
+    my $extension_set = $xp->find("$root_path/*");
+    for my $index2 (1..$extension_set->size()) {
+        my $ext_node = $extension_set->get_node($index2);
+        my $ext_ns = $ext_node->getNamespace($ext_node->getPrefix);
+        next if ($ext_ns && (NS_MOVABLETYPE eq $ext_ns->getExpanded));
+        
+        MT->run_callbacks('Restore.else:' . $ext_ns->getExpanded, 
+            $xp, $ext_node, $objects, $deferred, $callback);
     }
 }
 
@@ -390,9 +404,88 @@ MT::BackupRestore
 
 =head1 METHODS
 
-=head2 backup_everything
+=head2 backup
 
-TODO backup I<users>, I<roles>, ...
+TODO Backup I<MT::Tag>, I<MT::Author>, I<MT::Blog>, I<MT::Role>, 
+I<MT::Category>, I<MT::Asset>, and I<MT::Entry>.  Each object will
+be back up by MT::Object#to_xml call, which will do the actual
+Object ==>> XML serialization.
+
+=head2 restore_file
+
+TODO Restore MT system from an XML file which contains MT backup
+information (created by backup subroutine).
+
+=head2 restore_process_single_file
+
+TODO A method which will do the actual heavy lifting of the
+process to restore objects from an XML file.
+
+=head2 restore_directory
+
+TODO A method which reads specified directory, find a manifest file,
+and do the multi-file restore operation directed by the manifest file.
+
+=head2 restore_asset
+
+TODO A method which restores the assets' actual files to the
+specified directory.
+
+=head2 restore_upload_manifest
+
+TODO A method which is called from MT::App::CMS to process an uploaded
+manifest file which is to be the source of the multi-file restore
+operation in the MT::App::CMS.
+
+=head1 Callbacks
+
+Callbacks called by the package are as follows:
+
+=over 4
+
+=item Backup.else
+    
+Calling convention is:
+
+    callback($cb)
+
+The callback is used for MT::Object-derived types used by plugins
+to be backup.  This callback is for those objects which has no
+relationship with any other MT::Objects.  Refer to MT::Object
+documentation for how to backup objects with relationships.
+The callback must return the object's XML representation in a
+string, or 1 for nothing.
+
+=item Restore.else.<namespace>
+
+Calling convention is:
+
+    callback($cb, $xp, $node, $objects, $deferred, $callback)
+
+Where $xp is an XML::XPath object to be used to search for xml nodes.
+
+$node is an XML::XPath::Element object to be restored.
+
+$objects is an hash reference which contains all the restored objects
+in the restore session.  The hash keys are stored in the format
+MT::ObjectClassName#old_id, and hash values are object reference
+of the actually restored objects (with new id).  Old ids are ids
+which are stored in the XML files, while new ids are ids which
+are restored.
+
+$deferred is an hash reference which contains information about
+restore-deferred objects.  Deferred objects are those objects
+which appeared in the XMl file but could not be restored because
+any parent objects are missing.  The hash keys are stored in
+the format MT::ObjectClassName#old_id and hash values are 1.
+
+$callback is a code reference which will print out the passed paramter.
+Callback method can use this to communicate with users.
+
+This callback is used for MT::Object-derived types used by plugins
+to be restored.  This callback is for those objects which has no
+relationship with any other MT::Objects.  Refer to MT::Object
+documentation for how to backup objects with relationships.
 
 =head1 AUTHOR & COPYRIGHT
 

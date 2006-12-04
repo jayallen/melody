@@ -11009,14 +11009,8 @@ sub backup {
         };
     }
 
-    my $callback = sub {
-            my ($object) = @_;
-            return MT->run_callbacks('CMSBackup.' . $object->datasource, $app, $object)
-                    or $printer->($app->error(MT->errstr()));
-        };
-
     MT::BackupRestore->backup(
-        \@blog_ids, $printer, $splitter, $finisher, $callback, $number, $enc);
+        \@blog_ids, $printer, $splitter, $finisher, $number, $enc);
 }
 
 sub restore {

@@ -398,6 +398,7 @@ sub to_backup {
 
 sub children_to_xml {
     my $obj = shift;
+    my ($namespace, $args) = @_;
     my $xml = '';
 
     require MT::Trackback;
@@ -413,7 +414,7 @@ sub children_to_xml {
             last unless @pings;
             $offset += scalar @pings;
             for my $ping (@pings) {
-                $xml .= $ping->to_xml . "\n" if $ping->to_backup;
+                $xml .= $ping->to_xml($namespace, $args) . "\n" if $ping->to_backup;
             }
         }
     }
@@ -427,14 +428,14 @@ sub children_to_xml {
         last unless @placements;
         $offset += scalar @placements;
         for my $placement (@placements) {
-            $xml .= $placement->to_xml . "\n" if $placement->to_backup;
+            $xml .= $placement->to_xml($namespace, $args) . "\n" if $placement->to_backup;
         }
     }
 
     my @children = $obj->children_categories;
     return $xml unless @children;
     for my $child (@children) {
-        $xml .= $child->to_xml . "\n";
+        $xml .= $child->to_xml($namespace, $args) . "\n";
     }
     $xml;
 }

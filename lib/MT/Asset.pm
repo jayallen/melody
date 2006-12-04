@@ -269,6 +269,7 @@ sub thumbnail_url {
 
 sub children_to_xml {
     my $obj = shift;
+    my ($namespace, $args) = @_;
     my $xml = '';
 
     require MT::ObjectTag;
@@ -281,7 +282,7 @@ sub children_to_xml {
         last unless @objecttags;
         $offset += scalar @objecttags;
         for my $objecttag (@objecttags) {
-            $xml .= $objecttag->to_xml . "\n" if $objecttag->to_backup;
+            $xml .= $objecttag->to_xml($namespace, $args) . "\n" if $objecttag->to_backup;
         }
     }
     

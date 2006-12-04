@@ -673,6 +673,8 @@ sub to_hash {
 
 sub children_to_xml {
     my $obj = shift;
+    my ($namespace, $args) = @_;
+
     my $xml = '';
 
     $xml .= $obj->_entry_child_to_xml('MT::Placement');
@@ -687,7 +689,7 @@ sub children_to_xml {
         last unless @objecttags;
         $offset += scalar @objecttags;
         for my $objecttag (@objecttags) {
-            $xml .= $objecttag->to_xml . "\n" if $objecttag->to_backup;
+            $xml .= $objecttag->to_xml($namespace, $args) . "\n" if $objecttag->to_backup;
         }
     }
     
@@ -704,19 +706,19 @@ sub children_to_xml {
             last unless @pings;
             $offset += scalar @pings;
             for my $ping (@pings) {
-                $xml .= $ping->to_xml . "\n" if $ping->to_backup;
+                $xml .= $ping->to_xml($namespace, $args) . "\n" if $ping->to_backup;
             }
         }
     }
     
-    $xml .= $obj->_entry_child_to_xml('MT::Comment');
+    $xml .= $obj->_entry_child_to_xml('MT::Comment', $namespace, $args);
     
     $xml;
 }
 
 sub _entry_child_to_xml {
     my $obj = shift;
-    my ($child_class) = @_;
+    my ($child_class, $namespace, $args) = @_;
     my $xml = '';
     
     eval "require $child_class";
@@ -732,7 +734,7 @@ sub _entry_child_to_xml {
         last unless @objects;
         $offset += scalar @objects;
         for my $object (@objects) {
-            $xml .= $object->to_xml . "\n" if $object->to_backup;
+            $xml .= $object->to_xml($namespace, $args) . "\n" if $object->to_backup;
         }
     }
     $xml;
