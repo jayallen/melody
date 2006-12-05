@@ -120,8 +120,8 @@ sub class_handler {
     my $pkg = shift;
     my ($class) = @_;
     my $package = $Classes{$class};
-    if ($package) {
-        if (defined *{$package.'::'}) {
+   if ($package) {
+        if (defined *{$package.'::new'}) {
             return $package;
         } else {
             eval "use $package;";
@@ -138,7 +138,6 @@ sub class_labels {
     my %names;
     foreach (keys %Classes) {
         my $class = $pkg->class_handler($_);
-        eval "use $class;";
         $names{$class->class} = $class->class_label;
     }
     \%names;
@@ -201,7 +200,7 @@ sub can_handle {
     my ($pkg, $filename) = @_;
     # undef is returned from fileparse if the extension is not known.
     require File::Basename;
-    return (fileparse($filename, @{ $pkg->extensions }))[2] ? 1 : 0;
+    return (File::Basename::fileparse($filename, @{ $pkg->extensions }))[2] ? 1 : 0;
 }
 
 # Given a filename, returns an appropriate MT::Asset class to associate

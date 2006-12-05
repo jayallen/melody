@@ -9318,6 +9318,11 @@ sub upload_file {
     my $local_basename = File::Basename::basename($local_file);
     my $ext = (File::Basename::fileparse($local_file, qr/[A-Za-z]+$/))[2];
 
+    # Does the file have dimensions with a recognized image extension?
+    require MT::Asset::Image;
+    if(defined($w) && defined($h) && MT::Asset::Image->can_handle($local_basename)) {
+        $param{is_image} = 1
+    }
     require MT::Asset;
     my $img_pkg = MT::Asset->class_handler($param{is_image} ? 'image' : 'file');
     my $asset = new $img_pkg;
@@ -9326,11 +9331,6 @@ sub upload_file {
     $asset->file_path($local_file);
     $asset->file_name($local_basename);
     $asset->file_ext($ext);
-    # Does the file have dimensions with a recognized image extension?
-    require MT::Asset::Image;
-    if(defined($w) && defined($h) && MT::Asset::Image->can_handle($local_basename)) {
-        $param{is_image} = 1
-    }
     if ($param{is_image}) {
         $asset->image_width($w);
         $asset->image_height($h);
