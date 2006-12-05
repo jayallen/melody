@@ -14,21 +14,7 @@ class MTViewer extends Smarty {
     var $id;
 
     var $conditionals = array(
-        'MTEntryPrevious' => 1,
-        'MTEntryNext' => 1,
-        'MTDateHeader' => 1,
-        'MTDateFooter' => 1,
-        'MTEntriesHeader' => 1,
-        'MTEntriesFooter' => 1,
-        'MTCalendarWeekHeader' => 1,
-        'MTCalendarWeekFooter' => 1,
         'MTParentCategory' => 1,
-        'MTSubCatIsFirst' => 1,
-        'MTSubCatIsLast' => 1,
-        'MTHasSubCategories' => 1,
-        'MTHasNoSubCategories' => 1,
-        'MTHasParentCategory' => 1,
-        'MTHasNoParentCategory' => 1,
         'MTTopLevelParent' => 1,
     );
     var $sanitized = array(
@@ -258,7 +244,7 @@ class MTViewer extends Smarty {
 
     function tag($tag, $args = array()) {
         $tag = preg_replace('/^MT/', '', $tag);
-        if ((array_key_exists('MT' . $tag, $this->conditionals)) || (preg_match('/^If/', $tag) || preg_match('/[a-z]If[A-Z]/', $tag))) {
+        if ((array_key_exists('MT' . $tag, $this->conditionals)) || (preg_match('/^If/', $tag) || preg_match('/[a-z](If|Has|Is)[A-Z]/', $tag) || preg_match('/[a-z](Header|Footer|Previous|Next)$/', $tag))) {
             @require_once("block.MT$tag.php");
             $fntag = 'smarty_block_MT' . $tag;
             if (function_exists($fntag)) {
