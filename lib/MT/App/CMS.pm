@@ -10850,7 +10850,7 @@ sub backup {
     my $q = $app->param;
 
     my $what = $q->param('backup_what');
-    return $app->errtrans("What to backup must be selected.") if !$what;
+    return $app->errtrans("You must select what you want to backup.") if !$what;
 
     my $number = $q->param('num_items') || 0;
     return $app->errtrans('[_1] is not a number.', $number)

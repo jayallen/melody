@@ -117,7 +117,7 @@ sub _loop_through_objects {
                     $splitter->(int($counter / $number + 1));
                 }
                 $printer->($object->to_xml(undef, $args) . "\n", 
-                    MT->translate('[_1]#[_2] has been backup.', $class, $object->id) . "\n")
+                    MT->translate('[_1]#[_2] has been backed up.', $class, $object->id) . "\n")
                         if $object->to_backup;
                 if ($class eq 'MT::Author') {
                     # MT::Author may be duplicated because of how terms and args are created.
