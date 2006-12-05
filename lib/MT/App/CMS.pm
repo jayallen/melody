@@ -960,8 +960,6 @@ sub list_assets {
     if ($class_filter) {
         my $asset_pkg = MT::Asset->class_handler($class_filter);
         $terms{class} = $asset_pkg->classes;
-    } else {
-        $terms{class} = MT::Asset->classes;
     }
 
     # identifier => name
