@@ -309,6 +309,8 @@ sub init_default_handlers {
         AssetIfTagged => [\&_hdlr_asset_if_tagged, 2],
         AssetIsFirstInRow => [ \&_hdlr_pass_tokens, 1 ],
         AssetIsLastInRow => [ \&_hdlr_pass_tokens, 1 ],
+        AssetsHeader => [ \&_hdlr_pass_tokens, 1 ],
+        AssetsFooter => [ \&_hdlr_pass_tokens, 1 ],
     );
 }
 
@@ -4532,6 +4534,8 @@ sub _hdlr_assets {
             %$cond,
             AssetIsFirstInRow => $f,
             AssetIsLastInRow => $l,
+            AssetsHeader => !$i,
+            AssetsFooter => !defined $assets[$i+1],
         });
         $res .= $out;
         $row_count++;
