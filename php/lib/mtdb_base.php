@@ -1496,6 +1496,27 @@ class MTDatabaseBase extends ezsql {
         return $results;
     }
 
+    function asset_count($args) {
+        if (isset($args['blog_id'])) {
+            $blog_filter = 'and asset_blog_id = '.intval($args['blog_id']);
+        }
+
+        # Adds a type filter
+        if (isset($args['type'])) {
+            $type_filter = "and asset_class ='" . $args['type'] . "'";
+        }
+
+        $count = $this->get_var("
+            select count(*)
+              from mt_asset
+             where
+                   1 = 1
+                   $blog_filter
+                   $type_filter
+        ");
+        return $count;
+    }
+
     function fetch_assets($args) {
         # load assets
 
