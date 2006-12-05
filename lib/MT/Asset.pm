@@ -71,10 +71,8 @@ sub classes {
     my $pkg = shift;
     my $this_class = $pkg->class;
     my @classes = values %Types;
-    if ($this_class ne 'file') {
-        @classes = grep { m/^\Q$this_class\E:/ } @classes;
-        push @classes, $this_class;
-    }
+    @classes = grep { m/^\Q$this_class\E:/ } @classes;
+    push @classes, $this_class;
     \@classes;
 }
 
