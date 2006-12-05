@@ -147,6 +147,7 @@ sub init {
         'grant_role' => \&grant_role,
         'backup_restore' => \&backup_restore,
         'backup' => \&backup,
+        'backup_download' => \&backup_download,
         'restore' => \&restore,
         'restore_upload_manifest' => \&restore_upload_manifest,
         'dialog_restore_upload' => \&dialog_restore_upload,
@@ -10818,6 +10819,21 @@ sub backup_restore {
     $app->build_page('backup_restore.tmpl', \%param);
 }
 
+sub _backup_finisher {
+    my $app = shift;
+    my ($fname, $param) = @_;
+    $param->{filename} = $fname;
+    $param->{backup_success} = 1;
+    require MT::Session;
+    my $sess = MT::Session->new;
+    $sess->id($app->make_magic_token());
+    $sess->kind('BU'); # BU == Backup
+    $sess->name($fname);
+    $sess->start(time);
+    $sess->save;
+    $app->print($app->build_page('backup_end.tmpl', $param));
+}
+
 sub backup {
     my $app = shift;
     my $user = $app->user;
@@ -10840,11 +10856,10 @@ sub backup {
 
     my $archive = $q->param('backup_archive_format');
     my $enc = $app->config('PublishCharset') || 'utf-8';
-    my $file = '';
     my @ts = gmtime(time);
     my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d",
         $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
-    $file .= "Movable_Type-$ts" . '-Backup';
+    my $file = "Movable_Type-$ts" . '-Backup';
 
     if ('1' eq $archive) {
         eval "require Archive::Tar;";
@@ -10858,6 +10873,22 @@ sub backup {
         return $app->errtrans('IO::String is required to archive in zip format.') if $@;
     }
 
+    my $param = {};
+    $app->{no_print_body} = 1;
+    $app->add_breadcrumb($app->translate('Backup & Restore'), $app->uri(mode => 'backup_restore'));
+    $app->add_breadcrumb($app->translate('Backup'));
+    $param->{system_overview_nav} = 1;
+    $param->{nav_backup} = 1;
+
+    local $| = 1;
+    my $charset = MT::ConfigMgr->instance->PublishCharset;
+    $app->send_http_header('text/html' .
+        ($charset ? "; charset=$charset" : ''));
+    $app->print($app->build_page('backup_start.tmpl', $param));
+    require File::Temp;
+    require File::Spec;
+    my $temp_dir = $app->config('TempDir');
+
     require MT::BackupRestore;
     require MT::Asset;
     my $num_assets = MT::Asset->count();
@@ -10865,24 +10896,28 @@ sub backup {
     my $splitter;
     my $finisher;
     my $fh;
+    my $fname;
     my $arc_buf;
     if (!($number || $num_assets)) {
-        $app->{no_print_body} = 1;
         $splitter = sub {};
+
         if ('0' eq $archive) {
-            $app->set_header("Content-Disposition" => "attachment; filename=$file.xml");
-            $app->send_http_header($enc ? "text/xml; charset=$enc"
-                                        : 'text/xml');
-            $printer = sub { $app->print(@_); };
-            $finisher = sub { my ($asset_files) = @_; 1; };
+            ($fh, my $filepath) = File::Temp::tempfile('xml.XXXXXXXX', DIR => $temp_dir);
+            (my $vol, my $dir, $fname) = File::Spec->splitpath($filepath);
+            $printer = sub { my ($data, $message) = @_; print $fh $data; $app->print($message); };
+            $finisher = sub { 
+                my ($asset_files) = @_;
+                close $fh;
+                $app->_backup_finisher($fname, $param);
+            };
         } elsif ('1' eq $archive) { # tar.gz
             require Archive::Tar;
             require Compress::Zlib;
-            $app->set_header("Content-Disposition" => "attachment; filename=$file.tar.gz");
-            $app->send_http_header('application/x-tar-gz');
-            $printer = sub { $arc_buf .= $_[0]; };
+            $printer = sub { my ($data, $message) = @_; $arc_buf .= $data; $app->print($message); };
             $finisher = sub {
                 my ($asset_files) = @_;
+                ($fh, my $filepath) = File::Temp::tempfile('tar.XXXXXXXX', DIR => $temp_dir);
+                (my $vol, my $dir, $fname) = File::Spec->splitpath($filepath);
                 my $arc = Archive::Tar->new;
                 $arc->add_data("$file.xml", $arc_buf);
                 $arc->add_data(
@@ -10890,25 +10925,26 @@ sub backup {
                     "<manifest xmlns='" . MT::BackupRestore::NS_MOVABLETYPE() . "'><file type='backup' name='$file.xml' /></manifest>"); 
                 require Compress::Zlib;
                 my $dest = Compress::Zlib::memGzip($arc->write);
-                $app->print($dest);
+                binmode $fh;
+                print $fh $dest;
+                close $fh;
+                $app->_backup_finisher($fname, $param);
             }
         } elsif ('2' eq $archive) { # zip
             require Archive::Zip;
-            $app->set_header("Content-Disposition" => "attachment; filename=$file.zip");
-            $app->send_http_header('application/zip');
-            $printer = sub { $arc_buf .= $_[0]; };
+            $printer = sub { my ($data, $message) = @_; $arc_buf .= $data; $app->print($message); };
             $finisher = sub {
                 my ($asset_files) = @_;
+                ($fh, my $filepath) = File::Temp::tempfile('zip.XXXXXXXX', DIR => $temp_dir);
+                (my $vol, my $dir, $fname) = File::Spec->splitpath($filepath);
                 my $arc = Archive::Zip->new;
                 $arc->addString($arc_buf, "$file.xml");
                 $arc->addString(
                     "<manifest xmlns='" . MT::BackupRestore::NS_MOVABLETYPE() . "'><file type='backup' name='$file.xml' /></manifest>", 
                     "$file.manifest");
-                my $buf;
-                require IO::String;
-                my $ios = IO::String->new(\$buf);
-                $arc->writeToFileHandle($ios);
-                $app->print($buf);
+                $arc->writeToFileHandle($fh);
+                close $fh;
+                $app->_backup_finisher($fname, $param);
             };
         }
     } else {
@@ -10918,7 +10954,7 @@ sub backup {
         $fh = gensym();
         open $fh, ">$filename";
         push @files, { filename => $file . "-1.xml" };
-        $printer = sub { print $fh $_[0]; };
+        $printer = sub { my ($data, $message) = @_; print $fh $data; $app->print($message); };
         $splitter = sub {
             my ($findex) = @_;
             print $fh '</movabletype>';
@@ -10955,14 +10991,8 @@ sub backup {
             close $fh;
             push @files, { filename => "$file.manifest" };
             if ('0' eq $archive) {
-                my $param = {};
-                $app->add_breadcrumb($app->translate('Backup & Restore'), $app->uri(mode => 'backup_restore'));
-                $app->add_breadcrumb($app->translate('Backup'));
-                $param->{system_overview_nav} = 1;
-                $param->{nav_backup} = 1;
                 $param->{files_loop} = \@files;
-                $param->{tempdir} = $temp_dir;
-                $app->build_page('backup_files.tmpl', $param);
+                $app->_backup_finisher($fname, $param);
             } elsif ('1' eq $archive) { # tar.gz
                 require Archive::Tar;
                 my $arc = Archive::Tar->new;
@@ -10977,18 +11007,17 @@ sub backup {
                         unlink $tmp_filename;
                     }
                 }
+                my ($fh_arc, $filepath) = File::Temp::tempfile('tar.XXXXXXXX', DIR => $temp_dir);
+                (my $vol, my $dir, $fname) = File::Spec->splitpath($filepath);
                 require Compress::Zlib;
                 my $dest = Compress::Zlib::memGzip($arc->write);
-                $app->{no_print_body} = 1;
-                $app->set_header("Content-Disposition" => "attachment; filename=$file.tar.gz");
-                $app->send_http_header('application/x-tar-gz');
-                $app->print($dest);
+                binmode $fh_arc;
+                print $fh_arc $dest;
+                close $fh_arc;
+                $app->_backup_finisher($fname, $param);
             } elsif ('2' eq $archive) { # zip
                 require Archive::Zip;
                 my $arc = Archive::Zip->new;
-                $app->{no_print_body} = 1;
-                $app->set_header("Content-Disposition" => "attachment; filename=$file.zip");
-                $app->send_http_header('application/zip');
                 for my $f (@files) {
                     if (defined $f->{path}) {
                         $arc->addFile($f->{path}, $f->{asset_id} . '-' . $f->{filename});
@@ -10997,20 +11026,66 @@ sub backup {
                         $arc->addFile($tmp_filename, $f->{filename});
                     }
                 }
-                my $buf;
-                require IO::String;
-                my $ios = IO::String->new(\$buf);
-                $arc->writeToFileHandle($ios);
-                for my $f (@files) {
-                    unlink File::Spec->catfile($temp_dir, $f->{filename}) if !defined($f->{path});
-                }
-                $app->print($buf);
+                my ($fh_arc, $filepath) = File::Temp::tempfile('zip.XXXXXXXX', DIR => $temp_dir);
+                (my $vol, my $dir, $fname) = File::Spec->splitpath($filepath);
+                $arc->writeToFileHandle($fh_arc);
+                close $fh_arc;
+                $app->_backup_finisher($fname, $param);
             }
         };
     }
 
     MT::BackupRestore->backup(
         \@blog_ids, $printer, $splitter, $finisher, $number, $enc);
+}
+
+sub backup_download {
+    my $app = shift;
+    my $user = $app->user;
+    return $app->errtrans("Permission denied.") if !$user->is_superuser;
+    $app->validate_magic() or return;
+    my $filename = $app->param('filename');
+    my $temp_dir = $app->config('TempDir');
+    require File::Spec;
+    my $fname = File::Spec->catfile($temp_dir, $filename);
+    
+    my $sess = MT::Session->load( { kind => 'BU', name => $filename } );
+    if (!defined($sess) || !$sess) {
+        return $app->errtrans("Specified file was not found.");
+    }
+    my @ts = gmtime($sess->start);
+    my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d",
+        $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
+    my $newfilename = "Movable_Type-$ts" . '-Backup';
+    $sess->remove;
+
+    $app->{no_print_body} = 1;
+    my $contenttype;
+    if ($filename =~ m/^xml\..+$/i) {
+        my $enc = $app->config('PublishCharset') || 'utf-8';
+        $contenttype = "text/xml; charset=$enc";
+        $newfilename .= '.xml';
+    } elsif ($filename =~ m/^tar\..+$/i) {
+        $contenttype = 'application/x-tar-gz';
+        $newfilename .= '.tar.gz';
+    } elsif ($filename =~ m/^zip\..+$/i) {
+        $contenttype = 'application/zip';
+        $newfilename .= '.zip';
+    } else {
+        $app->send_http_header('application/octet-stream');
+    }
+
+    $app->set_header("Content-Disposition" => "attachment; filename=$newfilename");
+    $app->send_http_header($contenttype);
+    
+    open my $fh, "<$fname";
+    my $data;
+    while (read $fh, my($chunk), 8192) {
+        $data .= $chunk;
+    }
+    close $fh;
+    $app->print($data);
+    unlink $fname;
 }
 
 sub restore {
@@ -11072,7 +11147,7 @@ sub restore {
                 $error = 'Required modules (Archive::Tar, IO::String, and/or Compress::Zlib) are missing.';
             } else {
                 my $temp_dir = $app->config('TempDir');
-                require File::Temp;;
+                require File::Temp;
                 my $tmp = File::Temp::tempdir($uploaded_filename . 'XXXX', DIR => $temp_dir, CLEANUP => 1);
                 my $buffer;
                 while (read $fh, my($chunk), 8192) {

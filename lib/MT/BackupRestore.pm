@@ -71,16 +71,16 @@ sub backup {
 
     my $header .= "<movabletype xmlns='" . NS_MOVABLETYPE . "'>\n";
     $header = "<?xml version='1.0' encoding='$enc'?>\n$header" if $enc !~ m/utf-?8/i;
-    $printer->($header);
+    $printer->($header, q());
 
     my $files = {};
     _loop_through_objects(
         $printer, $splitter, $finisher, $number, $obj_to_backup, $files);
 
     my $else_xml = MT->run_callbacks('Backup.else');
-    $printer->($else_xml) if $else_xml ne '1';
+    $printer->($else_xml, q()) if $else_xml ne '1';
 
-    $printer->('</movabletype>');
+    $printer->('</movabletype>', q());
     $finisher->($files);
 }
 
@@ -98,7 +98,7 @@ sub _loop_through_objects {
         }
         my $err = $@;
         if ($err) {
-            $printer->("$err\n");
+            $printer->("$err\n", "$err\n");
             next;
         }
         my $offset = 0;
@@ -116,7 +116,9 @@ sub _loop_through_objects {
                 if ($number && ($counter % $number == 0)) {
                     $splitter->(int($counter / $number + 1));
                 }
-                $printer->($object->to_xml(undef, $args) . "\n") if $object->to_backup;
+                $printer->($object->to_xml(undef, $args) . "\n", 
+                    MT->translate('[_1]#[_2] has been backup.', $class, $object->id) . "\n")
+                        if $object->to_backup;
                 if ($class eq 'MT::Author') {
                     # MT::Author may be duplicated because of how terms and args are created.
                     $author_ids_seen{$object->id} = 1;
