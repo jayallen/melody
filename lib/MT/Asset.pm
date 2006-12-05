@@ -138,6 +138,7 @@ sub class_labels {
     my %names;
     foreach (keys %Classes) {
         my $class = $pkg->class_handler($_);
+        eval "use $class;";
         $names{$class->class} = $class->class_label;
     }
     \%names;
