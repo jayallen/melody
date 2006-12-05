@@ -52,6 +52,7 @@ parameters:
                         <div class="list-data-wrapper list-data">
 </TMPL_UNLESS>
 <TMPL_IF NAME=OBJECT_LOOP>
+                            <div class="list-data-layout">
                             <table cellspacing="0">
     <TMPL_LOOP NAME=OBJECT_LOOP>
                                 <tr id="<TMPL_VAR NAME=PANEL_TYPE>-<TMPL_VAR NAME=ID>" class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
@@ -61,6 +62,7 @@ parameters:
                                 </tr>
     </TMPL_LOOP>
                             </table>
+                            </div>
 <TMPL_ELSE>
 <TMPL_IF NAME=SEARCH>
 <p class="message"><MT_TRANS phrase="Sorry, there were no results for your search. Please try searching again."></p> 

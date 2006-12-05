@@ -1358,7 +1358,7 @@ li {
 
 .close_asset_icon { background-image: url(images/close.gif); }
 
-.metadata { width: 205px; height: 200px; overflow: auto; }
+.metadata { width: 205px; height: 180px; overflow: auto; }
 .metadata dl { margin-top: 0px; }
 .metadata dt { font-weight: bold; }
 .metadata dd { margin-left: 0px; }
@@ -3540,19 +3540,25 @@ body#mt-wizard #topnav-img {
 .list-data-wrapper { 
     font-size:11px;
     width: 618px; 
-    height: 300px;
+    height: 240px;
     overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     border-bottom: 1px solid #D7E3F5;
 }
 
 * html body .list-data-wrapper { 
     font-size:11px;
     width: 618px; 
-    height: 300px;
+    height: 240px;
     overflow-y: auto;
     overflow-x: hidden;
     border-bottom: 1px solid #D7E3F5;
 } /* safari fix - overflow-x and overflow-y not supported by safari */
+
+.list-data-layout {
+    height: 240px;
+}
 
 .list-multi .list-data-wrapper {
     height: 240px;
