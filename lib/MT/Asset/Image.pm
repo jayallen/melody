@@ -9,9 +9,7 @@ package MT::Asset::Image;
 use base 'MT::Asset';
 
 # List of supported file extensions (to aid the stock 'can_handle' method.)
-sub extensions {
-    ['gif', 'jpg', 'jpeg', 'png'];
-}
+sub extensions { [ qr/gif/i, qr/jpe?g/i, qr/png/i, ] }
 
 sub class_label {
     MT->translate('Image');

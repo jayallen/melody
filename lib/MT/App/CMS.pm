@@ -9313,13 +9313,9 @@ sub upload_file {
     $relative_url =~ s!^/!!;
     $url .= $relative_url;
     $param{url} = $url;
-    $param{is_image} = defined($w) && defined($h);
     require File::Basename;
     my $local_basename = File::Basename::basename($local_file);
-    my $ext = '';
-    if ($local_file =~ m/\.([A-Za-z]+)$/) {
-        $ext = $1;
-    }
+    my $ext = (File::Basename::fileparse($local_file, qr/[A-Za-z]+$/))[2];
 
     require MT::Asset;
     my $img_pkg = MT::Asset->class_handler($param{is_image} ? 'image' : 'file');
@@ -9329,6 +9325,11 @@ sub upload_file {
     $asset->file_path($local_file);
     $asset->file_name($local_basename);
     $asset->file_ext($ext);
+    # Does the file have dimensions with a recognized image extension?
+    require MT::Asset::Image;
+    if(defined($w) && defined($h) && MT::Asset::Image->can_handle($local_basename)) {
+        $param{is_image} = 1
+    }
     if ($param{is_image}) {
         $asset->image_width($w);
         $asset->image_height($h);
@@ -9338,7 +9339,7 @@ sub upload_file {
 
     if ($param{is_image}) {
         eval { require MT::Image; MT::Image->new or die; };
-        $param{do_thumb} = !$@ ? 1 : 0;
+        $param{do_thumb} = $@ ? 0 : 1;
         # Pass image default settings along.
         $param{image_defaults} = $blog->image_default_set() ? 1 : 0;
         $param{make_thumb} = $blog->image_default_thumb() ? 1 : 0;

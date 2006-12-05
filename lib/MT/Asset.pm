@@ -197,19 +197,10 @@ sub blog {
 # Returns a true/false response based on whether the active package
 # has extensions registered that match the requested filename.
 sub can_handle {
-    my $pkg = shift;
-    my ($filename) = @_;
-    my $ext = lc $filename;
-    $ext =~ s/.*\.//;
-    my $extensions = $pkg->extensions or return 0;
-    foreach my $this_ext (@$extensions) {
-        if (ref $this_ext eq 'Regexp') {
-            return 1 if $ext =~ m/$this_ext/;
-        } elsif ($this_ext eq $ext) {
-            return 1;
-        }
-    }
-    0;
+    my ($pkg, $filename) = @_;
+    # undef is returned from fileparse if the extension is not known.
+    require File::Basename;
+    return (fileparse($filename, @{ $pkg->extensions }))[2] ? 1 : 0;
 }
 
 # Given a filename, returns an appropriate MT::Asset class to associate
