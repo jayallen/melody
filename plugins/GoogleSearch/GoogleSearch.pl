@@ -13,7 +13,7 @@ use MT::Plugin;
 use MT;
 my $plugin = new MT::Plugin::GoogleSearch({
     name => "Google Search",
-    version => '1.0',
+    version => '1.0-dev',
     description => "<MT_TRANS phrase=\"Adds template tags to allow you to search for content from Google. You will need to configure this plugin using a <a href='http://www.google.com/apis/'>license key.</a>\">",
     author_name => "Six Apart, Ltd.",
     author_link => "http://www.sixapart.com/",
@@ -89,6 +89,18 @@ sub _hdlr_google_search {
         $query = $ctx->_hdlr_entry_excerpt or return '';
     } elsif ($args->{keywords}) {
         $query = $ctx->_hdlr_entry_keywords or return '';
+    } elsif ($args->{tags}) {
+        require MT::Tag;
+        my $entry = $ctx->stash('entry');
+        if ($entry) {
+            my @tags = $entry->tags;
+            @tags = grep /^[^@]/, @tags;
+            $query = '';
+            foreach my $tag (@tags) {
+                $query .= '"'.$tag.'" ';
+            }
+        }
+        $query = $ctx->_hdlr_entry_title unless $query;
     }
     $query = $ctx->stash('search_string') unless defined $query;
     if (!defined $query) {
@@ -155,3 +167,4 @@ sub _hdlr_google_search_result {
     MT::I18N::encode_text(MT::I18N::utf8_off($res->{$prop}), 'utf-8', $enc) || '';
 }
 
+1;

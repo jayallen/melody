@@ -26,8 +26,20 @@ function smarty_block_MTGoogleSearch($args, $content, &$ctx, &$repeat) {
             $query = smarty_function_MTEntryExcerpt(array(), $ctx);
         } elseif ($args['keywords']) {
             $query = $entry['entry_keywords'];
+        } elseif ($args['tags']) {
+            $query = "";
+            $tags = $ctx->mt->db->fetch_entry_tags(array('entry_id' => $entry['entry_id'], 'blog_id' => $blog->id));
+            if (isset($tags)) {
+                foreach($tags as $tag) {
+                    $query .= '"'.$tag['tag_name'].'" ';
+                }
+            }
         } else {
             $query = $args['query'];
+        }
+
+        if ($query == '') {
+            $query = $entry['entry_title'];
         }
 
         global $mt;
@@ -77,20 +89,22 @@ function smarty_block_MTGoogleSearch($args, $content, &$ctx, &$repeat) {
             print('error:'.$output);
         } else {
             // We have proper search results
-            foreach ($result->resultElements as $index => $item) {
-                $summary = $item->summary;
-                $url = $item->URL;
-                $snippet = $item->snippet;
-                $title = $item->title;
+            if ($result->resultElements) {
+                foreach ($result->resultElements as $index => $item) {
+                    $summary = $item->summary;
+                    $url = $item->URL;
+                    $snippet = $item->snippet;
+                    $title = $item->title;
                 
-                $set = array(
-                    'summary' => $summary,
-                    'URL' => $url,
-                    'snippet' => $snippet,
-                    'title' => $title
-                );
+                    $set = array(
+                        'summary' => $summary,
+                        'URL' => $url,
+                        'snippet' => $snippet,
+                        'title' => $title
+                    );
                 
-                $google_results[] = $set;
+                    $google_results[] = $set;
+                }
             }
             $ctx->stash('google_results', $google_results);
         }
