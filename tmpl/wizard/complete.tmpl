@@ -18,9 +18,9 @@
 <MT_TRANS phrase="This is a copy of your configuration settings.">
 </p>
 
-<textarea style="width: 100%; height: 300px; font-family: monospace">
+<pre>
 <TMPL_INCLUDE NAME=mt-config.tmpl>
-</textarea>
+</pre>
 
 <p>
 <input type="submit" value="<MT_TRANS phrase="Back">" onclick="document.location.href='?__mode=optional&amp;config=<TMPL_VAR NAME=CONFIG ESCAPE=HTML>&set_static_uri_to=<TMPL_VAR NAME=STATIC_URI>'; return false" />
