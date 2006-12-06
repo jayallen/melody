@@ -986,7 +986,7 @@ sub list_assets {
                 edit_blog_id => $blog_id,
             ) : ()),
             class_loop => \@class_loop,
-            can_delete_files => $app->user->is_superuser,
+            can_delete_files => ($blog ? $app->{perms}->can_edit_assets : $app->user->is_superuser),
             nav_assets => 1,
             has_expanded_mode => 1,
         },
@@ -1469,22 +1469,24 @@ sub build_page {
         $param->{can_edit_templates} = $perms->can_edit_templates;
         $param->{can_edit_authors} = $perms->can_administer_blog;
         $param->{can_edit_config} = $perms->can_edit_config;
+        $param->{can_edit_assets} = $perms->can_edit_assets;
         # FIXME: once we have edit_commenters permission
+        $param->{can_access_assets} = $param->{can_edit_entries} || $param->{can_edit_assets};
         $param->{can_edit_commenters} = $perms->can_edit_config();
         $param->{can_rebuild} = $perms->can_rebuild;
         $param->{can_edit_categories} = $perms->can_edit_categories;
         $param->{can_edit_tags} = $perms->can_edit_tags;
         $param->{can_edit_notifications} = $perms->can_edit_notifications;
         $param->{has_manage_label} =
-            $perms->can_edit_templates  || $perms->can_administer_blog ||
-            $perms->can_edit_categories || $perms->can_edit_config ||
-            $perms->can_edit_tags;
+            $param->{can_edit_templates} || $perms->can_administer_blog ||
+            $param->{can_edit_categories} || $param->{can_edit_config} ||
+            $param->{can_edit_tags};
         $param->{has_posting_label} =
-            $perms->can_post  || $perms->can_edit_all_posts ||
-            $perms->can_upload;
+            $param->{can_post} || $param->{can_edit_entries} ||
+            $param->{can_access_assets};
         $param->{has_community_label} =
-            $perms->can_post  || $perms->can_edit_config ||
-            $perms->can_edit_notifications || $perms->can_edit_all_posts;
+            $param->{can_edit_entries} || $param->{can_edit_config} ||
+            $perms->{can_edit_notifications};
         $param->{can_view_log} = $perms->can_view_blog_log;
     }
     my $blog_id = $app->param('blog_id');

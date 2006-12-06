@@ -87,6 +87,7 @@ sub blog {
         [ 32768, 'save_image_defaults', 'Save Image Defaults', 1, 'blog'],
         [ 2,     'post', 'Create Entries', 1, 'blog'],
         [ 4,     'upload', 'Upload File', 1, 'blog'],
+        [ 65536,  'edit_assets', 'Manage Assets', 1, 'blog'],
         [ 512,   'edit_categories', 'Add/Manage Categories', 1, 'blog'],
         [ 16384, 'edit_tags', 'Manage Tags', 1, 'blog'],
         [ 1024,  'edit_notifications', 'Manage Notification List', 1, 'blog'],
