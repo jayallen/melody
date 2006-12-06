@@ -1283,12 +1283,14 @@ li {
 #list-asset table th#as-file-status { width: 1%; min-width: 10px; }
 #list-asset table th#as-file-name { width: 36%; }
 #list-asset table.show-weblog th#as-file-name { width: 26%; }
-#list-asset table th#as-asset-type { width: 15%; }
+#list-asset table th#as-asset-type { width: 15%; text-align: center; }
+#list-asset table td.as-asset-type { text-align: center; }
 #list-asset table.show-weblog th#as-asset-type { width: 10%; }
 #list-asset table th#as-weblog { width: 20%; }
 #list-asset table th#as-file-size { width: 10%; text-align: right; }
 #list-asset table td.as-file-size { width: 10%; text-align: right; }
-#list-asset table th#as-created-by { width: 20%; }
+#list-asset table th#as-created-by { width: 20%; text-align: center; }
+#list-asset table td.as-created-by { text-align: center; }
 #list-asset table.show-weblog th#as-created-by { width: 15%; }
 #list-asset table th#as-created-on { width: 16%; }
 #list-asset table th#as-view { width: 1%; min-width: 10px; ;}
@@ -1304,11 +1306,11 @@ li {
     color: #3F658C;
 }
 
-#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail, 
-#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail a:link, 
-#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail a:visited, 
-#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail a:active, 
-#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_right .close_asset_detail a:hover {
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail a:link, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail a:visited, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail a:active, 
+#list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail a:hover {
     color: #999;
 }
 
@@ -1317,6 +1319,7 @@ li {
     position: relative;
     top: -45px;
 }
+
 .asset-detail-panel-inner {
     position: absolute;
     background-color: white;
@@ -1324,15 +1327,24 @@ li {
     padding: 5px;
     left: 100px;
     width: 381px;
-    height: 242px;
+    min-height: 215px;
     z-index: 5;
 }
+
+.asset-detail-title {
+    color: #93B06B;
+    line-height:1.3;
+    font-size: 16px;
+    font-weight: bold;
+}
+
 .asset-icon {
     display: block;
 }
+
 .asset_detail_left { float: left; text-align: center; margin-left: auto; margin-right: auto; width: 166px; }
 .asset_detail_right { float: right; width: 205px; }
-.close_asset_detail { font-size: 9px; color: #999; text-transform: uppercase; float: right; }
+.close_asset_detail { font-size: 9px; font-weight: normal; color: #999; text-transform: uppercase; float: right; }
 .close_asset_detail a,
 .close_asset_detail a:link,
 .close_asset_detail a:visited { text-decoration: underline; color: #999; }
@@ -1358,7 +1370,7 @@ li {
 
 .close_asset_icon { background-image: url(images/close.gif); }
 
-.metadata { width: 205px; height: 180px; overflow: auto; }
+.metadata { width: 205px; min-height: 190px; overflow: auto; }
 .metadata dl { margin-top: 0px; }
 .metadata dt { font-weight: bold; }
 .metadata dd { margin-left: 0px; }
