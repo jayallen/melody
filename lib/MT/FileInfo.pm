@@ -109,4 +109,15 @@ sub set_info_for_url {
     return $url_map;
 }
 
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+        template => 'MT::Template',
+        category => 'MT::Category',
+        entry => 'MT::Entry',
+    };
+    $parents;
+}
+
 1;

@@ -62,9 +62,15 @@ function highlightSwitch(selection) {
 </div>
 </div>
 <div class="setting">
-<div class="label"><label for="num_items"><MT_TRANS phrase="Number of Items per file">:</label></div>
+<div class="label"><label for="num_items"><MT_TRANS phrase="Number of megabytes per file">:</label></div>
 <div class="field">
-<input name="num_items" id="num_items" value="<TMPL_VAR NAME=NAME ESCAPE=HTML>" size="30" />
+<select name="size_limit" id="size_limit">
+<option value="0" selected="selected">Don't Divide</option>
+<option value="1024">1MB</option>
+<option value="2048">2MB</option>
+<option value="4096">4MB</option>
+<option value="8192">8MB</option>
+</select>
 <p><MT_TRANS phrase="How many items are in a single file."> <a href="#" onclick="return openManual('backup_restore', 'backup_num_items')" class="help">?</a></p>
 </div>
 </div>

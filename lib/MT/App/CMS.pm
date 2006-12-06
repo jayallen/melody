@@ -10852,9 +10852,9 @@ sub backup {
     my $what = $q->param('backup_what');
     return $app->errtrans("You must select what you want to backup.") if !$what;
 
-    my $number = $q->param('num_items') || 0;
-    return $app->errtrans('[_1] is not a number.', $number)
-        if $number !~ /^\d+$/;
+    my $size = $q->param('size_limit') || 0;
+    return $app->errtrans('[_1] is not a number.', $size)
+        if $size !~ /^\d+$/;
 
     my $blog_ids = $q->param('selected_blog_ids') if $what eq 'custom';
     return $app->errtrans('Choose weblogs to backup.') if $what eq 'custom' && (!defined($blog_ids) || !$blog_ids);
@@ -10905,13 +10905,13 @@ sub backup {
     my $fh;
     my $fname;
     my $arc_buf;
-    if (!($number || $num_assets)) {
+    if (!($size || $num_assets)) {
         $splitter = sub {};
 
         if ('0' eq $archive) {
             ($fh, my $filepath) = File::Temp::tempfile('xml.XXXXXXXX', DIR => $temp_dir);
             (my $vol, my $dir, $fname) = File::Spec->splitpath($filepath);
-            $printer = sub { my ($data, $message) = @_; print $fh $data; $app->print($message); };
+            $printer = sub { my ($data, $message) = @_; print $fh $data; $app->print($message); return length($data); };
             $finisher = sub { 
                 my ($asset_files) = @_;
                 close $fh;
@@ -10920,7 +10920,7 @@ sub backup {
         } elsif ('1' eq $archive) { # tar.gz
             require Archive::Tar;
             require Compress::Zlib;
-            $printer = sub { my ($data, $message) = @_; $arc_buf .= $data; $app->print($message); };
+            $printer = sub { my ($data, $message) = @_; $arc_buf .= $data; $app->print($message); return length($data); };
             $finisher = sub {
                 my ($asset_files) = @_;
                 ($fh, my $filepath) = File::Temp::tempfile('tar.XXXXXXXX', DIR => $temp_dir);
@@ -10961,7 +10961,7 @@ sub backup {
         $fh = gensym();
         open $fh, ">$filename";
         push @files, { filename => $file . "-1.xml" };
-        $printer = sub { my ($data, $message) = @_; print $fh $data; $app->print($message); };
+        $printer = sub { my ($data, $message) = @_; print $fh $data; $app->print($message); return length($data); };
         $splitter = sub {
             my ($findex) = @_;
             print $fh '</movabletype>';
@@ -11043,7 +11043,7 @@ sub backup {
     }
 
     MT::BackupRestore->backup(
-        \@blog_ids, $printer, $splitter, $finisher, $number, $enc);
+        \@blog_ids, $printer, $splitter, $finisher, $size * 1024, $enc);
 }
 
 sub backup_download {
@@ -11402,12 +11402,15 @@ sub dialog_restore_upload {
         {tag => 'MT::Tag'},
         {author => 'MT::Author'},
         {blog => 'MT::Blog'},
+        {template => 'MT::Template'},
         {role => 'MT::Role'},
         {category => 'MT::Category'},
         {asset => 'MT::Asset'},
         {entry => 'MT::Entry'},
+        {trackback => 'MT::Trackback'},
+        {comment => 'MT::Comment'},
     );
-
+ 
     $app->{no_print_body} = 1;
 
     local $| = 1;

@@ -671,11 +671,13 @@ sub children_names {
         placement => 'MT::Placement',
         permission => 'MT::Permission',
         notification => 'MT::Notification',
-        template => 'MT::Template',
         association => 'MT::Association',
-        #entry => 'MT::Entry',  ## A blog is a parent of an entry but an entry is not a child of a blog
-                                ## otherwise entries duplicate in restore operation.
-                                ## Also, <blog> must come before <entry>.
+	fileinfo => 'MT::FileInfo',
+        #template => 'MT::Template',
+        #entry => 'MT::Entry',  ## A blog is a parent of an entry/a template but 
+				## they are not a child of a blog
+                                ## otherwise they duplicate in restore operation.
+                                ## Also, <blog> must come before <entry> and <template>.
     };
     $children;
 }

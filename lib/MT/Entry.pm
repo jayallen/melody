@@ -693,25 +693,25 @@ sub children_to_xml {
         }
     }
     
-    require MT::Trackback;
-    my $tb = MT::Trackback->load({ entry_id => $obj->id });
-    if ($tb) {
-        require MT::TBPing;
-        my $offset = 0;
-        while (1) {
-            my @pings = MT::TBPing->load(
-                { tb_id => $tb->id, },
-                { offset => $offset, limit => 50, }
-            );
-            last unless @pings;
-            $offset += scalar @pings;
-            for my $ping (@pings) {
-                $xml .= $ping->to_xml($namespace, $args) . "\n" if $ping->to_backup;
-            }
-        }
-    }
+    #require MT::Trackback;
+    #my $tb = MT::Trackback->load({ entry_id => $obj->id });
+    #if ($tb) {
+    #    require MT::TBPing;
+    #    my $offset = 0;
+    #    while (1) {
+    #        my @pings = MT::TBPing->load(
+    #            { tb_id => $tb->id, },
+    #            { offset => $offset, limit => 50, }
+    #        );
+    #        last unless @pings;
+    #        $offset += scalar @pings;
+    #        for my $ping (@pings) {
+    #            $xml .= $ping->to_xml($namespace, $args) . "\n" if $ping->to_backup;
+    #        }
+    #    }
+    #}
     
-    $xml .= $obj->_entry_child_to_xml('MT::Comment', $namespace, $args);
+    $xml .= $obj->_entry_child_to_xml('MT::FileInfo', $namespace, $args);
     
     $xml;
 }
@@ -744,9 +744,8 @@ sub children_names {
     my $obj = shift;
     my $children = {
         objecttag => 'MT::ObjectTag',
-        comment => 'MT::Comment',
-        tbping => 'MT::TBPing',
         placement => 'MT::Placement',
+        fileinfo => 'MT::FileInfo',
     };
     $children;
 }

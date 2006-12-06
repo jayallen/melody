@@ -275,6 +275,7 @@ sub published_url {
 sub children_names {
     my $obj = shift;
     my $children = {
+        fileinfo => 'MT::FileInfo',
         templatemap => 'MT::TemplateMap',
     };
     $children;
