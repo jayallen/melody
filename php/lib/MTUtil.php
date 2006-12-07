@@ -1104,7 +1104,7 @@ function cat_path_to_category($path, $blog_id = 0) {
     if ($cats)
         return $cats;
     if (!$cats && $path) {
-        $cats = $mtdb->fetch_categories(array_merge($blogs, array('label' => $path, 'show_empty' => 1)));
+        $cats = $mtdb->fetch_categories(array('blog_id' => $blog_id, 'label' => $path, 'show_empty' => 1));
         if ($cats)
             return $cats;
     }

@@ -4,7 +4,9 @@ function smarty_block_MTEntriesWithSubCategories($args, $content, &$ctx, &$repea
     if (!isset($content)) {
         $cat = $args['category'];
         if (!$cat) {
-            # TBD: determine category from stash when attribute isn't given
+            $cat = $ctx->stash('category');
+            if (isset($cat))
+                $args['category'] = $cat['category_label'];
         }
         $args['include_subcategories'] = 1;
         $ctx->localize($localvars);
