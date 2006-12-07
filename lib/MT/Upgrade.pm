@@ -570,7 +570,8 @@ sub BEGIN {
 
 my $perm_role_names = {
     4096 => 'Weblog Administrator',  # administer_blog
-    30687 => 'Weblog Administrator', # 32767 - 2048(not comment) - 32(reserved) = every permissions in MT3.3
+    30687 => 'Weblog Administrator', # 32767 - 2048(not comment) - 32(reserved) = all permissions in MT3.3
+    14303 => 'Weblog Administrator', # 16383 - 2048(not comment) - 32(reserved) = all permissions in MT3.2
     2 => 'Writer', # post
     6 => 'Writer (can upload)', # post + upload
     17032 => 'Editor',  # edit_all_posts + edit_tags + edit_categories + rebuild
@@ -599,6 +600,7 @@ sub _migrate_permission_to_role {
     return unless $user->type == 1;
 
     my $role_mask = $perm->role_mask;
+    $role_mask -= 32 if (32 & $role_mask) == 32; # for permissions before 3.2
 
     # '0' permission, not used for permissions, just prefs
     return unless $role_mask;
