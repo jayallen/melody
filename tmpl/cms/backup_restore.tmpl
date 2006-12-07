@@ -21,7 +21,8 @@ function highlightSwitch(selection) {
 </script>
 <h2><span class="weblog-title-highlight"><TMPL_IF NAME=BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>:</span> <MT_TRANS phrase="Backup / Restore"></h2>
 
-<p class="page-desc"><MT_TRANS phrase="_BACKUP_RESTORE_DESCRIPTION"></p>
+<p class="page-desc"><MT_TRANS phrase="_BACKUP_RESTORE_DESCRIPTION">
+<a href="#" onclick="return openManual('backup_restore', 'backup_restore_main')" class="help">?</a></p>
 
 <div class="tabs">
 <ul>
@@ -31,8 +32,6 @@ function highlightSwitch(selection) {
 </div>
                                                                                          
 <div id="backup-panel">
-
-<p class="page-desc"><MT_TRANS phrase="_USAGE_BACKUP"></p> 
 
 <form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>">
 <input type="hidden" name="__mode" value="backup" />
@@ -56,9 +55,12 @@ function highlightSwitch(selection) {
 <div class="setting">
 <div class="label"><label><MT_TRANS phrase="Type of archive format">:</label></div>
 <div class="field">
-<p><input type="radio" id="no_archive" name="backup_archive_format" value="0"> <label for="no_archive"><MT_TRANS phrase="Don't Archive"></label>
-<input type="radio" id="tar.gz" name="backup_archive_format" value="1" checked="checked"<TMPL_UNLESS NAME=TARGZ> disabled="disabled"</TMPL_UNLESS>> <label for="tar.gz"><MT_TRANS phrase="tar.gz"></label>
-<input type="radio" id="zip" name="backup_archive_format" value="2"<TMPL_UNLESS NAME=ZIP> disabled="disabled"</TMPL_UNLESS>> <label for="zip"><MT_TRANS phrase="zip"></label></p>
+<p>
+<TMPL_IF NAME=TARGZ><input type="radio" id="tar.gz" name="backup_archive_format" value="1" checked="checked"> <label for="tar.gz"><MT_TRANS phrase="tar.gz"></label></TMPL_IF>
+<TMPL_IF NAME=ZIP><input type="radio" id="zip" name="backup_archive_format" value="2"> <label for="zip"><MT_TRANS phrase="zip"></label></TMPL_IF>
+<input type="radio" id="no_archive" name="backup_archive_format" value="0"> <label for="no_archive"><MT_TRANS phrase="Don't compress"></label>
+<a href="#" onclick="return openManual('backup_restore', 'backup_format')" class="help">?</a>
+</p>
 </div>
 </div>
 <div class="setting">
@@ -71,7 +73,7 @@ function highlightSwitch(selection) {
 <option value="4096">4MB</option>
 <option value="8192">8MB</option>
 </select>
-<p><MT_TRANS phrase="How many items are in a single file."> <a href="#" onclick="return openManual('backup_restore', 'backup_num_items')" class="help">?</a></p>
+<p><MT_TRANS phrase="Maximum file size per backup file."> <a href="#" onclick="return openManual('backup_restore', 'backup_num_size')" class="help">?</a></p>
 </div>
 </div>
 <p style="text-align: center;"><input type="submit" value="<MT_TRANS phrase="Make Backup">" title="<MT_TRANS phrase="Make Backup (b)">" accesskey="b" /></p>
@@ -80,8 +82,6 @@ function highlightSwitch(selection) {
 </form>
 </div>
 <div id="restore-panel" style="display: none;">
-
-<p class="page-desc"><MT_TRANS phrase="_USAGE_RESTORE"></p> 
 
 <form method="post" enctype="multipart/form-data" action="<TMPL_VAR NAME=SCRIPT_URL>">
 <input type="hidden" name="__mode" value="restore" />
