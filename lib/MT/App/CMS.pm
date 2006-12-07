@@ -12589,7 +12589,7 @@ is populated with hashrefs, each containing:
 
 The code to execute when running the custom rebuild option.
 
-=item label
+=item name
 
 The label to display in the list of rebuild options.
 
