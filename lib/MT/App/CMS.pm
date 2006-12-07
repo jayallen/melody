@@ -4914,6 +4914,9 @@ sub save_object {
         }
     }
 
+    return $app->errtrans('The Template Name and Output File fields are required.')
+        if $type eq 'template' && !$q->param('name') && !$q->param('outfile');
+
     if ($type eq 'author') {
         ## If we are saving an author profile, we need to do some
         ## password maintenance. First make sure that the two

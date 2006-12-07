@@ -81,6 +81,21 @@ function init()
 {
     initDirty();
 }
+
+function validate (f, rebuild) {
+    if (!f.name.value) {
+        alert('<MT_TRANS phrase="You must set the Template Name." escape="singlequotes">');
+        return false;
+    }
+    else if (!f.outfile.value) {
+        alert('<MT_TRANS phrase="You must set the template Output File." escape="singlequotes">');
+        return false;
+    }
+    else {
+        clearDirty();
+        if (rebuild) setRebuild(f);
+    }
+}
 //-->
 </script>
 
@@ -250,12 +265,12 @@ with (document) {
 </div>
 </div>
 
-<input accesskey="s" type="submit" value="<MT_TRANS phrase="Save">" title="<MT_TRANS phrase="Save this template (s)">" onclick="clearDirty()" />
+<input accesskey="s" type="submit" value="<MT_TRANS phrase="Save">" title="<MT_TRANS phrase="Save this template (s)">" onclick="return validate(this.form);" />
 <TMPL_UNLESS NAME=NEW_OBJECT>
 <TMPL_UNLESS NAME=BUILD_DYNAMIC>
 <TMPL_IF NAME=HAS_REBUILD>
 <TMPL_IF NAME=CAN_REBUILD>
-<input type="submit" value="<MT_TRANS phrase="Save and Rebuild">" accesskey="r" title="<MT_TRANS phrase="Save and rebuild this template (r)">" onclick="clearDirty();setRebuild(this.form)" /></TMPL_IF>
+<input type="submit" value="<MT_TRANS phrase="Save and Rebuild">" accesskey="r" title="<MT_TRANS phrase="Save and rebuild this template (r)">" onclick="return validate(this.form, 1);" /></TMPL_IF>
 </TMPL_IF>
 </TMPL_UNLESS>
 </TMPL_UNLESS>
