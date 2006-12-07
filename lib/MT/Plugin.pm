@@ -725,13 +725,19 @@ listings within the MT::App::CMS application. The format for this key is:
 
     app_itemset_actions => {
         'MT::App::CMS' => {   # application the action applies to
-            'type' => {
+            $type => {
                 key => 'unique_action_name',
                 label => 'Uppercase text',
                 code => \&itemset_handler
             }
         }
     }
+
+Where C<$type> should be an MT item such as 'entry', 'asset', 'ping',
+etc.
+
+Please see the full documentation of these C<type> options in the
+L<MT::App::CMS> add_itemset_action section.
 
 In the event that you need to register multiple actions for a single type,
 you can use the alternate format:
