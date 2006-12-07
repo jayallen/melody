@@ -12,6 +12,18 @@ function setExtraPath(sel) {
 //-->
 </script>
 
+<TMPL_IF NAME=MISSING_PATHS>
+<h2><span class="weblog-title-highlight"><MT_TRANS phrase="You need to configure your weblog."></span></h2>
+<MT_TRANS phrase="Before you can upload a file, you need to configure the publishing paths for your weblog. <a href="javascript:void(0);" onclick="closeDialog('[_1]');">Click here</a> to configure your weblog's publishing paths." params="<TMPL_VAR NAME=SCRIPT_URL>?__mode=cfg_archives&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>">
+
+<div class="panel-commands">
+<form onsubmit="return false" onclick="window.focus();">
+<input onclick="closeDialog()" type="button" value="<MT_TRANS phrase="Close">" />
+</form>
+</div> 
+
+<TMPL_ELSE>
+
 <form method="post" enctype="multipart/form-data" action="<TMPL_VAR NAME=SCRIPT_URL>">
 <input type="hidden" name="__mode" value="upload_file" />
 <input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>" />
@@ -63,5 +75,6 @@ function setExtraPath(sel) {
 
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 </form>
+</TMPL_IF>
 
 <TMPL_INCLUDE NAME="footer-dialog.tmpl">

@@ -9127,6 +9127,7 @@ sub start_upload {
     push @extra_paths, { path => $date_stamp, label => '<' . $app->translate($label_path) . '>' . '/' . $date_stamp };
     $param{extra_paths} = \@extra_paths;
     $param{refocus} = 1;
+    $param{missing_paths} = -d $blog->site_path || -d $blog->archive_path ? 0 : 1;
     $app->build_page('upload.tmpl', \%param);
 }
 
@@ -9175,6 +9176,9 @@ sub upload_file {
     } else {
         $root_path = $blog->archive_path;
     }
+    return $app->error($app->translate(
+        "Before you can upload a file, you need to configure the publishing paths for your weblog."
+    )) unless $root_path;
     $relative_path = $q->param('extra_path');
     $middle_path = $q->param('middle_path') || '';
     my $relative_path_save = $relative_path;
