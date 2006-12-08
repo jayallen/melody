@@ -1,0 +1,288 @@
+<TMPL_INCLUDE NAME="header-dialog.tmpl">
+
+<div id="list-asset">
+
+<script type="text/javascript">
+<!--
+var assets = {};
+<TMPL_LOOP NAME=OBJECT_LOOP>
+assets[<TMPL_VAR NAME=ID>] = <TMPL_VAR NAME=METADATA_JSON>;
+</TMPL_LOOP>
+
+function displayAssetDetails(id) {
+    /* display popup panel showing details of selected asset */
+    var detail = getByID("asset-" + id + "-detail");
+    var detail_inner = getByID("asset-" + id + "-detail-inner");
+    var asset = assets[id];
+    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><MT_TRANS phrase="Close"></a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
+    var preview;
+    if (asset.thumbnail_url) {
+        preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
+    } else {
+        ext = asset.ext;
+        var icons = ("doc,eps,fla,gif,jpg,mp3,mpg,pdf,png,ppt,psd,txt,xls,zip");
+        var icon_array = icons.split(",");
+        for (var loop=0; loop < icon_array.length; loop++) {
+            if (ext == icon_array[loop]){
+                asset.ext = ext;
+                break;
+            } else {
+                asset.ext = "default";
+            }
+        }
+        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><div class=\"asset-icon-" + asset.ext + "\"><img src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"90\" height=\"96\"></div></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\" target=\"view_uploaded\"><MT_TRANS phrase="Click to see uploaded file."></a>";
+    }
+    var metadata = '';
+    var meta_names = [];
+    var meta_name;
+    for (meta_name in asset) {
+        if (meta_name.match(/^[a-z_]/)) continue;
+        if (!asset[meta_name]) continue;
+        meta_names[meta_names.length] = meta_name;
+    }
+    meta_names.sort();
+    var i;
+    for (i = 0; i < meta_names.length; i++) {
+        meta_name = meta_names[i];
+        metadata += '<dt>' + meta_name + ":</dt> <dd>" + asset[meta_name] + "</dd>";
+    }
+    iam = asset.name;
+    detail_inner.innerHTML = "<div class=\"close_asset_detail\">" + close_link + " " + close_icon + "</div>"
+        + "<div class=\"asset-detail-title\">" + iam + "</div>"
+        + "<div class=\"asset_detail_left\">" + preview + "</div>"
+//    detail_inner.innerHTML = "<div class=\"asset_detail_left\">" + preview + "</div>"
+        + "<div class=\"asset_detail_right\">"
+//        + "<div class=\"close_asset_detail\">" + close_link + " " + close_icon + "</div>"
+//        + "<h2><span class=\"weblog-title-highlight\">" + iam + "</span></h2>"
+        + "<div class=\"metadata\"><dl>" + metadata + "</dl></div>"
+        + "</div>";
+    show("asset-" + id + "-detail");
+    return false;
+}
+
+function enableFilterButton() {
+    getByID("filter-button").style.display = "inline";
+}
+
+function toggleFilter() {
+    var filterActive = getByID("filter-active");
+    if (filterActive.style.display == "none") {
+        filterActive.style.display = "block";
+        getByID("filter-select").style.display = "none";
+    } else {
+        filterActive.style.display = "none";
+        getByID("filter-select").style.display = "block";
+    }
+}
+
+function setFilterCol(choice) {
+    var sel = getByID('filter-select');
+    if (!sel) return;
+    sel.className = "filter-" + choice;
+    if (choice == 'none')
+        getByID('filter-mode').selectedIndex = 0;
+    else {
+        getByID('filter-mode').selectedIndex = 1;
+        var fld = getByID('filter-col');
+        if (choice == 'class')
+            fld.selectedIndex = 0;
+        else if (choice == 'exacttag')
+            fld.selectedIndex = 1;
+        else if (choice == 'normalizedtag')
+            fld.selectedIndex = 2;
+        col_span = getByID("filter-text-col");
+        if (fld.selectedIndex > -1 && col_span)
+            col_span.innerHTML = '<strong>' +
+                fld.options[fld.selectedIndex].text + '</strong>';
+    }
+}
+
+var tableSelect;
+function init() {
+	// setup
+	tableSelect = new TC.TableSelect( "selector" );
+	tableSelect.rowSelect = true;
+
+	setFilterCol(<TMPL_IF NAME=FILTER>'<TMPL_VAR NAME=FILTER>'<TMPL_ELSE>'none'</TMPL_IF>);<TMPL_IF NAME=FILTER>
+	setFilterVal('<TMPL_VAR NAME=FILTER_VAL>');
+</TMPL_IF>
+}
+TC.attachLoadEvent( init );
+// -->
+</script>
+
+<h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>: </span> <MT_TRANS phrase="Assets"></h2>
+
+<p class="page-desc"><MT_TRANS phrase="TBD"></p>
+
+<div class="tabs">
+<ul>
+<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>"><MT_TRANS phrase="Assets"></a></li>
+<TMPL_IF NAME=EDIT_BLOG_ID>
+<TMPL_IF NAME=CAN_UPLOAD>
+<li class="special">
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New File">" width="9" height="9" />
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=start_upload&__type=asset&blog_id=<TMPL_VAR NAME=BLOG_ID>&dialog_view=1&return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New File"></a>
+</li>
+</TMPL_IF>
+</TMPL_IF>
+</ul>
+</div>
+
+<div class="list-filters">
+<div class="inner">
+
+<div id="filter-active">
+
+<div class="rightcol">
+<TMPL_UNLESS NAME=FILTER>
+<MT_TRANS phrase="Quickfilter:"> <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&dialog_view=1<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>&amp;filter=class&amp;filter_val=image"><MT_TRANS phrase="Show images."></a>
+<TMPL_ELSE>
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&dialog_view=1<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>"><MT_TRANS phrase="Reset"></a>
+</TMPL_UNLESS>
+</div>
+
+<strong><MT_TRANS phrase="Filter">:</strong>
+
+<TMPL_UNLESS NAME=FILTER>
+<a href="javascript:void(0)" onclick="toggleFilter()"><MT_TRANS phrase="None."></a> <span class="hint"><MT_TRANS phrase="(Showing all assets.)"></span>
+<TMPL_ELSE>
+<a href="javascript:void(0)" onclick="toggleFilter()"><MT_TRANS phrase="Showing only assets where [_1] is [_2]." params='<span id="filter-text-col">&nbsp;</span>%%<span id="filter-text-val"></span>'></a>
+</TMPL_UNLESS>
+
+</div>
+
+<form id="filter-form" method="get" action="<TMPL_VAR NAME=MT_URL>">
+<input type="hidden" name="__mode" value="list_assets" />
+<TMPL_IF NAME=EDIT_BLOG_ID>
+<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=EDIT_BLOG_ID>" />
+</TMPL_IF>
+<input id="filter" type="hidden" name="filter" value="" />
+<input id="filter_val" type="hidden" name="filter_val" value="" />
+</form>
+
+<form id="filter-select" method="get" action="<TMPL_VAR NAME=MT_URL>" onsubmit="return execFilter(this)" style="display: none">
+<MT_TRANS phrase="Show">
+<select id="filter-mode" name="mode" onchange="if (this.options[this.selectedIndex].value == 'all') { setFilterCol('none') } else { setFilterCol('class') } enableFilterButton()">
+<option value="all"><MT_TRANS phrase="all"></option>
+<option value="only"><MT_TRANS phrase="only"></option>
+</select>
+<span id="filter-mode-all" style="display: none">
+<MT_TRANS phrase="assets.">
+</span>
+<span id="filter-mode-only" style="display: none">
+<MT_TRANS phrase="assets where">
+<select id="filter-col" name="filter" onchange="setFilterCol(this.options[this.selectedIndex].value);enableFilterButton()">
+<option value="class"><MT_TRANS phrase="type"></option>
+<option value="exacttag"><MT_TRANS phrase="tag (exact match)"></option>
+<option value="normalizedtag"><MT_TRANS phrase="tag (fuzzy match)"></option>
+</select>
+<MT_TRANS phrase="is">
+<span id="filter-class" style="display: none">
+<select id="class-val" name="filter_val" onchange="enableFilterButton()">
+<TMPL_LOOP NAME=CLASS_LOOP>
+<option value="<TMPL_VAR NAME=CLASS_ID>"><TMPL_VAR NAME=CLASS_LABEL ESCAPE=HTML></option>
+</TMPL_LOOP>
+</select>
+</span>
+<span id="filter-exacttag" style="display: none">
+<input type="text" id="exacttag-val" name="filter_val" value="<TMPL_IF NAME=FILTER_COL_EXACTTAG><TMPL_VAR NAME=FILTER_VAL ESCAPE=HTML></TMPL_IF><TMPL_IF NAME=FILTER_COL_NORMALIZEDTAG><TMPL_VAR NAME=FILTER_VAL ESCAPE=HTML></TMPL_IF>" onchange="enableFilterButton()" onkeypress="enableFilterButton()" />
+</span>
+<span id="filter-normalizedtag" style="display: none">
+<input type="text" id="normalizedtag-val" name="filter_val" value="<TMPL_IF NAME=FILTER_COL_EXACTTAG><TMPL_VAR NAME=FILTER_VAL ESCAPE=HTML></TMPL_IF><TMPL_IF NAME=FILTER_COL_NORMALIZEDTAG><TMPL_VAR NAME=FILTER_VAL ESCAPE=HTML></TMPL_IF>" onchange="enableFilterButton()" onkeypress="enableFilterButton()" />
+</span>
+<MT_TRANS phrase=".">
+</span>
+&nbsp;
+
+<input type="submit" value="<MT_TRANS phrase="Filter">" id="filter-button" style="display: none" />
+<input type="button" value="<MT_TRANS phrase="Cancel">" onclick="toggleFilter()" />
+
+</form>
+</div>
+</div>
+
+<div class="list-wrapper">
+<TMPL_IF NAME=OBJECT_LOOP>
+<form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return this['__mode'] ? true : false">
+<input type="hidden" name="__mode" value="" />
+<input type="hidden" name="_type" value="asset" /><TMPL_IF NAME=EDIT_BLOG_ID>
+<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=EDIT_BLOG_ID>" />
+</TMPL_IF>
+<input type="hidden" name="filter_args" value="<TMPL_VAR NAME=FILTER_ARGS>" />
+<input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
+<input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
+<input type="hidden" name="dialog_view" value="1" />
+
+<div class="list" id="selector">
+<table cellspacing="0" class="<TMPL_UNLESS NAME=EDIT_BLOG_ID>show-weblog </TMPL_UNLESS><TMPL_IF NAME=VIEW_EXPANDED>expanded<TMPL_ELSE>compact</TMPL_IF>">
+
+<thead>
+<tr>
+<th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+<th id="as-file-status"><img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/flag.gif" alt="<MT_TRANS phrase="Status">" title="<MT_TRANS phrase="Status">" width="9" height="9" /></th>
+<th id="as-file-name"><MT_TRANS phrase="Filename"></th>
+<th id="as-asset-type"><MT_TRANS phrase="Type"></th>
+<TMPL_UNLESS NAME=EDIT_BLOG_ID>
+<th id="as-weblog"><MT_TRANS phrase="Weblog"></th>
+</TMPL_UNLESS>
+<th id="as-file-size"><MT_TRANS phrase="Size"></th>
+<th id="as-created-by"><MT_TRANS phrase="Created By"></th>
+<th id="as-created-on"><MT_TRANS phrase="Created On"></th>
+<th id="as-view">&nbsp;</th>
+</tr>
+</thead>
+<tbody>
+
+
+<TMPL_LOOP NAME=OBJECT_LOOP>
+<tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
+<td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
+<td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /</td>
+<td><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="return displayAssetDetails('<TMPL_VAR NAME=ID>');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner" class="asset-detail-panel-inner"></div></div></td>
+<td class="as-asset-type"><TMPL_VAR NAME=ASSET_CLASS ESCAPE=HTML></td>
+<TMPL_UNLESS NAME=EDIT_BLOG_ID>
+<td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
+</TMPL_UNLESS>
+<TMPL_IF NAME=FILE_SIZE_FORMATTED>
+<td class="as-file-size"><span title="<TMPL_VAR NAME=FILE_SIZE>"><TMPL_VAR NAME=FILE_SIZE_FORMATTED></td>
+<TMPL_ELSE>
+<td class="as-file-size"><TMPL_VAR NAME=FILE_SIZE></td>
+</TMPL_IF>
+<td class="as-created-by"><TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF></td>
+<td><span title="<TMPL_VAR NAME=CREATED_ON_FORMATTED>"><TMPL_IF NAME=CREATED_ON_RELATIVE><TMPL_IF NAME=DATES_RELATIVE><TMPL_VAR NAME=CREATED_ON_RELATIVE><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED></TMPL_IF><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED></TMPL_IF></span></td>
+<td class="status-view"><TMPL_IF NAME=URL><a href="<TMPL_VAR NAME=URL>" target="view_uploaded" title="<MT_TRANS phrase="View File">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="View File">" width="13" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+</tr>
+</TMPL_LOOP>
+
+</tbody>
+</table>
+</div>
+
+<TMPL_IF NAME=POSITION_ACTIONS_BOTTOM>
+<div class="list-actions-footer">
+<TMPL_INCLUDE NAME=asset_actions.tmpl>
+</div>
+</TMPL_IF>
+
+<div class="insert_button_spacing">&nbsp;</div>
+<div class="panel-commands">
+    <input onclick="closeDialog()" type="button" value="<MT_TRANS phrase="Cancel">" />
+    <input type="submit" value="<MT_TRANS phrase="Insert">" />
+</div>
+
+</form>
+
+<TMPL_INCLUDE NAME=pager.tmpl>
+
+
+<TMPL_ELSE>
+<br /><h4 class="message"><MT_TRANS phrase="No assets could be found."></h4>
+</TMPL_IF>
+
+</div>
+
+</div>
+
+<TMPL_INCLUDE NAME="footer-dialog.tmpl">
