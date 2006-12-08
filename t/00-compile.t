@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 'lib';
-use Test::More tests => 82;
+use Test::More tests => 85;
 use_ok 'MT';
 use_ok 'MT::App';
 use_ok 'MT::App::ActivityFeeds';
@@ -86,3 +86,6 @@ use_ok 'MT::Util';
 use_ok 'MT::WeblogPublisher';
 use_ok 'MT::XMLRPC';
 use_ok 'MT::XMLRPCServer';
+use_ok 'MT::Asset';
+use_ok 'MT::Association';
+use_ok 'MT::Role';
