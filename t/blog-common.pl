@@ -214,29 +214,21 @@ And it\'s a hard, it\'s a hard, it\'s a hard, it\'s a hard,
 It\'s a hard rain\'s a-gonna fall');
 
 require MT::Category;
-my $cat = MT::Category->load({ label => 'foo', blog_id => 1});
-if (!$cat) {
-    $cat = new MT::Category;
-    $cat->blog_id(1);
-    $cat->label('foo');
-    $cat->description('bar');
-    $cat->author_id($chuckd->id);
-    $cat->parent(0);
-    $cat->id(1);
-    $cat->save or die "Couldn't save category record 1: ". $cat->errstr;
-}
+my $cat = new MT::Category;
+$cat->blog_id(1);
+$cat->label('foo');
+$cat->description('bar');
+$cat->author_id($chuckd->id);
+$cat->parent(0);
+$cat->save or die "Couldn't save category record 1: ". $cat->errstr;
 
-$cat = MT::Category->load({ label => 'bar', blog_id => 1});
-if (!$cat) {
-    $cat = new MT::Category;
-    $cat->blog_id(1);
-    $cat->label('bar');
-    $cat->description('foo');
-    $cat->author_id($chuckd->id);
-    $cat->parent(0);
-    $cat->id(2);
-    $cat->save or die "Couldn't save category record 2: ". $cat->errstr;
-}
+$cat = new MT::Category;
+$cat->blog_id(1);
+$cat->label('bar');
+$cat->description('foo');
+$cat->author_id($chuckd->id);
+$cat->parent(0);
+$cat->save or die "Couldn't save category record 2: ". $cat->errstr;
 
 $tb = MT::Trackback->load(2);
 if (!$tb) {
@@ -250,17 +242,13 @@ if (!$tb) {
     $tb->save or die "Couldn't save Trackback record 2: " . $tb->errstr;;
 }
 
-$cat = MT::Category->load({ label => 'subfoo', blog_id => 1});
-if (!$cat) {
-    $cat = new MT::Category;
-    $cat->blog_id(1);
-    $cat->label('subfoo');
-    $cat->description('subcat');
-    $cat->author_id($bobd->id);
-    $cat->parent(1);
-    $cat->id(3);
-    $cat->save or die "Couldn't save category record 3: ". $cat->errstr;
-}
+$cat = new MT::Category;
+$cat->blog_id(1);
+$cat->label('subfoo');
+$cat->description('subcat');
+$cat->author_id($bobd->id);
+$cat->parent(1);
+$cat->save or die "Couldn't save category record 3: ". $cat->errstr;
 
 require MT::Placement;
 foreach my $i (1..@verses) {

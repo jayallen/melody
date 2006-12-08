@@ -20,24 +20,27 @@ require MT::Category;
 my $cat_cache = MT::Category->cache(blog_id => 1);
 ok($cat_cache);
 
+# make sure order is consistent
+@$cat_cache = sort { $a->[1] cmp $b->[1] } @$cat_cache;
+
 # check one of the elements
-ok($cat_cache->[0][0] eq '1');
-ok($cat_cache->[0][1] eq 'foo');
-ok($cat_cache->[0][2] eq '0');
+ok($cat_cache->[0][0], '2');
+ok($cat_cache->[0][1], 'bar');
+ok($cat_cache->[0][2], '0');
 
 require MT::Tag;
 my $tag_cache = MT::Tag->cache(blog_id => 1, class => 'MT::Entry');
 ok($tag_cache);
 
-ok($tag_cache->{grandpa} == 1);
-ok($tag_cache->{verse} == 5);
+ok($tag_cache->{grandpa}, 1);
+ok($tag_cache->{verse}, MT::Object->driver->can('count_group_by') ? 5 : 1);
 
 my $entry = MT::Entry->load(1);
 $entry->tags($entry->get_tags(), 'newtag');
 $entry->save;
 
 $tag_cache = MT::Tag->cache(blog_id => 1, class => 'MT::Entry');
-ok($tag_cache->{newtag} == 1);
+ok($tag_cache->{newtag}, 1);
 
 my $cat = new MT::Category;
 $cat->label("New category");
