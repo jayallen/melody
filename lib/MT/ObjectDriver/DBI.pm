@@ -331,18 +331,6 @@ sub insert {
     1;
 }
 
-sub _static_update {
-    my $driver = shift;
-    my $pkg = shift;
-    my ($val, $terms, $args) = @_;
-    my $iter = $driver->load_iter($pkg, $terms, $args) or return;
-    while (my $obj = $iter->()) {
-        $obj->set_values($val);
-        $obj->update or return $driver->error($obj->errstr);
-    }
-    1;
-}
-
 sub update {
     my $driver = shift;
     my($obj, $original) = @_;
@@ -390,20 +378,6 @@ sub update {
         or return $driver->error(MT->translate("Update failed on SQL error [_1]", $dbh->errstr));
     $sth->finish;
     $driver->run_callbacks($class . '::post_update', $obj, $original);
-    1;
-}
-
-sub _static_remove {
-    my $driver = shift;
-    my $pkg = shift;
-    my ($terms, $args) = @_;
-    my $iter = $driver->load_iter($pkg, $terms, $args)
-        or return 1;
-    while (my $obj = $iter->()) {
-        $obj->remove
-            or return $iter->('finish'),
-            $driver->error($obj->errstr);
-    }
     1;
 }
 
@@ -513,7 +487,7 @@ sub build_sql {
                     }
                 }
             }
-            push @terms, "($term)";
+            push @terms, "($term)" if $term;
         }
     }
     if (my $sv = $args->{start_val}) {

@@ -68,6 +68,32 @@ sub init {
     $driver;
 }
 
+# A non-locking load_iter for SQLite
+sub load_iter {
+    my $driver = shift;
+    $driver->run_callbacks($_[0] . '::pre_load', \@_);
+    my($class, $terms, $args) = @_;
+    my($tbl, $sql, $bind) =
+        $driver->_prepare_from_where($class, $terms, $args);
+    my $tmp = "select ";
+    $tmp .= "distinct " if $args->{join} && $args->{join}[3]{unique};
+    $tmp .= "${tbl}_id\n";
+    $sql = $tmp . $sql;
+    my $dbh = $driver->{dbh};
+    warn "load_iter - Preparing SQL: $sql" if $MT::DebugMode & 4;
+    my $ids = $dbh->selectcol_arrayref($sql, undef, @$bind)
+        or return $driver->error($dbh->errstr);
+    sub {
+        if ((@_ && ($_[0] eq 'finish')) || !@$ids) {
+            $ids = [];
+            return;
+        }
+        my $id = shift @$ids;
+        my $obj = $class->load($id);
+        $obj;
+    }
+}
+
 sub _prepare_from_where {
     my $driver = shift;
     my($class, $terms, $args) = @_;
@@ -160,7 +186,8 @@ sub column_defs {
     my $dbh = $driver->{dbh};
     return undef unless $dbh;
 
-    my $sth = $dbh->prepare('select * from mt_' . $ds) or return undef;
+    my $sth = $dbh->prepare('select * from mt_' . $ds . ' limit 1')
+        or return undef;
     $sth->execute or return undef;
     my $fields = $sth->{'NUM_OF_FIELDS'};
     my $coltypes = $sth->{'TYPE'};
@@ -254,26 +281,6 @@ sub _cast_column {
     my ($class, $name) = @_;
     my $ds = $class->properties->{datasource};
     return "${ds}_$name";
-}
-
-sub _static_remove {
-    my $driver = shift;
-    my $pkg = shift;
-    my ($terms, $args) = @_;
-    my $iter = $driver->load_iter($pkg, $terms, $args)
-        or return 1;
-    my @ids;
-    while (my $obj = $iter->()) {
-        push @ids, $obj->id;
-    }
-    ## The iterator is finished, so we can safely remove.
-    for my $id (@ids) {
-        my $obj = $driver->load($pkg, $id);
-        $obj->remove
-            or return $iter->('finish'),
-            $driver->error($obj->errstr);
-    }
-    1;
 }
 
 1;

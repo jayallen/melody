@@ -32,10 +32,38 @@ sub init {
 sub cfg { $_[0]->{cfg} }
 
 sub load;
+sub load_iter;
 sub exists;
 sub save;
+sub remove;
 sub clear_cache {}
 sub configure {}
+
+sub _static_update {
+    my $driver = shift;
+    my $pkg = shift;
+    my ($val, $terms, $args) = @_;
+    my $iter = $driver->load_iter($pkg, $terms, $args) or return;
+    while (my $obj = $iter->()) {
+        $obj->set_values($val);
+        $obj->update or return $driver->error($obj->errstr);
+    }
+    1;
+}
+
+sub _static_remove {
+    my $driver = shift;
+    my $pkg = shift;
+    my ($terms, $args) = @_;
+    my $iter = $driver->load_iter($pkg, $terms, $args)
+        or return 1;
+    while (my $obj = $iter->()) {
+        $obj->remove
+            or return $iter->('finish'),
+            $driver->error($obj->errstr);
+    }
+    1;
+}
 
 sub join_on {
     my $driver = shift;

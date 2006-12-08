@@ -538,18 +538,17 @@ sub load_iter {
     my @ids = $driver->_get_ids($DB, $db, $class, $terms, $args);
     return $driver->error($driver->errstr())
         if (!defined($ids[0])) && ($#ids == 0);
+    undef $DB;
+    untie %$db;
+    $unlock->();
+
     my $idx = 0;
     sub {
         if ((@_ && ($_[0] eq 'finish')) || ($idx > $#ids)) {
-            undef $DB;
-            untie %$db;
-            $unlock->();
+            @ids = ();
             return;
         }
-        my $rec = $db->{ $ids[$idx++] } or return;
-        $rec = $driver->{serializer}->unserialize($rec);
-        my $obj = $class->new;
-        $obj->set_values($$rec);
+        my $obj = $class->load( $ids[$idx++] );
         $driver->run_callbacks($class . '::post_load', \@_, $obj);
         $obj;
     };
@@ -776,6 +775,8 @@ sub rebuild_index_for_item {
 sub remove {
     my $driver = shift;
     my($obj) = @_;
+    return $driver->_static_remove(@_) unless ref $obj;
+
     $driver->run_callbacks((ref $obj) . "::pre_remove", @_);
     my $id = $obj->id;
     return unless $id;
