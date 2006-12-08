@@ -979,11 +979,13 @@ sub list_assets {
         Args => \%args,
         Type => 'asset',
         Code => $hasher,
+        Template => $app->param('dialog_view') ? 'dialog_list_assets.tmpl' : '',
         Params => {
             ($blog ? (
                 blog_id => $blog_id,
                 blog_name => $blog->name,
                 edit_blog_id => $blog_id,
+                dialog_view => $app->param('dialog_view') ? 1 : 0,
             ) : ()),
             class_loop => \@class_loop,
             can_delete_files => ($blog ? $app->{perms}->can_edit_assets : $app->user->is_superuser),
