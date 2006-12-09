@@ -822,12 +822,12 @@ sub publish_future_posts {
                 $mt->rebuild_indexes( Blog => $blog )
                     or die $mt->errstr;
             };
-            if ($@) {
+            if (my $err = $@) {
                 # a fatal error occured while processing the rebuild
                 # step. LOG the error and revert the entry/entries:
                 require MT::Log;
                 $mt->log({
-                    message => $mt->translate("An error occurred while rebuilding to publish scheduled posts: [_1]", $@),
+                    message => $mt->translate("An error occurred while rebuilding to publish scheduled posts: [_1]", $err),
                     class => "system",
                     blog_id => $blog->id,
                     level => MT::Log::ERROR()
