@@ -587,6 +587,9 @@ my $perm_role_names = {
     8192 => 'Monitor', # view_blog_log
 };
 
+{
+    my $full_perm_mask = 0;
+
 sub _migrate_permission_to_role {
     my $perm = shift;
 
@@ -601,6 +604,18 @@ sub _migrate_permission_to_role {
 
     my $role_mask = $perm->role_mask;
     $role_mask -= 32 if (32 & $role_mask) == 32; # for permissions before 3.2
+
+    if (!$full_perm_mask) {
+        # only consider blog permissions that are supported (exclude
+        # now reserved permission bits like 32).
+        my $perms = MT::Permission->perms('blog');
+        foreach my $p (@$perms) {
+            next if $p->[1] =~ m/^not_/; # skip exclusion permissions
+            $full_perm_mask |= $p->[0];
+        }
+    }
+
+    $role_mask = $full_perm_mask & $role_mask;
 
     # '0' permission, not used for permissions, just prefs
     return unless $role_mask;
@@ -624,6 +639,7 @@ sub _migrate_permission_to_role {
     }
     my $blog = MT::Blog->load($perm->blog_id);
     $user->add_role($role, $blog) if $blog;
+}
 }
 
 sub register_class {
