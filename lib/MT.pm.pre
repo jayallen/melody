@@ -849,7 +849,7 @@ sub ping_and_save {
     my $mt = shift;
     my %param = @_;
     if (my $entry = $param{Entry}) {
-        my $results = $mt->ping(@_) or return;
+        my $results = MT::ping($mt, @_) or return;
         my %still_ping;
         my $pinged = $entry->pinged_url_list;
         for my $res (@$results) {
