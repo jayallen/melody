@@ -9,6 +9,14 @@ var assets = {};
 assets[<TMPL_VAR NAME=ID>] = <TMPL_VAR NAME=METADATA_JSON>;
 </TMPL_LOOP>
 
+function validate (f) {
+    var x = undefined;
+    for (var i = 0; i < f.id.length; i++) {
+        if (f.id[i].checked) f.__mode.value = 'asset_insert';
+    }
+    return f['__mode'] ? true : false;
+}
+
 function displayAssetDetails(id) {
     /* display popup panel showing details of selected asset */
     var detail = getByID("asset-" + id + "-detail");
@@ -114,11 +122,8 @@ TC.attachLoadEvent( init );
 
 <h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>: </span> <MT_TRANS phrase="Assets"></h2>
 
-<p class="page-desc"><MT_TRANS phrase="TBD"></p>
-
 <div class="tabs">
 <ul>
-<li class="yah"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets<TMPL_IF NAME=EDIT_BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=EDIT_BLOG_ID></TMPL_IF>"><MT_TRANS phrase="Assets"></a></li>
 <TMPL_IF NAME=EDIT_BLOG_ID>
 <TMPL_IF NAME=CAN_UPLOAD>
 <li class="special">
@@ -205,22 +210,23 @@ TC.attachLoadEvent( init );
 
 <div class="list-wrapper">
 <TMPL_IF NAME=OBJECT_LOOP>
-<form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return this['__mode'] ? true : false">
+<form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return validate(this)">
 <input type="hidden" name="__mode" value="" />
-<input type="hidden" name="_type" value="asset" /><TMPL_IF NAME=EDIT_BLOG_ID>
-<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=EDIT_BLOG_ID>" />
-</TMPL_IF>
+<input type="hidden" name="_type" value="asset" />
 <input type="hidden" name="filter_args" value="<TMPL_VAR NAME=FILTER_ARGS>" />
 <input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 <input type="hidden" name="dialog_view" value="1" />
+<TMPL_IF NAME=EDIT_BLOG_ID>
+<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=EDIT_BLOG_ID>" />
+</TMPL_IF>
 
 <div class="list" id="selector">
 <table cellspacing="0" class="<TMPL_UNLESS NAME=EDIT_BLOG_ID>show-weblog </TMPL_UNLESS><TMPL_IF NAME=VIEW_EXPANDED>expanded<TMPL_ELSE>compact</TMPL_IF>">
 
 <thead>
 <tr>
-<th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+<th class=""></th>
 <th id="as-file-status"><img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/flag.gif" alt="<MT_TRANS phrase="Status">" title="<MT_TRANS phrase="Status">" width="9" height="9" /></th>
 <th id="as-file-name"><MT_TRANS phrase="Filename"></th>
 <th id="as-asset-type"><MT_TRANS phrase="Type"></th>
@@ -238,7 +244,7 @@ TC.attachLoadEvent( init );
 
 <TMPL_LOOP NAME=OBJECT_LOOP>
 <tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
-<td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
+<td class="cb"><input type="radio" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
 <td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /</td>
 <td><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="return displayAssetDetails('<TMPL_VAR NAME=ID>');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner" class="asset-detail-panel-inner"></div></div></td>
 <td class="as-asset-type"><TMPL_VAR NAME=ASSET_CLASS ESCAPE=HTML></td>

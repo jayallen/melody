@@ -99,6 +99,13 @@ sub thumbnail_file {
     return $thumbnail;
 }
 
+sub as_html {
+    my $self = shift;
+    my %args = @_;
+    return sprintf '<img src="%s" height="%d" width="%d" alt="%s" class="%s" />',
+        $self->url, $self->image_height, $self->image_width, $self->file_name, $args{class};
+}
+
 1;
 
 __END__
@@ -140,8 +147,13 @@ Creates or retrieves the file path to a thumbnail image appropriate for
 the asset. If a thumbnail cannot be created, this routine will return
 undef.
 
-=head1 AUTHORS & COPYRIGHT
+=head2 $asset->as_html
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Return the HTML I<IMG> element with the image asset attributes.
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see the L<MT/"AUTHOR & COPYRIGHT"> for author, copyright, and
+license information.
 
 =cut

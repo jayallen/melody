@@ -1,0 +1,8 @@
+<TMPL_INCLUDE NAME=header-dialog.tmpl>
+<script type="text/javascript">
+var win = window.parent.document;
+var str = getByID('text', win);
+setSelection(str, '<TMPL_VAR NAME=ASSET_HTML>');
+closeDialog();
+</script>
+<TMPL_INCLUDE NAME=footer-dialog.tmpl>

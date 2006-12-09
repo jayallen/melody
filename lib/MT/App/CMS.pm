@@ -152,6 +152,7 @@ sub init {
         'restore_upload_manifest' => \&restore_upload_manifest,
         'dialog_restore_upload' => \&dialog_restore_upload,
         'restore_premature_cancel' => \&restore_premature_cancel,
+        'asset_insert' => \&asset_insert,
     );
     $app->{state_params} = [
         '_type', 'id', 'tab', 'offset', 'filter',
@@ -993,6 +994,20 @@ sub list_assets {
             has_expanded_mode => 1,
         },
     });
+}
+
+sub asset_insert {
+    my $app = shift;
+    my $asset = $app->param('id');
+    require MT::Asset;
+    $asset = MT::Asset->load($asset) ||
+        return $app->errtrans("Can't load asset, $asset.");
+    my $param = {
+        asset_html => $asset->as_html,
+        class => $app->param('class'),
+        magic_token => $app->param('magic_token'),
+    };
+    $app->build_page('asset_insert.tmpl', $param);
 }
 
 sub list_roles {
@@ -12069,6 +12084,11 @@ Applies a set of tags to one or more entries.
 
 Approves a comment or trackback for publication.
 
+=item * asset_insert
+
+Load an asset, given the I<asset id>, construct an appropriate
+parameter list and render the I<asset_insert> template.
+
 =item * ban_commenter
 
 Bans a commenter for a particular blog.
@@ -12221,6 +12241,10 @@ Ajax-style handler for testing whether a particular tag name exists or not.
 =item * js_tag_list
 
 Ajax-style handler for returning the tags that exist on a particular blog.
+
+=item * list_assets
+
+Handler for displaying a list of blog-level assets.
 
 =item * list_associations
 
