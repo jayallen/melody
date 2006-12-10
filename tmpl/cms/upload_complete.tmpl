@@ -4,20 +4,26 @@
 <!--
 
 function doClick (f, mode) {
+<TMPL_IF NAME=ENTRY_INSERT>
+    doHandleMode(f, mode, 'asset_insert');
+<TMPL_ELSE>
 <TMPL_IF NAME=CAN_POST>
     if (f.new_entry.checked) {
         doHandleMode(f, mode, 'start_upload_entry');
-   } else if (!f.new_entry.checked) { 
-        doHandleMode(f, mode, 'list_assets');
-   } else {
-</TMPL_IF>
-        doHandleMode(f, mode, 'list_assets');
-<TMPL_IF NAME=CAN_POST>
     }
+    else {
+        doHandleMode(f, mode, 'list_assets');
+    }
+<TMPL_ELSE>
+    doHandleMode(f, mode, 'list_assets');
+</TMPL_IF>
 </TMPL_IF>
 }
 
 function doHandleMode (f, mode, type) {
+if (type == 'asset_insert') {
+alert('This feature not yet ready for prime time...');return false;
+}
     var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=' + type;
     url += '&blog_id=<TMPL_VAR NAME=BLOG_ID>&url=<TMPL_VAR NAME=URL ESCAPE=URL>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>';
     url += mode;
@@ -114,6 +120,7 @@ function adjustWidthHeight (f, width) {
 </script>
 
 <form action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return false;">
+<input type="hidden" name="id" value="<TMPL_VAR NAME=ASSET_ID>" />
 <TMPL_IF NAME=DO_THUMB>
 <input type="hidden" name="full_width" value="<TMPL_VAR NAME=WIDTH>" />
 <input type="hidden" name="full_height" value="<TMPL_VAR NAME=HEIGHT>" />
@@ -129,15 +136,19 @@ function adjustWidthHeight (f, width) {
 
 <div class="selector list">
     <div class="upload-data-wrapper">
+    <TMPL_UNLESS NAME=ENTRY_INSERT>
     <TMPL_IF NAME=IS_IMAGE>
     <b><MT_TRANS phrase="Image Options"></b>
     <TMPL_ELSE>
     <b><MT_TRANS phrase="File Options"></b>
     </TMPL_IF>
+    </TMPL_UNLESS>
     <div class="upload_indent_choices">
+        <TMPL_UNLESS NAME=ENTRY_INSERT>
         <TMPL_IF NAME=CAN_POST>
         <p><label><input type="checkbox" name="new_entry" value="1" checked="checked" onclick="toggleSubPrefs(this); return true;" /> <MT_TRANS phrase="Create a new entry using this uploaded file."></label> <a href="#" onclick="return openManual('file_upload', 'creating_a_new_entry')" class="help">?</a><br /></p>
         </TMPL_IF>
+        </TMPL_UNLESS>
     </div>
 
 

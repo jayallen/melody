@@ -9147,6 +9147,7 @@ sub start_upload {
     $param{extra_paths} = \@extra_paths;
     $param{refocus} = 1;
     $param{missing_paths} = -d $blog->site_path || -d $blog->archive_path ? 0 : 1;
+    $param{entry_insert} = $app->param('entry_insert');
     $app->build_page('upload.tmpl', \%param);
 }
 
@@ -9286,6 +9287,7 @@ sub upload_file {
                 temp => $tmp, extra_path => $relative_path_save,
                 site_path => scalar $q->param('site_path'),
                 middle_path => $middle_path,
+                entry_insert => $q->param('entry_insert'),
                 fname => $basename });
         }
     }
@@ -9367,10 +9369,12 @@ sub upload_file {
     }
     $asset->created_by($app->user->id);
     $asset->save;
+    $param{asset_id} = $asset->id;
 
     if ($param{is_image}) {
         eval { require MT::Image; MT::Image->new or die; };
         $param{do_thumb} = $@ ? 0 : 1;
+        $param{entry_insert} = $q->param('entry_insert');
         # Pass image default settings along.
         $param{image_defaults} = $blog->image_default_set() ? 1 : 0;
         $param{make_thumb} = $blog->image_default_thumb() ? 1 : 0;
