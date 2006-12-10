@@ -3,36 +3,30 @@
 <script type="text/javascript">
 <!--
 
-function doClick (f, mode) {
+function doClick (f, trigger) {
 <TMPL_IF NAME=ENTRY_INSERT>
-    doHandleMode(f, mode, 'asset_insert');
+    doHandleMode(f, trigger, 'asset_insert');
 <TMPL_ELSE>
 <TMPL_IF NAME=CAN_POST>
     if (f.new_entry.checked) {
-        doHandleMode(f, mode, 'start_upload_entry');
+        doHandleMode(f, trigger, 'start_upload_entry');
     }
     else {
-        doHandleMode(f, mode, 'list_assets');
+        doHandleMode(f, trigger, 'list_assets');
     }
 <TMPL_ELSE>
-    doHandleMode(f, mode, 'list_assets');
+    doHandleMode(f, trigger, 'list_assets');
 </TMPL_IF>
 </TMPL_IF>
 }
 
-function doHandleMode (f, mode, type) {
-if (type == 'asset_insert') {
-alert('This feature not yet ready for prime time...');return false;
-}
-    var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=' + type;
-    url += '&blog_id=<TMPL_VAR NAME=BLOG_ID>&url=<TMPL_VAR NAME=URL ESCAPE=URL>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>';
-    url += mode;
+function doHandleMode (f, trigger, type) {
+    var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=' + type + trigger;
+    url += '&blog_id=<TMPL_VAR NAME=BLOG_ID>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>&url=<TMPL_VAR NAME=URL ESCAPE=URL>';
 <TMPL_IF NAME=DO_THUMB>
     if (f.thumb.checked) {
         url += '&thumb=1' + calcGeometry(f);
-        url += '&thumb_width_type=pixels';
-        url += '&thumb_height_type=pixels';
-        url += '&constrain=1';
+        url += '&thumb_width_type=pixels&thumb_height_type=pixels&constrain=1';
     }
 </TMPL_IF>
 <TMPL_IF NAME=IS_IMAGE>
@@ -41,30 +35,23 @@ alert('This feature not yet ready for prime time...');return false;
     } else {
         url += '&link=1';
     }
-    url += '&width=<TMPL_VAR NAME=WIDTH>';
-    url += '&height=<TMPL_VAR NAME=HEIGHT>';
-    url += '&image_type=<TMPL_VAR NAME=IMAGE_TYPE>';
+    url += '&width=<TMPL_VAR NAME=WIDTH>&height=<TMPL_VAR NAME=HEIGHT>&image_type=<TMPL_VAR NAME=IMAGE_TYPE>';
     if (f.include.checked) {
         url += '&wrap_text=1&align=';
-        for (i=0; i<f.align.length; i++) {
-            if (f.align[i].checked) {
-                url += f.align[i].value;
-            }
+        for (i = 0; i < f.align.length; i++) {
+            if (f.align[i].checked) url += f.align[i].value;
         }
     }
     
-    if (f.popup.checked) { 
-        url += '&popup=1';
-    }
-    if (f.image_defaults.checked) {
-        url += '&image_defaults=1';
-    }
+    if (f.popup.checked) url += '&popup=1';
+    if (f.image_defaults.checked) url += '&image_defaults=1';
 </TMPL_IF>
-    if (type == 'start_upload_entry') {
-          closeDialog(url);
-    } else if (type == 'list_assets') {
-          closeDialog(url);
+    if (type == 'asset_insert') {
+        document.asset_insert.submit();
+        return true;
     }
+
+    closeDialog(url);
 }
 
 <TMPL_IF NAME=DO_THUMB>
@@ -72,8 +59,7 @@ alert('This feature not yet ready for prime time...');return false;
 function calcGeometry (f) {
     var w = calcDim(f.thumb_width, f.thumb_width_type, f.full_width.value);
     var h = calcDim(f.thumb_height, f.thumb_height_type, f.full_height.value);
-    var url = '&thumb_width=' + w + '&thumb_height=' + h;
-    return url;
+    return '&thumb_width=' + w + '&thumb_height=' + h;
 }
 
 function calcDim (val, type, full) {
@@ -119,8 +105,13 @@ function adjustWidthHeight (f, width) {
 //-->
 </script>
 
-<form action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return false;">
+<form name="asset_insert" action="<TMPL_VAR NAME=SCRIPT_URL>">
+<input type="hidden" name="__mode" value="asset_insert" />
 <input type="hidden" name="id" value="<TMPL_VAR NAME=ASSET_ID>" />
+<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>" />
+</form>
+
+<form action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return false;">
 <TMPL_IF NAME=DO_THUMB>
 <input type="hidden" name="full_width" value="<TMPL_VAR NAME=WIDTH>" />
 <input type="hidden" name="full_height" value="<TMPL_VAR NAME=HEIGHT>" />
