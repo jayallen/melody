@@ -160,6 +160,7 @@ TC.attachLoadEvent( init );
 
 <form id="filter-form" method="get" action="<TMPL_VAR NAME=MT_URL>">
 <input type="hidden" name="__mode" value="list_assets" />
+<input type="hidden" name="dialog_view" value="<TMPL_VAR NAME=DIALOG_VIEW>" />
 <TMPL_IF NAME=EDIT_BLOG_ID>
 <input type="hidden" name="blog_id" value="<TMPL_VAR NAME=EDIT_BLOG_ID>" />
 </TMPL_IF>
