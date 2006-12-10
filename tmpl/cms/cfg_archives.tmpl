@@ -1,6 +1,7 @@
 <TMPL_INCLUDE NAME="header.tmpl">
 
 <div id="cfg-archives">
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/client.js"></script>
 
 <script type="text/javascript">
 <!--
@@ -112,6 +113,47 @@ function toggleFile(path) {
     return false;
 }
 
+function toggleDynamicOptions(selection) {
+    var fld = getByID('dynamic_options_area');
+    if (fld) {
+        if (selection.value == 'none') {
+            fld.style.display = 'none';
+        } else {
+            fld.style.display = 'block';
+            TC.Client.call({
+                'load': function(c, response) {
+                    var result;
+                    try {
+                        result = eval('('+response+')');
+                        var cache = getByID("dynamic_cache");
+                        if (cache)
+                            cache.checked = result.cache;
+                        var condition = getByID("dynamic_conditional");
+                        if (condition)
+                            condition.checked = result.conditional;
+                        var progress = getByID("progress-bar");
+                        if (progress) {
+                            progress.style.display = "none";
+                        } else {
+                        }
+                        var area = getByID('dynamic_options');
+                        if (area) {
+                            area.style.display = "block";
+                        }
+                    } catch ( e ) {
+                        alert(e.message);
+                    }
+                },
+                'method': 'POST',
+                'uri': '<TMPL_VAR NAME=MT_URL>',
+                'arguments': { '__mode': 'js_check_mtview',
+                    'blog_id': '<TMPL_VAR NAME=BLOG_ID>',
+                    'magic_token': '<TMPL_VAR NAME=MAGIC_TOKEN>'}
+            });
+        }
+    }
+    return false;
+}
 //-->
 </script>
 
@@ -157,12 +199,24 @@ function toggleFile(path) {
 
 <TMPL_ELSE>
 
+<TMPL_IF NAME=NO_CACHE_PATH>
+<div class="error-message"><MT_TRANS phrase="Error: Movable Type was not able to create a directory to cache your dynamic templates. You should create a directory called <code>[_1]</code> underneath your blog directory." params="cache"></div>
+
+<TMPL_ELSE>
+
+<TMPL_IF NAME=NO_WRITE_CACHE_PATH>
+<div class="error-message"><MT_TRANS phrase="Error: Movable Type cannot write to the template cache directory. Please check the permissions for the directory called <code>[_1]</code> underneath your blog directory." params="cache"></div>
+
+<TMPL_ELSE>
+
 <TMPL_IF NAME=SAVED>
 <div class="message"><MT_TRANS phrase="Your weblog's archive configuration has been saved.">
 <TMPL_IF NAME=ARCHIVES_CHANGED>
 <MT_TRANS phrase="You may need to update your templates to account for your new archive configuration.">
 </TMPL_IF>
 <br /><TMPL_INCLUDE NAME="rebuild-stub.tmpl"></div>
+</TMPL_IF>
+</TMPL_IF>
 </TMPL_IF>
 </TMPL_IF>
 </TMPL_IF>
@@ -300,13 +354,22 @@ function toggleFile(path) {
 
 <TMPL_IF NAME=SHOW_BUILD_OPTIONS>
 <div class="setting">
-<div class="label"><label for="dynamicity"><MT_TRANS phrase="Dynamic Publishing:"></label>  <a href="#" onclick="return openManual('blog_settings_publishing', 'dynamic_publishing')" class="help">?</a></div>
+<div class="label"><label for="dynamicity"><MT_TRANS phrase="Dynamic Publishing:"></label></div>
 <div class="field">
-<ul>
-<li><input type="radio" id="dynamic_none" name="dynamicity" value="none"<TMPL_IF NAME=DYNAMIC_NONE> checked="on"</TMPL_IF> class="rb" /> <label for="dynamic_none"><MT_TRANS phrase="Build all templates statically"></label></li>
-<li><input type="radio" id="dynamic_archives" name="dynamicity" value="archives"<TMPL_IF NAME=DYNAMIC_ARCHIVES> checked="checked"</TMPL_IF> class="rb" /> <label for="dynamic_archives"><MT_TRANS phrase="Build only Archive Templates dynamically"></label></li>
-<li><input type="radio" id="dynamic_custom" name="dynamicity" value="custom"<TMPL_IF NAME=DYNAMIC_CUSTOM> checked="checked"</TMPL_IF> class="rb" /> <label for="dynamic_custom"><MT_TRANS phrase="Set each template's Build Options separately"></label></li>
-</ul>
+<select name="dynamicity" id="dynamicity" onchange="return toggleDynamicOptions(this)">
+<option value="none"<TMPL_IF NAME=DYNAMIC_NONE> selected="selected"</TMPL_IF>><MT_TRANS phrase="Build all templates statically"></option>
+<option value="archives"<TMPL_IF NAME=DYNAMIC_ARCHIVES> selected="selected"</TMPL_IF>><MT_TRANS phrase="Build only Archive Templates dynamically"></option>
+<option value="custom"<TMPL_IF NAME=DYNAMIC_CUSTOM> selected="selected"</TMPL_IF>><MT_TRANS phrase="Set each template's Build Options separately"></option>
+<option value="all"<TMPL_IF NAME=DYNAMIC_ALL> selected="selected"</TMPL_IF>><MT_TRANS phrase="Build all templates dynamically"></option>
+</select>
+<div id="dynamic_options_area" style="display:none;">
+<div id="progress-bar"><p><img src="<TMPL_VAR NAME=STATIC_URI>images/indeterminate-progress-bar.gif" alt="" height="24" width="124" /></p></div>
+<div id="dynamic_options" style="display:none;">
+<p><MT_TRANS phrase="Optional Settings for Dynamic Publishing:"> <a href="#" onclick="return openManual('blog_settings_publishing', 'dynamic_publishing_options')" class="help">?</a></p>
+<div class="field">
+<input type="checkbox" id="dynamic_cache" name="dynamic_cache" /><label for="dynamic_cache"><MT_TRANS phrase="Enable caching"></label> <input type="checkbox" id="dynamic_conditional" name="dynamic_conditional" /><label for="dynamic_conditional"><MT_TRANS phrase="Enable conditional retrieval"></label>
+</div>
+</div><a href="#" onclick="return openManual('blog_settings_publishing', 'dynamic_publishing')" class="help">?</a>
 </div>
 </div>
 </TMPL_IF>

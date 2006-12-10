@@ -71,6 +71,7 @@ sub init {
         'preview_entry' => \&preview_entry,
         'cfg_archives' => \&cfg_archives,
         'cfg_archives_do_add' => \&cfg_archives_do_add,
+        'js_check_mtview' => \&js_check_mtview,
         'cfg_prefs' => \&cfg_prefs,
         'cfg_entries' => \&cfg_entries,
         'cfg_plugins' => \&cfg_plugins,
@@ -4387,7 +4388,9 @@ sub CMSPostSave_blog {
     my $screen = $app->param('cfg_screen') || '';
     if ($screen eq 'cfg_archives') {
         if (my $dcty = $app->param('dynamicity')) {
-            $app->update_dynamicity($obj);
+            $app->update_dynamicity($obj, 
+                $app->param('dynamic_cache') ? 1 : 0, 
+                $app->param('dynamic_conditional') ? 1 : 0);
         }
         $app->cfg_archives_save($obj);
     }
@@ -8193,6 +8196,7 @@ sub cfg_archives {
     $param{dynamic_archives} = 
         $blog->custom_dynamic_templates eq 'archives';
     $param{dynamic_custom} = $blog->custom_dynamic_templates eq 'custom';
+    $param{dynamic_all} = $blog->custom_dynamic_templates eq 'all';
     $param{show_build_options} = $app->config('ObjectDriver') =~ m/^DBI::(postgres|sqlite|mysql)/;
     $iter = MT::Template->load_iter({ blog_id => $blog->id });
     my(@tmpl);
@@ -10209,7 +10213,7 @@ sub reset_blog_templates {
 
 sub update_dynamicity {
     my $app = shift;
-    my ($blog) = @_;
+    my ($blog, $cache, $conditional) = @_;
     my $dcty = $blog->custom_dynamic_templates;
     if ($dcty eq 'none') {
         require MT::Template;
@@ -10226,6 +10230,16 @@ sub update_dynamicity {
             $tmpl->save();
         }
     } elsif ($dcty eq 'custom') {
+    } elsif ($dcty eq 'all') {
+        require MT::Template;
+        my @templates = MT::Template->load({
+            blog_id => $blog->id,
+            type => [ 'index', 'archive', 'individual', 'category' ],
+        });
+        for my $tmpl (@templates) {
+            $tmpl->build_dynamic(1);
+            $tmpl->save();
+        }
     }
 
     if ($dcty ne 'none') {
@@ -10241,7 +10255,7 @@ sub update_dynamicity {
             my $mtview_path = File::Spec->catfile($blog->site_path(), "mtview.php");
             my $contents = "";
             if (open(HT, $htaccess_path)) {
-                $/ = undef;
+                local $/ = undef;
                 $contents = <HT>;
                 close HT;
             }
@@ -10300,6 +10314,39 @@ HTACCESS
             }
         }; if ($@) { print STDERR $@; } 
         
+        eval {
+            my $mtview_path = File::Spec->catfile($blog->site_path(), "mtview.php");
+            my $mv_contents = '';
+            if (-f $mtview_path) {
+                open(my $mv, "<$mtview_path");
+                while (my $line = <$mv>) {
+                    $mv_contents .= "//$line" if ($line !~ /<\?(?:php)?|\?>/);
+                }
+                close $mv;
+            }
+            my $cgi_path = MT->instance->server_path() || "";
+            $cgi_path =~ s!/*$!!;
+            my $mtphp_path = File::Spec->canonpath("$cgi_path/php/mt.php");
+            my $blog_id = $blog->id;
+            my $config = MT->instance->{cfg_file};
+            my $cache_code = $cache ? "\n    \$mt->caching = true;" : '';
+            my $conditional_code = $conditional ? "\n    \$mt->conditional = true;" : '';
+            my $mtview = <<MTVIEW;
+<?php
+$mv_contents
+    include('$mtphp_path');
+    \$mt = new MT($blog_id, '$config');$cache_code$conditional_code
+    \$mt->view();
+?>
+MTVIEW
+            $blog->file_mgr->mkpath($blog->site_path);
+
+            open(my $mv, ">$mtview_path")
+                || die "Couldn't open $mtview_path for appending";
+            print $mv $mtview || die "Couldn't write to $mtview_path";
+            close $mv;
+        }; if ($@) { print STDERR $@; } 
+
         my $compiled_template_path = File::Spec->catfile($blog->site_path(), 
                                                          'templates_c');
         my $fmgr = $blog->file_mgr;
@@ -10315,8 +10362,45 @@ HTACCESS
                 unless (-d $compiled_template_path);
         }
             # FIXME: use FileMgr
+
+        if ($cache) {
+            my $cache_path = File::Spec->catfile($blog->site_path(), 'cache');
+            $app->config('DirUmask', '0000');
+            $fmgr->mkpath($cache_path);
+            $app->config('DirUmask', $saved_umask);
+            if (-d $cache_path) {
+                $app->add_return_arg('no_write_cachepath' => 1)
+                    unless (-w $cache_path);
+            } else {
+                $app->add_return_arg('no_cachepath' => 1)
+                    unless (-d $cache_path);
+            }
+        }
     }
     $app->add_return_arg(dynamic_set => 1);
+}
+
+sub js_check_mtview {
+    my $app = shift;
+    $app->validate_magic or return;
+    my $blog_id = $app->param('blog_id');
+    my $blog = MT::Blog->load($blog_id, { cached_ok => 1 });
+    return $app->errtrans('Blog (ID: [_1]) can\'t be found', $blog_id) if !defined($blog);
+
+    my $cache = 0;
+    my $conditional = 0;
+    my $mtview_path = File::Spec->catfile($blog->site_path(), "mtview.php");
+    if (-f $mtview_path) {
+        open my($fh), $mtview_path;
+        while (my $line = <$fh>) {
+            $cache = 1 if $line =~ m/^\s*\$mt->caching\s*=\s*true;/i;
+            $conditional = 1 if $line =~ /^\s*\$mt->conditional\s*=\s*true;/i;
+        }
+        close $fh;
+    }
+    $app->send_http_header('text/javascript');
+    $app->{no_print_body} = 1;
+    $app->print("{cache: $cache, conditional: $conditional}");
 }
 
 sub handshake {
@@ -10849,7 +10933,9 @@ sub backup_restore {
     eval "require Compress::Zlib;";
     $param{targz} = $@ ? 0 : 1;
     eval "require Archive::Zip;";
+    eval "require IO::String;";
     $param{zip} = $@ ? 0 : 1;
+
     $app->build_page('backup_restore.tmpl', \%param);
 }
 

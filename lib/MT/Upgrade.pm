@@ -565,6 +565,11 @@ sub BEGIN {
                 code => \&_migrate_permission_to_role,
             }
         },
+        'core_remove_dynamic_site_bootstrapper' => {
+            code => \&remove_mtviewphp,
+            version_limit => 3.303,
+            priority => 5.1,
+        },
     );
 }
 
@@ -1030,6 +1035,16 @@ sub create_default_roles {
         $role->save;
     }
 
+    1;
+}
+
+sub remove_mtviewphp {
+    my $self = shift;
+    my (%param) = @_;
+
+    require MT::Template;
+    $self->progress(MT->translate('Removing Dynamic Site Bootstrapper index template...'));
+    MT::Template->remove( { type => 'index', outfile => 'mtview.php' } );
     1;
 }
 

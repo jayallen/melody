@@ -17,12 +17,6 @@ my $templates = [
             'rebuild_me' => '1'
           },
           {
-              'outfile' => 'mtview.php',
-              'name' => 'Dynamic Site Bootstrapper',
-              'type' => 'index',
-              'rebuild_me' => 1,
-          },
-          {
             'outfile' => 'rsd.xml',
             'name' => 'RSD',
             'type' => 'index',
