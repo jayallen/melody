@@ -1003,8 +1003,7 @@ sub asset_insert {
     $asset = MT::Asset->load($asset) ||
         return $app->errtrans("Can't load asset, $asset.");
     my $param = {
-        asset_html => $asset->as_html,
-        class => $app->param('class'),
+        asset_html => $asset->as_html(class => $app->param('class') || ''),
         magic_token => $app->param('magic_token'),
     };
     $app->build_page('asset_insert.tmpl', $param);
