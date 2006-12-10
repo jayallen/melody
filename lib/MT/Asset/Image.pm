@@ -102,8 +102,9 @@ sub thumbnail_file {
 sub as_html {
     my $self = shift;
     my %args = @_;
+    (my $name = $self->file_name) =~ s/'/\\'/g;
     return sprintf '<img src="%s" height="%d" width="%d" alt="%s" class="%s" />',
-        $self->url, $self->image_height, $self->image_width, $self->file_name, $args{class};
+        $self->url, $self->image_height, $self->image_width, $name, $args{class};
 }
 
 1;
