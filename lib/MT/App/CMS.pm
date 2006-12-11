@@ -681,10 +681,9 @@ sub js_tag_check {
     my $tag = MT::Tag->load({ name => $name }, { binary => { name => 1 }});
     my $class = $app->_load_driver_for($type) or return;
     if ($tag && $blog_id) {
-        require MT::Entry;
         require MT::ObjectTag;
         my $count = MT::ObjectTag->count({
-           datasource => $class->datasource,
+           object_datasource => $class->datasource,
            blog_id => $blog_id,
            tag_id => $tag->id
         });

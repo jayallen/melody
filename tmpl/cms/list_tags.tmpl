@@ -55,6 +55,8 @@ function cancel_edit(id) {
 }
 
 function submit_edit(id) {
+    if ((0 != current_edit) && (id != current_edit))
+        id = current_edit;
     // if old name matches new name, ignore submission (same as cancel)
     // if new name is already in our tagList array, warn user
     // if not in tagList and not in range of tagList tags, check with server.
@@ -122,6 +124,8 @@ function server_confirm_edit(id, response) {
             } else {
                 submit_edit_form(id);
             }
+        } else {
+            submit_edit_form(id);
         }
     } else {
         alert(trans("An error occurred while testing for the new tag name."));
