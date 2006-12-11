@@ -4,24 +4,19 @@
 <!--
 
 function doClick (f, trigger) {
+    var mode = 'list_assets';
 <TMPL_IF NAME=ENTRY_INSERT>
-    doHandleMode(f, trigger, 'asset_insert');
+    mode = 'asset_insert';
 <TMPL_ELSE>
 <TMPL_IF NAME=CAN_POST>
-    if (f.new_entry.checked) {
-        doHandleMode(f, trigger, 'start_upload_entry');
-    }
-    else {
-        doHandleMode(f, trigger, 'list_assets');
-    }
-<TMPL_ELSE>
-    doHandleMode(f, trigger, 'list_assets');
+    if (f.new_entry.checked) mode = 'start_upload_entry';
 </TMPL_IF>
 </TMPL_IF>
+    doHandleMode(f, trigger, mode);
 }
 
-function doHandleMode (f, trigger, type) {
-    var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=' + type + trigger;
+function doHandleMode (f, trigger, mode) {
+    var url = '<TMPL_VAR NAME=SCRIPT_URL>?__mode=' + mode + trigger;
     url += '&blog_id=<TMPL_VAR NAME=BLOG_ID>&site_path=<TMPL_VAR NAME=SITE_PATH>&fname=<TMPL_VAR NAME=FNAME ESCAPE=URL>&url=<TMPL_VAR NAME=URL ESCAPE=URL>';
 <TMPL_IF NAME=DO_THUMB>
     if (f.thumb.checked) {
@@ -46,7 +41,7 @@ function doHandleMode (f, trigger, type) {
     if (f.popup.checked) url += '&popup=1';
     if (f.image_defaults.checked) url += '&image_defaults=1';
 </TMPL_IF>
-    if (type == 'asset_insert') {
+    if (mode == 'asset_insert') {
         document.asset_insert.submit();
         return true;
     }
