@@ -62,7 +62,7 @@ HelpBaseURI = '<TMPL_VAR NAME=HELP_URL>';
 <div id="topnav-blogs">
 <MT_TOPNAV:BLOGMENU>
 <TMPL_IF NAME=TOP_BLOG_LOOP>
-<form class="inline">
+<form class="inline" action="<TMPL_VAR NAME=SCRIPT_URL>">
 
 <MT_TRANS phrase="Go to:">
 <select name="blog_id" onchange="if(this.value!='')window.location.href=this.value;">

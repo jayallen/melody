@@ -33,7 +33,7 @@
 
 <TMPL_LOOP NAME=OBJECT_LOOP>
 <tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
-<td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" />
+<td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
 <td><a href="?__mode=menu&amp;blog_id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NAME ESCAPE=HTML></a></td>
 <td align="right"><TMPL_IF NAME=CAN_EDIT_ENTRIES><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_entries&amp;blog_id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NUM_ENTRIES></a><TMPL_ELSE><TMPL_VAR NAME=NUM_ENTRIES></TMPL_IF></td>
 <td align="right"><TMPL_IF NAME=CAN_EDIT_ENTRIES><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_comments&amp;blog_id=<TMPL_VAR NAME=ID>"><TMPL_VAR NAME=NUM_COMMENTS></a><TMPL_ELSE><TMPL_VAR NAME=NUM_COMMENTS></TMPL_IF></td>

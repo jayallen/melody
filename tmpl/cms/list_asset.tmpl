@@ -248,14 +248,14 @@ TC.attachLoadEvent( init );
 <TMPL_LOOP NAME=OBJECT_LOOP>
 <tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
 <td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
-<td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /</td>
+<td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /></td>
 <td><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="return displayAssetDetails('<TMPL_VAR NAME=ID>');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner" class="asset-detail-panel-inner"></div></div></td>
 <td class="as-asset-type"><TMPL_VAR NAME=ASSET_CLASS ESCAPE=HTML></td>
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
 <td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
 </TMPL_UNLESS>
 <TMPL_IF NAME=FILE_SIZE_FORMATTED>
-<td class="as-file-size"><span title="<TMPL_VAR NAME=FILE_SIZE>"><TMPL_VAR NAME=FILE_SIZE_FORMATTED></td>
+<td class="as-file-size"><span title="<TMPL_VAR NAME=FILE_SIZE>"><TMPL_VAR NAME=FILE_SIZE_FORMATTED></span></td>
 <TMPL_ELSE>
 <td class="as-file-size"><TMPL_VAR NAME=FILE_SIZE></td>
 </TMPL_IF>

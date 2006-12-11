@@ -138,12 +138,12 @@ TC.attachLoadEvent( init );
 <tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
 <td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
 <TMPL_IF NAME=ASSOCIATION_VIEW>
-<td><span class="user_id"><img align="top" border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="15"></span> <TMPL_IF NAME=IS_ADMINISTRATOR><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=USER_ID>"></TMPL_IF><TMPL_VAR NAME=USER_NAME ESCAPE=HTML><TMPL_IF NAME=IS_ADMINISTRATOR></a></TMPL_IF></td>
+<td><span class="user_id"><img align="top" border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="15" alt="" /></span> <TMPL_IF NAME=IS_ADMINISTRATOR><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=USER_ID>"></TMPL_IF><TMPL_VAR NAME=USER_NAME ESCAPE=HTML><TMPL_IF NAME=IS_ADMINISTRATOR></a></TMPL_IF></td>
 </TMPL_IF>
 <TMPL_UNLESS NAME=ROLE_VIEW>
 <td><TMPL_IF NAME=IS_ADMINISTRATOR><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;role_id=<TMPL_VAR NAME=ROLE_ID>"></TMPL_IF><TMPL_VAR NAME=ROLE_NAME ESCAPE=HTML><TMPL_IF NAME=IS_ADMINISTRATOR></a></TMPL_IF></td>
 <TMPL_ELSE>
-<td><span class="user_id"><img align="top" border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="15"></span> <TMPL_IF NAME=IS_ADMINISTRATOR><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=USER_ID>"></TMPL_IF><TMPL_VAR NAME=USER_NAME ESCAPE=HTML><TMPL_IF NAME=IS_ADMINISTRATOR></a></TMPL_IF></td>
+<td><span class="user_id"><img align="top" border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="15" alt="" /></span> <TMPL_IF NAME=IS_ADMINISTRATOR><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;author_id=<TMPL_VAR NAME=USER_ID>"></TMPL_IF><TMPL_VAR NAME=USER_NAME ESCAPE=HTML><TMPL_IF NAME=IS_ADMINISTRATOR></a></TMPL_IF></td>
 </TMPL_UNLESS>
 <TMPL_UNLESS NAME=BLOG_VIEW>
 <td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
