@@ -260,7 +260,7 @@ sub restore_directory {
     closedir $dh;
     unless ($manifest) {
         $$error = MT->translate("No manifest file could be found in your import directory [_1].", $dir);
-        return 0;
+        return undef;
     }
 
     my $fh = gensym;

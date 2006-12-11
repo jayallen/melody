@@ -10921,12 +10921,21 @@ sub backup_restore {
     $app->add_breadcrumb($app->translate('Backup & Restore'));
     $param{system_overview_nav} = 1;
     $param{nav_backup} = 1;
+    my $missing_tgz = 0;
     eval "require Archive::Tar;";
+    $missing_tgz = 1 if $@;
     eval "require Compress::Zlib;";
-    $param{targz} = $@ ? 0 : 1;
+    $missing_tgz = 1 if $@;
+    $param{targz} = !$missing_tgz;
+    my $missing_zip = 0;
     eval "require Archive::Zip;";
+    $missing_zip = 1 if $@;
     eval "require IO::String;";
-    $param{zip} = $@ ? 0 : 1;
+    $missing_zip = 1 if $@;
+    $param{zip} = !$missing_zip;
+
+    eval "require XML::XPath";
+    $param{missing_xpath} = 1 if $@;
 
     $app->build_page('backup_restore.tmpl', \%param);
 }
@@ -11104,6 +11113,7 @@ sub backup {
             push @files, { filename => "$file.manifest" };
             if ('0' eq $archive) {
                 $param->{files_loop} = \@files;
+                $param->{tempdir} = $temp_dir;
                 $app->_backup_finisher($fname, $param);
             } elsif ('1' eq $archive) { # tar.gz
                 require Archive::Tar;

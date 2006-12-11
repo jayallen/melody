@@ -38,6 +38,7 @@ my @OPT = (
     [ 'Compress::Zlib', 0, 0, 'Compress::Zlib is required in order to compress/decompress files in backup/restore operation.', 'Compress Zlib'],
     [ 'IO::String', 0, 0, 'IO::String is required in order to archive files in backup/restore operation.', 'I/O String'],
     [ 'Archive::Zip', 0, 0, 'Archive::Zip is required in order to archive files in backup/restore operation.', 'Archive Zip'],
+    [ 'XML::XPath', 0, 0, 'XML::XPath and/or its dependencies is required in order to restore.', 'XML XPath'],
 );
 
 my %drivers = (
@@ -594,7 +595,7 @@ sub module_check {
     foreach my $ref (@$modules) {
         my($mod, $ver, $req, $desc, $name) = @$ref;
         eval("use $mod" . ($ver ? " $ver;" : ";"));
-        if ($@) {
+        if ($@ || !($mod->VERSION)) {
             push @missing, { module => $mod,
                              version => $ver,
                              required => $req,

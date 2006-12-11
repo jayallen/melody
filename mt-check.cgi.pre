@@ -233,6 +233,8 @@ my @OPT = (
     [ 'IO::String', 0, 0, translate('IO::String is required in order to archive files in backup/restore operation.')],
 
     [ 'Archive::Zip', 0, 0, translate('Archive::Zip is required in order to archive files in backup/restore operation.')],
+
+    [ 'XML::XPath', 0, 0, translate('XML::XPath and/or its dependencies is required in order to restore.')],
 );
 
 use Cwd;
@@ -320,7 +322,7 @@ MSG
         print "    <h3>$mod" .
             ($ver ? " (version &gt;= $ver)" : "") . "</h3>";
         eval("use $mod" . ($ver ? " $ver;" : ";"));
-        if ($@) {
+        if ($@ || !($mod->VERSION)) {
             $is_good = 0 if $req;
             my $msg = $ver ?
                       trans_templ(qq{<p class="bad"><MT_TRANS phrase="Either your server does not have [_1] installed, the version that is installed is too old, or [_1] requires another module that is not installed." params="$mod"> }) :

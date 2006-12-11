@@ -42,16 +42,19 @@ if (progress) {
 <input type="hidden" name="filename" value="<TMPL_VAR NAME=FILENAME ESCAPE=HTML>" />
 </form>
 <script type="text/javascript">
+var timer;
+
 function submit_form() {
+    window.clearTimeout(timer);
     var f = document['file_download'];
     if (f) {
         f.submit();
     }
 }
 
-var timer;
-timer = window.setTimeout("submit_form()", 1000);
+timer = window.setTimeout("submit_form()", 3000);
 </script>
+<p><strong><MT_TRANS phrase="_BACKUP_DOWNLOAD_MESSAGE"></strong></p>
 </TMPL_IF>
 <TMPL_ELSE>
 <p><strong><MT_TRANS phrase="An error occurred during the backup process: [_1]" params="<TMPL_VAR NAME=ERROR>"></strong></p>
