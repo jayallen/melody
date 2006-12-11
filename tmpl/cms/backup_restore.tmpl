@@ -68,10 +68,18 @@ function highlightSwitch(selection) {
 <div class="field">
 <select name="size_limit" id="size_limit">
 <option value="0" selected="selected">Don't Divide</option>
+<TMPL_IF NAME=OVER_300>
+<option value="300">300KB</option>
+<TMPL_IF NAME=OVER_500>
+<option value="500">500KB</option>
+<TMPL_IF NAME=OVER_1024>
 <option value="1024">1MB</option>
+<TMPL_IF NAME=OVER_2048>
 <option value="2048">2MB</option>
-<option value="4096">4MB</option>
-<option value="8192">8MB</option>
+</TMPL_IF>
+</TMPL_IF>
+</TMPL_IF>
+</TMPL_IF>
 </select>
 <p><MT_TRANS phrase="Maximum file size per backup file."> <a href="#" onclick="return openManual('backup_restore', 'backup_num_size')" class="help">?</a></p>
 </div>

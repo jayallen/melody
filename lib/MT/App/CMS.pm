@@ -10937,6 +10937,11 @@ sub backup_restore {
     eval "require XML::XPath";
     $param{missing_xpath} = 1 if $@;
 
+    my $limit = $app->config('CGIMaxUpload') || 2048;
+    $param{over_300} = 1 if $limit >= 300 * 1024;
+    $param{over_500} = 1 if $limit >= 500 * 1024;
+    $param{over_1024} = 1 if $limit >= 1024 * 1024;
+    $param{over_2048} = 1 if $limit >= 2048 * 1024;
     $app->build_page('backup_restore.tmpl', \%param);
 }
 
