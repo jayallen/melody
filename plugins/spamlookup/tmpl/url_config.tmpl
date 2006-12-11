@@ -42,9 +42,9 @@
     <a href="#" class="spinner" onclick="return junkScoreNudge(1,'sl_priorurl_weight')"><img src="<TMPL_VAR NAME=STATIC_URI>images/increase.gif" alt="<MT_TRANS phrase="Increase">" width="12" height="8" /></a>
 
 </span></p>
-</li>
-<ul><li><input type="checkbox" name="priorurl_greyperiod_mode" value="1" <TMPL_IF NAME=PRIORURL_GREYPERIOD_MODE>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Exclude URLs from comments published within last [_1] days." params="<span id="priorurl_greyperiod-advanced"><input type="text" size="3" name="priorurl_greyperiod" value="<TMPL_VAR NAME=PRIORURL_GREYPERIOD ESCAPE=HTML>" /></span>">
-</li></ul>
+<ul>
+<li><input type="checkbox" name="priorurl_greyperiod_mode" value="1" <TMPL_IF NAME=PRIORURL_GREYPERIOD_MODE>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Exclude URLs from comments published within last [_1] days." params="<span id="priorurl_greyperiod-advanced"><input type="text" size="3" name="priorurl_greyperiod" value="<TMPL_VAR NAME=PRIORURL_GREYPERIOD ESCAPE=HTML>" /></span>">
+</li></ul></li>
 </ul>
 </div>
 </div>
@@ -60,9 +60,9 @@
 <input type="text" size="3" name="prioremail_weight" id="sl_prioremail_weight" value="<TMPL_VAR NAME=PRIOREMAIL_WEIGHT ESCAPE=HTML>" />
 <a href="#" class="spinner" onclick="return junkScoreNudge(1,'sl_prioremail_weight')"><img src="<TMPL_VAR NAME=STATIC_URI>images/increase.gif" alt="<MT_TRANS phrase="Increase">" width="12" height="8" /></a>
 
-</span></li>
+</span>
 <ul><li><input type="checkbox" name="prioremail_greyperiod_mode" value="1" <TMPL_IF NAME=PRIOREMAIL_GREYPERIOD_MODE>checked="checked"</TMPL_IF> /> <MT_TRANS phrase="Exclude Email addresses from comments published within last [_1] days." params="<span id="prioremail_greyperiod-advanced"> <input type="text" size="3" name="prioremail_greyperiod" value="<TMPL_VAR NAME=PRIOREMAIL_GREYPERIOD ESCAPE=HTML>" /></span>">
-</li></ul>
+</li></ul></li>
 </ul>
 </div>
 </div>

@@ -13,6 +13,8 @@ use base qw(MT::Plugin);
 sub BEGIN {
     MT->add_plugin(new MT::Plugin::TemplateRefresh({
         name => "Template Backup and Refresh",
+        author_name => 'Six Apart, Ltd.',
+        author_link => 'http://www.sixapart.com/',
         description => "<MT_TRANS phrase=\"Backup and refresh existing templates to Movable Type's default templates.\">",
         version => 1.1,
     }));

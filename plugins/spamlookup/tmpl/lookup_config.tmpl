@@ -68,7 +68,7 @@
 
 
 <div class="setting">
-<div class="label"><label for="sll_tborigin_enabled"><MT_TRANS phrase="Advanced TrackBack Lookups:"></label></div>
+<div class="label"><label><MT_TRANS phrase="Advanced TrackBack Lookups:"></label></div>
 <div class="field">
 <ul>
 <li><input type="radio" name="tborigin_mode" value="0" <TMPL_UNLESS NAME=TBORIGIN_MODE>checked="checked"</TMPL_UNLESS> class="rb" /> <MT_TRANS phrase="Off"></li>
@@ -89,7 +89,7 @@
 <p><MT_TRANS phrase="To prevent lookups for some IP addresses or domains, list them below. Place each entry on a line by itself."></p>
 
 <div class="setting last">
-<div class="label" for="sll_whitelist"><MT_TRANS phrase="Lookup Whitelist:"></div>
+<div class="label"><label for="sll_whitelist"><MT_TRANS phrase="Lookup Whitelist:"></label></div>
 <div class="field">
 <textarea name="whitelist" id="sll_whitelist" cols="60" rows="8"><TMPL_VAR NAME=WHITELIST ESCAPE=HTML></textarea>
 </div>
