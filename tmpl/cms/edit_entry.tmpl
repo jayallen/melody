@@ -531,6 +531,7 @@ function doValidateNotifyRecips(f) {
 <div class="field-buttons">
 <div class="field-buttons-formatting">
 <script type="text/javascript">
+<!--
 if (canFormat) {
     with (document) {
         write('<img title="<MT_TRANS phrase="Bold" escape="singlequotes">" onclick="return formatStr(document.entry_form.text, \'strong\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/bold.gif" alt="<MT_TRANS phrase="Bold" escape="singlequotes">" width="26" height="19" />');
@@ -542,14 +543,17 @@ if (canFormat) {
         write('<img title="<MT_TRANS phrase="Insert Link" escape="singlequotes">" onclick="return openDialog(document.entry_form, \'list_assets\', \'__type=asset&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;filter=class&amp;filter_val=image&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/add_image.gif" alt="<MT_TRANS phrase="Insert Link" escape="singlequotes">" width="26" height="19" />');
     }
 }
+//-->
 </script>
 </div>
 <div class="field-buttons-resizing">
 <script type="text/javascript">
+<!--
 with (document) {
     write('<img title="<MT_TRANS phrase="Bigger">" onclick="return expandEditor( \'text\', \'expand\' );" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/field-bigger.gif" alt="<MT_TRANS phrase="Bigger">" width="26" height="19" /></a>');
     write('<img title="<MT_TRANS phrase="Smaller">" onclick="return expandEditor( \'text\', \'contract\' );" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/field-smaller.gif" alt="<MT_TRANS phrase="Smaller">" width="26" height="19" /></a>');
 }
+//-->
 </script>
 </div>
 </div>
@@ -570,6 +574,7 @@ with (document) {
 <div class="field-buttons">
 <div class="field-buttons-formatting">
 <script type="text/javascript">
+<!--
 if (canFormat) {
     with (document) {
         write('<img title="<MT_TRANS phrase="Bold">" onclick="return formatStr(document.entry_form.text_more, \'strong\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/bold.gif" alt="<MT_TRANS phrase="Bold">" width="26" height="19" />');
@@ -580,14 +585,17 @@ if (canFormat) {
         write('<img title="<MT_TRANS phrase="Quote">" onclick="return formatStr(document.entry_form.text_more, \'blockquote\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/quote.gif" alt="<MT_TRANS phrase="Quote">" width="26" height="19" />');
     }
 }
+//-->
 </script>
 </div>
 <div class="field-buttons-resizing">
 <script type="text/javascript">
+<!--
 with (document) {
     write('<img title="<MT_TRANS phrase="Bigger">" onclick="return expandEditor( \'text_more\', \'expand\' );" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/field-bigger.gif" alt="<MT_TRANS phrase="Bigger">" width="26" height="19" /></a>');
     write('<img title="<MT_TRANS phrase="Smaller">" onclick="return expandEditor( \'text_more\', \'contract\' );" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/field-smaller.gif" alt="<MT_TRANS phrase="Smaller">" width="26" height="19" /></a>');
 }
+//-->
 </script>
 </div>
 </div>

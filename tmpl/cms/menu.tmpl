@@ -30,7 +30,7 @@ function welcomeMessageToggle() {
 <input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 
-<textarea id="welcome-message-text" name="welcome-message-text" rows="38" cols=20"><TMPL_IF NAME=WELCOME><TMPL_VAR NAME=WELCOME><TMPL_ELSE>&lt;h4&gt;<MT_TRANS phrase="Welcome to [_1]." params="<TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>">&lt;/h4&gt;
+<textarea id="welcome-message-text" name="welcome-message-text" rows="38" cols="20"><TMPL_IF NAME=WELCOME><TMPL_VAR NAME=WELCOME><TMPL_ELSE>&lt;h4&gt;<MT_TRANS phrase="Welcome to [_1]." params="<TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>">&lt;/h4&gt;
 
 &lt;p&gt;<MT_TRANS phrase="You can post to and manage your weblog by selecting an option from the menu located to the left of this message.">&lt;/p&gt;
 

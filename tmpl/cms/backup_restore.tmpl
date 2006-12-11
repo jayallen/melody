@@ -56,18 +56,18 @@ function highlightSwitch(selection) {
 <div class="label"><label><MT_TRANS phrase="Type of archive format">:</label></div>
 <div class="field">
 <p>
-<TMPL_IF NAME=TARGZ><input type="radio" id="tar.gz" name="backup_archive_format" value="1" checked="checked"> <label for="tar.gz"><MT_TRANS phrase="tar.gz"></label></TMPL_IF>
-<TMPL_IF NAME=ZIP><input type="radio" id="zip" name="backup_archive_format" value="2"> <label for="zip"><MT_TRANS phrase="zip"></label></TMPL_IF>
-<input type="radio" id="no_archive" name="backup_archive_format" value="0"> <label for="no_archive"><MT_TRANS phrase="Don't compress"></label>
+<TMPL_IF NAME=TARGZ><input type="radio" id="tar.gz" name="backup_archive_format" value="1" checked="checked" /> <label for="tar.gz"><MT_TRANS phrase="tar.gz"></label></TMPL_IF>
+<TMPL_IF NAME=ZIP><input type="radio" id="zip" name="backup_archive_format" value="2" /> <label for="zip"><MT_TRANS phrase="zip"></label></TMPL_IF>
+<input type="radio" id="no_archive" name="backup_archive_format" value="0" /> <label for="no_archive"><MT_TRANS phrase="Don't compress"></label>
 <a href="#" onclick="return openManual('backup_restore', 'backup_format')" class="help">?</a>
 </p>
 </div>
 </div>
 <div class="setting">
-<div class="label"><label for="num_items"><MT_TRANS phrase="Number of megabytes per file">:</label></div>
+<div class="label"><label for="size_limit"><MT_TRANS phrase="Number of megabytes per file">:</label></div>
 <div class="field">
 <select name="size_limit" id="size_limit">
-<option value="0" selected="selected">Don't Divide</option>
+<option value="0" selected="selected"><MT_TRANS phrase="Don't Divide"></option>
 <TMPL_IF NAME=OVER_300>
 <option value="300">300KB</option>
 <TMPL_IF NAME=OVER_500>
@@ -103,30 +103,36 @@ function highlightSwitch(selection) {
 <div class="setting">
 <div class="label"><label><MT_TRANS phrase="Upload backup file: (optional)"></label></div>
 <div class="field">
-<input name="file" id="file" type="file" />
+<input name="file" type="file" />
 <p><MT_TRANS phrase="If your backup file is located on your computer, you can upload it here.  Otherwise, Movable Type will automatically look in the <code>import</code> folder of your Movable Type directory."> <a href="#" onclick="return openManual('backup_restore', 'source_file')" class="help">?</a><br /></p>
 </div>
 </div>
 
 <p style="text-align: center;"><input type="submit" value="<MT_TRANS phrase="Restore">" title="<MT_TRANS phrase="Restore (r)">" accesskey="r" /></p>
+</fieldset>
+
 </form>
 
 <form method="post" enctype="multipart/form-data" action="<TMPL_VAR NAME=SCRIPT_URL>">
 <input type="hidden" name="__mode" value="restore_upload_manifest" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 
+<fieldset style="margin-top: 0px;">
+
 <h3>Upload Multiple Files</h3>
 
 <div class="setting">
 <div class="label"><label><MT_TRANS phrase="Upload manifest file:"></label></div>
 <div class="field">
-<input name="file" id="file" type="file" />
+<input name="file" type="file" />
 <p><MT_TRANS phrase="If you have a manifest file and multiple backup files, you first upload the manifest file here.  Movable Type will guide you through the restore process."> <a href="#" onclick="return openManual('backup_restore', 'manifest_file')" class="help">?</a><br /></p>
 </div>
 </div>
+
 <p style="text-align: center;"><input type="submit" name="upload_multiple_files" id="upload_multiple_files" value="<MT_TRANS phrase="Upload Multiple Files">" title="<MT_TRANS phrase="Upload Manifest File (m)">" accesskey="m" /></p>
 
 </fieldset>
+
 </form>
 </TMPL_IF>
 </div>
