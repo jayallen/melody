@@ -71,7 +71,6 @@ sub init {
         'preview_entry' => \&preview_entry,
         'cfg_archives' => \&cfg_archives,
         'cfg_archives_do_add' => \&cfg_archives_do_add,
-        'js_check_mtview' => \&js_check_mtview,
         'cfg_prefs' => \&cfg_prefs,
         'cfg_entries' => \&cfg_entries,
         'cfg_plugins' => \&cfg_plugins,
@@ -10394,29 +10393,6 @@ MTVIEW
         }
     }
     $app->add_return_arg(dynamic_set => 1);
-}
-
-sub js_check_mtview {
-    my $app = shift;
-    $app->validate_magic or return;
-    my $blog_id = $app->param('blog_id');
-    my $blog = MT::Blog->load($blog_id, { cached_ok => 1 });
-    return $app->errtrans('Blog (ID: [_1]) can\'t be found', $blog_id) if !defined($blog);
-
-    my $cache = 0;
-    my $conditional = 0;
-    my $mtview_path = File::Spec->catfile($blog->site_path(), "mtview.php");
-    if (-f $mtview_path) {
-        open my($fh), $mtview_path;
-        while (my $line = <$fh>) {
-            $cache = 1 if $line =~ m/^\s*\$mt->caching\s*=\s*true;/i;
-            $conditional = 1 if $line =~ /^\s*\$mt->conditional\s*=\s*true;/i;
-        }
-        close $fh;
-    }
-    $app->send_http_header('text/javascript');
-    $app->{no_print_body} = 1;
-    $app->print("{cache: $cache, conditional: $conditional}");
 }
 
 sub handshake {
