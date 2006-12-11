@@ -8198,6 +8198,15 @@ sub cfg_archives {
     $param{dynamic_custom} = $blog->custom_dynamic_templates eq 'custom';
     $param{dynamic_all} = $blog->custom_dynamic_templates eq 'all';
     $param{show_build_options} = $app->config('ObjectDriver') =~ m/^DBI::(postgres|sqlite|mysql)/;
+    my $mtview_path = File::Spec->catfile($blog->site_path(), "mtview.php");
+    if (-f $mtview_path) {
+        open my($fh), $mtview_path;
+        while (my $line = <$fh>) {
+            $param{dynamic_caching} = 1 if $line =~ m/^\s*\$mt->caching\s*=\s*true;/i;
+            $param{dynamic_conditional} = 1 if $line =~ /^\s*\$mt->conditional\s*=\s*true;/i;
+        }
+        close $fh;
+    }
     $iter = MT::Template->load_iter({ blog_id => $blog->id });
     my(@tmpl);
     while (my $tmpl = $iter->()) {
@@ -10320,7 +10329,7 @@ HTACCESS
             if (-f $mtview_path) {
                 open(my $mv, "<$mtview_path");
                 while (my $line = <$mv>) {
-                    $mv_contents .= "//$line" if ($line !~ /<\?(?:php)?|\?>/);
+                    $mv_contents .= $line if ($line !~ m!^//|<\?(?:php)?|\?>!);
                 }
                 close $mv;
             }
@@ -10331,20 +10340,27 @@ HTACCESS
             my $config = MT->instance->{cfg_file};
             my $cache_code = $cache ? "\n    \$mt->caching = true;" : '';
             my $conditional_code = $conditional ? "\n    \$mt->conditional = true;" : '';
-            my $mtview = <<MTVIEW;
-<?php
-$mv_contents
+            my $new_mtview = <<NEW_MTVIEW;
+
     include('$mtphp_path');
     \$mt = new MT($blog_id, '$config');$cache_code$conditional_code
     \$mt->view();
+NEW_MTVIEW
+            if ($new_mtview ne substr($mv_contents, 0, length($new_mtview))) {
+                $mv_contents =~ s!\n!\n//!gs;
+                my $mtview = <<MTVIEW;
+<?php
+$new_mtview
+$mv_contents
 ?>
 MTVIEW
-            $blog->file_mgr->mkpath($blog->site_path);
 
-            open(my $mv, ">$mtview_path")
-                || die "Couldn't open $mtview_path for appending";
-            print $mv $mtview || die "Couldn't write to $mtview_path";
-            close $mv;
+                $blog->file_mgr->mkpath($blog->site_path);
+                open(my $mv, ">$mtview_path")
+                    || die "Couldn't open $mtview_path for appending";
+                print $mv $mtview || die "Couldn't write to $mtview_path";
+                close $mv;
+            }
         }; if ($@) { print STDERR $@; } 
 
         my $compiled_template_path = File::Spec->catfile($blog->site_path(), 

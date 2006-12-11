@@ -120,36 +120,6 @@ function toggleDynamicOptions(selection) {
             fld.style.display = 'none';
         } else {
             fld.style.display = 'block';
-            TC.Client.call({
-                'load': function(c, response) {
-                    var result;
-                    try {
-                        result = eval('('+response+')');
-                        var cache = getByID("dynamic_cache");
-                        if (cache)
-                            cache.checked = result.cache;
-                        var condition = getByID("dynamic_conditional");
-                        if (condition)
-                            condition.checked = result.conditional;
-                        var progress = getByID("progress-bar");
-                        if (progress) {
-                            progress.style.display = "none";
-                        } else {
-                        }
-                        var area = getByID('dynamic_options');
-                        if (area) {
-                            area.style.display = "block";
-                        }
-                    } catch ( e ) {
-                        alert(e.message);
-                    }
-                },
-                'method': 'POST',
-                'uri': '<TMPL_VAR NAME=MT_URL>',
-                'arguments': { '__mode': 'js_check_mtview',
-                    'blog_id': '<TMPL_VAR NAME=BLOG_ID>',
-                    'magic_token': '<TMPL_VAR NAME=MAGIC_TOKEN>'}
-            });
         }
     }
     return false;
@@ -362,15 +332,12 @@ function toggleDynamicOptions(selection) {
 <option value="custom"<TMPL_IF NAME=DYNAMIC_CUSTOM> selected="selected"</TMPL_IF>><MT_TRANS phrase="Set each template's Build Options separately"></option>
 <option value="all"<TMPL_IF NAME=DYNAMIC_ALL> selected="selected"</TMPL_IF>><MT_TRANS phrase="Build all templates dynamically"></option>
 </select>
-<div id="dynamic_options_area" style="display:none;">
-<div id="progress-bar"><p><img src="<TMPL_VAR NAME=STATIC_URI>images/indeterminate-progress-bar.gif" alt="" height="24" width="124" /></p></div>
-<div id="dynamic_options" style="display:none;">
+<div id="dynamic_options_area"<TMPL_IF NAME=DYNAMIC_NONE> style="display:none;"</TMPL_IF>>
 <p><MT_TRANS phrase="Optional Settings for Dynamic Publishing:"> <a href="#" onclick="return openManual('blog_settings_publishing', 'dynamic_publishing_options')" class="help">?</a></p>
 <div class="field">
-<input type="checkbox" id="dynamic_cache" name="dynamic_cache" /><label for="dynamic_cache"><MT_TRANS phrase="Enable caching"></label> <input type="checkbox" id="dynamic_conditional" name="dynamic_conditional" /><label for="dynamic_conditional"><MT_TRANS phrase="Enable conditional retrieval"></label>
+<input type="checkbox" id="dynamic_cache" name="dynamic_cache" <TMPL_IF NAME=DYNAMIC_CACHING>checked="checked"</TMPL_IF>/><label for="dynamic_cache"><MT_TRANS phrase="Enable caching"></label> <input type="checkbox" id="dynamic_conditional" name="dynamic_conditional" <TMPL_IF NAME=DYNAMIC_CONDITIONAL>checked="checked"</TMPL_IF>/><label for="dynamic_conditional"><MT_TRANS phrase="Enable conditional retrieval"></label>
 </div>
 </div><a href="#" onclick="return openManual('blog_settings_publishing', 'dynamic_publishing')" class="help">?</a>
-</div>
 </div>
 </TMPL_IF>
 
