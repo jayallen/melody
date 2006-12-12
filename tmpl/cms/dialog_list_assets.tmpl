@@ -17,14 +17,25 @@ function validate (f) {
     return f['__mode'] ? true : false;
 }
 
-function slideScrollBar(id) {
+function toggleScrollBar(which) {
+    var move = which;
     var scrollArea = getByID("list-data-wrapper");
-    scrollArea.className = 'condense-list-data-wrapper';
-}
-
-function returnScrollBar(id) {
-    var scrollArea = getByID("list-data-wrapper");
-    scrollArea.className = 'list-data-wrapper';
+    if (move == 'left') {
+        scrollArea.className = 'condense-list-data-wrapper';
+    } else {
+        scrollArea.className = 'list-data-wrapper';
+    }
+    var table = getByID('assetDisplay'); 
+    var col, i = 0, cols = table.getElementsByTagName('td'); 
+    while (col = cols.item(i++)) { 
+        if (col.className == 'panel-description') { 
+            if (move == 'left') {
+                col.style.display = 'none'; 
+            } else {
+                col.style.display = 'block'; 
+            }
+        } 
+    }  
 }
 
 function displayAssetDetails(id) {
@@ -32,8 +43,8 @@ function displayAssetDetails(id) {
     var detail = getByID("asset-" + id + "-detail");
     var detail_inner = getByID("asset-" + id + "-detail-inner-modal");
     var asset = assets[id];
-    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); returnScrollBar();\"><MT_TRANS phrase="Close"></a>";
-    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); returnScrollBar();\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
+    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); toggleScrollBar('right');\"><MT_TRANS phrase="Close"></a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); toggleScrollBar('right');\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
     var preview;
     if (asset.thumbnail_url) {
         preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
@@ -240,7 +251,7 @@ TC.attachLoadEvent( init );
 <table cellspacing="0" class="list-heading <TMPL_UNLESS NAME=EDIT_BLOG_ID>show-weblog </TMPL_UNLESS><TMPL_IF NAME=VIEW_EXPANDED>expanded<TMPL_ELSE>compact</TMPL_IF>">
 
 <tr>
-<th class=""></th>
+<th class="cb"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="15" height="1"></th>
 <th id="as-file-status"><img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/flag.gif" alt="<MT_TRANS phrase="Status">" title="<MT_TRANS phrase="Status">" width="9" height="9" /></th>
 <th class="panel-label"><MT_TRANS phrase="Filename"></th>
 <!-- <th id="as-asset-type"><MT_TRANS phrase="Type"></th> -->
@@ -256,12 +267,12 @@ TC.attachLoadEvent( init );
 
         <div class="list-data-wrapper list-data" id="list-data-wrapper">
             <div class="list-data-layout-modal">
-            <table cellspacing="0">
+            <table cellspacing="0" id="assetDisplay">
 <TMPL_LOOP NAME=OBJECT_LOOP>
 <tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
 <td class="cb"><input type="radio" name="id" value="<TMPL_VAR NAME=ID>" class="select" onclick="this.form.submit_button.disabled = false;" /></td>
 <td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /</td>
-<td class="panel-label"><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="displayAssetDetails('<TMPL_VAR NAME=ID>'); slideScrollBar();"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel-modal"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner-modal" class="asset-detail-panel-inner-modal"></div></div></td>
+<td class="panel-label"><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="displayAssetDetails('<TMPL_VAR NAME=ID>'); toggleScrollBar('left');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel-modal"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner-modal" class="asset-detail-panel-inner-modal"></div></div></td>
 <!-- <td class="as-asset-type"><TMPL_VAR NAME=ASSET_CLASS ESCAPE=HTML></td> -->
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
 <td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
