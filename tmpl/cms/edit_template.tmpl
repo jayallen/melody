@@ -83,11 +83,11 @@ function init()
 }
 
 function validate (f, rebuild) {
-    if (!f.name.value) {
+    if (f.name && !f.name.value) {
         alert('<MT_TRANS phrase="You must set the Template Name." escape="singlequotes">');
         return false;
     }
-    else if (!f.outfile.value) {
+    else if (f.outfile && !f.outfile.value) {
         alert('<MT_TRANS phrase="You must set the template Output File." escape="singlequotes">');
         return false;
     }
