@@ -17,13 +17,23 @@ function validate (f) {
     return f['__mode'] ? true : false;
 }
 
+function slideScrollBar(id) {
+    var scrollArea = getByID("list-data-wrapper");
+    scrollArea.className = 'condense-list-data-wrapper';
+}
+
+function returnScrollBar(id) {
+    var scrollArea = getByID("list-data-wrapper");
+    scrollArea.className = 'list-data-wrapper';
+}
+
 function displayAssetDetails(id) {
     /* display popup panel showing details of selected asset */
     var detail = getByID("asset-" + id + "-detail");
-    var detail_inner = getByID("asset-" + id + "-detail-inner");
+    var detail_inner = getByID("asset-" + id + "-detail-inner-modal");
     var asset = assets[id];
-    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><MT_TRANS phrase="Close"></a>";
-    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
+    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); returnScrollBar();\"><MT_TRANS phrase="Close"></a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); returnScrollBar();\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
     var preview;
     if (asset.thumbnail_url) {
         preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
@@ -122,19 +132,22 @@ TC.attachLoadEvent( init );
 
 <h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>: </span> <MT_TRANS phrase="Assets"></h2>
 
-<div class="tabs">
-<ul>
-<TMPL_IF NAME=EDIT_BLOG_ID>
-<TMPL_IF NAME=CAN_UPLOAD>
-<li class="special">
-<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New File">" width="9" height="9" />
-<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=start_upload&__type=asset&blog_id=<TMPL_VAR NAME=BLOG_ID>&dialog_view=1&entry_insert=1&return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New File"></a>
-</li>
-</TMPL_IF>
-</TMPL_IF>
-</ul>
+<div class="items-wrapper">
+    <span class="modal_added"><MT_TRANS phrase="Select the image you want to insert, or upload a new one."></span>
 </div>
 
+<div class="search-box">
+<p class="page-desc">
+<TMPL_IF NAME=EDIT_BLOG_ID>
+<TMPL_IF NAME=CAN_UPLOAD>
+<img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New File">" width="9" height="9" />
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=start_upload&__type=asset&blog_id=<TMPL_VAR NAME=BLOG_ID>&dialog_view=1&entry_insert=1&return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New File"></a>
+</TMPL_IF>
+</TMPL_IF>
+</p>
+</div>
+
+<!-- 
 <div class="list-filters">
 <div class="inner">
 
@@ -208,6 +221,7 @@ TC.attachLoadEvent( init );
 </form>
 </div>
 </div>
+-->
 
 <div class="list-wrapper">
 <TMPL_IF NAME=OBJECT_LOOP>
@@ -222,49 +236,54 @@ TC.attachLoadEvent( init );
 <input type="hidden" name="blog_id" value="<TMPL_VAR NAME=EDIT_BLOG_ID>" />
 </TMPL_IF>
 
-<div class="list" id="selector">
-<table cellspacing="0" class="<TMPL_UNLESS NAME=EDIT_BLOG_ID>show-weblog </TMPL_UNLESS><TMPL_IF NAME=VIEW_EXPANDED>expanded<TMPL_ELSE>compact</TMPL_IF>">
+<div class="selector list" id="selector">
+<table cellspacing="0" class="list-heading <TMPL_UNLESS NAME=EDIT_BLOG_ID>show-weblog </TMPL_UNLESS><TMPL_IF NAME=VIEW_EXPANDED>expanded<TMPL_ELSE>compact</TMPL_IF>">
 
-<thead>
 <tr>
 <th class=""></th>
 <th id="as-file-status"><img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/flag.gif" alt="<MT_TRANS phrase="Status">" title="<MT_TRANS phrase="Status">" width="9" height="9" /></th>
-<th id="as-file-name"><MT_TRANS phrase="Filename"></th>
-<th id="as-asset-type"><MT_TRANS phrase="Type"></th>
+<th class="panel-label"><MT_TRANS phrase="Filename"></th>
+<!-- <th id="as-asset-type"><MT_TRANS phrase="Type"></th> -->
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
 <th id="as-weblog"><MT_TRANS phrase="Weblog"></th>
 </TMPL_UNLESS>
-<th id="as-file-size"><MT_TRANS phrase="Size"></th>
-<th id="as-created-by"><MT_TRANS phrase="Created By"></th>
-<th id="as-created-on"><MT_TRANS phrase="Created On"></th>
-<th id="as-view">&nbsp;</th>
+<th class="panel-description"><MT_TRANS phrase="Size"></th>
+<!-- <th id="as-created-by"><MT_TRANS phrase="Created By"></th> -->
+<!-- <th id="as-created-on"><MT_TRANS phrase="Created On"></th> -->
+<!-- <th id="as-view">&nbsp;</th> -->
 </tr>
-</thead>
-<tbody>
+</table>
 
-
+        <div class="list-data-wrapper list-data" id="list-data-wrapper">
+            <div class="list-data-layout-modal">
+            <table cellspacing="0">
 <TMPL_LOOP NAME=OBJECT_LOOP>
 <tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
 <td class="cb"><input type="radio" name="id" value="<TMPL_VAR NAME=ID>" class="select" onclick="this.form.submit_button.disabled = false;" /></td>
 <td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /</td>
-<td><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="return displayAssetDetails('<TMPL_VAR NAME=ID>');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner" class="asset-detail-panel-inner"></div></div></td>
-<td class="as-asset-type"><TMPL_VAR NAME=ASSET_CLASS ESCAPE=HTML></td>
+<td class="panel-label"><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="displayAssetDetails('<TMPL_VAR NAME=ID>'); slideScrollBar();"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel-modal"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner-modal" class="asset-detail-panel-inner-modal"></div></div></td>
+<!-- <td class="as-asset-type"><TMPL_VAR NAME=ASSET_CLASS ESCAPE=HTML></td> -->
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
 <td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
 </TMPL_UNLESS>
-<TMPL_IF NAME=FILE_SIZE_FORMATTED>
-<td class="as-file-size"><span title="<TMPL_VAR NAME=FILE_SIZE>"><TMPL_VAR NAME=FILE_SIZE_FORMATTED></td>
-<TMPL_ELSE>
-<td class="as-file-size"><TMPL_VAR NAME=FILE_SIZE></td>
-</TMPL_IF>
-<td class="as-created-by"><TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF></td>
-<td><span title="<TMPL_VAR NAME=CREATED_ON_FORMATTED>"><TMPL_IF NAME=CREATED_ON_RELATIVE><TMPL_IF NAME=DATES_RELATIVE><TMPL_VAR NAME=CREATED_ON_RELATIVE><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED></TMPL_IF><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED></TMPL_IF></span></td>
-<td class="status-view"><TMPL_IF NAME=URL><a href="<TMPL_VAR NAME=URL>" target="view_uploaded" title="<MT_TRANS phrase="View File">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="View File">" width="13" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF></td>
+            <td class="panel-description">
+            <TMPL_IF NAME=FILE_SIZE_FORMATTED>
+            <span class="float_desc" title="<TMPL_VAR NAME=FILE_SIZE>"><TMPL_VAR NAME=FILE_SIZE_FORMATTED></span>
+            <TMPL_ELSE>
+            <span class="float_desc"><TMPL_VAR NAME=FILE_SIZE></span>
+            </TMPL_IF>
+            <span class="link">
+            <TMPL_IF NAME=URL><a href="<TMPL_VAR NAME=URL>" target="view_uploaded" title="<MT_TRANS phrase="View File">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="View File">" width="13" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF>
+            </span>
+            </td>
+<!-- <td class="as-created-by"><TMPL_IF NAME=CREATED_BY><TMPL_VAR NAME=CREATED_BY><TMPL_ELSE><em><MT_TRANS phrase="System"></em></TMPL_IF></td> -->
+<!-- <td><span title="<TMPL_VAR NAME=CREATED_ON_FORMATTED>"><TMPL_IF NAME=CREATED_ON_RELATIVE><TMPL_IF NAME=DATES_RELATIVE><TMPL_VAR NAME=CREATED_ON_RELATIVE><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED></TMPL_IF><TMPL_ELSE><TMPL_VAR NAME=CREATED_ON_FORMATTED></TMPL_IF></span></td> -->
+<!-- <td class="status-view"><TMPL_IF NAME=URL><a href="<TMPL_VAR NAME=URL>" target="view_uploaded" title="<MT_TRANS phrase="View File">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="View File">" width="13" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF></td> -->
 </tr>
 </TMPL_LOOP>
 
-</tbody>
 </table>
+</div>
 </div>
 
 <div class="insert_button_spacing">&nbsp;</div>

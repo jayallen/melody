@@ -1296,10 +1296,15 @@ li {
 #list-asset table th#as-created-on { width: 16%; }
 #list-asset table th#as-view { width: 1%; min-width: 10px; ;}
 
+#list-asset table tr.selected td .asset-detail-panel-modal,
 #list-asset table tr.selected td .asset-detail-panel {
     color: #333;
 }
 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:link, 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:visited, 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:active, 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:hover,
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:link, 
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:visited, 
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:active, 
@@ -1307,6 +1312,11 @@ li {
     color: #3F658C;
 }
 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail, 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:link, 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:visited, 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:active, 
+#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:hover,
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail, 
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail a:link, 
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail a:visited, 
@@ -1329,6 +1339,22 @@ li {
     left: 100px;
     width: 381px;
     min-height: 215px;
+    z-index: 5;
+}
+
+.asset-detail-panel-modal {
+    display: none;
+    position: absolute;
+    top: 18px;
+    left: 220px;
+}
+
+.asset-detail-panel-inner-modal {
+    background-color: white;
+    border: 1px solid #8faebe;
+    padding: 5px;
+    width: 388px;
+    height: 240px;
     z-index: 5;
 }
 
@@ -3553,8 +3579,17 @@ body#mt-wizard #topnav-img {
 .list-data-wrapper { 
     font-size:11px;
     width: 618px; 
-    height: 240px;
+    height: 250px;
     overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-bottom: 1px solid #D7E3F5;
+}
+
+.condense-list-data-wrapper { 
+    font-size:11px;
+    width: 220px; 
+    height: 250px;
     overflow-x: hidden;
     overflow-y: auto;
     border-bottom: 1px solid #D7E3F5;
@@ -3563,18 +3598,22 @@ body#mt-wizard #topnav-img {
 * html body .list-data-wrapper { 
     font-size:11px;
     width: 618px; 
-    height: 240px;
+    height: 250px;
     overflow-y: auto;
     overflow-x: hidden;
     border-bottom: 1px solid #D7E3F5;
 } /* safari fix - overflow-x and overflow-y not supported by safari */
 
 .list-data-layout {
-    height: 240px;
+    height: 250px;
+}
+
+.list-data-layout-modal {
+    height: 250px;
 }
 
 .list-multi .list-data-wrapper {
-    height: 240px;
+    height: 250px;
 }
 
 .dialog .panel .search-box {
