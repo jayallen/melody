@@ -25,12 +25,12 @@ function doHandleMode (f, trigger, mode) {
     }
 </TMPL_IF>
 <TMPL_IF NAME=IS_IMAGE>
+    url += '&width=<TMPL_VAR NAME=WIDTH>&height=<TMPL_VAR NAME=HEIGHT>&image_type=<TMPL_VAR NAME=IMAGE_TYPE>';
     if (f.include.checked) { 
         url += '&include=1';
     } else {
         url += '&link=1';
     }
-    url += '&width=<TMPL_VAR NAME=WIDTH>&height=<TMPL_VAR NAME=HEIGHT>&image_type=<TMPL_VAR NAME=IMAGE_TYPE>';
     if (f.include.checked) {
         url += '&wrap_text=1&align=';
         for (i = 0; i < f.align.length; i++) {
@@ -42,11 +42,11 @@ function doHandleMode (f, trigger, mode) {
     if (f.image_defaults.checked) url += '&image_defaults=1';
 </TMPL_IF>
     if (mode == 'asset_insert') {
-        document.asset_insert.submit();
-        return true;
+        url += '&id=<TMPL_VAR NAME=ASSET_ID>';
+        location.href = url;
+    } else {
+        closeDialog(url);
     }
-
-    closeDialog(url);
 }
 
 <TMPL_IF NAME=DO_THUMB>
@@ -99,12 +99,6 @@ function adjustWidthHeight (f, width) {
 
 //-->
 </script>
-
-<form name="asset_insert" action="<TMPL_VAR NAME=SCRIPT_URL>">
-<input type="hidden" name="__mode" value="asset_insert" />
-<input type="hidden" name="id" value="<TMPL_VAR NAME=ASSET_ID>" />
-<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>" />
-</form>
 
 <form action="<TMPL_VAR NAME=SCRIPT_URL>" onsubmit="return false;">
 <TMPL_IF NAME=DO_THUMB>
