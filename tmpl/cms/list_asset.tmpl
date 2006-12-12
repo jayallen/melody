@@ -9,13 +9,34 @@ var assets = {};
 assets[<TMPL_VAR NAME=ID>] = <TMPL_VAR NAME=METADATA_JSON>;
 </TMPL_LOOP>
 
+var opened = false;
+var asset_id = '';
+function hasOpened(id) {
+    opened = true;
+    asset_id = id;
+}
+
+function notOpened(id) {
+    opened = false;
+    asset_id = '';
+}
+
+function checkOpened() {
+    if (opened) {
+        hide('asset-' + asset_id + '-detail');
+        notOpened(asset_id);
+    }
+}
+
 function displayAssetDetails(id) {
     /* display popup panel showing details of selected asset */
+    checkOpened();
+    hasOpened(id);
     var detail = getByID("asset-" + id + "-detail");
     var detail_inner = getByID("asset-" + id + "-detail-inner");
     var asset = assets[id];
-    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><MT_TRANS phrase="Close"></a>";
-    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail');return false;\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
+    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); notOpened('<TMPL_VAR NAME=ID>');\"><MT_TRANS phrase="Close"></a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); notOpened('<TMPL_VAR NAME=ID>');\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
     var preview;
     if (asset.thumbnail_url) {
         preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
