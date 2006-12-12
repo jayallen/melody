@@ -11078,7 +11078,10 @@ sub backup {
         my $filename = File::Spec->catfile($temp_dir, $file . "-1.xml");
         $fh = gensym();
         open $fh, ">$filename";
-        push @files, { filename => $file . "-1.xml" };
+        push @files, { 
+            url => $app->uri . "?__mode=backup_download&name=$file-1.xml&magic_token=" . $app->current_magic,
+            filename => $file . "-1.xml"
+        };
         $printer = sub { my ($data, $message) = @_; print $fh $data; $app->print($message); return length($data); };
         $splitter = sub {
             my ($findex) = @_;
@@ -11087,7 +11090,10 @@ sub backup {
             my $filename = File::Spec->catfile($temp_dir, $file . "-$findex.xml");
             $fh = gensym();
             open $fh, ">$filename";
-            push @files, { filename => $file . "-$findex.xml" };
+            push @files, {
+                url => $app->uri . "?__mode=backup_download&name=$file-$findex.xml&magic_token=" . $app->current_magic,
+                filename => $file . "-$findex.xml"
+            };
             my $header .= "<movabletype xmlns='" . MT::BackupRestore::NS_MOVABLETYPE() . "'>\n";
             $header = "<?xml version='1.0' encoding='$enc'?>\n$header" if $enc !~ m/utf-?8/i;
             print $fh $header;
@@ -11114,7 +11120,10 @@ sub backup {
             }
             print $fh "</manifest>\n";
             close $fh;
-            push @files, { filename => "$file.manifest" };
+            push @files, {
+                url => $app->uri . "?__mode=backup_download&name=$file.manifest&magic_token=" . $app->current_magic,
+                filename => "$file.manifest"
+            };
             if ('0' eq $archive) {
                 $param->{files_loop} = \@files;
                 $param->{tempdir} = $temp_dir;
@@ -11172,20 +11181,25 @@ sub backup_download {
     $app->validate_magic() or return;
     my $filename = $app->param('filename');
     my $temp_dir = $app->config('TempDir');
+    my $newfilename;
+    if (defined($filename)) {
+        my $sess = MT::Session->load( { kind => 'BU', name => $filename } );
+        if (!defined($sess) || !$sess) {
+            return $app->errtrans("Specified file was not found.");
+        }
+        my @ts = gmtime($sess->start);
+        my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d",
+            $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
+        $newfilename = "Movable_Type-$ts" . '-Backup';
+        $sess->remove;
+    } else {
+        $newfilename = $app->param('name');
+        $filename = $newfilename;
+    }
+
     require File::Spec;
     my $fname = File::Spec->catfile($temp_dir, $filename);
-    
-    my $sess = MT::Session->load( { kind => 'BU', name => $filename } );
-    if (!defined($sess) || !$sess) {
-        return $app->errtrans("Specified file was not found.");
-    }
-    my @ts = gmtime($sess->start);
-    my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d",
-        $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
-    my $newfilename = "Movable_Type-$ts" . '-Backup';
-    $sess->remove;
 
-    $app->{no_print_body} = 1;
     my $contenttype;
     if ($filename =~ m/^xml\..+$/i) {
         my $enc = $app->config('PublishCharset') || 'utf-8';
@@ -11198,20 +11212,23 @@ sub backup_download {
         $contenttype = 'application/zip';
         $newfilename .= '.zip';
     } else {
-        $app->send_http_header('application/octet-stream');
+        $contenttype = 'application/octet-stream';
     }
-
-    $app->set_header("Content-Disposition" => "attachment; filename=$newfilename");
-    $app->send_http_header($contenttype);
     
-    open my $fh, "<$fname";
-    my $data;
-    while (read $fh, my($chunk), 8192) {
-        $data .= $chunk;
+    if (open(my $fh, "<$fname")) {
+        $app->{no_print_body} = 1;
+        $app->set_header("Content-Disposition" => "attachment; filename=$newfilename");
+        $app->send_http_header($contenttype);
+        my $data;
+        while (read $fh, my($chunk), 8192) {
+            $data .= $chunk;
+        }
+        close $fh;
+        $app->print($data);
+        unlink $fname;
+    } else {
+        $app->errtrans('Specified file was not found.');
     }
-    close $fh;
-    $app->print($data);
-    unlink $fname;
 }
 
 sub restore {
