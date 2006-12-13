@@ -1,7 +1,9 @@
 <TMPL_INCLUDE NAME=header-dialog.tmpl>
 <script type="text/javascript">
-var str = getByID('text', window.parent.document);
-setSelection(str, '<TMPL_VAR NAME=ASSET_HTML>');
+<!--
+var str = getByID('<TMPL_VAR NAME=EDIT_FIELD>', window.parent.document);
+setSelection(str, '<TMPL_VAR NAME=ASSET_HTML ESCAPE=JS>');
 closeDialog();
+//-->
 </script>
 <TMPL_INCLUDE NAME=footer-dialog.tmpl>

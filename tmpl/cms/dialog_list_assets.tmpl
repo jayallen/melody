@@ -121,6 +121,7 @@ function displayAssetDetails(id) {
 function dialogClose(data) {
     if (!data) {
         closeDialog();
+        return;
     }
     // user made a selection and clicked insert...
     var f = document.forms['insert_asset'];
@@ -139,8 +140,6 @@ function init() {
 	panel.pager.setState(<TMPL_VAR NAME=PAGER_JSON>);
 	panel.parent = dlg;
 	dlg.open({}, dialogClose);
-	//tableSelect = new TC.TableSelect( "selector" );
-	//tableSelect.rowSelect = true;
 }
 TC.attachLoadEvent( init );
 // -->
@@ -177,6 +176,7 @@ TC.attachLoadEvent( init );
 <TMPL_IF NAME=EDIT_BLOG_ID>
 <input type="hidden" name="blog_id" value="<TMPL_VAR NAME=EDIT_BLOG_ID>" />
 <input type="hidden" name="id" value="" />
+<input type="hidden" name="edit_field" value="<TMPL_VAR NAME=EDIT_FIELD>" />
 </TMPL_IF>
 </form>
 

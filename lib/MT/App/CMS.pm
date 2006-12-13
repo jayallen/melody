@@ -985,6 +985,7 @@ sub list_assets {
                 blog_id => $blog_id,
                 blog_name => $blog->name,
                 edit_blog_id => $blog_id,
+                edit_field => $app->param('edit_field'),
                 dialog_view => $app->param('dialog_view') ? 1 : 0,
             ) : ()),
             class_loop => \@class_loop,
@@ -1003,7 +1004,7 @@ sub asset_insert {
         return $app->errtrans("Can't load asset, $asset.");
     my $param = {
         asset_html => $asset->as_html(class => $app->param('class') || ''),
-        magic_token => $app->param('magic_token'),
+        edit_field => $app->param('edit_field'),
     };
     $app->build_page('asset_insert.tmpl', $param);
 }
