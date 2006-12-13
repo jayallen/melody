@@ -2749,7 +2749,7 @@ sub edit_object {
             $app->add_breadcrumb($app->translate('Entries'),
                                  $app->uri( 'mode' => 'list_entries',
                                      args => { blog_id => $blog_id }));
-            $app->add_breadcrumb($obj->title || $app->translate('(untitled)'));
+            $app->add_breadcrumb((!defined($obj->title) || $obj->title eq '') ? $app->translate('(untitled)') : $obj->title);
             ## Don't pass in author_id, because it will clash with the
             ## author_id parameter of the author currently logged in.
             delete $param{'author_id'};
@@ -3138,7 +3138,7 @@ sub edit_object {
             $app->add_breadcrumb($app->translate('Edit Comment'));
             if (my $entry = $obj->entry) {
                 my $title_max_len = const('DISPLAY_LENGTH_EDIT_COMMENT_TITLE');
-                $param{entry_title} = $entry->title || $entry->text || "";
+                $param{entry_title} = (!defined($entry->title) || $entry->title eq '') ? $app->translate('(untitled)') : $entry->title;
                 $param{entry_title} = substr_text($param{entry_title}, 0, $title_max_len) . '...'
                     if $param{entry_title} && length_text($param{entry_title}) > $title_max_len;
                 $param{entry_permalink} = $entry->permalink;
@@ -6401,8 +6401,9 @@ sub build_comment_table {
             $entry = new MT::Entry;
             $entry->title('* ' . $app->translate('Orphaned comment') . ' *');
         }
-        $row->{entry_title} = defined($entry->title) ? $entry->title 
-                            : defined($entry->text) ? $entry->text : "";
+        $row->{entry_title} = (defined($entry->title) ? $entry->title 
+                            : defined($entry->text) ? $entry->text : '');
+        $row->{entry_title} = $app->translate('(untitled)') if $row->{entry_title} eq '';
         $row->{entry_title} = substr_text($row->{entry_title}, 0, $title_max_len) . '...'
             if $row->{entry_title} && length_text($row->{entry_title}) > $title_max_len;
         $row->{commenter_id} = $obj->commenter_id() if $obj->commenter_id();
