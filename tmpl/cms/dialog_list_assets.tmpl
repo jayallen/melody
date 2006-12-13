@@ -26,19 +26,6 @@ function toggleScrollBar(which) {
     } else {
         TC.removeClassName(el, "condensed");
     }
-    /*
-    var table = getByID('assetDisplay'); 
-    var col, i = 0, cols = table.getElementsByTagName('td'); 
-    while (col = cols.item(i++)) { 
-        if (col.className == 'panel-description') { 
-            if (move == 'left') {
-                col.style.display = 'none'; 
-            } else {
-                col.style.display = ''; 
-            }
-        } 
-    }
-    */
 }
 
 var opened = false;
@@ -157,11 +144,8 @@ TC.attachLoadEvent( init );
 
 <h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>: </span> <MT_TRANS phrase="Assets"></h2>
 
-<div class="items-wrapper">
     <span class="modal_added"><MT_TRANS phrase="Select the image you want to insert, or upload a new one."></span>
-</div>
 
-<div class="search-box">
 <p class="page-desc">
 <TMPL_IF NAME=EDIT_BLOG_ID>
 <TMPL_IF NAME=CAN_UPLOAD>
@@ -170,7 +154,6 @@ TC.attachLoadEvent( init );
 </TMPL_IF>
 </TMPL_IF>
 </p>
-</div>
 
 <div class="list-wrapper">
 </TMPL_UNLESS>
@@ -203,7 +186,7 @@ TC.attachLoadEvent( init );
 </tr>
 </table>
 
-        <div class="list-data-wrapper list-data">
+        <div class="list-data-wrapper-modal list-data">
 </TMPL_UNLESS>
             <div class="list-data-layout-modal">
             <table cellspacing="0" class="list-data" id="assetDisplay">
@@ -217,7 +200,7 @@ TC.attachLoadEvent( init );
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
 <td class="detail"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
 </TMPL_UNLESS>
-            <td class="panel-description detail">
+            <td class="panel-description"><span class="detail">
             <TMPL_IF NAME=FILE_SIZE_FORMATTED>
             <span class="float_desc" title="<TMPL_VAR NAME=FILE_SIZE>"><TMPL_VAR NAME=FILE_SIZE_FORMATTED></span>
             <TMPL_ELSE>
@@ -225,7 +208,7 @@ TC.attachLoadEvent( init );
             </TMPL_IF>
             <span class="link">
             <TMPL_IF NAME=URL><a href="<TMPL_VAR NAME=URL>" target="view_uploaded" title="<MT_TRANS phrase="View File">"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="View File">" width="13" height="9" /></a><TMPL_ELSE>&nbsp;</TMPL_IF>
-            </span>
+            </span></span>
             </td>
 </tr>
 </TMPL_LOOP>

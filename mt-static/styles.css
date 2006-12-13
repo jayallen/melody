@@ -1296,15 +1296,15 @@ li {
 #list-asset table th#as-created-on { width: 16%; }
 #list-asset table th#as-view { width: 1%; min-width: 10px; ;}
 
-#list-asset table tr.selected td .asset-detail-panel-modal,
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal,
 #list-asset table tr.selected td .asset-detail-panel {
     color: #333;
 }
 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:link, 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:visited, 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:active, 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:hover,
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:link, 
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:visited, 
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:active, 
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .asset_detail_left a:hover,
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:link, 
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:visited, 
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .asset_detail_left a:active, 
@@ -1312,11 +1312,11 @@ li {
     color: #3F658C;
 }
 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail, 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:link, 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:visited, 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:active, 
-#list-asset table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:hover,
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail, 
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:link, 
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:visited, 
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:active, 
+#list-assets-dialog table tr.selected td .asset-detail-panel-modal .asset-detail-panel-inner-modal .close_asset_detail a:hover,
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail, 
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail a:link, 
 #list-asset table tr.selected td .asset-detail-panel .asset-detail-panel-inner .close_asset_detail a:visited, 
@@ -1346,15 +1346,15 @@ li {
     display: none;
     position: absolute;
     top: 18px;
-    left: 220px;
+    left: 219px;
 }
 
 .asset-detail-panel-inner-modal {
     background-color: white;
-    border: 1px solid #8faebe;
+    border: 1px solid #D7E3F5;
     padding: 5px;
-    width: 388px;
-    height: 240px;
+    width: 387px;
+    height: 255px;
     z-index: 5;
 }
 
@@ -3586,14 +3586,24 @@ body#mt-wizard #topnav-img {
     border-bottom: 1px solid #D7E3F5;
 }
 
+.list-data-wrapper-modal { 
+    font-size:11px;
+    width: 618px; 
+    height: 265px;
+    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-bottom: 1px solid #D7E3F5;
+}
+
 #list-assets-dialog div.condensed table tr .detail {
     display: none;
 }
 
-#list-assets-dialog div.condensed div.list-data-wrapper { 
+#list-assets-dialog div.condensed div.list-data-wrapper-modal { 
     font-size:11px;
     width: 220px; 
-    height: 250px;
+    height: 265px;
     overflow: auto;
     overflow-x: hidden;
     overflow-y: auto;
