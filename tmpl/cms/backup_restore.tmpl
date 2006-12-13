@@ -91,7 +91,7 @@ function highlightSwitch(selection) {
 </div>
 <div id="restore-panel" style="display: none;">
 <TMPL_IF NAME=MISSING_XPATH>
-<div class="error-message"><MT_TRANS phrase="Perl module XML::XPath and/or its dependencies is missing - Movable Type can not restore system without it."></div>
+<div class="error-message"><MT_TRANS phrase="Perl module XML::XPath and/or its dependencies are missing - Movable Type can not restore the system without it."></div>
 <TMPL_ELSE>
 <form method="post" enctype="multipart/form-data" action="<TMPL_VAR NAME=SCRIPT_URL>">
 <input type="hidden" name="__mode" value="restore" />
