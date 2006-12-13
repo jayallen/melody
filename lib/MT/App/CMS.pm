@@ -152,7 +152,6 @@ sub init {
         'restore_upload_manifest' => \&restore_upload_manifest,
         'dialog_restore_upload' => \&dialog_restore_upload,
         'restore_premature_cancel' => \&restore_premature_cancel,
-        'asset_insert' => \&asset_insert,
     );
     $app->{state_params} = [
         '_type', 'id', 'tab', 'offset', 'filter',
@@ -994,19 +993,6 @@ sub list_assets {
             has_expanded_mode => 1,
         },
     });
-}
-
-sub asset_insert {
-    my $app = shift;
-    my $asset = $app->param('id');
-    require MT::Asset;
-    $asset = MT::Asset->load($asset) ||
-        return $app->errtrans("Can't load asset, $asset.");
-    my $param = {
-        asset_html => $asset->as_html(class => $app->param('class') || ''),
-        edit_field => $app->param('edit_field'),
-    };
-    $app->build_page('asset_insert.tmpl', $param);
 }
 
 sub list_roles {
@@ -5468,8 +5454,9 @@ sub register_type {
 sub show_upload_html {
     my $app = shift;
     defined(my $text = $app->_process_post_upload) or return;
-    $app->build_page('show_upload_html.tmpl',
-        { upload_html => $text });
+    $app->build_page('asset_insert.tmpl',
+        { upload_html => $text, edit_field => $app->param('edit_field'), },
+    );
 }
 
 sub start_upload_entry {
@@ -5574,6 +5561,8 @@ sub _process_post_upload {
         $asset->created_by($app->user->id);
         $asset->save;
 
+        $app->param('thumb_asset_id' => $asset->id);
+
         MT->run_callbacks('CMSUploadFile',
                           File => $t_file, Url => $thumb, Size => length($blob),
                           Asset => $asset,
@@ -5651,27 +5640,20 @@ sub _process_post_upload {
                           Type => 'popup',
                           Blog => $blog);
         }
-        my $link = $thumb ? qq(<img src="$thumb" width="$thumb_width" height="$thumb_height" alt="" />) : q{<MT_TRANS phrase="View image">};
-        return $app->translate_templatized(<<"HTML");
-<a href="$url" onclick="window.open('$url','popup','width=$width,height=$height,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false">$link</a>
-HTML
-    } elsif ($q->param('include')) {
-        my $wrap_style = $q->param('wrap_text') && $q->param('align')
-            ? 'class="display_img_'. $q->param('align') .'" ' : '';
-        if ($thumb) {
-            return <<"HTML";
-<a href="$url"><img alt="$fname" src="$thumb" width="$thumb_width" height="$thumb_height" $wrap_style/></a>
-HTML
-        } else {
-            return <<"HTML";
-<img alt="$fname" src="$url" width="$width" height="$height" $wrap_style/>
-HTML
-        }
-    } elsif ($q->param('link')) {
-        return $app->translate_templatized(<<"HTML");
-<a href="$url"><MT_TRANS phrase="Download file"></a>
-HTML
     }
+    return $app->asset_insert_text();
+}
+
+sub asset_insert_text {
+    my $app = shift;
+    my $q = $app->param;
+    require MT::Asset;
+    my $asset = MT::Asset->load($q->param('id')) ||
+        return $app->errtrans("Can't load asset, ". $q->param('id') .'.');
+    my $text = $asset->as_html($q);
+    return $q->param('popup') || $q->param('link')
+        ? $app->translate_templatized($text)
+        : $text;
 }
 
 use constant NEW_PHASE => 1;
@@ -9160,6 +9142,7 @@ sub start_upload {
     $param{refocus} = 1;
     $param{missing_paths} = -d $blog->site_path || -d $blog->archive_path ? 0 : 1;
     $param{entry_insert} = $app->param('entry_insert');
+    $param{edit_field} = $app->param('edit_field');
     $app->build_page('upload.tmpl', \%param);
 }
 
@@ -9300,6 +9283,7 @@ sub upload_file {
                 site_path => scalar $q->param('site_path'),
                 middle_path => $middle_path,
                 entry_insert => $q->param('entry_insert'),
+                edit_field => $app->param('edit_field'),
                 fname => $basename });
         }
     }
@@ -9382,6 +9366,8 @@ sub upload_file {
     $asset->created_by($app->user->id);
     $asset->save;
     $param{asset_id} = $asset->id;
+
+    $param{edit_field} = $q->param('edit_field');
 
     if ($param{is_image}) {
         eval { require MT::Image; MT::Image->new or die; };
@@ -12198,11 +12184,6 @@ Applies a set of tags to one or more entries.
 =item * approve_item
 
 Approves a comment or trackback for publication.
-
-=item * asset_insert
-
-Load an asset, given the I<asset id>, construct an appropriate
-parameter list and render the I<asset_insert> template.
 
 =item * ban_commenter
 

@@ -14,7 +14,7 @@ var assets = {};
 function validate (f) {
     var x = undefined;
     for (var i = 0; i < f.id.length; i++) {
-        if (f.id[i].checked) f.__mode.value = 'asset_insert';
+        if (f.id[i].checked) f.__mode.value = 'show_upload_html';
     }
     return f['__mode'] ? true : false;
 }
@@ -166,7 +166,7 @@ TC.attachLoadEvent( init );
 <TMPL_IF NAME=EDIT_BLOG_ID>
 <TMPL_IF NAME=CAN_UPLOAD>
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New File">" width="9" height="9" />
-<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=start_upload&amp;_type=asset&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;entry_insert=1&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New File"></a>
+<a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=start_upload&amp;_type=asset&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;entry_insert=1&amp;edit_field=<TMPL_VAR NAME=EDIT_FIELD>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New File"></a>
 </TMPL_IF>
 </TMPL_IF>
 </p>

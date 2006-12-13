@@ -6,13 +6,13 @@
 function doClick (f, trigger) {
     var mode = 'list_assets';
 <TMPL_IF NAME=ENTRY_INSERT>
-    mode = 'asset_insert';
+    mode = 'show_upload_html';
 <TMPL_ELSE>
 <TMPL_IF NAME=CAN_POST>
     if (f.new_entry.checked) mode = 'start_upload_entry';
 </TMPL_IF>
 </TMPL_IF>
-    doHandleMode(f, trigger, mode);
+doHandleMode(f, trigger, mode);
 }
 
 function doHandleMode (f, trigger, mode) {
@@ -41,12 +41,12 @@ function doHandleMode (f, trigger, mode) {
     if (f.popup.checked) url += '&popup=1';
     if (f.image_defaults.checked) url += '&image_defaults=1';
 </TMPL_IF>
-    if (mode == 'asset_insert') {
-        url += '&id=<TMPL_VAR NAME=ASSET_ID>';
-        location.href = url;
-    } else {
-        closeDialog(url);
-    }
+<TMPL_IF NAME=ENTRY_INSERT>
+    url += '&id=<TMPL_VAR NAME=ASSET_ID>&edit_field=<TMPL_VAR NAME=EDIT_FIELD>';
+    location.href = url;
+<TMPL_ELSE>
+    closeDialog(url);
+</TMPL_IF>
 }
 
 <TMPL_IF NAME=DO_THUMB>

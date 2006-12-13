@@ -100,11 +100,54 @@ sub thumbnail_file {
 }
 
 sub as_html {
-    my $self = shift;
-    my %args = @_;
-    (my $name = $self->file_name) =~ s/'/\\'/g;
-    return sprintf '<img src="%s" height="%d" width="%d" alt="%s" class="%s" />',
-        $self->url, $self->image_height, $self->image_width, $name, $args{class};
+    my ($self, $q) = @_;
+
+    my $text = '';
+
+    (my $fname = $self->file_name) =~ s/'/\\'/g;
+
+    my $thumb = undef;
+    if ($q->param('thumb')) {
+        $thumb = MT::Asset->load($q->param('thumb_asset_id')) ||
+            return MT::App->errtrans(
+                "Can't load asset, ". $q->param('thumb_asset_id') .'.'
+            );
+    }
+
+    if ($q->param('popup')) {
+        my $link = $thumb
+            ? sprintf('<img src="%s" width="%d" height="%d" alt="%s" />',
+                $thumb->url, $thumb->image_width, $thumb->image_height, $fname,
+              )
+            : '<MT_TRANS phrase="View image">';
+        $text = sprintf(
+            q|<a href="%s" onclick="window.open('%s','popup','width=%d,height=%d,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false">%s</a>|,
+            $self->url, $self->url, $self->image_width, $self->image_height, $link,
+        );
+    }
+    elsif ($q->param('include')) {
+        my $wrap_style = $q->param('wrap_text') && $q->param('align')
+            ? 'class="display_img_' . $q->param('align') . '" ' : '';
+        if ($q->param('thumb')) {
+            $text = sprintf(
+                '<a href="%s"><img alt="%s" src="%s" width="%d" height="%d" %s/></a>',
+                $self->url, $fname, $thumb->url, $thumb->image_width, $thumb->image_height, $wrap_style,
+            );
+        }
+        else {
+            $text = sprintf(
+                '<img alt="%s" src="%s" width="%d" height="%d" %s/>',
+                $fname, $self->url, $self->image_width, $self->image_height, $wrap_style,
+            );
+        }
+    }
+    elsif ($q->param('link')) {
+        $text = sprintf(
+            '<a href="%s"><MT_TRANS phrase="Download file"></a>', $self->url,
+        );
+    }
+
+    return $text;
 }
 
 1;
