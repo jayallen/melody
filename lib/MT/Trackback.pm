@@ -113,6 +113,12 @@ sub restore_parent_ids {
     my ($data, $objects) = @_;
 
     my $result = 0;
+    my $new_blog = $objects->{'MT::Blog#' . $data->{blog_id}};
+    if ($new_blog) {
+        $data->{blog_id} = $new_blog->id;
+    } else {
+        return 0;
+    }                            
     if ($data->{category_id}) {
         my $new_obj = $objects->{'MT::Category#' . $data->{category_id}};
         if ($new_obj) {
