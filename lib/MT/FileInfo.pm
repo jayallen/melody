@@ -114,6 +114,7 @@ sub parent_names {
     my $parents = {
         blog => 'MT::Blog',
         template => 'MT::Template',
+        templatemap => 'MT::TemplateMap',
         category => 'MT::Category',
         entry => 'MT::Entry',
     };

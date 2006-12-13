@@ -476,6 +476,10 @@ sub restore_parent_ids {
 
     my $done = 0;
     for my $parent_element_name (keys %$parent_names) {
+        if (!exists($data->{$parent_element_name . '_id'})) {
+            $done++;
+            next;
+        }
         my $parent_class_name = $parent_names->{$parent_element_name};
         my $old_id = $data->{$parent_element_name . '_id'};
         my $new_obj = $objects->{"$parent_class_name#$old_id"};

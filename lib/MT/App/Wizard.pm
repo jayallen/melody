@@ -35,8 +35,8 @@ my @OPT = (
     [ 'MIME::Base64', 0, 0, 'MIME::Base64 is required in order to enable comment registration.', 'MIME Base64'],
     [ 'XML::Atom', 0, 0, 'XML::Atom is required in order to use the Atom API.', 'XML Atom'],
     [ 'Archive::Tar', 0, 0, 'Archive::Tar is required in order to archive files in backup/restore operation.', 'Archive Tar'],
-    [ 'Compress::Zlib', 0, 0, 'Compress::Zlib is required in order to compress/decompress files in backup/restore operation.', 'Compress Zlib'],
-    [ 'IO::String', 0, 0, 'IO::String is required in order to archive files in backup/restore operation.', 'I/O String'],
+    [ 'IO::Compress::Gzip', 0, 0, 'IO::Compress::Gzip is required in order to compress files in backup/restore operation.', 'IO Compress Gzip'],
+    [ 'IO::Uncompress::Gunzip', 0, 0, 'IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.', 'IO Uncompress Gunzip'],
     [ 'Archive::Zip', 0, 0, 'Archive::Zip is required in order to archive files in backup/restore operation.', 'Archive Zip'],
     [ 'XML::XPath', 0, 0, 'XML::XPath and/or its dependencies is required in order to restore from multiple files.', 'XML XPath'],
 );

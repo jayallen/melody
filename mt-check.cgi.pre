@@ -228,10 +228,10 @@ my @OPT = (
 
     [ 'Archive::Tar', 0, 0, translate('Archive::Tar is required in order to archive files in backup/restore operation.')],
 
-    [ 'Compress::Zlib', 0, 0, translate('Compress::Zlib is required in order to compress/decompress files in backup/restore operation.')],
-
-    [ 'IO::String', 0, 0, translate('IO::String is required in order to archive files in backup/restore operation.')],
-
+    [ 'IO::Compress::Gzip', 0, 0, translate('IO::Compress::Gzip is required in order to compress files in backup/restore operation.')],
+        
+    [ 'IO::Uncompress::Gunzip', 0, 0, translate('IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.')],
+    
     [ 'Archive::Zip', 0, 0, translate('Archive::Zip is required in order to archive files in backup/restore operation.')],
 
     [ 'XML::XPath', 0, 0, translate('XML::XPath and/or its dependencies is required in order to restore.')],

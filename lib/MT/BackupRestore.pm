@@ -306,7 +306,7 @@ sub restore_directory {
         close $fh;
     }
     
-    $error_assets = _restore_assets($dir, $backups, \%objects, $callback) if defined($backups->{assets});
+     _restore_assets($dir, $backups, \%objects, $error_assets, $callback) if defined($backups->{assets});
     $deferred;
 }
 
@@ -359,36 +359,38 @@ sub restore_asset {
     next if !defined($path);
     my ($vol, $dir, $fn) = File::Spec->splitpath($path);
     if (!-w "$vol$dir") {
-        $errors->{$id} = MT->translate('[_1] is not writable.', "$vol$dir");
-        next;
-    }
-    my $filename = "$id-" . $asset_element->{name};
-    $callback->(MT->translate("Copying [_1] to [_2]...", $filename, $path));
-    my $file;
-    if (defined($tmp)) {
-        $file = File::Spec->catfile($tmp, $filename) if defined($tmp);
+        my $voldir =  "$vol$dir";
+        # we do need decode_utf8 here
+        $errors->{$id} = MT::I18N::decode_utf8(MT->translate('[_1] is not writable.', $voldir));
     } else {
-        $file = $asset_element->{fh};
+        my $filename = "$id-" . $asset_element->{name};
+        $callback->(MT->translate("Copying [_1] to [_2]...", $filename, $path));
+        my $file;
+        if (defined($tmp)) {
+            $file = File::Spec->catfile($tmp, $filename) if defined($tmp);
+        } else {
+            $file = $asset_element->{fh};
+        }
+        copy($file, $path)
+            or $errors->{$id} = $!;
     }
-    copy($file, $path)
-        or $errors->{$id} = $!;
     $callback->(exists($errors->{$id}) ?
-        MT->translate("Failed: [_1]\n", $errors->{$id}) :
-        MT->translate("Done.\n")
+        MT->translate('Failed: ') . $errors->{$id} :
+        MT->translate("Done.")
     );
+    $callback->("\n");
 }
 
 sub _restore_assets {
-    my ($tmp, $backups, $objects, $callback) = @_;
+    my ($tmp, $backups, $objects, $errors, $callback) = @_;
     my $assets = $backups->{assets};
-    my $errors = {};
-    return $errors if !defined($assets);
+    return 0 if !defined($assets);
     use File::Copy;
     require File::Spec;
     for my $asset_element (@$assets) {
         __PACKAGE__->restore_asset($tmp, $asset_element, $objects, $errors, $callback);
     }
-    $errors;
+    1;
 }
 
 sub restore_upload_manifest {

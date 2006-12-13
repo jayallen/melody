@@ -10911,13 +10911,11 @@ sub backup_restore {
     my $missing_tgz = 0;
     eval "require Archive::Tar;";
     $missing_tgz = 1 if $@;
-    eval "require Compress::Zlib;";
+    eval "require IO::Compress::Gzip;";
     $missing_tgz = 1 if $@;
     $param{targz} = !$missing_tgz;
     my $missing_zip = 0;
     eval "require Archive::Zip;";
-    $missing_zip = 1 if $@;
-    eval "require IO::String;";
     $missing_zip = 1 if $@;
     $param{zip} = !$missing_zip;
 
@@ -10977,13 +10975,11 @@ sub backup {
     if ('1' eq $archive) {
         eval "require Archive::Tar;";
         return $app->errtrans('Archive::Tar is required to archive in tar.gz format.') if $@;
-        eval "require Compress::Zlib;";
-        return $app->errtrans('Compress::Zlib is required to archive in tar.gz format.') if $@;
+        eval "require IO::Compress::Gzip;";
+        return $app->errtrans('IO::Compress::Gzip is required to archive in tar.gz format.') if $@;
     } elsif ('2' eq $archive) {
         eval "require Archive::Zip;";
         return $app->errtrans('Archive::Zip is required to archive in zip format.') if $@;
-        eval "require IO::String;";
-        return $app->errtrans('IO::String is required to archive in zip format.') if $@;
     }
 
     my $param = {};
@@ -11025,7 +11021,6 @@ sub backup {
             };
         } elsif ('1' eq $archive) { # tar.gz
             require Archive::Tar;
-            require Compress::Zlib;
             $printer = sub { my ($data, $message) = @_; $arc_buf .= $data; $app->print($message); return length($data); };
             $finisher = sub {
                 my ($asset_files) = @_;
@@ -11036,11 +11031,10 @@ sub backup {
                 $arc->add_data(
                     "$file.manifest",
                     "<manifest xmlns='" . MT::BackupRestore::NS_MOVABLETYPE() . "'><file type='backup' name='$file.xml' /></manifest>"); 
-                require Compress::Zlib;
-                my $dest = Compress::Zlib::memGzip($arc->write);
-                binmode $fh;
-                print $fh $dest;
-                close $fh;
+                require IO::Compress::Gzip;
+                my $z = IO::Compress::Gzip->new($fh);
+                $arc->write($z);
+                $z->close;
                 $app->_backup_finisher($fname, $param);
             }
         } elsif ('2' eq $archive) { # zip
@@ -11132,11 +11126,10 @@ sub backup {
                 }
                 my ($fh_arc, $filepath) = File::Temp::tempfile('tar.XXXXXXXX', DIR => $temp_dir);
                 (my $vol, my $dir, $fname) = File::Spec->splitpath($filepath);
-                require Compress::Zlib;
-                my $dest = Compress::Zlib::memGzip($arc->write);
-                binmode $fh_arc;
-                print $fh_arc $dest;
-                close $fh_arc;
+                require IO::Compress::Gzip;
+                my $z = IO::Compress::Gzip->new($fh_arc);
+                $arc->write($z);
+                $z->close;
                 $app->_backup_finisher($fname, $param);
             } elsif ('2' eq $archive) { # zip
                 require Archive::Zip;
@@ -11271,48 +11264,69 @@ sub restore {
         if ($uploaded_filename =~ /^.+\.xml$/i) {
             $param->{restore_upload} = 1;
             $result = $app->restore_file($fh, \$error);
-        } elsif ($uploaded_filename =~ /^.+\.tar\.gz$/i) {
+        } elsif ($uploaded_filename =~ /^.+\.tar(\.gz)?$/i) {
+            my $e = '';
             eval "require Archive::Tar;";
-            eval "require Compress::Zlib;";
-            eval "require IO::String;";
-            if ($@) {
+            $e = $@;
+            if ($1) {
+                eval "require IO::Uncompress::Gunzip;";
+                $e = $@;
+            }
+            if ($e) {
                 $result = 0;
-                $error = 'Required modules (Archive::Tar, IO::String, and/or Compress::Zlib) are missing.';
+                $error = 'Required modules (Archive::Tar and/or IO::Uncompress::Gunzip) are missing.';
             } else {
                 my $temp_dir = $app->config('TempDir');
                 require File::Temp;
                 my $tmp = File::Temp::tempdir($uploaded_filename . 'XXXX', DIR => $temp_dir, CLEANUP => 1);
-                my $buffer;
-                while (read $fh, my($chunk), 8192) {
-                    $buffer .= $chunk;
+                my $z;
+                my $tar;
+                if ($1) {
+                    # it's a gz file
+                    eval {
+                        bless $fh, 'IO::File';
+                        $z = new IO::Uncompress::Gunzip $fh or die $@;
+                    };
+                    if ($e = $@) {
+                        $result = 0;
+                        $app->print($e);
+                        $param->{restore_success} = 0;
+                        $param->{error} = $e;
+                        $app->print($app->build_page("restore_end.tmpl", $param));
+                        close $fh if !$no_upload;
+                        return 1;
+                    }
+                } else {
+                    $z = bless $fh, 'IO::File';
                 }
-                my $dest = Compress::Zlib::memGunzip($buffer);
-                my $ios = IO::String->new(\$dest);
-                my $tar = Archive::Tar->new($ios);
-                for my $file ($tar->list_files) {
-                    my $f = File::Spec->catfile($tmp, $file);
-                    $tar->extract_file($file, $f);
+                eval {
+                    $tar = Archive::Tar->new($z) or die $@;
+                };
+                if ($e = $@) {
+                    $result = 0;
+                    $error = $e;
+                    $app->print($app->translate("Uploaded file was invalid. $1"));
+                } else {
+                    for my $file ($tar->list_files) {
+                        my $f = File::Spec->catfile($tmp, $file);
+                        $tar->extract_file($file, $f);
+                    }
+                    close $z;
+                    $result = $app->restore_directory($tmp, \$error);
                 }
-                $result = $app->restore_directory($tmp, \$error);
             }
         } elsif ($uploaded_filename =~ /^.+\.zip$/i) {
             eval "require Archive::Zip;";
-            eval "require IO::String;";
             if ($@) {
                 $result = 0;
-                $error = 'Required modules (Archive::Zip and/or IO::String) are missing.';
+                $error = 'Required module (Archive::Zip) is missing.';
             } else {
                 my $temp_dir = $app->config('TempDir');
                 require File::Temp;;
                 my $tmp = File::Temp::tempdir($uploaded_filename . 'XXXX', DIR => $temp_dir, CLEANUP => 1);
-                my $buffer;
-                while (read $fh, my($chunk), 8192) {
-                    $buffer .= $chunk;
-                }
-                require IO::String;
-                my $ios = IO::String->new(\$buffer);
+                bless $fh, 'IO::File';
                 my $zip = Archive::Zip->new;
-                my $s = $zip->readFromFileHandle($ios);
+                my $s = $zip->readFromFileHandle($fh);
                 for my $member ($zip->memberNames) {
                     my $f = File::Spec->catfile($tmp, $member);
                     $zip->extractMember($member, $f);
@@ -11389,9 +11403,9 @@ sub restore_directory {
     if (scalar(keys %error_assets)) {
         my $data;
         while (my ($key, $value) = each %error_assets) {
-            $data .= $app->translate("Actual file for an asset (ID: [_1]) could not be restored: [_2]\n", $key, $value);
+            $data .= $app->translate('MT::Asset#[_1]: ', $key) . $value . "\n";
         }
-        my $message = 'Some of the actual files for assets could not be restored.';
+        my $message = $app->translate('Some of the actual files for assets could not be restored.');
         $app->log({
             message => $message,
             level => MT::Log::WARNING(),
@@ -11400,7 +11414,7 @@ sub restore_directory {
             metadata => $data,
         });
         $$error .= $message;
-    }    
+    }
 
     if (scalar(keys %$deferred)) {
         my @names = keys %$deferred;
