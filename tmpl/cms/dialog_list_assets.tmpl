@@ -200,9 +200,9 @@ TC.attachLoadEvent( init );
             <div class="list-data-layout-modal">
             <table cellspacing="0" class="list-data" id="assetDisplay">
 <TMPL_LOOP NAME=OBJECT_LOOP>
-<input type="hidden" id="asset-<TMPL_VAR NAME=ID>-json" value="<TMPL_VAR NAME=METADATA_JSON ESCAPE=HTML>" />
 <tr id="asset-<TMPL_VAR NAME=ID>" class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
-<td class="cb"><input type="radio" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
+<td class="cb"><input type="hidden" id="asset-<TMPL_VAR NAME=ID>-json" value="<TMPL_VAR NAME=METADATA_JSON ESCAPE=HTML>" />
+<input type="radio" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
 <td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /</td>
 <td class="panel-label"><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="displayAssetDetails('<TMPL_VAR NAME=ID>'); toggleScrollBar('left');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span>
 <div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel-modal"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner-modal" class="asset-detail-panel-inner-modal"></div></div></td>
