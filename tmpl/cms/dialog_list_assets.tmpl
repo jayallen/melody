@@ -20,13 +20,13 @@ function validate (f) {
 }
 
 function toggleScrollBar(which) {
-    var move = which;
-    var scrollArea = getByID("list-data-wrapper");
-    if (move == 'left') {
-        scrollArea.className = 'condense-list-data-wrapper';
+    var el = getByID("selector");
+    if (which == 'left') {
+        TC.addClassName(el, "condensed");
     } else {
-        scrollArea.className = 'list-data-wrapper';
+        TC.removeClassName(el, "condensed");
     }
+    /*
     var table = getByID('assetDisplay'); 
     var col, i = 0, cols = table.getElementsByTagName('td'); 
     while (col = cols.item(i++)) { 
@@ -37,7 +37,8 @@ function toggleScrollBar(which) {
                 col.style.display = ''; 
             }
         } 
-    }  
+    }
+    */
 }
 
 var opened = false;
@@ -118,6 +119,11 @@ function displayAssetDetails(id) {
     return false;
 }
 
+function viewChange(ds, fn) {
+    checkOpened();
+    if (fn) fn(ds);
+}
+
 function dialogClose(data) {
     if (!data) {
         closeDialog();
@@ -137,6 +143,8 @@ function init() {
 	dlg = new Dialog.Simple("list-assets");
 	var panel = new ListingPanel("assets");
 	dlg.panel = panel;
+	var old_update = panel.datasource.onUpdate;
+	panel.datasource.onUpdate = function(ds) { viewChange(ds, old_update) };
 	panel.pager.setState(<TMPL_VAR NAME=PAGER_JSON>);
 	panel.parent = dlg;
 	dlg.open({}, dialogClose);
@@ -191,11 +199,11 @@ TC.attachLoadEvent( init );
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
 <th id="as-weblog"><MT_TRANS phrase="Weblog"></th>
 </TMPL_UNLESS>
-<th class="panel-description"><MT_TRANS phrase="Size"></th>
+<th class="panel-description"><span class="detail"><MT_TRANS phrase="Size"></span></th>
 </tr>
 </table>
 
-        <div class="list-data-wrapper list-data" id="list-data-wrapper">
+        <div class="list-data-wrapper list-data">
 </TMPL_UNLESS>
             <div class="list-data-layout-modal">
             <table cellspacing="0" class="list-data" id="assetDisplay">
@@ -207,9 +215,9 @@ TC.attachLoadEvent( init );
 <td class="panel-label"><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="displayAssetDetails('<TMPL_VAR NAME=ID>'); toggleScrollBar('left');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span>
 <div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel-modal"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner-modal" class="asset-detail-panel-inner-modal"></div></div></td>
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
-<td><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
+<td class="detail"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
 </TMPL_UNLESS>
-            <td class="panel-description">
+            <td class="panel-description detail">
             <TMPL_IF NAME=FILE_SIZE_FORMATTED>
             <span class="float_desc" title="<TMPL_VAR NAME=FILE_SIZE>"><TMPL_VAR NAME=FILE_SIZE_FORMATTED></span>
             <TMPL_ELSE>

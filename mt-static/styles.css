@@ -3586,7 +3586,11 @@ body#mt-wizard #topnav-img {
     border-bottom: 1px solid #D7E3F5;
 }
 
-.condense-list-data-wrapper { 
+#list-assets-dialog div.condensed table tr .detail {
+    display: none;
+}
+
+#list-assets-dialog div.condensed div.list-data-wrapper { 
     font-size:11px;
     width: 220px; 
     height: 250px;
