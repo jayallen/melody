@@ -386,7 +386,7 @@ sub do_import {
                     }
 
                     ## Assign a title if one is not already assigned.
-                    unless ($entry->title) {
+                    if (!defined($entry->title)) {
                         my $body = $entry->text;
                         if ($t_start && $t_end && $body =~
                             s!\Q$t_start\E(.*?)\Q$t_end\E\s*!!s) {
