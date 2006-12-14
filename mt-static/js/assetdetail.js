@@ -1,4 +1,6 @@
-/* for showing and hiding asset details */
+/* for showing, hiding, and displaying asset details */
+
+var isModal = getByID("list-assets-dialog");
 
 function toggleScrollBar(which) {
     var el = getByID("selector");
@@ -30,7 +32,6 @@ function checkOpened() {
 }
 
 function toggleAssetDetails(id) {
-    var isModal = getByID("list-assets-dialog");
     if (asset_id == id) {
         hide('asset-' + asset_id + '-detail');
         notOpened(asset_id);
@@ -43,4 +44,88 @@ function toggleAssetDetails(id) {
             toggleScrollBar('left');
         }
     }
+}
+
+var assets = {};
+
+function displayAssetDetails(id) {
+    /* display popup panel showing details of selected asset */
+    checkOpened();
+    hasOpened(id);
+    var detail = getByID("asset-" + id + "-detail");
+    if (isModal) {
+        var detail_inner = getByID("asset-" + id + "-detail-inner-modal");
+    } else {
+        var detail_inner = getByID("asset-" + id + "-detail-inner");
+    }
+    var asset = assets[id];
+    if (!asset) {
+        var detail_json = getByID("asset-" + id + "-json");
+        if (!detail_json) return false;
+        asset = eval('(' + detail_json.value + ')');
+        if (!asset) return false;
+        assets[id] = asset;
+    }
+    var close = trans('Close');
+    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); notOpened('" + id + "'); toggleScrollBar('right');\">" + close + "</a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); notOpened('" + id + "'); toggleScrollBar('right');\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"" + StaticURI + "images/spacer.gif\" width=\"9\" height=\"9\"></a>";
+    var preview;
+    if (asset.thumbnail_url) {
+        preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
+    } else {
+        ext = asset.ext;
+        var icons = ("doc,eps,fla,gif,jpg,mp3,mpg,pdf,png,ppt,psd,txt,xls,zip");
+        var icon_array = icons.split(",");
+        for (var loop=0; loop < icon_array.length; loop++) {
+            if (ext == icon_array[loop]){
+                asset.ext = ext;
+                break;
+            } else {
+                asset.ext = "default";
+            }
+        }
+        var noPreview = trans('No Preview Available');
+        var clickToSee = trans('Click to see uploaded file.');
+        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><div class=\"asset-icon-" + asset.ext + "\"><img src=\"" + StaticURI + "images/spacer.gif\" width=\"90\" height=\"96\"></div></div></div><b>" + noPreview + "</b><br /><a href=\"" + asset.url + "\" target=\"view_uploaded\">" + clickToSee + "</a>";
+    }
+    var metadata = '';
+    var meta_names = [];
+    var meta_name;
+    for (meta_name in asset) {
+        if (meta_name.match(/^[a-z_]/)) continue;
+        if (!asset[meta_name]) continue;
+        meta_names[meta_names.length] = meta_name;
+    }
+    meta_names.sort();
+    var i;
+    for (i = 0; i < meta_names.length; i++) {
+        meta_name = meta_names[i];
+        metadata += '<dt>' + meta_name + ":</dt> <dd>" + asset[meta_name] + "</dd>";
+    }
+    iam = asset.name;
+    detail_inner.innerHTML = "<div class=\"close_asset_detail\">" + close_link + " " + close_icon + "</div>"
+        + "<div class=\"asset-detail-title\">" + iam + "</div>"
+        + "<div class=\"asset_detail_left\">" + preview + "</div>"
+        + "<div class=\"asset_detail_right\">"
+        + "<div class=\"metadata\"><dl>" + metadata + "</dl></div>"
+        + "</div>";
+    show("asset-" + id + "-detail");
+    return false;
+}
+
+function viewChange(ds, fn) {
+    checkOpened();
+    if (fn) fn(ds);
+}
+
+function dialogClose(data) {
+    if (!data) {
+        closeDialog();
+        return;
+    }
+    // user made a selection and clicked insert...
+    var f = document.forms['select_asset'];
+    var sel = dlg.panel.tableSelect.selected();
+    f['id'].value = sel[0].value;
+    f.submit();
 }

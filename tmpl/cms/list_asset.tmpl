@@ -1,67 +1,11 @@
 <TMPL_INCLUDE NAME="header.tmpl">
 
-<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/assetdetail.js"></script>
-
 <div id="list-asset">
+
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/assetdetail.js"></script>
 
 <script type="text/javascript">
 <!--
-var assets = {};
-<TMPL_LOOP NAME=OBJECT_LOOP>
-assets[<TMPL_VAR NAME=ID>] = <TMPL_VAR NAME=METADATA_JSON>;
-</TMPL_LOOP>
-
-function displayAssetDetails(id) {
-    /* display popup panel showing details of selected asset */
-    checkOpened();
-    hasOpened(id);
-    var detail = getByID("asset-" + id + "-detail");
-    var detail_inner = getByID("asset-" + id + "-detail-inner");
-    var asset = assets[id];
-    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); notOpened('<TMPL_VAR NAME=ID>');\"><MT_TRANS phrase="Close"></a>";
-    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); notOpened('<TMPL_VAR NAME=ID>');\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"9\" height=\"9\"></a>";
-    var preview;
-    if (asset.thumbnail_url) {
-        preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
-    } else {
-        ext = asset.ext;
-        var icons = ("doc,eps,fla,gif,jpg,mp3,mpg,pdf,png,ppt,psd,txt,xls,zip");
-        var icon_array = icons.split(",");
-        for (var loop=0; loop < icon_array.length; loop++) {
-            if (ext == icon_array[loop]){
-                asset.ext = ext;
-                break;
-            } else {
-                asset.ext = "default";
-            }
-        }
-        preview = "<div class=\"asset-icon-area\"><div class=\"asset-icon-layout\"><div class=\"asset-icon-" + asset.ext + "\"><img src=\"<TMPL_VAR NAME=STATIC_URI>images/spacer.gif\" width=\"90\" height=\"96\"></div></div></div><b><MT_TRANS phrase="No Preview Available"></b><br /><a href=\"" + asset.url + "\" target=\"view_uploaded\"><MT_TRANS phrase="Click to see uploaded file."></a>";
-    }
-    var metadata = '';
-    var meta_names = [];
-    var meta_name;
-    for (meta_name in asset) {
-        if (meta_name.match(/^[a-z_]/)) continue;
-        if (!asset[meta_name]) continue;
-        meta_names[meta_names.length] = meta_name;
-    }
-    meta_names.sort();
-    var i;
-    for (i = 0; i < meta_names.length; i++) {
-        meta_name = meta_names[i];
-        metadata += '<dt>' + meta_name + ":</dt> <dd>" + asset[meta_name] + "</dd>";
-    }
-    iam = asset.name;
-    detail_inner.innerHTML = "<div class=\"close_asset_detail\">" + close_link + " " + close_icon + "</div>"
-        + "<div class=\"asset-detail-title\">" + iam + "</div>"
-        + "<div class=\"asset_detail_left\">" + preview + "</div>"
-        + "<div class=\"asset_detail_right\">"
-        + "<div class=\"metadata\"><dl>" + metadata + "</dl></div>"
-        + "</div>";
-    show("asset-" + id + "-detail");
-    return false;
-}
-
 function enableFilterButton() {
     getByID("filter-button").style.display = "inline";
 }
@@ -248,7 +192,8 @@ TC.attachLoadEvent( init );
 
 <TMPL_LOOP NAME=OBJECT_LOOP>
 <tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
-<td class="cb"><input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
+<td class="cb"><input type="hidden" id="asset-<TMPL_VAR NAME=ID>-json" value="<TMPL_VAR NAME=METADATA_JSON ESCAPE=HTML>" />
+<input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
 <td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /></td>
 <td><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="return toggleAssetDetails('<TMPL_VAR NAME=ID>');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span><div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner" class="asset-detail-panel-inner"></div></div></td>
 <td class="as-asset-type"><TMPL_VAR NAME=ASSET_CLASS ESCAPE=HTML></td>
