@@ -987,15 +987,14 @@ sub list_assets {
         Params => {
             ($blog ? (
                 blog_id => $blog_id,
-                blog_name => $blog->name,
+                blog_name => $blog->name || '',
                 edit_blog_id => $blog_id,
-                edit_field => $app->param('edit_field'),
-                dialog_view => $app->param('dialog_view') ? 1 : 0,
+                edit_field => $app->param('edit_field') || '',
+                dialog_view => ($app->param('dialog_view') ? 1 : 0),
             ) : ()),
             class_loop => \@class_loop,
             can_delete_files => ($blog ? $app->{perms}->can_edit_assets : $app->user->is_superuser),
             nav_assets => 1,
-            has_expanded_mode => 1,
         },
     });
 }
