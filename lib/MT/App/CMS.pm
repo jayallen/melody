@@ -11527,10 +11527,11 @@ sub dialog_restore_upload {
     $param->{deferred_json} = JSON::objToJson($deferred) if defined($deferred);
 
     my $uploaded = $q->param('file');
+    $uploaded =~ s!\\!/!g;   ## Change backslashes to forward slashes
     my ($volume, $directories, $uploaded_filename) = File::Spec->splitpath($uploaded) if defined($uploaded);
     if (defined($uploaded) && ($current ne $uploaded_filename)) {
         close $fh;
-        $param->{error} = $app->translate('Please upload [_1] in this page.[_2]', $current, $q->param('file'));
+        $param->{error} = $app->translate('Please upload [_1] in this page.', $current);
         return $app->build_page('dialog_restore_upload.tmpl', $param);
     }
 
