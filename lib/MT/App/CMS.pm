@@ -61,6 +61,7 @@ sub init {
         'list_authors' => \&list_authors,
         'list_commenters' => \&list_commenters,
         'list_assets' => \&list_assets,
+        'asset_insert' => \&asset_insert,
         'save_commenter_perm' => \&save_commenter_perm,
         'trust_commenter' => \&trust_commenter,
         'ban_commenter' => \&ban_commenter,
@@ -97,7 +98,6 @@ sub init {
         'start_upload' => \&start_upload,
         'upload_file' => \&upload_file,
         'start_upload_entry' => \&start_upload_entry,
-        'show_upload_html' => \&show_upload_html,
         'logout' => \&logout,
         'start_recover' => \&start_recover,
         'recover' => \&recover_password,
@@ -5451,11 +5451,13 @@ sub register_type {
     $API{$type} = $param;
 }
 
-sub show_upload_html {
+sub asset_insert {
     my $app = shift;
     defined(my $text = $app->_process_post_upload) or return;
-    $app->build_page('asset_insert.tmpl',
-        { upload_html => $text, edit_field => $app->param('edit_field'), },
+    $app->build_page('asset_insert.tmpl', {
+            upload_html => $text,
+            edit_field => $app->param('edit_field'),
+        },
     );
 }
 
@@ -12556,8 +12558,6 @@ Handler for resetting the system-wide activity log.
 
 =item * show_status
 
-=item * show_upload_html
-
 =item * start_import
 
 =item * start_rebuild_pages
@@ -12565,6 +12565,8 @@ Handler for resetting the system-wide activity log.
 =item * start_recover
 
 =item * start_upload
+
+=item * asset_insert
 
 =item * start_upload_entry
 

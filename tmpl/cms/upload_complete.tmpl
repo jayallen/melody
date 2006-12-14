@@ -6,7 +6,7 @@
 function doClick (f, trigger) {
     var mode = 'list_assets';
 <TMPL_IF NAME=ENTRY_INSERT>
-    mode = 'show_upload_html';
+    mode = 'asset_insert';
 <TMPL_ELSE>
 <TMPL_IF NAME=CAN_POST>
     if (f.new_entry.checked) mode = 'start_upload_entry';
