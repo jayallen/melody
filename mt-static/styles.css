@@ -1402,6 +1402,11 @@ li {
 .metadata dt { font-weight: bold; }
 .metadata dd { margin-left: 0px; }
 
+.metadata_dialog { width: 205px; height: 230px; overflow: auto; }
+.metadata_dialog dl { margin-top: 0px; }
+.metadata_dialog dt { font-weight: bold; }
+.metadata_dialog dd { margin-left: 0px; }
+
 /* tmpl/cms/list_comment.tmpl */
 
 /* global */

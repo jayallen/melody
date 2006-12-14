@@ -103,11 +103,15 @@ function displayAssetDetails(id) {
         metadata += '<dt>' + meta_name + ":</dt> <dd>" + asset[meta_name] + "</dd>";
     }
     iam = asset.name;
+    var metadataClass = 'metadata';
+    if (isModal) {
+        metadataClass = 'metadata_dialog';
+    }
     detail_inner.innerHTML = "<div class=\"close_asset_detail\">" + close_link + " " + close_icon + "</div>"
         + "<div class=\"asset-detail-title\">" + iam + "</div>"
         + "<div class=\"asset_detail_left\">" + preview + "</div>"
         + "<div class=\"asset_detail_right\">"
-        + "<div class=\"metadata\"><dl>" + metadata + "</dl></div>"
+        + "<div class=\"" + metadataClass + "\"><dl>" + metadata + "</dl></div>"
         + "</div>";
     show("asset-" + id + "-detail");
     return false;
