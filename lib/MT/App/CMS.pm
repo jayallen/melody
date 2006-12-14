@@ -342,6 +342,7 @@ sub init_core_callbacks {
         CMSPostDelete_notification CMSPostDelete_author CMSPostDelete_category
         CMSPostDelete_comment CMSPostDelete_entry CMSPostDelete_ping
         CMSPostDelete_template CMSPostDelete_tag
+        CMSPostSave_asset CMSPostDelete_asset
     );
     $MT::CallbackAlias{'AppPostEntrySave'} = 'CMSPostSave.entry';
     $MT::CallbackAlias{'CMSPostEntrySave'} = 'CMSPostSave.entry';
@@ -438,6 +439,10 @@ sub init_core_callbacks {
         #'HandleJunk' => \&_builtin_spam_handler,
         #'HandleNotJunk' => \&_builtin_spam_unhandler,
         'NotJunkTest' => \&_cb_notjunktest_filter,
+
+        # assets
+        'CMSPostSave.asset' => \&CMSPostSave_asset,
+        'CMSPostDelete.asset' => \&CMSPostDelete_asset,
     });
 }
 
@@ -4878,6 +4883,32 @@ sub CMSPostDelete_tag {
     });
 }
 
+sub CMSPostSave_asset {
+    my $eh = shift;
+    my ($app, $obj, $original) = @_;
+
+    if (!$original->id) {
+        $app->log({
+            message => $app->translate("Asset '[_1]' created by '[_2]'", $obj->file_name, $app->user->name),
+            level => MT::Log::INFO(),
+            class => 'asset',
+            category => 'new',
+        });
+    }
+    1;
+}
+
+sub CMSPostDelete_asset {
+    my ($eh, $app, $obj) = @_;
+
+    $app->log({
+        message => $app->translate("Asset '[_1]' (ID:[_2]) deleted by '[_3]'", $obj->file_name, $obj->id, $app->user->name),
+        level => MT::Log::INFO(),
+        class => 'asset',
+        category => 'delete'
+    });
+}
+
 sub save_object {
     my $app = shift;
     my $q = $app->param;
@@ -5551,6 +5582,7 @@ sub _process_post_upload {
         require MT::Asset;
         my $img_pkg = MT::Asset->class_handler('image');
         my $asset = new $img_pkg;
+        my $original = $asset->clone;
         $asset->blog_id($blog_id);
         #$asset->url($thumb);
         $asset->file_path($t_file);
@@ -5562,6 +5594,7 @@ sub _process_post_upload {
         $asset->image_height($thumb_height);
         $asset->created_by($app->user->id);
         $asset->save;
+        MT->run_callbacks('CMSPostSave.asset', $app, $asset, $original);
 
         $app->param('thumb_asset_id' => $asset->id);
 
@@ -5570,6 +5603,7 @@ sub _process_post_upload {
                           Asset => $asset,
                           Type => 'thumbnail',
                           Blog => $blog);
+
         MT->run_callbacks('CMSUploadImage',
                           File => $t_file, Url => $thumb,
                           Asset => $asset,
@@ -5627,6 +5661,7 @@ sub _process_post_upload {
 
             my $img_pkg = MT::Asset->class_handler('image');
             my $asset = new $img_pkg;
+            my $original = $asset->clone;
             $asset->blog_id($blog_id);
             $asset->url($url);
             $asset->file_path($abs_file_path);
@@ -5634,6 +5669,7 @@ sub _process_post_upload {
             $asset->file_ext($blog->file_extension);
             $asset->created_by($app->user->id);
             $asset->save;
+            MT->run_callbacks('CMSPostSave.asset', $app, $asset, $original);
 
             MT->run_callbacks('CMSUploadFile',
                           File => $abs_file_path, Url => $url,
@@ -9357,6 +9393,7 @@ sub upload_file {
     require MT::Asset;
     my $img_pkg = MT::Asset->class_handler($param{is_image} ? 'image' : 'file');
     my $asset = new $img_pkg;
+    my $original = $asset->clone;
     $asset->blog_id($blog_id);
     $asset->url($url);
     $asset->file_path($local_file);
@@ -9368,6 +9405,8 @@ sub upload_file {
     }
     $asset->created_by($app->user->id);
     $asset->save;
+    MT->run_callbacks('CMSPostSave.asset', $app, $asset, $original);
+
     $param{asset_id} = $asset->id;
 
     $param{edit_field} = $q->param('edit_field');
