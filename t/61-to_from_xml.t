@@ -32,6 +32,7 @@ my %objects;
 my $error;
 
 my $blog = MT::Blog->load(1);
+my $blog2;
 my $xml = $blog->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
 
 my $xp = XML::XPath->new(xml => $xml);
@@ -43,7 +44,7 @@ for my $index (1..$nodeset->size()) {
     next if !($node->isa('XML::XPath::Node::Element'));
 
     require MT::Blog;
-    my $blog2 = MT::Blog->from_xml(
+    $blog2 = MT::Blog->from_xml(
         XPath => $xp,
         XmlNode => $node, 
         Objects => \%objects, 
@@ -126,31 +127,48 @@ for my $index (1..$nodeset->size()) {
         my $notes2 = MT::Notification->load({ blog_id => $blog2->id, email => $email2 });
         ok(defined($notes2));
     }
-    
-    require MT::Template;
-    my @templates2 = MT::Template->load({ blog_id => $blog2->id });
-    is(scalar(@templates2), MT::Template->count({ blog_id => $blog->id }));
-    for my $template2 (@templates2) {
-        my $template = MT::Template->load({ blog_id => $blog->id, name => $template2->name, type => $template2->type });
-        ok(defined($template));
-        is($template2->outfile, $template->outfile);
-        is($template2->text, $template->text) if defined($template2->text);
-        is($template2->linked_file, $template->linked_file);
-        is($template2->linked_file_mtime, $template->linked_file_mtime);
-        is($template2->linked_file_size, $template->linked_file_size);
-        is($template2->rebuild_me, $template->rebuild_me);
-        is($template2->build_dynamic, $template->build_dynamic);
-    }
-
-    require MT::TemplateMap;
-    my @templatemaps2 = MT::TemplateMap->load({ blog_id => $blog2->id });
-    is(scalar(@templatemaps2), MT::TemplateMap->count({ blog_id => $blog->id }));
-    for my $templatemap2 (@templatemaps2) {
-        my $template3 = MT::Template->load($templatemap2->id);
-        ok(defined($template3));
-    }
-
 }
+
+my @templates = MT::Template->load({blog_id => 1});
+for my $templ (@templates) {
+    my $xml9 = $templ->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
+
+    my $xp9 = XML::XPath->new(xml => $xml9);
+    my $current_path9 = "/*[local-name()='template']";
+    my $nodeset9 = $xp9->find($current_path9);
+
+    for my $index (1..$nodeset9->size()) {
+        my $node = $nodeset9->get_node($index);
+        next if !($node->isa('XML::XPath::Node::Element'));
+
+        my $template2 = MT::Template->from_xml(
+            XPath => $xp9,
+            XmlNode => $node, 
+            Objects => \%objects, 
+            Error => \$error, 
+            Callback => sub { print(@_); },
+            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
+            
+        );
+
+        is($template2->outfile, $templ->outfile);
+        is($template2->text, $templ->text) if defined($template2->text);
+        is($template2->linked_file, $templ->linked_file);
+        is($template2->linked_file_mtime, $templ->linked_file_mtime);
+        is($template2->linked_file_size, $templ->linked_file_size);
+        is($template2->rebuild_me, $templ->rebuild_me);
+        is($template2->build_dynamic, $templ->build_dynamic);
+
+        require MT::TemplateMap;
+        my @templatemaps2 = MT::TemplateMap->load({ blog_id => $blog2->id, template_id => $template2->id });
+        is(scalar(@templatemaps2), MT::TemplateMap->count({ blog_id => $blog->id, template_id => $templ->id }));
+        for my $templatemap2 (@templatemaps2) {
+            my $template3 = MT::Template->load($templatemap2->id);
+            ok(defined($template3));
+        }
+    }
+}
+
 
 my @authors = MT::Author->load();
 for my $author (@authors) {

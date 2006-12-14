@@ -422,19 +422,6 @@ sub to_hash {
     $hash;
 }
 
-sub children_names {
-    my $obj = shift;
-    my $children = {
-        permission => 'MT::Permission',
-        association => 'MT::Association',
-        #entry => 'MT::Entry',       ## An author is a parent of a category/entry
-        #category => 'MT::Category', ## but a category/entry is not a child of an author
-                                     ## otherwise they duplicate in restore operation.
-                                     ## Also, <author> must come before <category> and
-                                     ## <entry> in the backup file.
-    };
-    $children;
-}
 1;
 __END__
 

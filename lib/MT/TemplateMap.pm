@@ -46,15 +46,6 @@ sub remove {
     $map->SUPER::remove(@_);
 }
 
-sub parent_names {
-    my $obj = shift;
-    my $parents = {
-        blog => 'MT::Blog',
-        template => 'MT::Template',
-    };
-    $parents;
-}
-
 1;
 __END__
 

@@ -262,15 +262,6 @@ sub cache {
     $data || {};
 }
 
-sub children_names {
-    my $obj = shift;
-    my $children = {
-        objecttag => 'MT::ObjectTag',
-    };
-    $children;
-}
-
-
 # An interface for any MT::Object that wishes to utilize tags themselves
 
 package MT::Taggable;

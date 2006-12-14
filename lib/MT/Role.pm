@@ -123,14 +123,6 @@ sub has {
     MT::Permission::has(@_);
 }
 
-sub children_names {
-    my $obj = shift;
-    my $children = {
-        association => 'MT::Association',
-    };
-    $children;
-}
-
 1;
 __END__
 

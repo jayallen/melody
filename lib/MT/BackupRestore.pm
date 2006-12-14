@@ -421,6 +421,813 @@ sub restore_upload_manifest {
     return q();
 }
 
+package MT::Object;
+
+sub _is_element {
+    my $obj = shift;
+    my ($def) = @_;
+    return (('text' eq $def->{type}) || (('string' eq $def->{type}) && (255 < $def->{size}))) ? 1 : 0;
+}
+
+sub to_backup { 1; }
+
+sub children_to_xml {
+    my $obj = shift;
+    my ($namespace, $args) = @_;
+
+    my $t = {};
+    if (defined($args)) {
+        my $j = $args->{'join'};
+        $t = $j->[2] if defined($j);
+    }
+
+    my $children = $obj->children_names;
+    my @children_classes = values %$children;
+    my $xml = '';
+
+    for my $child_class (@children_classes) {
+        eval "require $child_class";
+        my $err = $@;
+        return $err if defined($err) && $err;
+
+        my $terms = { 
+            $obj->datasource . '_id' => $obj->id,
+            %$t,
+        };
+        
+        my $offset = 0;
+        while (1) {
+            my @objects = $child_class->load(
+                $terms,
+                { offset => $offset, limit => 50, }
+            );
+            last unless @objects;
+            $offset += scalar @objects;
+            for my $object (@objects) {
+                $xml .= $object->to_xml($namespace) . "\n" if $object->to_backup;
+            }
+        }
+    }
+    $xml;
+}
+
+sub to_xml {
+    my $obj = shift;
+    my ($namespace, $args) = @_;
+
+    my $coldefs = $obj->column_defs;
+    my $colnames = $obj->column_names;
+    my $xml;
+
+    $xml = '<' . $obj->datasource;
+    $xml .= " xmlns='$namespace'" if defined($namespace) && $namespace;
+
+    my @elements;
+    for my $name (@$colnames) {
+        if ($obj->column($name) || (defined($obj->column($name)) && ('0' eq $obj->column($name)))) {
+            if ($obj->_is_element($coldefs->{$name})) {
+                push @elements, $name;
+                next;
+                #} elsif (('datetime' eq $coldefs->{$name}{type}) || ('timestamp' eq $coldefs->{$name}{type})) {
+                #    my $ts_iso = MT::Util::ts2iso(undef, $obj->column($name));
+                #    $ts_iso =~ s/ /T/;
+                #    $xml .= " $name='" . $ts_iso . "'";
+                #    next;
+            }
+            $xml .= " $name='" . MT::Util::encode_xml($obj->column($name), 1) . "'";
+        }
+    }
+    $xml .= '>';
+    $xml .= "<$_>" . MT::Util::encode_xml($obj->column($_), 1) . "</$_>" foreach @elements;
+    $xml .= $obj->children_to_xml($namespace, $args);
+    my $ext_xml = MT->run_callbacks('Backup.' . $obj->datasource, $obj);
+    $xml .= $ext_xml if $ext_xml ne '1';
+    $xml .= '</' . $obj->datasource . '>';
+    $xml;
+}
+
+sub children_names {
+    my $obj = shift;
+    {};
+}
+
+sub parent_names {
+    my $obj = shift;
+    {};
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $parent_names = $obj->parent_names;
+
+    my $done = 0;
+    for my $parent_element_name (keys %$parent_names) {
+        if (!exists($data->{$parent_element_name . '_id'})) {
+            $done++;
+            next;
+        }
+        my $parent_class_name = $parent_names->{$parent_element_name};
+        my $old_id = $data->{$parent_element_name . '_id'};
+        my $new_obj = $objects->{"$parent_class_name#$old_id"};
+        next if !(defined($new_obj) && $new_obj);
+        $data->{$parent_element_name . '_id'} = $new_obj->id;
+        $done++;
+    }
+    (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
+}
+
+sub from_xml {
+    my $class = shift;
+    my (%param) = @_;
+    my $xp = $param{XPath};
+    my $element = $param{XmlNode};
+    my $objects = $param{Objects};
+    my $deferred = $param{Deferred};
+    my $error = $param{Error};
+    my $cb = $param{Callback};
+
+    require MT::BackupRestore;
+    my $namespace = $param{Namespace} || MT::BackupRestore::NS_MOVABLETYPE();
+
+    if (ref($class)) {
+        $class = ref($class);
+    }
+
+    my $err = $@;
+    if (defined($err) && $err) {
+        $cb->($err . "\n");
+        return undef;
+    }
+
+    my $obj = $class->new;
+    if (!$obj || !($obj->isa('MT::Object'))) {
+        $cb->(MT->translate("Invalid XML element to restore: [_1]\n", $class));
+        return undef;
+    }
+
+    my %data;
+    my $coldefs = $obj->column_defs;
+    my $attributes = $element->getAttributeNodes;
+    for my $attribute (@$attributes) {
+        my $colname = $attribute->getLocalName;
+        #if (('datetime' eq $coldefs->{$colname}{type}) || ('timestamp' eq $coldefs->{$colname}{type})) {
+        #    $data{$colname} = MT::Util::iso2ts(undef, $attribute->getNodeValue);
+        #} else {
+            $data{$colname} = $attribute->getNodeValue;
+        #}
+    }
+
+    my $success = 1;
+    my $parent_names = $obj->parent_names;
+    $success = $obj->restore_parent_ids(\%data, $objects) if scalar(keys %$parent_names);
+    if (!$success) {
+        $cb->(MT->translate("Restoring [_1] (ID: [_2]) was deferred because its parents objects have not been restored yet.\n", $class, $data{id}));
+        $deferred->{$class . '#' . $data{id}} = 1;
+        return undef;
+    }
+
+    $cb->(MT->translate("Restoring [_1]...\n", $class));
+
+    my @extension_names;
+    my $child_element_names = $obj->children_names;
+    my $nodeset = $xp->find("*", $element);
+    for my $index (1..$nodeset->size()) {
+        my $node = $nodeset->get_node($index);
+        next if !($node->isa('XML::XPath::Node::Element'));
+
+        my $ns = $node->getNamespace($node->getPrefix);
+        if ($ns && ($namespace eq $ns->getExpanded)) {
+            if (!exists($child_element_names->{$node->getLocalName})) {
+                $data{$node->getLocalName} = MT::Util::decode_xml($node->string_value);
+            }
+        } elsif ($ns) {
+            push @extension_names, $node->getLocalName;
+        }
+    }
+
+    my $old_id = $data{id};
+    delete $data{id};
+    $obj->set_values(\%data);
+    $obj->save or
+        $cb->($obj->errstr . "\n"), return undef;
+    $cb->(MT->translate("[_1] [_2] (ID: [_3]) has been restored successfully with new ID: [_4]\n",
+            $element->getLocalName =~ m/^[aeiou]/i ? 'An' : 'A',
+            $element->getLocalName,
+            $old_id,
+            $obj->id)
+    );
+    my $key = "$class#$old_id";
+    delete $deferred->{$key} if exists $deferred->{$key};
+    $objects->{$key} = $obj;
+
+    for my $name (keys %$child_element_names) {
+        my $children_set = $xp->find("*[local-name()='$name']", $element);
+        for my $index2 (1..$children_set->size()) {
+            my $node = $children_set->get_node($index2);
+            my $ns = $node->getNamespace($node->getPrefix);
+            next if !$ns || $namespace ne $ns->getExpanded;
+            
+            $param{XmlNode} = $node;
+            my $class = $child_element_names->{$name};
+            eval "require $class;";
+            my $child = $class->from_xml(%param);
+            next if !defined($child);
+            my $child_old_id = $node->getAttribute('id');
+            my $grand_children_names = $child->children_names;
+            if (scalar(keys %$grand_children_names)) {
+                my $child_key = "$class#$child_old_id";
+                $objects->{$child_key} = $child;
+            }
+        }
+    }
+
+    for my $ext_name (@extension_names) {
+        my $extension_set = $xp->find("*[local-name()='$ext_name']", $element);
+        for my $index3 (1..$extension_set->size()) {
+            my $ext_node = $extension_set->get_node($index3);
+            my $ns = $ext_node->getNamespace($ext_node->getPrefix);
+            next if !$ns || $namespace eq $ns->getExpanded;
+
+            MT->run_callbacks('Restore.' . $obj->datasource . ':' . $ns->getExpanded,
+                $xp, $ext_node, $obj, $objects, $deferred, $cb);
+        }
+    }
+    $obj;
+}
+
+package MT::Asset;
+
+sub children_to_xml {
+    my $obj = shift;
+    my ($namespace, $args) = @_;
+    my $xml = '';
+
+    require MT::ObjectTag;
+    my $offset = 0;
+    while (1) {
+        my @objecttags = MT::ObjectTag->load(
+            { object_id => $obj->id, object_datasource => $obj->datasource },
+            { offset => $offset, limit => 50, }
+        );
+        last unless @objecttags;
+        $offset += scalar @objecttags;
+        for my $objecttag (@objecttags) {
+            $xml .= $objecttag->to_xml($namespace, $args) . "\n" if $objecttag->to_backup;
+        }
+    }
+    
+    $xml;
+}
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        objecttag => 'MT::ObjectTag',
+    };
+    $children;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+    };
+    $parents;
+}
+
+package MT::Association;
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+        author => 'MT::Author',
+        role => 'MT::Role',
+    };
+    $parents;
+}
+
+package MT::Author;
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        permission => 'MT::Permission',
+        association => 'MT::Association',
+        #entry => 'MT::Entry',       ## An author is a parent of a category/entry
+        #category => 'MT::Category', ## but a category/entry is not a child of an author
+                                     ## otherwise they duplicate in restore operation.
+                                     ## Also, <author> must come before <category> and
+                                     ## <entry> in the backup file.
+    };
+    $children;
+}
+
+package MT::Blog;
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        placement => 'MT::Placement',
+        permission => 'MT::Permission',
+        notification => 'MT::Notification',
+        association => 'MT::Association',
+    	fileinfo => 'MT::FileInfo',
+        #template => 'MT::Template',
+        #entry => 'MT::Entry',  ## A blog is a parent of an entry/a template but 
+				## they are not a child of a blog
+                                ## otherwise they duplicate in restore operation.
+                                ## Also, <blog> must come before <entry> and <template>.
+    };
+    $children;
+}
+
+package MT::Category;
+
+sub to_backup {
+    $_[0]->parent ? 0 : 1;
+}
+
+sub children_to_xml {
+    my $obj = shift;
+    my ($namespace, $args) = @_;
+    my $xml = '';
+
+    #require MT::Trackback;
+    #my $tb = MT::Trackback->load({ category_id => $obj->id });
+    #if ($tb) {
+    #    require MT::TBPing;
+    #    my $offset = 0;
+    #    while (1) {
+    #        my @pings = MT::TBPing->load(
+    #            { tb_id => $tb->id, },
+    #            { offset => $offset, limit => 50, }
+    #        );
+    #        last unless @pings;
+    #        $offset += scalar @pings;
+    #        for my $ping (@pings) {
+    #            $xml .= $ping->to_xml($namespace, $args) . "\n" if $ping->to_backup;
+    #        }
+    #    }
+    #}
+
+    my $offset = 0;
+    while (1) {
+        my @placements = MT::Placement->load(
+            { 'category_id' => $obj->id, },
+            { offset => $offset, limit => 50, }
+        );
+        last unless @placements;
+        $offset += scalar @placements;
+        for my $placement (@placements) {
+            $xml .= $placement->to_xml($namespace, $args) . "\n" if $placement->to_backup;
+        }
+    }
+
+    my @children = $obj->children_categories;
+    return $xml unless @children;
+    for my $child (@children) {
+        $xml .= $child->to_xml($namespace, $args) . "\n";
+    }
+    $xml;
+}
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        #tbping => 'MT::TBPing',
+        category => 'MT::Category',
+        placement => 'MT::Placement',
+        fileinfo => 'MT::FileInfo',
+    };
+    $children;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+        author => 'MT::Author',
+    };
+    $parents;
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $parent_names = $obj->parent_names;
+
+    my $done = -1;
+    for my $parent_element_name (keys %$parent_names) {
+        my $parent_class_name = $parent_names->{$parent_element_name};
+        my $old_id = $data->{$parent_element_name . '_id'};
+        my $new_obj = $objects->{"$parent_class_name#$old_id"};
+        next if !(defined($new_obj) && $new_obj);
+        $data->{$parent_element_name . '_id'} = $new_obj->id;
+        $done++;
+    }
+    my $old_id = $data->{'parent'};
+    if (defined($old_id) && ($old_id > 0)) {
+        my $new_obj = $objects->{"MT::Category#$old_id"};
+        if (defined($new_obj) && $new_obj) {
+            $data->{'parent'} = $new_obj->id;
+            $done++;
+        }
+    } else {
+        $done++;
+    }
+    (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
+}
+
+package MT::Comment;
+
+## To avoid duplicates...
+#sub children_names {
+#    my $obj = shift;
+#    my $children = {
+#        author -> 'MT::Author',
+#    };
+#    $children;
+#}
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        entry => 'MT::Entry',
+        blog => 'MT::Blog',
+    };
+    $parents;
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $parent_names = $obj->parent_names;
+
+    my $done = -1;
+    for my $parent_element_name (keys %$parent_names) {
+        my $parent_class_name = $parent_names->{$parent_element_name};
+        my $old_id = $data->{$parent_element_name . '_id'};
+        my $new_obj = $objects->{"$parent_class_name#$old_id"};
+        next if !(defined($new_obj) && $new_obj);
+        $data->{$parent_element_name . '_id'} = $new_obj->id;
+        $done++;
+    }
+    my $old_id = $data->{'commenter_id'};
+    if (defined($old_id) && ($old_id > 0)) {
+        my $new_obj = $objects->{"MT::Author#$old_id"};
+        if (defined($new_obj) && $new_obj) {
+            $data->{'commenter_id'} = $new_obj->id;
+            $done++;
+        }
+    } else {
+        $done++;
+    }
+    (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
+}
+
+package MT::Entry;
+
+sub children_to_xml {
+    my $obj = shift;
+    my ($namespace, $args) = @_;
+
+    my $xml = '';
+
+    $xml .= $obj->_entry_child_to_xml('MT::Placement');
+
+    require MT::ObjectTag;
+    my $offset = 0;
+    while (1) {
+        my @objecttags = MT::ObjectTag->load(
+            { object_id => $obj->id, object_datasource => $obj->datasource },
+            { offset => $offset, limit => 50, }
+        );
+        last unless @objecttags;
+        $offset += scalar @objecttags;
+        for my $objecttag (@objecttags) {
+            $xml .= $objecttag->to_xml($namespace, $args) . "\n" if $objecttag->to_backup;
+        }
+    }
+    
+    #require MT::Trackback;
+    #my $tb = MT::Trackback->load({ entry_id => $obj->id });
+    #if ($tb) {
+    #    require MT::TBPing;
+    #    my $offset = 0;
+    #    while (1) {
+    #        my @pings = MT::TBPing->load(
+    #            { tb_id => $tb->id, },
+    #            { offset => $offset, limit => 50, }
+    #        );
+    #        last unless @pings;
+    #        $offset += scalar @pings;
+    #        for my $ping (@pings) {
+    #            $xml .= $ping->to_xml($namespace, $args) . "\n" if $ping->to_backup;
+    #        }
+    #    }
+    #}
+    
+    $xml .= $obj->_entry_child_to_xml('MT::FileInfo', $namespace, $args);
+    
+    $xml;
+}
+
+sub _entry_child_to_xml {
+    my $obj = shift;
+    my ($child_class, $namespace, $args) = @_;
+    my $xml = '';
+    
+    eval "require $child_class";
+    my $err = $@;
+    return $err if defined($err) && $err;
+
+    my $offset = 0;
+    while (1) {
+        my @objects = $child_class->load(
+            { entry_id => $obj->id, },
+            { offset => $offset, limit => 50, }
+        );
+        last unless @objects;
+        $offset += scalar @objects;
+        for my $object (@objects) {
+            $xml .= $object->to_xml($namespace, $args) . "\n" if $object->to_backup;
+        }
+    }
+    $xml;
+}
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        objecttag => 'MT::ObjectTag',
+        placement => 'MT::Placement',
+        fileinfo => 'MT::FileInfo',
+    };
+    $children;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+        author => 'MT::Author',
+    };
+    $parents;
+}
+
+package MT::Notification;
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+    };
+    $parents;
+}
+
+package MT::ObjectTag;
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+        tag => 'MT::Tag',
+        entry => 'MT::Entry',
+        asset => 'MT::Asset',
+    };
+    $parents;
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $parent_names = $obj->parent_names;
+
+    my $done = 1;
+    for my $parent_element_name (keys %$parent_names) {
+        my $parent_class_name = $parent_names->{$parent_element_name};
+        my $old_id = $data->{$parent_element_name . '_id'};
+        my $new_obj = $objects->{"$parent_class_name#$old_id"};
+        next if !(defined($new_obj) && $new_obj);
+        $data->{$parent_element_name . '_id'} = $new_obj->id;
+        $done++;
+    }
+    my $old_id = $data->{'object_id'};
+    if (defined($old_id) && ($old_id > 0)) {
+        my $class = $parent_names->{$data->{'object_datasource'}};
+        my $new_obj = $objects->{"$class#$old_id"};
+        if (defined($new_obj) && $new_obj) {
+            $data->{'object_id'} = $new_obj->id;
+            $done++;
+        }
+    } else {
+        $done++;
+    }
+    (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
+}
+
+package MT::Permission;
+
+sub parent_names {
+    my $obj = shift;
+    { author => 'MT::Author', blog => 'MT::Blog' };
+}
+
+package MT::Placement;
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        category => 'MT::Category',
+        blog => 'MT::Blog',
+        entry => 'MT::Entry',
+    };
+    $parents;
+}
+
+package MT::Role;
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        association => 'MT::Association',
+    };
+    $children;
+}
+
+package MT::Tag;
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        objecttag => 'MT::ObjectTag',
+    };
+    $children;
+}
+
+package MT::TBPing;
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+    };
+    $parents;
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $parent_names = $obj->parent_names;
+
+    my $done = -1;
+    for my $parent_element_name (keys %$parent_names) {
+        my $parent_class_name = $parent_names->{$parent_element_name};
+        my $old_id = $data->{$parent_element_name . '_id'};
+        my $new_obj = $objects->{"$parent_class_name#$old_id"};
+        next if !(defined($new_obj) && $new_obj);
+        $data->{$parent_element_name . '_id'} = $new_obj->id;
+        $done++;
+    }
+    my $old_tb_id = $data->{'tb_id'};
+    my $new_tb;
+    require MT::Trackback;
+    my $tb = MT::Trackback->load($old_tb_id);
+    if (my $cid = $tb->category_id) {
+        my $new_obj = $objects->{"MT::Category#" . $cid};
+        if (defined($new_obj) && $new_obj) {
+            $new_tb = MT::Trackback->load({ category_id => $new_obj->id });
+            return 0 if (!defined($new_tb) || !$new_tb);
+        }   
+    } elsif (my $eid = $tb->entry_id) {
+        my $new_obj = $objects->{"MT::Entry#" . $eid};
+        if (defined($new_obj) && $new_obj) {
+            $new_tb = MT::Trackback->load({ entry_id => $new_obj->id });
+            return 0 if (!defined($new_tb) || !$new_tb);
+        }
+    }
+    if (defined($new_tb) && $new_tb) {
+        $data->{'tb_id'} = $new_tb->id;
+        $done++;
+    }
+    (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
+}
+
+package MT::Template;
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        fileinfo => 'MT::FileInfo',
+        templatemap => 'MT::TemplateMap',
+    };
+    $children;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+    };
+    $parents;
+}
+
+package MT::TemplateMap;
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+        template => 'MT::Template',
+    };
+    $parents;
+}
+
+package MT::Trackback;
+
+sub children_names {
+    my $obj = shift;
+    my $children = {
+        tbping => 'MT::TBPing',
+    };
+    $children;
+}
+
+sub children_to_xml {
+    my $obj = shift;
+    my ($namespace, $args) = @_;
+
+    my $t = {};
+    if (defined($args)) {
+        my $j = $args->{'join'};
+        $t = $j->[2] if defined($j);
+    }
+
+    my $xml = '';
+
+    my $terms = { 
+        'tb_id' => $obj->id,
+        %$t,
+    };
+    
+    my $offset = 0;
+    while (1) {
+        my @objects = MT::TBPing->load(
+            $terms,
+            { offset => $offset, limit => 50, }
+        );
+        last unless @objects;
+        $offset += scalar @objects;
+        for my $object (@objects) {
+            $xml .= $object->to_xml($namespace) . "\n" if $object->to_backup;
+        }
+    }
+    $xml;
+}
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        entry => 'MT::Entry',
+        category => 'MT::Category',
+    };
+    $parents;
+}
+
+sub restore_parent_ids {
+    my $obj = shift;
+    my ($data, $objects) = @_;
+
+    my $result = 0;
+    my $new_blog = $objects->{'MT::Blog#' . $data->{blog_id}};
+    if ($new_blog) {
+        $data->{blog_id} = $new_blog->id;
+    } else {
+        return 0;
+    }                            
+    if ($data->{category_id}) {
+        my $new_obj = $objects->{'MT::Category#' . $data->{category_id}};
+        if ($new_obj) {
+            $data->{category_id} = $new_obj->id;
+            $result = 1;
+        }
+    } elsif ($data->{entry_id}) {
+        my $new_obj = $objects->{'MT::Entry#' . $data->{entry_id}};
+        if ($new_obj) {
+            $data->{entry_id} = $new_obj->id;
+            $result = 1;
+        }
+    }
+    $result;
+}
+
 1;
 __END__
 

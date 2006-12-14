@@ -665,23 +665,6 @@ sub clone_with_children {
     $new_blog;
 }
 
-sub children_names {
-    my $obj = shift;
-    my $children = {
-        placement => 'MT::Placement',
-        permission => 'MT::Permission',
-        notification => 'MT::Notification',
-        association => 'MT::Association',
-	fileinfo => 'MT::FileInfo',
-        #template => 'MT::Template',
-        #entry => 'MT::Entry',  ## A blog is a parent of an entry/a template but 
-				## they are not a child of a blog
-                                ## otherwise they duplicate in restore operation.
-                                ## Also, <blog> must come before <entry> and <template>.
-    };
-    $children;
-}
-
 1;
 __END__
 

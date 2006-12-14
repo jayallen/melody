@@ -338,11 +338,6 @@ sub to_hash {
     $hash;
 }
 
-sub parent_names {
-    my $obj = shift;
-    { author => 'MT::Author', blog => 'MT::Blog' };
-}
-
 1;
 __END__
 

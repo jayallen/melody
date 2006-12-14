@@ -27,14 +27,6 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
 });
 
-sub parent_names {
-    my $obj = shift;
-    my $parents = {
-        blog => 'MT::Blog',
-    };
-    $parents;
-}
-
 1;
 __END__
 
