@@ -4,41 +4,13 @@
 <script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/client.js"></script>
 <script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/tc/json.js"></script>
 <script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/dialog.js"></script>
+<script type="text/javascript" src="<TMPL_VAR NAME=STATIC_URI>js/assetdetail.js"></script>
 
 <div class="modal_width" id="list-assets-dialog">
 
 <script type="text/javascript">
 <!--
 var assets = {};
-
-function toggleScrollBar(which) {
-    var el = getByID("selector");
-    if (which == 'left') {
-        TC.addClassName(el, "condensed");
-    } else {
-        TC.removeClassName(el, "condensed");
-    }
-}
-
-var opened = false;
-var asset_id = '';
-function hasOpened(id) { 
-    opened = true;
-    asset_id = id;    
-}
-
-function notOpened(id) { 
-    opened = false; 
-    asset_id = '';    
-}
-
-function checkOpened() {
-    if (opened) {
-        hide('asset-' + asset_id + '-detail');
-        notOpened(asset_id);
-        toggleScrollBar('right');
-    }
-} 
 
 function displayAssetDetails(id) {
     /* display popup panel showing details of selected asset */
@@ -187,7 +159,7 @@ TC.attachLoadEvent( init );
 <td class="cb"><input type="hidden" id="asset-<TMPL_VAR NAME=ID>-json" value="<TMPL_VAR NAME=METADATA_JSON ESCAPE=HTML>" />
 <input type="radio" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
 <td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /</td>
-<td class="panel-label"><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="displayAssetDetails('<TMPL_VAR NAME=ID>'); toggleScrollBar('left');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span>
+<td class="panel-label"><span title="<TMPL_VAR NAME=FILE_PATH ESCAPE=HTML>"><TMPL_UNLESS NAME=FILE_IS_MISSING><a href="javascript:void(0)" onclick="toggleAssetDetails('<TMPL_VAR NAME=ID>');"></TMPL_UNLESS><TMPL_VAR NAME=FILE_NAME ESCAPE=HTML><TMPL_UNLESS NAME=FILE_IS_MISSING></a></TMPL_UNLESS></span>
 <div id="asset-<TMPL_VAR NAME=ID>-detail" class="asset-detail-panel-modal"><div id="asset-<TMPL_VAR NAME=ID>-detail-inner-modal" class="asset-detail-panel-inner-modal"></div></div></td>
 <TMPL_UNLESS NAME=EDIT_BLOG_ID>
 <td class="detail"><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_assets&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML></a></td>
