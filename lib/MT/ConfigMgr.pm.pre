@@ -189,7 +189,22 @@ sub init {
                              }],
         ['DeleteFilesAtRebuild', { Default => 0 } ],
         ['MaxTagAutoCompletionItems', { Default => 10000 } ],
+        ['DefaultUserLanguage'],
+        ['DefaultUserTagDelimiter', { Default => 'comma' }],
     ]);
+}
+
+sub DefaultUserTagDelimiter {
+    my $mgr = shift;
+    return $mgr->set('DefaultUserTagDelimiter', @_) if @_;
+    my $delim = $mgr->get('DefaultUserTagDelimiter');
+    if (lc $delim eq 'comma') {
+        return ord(',');
+    } elsif (lc $delim eq 'space') {
+        return ord(' ');
+    } else {
+        return ord(',');
+    }
 }
 
 sub define {
