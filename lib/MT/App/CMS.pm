@@ -3589,6 +3589,7 @@ sub edit_object {
             $cwd = File::Spec->canonpath($cwd);
             $cwd =~ s!([\\/])cgi(?:-bin)?([\\/].*)?$!$1!;
             $cwd =~ s!([\\/])mt[\\/]?$!$1!i;
+            $param{site_path} = $cwd;
         }
         if(!$param{id}) {
             $param{site_path} = File::Spec->catdir($param{site_path}, 'WEBLOG-NAME');
