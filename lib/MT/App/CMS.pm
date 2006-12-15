@@ -7214,9 +7214,10 @@ sub build_entry_table {
     ## pulldown on power edit page).
     my(@a_data, %authors);
     if ($is_power_edit) {
+        my $bdb = $app->config('ObjectDriver') eq 'DBM';
         # FIXME: Scaling issue for lots of authors on one blog
-        my $auth_iter = MT::Author->load_iter({type => AUTHOR, is_superuser => 1 }, {
-            'not' => { is_superuser => 1 },
+        my $auth_iter = MT::Author->load_iter({type => AUTHOR, is_superuser => ( $bdb ? 0 : 1 ) }, {
+            ($bdb ? () : (not => { is_superuser => 1 })),
             'join' => MT::Permission->join_on('author_id',
                         { blog_id => $blog_id } ) });
         while (my $author = $auth_iter->()) {
