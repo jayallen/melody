@@ -340,12 +340,13 @@ function toggleDynamicOptions(selection) {
 <option value="custom"<TMPL_IF NAME=DYNAMIC_CUSTOM> selected="selected"</TMPL_IF>><MT_TRANS phrase="Set each template's Build Options separately"></option>
 <option value="all"<TMPL_IF NAME=DYNAMIC_ALL> selected="selected"</TMPL_IF>><MT_TRANS phrase="Build all templates dynamically"></option>
 </select>
+<a href="#" onclick="return openManual('blog_settings_publishing', 'dynamic_publishing')" class="help">?</a>
 <div id="dynamic_options_area"<TMPL_IF NAME=DYNAMIC_NONE> style="display:none;"</TMPL_IF>>
-<p><MT_TRANS phrase="Optional Settings for Dynamic Publishing:"> <a href="#" onclick="return openManual('blog_settings_publishing', 'dynamic_publishing_options')" class="help">?</a></p>
 <div class="field">
-<input type="checkbox" id="dynamic_cache" name="dynamic_cache" <TMPL_IF NAME=DYNAMIC_CACHING>checked="checked"</TMPL_IF>/><label for="dynamic_cache"><MT_TRANS phrase="Enable caching"></label> <input type="checkbox" id="dynamic_conditional" name="dynamic_conditional" <TMPL_IF NAME=DYNAMIC_CONDITIONAL>checked="checked"</TMPL_IF>/><label for="dynamic_conditional"><MT_TRANS phrase="Enable conditional retrieval"></label>
+<p><MT_TRANS phrase="Optional Settings for Dynamic Publishing:"></p>
+<p class="page-desc"><input type="checkbox" id="dynamic_cache" name="dynamic_cache" <TMPL_IF NAME=DYNAMIC_CACHING>checked="checked"</TMPL_IF>/> <label for="dynamic_cache"><MT_TRANS phrase="Enable caching"></label> <input type="checkbox" id="dynamic_conditional" name="dynamic_conditional" <TMPL_IF NAME=DYNAMIC_CONDITIONAL>checked="checked"</TMPL_IF>/> <label for="dynamic_conditional"><MT_TRANS phrase="Enable conditional retrieval"></label></p>
 </div>
-</div><a href="#" onclick="return openManual('blog_settings_publishing', 'dynamic_publishing')" class="help">?</a>
+</div>
 </div>
 </TMPL_IF>
 
