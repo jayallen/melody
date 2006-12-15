@@ -522,8 +522,8 @@ sub domain_or_ip_in_whitelist {
             my @whitelist = split /\r?\n/, $whitelist;
             foreach my $whiteitem (@whitelist) {
                 next if $whiteitem =~ m/^#/;
-                if ($whiteitem =~ m/^\d{1,3}(?:\.\d{1,3}){0,3}$/) {
-                    return 1 if defined $ip && ($whiteitem =~ m/^\Q$ip\E/);
+                if ($whiteitem =~ m/^\d{1,3}\.(?:\d{1,3}\.(?:\d{1,3}\.(?:\d{1,3})?)?)?$/) {
+                    return 1 if defined $ip && ($ip =~ m/^\Q$whiteitem\E/);
                 } elsif ($whiteitem =~ m/\w/) {
                     next if defined $domain && ($domain =~ m/\Q$whiteitem\E$/i);
                     $domains{$domain} = 1;
@@ -538,8 +538,8 @@ sub domain_or_ip_in_whitelist {
     my @whitelist = split /\r?\n/, $whitelist;
     foreach my $whiteitem (@whitelist) {
         next if $whiteitem =~ m/^#/;
-        if ($whiteitem =~ m/^\d{1,3}(?:\.\d{1,3}){0,3}$/) {
-            return 1 if defined $ip && ($whiteitem =~ m/^\Q$ip\E/);
+        if ($whiteitem =~ m/^\d{1,3}\.(?:\d{1,3}\.(?:\d{1,3}\.(?:\d{1,3})?)?)?$/) {
+            return 1 if defined $ip && ($ip =~ m/^\Q$whiteitem\E/);
         } elsif ($whiteitem =~ m/\w/) {
             return 1 if defined $domain && ($domain =~ m/\Q$whiteitem\E$/i);
         }
