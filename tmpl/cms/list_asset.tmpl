@@ -191,7 +191,7 @@ TC.attachLoadEvent( init );
 
 
 <TMPL_LOOP NAME=OBJECT_LOOP>
-<tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
+<tr id="asset-<TMPL_VAR NAME=ID>" class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
 <td class="cb"><input type="hidden" id="asset-<TMPL_VAR NAME=ID>-json" value="<TMPL_VAR NAME=METADATA_JSON ESCAPE=HTML>" />
 <input type="checkbox" name="id" value="<TMPL_VAR NAME=ID>" class="select" /></td>
 <td class="status-<TMPL_IF NAME=FILE_IS_MISSING>missing<TMPL_ELSE>publish</TMPL_IF>"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" <TMPL_IF NAME=FILE_IS_MISSING>alt="<MT_TRANS phrase="Pending">"<TMPL_ELSE>alt="<MT_TRANS phrase="Published">"</TMPL_IF> width="9" height="9" /></td>
