@@ -10,6 +10,23 @@
 
 <script type="text/javascript">
 <!--
+function dialogClose(data) {
+    if (!data) {
+        closeDialog();
+        return;
+    }
+    // user made a selection and clicked insert...
+    var f = document.forms['select_asset'];
+    var sel = dlg.panel.tableSelect.selected();
+    f['id'].value = sel[0].value;
+    f.submit();
+}
+
+function viewChange(ds, fn) {
+    checkOpened();
+    if (fn) fn(ds);
+}
+
 var tableSelect;
 var dlg;
 function init() {

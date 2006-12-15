@@ -126,19 +126,3 @@ function displayAssetDetails(id) {
     return false;
 }
 
-function viewChange(ds, fn) {
-    checkOpened();
-    if (fn) fn(ds);
-}
-
-function dialogClose(data) {
-    if (!data) {
-        closeDialog();
-        return;
-    }
-    // user made a selection and clicked insert...
-    var f = document.forms['select_asset'];
-    var sel = dlg.panel.tableSelect.selected();
-    f['id'].value = sel[0].value;
-    f.submit();
-}
