@@ -97,6 +97,7 @@ sub init {
         'send_notify' => \&send_notify,
         'start_upload' => \&start_upload,
         'upload_file' => \&upload_file,
+        'complete_upload' => \&complete_upload,
         'start_upload_entry' => \&start_upload_entry,
         'logout' => \&logout,
         'start_recover' => \&start_recover,
@@ -990,7 +991,7 @@ sub list_assets {
                 blog_name => $blog->name || '',
                 edit_blog_id => $blog_id,
                 edit_field => $app->param('edit_field') || '',
-                dialog_view => ($app->param('dialog_view') ? 1 : 0),
+                dialog_view => $app->param('dialog_view') ? 1 : 0,
             ) : ()),
             class_loop => \@class_loop,
             can_delete_files => ($blog ? $app->{perms}->can_edit_assets : $app->user->is_superuser),
@@ -9184,6 +9185,59 @@ sub start_upload {
     $app->build_page('upload.tmpl', \%param);
 }
 
+sub complete_upload {
+    my ($app, %args) = @_;
+
+    my $asset = $args{asset};
+    if (!$asset && $app->param('id')) {
+        require MT::Asset;
+        $asset = MT::Asset->load($app->param('id')) ||
+            return $app->errtrans("Can't load asset, ". $app->param('id') .'.');
+    }
+    return $app->errtrans('No asset to upload.') unless $asset;
+
+    $args{is_image} = $asset->isa('MT::Asset::Image') ? 1 : 0
+        unless defined $args{is_image};
+
+    require MT::Blog;
+    my $blog = $args{blog} || MT::Blog->load($app->param('blog_id')) ||
+        return $app->errtrans("Can't load blog, ". $app->param('blog_id') .'.');
+    my $perms = $args{perms} || $app->{perms} ||
+        return $app->errtrans('No permissions');
+
+    my %param = (
+        asset_id => $asset->id,
+        bytes => $args{bytes},
+        direct_asset_insert => scalar $app->param('direct_asset_insert'),
+        edit_field => scalar $app->param('edit_field'),
+        entry_insert => scalar $app->param('entry_insert'),
+        fname => $asset->file_name,
+        height => $asset->image_height,
+        is_image => $args{is_image},
+        site_path => scalar $app->param('site_path'),
+        url => $asset->url,
+        width => $asset->image_width,
+    );
+
+    if ($args{is_image}) {
+        eval { require MT::Image; MT::Image->new or die; };
+        $param{do_thumb} = $@ ? 0 : 1;
+        $param{can_save_image_defaults} = $perms->can_save_image_defaults ? 1 : 0;
+        $param{constrain} = $blog->image_default_constrain ? 1 : 0;
+        $param{popup_image} = $blog->image_default_popup ? 1 : 0;
+        $param{image_defaults} = $blog->image_default_set ? 1 : 0;
+        $param{wrap_text} = $blog->image_default_wrap_text ? 1 : 0;
+        $param{make_thumb} = $blog->image_default_thumb ? 1 : 0;
+        $param{'align_'.$_} = $blog->image_default_align eq $_ ? 1 : 0 for qw(left center right);
+        $param{'unit_w'.$_} = $blog->image_default_wunits eq $_ ? 1 : 0 for qw(percent pixels);
+        $param{'unit_h'.$_} = $blog->image_default_hunits eq $_ ? 1 : 0 for qw(percent pixels);
+        $param{thumb_width} = $blog->image_default_width || $asset->image_width || 0;
+        $param{thumb_height} = $blog->image_default_height || $asset->image_height || 0;
+    }
+
+    $app->build_page('upload_complete.tmpl', \%param);
+}
+
 sub upload_file {
     my $app = shift;
     my $perms = $app->{perms}
@@ -9304,7 +9358,7 @@ sub upload_file {
                 ($tmp_fh, $tmp_file) =
                     File::Temp::tempfile(DIR => $tmp_dir);
             };
-            if ($@) { #!$tmp_fh) {
+            if ($@) { #!$tmp_fh
                 return $app->errtrans(
                     "Error creating temporary file; please check your TempDir ".
                     "setting in mt.cfg (currently '[_1]') " .
@@ -9372,33 +9426,30 @@ sub upload_file {
     $relative_path =~ s!^/!!;
     $relative_url =~ s!\\!/!g;
     $relative_url =~ s!^/!!;
-    my %param = ( width => $w, height => $h, bytes => $bytes,
-                  image_type => $id, fname => $relative_path,
-                  site_path => scalar $q->param('site_path') );
-    my $url = $q->param('site_path') ? $blog->site_url : $blog->archive_url;
+    my $url = $app->param('site_path') ? $blog->site_url : $blog->archive_url;
     $url .= '/' unless $url =~ m!/$!;
     $relative_url =~ s!^/!!;
     $url .= $relative_url;
-    $param{url} = $url;
+
     require File::Basename;
     my $local_basename = File::Basename::basename($local_file);
     my $ext = (File::Basename::fileparse($local_file, qr/[A-Za-z]+$/))[2];
 
     # Does the file have dimensions with a recognized image extension?
     require MT::Asset::Image;
-    if(defined($w) && defined($h) && MT::Asset::Image->can_handle($local_basename)) {
-        $param{is_image} = 1
-    }
+    my $is_image = defined($w) && defined($h) && MT::Asset::Image->can_handle($local_basename)
+        ? 1 : 0;
+
     require MT::Asset;
-    my $img_pkg = MT::Asset->class_handler($param{is_image} ? 'image' : 'file');
-    my $asset = new $img_pkg;
+    my $img_pkg = MT::Asset->class_handler($is_image ? 'image' : 'file');
+    my $asset = $img_pkg->new();
     my $original = $asset->clone;
     $asset->blog_id($blog_id);
     $asset->url($url);
     $asset->file_path($local_file);
     $asset->file_name($local_basename);
     $asset->file_ext($ext);
-    if ($param{is_image}) {
+    if ($is_image) {
         $asset->image_width($w);
         $asset->image_height($h);
     }
@@ -9406,30 +9457,7 @@ sub upload_file {
     $asset->save;
     MT->run_callbacks('CMSPostSave.asset', $app, $asset, $original);
 
-    $param{asset_id} = $asset->id;
-
-    $param{edit_field} = $q->param('edit_field');
-
-    if ($param{is_image}) {
-        eval { require MT::Image; MT::Image->new or die; };
-        $param{do_thumb} = $@ ? 0 : 1;
-        $param{entry_insert} = $q->param('entry_insert');
-        # Pass image default settings along.
-        $param{image_defaults} = $blog->image_default_set() ? 1 : 0;
-        $param{make_thumb} = $blog->image_default_thumb() ? 1 : 0;
-        $param{wrap_text} = $blog->image_default_wrap_text() ? 1 : 0;
-        $param{align_left} = $blog->image_default_align() eq 'left' ? 1 : 0;
-        $param{align_center} = $blog->image_default_align() eq 'center' ? 1 : 0;
-        $param{align_right} = $blog->image_default_align() eq 'right' ? 1 : 0;
-        $param{thumb_width} = $blog->image_default_width() || $w;
-        $param{unit_wpixels} = $blog->image_default_wunits() eq 'pixels' ? 1 : 0;
-        $param{unit_wpercent} = $blog->image_default_wunits() eq 'percent' ? 1 : 0;
-        $param{thumb_height} = $blog->image_default_height() || $h;
-        $param{unit_hpixels} = $blog->image_default_hunits() eq 'pixels' ? 1 : 0;
-        $param{unit_hpercent} = $blog->image_default_hunits() eq 'percent' ? 1 : 0;
-        $param{constrain} = $blog->image_default_constrain() ? 1 : 0;
-        $param{popup_image} = $blog->image_default_popup() ? 1 : 0;
-        $param{can_save_image_defaults} = $perms->can_save_image_defaults() ? 1 : 0;
+    if ($is_image) {
         MT->run_callbacks('CMSUploadFile',
                           File => $local_file, Url => $url, Size => $bytes,
                           Asset => $asset,
@@ -9449,7 +9477,13 @@ sub upload_file {
                           Type => 'file',
                           Blog => $blog);
     }
-    $app->build_page('upload_complete.tmpl', \%param);
+
+    $app->complete_upload(
+        asset => $asset,
+        blog => $blog,
+        bytes => $bytes,
+        perms => $perms,
+    );
 }
 
 sub _write_upload {
@@ -12607,6 +12641,8 @@ Handler for resetting the system-wide activity log.
 
 =item * asset_insert
 
+=item * asset_insert_text
+
 =item * start_upload_entry
 
 =item * system_list_blogs
@@ -12641,6 +12677,8 @@ Transient mode handler used to redirect user to the mt-upgrade script
 for either installation of upgrade of their database.
 
 =item * upload_file
+
+=item * complete_upload
 
 =item * view_log
 

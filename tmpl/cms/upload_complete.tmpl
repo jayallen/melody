@@ -108,9 +108,11 @@ function adjustWidthHeight (f, width) {
 
 <h2><span class="weblog-title-highlight"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="Upload File"></h2>
 
+<TMPL_UNLESS NAME=DIRECT_ASSET_INSERT>
 <div class="items-wrapper">
     <span class="modal_added"><MT_TRANS phrase="The file named '[_1]' has been uploaded. Size: [quant,_2,byte]." params="<TMPL_VAR NAME=FNAME ESCAPE=HTML>%%<TMPL_VAR NAME=BYTES>"></span>
 </div>
+</TMPL_UNLESS>
 
 <p class="page-desc"><img border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="5"></p>
 

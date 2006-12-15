@@ -63,7 +63,7 @@ TC.attachLoadEvent( init );
 </TMPL_UNLESS>
 <TMPL_IF NAME=OBJECT_LOOP><TMPL_UNLESS NAME=JSON>
 <form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" name="select_asset">
-<input type="hidden" name="__mode" value="asset_insert" />
+<input type="hidden" name="__mode" value="complete_upload" />
 <input type="hidden" name="_type" value="asset" />
 <input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
@@ -72,6 +72,8 @@ TC.attachLoadEvent( init );
 <input type="hidden" name="blog_id" value="<TMPL_VAR NAME=EDIT_BLOG_ID>" />
 <input type="hidden" name="id" value="" />
 <input type="hidden" name="edit_field" value="<TMPL_VAR NAME=EDIT_FIELD>" />
+<input type="hidden" name="entry_insert" value="1" />
+<input type="hidden" name="direct_asset_insert" value="1" />
 </TMPL_IF>
 </form>
 

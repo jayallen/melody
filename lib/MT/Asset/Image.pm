@@ -18,8 +18,10 @@ sub class_label {
 sub metadata {
     my $obj = shift;
     my $meta = $obj->SUPER::metadata(@_);
-    $meta->{MT->translate("Actual Dimensions")} = MT->translate("[_1] wide x [_2] high",
-        $obj->image_width, $obj->image_height);
+    $meta->{MT->translate("Actual Dimensions")} = MT->translate(
+        "[_1] wide x [_2] high",
+        $obj->image_width, $obj->image_height
+    ) if defined $obj->image_width && defined $obj->image_height;
     $meta;
 }
 
