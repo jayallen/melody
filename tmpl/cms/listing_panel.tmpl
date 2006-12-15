@@ -36,7 +36,7 @@ parameters:
                         <input type="button" class="search-reset hidden" value="<MT_TRANS phrase="View All">"<TMPL_UNLESS PANEL_SEARCHABLE> disabled="disabled"</TMPL_UNLESS> />
                     </p></form>
                     <TMPL_ELSE>
-                    <p class="page-desc">&nbsp;<img border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="20"></p>
+                    <p class="page-desc">&nbsp;<img border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="20" alt="" /></p>
                     </TMPL_IF>
                 </div>
 
@@ -58,7 +58,7 @@ parameters:
                                 <tr id="<TMPL_VAR NAME=PANEL_TYPE>-<TMPL_VAR NAME=ID>" class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
                                     <td class="cb"><input type="<TMPL_IF NAME=PANEL_MULTI>checkbox<TMPL_ELSE>radio</TMPL_IF>" class="select" name="<TMPL_VAR NAME=PANEL_TYPE>-cb" value="<TMPL_VAR NAME=ID>" /></td>
                                     <td class="panel-label"><label><TMPL_VAR NAME=LABEL></label></td>
-                                    <td class="panel-description"><TMPL_IF NAME=LINK><span class="float_desc"></TMPL_IF><TMPL_VAR NAME=DESCRIPTION><TMPL_IF NAME=LINK></span></TMPL_IF><TMPL_IF NAME=LINK><span class="link"><a href="<TMPL_VAR NAME=LINK ESCAPE=HTML>" target="_blank"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" title="<MT_TRANS phrase="Go to [_1]" params="<TMPL_VAR NAME=LABEL ESCAPE=HTML>">" width="13" height="9" /></a></span></TMPL_IF></td>
+                                    <td class="panel-description"><TMPL_IF NAME=LINK><span class="float_desc"></TMPL_IF><TMPL_VAR NAME=DESCRIPTION><TMPL_IF NAME=LINK></span></TMPL_IF><TMPL_IF NAME=LINK><span class="link"><a href="<TMPL_VAR NAME=LINK ESCAPE=HTML>" target="_blank"><img src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" title="<MT_TRANS phrase="Go to [_1]" params="<TMPL_VAR NAME=LABEL ESCAPE=HTML>">" width="13" height="9" alt="" /></a></span></TMPL_IF></td>
                                 </tr>
     </TMPL_LOOP>
                             </table>
