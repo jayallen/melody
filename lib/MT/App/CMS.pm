@@ -7195,7 +7195,7 @@ sub build_entry_table {
     ## pulldown on power edit page).
     my($c_data, %cats);
     my $blog_id = $app->param('blog_id');
-    if ($blog_id && $is_power_edit) {
+    if ($blog_id) {
         $c_data = $app->_build_category_list(blog_id => $blog_id);
         my $i = 0;
         for my $row (@$c_data) {
