@@ -3578,18 +3578,17 @@ sub edit_object {
             %param = ( %param, %$pref_param );
         }
     } elsif ($type eq 'blog') {
-        my $cwd = '';
-        if ($ENV{MOD_PERL}) {
-            ## If mod_perl, just use the document root.
-            $cwd = $app->{apache}->document_root;
-        } else {
-            $cwd = $app->config('DefaultSiteRoot') || $ENV{DOCUMENT_ROOT} || $app->mt_dir;
-        }
-        $cwd = File::Spec->canonpath($cwd);
-        $cwd =~ s!([\\/])cgi(?:-bin)?([\\/].*)?$!$1!;
-        $cwd =~ s!([\\/])mt[\\/]?$!$1!i;
-        if (!$param{site_path}) {
-            $param{site_path} = $cwd;
+        if (!$param{site_path} && !($param{site_path} = $app->config('DefaultSiteRoot'))) {
+            my $cwd = '';
+            if ($ENV{MOD_PERL}) {
+                ## If mod_perl, just use the document root.
+                $cwd = $app->{apache}->document_root;
+            } else {
+                $cwd = $ENV{DOCUMENT_ROOT} || $app->mt_dir;
+            }
+            $cwd = File::Spec->canonpath($cwd);
+            $cwd =~ s!([\\/])cgi(?:-bin)?([\\/].*)?$!$1!;
+            $cwd =~ s!([\\/])mt[\\/]?$!$1!i;
         }
         if(!$param{id}) {
             $param{site_path} = File::Spec->catdir($param{site_path}, 'WEBLOG-NAME');
