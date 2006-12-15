@@ -4742,7 +4742,7 @@ sub _hdlr_asset_link {
 
     my $ret = sprintf qq(<a href="%s"), $a->url;
     if ($args->{new_window}) {
-        $ret .= qq( target="_brank");
+        $ret .= qq( target="_blank");
     }
     $ret .= sprintf qq(>%s</a>), $a->file_name;
     $ret;
@@ -4772,7 +4772,7 @@ sub _hdlr_asset_thumbnail_link {
 
     my $ret = sprintf qq(<a href="%s"), $a->url;
     if ($args->{new_window}) {
-        $ret .= qq( target="_brank");
+        $ret .= qq( target="_blank");
     }
     $ret .= sprintf qq(><img src="%s" width="%d" height="%d"></a>), $url, $w, $h;
     $ret;
