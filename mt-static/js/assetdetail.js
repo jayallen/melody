@@ -76,8 +76,8 @@ function displayAssetDetails(id) {
         assets[id] = asset;
     }
     var close = trans('Close');
-    var close_link = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); notOpened('" + id + "'); toggleScrollBar('right');\">" + close + "</a>";
-    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"hide('asset-" + id + "-detail'); notOpened('" + id + "'); toggleScrollBar('right');\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"" + StaticURI + "images/spacer.gif\" width=\"9\" height=\"9\"></a>";
+    var close_link = "<a href=\"javascript:void(0)\" onclick=\"toggleAssetDetails('" + id + "'); notOpened('" + id + "');\">" + close + "</a>";
+    var close_icon = "<a href=\"javascript:void(0)\" onclick=\"toggleAssetDetails('" + id + "'); notOpened('" + id + "');\"><img class=\"close_asset_icon\" align=\"bottom\" src=\"" + StaticURI + "images/spacer.gif\" width=\"9\" height=\"9\"></a>";
     var preview;
     if (asset.thumbnail_url) {
         preview = "<img src=\"" + asset.thumbnail_url + "\" class=\"preview\" /><br />";
