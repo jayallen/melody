@@ -132,6 +132,8 @@ function validate (f, rebuild) {
 <input type="hidden" name="__mode" value="save" />
 <input type="hidden" name="_type" value="template" />
 <input type="hidden" name="rebuild" value="" />
+<input type="hidden" name="action_name" value="" />
+<input type="hidden" name="action_input" value="" />
 <input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 
@@ -265,6 +267,9 @@ with (document) {
 </div>
 </div>
 
+<div class="list-actions">
+
+<div class="button-bar">
 <input accesskey="s" type="submit" value="<MT_TRANS phrase="Save">" title="<MT_TRANS phrase="Save this template (s)">" onclick="return validate(this.form);" />
 <TMPL_UNLESS NAME=NEW_OBJECT>
 <TMPL_UNLESS NAME=BUILD_DYNAMIC>
@@ -274,6 +279,14 @@ with (document) {
 </TMPL_IF>
 </TMPL_UNLESS>
 </TMPL_UNLESS>
+</div>
+
+<div class="button-bar-alt">
+<TMPL_INCLUDE NAME="itemset_action_widget.tmpl">
+</div>
+
+</div>
+
 </form>
 
 </div>

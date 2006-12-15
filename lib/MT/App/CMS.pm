@@ -2913,6 +2913,12 @@ sub edit_object {
             my $published_url = $obj->published_url;
             $param{published_url} = $published_url if $published_url;
             $param{saved_rebuild} = 1 if $q->param('saved_rebuild');
+            my $plugin_actions = $app->plugin_itemset_actions('template');
+            $param{plugin_itemset_action_loop} = $plugin_actions || [];
+            my $core_actions = $app->core_itemset_actions('template');
+            $param{core_itemset_action_loop} = $core_actions || [];
+            $param{has_itemset_actions} =
+        (scalar(@$plugin_actions) || scalar(@$core_actions)) ? 1 : 0;
         } elsif ($type eq 'blog') {
             require MT::IPBanList;
             my $output = $param{output} || '';
