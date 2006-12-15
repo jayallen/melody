@@ -280,5 +280,56 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "<MTEntries tags='verse' category='foo' lastn='1'><MTEntryTitle></MTEntries>", "e" : "Verse 3" }, #229
 { "t" : "<MTEntries author='Bob D' category='foo'><MTEntryTitle></MTEntries>", "e" : "Verse 3" }, #229
 { "t" : "<MTEntries author='Chuck D' tags='strolling'><MTEntryTitle></MTEntries>", "e" : "A Rainy Day" }, #230
-{ "t" : "<MTSetVar name='x' value='0'><MTIfNonZero tag='GetVar' name='x'><MTElse>0</MTElse></MTIfNonZero>", "e" : "0" } #231
+{ "t" : "<MTSetVar name='x' value='0'><MTIfNonZero tag='GetVar' name='x'><MTElse>0</MTElse></MTIfNonZero>", "e" : "0" }, #231
+{ "t" : "<MTAsset id='1'><$MTAssetID$></MTAsset>", "e" : "1"}, #232
+{ "t" : "<MTAssets type='image'><$MTAssetID$></MTAssets>", "e" : "1"}, #233
+{ "t" : "<MTAssets type='file'><$MTAssetID$></MTAssets>", "e" : "2"}, #234
+{ "t" : "<MTAssets type='all'><$MTAssetID$></MTAssets>", "e" : ""}, #235
+{ "t" : "<MTAssets file_ext='jpg'><$MTAssetID$></MTAssets>", "e" : "1"}, #236
+{ "t" : "<MTAssets file_ext='tmpl'><$MTAssetID$></MTAssets>", "e" : "2"}, #237
+{ "t" : "<MTAssets file_ext='dat'><$MTAssetID$></MTAssets>", "e" : ""}, #238
+{ "t" : "<MTAssets lastn='1'><$MTAssetID$></MTAssets>", "e" : "1"}, #239
+{ "t" : "<MTAssets days='1'><$MTAssetID$>;</MTAssets>", "e" : "1;"}, #240
+{ "t" : "<MTAssets author='Chuck D'><$MTAssetID$></MTAssets>", "e" : ""}, #241
+{ "t" : "<MTAssets author='Melody'><$MTAssetID$>;</MTAssets>", "e" : "1;2;"}, #242
+{ "t" : "<MTAssets offset='1'><$MTAssetID$></MTAssets>", "e" : "2"}, #243
+{ "t" : "<MTAssets offset='2'><$MTAssetID$></MTAssets>", "e" : ""}, #244
+{ "t" : "<MTAssets tag='alpha'><$MTAssetID$></MTAssets>", "e" : "1"}, #245
+{ "t" : "<MTAssets sort_by='file_name'><$MTAssetID$>;</MTAssets>", "e" : "2;1;"}, #246
+{ "t" : "<MTAssets sort_order='ascend'><$MTAssetID$>;</MTAssets>", "e" : "2;1;"}, #247
+{ "t" : "<MTAssets lastn='1'><$MTAssetFileName$></MTAssets>", "e" : "test.jpg"}, #248
+{ "t" : "<MTAssets lastn='1'><$MTAssetURL$></MTAssets>", "e" : "http://narnia.na/nana/images/test.jpg"}, #249
+{ "t" : "<MTAssets lastn='1'><$MTAssetType$></MTAssets>", "e" : "Image"}, #250
+{ "t" : "<MTAssets lastn='1'><$MTAssetMimeType$></MTAssets>", "e" : "image/jpeg"}, #251
+{ "t" : "<MTAssets lastn='1'><$MTAssetFilePath$></MTAssets>", "e" : "/home/takayama/Code/wheeljack/t/images/test.jpg"}, #252
+{ "t" : "<MTAssets lastn='1' sort_order='ascend'><$MTAssetDateAdded$></MTAssets>", "e" : "January 31, 1978  7:45 AM"}, #253
+{ "t" : "<MTAssets lastn='1'><$MTAssetAddedBy$></MTAssets>", "e" : "Melody"}, #254
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size'$></MTAssets>", "e" : "84.1 KB"}, #255
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size' format='0'$></MTAssets>", "e" : "86094"}, #256
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size' format='1'$></MTAssets>", "e" : "84.1 KB"}, #257
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size' format='k'$></MTAssets>", "e" : "84.1"}, #258
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size' format='m'$></MTAssets>", "e" : "0.1"}, #259
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='image_width'$></MTAssets>", "e" : "640"}, #260
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='image_height'$></MTAssets>", "e" : "480"}, #261
+{ "t" : "<MTAssets lastn='1' sort_order='ascend'><$MTAssetProperty property='image_width'$></MTAssets>", "e" : "0"}, #262
+{ "t" : "<MTAssets lastn='1' sort_order='ascend'><$MTAssetProperty property='image_height'$></MTAssets>", "e" : "0"}, #263
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='label'$></MTAssets>", "e" : "Image photo"}, #264
+{ "t" : "<MTAssets lastn='1'><$MTAssetProperty property='description'$></MTAssets>", "e" : "This is a test photo."}, #265
+{ "t" : "<MTAssets lastn='1'><$MTAssetFileExt$></MTAssets>", "e" : "jpg"}, #266
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL width='160'$></MTAssets>", "e" : "http://narnia.na/nana/images/test-thumb-120x160.jpg"}, #267
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL height='240'$></MTAssets>", "e" : "http://narnia.na/nana/images/test-thumb-240x320.jpg"}, #268
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL scale='75'$></MTAssets>", "e" : "http://narnia.na/nana/images/test-thumb-360x480.jpg"}, #269
+{ "t" : "<MTAssets lastn='1'><$MTAssetLink$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\">test.jpg</a>"}, #270
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"\http://narnia.na/nana/images/test-thumb-120x160.jpg\" width=\"160\" height=\"120\"></a>"}, #271
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"\http://narnia.na/nana/images/test-thumb-120x160.jpg\" width=\"160\" height=\"120\"></a>"}, #272
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink height='240'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"\http://narnia.na/nana/images/test-thumb-240x320.jpg\" width=\"320\" height=\"240\"></a>"}, #273
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink scale='100'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"\http://narnia.na/nana/images/test-thumb-480x640.jpg\" width=\"640\" height=\"480\"></a>"}, #274
+{ "t" : "<MTAssets lastn='1'><$MTAssetLink new_window='1'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\">test.jpg</a>"}, #270
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"\http://narnia.na/nana/images/test-thumb-120x160.jpg\" width=\"160\" height=\"120\"></a>"}, #275
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"\http://narnia.na/nana/images/test-thumb-120x160.jpg\" width=\"160\" height=\"120\"></a>"}, #276
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' height='240'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"\http://narnia.na/nana/images/test-thumb-240x320.jpg\" width=\"320\" height=\"240\"></a>"}, #277
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' scale='100'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"\http://narnia.na/nana/images/test-thumb-480x640.jpg\" width=\"640\" height=\"480\"></a>"}, #278
+{ "t" : "<$MTAssetCount$>", "e" : "2"}, #279
+{ "t" : "<MTAssets lastn='1'><MTAssetTags><$MTTagName$>; </MTAssetTags></MTAssets>", "e" : "alpha; beta; gamma; "}, #280
+{ "t" : "<MTAssets><MTAssetsHeader>(Head)</MTAssetsHeader><$MTAssetID$>;<MTAssetsFooter>(Last)</MTAssetsFooter></MTAssets>", "e" : "(Head)1;2;(Last)"} #281
 ]

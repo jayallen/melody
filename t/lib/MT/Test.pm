@@ -512,7 +512,41 @@ It\'s a hard rain\'s a-gonna fall',
         BlogId => 1,
         EntryCallback => sub { print STDERR "# Rebuilding entry " . $_[0]->id . "\n" }
     );
+    
+    ### Asset
+    use MT::Asset;
 
+    my $img_pkg = MT::Asset->class_handler('image');
+    my $file_pkg = MT::Asset->class_handler('file');
+    my $asset = new $img_pkg;
+    $asset->blog_id(1);
+    $asset->url('http://narnia.na/nana/images/test.jpg');
+    $asset->file_path(File::Spec->catfile($ENV{MT_HOME}, "t", 'images', 'test.jpg'));
+    $asset->file_name('test.jpg');
+    $asset->file_ext('jpg');
+    $asset->image_width(640);
+    $asset->image_height(480);
+    $asset->mime_type('image/jpeg');
+    $asset->label('Image photo');
+    $asset->description('This is a test photo.');
+    $asset->created_by(1);
+    $asset->tags('alpha', 'beta', 'gamma');
+    $asset->save;
+
+    $asset = new $file_pkg;
+    $asset->blog_id(1);
+    $asset->url('http://narnia.na/nana/files/test.tmpl');
+    $asset->file_path(File::Spec->catfile($ENV{MT_HOME}, "t", 'test.tmpl'));
+    $asset->file_name('test.tmpl');
+    $asset->file_ext('tmpl');
+    $asset->mime_type('text/plain');
+    $asset->label('Template');
+    $asset->description('This is a test template.');
+    $asset->created_by(1);
+    $asset->created_on('19780131074500');
+    $asset->tags('beta');
+    $asset->save;
+    
     1;
 }
 
