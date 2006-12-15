@@ -156,7 +156,7 @@ function adjustWidthHeight (f, width) {
                 </p>
                 </TMPL_IF>
 
-                <p><input type="checkbox" name="popup" value="1" /> <MT_TRANS phrase="Link image to full-size version in a popup window."></p>
+                <p><input type="checkbox" name="popup" value="1" <TMPL_IF NAME=POPUP>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Link image to full-size version in a popup window."></p>
                 <TMPL_IF NAME=CAN_SAVE_IMAGE_DEFAULTS>
                 <p><input type="checkbox" name="image_defaults" value="1" <TMPL_IF NAME=IMAGE_DEFAULTS>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Remember these settings"></p>
                 </TMPL_IF>

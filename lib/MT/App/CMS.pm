@@ -97,7 +97,7 @@ sub init {
         'send_notify' => \&send_notify,
         'start_upload' => \&start_upload,
         'upload_file' => \&upload_file,
-        'complete_upload' => \&complete_upload,
+        'complete_insert' => \&complete_insert,
         'start_upload_entry' => \&start_upload_entry,
         'logout' => \&logout,
         'start_recover' => \&start_recover,
@@ -5489,8 +5489,15 @@ sub register_type {
 }
 
 sub asset_insert {
-    my $app = shift;
-    defined(my $text = $app->_process_post_upload) or return;
+    my ($app, %args) = @_;
+
+    # Just insert text if there are arguments, unless one is
+    # 'is_image' otherwise we are definitely uploading.
+    my $text = !keys %args || $args{is_image}
+        ? $app->_process_post_upload()
+        : $app->asset_insert_text($args{asset_id});
+    return unless defined $text;
+
     $app->build_page('asset_insert.tmpl', {
             upload_html => $text,
             edit_field => $app->param('edit_field'),
@@ -5685,15 +5692,17 @@ sub _process_post_upload {
                           Blog => $blog);
         }
     }
+
     return $app->asset_insert_text();
 }
 
 sub asset_insert_text {
     my $app = shift;
     my $q = $app->param;
+    my $id = shift || $q->param('id');
     require MT::Asset;
-    my $asset = MT::Asset->load($q->param('id')) ||
-        return $app->errtrans("Can't load asset, ". $q->param('id') .'.');
+    my $asset = MT::Asset->load($id) ||
+        return $app->errtrans("Can't load asset, $id.");
     my $text = $asset->as_html($q);
     return $q->param('popup') || $q->param('link')
         ? $app->translate_templatized($text)
@@ -9192,7 +9201,7 @@ sub start_upload {
     $app->build_page('upload.tmpl', \%param);
 }
 
-sub complete_upload {
+sub complete_insert {
     my ($app, %args) = @_;
 
     my $asset = $args{asset};
@@ -9212,37 +9221,44 @@ sub complete_upload {
     my $perms = $args{perms} || $app->{perms} ||
         return $app->errtrans('No permissions');
 
-    my %param = (
-        asset_id => $asset->id,
-        bytes => $args{bytes},
-        direct_asset_insert => scalar $app->param('direct_asset_insert'),
-        edit_field => scalar $app->param('edit_field'),
-        entry_insert => scalar $app->param('entry_insert'),
-        fname => $asset->file_name,
-        height => $asset->image_height,
-        is_image => $args{is_image},
-        site_path => scalar $app->param('site_path'),
-        url => $asset->url,
-        width => $asset->image_width,
-    );
-
     if ($args{is_image}) {
-        eval { require MT::Image; MT::Image->new or die; };
-        $param{do_thumb} = $@ ? 0 : 1;
-        $param{can_save_image_defaults} = $perms->can_save_image_defaults ? 1 : 0;
-        $param{constrain} = $blog->image_default_constrain ? 1 : 0;
-        $param{popup_image} = $blog->image_default_popup ? 1 : 0;
-        $param{image_defaults} = $blog->image_default_set ? 1 : 0;
-        $param{wrap_text} = $blog->image_default_wrap_text ? 1 : 0;
-        $param{make_thumb} = $blog->image_default_thumb ? 1 : 0;
-        $param{'align_'.$_} = $blog->image_default_align eq $_ ? 1 : 0 for qw(left center right);
-        $param{'unit_w'.$_} = $blog->image_default_wunits eq $_ ? 1 : 0 for qw(percent pixels);
-        $param{'unit_h'.$_} = $blog->image_default_hunits eq $_ ? 1 : 0 for qw(percent pixels);
-        $param{thumb_width} = $blog->image_default_width || $asset->image_width || 0;
-        $param{thumb_height} = $blog->image_default_height || $asset->image_height || 0;
-    }
+        my $param = {
+            asset_id => $asset->id,
+            bytes => $args{bytes},
+            direct_asset_insert => scalar $app->param('direct_asset_insert'),
+            edit_field => scalar $app->param('edit_field'),
+            entry_insert => scalar $app->param('entry_insert'),
+            fname => $asset->file_name,
+            height => $asset->image_height,
+            is_image => $args{is_image},
+            site_path => scalar $app->param('site_path'),
+            url => $asset->url,
+            width => $asset->image_width,
+        };
 
-    $app->build_page('upload_complete.tmpl', \%param);
+        eval { require MT::Image; MT::Image->new or die; };
+        $param->{do_thumb} = $@ ? 0 : 1;
+
+        $param->{can_save_image_defaults} = $perms->can_save_image_defaults ? 1 : 0;
+        $param->{constrain} = $blog->image_default_constrain ? 1 : 0;
+        $param->{popup} = $blog->image_default_popup ? 1 : 0;
+        $param->{image_defaults} = $blog->image_default_set ? 1 : 0;
+        $param->{wrap_text} = $blog->image_default_wrap_text ? 1 : 0;
+        $param->{make_thumb} = $blog->image_default_thumb ? 1 : 0;
+        $param->{'align_'.$_} = $blog->image_default_align eq $_ ? 1 : 0 for qw(left center right);
+        $param->{'unit_w'.$_} = $blog->image_default_wunits eq $_ ? 1 : 0 for qw(percent pixels);
+        $param->{'unit_h'.$_} = $blog->image_default_hunits eq $_ ? 1 : 0 for qw(percent pixels);
+        $param->{thumb_width} = $blog->image_default_width || $asset->image_width || 0;
+        $param->{thumb_height} = $blog->image_default_height || $asset->image_height || 0;
+
+        $app->build_page('upload_complete.tmpl', $param);
+    }
+    else {
+        $app->asset_insert(
+            asset_id => $asset->id,
+            is_image => $args{is_image},
+        );
+    }
 }
 
 sub upload_file {
@@ -9485,7 +9501,7 @@ sub upload_file {
                           Blog => $blog);
     }
 
-    $app->complete_upload(
+    $app->complete_insert(
         asset => $asset,
         blog => $blog,
         bytes => $bytes,
@@ -12685,7 +12701,7 @@ for either installation of upgrade of their database.
 
 =item * upload_file
 
-=item * complete_upload
+=item * complete_insert
 
 =item * view_log
 

@@ -256,6 +256,13 @@ sub thumbnail_url {
     return $asset->stock_icon_url(@_);
 }
 
+sub as_html {
+    my ($self, $q) = @_;
+    (my $fname = $self->file_name) =~ s/'/\\'/g;
+    my $text = sprintf '<a href="%s">%s</a>', $self->url, $fname;
+    return $text;
+}
+
 1;
 
 __END__

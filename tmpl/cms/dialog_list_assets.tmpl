@@ -48,7 +48,7 @@ TC.attachLoadEvent( init );
 
 <h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>: </span> <MT_TRANS phrase="Assets"></h2>
 
-    <span class="modal_added"><MT_TRANS phrase="Select the image you want to insert, or upload a new one."></span>
+    <span class="modal_added"><MT_TRANS phrase="Select the asset you would like to insert, or upload a new one."></span>
 
 <p class="page-desc">
 <TMPL_IF NAME=EDIT_BLOG_ID>
@@ -63,7 +63,7 @@ TC.attachLoadEvent( init );
 </TMPL_UNLESS>
 <TMPL_IF NAME=OBJECT_LOOP><TMPL_UNLESS NAME=JSON>
 <form method="post" action="<TMPL_VAR NAME=SCRIPT_URL>" name="select_asset">
-<input type="hidden" name="__mode" value="complete_upload" />
+<input type="hidden" name="__mode" value="complete_insert" />
 <input type="hidden" name="_type" value="asset" />
 <input type="hidden" name="return_args" value="<TMPL_VAR NAME=RETURN_ARGS ESCAPE=HTML>" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
