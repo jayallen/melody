@@ -133,9 +133,12 @@ sub save {
 
     # check that the parent is legit.
     if ($cat->parent && $cat->parent ne '0') {
-        my $parent = MT::Category->load($cat->parent)
-            or return $cat->error(MT::Category->errstr);
+        my $parent = MT::Category->load($cat->parent);
+        $cat->parent(0) unless $parent;
+    }
 
+    if ($cat->parent && $cat->parent ne '0') {
+        my $parent = MT::Category->load($cat->parent);
         return $cat->error(MT->translate("Categories must exist within the same blog"))
             if ($cat->blog_id != $parent->blog_id);
         return $cat->error(MT->translate("Category loop detected"))
