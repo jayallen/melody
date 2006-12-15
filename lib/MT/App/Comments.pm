@@ -352,6 +352,7 @@ sub post {
             # I think what we really want is the individual archive.
             $comment_link = $entry->permalink;
         } else {
+            $static =~ s/[\r\n].*$//s;
             $comment_link = $static . '#' . $comment->id;
         }
     }
