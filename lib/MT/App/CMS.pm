@@ -919,9 +919,7 @@ sub list_assets {
         my ($obj, $row) = @_;
         my $blog;
         unless ($blog_id) {
-            $blog = $blogs{$obj->blog_id} ||= MT::Blog->load($obj->blog_id, { cached_ok => 1 });
-        } else {
-            $blog = $app->blog;
+            $blog = $blogs{$obj->blog_id} ||= $obj->blog;
         }
         $row->{blog_name} = $blog ? $blog->name : '-';
         $row->{file_name} = File::Basename::basename($row->{file_path});
@@ -996,6 +994,9 @@ sub list_assets {
             class_loop => \@class_loop,
             can_delete_files => ($blog ? $app->{perms}->can_edit_assets : $app->user->is_superuser),
             nav_assets => 1,
+            panel_searchable => 1,
+            search_prompt => $app->translate("Search Assets") . ":",
+            #search_type => $app->translate("Assets"),
         },
     });
 }
@@ -5489,18 +5490,16 @@ sub register_type {
 }
 
 sub asset_insert {
-    my ($app, %args) = @_;
+    my $app = shift;
 
     # Just insert text if there are arguments, unless one is
     # 'is_image' otherwise we are definitely uploading.
-    my $text = !keys %args || $args{is_image}
-        ? $app->_process_post_upload()
-        : $app->asset_insert_text($args{asset_id});
+    my $text = $app->_process_post_upload();
     return unless defined $text;
 
     $app->build_page('asset_insert.tmpl', {
-            upload_html => $text,
-            edit_field => $app->param('edit_field'),
+            upload_html => $text || '',
+            edit_field => scalar $app->param('edit_field') || '',
         },
     );
 }
@@ -5511,202 +5510,32 @@ sub start_upload_entry {
     $q->param('_type', 'entry');
     defined(my $text = $app->_process_post_upload) or return;
     $q->param('text', $text);
+    # strip any asset id
+    $q->param('id', 0);
     $app->edit_object;
 }
 
 sub _process_post_upload {
     my $app = shift;
-    my $q = $app->param;
-    my($url, $width, $height) = map $q->param($_), qw( url width height );
-    my ($base_url, $fname) = $url =~ m|(.*)/([^/]*)|;
-    $url = $base_url . '/' . $fname; # no need to re-encode filename; url is already encoded
-    my $blog_id = $q->param('blog_id');
-    require MT::Blog;
-    my $blog = MT::Blog->load($blog_id, {cached_ok=>1});
-    my($thumb, $thumb_width, $thumb_height);
-    # Save new defaults if requested.
-    if($q->param('image_defaults')) {
-        return $app->error($app->translate(
-            'Permission denied setting image defaults for blog #[_2]', $blog_id
-        )) unless $app->{perms}->can_save_image_defaults;
-        $blog->image_default_set(1);
-        $blog->image_default_wrap_text($q->param('wrap_text') ? 1 : 0);
-        $blog->image_default_align($q->param('align') || MT::Blog::ALIGN());
-        $blog->image_default_thumb($q->param('thumb') ? 1 : 0);
-        $blog->image_default_width($q->param('thumb_width') || MT::Blog::WIDTH());
-        $blog->image_default_wunits($q->param('thumb_width_type') || MT::Blog::UNITS());
-        $blog->image_default_height($q->param('thumb_height') || MT::Blog::WIDTH());
-        $blog->image_default_hunits($q->param('thumb_height_type') || MT::Blog::UNITS());
-        $blog->image_default_constrain($q->param('constrain') ? 1 : 0);
-        $blog->image_default_popup($q->param('popup') ? 1 : 0);
-    }
-    else {
-        $blog->image_default_set(0);
-        $blog->image_default_wrap_text(0);
-        $blog->image_default_align(MT::Blog::ALIGN());
-        $blog->image_default_thumb(0);
-        $blog->image_default_width(0);
-        $blog->image_default_wunits(MT::Blog::UNITS());
-        $blog->image_default_height(0);
-        $blog->image_default_hunits(MT::Blog::UNITS());
-        $blog->image_default_constrain(1);
-        $blog->image_default_popup(0);
-    }
-    $blog->save;
-    if ($thumb = $q->param('thumb')) {
-        require MT::Image;
-        my $base_path = $q->param('site_path') ?
-            $blog->site_path : $blog->archive_path;
-        my $file = $q->param('fname');
-        if ($file =~ m!\.\.|\0|\|!) {
-            return $app->error($app->translate("Invalid filename '[_1]'", $file));
-        }
-        my $i_file = File::Spec->catfile($base_path, $file);
-        ## Untaint. We checked $file for security holes above.
-        ($i_file) = $i_file =~ /(.+)/s;
-        my $fmgr = $blog->file_mgr;
-        my $data = $fmgr->get_data($i_file, 'upload')
-            or return $app->error($app->translate(
-                "Reading '[_1]' failed: [_2]", $i_file, $fmgr->errstr));
-        my $image_type = scalar $q->param('image_type');
-        my $img = MT::Image->new( Data => $data,
-                                  Type => $image_type )
-            or return $app->error($app->translate(
-                "Thumbnail failed: [_1]", MT::Image->errstr));
-        my($w, $h) = map $q->param($_), qw( thumb_width thumb_height );
-        (my($blob), $thumb_width, $thumb_height) =
-            $img->scale( Width => $w, Height => $h )
-            or return $app->error($app->translate("Thumbnail failed: [_1]",
-                $img->errstr));
-        require File::Basename;
-        my($base, $path, $ext) = File::Basename::fileparse($i_file, '\.[^.]*');
-        my $t_file = $path . $base . '-thumb' . $ext;
-        my $basename = $base . '-thumb' . $ext;
-        $fmgr->put_data($blob, $t_file, 'upload')
-            or return $app->error($app->translate(
-                "Error writing to '[_1]': [_2]", $t_file, $fmgr->errstr));
-
-        $file =~ s/\Q$base$ext\E$//;
-        my $url = $q->param('site_path') ? $blog->site_url : $blog->archive_url;
-        $url .= '/' unless $url =~ m!/$!;
-        $url .= $file;
-        $thumb = $url . encode_url($base . '-thumb' . $ext);
-
-        require MT::Asset;
-        my $img_pkg = MT::Asset->class_handler('image');
-        my $asset = new $img_pkg;
-        my $original = $asset->clone;
-        $asset->blog_id($blog_id);
-        #$asset->url($thumb);
-        $asset->file_path($t_file);
-        $asset->file_name($basename);
-        my $ext2 = $ext;
-        $ext2 =~ s/^\.//;
-        $asset->file_ext($ext2);
-        $asset->image_width($thumb_width);
-        $asset->image_height($thumb_height);
-        $asset->created_by($app->user->id);
-        $asset->save;
-        MT->run_callbacks('CMSPostSave.asset', $app, $asset, $original);
-
-        $app->param('thumb_asset_id' => $asset->id);
-
-        MT->run_callbacks('CMSUploadFile',
-                          File => $t_file, Url => $thumb, Size => length($blob),
-                          Asset => $asset,
-                          Type => 'thumbnail',
-                          Blog => $blog);
-
-        MT->run_callbacks('CMSUploadImage',
-                          File => $t_file, Url => $thumb,
-                          Asset => $asset,
-                          Width => $thumb_width, Height => $thumb_height,
-                          ImageType => $image_type,
-                          Size => length($blob),
-                          Type => 'thumbnail',
-                          Blog => $blog);
-    }
-    if ($q->param('popup')) {
-        require MT::Template;
-        if (my $tmpl = MT::Template->load({ blog_id => $blog_id,
-                                            type => 'popup_image' })) {
-            (my $rel_path = $q->param('fname')) =~ s!\.[^.]*$!!;
-            if ($rel_path =~ m!\.\.|\0|\|!) {
-                return $app->error($app->translate(
-                    "Invalid basename '[_1]'", $rel_path));
-            }
-            my $ext = $blog->file_extension || '';
-            $ext = '.' . $ext if $ext ne '';
-            require MT::Template::Context;
-            my $ctx = MT::Template::Context->new;
-            $ctx->stash('image_url', $url);
-            $ctx->stash('image_width', $width);
-            $ctx->stash('image_height', $height);
-            my $popup = $tmpl->build($ctx);
-            my $fmgr = $blog->file_mgr;
-            my $root_path = $q->param('site_path') ?
-                $blog->site_path : $blog->archive_path;
-            my $abs_file_path = File::Spec->catfile($root_path, $rel_path . $ext);
-
-            ## If the popup filename already exists, we don't want to overwrite
-            ## it, because it could contain valuable data; so we'll just make
-            ## sure to generate the name uniquely.
-            my($i, $rel_path_ext) = (0, $rel_path . $ext);
-            while ($fmgr->exists($abs_file_path)) {
-                $rel_path_ext = $rel_path . ++$i . $ext;
-                $abs_file_path = File::Spec->catfile($root_path, $rel_path_ext);
-            }
-            my ($vol, $dirs, $basename) = File::Spec->splitpath($rel_path_ext);
-            my $rel_url_ext = File::Spec->catpath($vol, $dirs, encode_url($basename));
- 
-            ## Untaint. We have checked for security holes above, so we
-            ## should be safe.
-            ($abs_file_path) = $abs_file_path =~ /(.+)/s;
-            $fmgr->put_data($popup, $abs_file_path, 'upload')
-                or return $app->error($app->translate(
-                   "Error writing to '[_1]': [_2]", $abs_file_path,
-                                                     $fmgr->errstr));
-            $url = $q->param('site_path') ?
-                $blog->site_url : $blog->archive_url;
-            $url .= '/' unless $url =~ m!/$!;
-            $rel_url_ext =~ s!^/!!;
-            $url .= $rel_url_ext;
-
-            my $img_pkg = MT::Asset->class_handler('image');
-            my $asset = new $img_pkg;
-            my $original = $asset->clone;
-            $asset->blog_id($blog_id);
-            $asset->url($url);
-            $asset->file_path($abs_file_path);
-            $asset->file_name($basename);
-            $asset->file_ext($blog->file_extension);
-            $asset->created_by($app->user->id);
-            $asset->save;
-            MT->run_callbacks('CMSPostSave.asset', $app, $asset, $original);
-
-            MT->run_callbacks('CMSUploadFile',
-                          File => $abs_file_path, Url => $url,
-                          Asset => $asset,
-                          Size => length($popup),
-                          Type => 'popup',
-                          Blog => $blog);
-        }
-    }
-
-    return $app->asset_insert_text();
+    my %param = $app->param_hash;
+    my $asset;
+    require MT::Asset;
+    $param{id} && ($asset = MT::Asset->load($param{id}))
+        or return $app->errtrans("Invalid request.");
+    $asset->on_upload(\%param);
+    return $app->asset_insert_text(\%param);
 }
 
 sub asset_insert_text {
     my $app = shift;
+    my ($param) = @_;
     my $q = $app->param;
-    my $id = shift || $q->param('id');
+    my $id = $app->param('id')
+        or return $app->errtrans("Invalid request.");
     require MT::Asset;
-    my $asset = MT::Asset->load($id) ||
-        return $app->errtrans("Can't load asset, $id.");
-    my $text = $asset->as_html($q);
-    return $q->param('popup') || $q->param('link')
-        ? $app->translate_templatized($text)
-        : $text;
+    my $asset = MT::Asset->load($id)
+        or return $app->errtrans("Can't load asset #[_1].", $id);
+    return $asset->as_html($param);
 }
 
 use constant NEW_PHASE => 1;
@@ -9202,63 +9031,45 @@ sub start_upload {
 }
 
 sub complete_insert {
-    my ($app, %args) = @_;
+    my $app = shift;
+    my (%args) = @_;
 
     my $asset = $args{asset};
     if (!$asset && $app->param('id')) {
         require MT::Asset;
         $asset = MT::Asset->load($app->param('id')) ||
-            return $app->errtrans("Can't load asset, ". $app->param('id') .'.');
+            return $app->errtrans("Can't load asset #[_1].", $app->param('id'));
     }
-    return $app->errtrans('No asset to upload.') unless $asset;
+    return $app->errtrans('Invalid request.') unless $asset;
 
     $args{is_image} = $asset->isa('MT::Asset::Image') ? 1 : 0
         unless defined $args{is_image};
 
     require MT::Blog;
-    my $blog = $args{blog} || MT::Blog->load($app->param('blog_id')) ||
-        return $app->errtrans("Can't load blog, ". $app->param('blog_id') .'.');
-    my $perms = $args{perms} || $app->{perms} ||
+    my $blog = $asset->blog or
+        return $app->errtrans("Can't load blog #[_1].", $app->param('blog_id') );
+    my $perms = $app->{perms} or
         return $app->errtrans('No permissions');
 
-    if ($args{is_image}) {
-        my $param = {
-            asset_id => $asset->id,
-            bytes => $args{bytes},
-            direct_asset_insert => scalar $app->param('direct_asset_insert'),
-            edit_field => scalar $app->param('edit_field'),
-            entry_insert => scalar $app->param('entry_insert'),
-            fname => $asset->file_name,
-            height => $asset->image_height,
-            is_image => $args{is_image},
-            site_path => scalar $app->param('site_path'),
-            url => $asset->url,
-            width => $asset->image_width,
-        };
-
-        eval { require MT::Image; MT::Image->new or die; };
-        $param->{do_thumb} = $@ ? 0 : 1;
-
-        $param->{can_save_image_defaults} = $perms->can_save_image_defaults ? 1 : 0;
-        $param->{constrain} = $blog->image_default_constrain ? 1 : 0;
-        $param->{popup} = $blog->image_default_popup ? 1 : 0;
-        $param->{image_defaults} = $blog->image_default_set ? 1 : 0;
-        $param->{wrap_text} = $blog->image_default_wrap_text ? 1 : 0;
-        $param->{make_thumb} = $blog->image_default_thumb ? 1 : 0;
-        $param->{'align_'.$_} = $blog->image_default_align eq $_ ? 1 : 0 for qw(left center right);
-        $param->{'unit_w'.$_} = $blog->image_default_wunits eq $_ ? 1 : 0 for qw(percent pixels);
-        $param->{'unit_h'.$_} = $blog->image_default_hunits eq $_ ? 1 : 0 for qw(percent pixels);
-        $param->{thumb_width} = $blog->image_default_width || $asset->image_width || 0;
-        $param->{thumb_height} = $blog->image_default_height || $asset->image_height || 0;
-
-        $app->build_page('upload_complete.tmpl', $param);
+    my $param = {
+        asset_id => $asset->id,
+        bytes => $args{bytes},
+        direct_asset_insert => scalar $app->param('direct_asset_insert') || 0,
+        edit_field => scalar $app->param('edit_field') || '',
+        entry_insert => scalar $app->param('entry_insert') || 0,
+        fname => $asset->file_name,
+        height => $asset->image_height,
+        is_image => $args{is_image} || 0,
+        site_path => scalar $app->param('site_path') || '',
+        url => $asset->url,
+        width => $asset->image_width,
+    };
+    my $html = $asset->insert_options($param);
+    unless ($html) {
+        return $app->asset_insert();
     }
-    else {
-        $app->asset_insert(
-            asset_id => $asset->id,
-            is_image => $args{is_image},
-        );
-    }
+    $param->{options_snippet} = $html;
+    $app->build_page('upload_complete.tmpl', $param);
 }
 
 sub upload_file {
@@ -9481,7 +9292,7 @@ sub upload_file {
     MT->run_callbacks('CMSPostSave.asset', $app, $asset, $original);
 
     if ($is_image) {
-        MT->run_callbacks('CMSUploadFile',
+        MT->run_callbacks('CMSUploadFile.' . $asset->class,
                           File => $local_file, Url => $url, Size => $bytes,
                           Asset => $asset,
                           Type => 'image',
@@ -9494,7 +9305,7 @@ sub upload_file {
                           ImageType => $id,
                           Blog => $blog);
     } else {
-        MT->run_callbacks('CMSUploadFile',
+        MT->run_callbacks('CMSUploadFile.' . $asset->class,
                           File => $local_file, Url => $url, Size => $bytes,
                           Asset => $asset,
                           Type => 'file',
@@ -9503,9 +9314,7 @@ sub upload_file {
 
     $app->complete_insert(
         asset => $asset,
-        blog => $blog,
         bytes => $bytes,
-        perms => $perms,
     );
 }
 
@@ -9532,6 +9341,7 @@ sub search_replace {
     my $app = shift;
     my $res = $app->do_search_replace(@_);
     $app->add_breadcrumb($app->translate('Search & Replace'));
+    $res->{nav_search} = 1;
     $app->build_page('search_replace.tmpl', $res);
 }
 
@@ -9552,6 +9362,15 @@ sub do_search_replace {
     }
 
     my $search_api = {
+        'asset' => {
+            'perm_check' => sub {
+                1;
+            },
+            'search_cols' => [ qw(file_name description) ],
+            'replace_cols' => [],
+            'can_replace' => 0,
+            'can_search_by_date' => 1,
+        },
         'entry' => {
             'perm_check' => sub {
                 grep { $_->can_edit_entry($_[0], $author) } @perms
@@ -9879,7 +9698,13 @@ sub do_search_replace {
     }
     if (@data) {
         my $meth = 'build_' . $type . '_table';
-        $app->$meth( items => \@data, param => \%param );
+        if ($app->can($meth)) {
+            $app->$meth( items => \@data, param => \%param );
+        } else {
+            my @objects;
+            push @objects, { object => $_ } for @data;
+            $param{object_loop} = \@objects;
+        }
     }
     if ($is_dateranged) {
         ($datefrom_year, $datefrom_month, $datefrom_day) 
@@ -9921,7 +9746,6 @@ sub do_search_replace {
     );
     $res{'tab_junk'} = 1 if $is_junk;
     $res{'search_cols_' . $_} = 1 foreach @cols;
-    $res{nav_search} = 1;
     \%res;
 }
 

@@ -32,10 +32,13 @@ var dlg;
 function init() {
 	// setup
 	dlg = new Dialog.Simple("list-assets");
-	var panel = new ListingPanel("assets");
+	var panel = new ListingPanel("asset");
 	dlg.panel = panel;
+
+	// hook into view updates so we can close any opened detail panel
 	var old_update = panel.datasource.onUpdate;
 	panel.datasource.onUpdate = function(ds) { viewChange(ds, old_update) };
+
 	panel.pager.setState(<TMPL_VAR NAME=PAGER_JSON>);
 	panel.parent = dlg;
 	dlg.open({}, dialogClose);
@@ -44,7 +47,7 @@ TC.attachLoadEvent( init );
 // -->
 </script>
 
-<div id="assets-panel" class="panel">
+<div id="asset-panel" class="panel">
 
 <h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>: </span> <MT_TRANS phrase="Assets"></h2>
 
@@ -58,6 +61,19 @@ TC.attachLoadEvent( init );
 </TMPL_IF>
 </TMPL_IF>
 </p>
+
+<div class="search-box">
+    <TMPL_IF PANEL_SEARCHABLE>
+    <form action="" method="get">
+        <p class="page-desc"><TMPL_VAR NAME=SEARCH_PROMPT>
+        <input type="text" class="search-input"<TMPL_UNLESS PANEL_SEARCHABLE> disabled="disabled"</TMPL_UNLESS> />
+        <input type="image" class="search-command" src="<TMPL_VAR NAME=STATIC_URI>images/nav_icons/color/search.gif" title="<MT_TRANS phrase="Search">" />
+        <input type="button" class="search-reset hidden" value="<MT_TRANS phrase="View All">" />
+    </p></form>
+    <TMPL_ELSE>
+    <p class="page-desc">&nbsp;<img border="0" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" width="17" height="20"></p>
+    </TMPL_IF>
+</div>
 
 <div class="list-wrapper">
 </TMPL_UNLESS>

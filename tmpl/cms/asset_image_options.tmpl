@@ -1,0 +1,77 @@
+<script type="text/javascript">
+<!--
+function calcDim (val, type, full) {
+    return val.value;
+}
+
+function adjustPixelsPct (f, width) {
+//    if (!f.constrain.checked) return;
+    var e, s, full;
+    if (width) {
+        e = f.thumb_width;
+        s = f.thumb_width_type;
+        full = f.full_width.value;
+    } else {
+        e = f.thumb_height;
+        s = f.thumb_height_type;
+        full = f.full_height.value;
+    }
+    e.value = Math.floor(full * e.value / 100);
+    return true;
+}
+
+function adjustWidthHeight (f, width) {
+//    if (!f.constrain.checked) return;
+    var w = f.thumb_width;
+    var wt = f.thumb_width_type;
+    var wf = f.full_width.value;
+    var h = f.thumb_height;
+    var ht = f.thumb_height_type;
+    var hf = f.full_height.value;
+    var pct;
+    var s = width ? wt : ht;
+    pct = width ? (w.value / wf) : (h.value / hf);
+    var e = width ? h : w;
+    var s = width ? ht : wt;
+    var full = width ? hf : wf;
+    e.value = Math.floor(pct * full);
+    return true;
+}
+//-->
+</script>
+
+<TMPL_IF NAME=DO_THUMB>
+<input type="hidden" name="full_width" value="<TMPL_VAR NAME=WIDTH>" />
+<input type="hidden" name="full_height" value="<TMPL_VAR NAME=HEIGHT>" />
+</TMPL_IF>
+
+    <div id="new_entry_prefs" style="display:block;">
+    <strong><MT_TRANS phrase="Display Options"></strong>
+
+        <div class="upload_indent_choices">
+        <p><label><input type="checkbox" name="include" value="1" checked="checked" onclick="toggleSubPrefs(this); return true;" /> <MT_TRANS phrase="Display Image in Entry"></label></p>
+
+            <div id="include_prefs" style="display:block;">
+
+            <input type="hidden" name="wrap_text" value="1" />
+            <p><MT_TRANS phrase="Alignment">: <span class="align_left_icon"><img align="absbottom" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="Align Image Left"> width="16" height="17" /></span> <input type="radio" name="align" value="left" <TMPL_IF NAME=ALIGN_LEFT>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Left"> <span class="align_center_icon"><img align="absbottom" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="Align Image Center"> width="16" height="17" /></span> <input type="radio" name="align" value="center" <TMPL_IF NAME=ALIGN_CENTER>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Center"> <span class="align_right_icon"><img align="absbottom" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="<MT_TRANS phrase="Align Image Right"> width="16" height="17" /></span> <input type="radio" name="align" value="right" <TMPL_IF NAME=ALIGN_RIGHT>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Right"></p>
+
+            <TMPL_IF NAME=DO_THUMB>
+            <p><input type="checkbox" name="thumb" value="1" <TMPL_IF NAME=MAKE_THUMB>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Create Thumbnail"> <a href="#" onclick="return openManual('file_upload', 'creating_thumbnails')" class="help">?</a>
+            <label for="thumb_width"><MT_TRANS phrase="Width">:</label>
+            <input name="thumb_width" id="thumb_width" value="<TMPL_VAR NAME=THUMB_WIDTH>" onchange="adjustWidthHeight(this.form, 1)" size="4" />
+            <label for="thumb_height"><MT_TRANS phrase="Height">:</label>
+            <input name="thumb_height" value="<TMPL_VAR NAME=THUMB_HEIGHT>" onchange="adjustWidthHeight(this.form, 0)" size="4" />
+            <MT_TRANS phrase="Pixels">
+            </p>
+            </TMPL_IF>
+
+            <p><input type="checkbox" name="popup" value="1" <TMPL_IF NAME=POPUP>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Link image to full-size version in a popup window."></p>
+            <TMPL_IF NAME=CAN_SAVE_IMAGE_DEFAULTS>
+            <p><input type="checkbox" name="image_defaults" value="1" <TMPL_IF NAME=IMAGE_DEFAULTS>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Remember these settings"></p>
+            </TMPL_IF>
+
+            </div>
+
+        </div>
+    </div>

@@ -188,7 +188,8 @@ sub blog {
     $asset->cache_property(sub {
         my $blog_id = $asset->blog_id or return undef;
         require MT::Blog;
-        MT::Blog->load($blog_id, { cached_ok => 1 });
+        MT::Blog->load($blog_id, { cached_ok => 1 })
+            or return $asset->error("Failed to load blog for asset");
     });
 }
 
@@ -198,7 +199,8 @@ sub can_handle {
     my ($pkg, $filename) = @_;
     # undef is returned from fileparse if the extension is not known.
     require File::Basename;
-    return (File::Basename::fileparse($filename, @{ $pkg->extensions }))[2] ? 1 : 0;
+    my $ext = $pkg->extensions || [];
+    return (File::Basename::fileparse($filename, @$ext))[2] ? 1 : 0;
 }
 
 # Given a filename, returns an appropriate MT::Asset class to associate
@@ -257,10 +259,28 @@ sub thumbnail_url {
 }
 
 sub as_html {
-    my ($self, $q) = @_;
-    (my $fname = $self->file_name) =~ s/'/\\'/g;
-    my $text = sprintf '<a href="%s">%s</a>', $self->url, $fname;
+    my $asset = shift;
+    my ($param) = @_;
+    my $fname = $asset->file_name;
+    require MT::Util;
+    my $text = sprintf '<a href="%s">%s</a>',
+        MT::Util::encode_html($asset->url),
+        MT::Util::encode_html($fname);
     return $text;
+}
+
+# Return a HTML snippet of form options for inserting this asset
+# into a web page. Default behavior is no options.
+sub insert_options {
+    my $asset = shift;
+    my ($param) = @_;
+    return undef;
+}
+
+sub on_upload {
+    my $asset = shift;
+    my ($param) = @_;
+    1;
 }
 
 1;
