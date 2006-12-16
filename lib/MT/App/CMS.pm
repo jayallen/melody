@@ -9307,8 +9307,8 @@ sub upload_file {
         $root_path = $blog->archive_path;
     }
     return $app->error($app->translate(
-        "Before you can upload a file, you need to configure the publishing paths for your weblog."
-    )) unless $root_path;
+        "Before you can upload a file, you need to publish your weblog."
+    )) unless -d $root_path;
     $relative_path = $q->param('extra_path');
     $middle_path = $q->param('middle_path') || '';
     my $relative_path_save = $relative_path;
