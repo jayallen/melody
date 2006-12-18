@@ -932,6 +932,7 @@ sub list_assets {
             $row->{asset_class} = $obj->class_label;
             $row->{file_size} = $size;
             if ($size < 1024) {
+                $row->{file_size_formatted} = sprintf("%.1f Bytes", $size);
             } elsif ($size < 1024000) {
                 $row->{file_size_formatted} = sprintf("%.1f KB", $size / 1024);
             } else {
