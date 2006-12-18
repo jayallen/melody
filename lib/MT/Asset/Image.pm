@@ -86,8 +86,12 @@ sub thumbnail_file {
     }
     if ($scale eq 'h') {
         # scale by height
-        $n_w = int($i_w * $h / $i_h);
         $n_h = $h;
+        $n_w = int($i_w * $h / $i_h);
+        if ($n_w > $w) {
+            $n_w = $w;
+            $n_h = int($i_h * $w / $i_w);
+        }
     } elsif ($scale eq 'w') {
         # scale by width
         $n_w = $w;
