@@ -1523,7 +1523,7 @@ sub build_page {
             $data[-1]{top_blog_selected} = 1
                 if $blog_id && ($blog->id == $blog_id);
         }
-        @data = sort { $a->{top_blog_name} cmp $b->{top_blog_name} } @data;
+        @data = sort { lc($a->{top_blog_name}) cmp lc($b->{top_blog_name}) } @data;
         $param->{top_blog_loop} = \@data;
     }
     $blog ||= MT::Blog->load($blog_id, {cached_ok=>1}) if $blog_id;
@@ -9066,6 +9066,7 @@ sub complete_insert {
     };
     my $html = $asset->insert_options($param);
     unless ($html) {
+        $app->param('id', $asset->id);
         return $app->asset_insert();
     }
     $param->{options_snippet} = $html;
