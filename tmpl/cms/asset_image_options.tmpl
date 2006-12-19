@@ -20,6 +20,17 @@ function adjustPixelsPct (f, width) {
     return true;
 }
 
+function checkThumbs(f) {
+    var real_w = <TMPL_VAR NAME=WIDTH>;
+    var real_h = <TMPL_VAR NAME=HEIGHT>;
+    var thumb_w = <TMPL_VAR NAME=THUMB_WIDTH>;
+    var thumb_h = <TMPL_VAR NAME=THUMB_HEIGHT>;
+    if ((real_w != thumb_w) || (real_h != thumb_h)) {
+        f = document.forms[0];
+        adjustWidthHeight(f,1);
+    }
+}
+
 function adjustWidthHeight (f, width) {
 //    if (!f.constrain.checked) return;
     var w = f.thumb_width;
@@ -37,9 +48,9 @@ function adjustWidthHeight (f, width) {
     e.value = Math.floor(pct * full);
     return true;
 }
+
 //-->
 </script>
-
 <TMPL_IF NAME=DO_THUMB>
 <input type="hidden" name="full_width" value="<TMPL_VAR NAME=WIDTH>" />
 <input type="hidden" name="full_height" value="<TMPL_VAR NAME=HEIGHT>" />
@@ -63,6 +74,7 @@ function adjustWidthHeight (f, width) {
             <label for="thumb_height"><MT_TRANS phrase="Height">:</label>
             <input name="thumb_height" value="<TMPL_VAR NAME=THUMB_HEIGHT>" onchange="adjustWidthHeight(this.form, 0)" size="4" />
             <MT_TRANS phrase="Pixels">
+<img onload="checkThumbs('now');" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="" width="1" height="1" />
             </p>
             </TMPL_IF>
 
