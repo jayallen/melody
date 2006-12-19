@@ -123,12 +123,11 @@ sub as_html {
             );
     }
 
+    my $dimensions = sprintf('width="%s" height="%s"', ($thumb
+        ? ($thumb->image_width, $thumb->image_height)
+        : ($asset->image_width, $asset->image_height)));
+
     if ($param->{popup}) {
-        my $dimensions = '';
-        if ($thumb->image_width && $thumb->image_height) {
-            $dimensions = sprintf('width="%s" height="%s"',
-                $thumb->image_width, $thumb->image_height);
-        }
         my $link = $thumb
             ? sprintf('<img src="%s" %s alt="%s" />',
                 MT::Util::encode_html($thumb->url),
@@ -146,11 +145,6 @@ sub as_html {
         my $wrap_style = $param->{wrap_text} && $param->{align}
             ? 'class="display_img_' . $param->{align} . '" ' : '';
         if ($param->{thumb}) {
-            my $dimensions = '';
-            if ($thumb->image_width && $thumb->image_height) {
-                $dimensions = sprintf('width="%s" height="%s"',
-                    $thumb->image_width, $thumb->image_height);
-            }
             $text = sprintf(
                 '<a href="%s"><img alt="%s" src="%s" %s %s/></a>',
                 MT::Util::encode_html($asset->url),
@@ -159,11 +153,6 @@ sub as_html {
                 $dimensions, $wrap_style,
             );
         } else {
-            my $dimensions = '';
-            if ($asset->image_width && $asset->image_height) {
-                $dimensions = sprintf('width="%s" height="%s"',
-                    $asset->image_width, $asset->image_height);
-            }
             $text = sprintf(
                 '<img alt="%s" src="%s" %s %s/>',
                 MT::Util::encode_html($fname),
@@ -172,9 +161,9 @@ sub as_html {
             );
         }
     } else {
-        $text = sprintf(
-            '<a href="%s">' . MT->translate('Download file') . '</a>',
+        $text = sprintf('<a href="%s">%s</a>',
             MT::Util::encode_html($asset->url),
+            MT->translate('Download file'),
         );
     }
 
