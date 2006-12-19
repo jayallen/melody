@@ -48,7 +48,10 @@ TC.attachLoadEvent(init);
 </script>
 
 <div id="<TMPL_VAR NAME=NAME>-panel" class="hidden panel">
-  <h2><span class="weblog-title-highlight"><MT_TRANS phrase="Restore Multiple Files"></span>: Upload <TMPL_VAR NAME=NAME></h2>
+  <h2><span class="weblog-title-highlight"><MT_TRANS phrase="Restore Multiple Files"></span>: <MT_TRANS phrase="Restoring"></h2>
+
+<span class="modal_added"><MT_TRANS phrase="Please upload the following file">: <span class="upload_restore_files"><TMPL_VAR NAME=NAME></span></span>
+
 <TMPL_IF NAME=ERROR>
 <div class="error-message"><TMPL_VAR NAME=ERROR></div>
 </TMPL_IF>
@@ -64,8 +67,8 @@ TC.attachLoadEvent(init);
 <input type="hidden" name="objects_json" value="<TMPL_VAR NAME=OBJECTS_JSON ESCAPE=HTML>" />
 <input type="hidden" name="deferred_json" value="<TMPL_VAR NAME=DEFERRED_JSON ESCAPE=HTML>" />
 
-<label><MT_TRANS phrase="Upload:"></label>
-<input name="file" id="file" type="file" size="50" />
+<p><label><MT_TRANS phrase="Upload:"></label>
+<input name="file" id="file" type="file" size="50" /></p>
 </form>
 <div class="panel-commands">
     <form action="" method="get" onsubmit="return false" onclick="window.focus();">

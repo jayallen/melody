@@ -3539,6 +3539,11 @@ body#mt-wizard #topnav-img {
     z-index: 20;
 }
 
+.upload_restore_files {
+    font-size: 11px;
+    color: #BDA239;
+    font-weight: bold;
+}
 .dialog .panel .items {
     font-size: 11px;
     font-weight: bold;
