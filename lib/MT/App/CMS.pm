@@ -991,7 +991,7 @@ sub list_assets {
                 edit_blog_id => $blog_id,
                 edit_field => $app->param('edit_field') || '',
                 dialog_view => $app->param('dialog_view') ? 1 : 0,
-                is_image => $app->param('filter_val') eq 'image' ? 1 : 0,
+                is_image => defined $app->param('filter_val') && $app->param('filter_val') eq 'image' ? 1 : 0,
             ) : ()),
             class_loop => \@class_loop,
             can_delete_files => ($blog ? $app->{perms}->can_edit_assets : $app->user->is_superuser),
