@@ -991,6 +991,7 @@ sub list_assets {
                 edit_blog_id => $blog_id,
                 edit_field => $app->param('edit_field') || '',
                 dialog_view => $app->param('dialog_view') ? 1 : 0,
+                is_image => $app->param('filter_val') eq 'image' ? 1 : 0,
             ) : ()),
             class_loop => \@class_loop,
             can_delete_files => ($blog ? $app->{perms}->can_edit_assets : $app->user->is_superuser),
@@ -5492,12 +5493,8 @@ sub register_type {
 
 sub asset_insert {
     my $app = shift;
-
-    # Just insert text if there are arguments, unless one is
-    # 'is_image' otherwise we are definitely uploading.
     my $text = $app->_process_post_upload();
     return unless defined $text;
-
     $app->build_page('asset_insert.tmpl', {
             upload_html => $text || '',
             edit_field => scalar $app->param('edit_field') || '',
