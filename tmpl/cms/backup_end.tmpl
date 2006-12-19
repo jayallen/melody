@@ -11,7 +11,7 @@ if (progress) {
 </script>
 
 <TMPL_IF NAME=BACKUP_SUCCESS>
-<p><strong><MT_TRANS phrase="All data backed up successfully!"></strong></p>
+<p><strong><MT_TRANS phrase="All of the data has been backed up successfully!"></strong></p>
 <TMPL_IF NAME=FILES_LOOP>
 <div class="list" id="list-files">
 <table cellspacing="0">
@@ -40,6 +40,7 @@ if (progress) {
 <input type="hidden" name="__mode" value="backup_download" />
 <input type="hidden" name="magic_token" value="<TMPL_VAR NAME=MAGIC_TOKEN>" />
 <input type="hidden" name="filename" value="<TMPL_VAR NAME=FILENAME ESCAPE=HTML>" />
+<TMPL_IF NAME=BLOG_ID><input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>" /></TMPL_IF>
 </form>
 <script type="text/javascript">
 var timer;

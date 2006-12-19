@@ -1,23 +1,52 @@
 #!/usr/bin/perl
-# $Id$
+# $Id:$
 use strict;
 use warnings;
 
-use Test::More tests => 503;
+use Test::More tests => 1575;
 
 use MT;
+use MT::Tag;
 use MT::Author;
+use MT::Blog;
+use MT::Role;
+use MT::Category;
+use MT::Entry;
+use MT::TBPing;
+use MT::Comment;
+
 use vars qw( $DB_DIR $T_CFG );
 
 use lib 't';
 
-use XML::XPath;
 use MT::BackupRestore;
 use Data::Dumper;
 
 system("rm t/db/* 2>null");
 require 'test-common.pl';
 require 'blog-common.pl';
+
+my %ds_table = (
+    'tag' => 'MT::Tag',
+    'author' => 'MT::Author',
+    'blog' => 'MT::Blog',
+    'notification' => 'MT::Notification',
+    'template' => 'MT::Template',
+    'templatemap' => 'MT::TemplateMap',
+    'role' => 'MT::Role',
+    'association' => 'MT::Association',
+    'permission' => 'MT::Permission',
+    'category' => 'MT::Category',
+    'asset' => 'MT::Asset',
+    'entry' => 'MT::Entry',
+    'fileinfo' => 'MT::FileInfo',
+    'objecttag' => 'MT::ObjectTag',
+    'placement' => 'MT::Placement',
+    'trackback' => 'MT::Trackback',
+    'tbping' => 'MT::TBPing',
+    'comment' => 'MT::Comment',
+    'plugindata' => 'MT::PluginData',
+);
 
 my @emails = ( 'fumiakiy@sixapart.jp', 'fyoshimatsu@sixapart.com' );
 my $chuck = MT::Author->load({ name => 'Chuck D' });
@@ -28,349 +57,132 @@ my $mel = MT::Author->load({ name => 'Melody' });
 my $mt = MT->new( Config => $T_CFG ) or die MT->errstr;
 isa_ok($mt, 'MT');
 
-my %objects;
-my $error;
+my $backup_data = '';
+my $printer = sub { $backup_data .= $_[0] };
 
-my $blog = MT::Blog->load(1);
-my $blog2;
-my $xml = $blog->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
+my @tags = MT::Tag->load;
+isnt(scalar(@tags), 0);
+my @authors = MT::Author->load;
+isnt(scalar(@authors), 0);
+my @blogs = MT::Blog->load;
+isnt(scalar(@blogs), 0);
+my @roles = MT::Role->load;
+isnt(scalar(@roles), 0);
+my @categories = MT::Category->load;
+isnt(scalar(@categories), 0);
+my @entries = MT::Entry->load;
+isnt(scalar(@entries), 0);
+my @tbpings = MT::TBPing->load;
+isnt(scalar(@tbpings), 0);
+my @comments = MT::Comment->load;
+isnt(scalar(@comments), 0);
+my @notifications = MT::Notification->load;
+isnt(scalar(@notifications), 0);
+my @templates = MT::Template->load;
+isnt(scalar(@templates), 0);
+my @templatemaps = MT::TemplateMap->load;
+isnt(scalar(@templatemaps), 0);
+my @associations = MT::Association->load;
+isnt(scalar(@associations), 0);
+my @permissions = MT::Permission->load;
+isnt(scalar(@permissions), 0);
+my @assets = MT::Asset->load;
 
-my $xp = XML::XPath->new(xml => $xml);
-my $current_path = "/*[local-name()='blog']";
-my $nodeset = $xp->find($current_path);
-
-for my $index (1..$nodeset->size()) {
-    my $node = $nodeset->get_node($index);
-    next if !($node->isa('XML::XPath::Node::Element'));
-
-    require MT::Blog;
-    $blog2 = MT::Blog->from_xml(
-        XPath => $xp,
-        XmlNode => $node, 
-        Objects => \%objects, 
-        Error => \$error, 
-        Callback => sub { print(@_); },
-        Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
-        
-    );
-
-    ok($blog2->id != $blog->id);
-    ok($blog2->name eq $blog->name);
-    ok($blog2->description eq $blog->description);
-    ok($blog2->archive_type eq $blog->archive_type);
-    ok($blog2->archive_type_preferred eq $blog->archive_type_preferred);
-    ok($blog2->site_path eq $blog->site_path);
-    ok($blog2->site_url eq $blog->site_url);
-    ok($blog2->days_on_index == $blog->days_on_index);
-    ok($blog2->entries_on_index == $blog->entries_on_index);
-    ok($blog2->file_extension eq $blog->file_extension);
-    ok($blog2->email_new_comments == $blog->email_new_comments);
-    ok($blog2->allow_comment_html == $blog->allow_comment_html);
-    ok($blog2->autolink_urls == $blog->autolink_urls);
-    ok($blog2->sort_order_posts eq $blog->sort_order_posts);
-    ok($blog2->sort_order_comments eq $blog->sort_order_comments);
-    ok($blog2->allow_comments_default == $blog->allow_comments_default);
-    ok($blog2->server_offset == $blog->server_offset);
-    ok($blog2->convert_paras eq $blog->convert_paras);
-    ok($blog2->convert_paras_comments eq $blog->convert_paras_comments);
-    ok($blog2->allow_pings_default == $blog->allow_pings_default);
-    ok($blog2->status_default == $blog->status_default);
-    ok(!defined($blog->allow_anon_comments) || ($blog2->allow_anon_comments == $blog->allow_anon_comments));
-    ok($blog2->words_in_excerpt == $blog->words_in_excerpt);
-    ok($blog2->moderate_unreg_comments == $blog->moderate_unreg_comments);
-    ok($blog2->moderate_pings == $blog->moderate_pings);
-    is($blog2->allow_unreg_comments, $blog->allow_unreg_comments);
-    ok(!defined($blog->allow_reg_comments) || ($blog2->allow_reg_comments == $blog->allow_reg_comments));
-    ok($blog2->allow_pings == $blog->allow_pings);
-    ok(!defined($blog->manual_approve_commenters) || ($blog2->manual_approve_commenters == $blog->manual_approve_commenters));
-    ok($blog2->require_comment_emails == $blog->require_comment_emails);
-    ok($blog2->junk_folder_expiry == $blog->junk_folder_expiry);
-    ok($blog2->ping_weblogs == $blog->ping_weblogs);
-    ok(!defined($blog->mt_update_key) || ($blog2->mt_update_key eq $blog->mt_update_key));
-    ok($blog2->language eq $blog->language);
-    ok(!defined($blog->welcome_msg) || ($blog2->welcome_msg eq $blog->welcome_msg));
-    ok($blog2->google_api_key eq $blog->google_api_key);
-    ok($blog2->email_new_pings == $blog->email_new_pings);
-    ok($blog2->ping_blogs == $blog->ping_blogs);
-    ok($blog2->ping_technorati == $blog->ping_technorati);
-    ok(!defined($blog->ping_others) || ($blog2->ping_others eq $blog->ping_others));
-    ok(!defined($blog->autodiscover_links) || ($blog2->autodiscover_links == $blog->autodiscover_links));
-    ok($blog2->sanitize_spec eq $blog->sanitize_spec);
-    ok($blog2->cc_license eq $blog->cc_license);
-    ok(!defined($blog->is_dynamic) || ($blog2->is_dynamic == $blog->is_dynamic));
-    ok($blog2->remote_auth_token eq $blog->remote_auth_token);
-    is($blog2->children_modified_on, $blog->children_modified_on);
-    ok($blog2->custom_dynamic_templates eq $blog->custom_dynamic_templates);
-    ok($blog2->junk_score_threshold == $blog->junk_score_threshold);
-    ok($blog2->internal_autodiscovery == $blog->internal_autodiscovery);
-    ok($blog2->basename_limit == $blog->basename_limit);
-    ok($blog2->archive_url eq $blog->archive_url);
-    ok($blog2->archive_path eq $blog->archive_path);
-    ok(!defined($blog->old_style_archive_links) || ($blog2->old_style_archive_links == $blog->old_style_archive_links));
-    ok(!defined($blog->archive_tmpl_daily) || ($blog2->archive_tmpl_daily eq $blog->archive_tmpl_daily));
-    ok(!defined($blog->archive_tmpl_weekly) || ($blog2->archive_tmpl_weekly eq $blog->archive_tmpl_weekly));
-    ok(!defined($blog->archive_tmpl_monthly) || ($blog2->archive_tmpl_monthly eq $blog->archive_tmpl_monthly));
-    ok(!defined($blog->archive_tmpl_category) || ($blog2->archive_tmpl_category eq $blog->archive_tmpl_category));
-    ok(!defined($blog->archive_tmpl_individual) || ($blog2->archive_tmpl_individual eq $blog->archive_tmpl_individual));
-    ok($blog2->image_default_wrap_text == $blog->image_default_wrap_text);
-    ok($blog2->image_default_align eq $blog->image_default_align);
-    ok($blog2->image_default_thumb == $blog->image_default_thumb);
-    ok($blog2->image_default_width == $blog->image_default_width);
-    ok($blog2->image_default_wunits eq $blog->image_default_wunits);
-    ok($blog2->image_default_height == $blog->image_default_height);
-    ok($blog2->image_default_hunits eq $blog->image_default_hunits);
-    ok($blog2->image_default_constrain == $blog->image_default_constrain);
-    ok($blog2->image_default_popup == $blog->image_default_popup);
-    
-    is(scalar(@emails) * 2, MT::Notification->count);
-    for my $email2 (@emails) {
-        my $notes2 = MT::Notification->load({ blog_id => $blog2->id, email => $email2 });
-        ok(defined($notes2));
-    }
-}
-
-my @templates = MT::Template->load({blog_id => 1});
-for my $templ (@templates) {
-    my $xml9 = $templ->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
-
-    my $xp9 = XML::XPath->new(xml => $xml9);
-    my $current_path9 = "/*[local-name()='template']";
-    my $nodeset9 = $xp9->find($current_path9);
-
-    for my $index (1..$nodeset9->size()) {
-        my $node = $nodeset9->get_node($index);
-        next if !($node->isa('XML::XPath::Node::Element'));
-
-        my $template2 = MT::Template->from_xml(
-            XPath => $xp9,
-            XmlNode => $node, 
-            Objects => \%objects, 
-            Error => \$error, 
-            Callback => sub { print(@_); },
-            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
-            
-        );
-
-        is($template2->outfile, $templ->outfile);
-        is($template2->text, $templ->text) if defined($template2->text);
-        is($template2->linked_file, $templ->linked_file);
-        is($template2->linked_file_mtime, $templ->linked_file_mtime);
-        is($template2->linked_file_size, $templ->linked_file_size);
-        is($template2->rebuild_me, $templ->rebuild_me);
-        is($template2->build_dynamic, $templ->build_dynamic);
-
-        require MT::TemplateMap;
-        my @templatemaps2 = MT::TemplateMap->load({ blog_id => $blog2->id, template_id => $template2->id });
-        is(scalar(@templatemaps2), MT::TemplateMap->count({ blog_id => $blog->id, template_id => $templ->id }));
-        for my $templatemap2 (@templatemaps2) {
-            my $template3 = MT::Template->load($templatemap2->id);
-            ok(defined($template3));
-        }
-    }
-}
+my @fileinfos = MT::FileInfo->load;
+isnt(scalar(@fileinfos), 0);
+my @objecttags = MT::ObjectTag->load;
+isnt(scalar(@objecttags), 0);
+my @placements = MT::Placement->load;
+isnt(scalar(@placements), 0);
+my @trackbacks = MT::Trackback->load;
+isnt(scalar(@trackbacks), 0);
+my @plugindata = MT::PluginData->load;
 
 
-my @authors = MT::Author->load();
-for my $author (@authors) {
-    my $xml2 = $author->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
 
-    my $xp2 = XML::XPath->new(xml => $xml2);
-    my $current_path2 = "/*[local-name()='author']";
-    my $nodeset2 = $xp2->find($current_path2);
 
-    for my $index (1..$nodeset2->size()) {
-        my $node = $nodeset2->get_node($index);
-        next if !($node->isa('XML::XPath::Node::Element'));
+MT::BackupRestore->backup(undef, $printer, sub {}, sub {}, 0, 'UTF-8');
 
-        require MT::Author;
-        my $author2 = MT::Author->from_xml(
-            XPath => $xp2,
-            XmlNode => $node, 
-            Objects => \%objects, 
-            Error => \$error, 
-            Callback => sub { print(@_); },
-            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
-        );
-        ok($author2->id != $author->id);
-        ok($author2->name eq $author->name);
-        ok(!defined($author2->nickname) || ($author2->nickname eq $author->nickname));
-        ok(!defined($author2->email) || ($author2->email eq $author->email));
-        ok(!defined($author2->url) || $author2->url eq $author->url);
-        ok($author2->type == $author->type);
-        ok(!defined($author->can_create_blog) || ($author2->can_create_blog == $author->can_create_blog));
-        ok(!defined($author->is_superuser) || ($author2->is_superuser == $author->is_superuser));
-        ok(!defined($author2->hint) || ($author2->hint eq $author->hint));
-        ok(!defined($author->can_view_log) || ($author2->can_view_log == $author->can_view_log));
-        ok(!defined($author->public_key) || $author2->public_key eq $author->public_key);
-        ok($author2->preferred_language eq $author->preferred_language);
-        ok(!defined($author->remote_auth_username) || $author2->remote_auth_username eq $author->remote_auth_username);
-        ok(!defined($author->remote_auth_token) || $author2->remote_auth_token eq $author->remote_auth_token);
-        ok(!defined($author->entry_prefs) || Dumper($author2->entry_prefs) eq Dumper($author->entry_prefs));
-        ok($author2->status == $author->status);
+use IO::String;
+my $h = IO::String->new(\$backup_data);
+my (%objects, %deferred, @errors);
+MT::BackupRestore->restore_process_single_file($h, \%objects, \%deferred, \@errors, sub { print $_[0]; });
 
-        # this can be ok because the blog the permission is related has already been restored.
-        my $perm2 = $author2->permissions;
-        my $perm = $author->permissions;
-        is($perm2->author_id, $author2->id);
-        is($perm2->role_mask, $perm->role_mask);
-        is($perm2->role_mask2, $perm->role_mask2);
-        is($perm2->role_mask3, $perm->role_mask3);
-        is($perm2->role_mask4, $perm->role_mask4);
-        is($perm2->blog_prefs, $perm->blog_prefs);
-        is($perm2->entry_prefs, $perm->entry_prefs);
-        is($perm2->template_prefs, $perm->template_prefs);
-        ok(((0 == $perm2->blog_id) && (0 == $perm->blog_id)) || ($perm2->blog_id != $perm->blog_id));
-    }
-}
+is(scalar(keys %deferred), 0);
+print join "\n", @errors;
+is(scalar(@errors), 0);
 
-my $role = MT::Role->load({ name => 'Weblog Administrator' });
-my $xml3 = $role->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
-my $xp3 = XML::XPath->new(xml => $xml3);
-my $current_path3 = "/*[local-name()='role']";
-my $nodeset3 = $xp3->find($current_path3);
+&checkthemout(\@tags, \%objects);
+&checkthemout(\@authors, \%objects);
+&checkthemout(\@blogs, \%objects);
+&checkthemout(\@roles, \%objects);
+&checkthemout(\@categories, \%objects);
+&checkthemout(\@entries, \%objects);
+&checkthemout(\@tbpings, \%objects);
+&checkthemout(\@comments, \%objects);
+&checkthemout(\@notifications, \%objects);
+&checkthemout(\@templates, \%objects);
+&checkthemout(\@templatemaps, \%objects);
+&checkthemout(\@associations, \%objects);
+&checkthemout(\@permissions, \%objects);
+&checkthemout(\@assets, \%objects);
+&checkthemout(\@fileinfos, \%objects);
+&checkthemout(\@objecttags, \%objects);
+&checkthemout(\@placements, \%objects);
+&checkthemout(\@trackbacks, \%objects);
+&checkthemout(\@plugindata, \%objects);
 
-for my $index3 (1..$nodeset3->size()) {
-    my $node = $nodeset3->get_node($index3);
-    next if !($node->isa('XML::XPath::Node::Element'));
 
-    require MT::Role;
-    my $role2 = MT::Role->from_xml(
-        XPath => $xp3,
-        XmlNode => $node, 
-        Objects => \%objects, 
-        Error => \$error, 
-        Callback => sub { print(@_); },
-        Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
-    );
-    isnt($role2->id, $role->id);
-    is($role2->name, $role->name);
-    is($role2->description, $role->description);
-    is($role2->is_system, $role->is_system);
-    is($role2->role_mask, $role->role_mask);
-    is($role2->role_mask2, $role->role_mask2);
-    is($role2->role_mask3, $role->role_mask3);
-    is($role2->role_mask4, $role->role_mask4);
+&finish;
 
-}
-
-my @categories = MT::Category->load({ blog_id => $blog->id, author_id => $chuck->id });
-for my $category (@categories) {
-    my $xml4 = $category->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
-    my $xp4 = XML::XPath->new(xml => $xml4);
-    my $nodeset4 = $xp4->find("/*[local-name()='category']");
-
-    for my $index4 (1..$nodeset4->size()) {
-        my $node = $nodeset4->get_node($index4);
-        next if !($node->isa('XML::XPath::Node::Element'));
-
-        require MT::Category;
-        my $category2 = MT::Category->from_xml(
-            XPath => $xp4,
-            XmlNode => $node, 
-            Objects => \%objects, 
-            Error => \$error, 
-            Callback => sub { print(@_); },
-            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
-        );
-        isnt($category2->id, $category->id);
-        is($category2->label, $category->label);
-        is($category2->ping_urls, $category->ping_urls);
-        is($category2->description, $category->description);
-        is($category2->allow_pings, $category->allow_pings);
-        is($category2->basename, $category->basename);
-        if (my @children = $category->children_categories) {
-            for my $child (@children) {
-                my $path = $child->category_label_path;
-                my @child2 = MT::Category->load({ label => $child->label });
-                my $child2;
-                for my $child3 (@child2) {
-                    last if (($child3->id != $child->id) && ($child3->category_label_path eq $path));
-                    $child2 = $child3;
-                }
-                ok(defined($child2));
-                is($child2->description, $child->description);
-                is($child2->ping_urls, $child->ping_urls);
-                is($child2->allow_pings, $child->allow_pings);
-                is($child2->basename, $child->basename);
+sub checkthemout {
+    my ($oldies, $objects) = @_;
+    for my $old (@$oldies) {
+        my $class = ref $old;
+        my $key = "$class#" . $old->id;
+        my $tmp_obj = $objects->{$key};
+        isnt(undef, $tmp_obj);
+        my $obj = $class->load($tmp_obj->id, {cached_ok=>0});
+        isnt($obj, undef);
+        for my $col (@{$obj->column_names}) {
+            next if $col eq 'id';
+            if ($col =~ /(\w+)_id$/) {
+                my $parent_class = $ds_table{$1};
+                next if !defined($parent_class);
+                my $old_parent_id = $obj->column($col);
+                next if !defined($old_parent_id); # like MT::Entry's category_id...
+                next if $old_parent_id eq '0'; # like MT::Trackback's category_id...
+                my $parent_key = $parent_class . '#' . $old_parent_id;
+                my $new_parent = $objects->{$parent_key};
+                my $parent = $parent_class->load($new_parent->id);
+                isnt(undef, $parent);
+            } else {
+                next if $col eq 'modified_on';
+                next if (
+#                    ($col eq 'text') &&
+                    (defined($old->column($col)) && ($old->column($col) eq '')) &&
+                    (!defined($obj->column($col)))
+                );
+                is($old->column($col), $obj->column($col), "$class$col" . $obj->id);
             }
         }
     }
 }
 
-my @entries = MT::Entry->load({ blog_id => $blog->id, author_id => [ $chuck->id, $bob->id ] });
-for my $entry (@entries) {
-    my $xml5 = $entry->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
-    my $xp5 = XML::XPath->new(xml => $xml5);
-    my $nodeset5 = $xp5->find("/*[local-name()='entry']");
-
-    for my $index5 (1..$nodeset5->size()) {
-        my $node = $nodeset5->get_node($index5);
-        next if !($node->isa('XML::XPath::Node::Element'));
-
-        require MT::Entry;
-        my $entry2 = MT::Entry->from_xml(
-            XPath => $xp5,
-            XmlNode => $node, 
-            Objects => \%objects, 
-            Error => \$error, 
-            Callback => sub { print(@_); },
-            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
-        );
-        isnt($entry2->id, $entry->id);
-        is($entry2->status, $entry->status);
-        is($entry2->allow_comments, $entry->allow_comments);
-        is($entry2->title, $entry->title);
-        is($entry2->excerpt, $entry->excerpt);
-        is($entry2->text, $entry->text);
-        is($entry2->text_more, $entry->text_more);
-        is($entry2->convert_breaks, $entry->convert_breaks);
-        is($entry2->to_ping_urls, $entry->to_ping_urls);
-        is($entry2->pinged_urls, $entry->pinged_urls);
-        is($entry2->allow_pings, $entry->allow_pings);
-        is($entry2->keywords, $entry->keywords);
-        is($entry2->tangent_cache, $entry->tangent_cache);
-        is($entry2->basename, $entry->basename);
-        is($entry2->atom_id, $entry->atom_id);
-        is($entry2->week_number, $entry->week_number);
-        is($entry2->category_id, $entry->category_id);
-    }
+sub finish {
+    use MT::Notification;
+    MT::Notification->remove({email => $_}) foreach @emails;
+    
+    use MT::TBPing;
+    MT::TBPing->remove({tb_id=>2, blog_id=>1,id=>2});
+    
+    use MT::Role;
+    MT::Role->remove;
+    
+    use MT::Association;
+    MT::Association->remove;
 }
-
-
-my @tags = MT::Tag->load();
-for my $tag (@tags) {
-    my $xml6 = $tag->to_xml(MT::BackupRestore::NS_MOVABLETYPE());
-    my $xp6 = XML::XPath->new(xml => $xml6);
-    my $nodeset6 = $xp6->find("/*[local-name()='tag']");
-
-    for my $index6 (1..$nodeset6->size()) {
-        my $node = $nodeset6->get_node($index6);
-        next if !($node->isa('XML::XPath::Node::Element'));
-
-        require MT::Tag;
-        my $tag2 = MT::Tag->from_xml(
-            XPath => $xp6,
-            XmlNode => $node, 
-            Objects => \%objects, 
-            Error => \$error, 
-            Callback => sub { print(@_); },
-            Namespace => MT::BackupRestore::NS_MOVABLETYPE(),
-        );
-        isnt($tag2->id, $tag->id);
-        is($tag2->name, $tag->name);
-        is($tag2->n8d_id, $tag->n8d_id);
-        is($tag2->is_private, $tag->is_private);
-    }
-}
-
-my $entry4 = MT::Entry->load(1);
-my @tags3 = $entry4->tags;
-my %tags3 = map { $_ => 1; } @tags3;
-my @tags_to_test = ('rain', 'grandpa', 'strolling');
-while (my $test = shift @tags_to_test) {
-    ok(exists $tags3{$test});
-}
-
+        
 sub setup {
     use MT::Notification;
     my $note = MT::Notification->new;

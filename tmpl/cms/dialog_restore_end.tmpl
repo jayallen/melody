@@ -19,10 +19,10 @@ if (progress) {
     </form>
 </div>
 <TMPL_ELSE>
-<p><strong><MT_TRANS phrase="All data restored successfully!"></strong></p>
+<p><strong><MT_TRANS phrase="All of the data have been restored successfully!"></strong></p>
 <div class="panel-commands">
     <form action="" method="get" onsubmit="return false" onclick="window.focus();">
-        <input type="button" value="<MT_TRANS phrase="OK">" onclick="return closeDialog()" />
+        <input type="button" value="<MT_TRANS phrase="OK">" onclick="return closeDialog('<TMPL_VAR NAME=OK_URL>')" />
     </form>
 </div>
 </TMPL_IF>

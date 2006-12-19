@@ -38,7 +38,7 @@ my @OPT = (
     [ 'IO::Compress::Gzip', 0, 0, 'IO::Compress::Gzip is required in order to compress files in backup/restore operation.', 'IO Compress Gzip'],
     [ 'IO::Uncompress::Gunzip', 0, 0, 'IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.', 'IO Uncompress Gunzip'],
     [ 'Archive::Zip', 0, 0, 'Archive::Zip is required in order to archive files in backup/restore operation.', 'Archive Zip'],
-    [ 'XML::XPath', 0, 0, 'XML::XPath and/or its dependencies is required in order to restore from multiple files.', 'XML XPath'],
+    [ 'XML::SAX', 0, 0, 'XML::SAX and/or its dependencies is required in order to restore.', 'XML SAX'],
 );
 
 my %drivers = (

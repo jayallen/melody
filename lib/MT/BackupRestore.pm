@@ -42,8 +42,16 @@ sub backup {
             term => { 'id' => $blog_ids }, 
             args => undef
             }};
+        push @$obj_to_backup, {'MT::Notification' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
         push @$obj_to_backup, {'MT::Template' => { 
             term => { 'id' => $blog_ids }, 
+            args => undef
+            }};
+        push @$obj_to_backup, {'MT::TemplateMap' => {
+            term => { 'blog_id' => $blog_ids }, 
             args => undef
             }};
         push @$obj_to_backup, {'MT::Role' => {
@@ -51,6 +59,14 @@ sub backup {
             args => { 'join' => 
                 [ 'MT::Association', 'role_id', { blog_id => $blog_ids }, undef ]
             }}};
+        push @$obj_to_backup, {'MT::Association' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
+        push @$obj_to_backup, {'MT::Permission' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
         push @$obj_to_backup, {'MT::Category' => {
             term => { 'blog_id' => $blog_ids }, 
             args => undef
@@ -63,7 +79,23 @@ sub backup {
             term => { 'blog_id' => $blog_ids }, 
             args => undef
             }};
+        push @$obj_to_backup, {'MT::FileInfo' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
+        push @$obj_to_backup, {'MT::ObjectTag' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
+        push @$obj_to_backup, {'MT::Placement' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
         push @$obj_to_backup, {'MT::Trackback' => {
+            term => { 'blog_id' => $blog_ids }, 
+            args => undef
+            }};
+        push @$obj_to_backup, {'MT::TBPing' => {
             term => { 'blog_id' => $blog_ids }, 
             args => undef
             }};
@@ -71,17 +103,28 @@ sub backup {
             term => { 'blog_id' => $blog_ids }, 
             args => undef
             }};
+        push @$obj_to_backup, {'MT::PluginData' => { term => undef, args => undef }};
     } else {
         push @$obj_to_backup, {'MT::Tag' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Author' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Blog' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Notification' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Template' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::TemplateMap' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Role' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Association' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Permission' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Category' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Asset' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Entry' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::FileInfo' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::ObjectTag' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::Placement' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Trackback' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::TBPing' => { term => undef, args => undef }};
         push @$obj_to_backup, {'MT::Comment' => { term => undef, args => undef }};
+        push @$obj_to_backup, {'MT::PluginData' => { term => undef, args => undef }};
+        $blog_ids = [];
     }
 
     my $header .= "<movabletype xmlns='" . NS_MOVABLETYPE . "'>\n";
@@ -92,7 +135,7 @@ sub backup {
     _loop_through_objects(
         $printer, $splitter, $finisher, $size, $obj_to_backup, $files);
 
-    my $else_xml = MT->run_callbacks('Backup.else');
+    my $else_xml = MT->run_callbacks('Backup', $blog_ids);
     $printer->($else_xml, q()) if $else_xml ne '1';
 
     $printer->('</movabletype>', q());
@@ -150,108 +193,50 @@ sub restore_file {
     my $class = shift;
     my ($fh, $errormsg, $callback) = @_;
 
-    my $xp = _process_backup_header($fh);
-    if (!defined($xp)) {
-        $$errormsg = MT->translate('Uploaded file was not a valid Movable Type backup file.');
-        return undef;
-    }
-
-    my @obj_to_restore = (    ## Beware the order of keys is important.
-        {tag => 'MT::Tag'},
-        {author => 'MT::Author'},
-        {blog => 'MT::Blog'},
-        {template => 'MT::Template'},
-        {role => 'MT::Role'},
-        {category => 'MT::Category'},
-        {asset => 'MT::Asset'},
-        {entry => 'MT::Entry'},
-        {trackback => 'MT::Trackback'},
-        {comment => 'MT::Comment'},
-    );
-    my %objects;
+    my $objects = {};
     my $deferred = {};
-    my $error;
+    my $errors = [];
 
-    my $result = __PACKAGE__->restore_process_single_file(
-        $fh, \@obj_to_restore, \%objects, $deferred, \$error, $callback);
-
+    $class->restore_process_single_file(
+        $fh, $objects, $deferred, $errors, $callback
+    );
+    $$errormsg = join('; ', @$errors);
     $deferred;
 }
-
-sub _process_backup_header {
-    my ($fh) = @_;
-
-    if ((ref($fh) eq 'Fh') || (ref($fh) eq 'GLOB')){
-        seek($fh, 0, 0) or return undef;
-        require XML::XPath;
-        my $xp = XML::XPath->new($fh) or return undef;
-        my $root;
-        eval {
-            $root = $xp->find("/*[local-name()='movabletype'][1]");
-        };
-        return undef if $@;
-        if ($root && ('movabletype' eq $root->get_node(1)->getLocalName)) {
-            return $xp;
-        }
-    }
-    return undef;
-
-}
-
+ 
 sub restore_process_single_file {
     my $class = shift;
-    my ($fh, $obj_to_restore, $objects, $deferred, $error, $callback) = @_;
-    
-    my $xp = _process_backup_header($fh);
-    if (!defined($xp)) {
-        $$error = MT->translate('Uploaded file was not a valid Movable Type backup file.');
-        return 0;
-    }
-    
-    my $root_path = "/*[local-name()='movabletype']";
-    for my $name_hash (@$obj_to_restore) {
-        my @keys = keys %$name_hash;
-        my $name = $keys[0];
-        my $nodeset = $xp->find("$root_path/*[local-name()='$name']");
-        for my $index (1..$nodeset->size()) {
-            my $node = $nodeset->get_node($index);
-            next if !($node->isa('XML::XPath::Node::Element'));
+    my ($fh, $objects, $deferred, $errors, $callback) = @_;
 
-            my $ns = $node->getNamespace($node->getPrefix);
-            next if ($ns && (NS_MOVABLETYPE ne $ns->getExpanded));
+    require XML::SAX;
+    require MT::BackupRestore::BackupFileHandler;
+    my $handler = MT::BackupRestore::BackupFileHandler->new(
+        callback => $callback,
+        objects => $objects,
+        deferred => $deferred,
+        errors => $errors,
+    );
 
-            my $class = $name_hash->{$node->getLocalName};
-            eval "require $class;";
-            $class->from_xml(
-                XPath => $xp,
-                XmlNode => $node, 
-                Objects => $objects, 
-                Deferred => $deferred,
-                Error => $error, 
-                Callback => $callback,
-                Namespace => NS_MOVABLETYPE,
-            );
-        }
+    my $parser = XML::SAX::ParserFactory->parser(
+        Handler => $handler,
+    );
+    my $e;
+    eval { $parser->parse_file($fh); };
+    $e = $@ if $@;
+    if ($e) {
+        push @$errors, $e;
+        $callback->($e);
     }
-    
-    my $extension_set = $xp->find("$root_path/*");
-    for my $index2 (1..$extension_set->size()) {
-        my $ext_node = $extension_set->get_node($index2);
-        my $ext_ns = $ext_node->getNamespace($ext_node->getPrefix);
-        next if ($ext_ns && (NS_MOVABLETYPE eq $ext_ns->getExpanded));
-        
-        MT->run_callbacks('Restore.else:' . $ext_ns->getExpanded, 
-            $xp, $ext_node, $objects, $deferred, $callback);
-    }
+    1;
 }
 
 sub restore_directory {
     my $class = shift;
-    my ($dir, $error, $error_assets, $callback) = @_;
+    my ($dir, $errors, $error_assets, $callback) = @_;
 
     my $manifest;
     my @files;
-    opendir my $dh, $dir or $$error = MT->translate("Can't open directory '[_1]': [_2]", $dir, "$!"), return undef;
+    opendir my $dh, $dir or push(@$errors, MT->translate("Can't open directory '[_1]': [_2]", $dir, "$!")), return undef;
     for my $f (readdir $dh) {
         next if $f !~ /^.+\.manifest$/i;
         $manifest = File::Spec->catfile($dir, $f);
@@ -259,33 +244,21 @@ sub restore_directory {
     }
     closedir $dh;
     unless ($manifest) {
-        $$error = MT->translate("No manifest file could be found in your import directory [_1].", $dir);
+        push @$errors, MT->translate("No manifest file could be found in your import directory [_1].", $dir);
         return undef;
     }
 
     my $fh = gensym;
-    open $fh, "<$manifest" or $$error = MT->translate('[_1] cannot open.'), return 0;
-    my $backups = _process_manifest($fh);
+    open $fh, "<$manifest" or push(@$errors, MT->translate("Can't open [_1].", $manifest)), return 0;
+    my $backups = __PACKAGE__->process_manifest($fh);
     close $fh;
     unless($backups) {
-        $$error = MT->translate("Manifest file [_1] was not a valid Movable Type backup manifest file.", $manifest);
+        push @$errors, MT->translate("Manifest file [_1] was not a valid Movable Type backup manifest file.", $manifest);
         return undef;
     }
 
     $callback->(MT->translate("Manifest file: [_1]\n", $manifest));
 
-    my @obj_to_restore = (    ## Beware the order of keys is important.
-        {tag => 'MT::Tag'},
-        {author => 'MT::Author'},
-        {blog => 'MT::Blog'},
-        {template => 'MT::Template'},
-        {role => 'MT::Role'},
-        {category => 'MT::Category'},
-        {asset => 'MT::Asset'},
-        {entry => 'MT::Entry'},
-        {trackback => 'MT::Trackback'},
-        {comment => 'MT::Comment'},
-    );
     my %objects;
     my $deferred = {};
 
@@ -293,15 +266,10 @@ sub restore_directory {
     for my $file (@$files) {
         my $fh = gensym;
         my $filepath = File::Spec->catfile($dir, $file);
-        open $fh, "<$filepath" or $$error = MT->translate('[_1] cannot open.'), return undef;
-        my $xp = _process_backup_header($fh);
-        if (!defined($xp)) {
-            $$error = MT->translate('The file [_1] was not a valid Movable Type backup file.', $filepath);
-            return undef;
-        }
+        open $fh, "<$filepath" or push @$errors, MT->translate('[_1] cannot open.'), next;
 
         my $result = __PACKAGE__->restore_process_single_file(
-            $fh, \@obj_to_restore, \%objects, $deferred, $error, $callback);
+            $fh, \%objects, $deferred, $errors, $callback);
 
         close $fh;
     }
@@ -310,39 +278,24 @@ sub restore_directory {
     $deferred;
 }
 
-sub _process_manifest {
+sub process_manifest {
+    my $class = shift;
     my ($stream) = @_;
 
     if ((ref($stream) eq 'Fh') || (ref($stream) eq 'GLOB')){
         seek($stream, 0, 0) or return undef;
-        require XML::XPath;
-        my $xp = XML::XPath->new($stream) or return undef;
-        my $root;
-        eval {
-            $root = $xp->find("/*[local-name()='manifest'][1]");
-        };
-        return undef if $@;
-        if ($root && ('manifest' eq $root->get_node(1)->getLocalName)) {
-            my $backups = {
-                files => [],
-                assets => [],
-            };
-            my $nodeset = $xp->find("*", $root->get_node(1));
-            for my $index (1..$nodeset->size()) {
-                my $node = $nodeset->get_node($index);
-                next if !($node->isa('XML::XPath::Node::Element'));
-                if ('backup' eq $node->getAttribute('type')) {
-                    push @{$backups->{files}}, $node->getAttribute('name');
-                } elsif ('asset' eq $node->getAttribute('type')) {
-                    push @{$backups->{assets}}, { 
-                        name => $node->getAttribute('name'),
-                        asset_id => $node->getAttribute('asset_id'),
-                    };
-                }
-            }
-            return $backups;
+        require XML::SAX;
+        require MT::BackupRestore::ManifestFileHandler;
+        my $handler = MT::BackupRestore::ManifestFileHandler->new();
+
+        my $parser = XML::SAX::ParserFactory->parser(
+            Handler => $handler,
+        );
+        eval { $parser->parse_file($stream); };
+        if (my $e = $@) {
+            die $e;
         }
-        return undef;
+        return $handler->{backups};
     }
     return undef;
 }
@@ -352,11 +305,23 @@ sub restore_asset {
     my ($tmp, $asset_element, $objects, $errors, $callback) = @_;
 
     my $id = $asset_element->{asset_id};
-    next if !defined($id);
-    next if !(exists $objects->{"MT::Asset#$id"});
+    if (!defined($id)) {
+        $callback->(MT->translate('ID for the asset was not set.'));
+        return 0;
+    }
     my $asset = $objects->{"MT::Asset#$id"};
+    unless (defined($asset)) {
+        $asset = $objects->{"MT::Asset::Image#$id"};
+        unless (defined($asset)) {
+            $callback->(MT->translate('The asset ([_1]) was not restored.', $id));
+            return 0;
+        }
+    }
     my $path = $asset->file_path;
-    next if !defined($path);
+    unless (defined($path)) {
+        $callback->(MT->translate('Path was not found for the asset ([_1]).', $id));
+        return 0;
+    }
     my ($vol, $dir, $fn) = File::Spec->splitpath($path);
     if (!-w "$vol$dir") {
         my $voldir =  "$vol$dir";
@@ -391,34 +356,6 @@ sub _restore_assets {
         __PACKAGE__->restore_asset($tmp, $asset_element, $objects, $errors, $callback);
     }
     1;
-}
-
-sub restore_upload_manifest {
-    my $class = shift;
-    my ($fh, $param) = @_;
-
-    my $backups = _process_manifest($fh);
-    return MT->translate("Uploaded file was not a valid Movable Type backup manifest file.") if !defined($backups);
-
-    my $files = $backups->{files};
-    my $assets = $backups->{assets};
-    my $file_next = shift @$files if defined($files) && scalar(@$files);
-    my $assets_json;
-
-    if (!defined($file_next)) {
-        if (scalar(@$assets) > 0) {
-            my $asset = shift @$assets;
-            $file_next = $asset->{name};
-            $param->{is_asset} = 1;
-        }
-    }
-    require JSON;
-    require MT::Util;
-    $assets_json = MT::Util::encode_html(JSON::objToJson($assets)) if scalar(@$assets) > 0;
-    $param->{files} = join(',', @$files);
-    $param->{assets} = $assets_json;
-    $param->{filename} = $file_next;
-    return q();
 }
 
 package MT::Object;
@@ -488,20 +425,12 @@ sub to_xml {
             if ($obj->_is_element($coldefs->{$name})) {
                 push @elements, $name;
                 next;
-                #} elsif (('datetime' eq $coldefs->{$name}{type}) || ('timestamp' eq $coldefs->{$name}{type})) {
-                #    my $ts_iso = MT::Util::ts2iso(undef, $obj->column($name));
-                #    $ts_iso =~ s/ /T/;
-                #    $xml .= " $name='" . $ts_iso . "'";
-                #    next;
             }
             $xml .= " $name='" . MT::Util::encode_xml($obj->column($name), 1) . "'";
         }
     }
     $xml .= '>';
     $xml .= "<$_>" . MT::Util::encode_xml($obj->column($_), 1) . "</$_>" foreach @elements;
-    $xml .= $obj->children_to_xml($namespace, $args);
-    my $ext_xml = MT->run_callbacks('Backup.' . $obj->datasource, $obj);
-    $xml .= $ext_xml if $ext_xml ne '1';
     $xml .= '</' . $obj->datasource . '>';
     $xml;
 }
@@ -536,125 +465,6 @@ sub restore_parent_ids {
         $done++;
     }
     (scalar(keys(%$parent_names)) == $done) ? 1 : 0;   
-}
-
-sub from_xml {
-    my $class = shift;
-    my (%param) = @_;
-    my $xp = $param{XPath};
-    my $element = $param{XmlNode};
-    my $objects = $param{Objects};
-    my $deferred = $param{Deferred};
-    my $error = $param{Error};
-    my $cb = $param{Callback};
-
-    require MT::BackupRestore;
-    my $namespace = $param{Namespace} || MT::BackupRestore::NS_MOVABLETYPE();
-
-    if (ref($class)) {
-        $class = ref($class);
-    }
-
-    my $err = $@;
-    if (defined($err) && $err) {
-        $cb->($err . "\n");
-        return undef;
-    }
-
-    my $obj = $class->new;
-    if (!$obj || !($obj->isa('MT::Object'))) {
-        $cb->(MT->translate("Invalid XML element to restore: [_1]\n", $class));
-        return undef;
-    }
-
-    my %data;
-    my $coldefs = $obj->column_defs;
-    my $attributes = $element->getAttributeNodes;
-    for my $attribute (@$attributes) {
-        my $colname = $attribute->getLocalName;
-        #if (('datetime' eq $coldefs->{$colname}{type}) || ('timestamp' eq $coldefs->{$colname}{type})) {
-        #    $data{$colname} = MT::Util::iso2ts(undef, $attribute->getNodeValue);
-        #} else {
-            $data{$colname} = $attribute->getNodeValue;
-        #}
-    }
-
-    my $success = 1;
-    my $parent_names = $obj->parent_names;
-    $success = $obj->restore_parent_ids(\%data, $objects) if scalar(keys %$parent_names);
-    if (!$success) {
-        $cb->(MT->translate("Restoring [_1] (ID: [_2]) was deferred because its parents objects have not been restored yet.\n", $class, $data{id}));
-        $deferred->{$class . '#' . $data{id}} = 1;
-        return undef;
-    }
-
-    $cb->(MT->translate("Restoring [_1]...\n", $class));
-
-    my @extension_names;
-    my $child_element_names = $obj->children_names;
-    my $nodeset = $xp->find("*", $element);
-    for my $index (1..$nodeset->size()) {
-        my $node = $nodeset->get_node($index);
-        next if !($node->isa('XML::XPath::Node::Element'));
-
-        my $ns = $node->getNamespace($node->getPrefix);
-        if ($ns && ($namespace eq $ns->getExpanded)) {
-            if (!exists($child_element_names->{$node->getLocalName})) {
-                $data{$node->getLocalName} = MT::Util::decode_xml($node->string_value);
-            }
-        } elsif ($ns) {
-            push @extension_names, $node->getLocalName;
-        }
-    }
-
-    my $old_id = $data{id};
-    delete $data{id};
-    $obj->set_values(\%data);
-    $obj->save or
-        $cb->($obj->errstr . "\n"), return undef;
-    $cb->(MT->translate("[_1] [_2] (ID: [_3]) has been restored successfully with new ID: [_4]\n",
-            $element->getLocalName =~ m/^[aeiou]/i ? 'An' : 'A',
-            $element->getLocalName,
-            $old_id,
-            $obj->id)
-    );
-    my $key = "$class#$old_id";
-    delete $deferred->{$key} if exists $deferred->{$key};
-    $objects->{$key} = $obj;
-
-    for my $name (keys %$child_element_names) {
-        my $children_set = $xp->find("*[local-name()='$name']", $element);
-        for my $index2 (1..$children_set->size()) {
-            my $node = $children_set->get_node($index2);
-            my $ns = $node->getNamespace($node->getPrefix);
-            next if !$ns || $namespace ne $ns->getExpanded;
-            
-            $param{XmlNode} = $node;
-            my $class = $child_element_names->{$name};
-            eval "require $class;";
-            my $child = $class->from_xml(%param);
-            next if !defined($child);
-            my $child_old_id = $node->getAttribute('id');
-            my $grand_children_names = $child->children_names;
-            if (scalar(keys %$grand_children_names)) {
-                my $child_key = "$class#$child_old_id";
-                $objects->{$child_key} = $child;
-            }
-        }
-    }
-
-    for my $ext_name (@extension_names) {
-        my $extension_set = $xp->find("*[local-name()='$ext_name']", $element);
-        for my $index3 (1..$extension_set->size()) {
-            my $ext_node = $extension_set->get_node($index3);
-            my $ns = $ext_node->getNamespace($ext_node->getPrefix);
-            next if !$ns || $namespace eq $ns->getExpanded;
-
-            MT->run_callbacks('Restore.' . $obj->datasource . ':' . $ns->getExpanded,
-                $xp, $ext_node, $obj, $objects, $deferred, $cb);
-        }
-    }
-    $obj;
 }
 
 package MT::Asset;
@@ -746,9 +556,9 @@ sub children_names {
 
 package MT::Category;
 
-sub to_backup {
-    $_[0]->parent ? 0 : 1;
-}
+#sub to_backup {
+#    $_[0]->parent ? 0 : 1;
+#}
 
 sub children_to_xml {
     my $obj = shift;
@@ -1264,7 +1074,7 @@ and do the multi-file restore operation directed by the manifest file.
 TODO A method which restores the assets' actual files to the
 specified directory.
 
-=head2 restore_upload_manifest
+=head2 process_manifest
 
 TODO A method which is called from MT::App::CMS to process an uploaded
 manifest file which is to be the source of the multi-file restore
@@ -1272,32 +1082,35 @@ operation in the MT::App::CMS.
 
 =head1 Callbacks
 
+For plugins which uses MT::Object-derived types, backup and restore
+operation call callbacks for plugins to inject XMLs so they are
+also backup, and read XML to restore objects so they are also restored.
+
 Callbacks called by the package are as follows:
 
 =over 4
 
-=item Backup.else
+=item Backup
     
 Calling convention is:
 
-    callback($cb)
+    callback($cb, $blog_ids)
 
 The callback is used for MT::Object-derived types used by plugins
-to be backup.  This callback is for those objects which has no
-relationship with any other MT::Objects.  Refer to MT::Object
-documentation for how to backup objects with relationships.
-The callback must return the object's XML representation in a
-string, or 1 for nothing.
+to be backup.  The callback must return the object's XML representation
+in a string, or 1 for nothing.  $blog_ids has an ARRAY reference to
+blog_ids which indicates what weblog a user chose to backup.  It may
+be an empty array if a user chose Everything.
 
-=item Restore.else.<namespace>
+=item Restore
 
-Calling convention is:
+Restore callbacks are called in convention like below:
 
-    callback($cb, $xp, $node, $objects, $deferred, $callback)
+    MT->run_callbacks("Restore.<xml_namespace>", 
+        $data, $objects, $deferred, $callback);
 
-Where $xp is an XML::XPath object to be used to search for xml nodes.
-
-$node is an XML::XPath::Element object to be restored.
+Where $data is a parameter which was passed to XML::SAX::Base's 
+start_element callback method.
 
 $objects is an hash reference which contains all the restored objects
 in the restore session.  The hash keys are stored in the format
@@ -1315,10 +1128,12 @@ the format MT::ObjectClassName#old_id and hash values are 1.
 $callback is a code reference which will print out the passed paramter.
 Callback method can use this to communicate with users.
 
-This callback is used for MT::Object-derived types used by plugins
-to be restored.  This callback is for those objects which has no
-relationship with any other MT::Objects.  Refer to MT::Object
-documentation for how to backup objects with relationships.
+If a plugin has an MT::Object derived type, the plugin will register 
+a callback to Restore.<xmlnamespace> callback, so later the restore 
+operation will call the callback function with parameters described above.
+XML Namespace is required to be registered, so an xml node can be resolved 
+into what plugins to be called back, and can be distinguished the same 
+element name with each other.
 
 =head1 AUTHOR & COPYRIGHT
 

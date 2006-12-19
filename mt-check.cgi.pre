@@ -234,7 +234,7 @@ my @OPT = (
     
     [ 'Archive::Zip', 0, 0, translate('Archive::Zip is required in order to archive files in backup/restore operation.')],
 
-    [ 'XML::XPath', 0, 0, translate('XML::XPath and/or its dependencies is required in order to restore.')],
+    [ 'XML::SAX', 0, 0, translate('XML::SAX and/or its dependencies is required in order to restore.')],
 );
 
 use Cwd;

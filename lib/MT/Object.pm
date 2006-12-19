@@ -1160,14 +1160,6 @@ and values are class names of them.
 This method is defined in MT/BackupRestore.pm - you must first 
 use MT::BackupRestore to use this method.
 
-=item * $class->from_xml()
-
-TODO - A factory method which creates and returns a new object from 
-its XML representation. Children objects will also be created along with
-the object itself.
-This method is defined in MT/BackupRestore.pm - you must first 
-use MT::BackupRestore to use this method.
-
 =back
 
 =head1 NOTES
@@ -1314,56 +1306,6 @@ not on a subclass of C<MT::Object>.
 This method just calls the set_callback_routine as defined by the
 MT::ObjectDriver set with the I<set_driver> method.
 
-= head2 Backup and Restore callbacks
-
-For plugins which uses MT::Object-derived types, backup and restore
-operation call callbacks for plugins to inject XMLs so they are
-also backup, and read XML to restore objects so they are also restored.
-
-Backup callbacks are called in convetion like below:
-
-    MT->run_callbacks('Backup.<object_name>, $parent)
-
-Where C<$parent> is an object reference which is currently processed.
-
-If a plugin has an MT::Object derived type which relates itself to 
-a blog, the plugin will register a callback to Backup.blog callback,
-so later the backup operation will call the callback function with a
-parameter which is an object reference to an weblog (to be backup).
-
-Restore callbacks are called in convention like below:
-
-    MT->run_callbacks('Restore.<object_name>.<xml_namespace>',
-                $xp, $ext_node, $parent, $objects, $deferred, $cb)
-
-Where $xp is an XML::XPath object to be used to search for xml nodes.
-
-$ext_node is an XML::XPath::Element object to be restored.
-
-$parent is an object reference which is currently processed.
-
-$objects is an hash reference which contains all the restored objects
-in the restore session.  The hash keys are stored in the format
-MT::ObjectClassName#old_id, and hash values are object reference
-of the actually restored objects (with new id).  Old ids are ids
-which are stored in the XML files, while new ids are ids which
-are restored.
-
-$deferred is an hash reference which contains information about
-restore-deferred objects.  Deferred objects are those objects
-which appeared in the XMl file but could not be restored because
-any parent objects are missing.  The hash keys are stored in
-the format MT::ObjectClassName#old_id and hash values are 1.
-
-$callback is a code reference which will print out the passed paramter.
-Callback method can use this to communicate with users.
-
-If a plugin has an MT::Object derived type which relates itself to 
-a blog, the plugin will register a callback to Restore.blog.<xmlnamespace>
-callback, so later the restore operation will call the callback function 
-with parameters described above.  XML Namespace is required to be
-registered, so an xml node can be resolved into what plugins to be 
-called back, and can be distinguished the same element name with each other.
 
 =back
 
