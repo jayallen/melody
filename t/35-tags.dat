@@ -252,7 +252,7 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "<MTCategories show_empty=\"1\" glue=\",\"><MTCategoryLabel>-<MTCategoryPrevious show_empty=\"1\"><MTCategoryLabel></MTCategoryPrevious></MTCategories>", "e" : "bar-,foo-bar,subfoo-"}, #200
 { "t" : "<MTEntries lastn=\"1\" offset=\"3\"><MTIfCategory name=\"foo\">in category</MTIfCategory></MTEntries>", "e" : "in category"}, #201
 { "t" : "", "e" : ""}, #202
-{ "t" : "<MTIndexList><MTIndexName>-<MTIndexLink>-<MTIndexBasename>;</MTIndexList>", "e" : "Atom Index-http://narnia.na/nana/atom.xml-index;Dynamic Site Bootstrapper-http://narnia.na/nana/mtview.php-index;Main Index-http://narnia.na/nana/-index;Master Archive Index-http://narnia.na/nana/archives.html-index;RSD-http://narnia.na/nana/rsd.xml-index;RSS 2.0 Index-http://narnia.na/nana/index.xml-index;Site JavaScript-http://narnia.na/nana/mt-site.js-index;Stylesheet-http://narnia.na/nana/styles-site.css-index;" }, #203
+{ "t" : "<MTIndexList><MTIndexName>-<MTIndexLink>-<MTIndexBasename>;</MTIndexList>", "e" : "Atom Index-http://narnia.na/nana/atom.xml-index;Main Index-http://narnia.na/nana/-index;Master Archive Index-http://narnia.na/nana/archives.html-index;RSD-http://narnia.na/nana/rsd.xml-index;RSS 2.0 Index-http://narnia.na/nana/index.xml-index;Site JavaScript-http://narnia.na/nana/mt-site.js-index;Stylesheet-http://narnia.na/nana/styles-site.css-index;" }, #203
 { "t" : "<MTIfNeedEmail>email needed</MTIfNeedEmail>", "e" : "" }, #204
 { "t" : "<MTIfAllowCommentHTML>comment html allowed</MTIfAllowCommentHTML>", "e" : "comment html allowed" }, #205
 { "t" : "<MTIfCommentsAllowed>comments allowed</MTIfCommentsAllowed>", "e" : "comments allowed" }, #206
@@ -301,7 +301,7 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "<MTAssets lastn='1'><$MTAssetURL$></MTAssets>", "e" : "http://narnia.na/nana/images/test.jpg"}, #249
 { "t" : "<MTAssets lastn='1'><$MTAssetType$></MTAssets>", "e" : "Image"}, #250
 { "t" : "<MTAssets lastn='1'><$MTAssetMimeType$></MTAssets>", "e" : "image/jpeg"}, #251
-{ "t" : "<MTAssets lastn='1'><$MTAssetFilePath$></MTAssets>", "e" : "/home/takayama/Code/wheeljack/t/images/test.jpg"}, #252
+{ "t" : "<MTAssets lastn='1'><$MTAssetFilePath$></MTAssets>", "e" : "CURRENT_WORKING_DIRECTORY/t/images/test.jpg"}, #252
 { "t" : "<MTAssets lastn='1' sort_order='ascend'><$MTAssetDateAdded$></MTAssets>", "e" : "January 31, 1978  7:45 AM"}, #253
 { "t" : "<MTAssets lastn='1'><$MTAssetAddedBy$></MTAssets>", "e" : "Melody"}, #254
 { "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size'$></MTAssets>", "e" : "84.1 KB"}, #255
