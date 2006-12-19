@@ -218,11 +218,11 @@ sub on_upload {
     my $blog_id = $blog->id;
 
     my($thumb, $thumb_width, $thumb_height);
-    # Save new defaults if requested.
     if($param->{image_defaults}) {
         return $app->error($app->translate(
             'Permission denied setting image defaults for blog #[_2]', $blog_id
         )) unless $app->{perms}->can_save_image_defaults;
+        # Save new defaults if requested.
         $blog->image_default_set(1);
         $blog->image_default_wrap_text($param->{wrap_text} ? 1 : 0);
         $blog->image_default_align($param->{align} || MT::Blog::ALIGN());
@@ -233,8 +233,21 @@ sub on_upload {
         $blog->image_default_hunits($param->{thumb_height_type} || MT::Blog::UNITS());
         $blog->image_default_constrain($param->{constrain} ? 1 : 0);
         $blog->image_default_popup($param->{popup} ? 1 : 0);
-        $blog->save;
     }
+    else {
+        # Reset the image defaults.
+        $blog->image_default_set(0);
+        $blog->image_default_wrap_text(0);
+        $blog->image_default_align(MT::Blog::ALIGN());
+        $blog->image_default_thumb(0);
+        $blog->image_default_width(MT::Blog::WIDTH());
+        $blog->image_default_wunits(MT::Blog::UNITS());
+        $blog->image_default_height(MT::Blog::WIDTH());
+        $blog->image_default_hunits(MT::Blog::UNITS());
+        $blog->image_default_constrain(1);
+        $blog->image_default_popup(0);
+    }
+    $blog->save;
 
     # Thumbnail creation
     if ($thumb = $param->{thumb}) {
