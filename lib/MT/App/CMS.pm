@@ -9063,7 +9063,7 @@ sub complete_insert {
         width => $asset->image_width,
     };
     my $html = $asset->insert_options($param);
-    unless ($html) {
+    if ($param->{direct_asset_insert} && !$html) {
         $app->param('id', $asset->id);
         return $app->asset_insert();
     }
