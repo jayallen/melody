@@ -1349,6 +1349,10 @@ li {
     left: 219px;
 }
 
+.upload_from_dialog {
+    float:left;
+}
+
 .asset-detail-panel-inner-modal {
     background-color: white;
     border: 1px solid #D7E3F5;
