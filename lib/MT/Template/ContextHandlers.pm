@@ -1491,20 +1491,33 @@ sub _hdlr_entries {
                 $ago[5]+1900, $ago[4]+1, @ago[3,2,1,0];
             $terms{created_on} = [ $ago ];
             $args{range_incl}{created_on} = 1;
-        } elsif (!%$args) {
-            if (my $days = $ctx->stash('blog')->days_on_index) {
-                my @ago = offset_time_list(time - 3600 * 24 * $days,
-                    $ctx->stash('blog_id'));
-                my $ago = sprintf "%04d%02d%02d%02d%02d%02d",
-                    $ago[5]+1900, $ago[4]+1, @ago[3,2,1,0];
-                $terms{created_on} = [ $ago ];
-                $args{range_incl}{created_on} = 1;
-            } elsif (my $limit = $ctx->stash('blog')->entries_on_index) {
-                $args->{lastn} = $limit;
+        } else {
+            # Check attributes
+            my $found_valid_args = 0;
+            foreach my $valid_key ('lastn', 'offset', 'category', 'categories', 'tag', 'tags', 'author', 'days', 'recently_commented_on') {
+                if (exists($args->{$valid_key})) {
+                    $found_valid_args = 1;
+                    last;
+                }
+            }
+
+            if (!$found_valid_args) {
+                # Uses weblog settings
+                if (my $days = $ctx->stash('blog')->days_on_index) {
+                    my @ago = offset_time_list(time - 3600 * 24 * $days,
+                        $ctx->stash('blog_id'));
+                    my $ago = sprintf "%04d%02d%02d%02d%02d%02d",
+                        $ago[5]+1900, $ago[4]+1, @ago[3,2,1,0];
+                    $terms{created_on} = [ $ago ];
+                    $args{range_incl}{created_on} = 1;
+                } elsif (my $limit = $ctx->stash('blog')->entries_on_index) {
+                    $args->{lastn} = $limit;
+                }
             }
         }
         $args{'sort'} = 'created_on';
         $args{direction} = 'descend';
+
         if (!@filters) {
             if (my $last = $args->{lastn}) {
                 $args{direction} = $args->{sort_order} || 'descend';
