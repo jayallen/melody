@@ -281,6 +281,7 @@ sub init_default_handlers {
         TagSearchLink => \&_hdlr_tag_search_link,
 
         TemplateNote => sub { '' },
+        TemplateCreatedOn => \&_hdlr_template_created_on,
         Ignore => [ sub { '' }, 1 ],
 
         HTTPContentType => \&_hdlr_http_content_type,
@@ -964,6 +965,14 @@ sub _hdlr_file_template {
     $file =~ s!/{2,}!/!g;
     $file =~ s!(^/|/$)!!g;
     $file;
+}
+
+sub _hdlr_template_created_on {
+    my($ctx, $args, $cond) = @_;
+    my $template = $ctx->stash('template')
+        or return $ctx->error(MT->translate("Can't load template"));
+    $args->{ts} = $template->created_on;
+    _hdlr_date($_[0], $args);
 }
 
 sub _hdlr_link {

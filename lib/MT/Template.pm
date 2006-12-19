@@ -64,6 +64,7 @@ use File::Spec;
 sub build {
     my $tmpl = shift;
     my($ctx, $cond) = @_;
+    $ctx->stash('template', $tmpl);
     my $tokens;
     my $build = MT::Builder->new;
     unless ($tokens = $tmpl->{__tokens}) {

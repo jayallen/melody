@@ -107,8 +107,6 @@ my $templates = [
             },
         ];
 
-use MT::Util qw(format_ts);
-
 sub templates {
     if (!$loaded) {
         require MT::Util;
@@ -121,15 +119,6 @@ sub templates {
             my $file = File::Spec->catfile($path, MT::Util::dirify($tmpl->{name}).'.tmpl');
             if ((-e $file) && (-r $file)) {
                 open FIN, "<$file"; my $data = <FIN>; close FIN;
-                if ('Atom Index' eq $tmpl->{name}) {
-                    if ($data =~ m!<\$MTDate format="([\S]+)"\$>!) {
-                        my @ts = gmtime(time);
-                        my $ts = sprintf '%04d%02d%02d%02d%02d%02d',
-                                $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
-                        my $date = format_ts($1, $ts);
-                        $data =~ s!<\$MTDate format="([\S]+)"\$>!$date!;
-                    }
-                }
                 $tmpl->{text} = $data;
             } else {
                 $tmpl->{text} = '';
