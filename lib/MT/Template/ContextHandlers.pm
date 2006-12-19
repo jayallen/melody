@@ -4704,7 +4704,7 @@ sub _hdlr_asset_property {
 
         if ($format eq '1') {
             if ($size < 1024) {
-                $ret = sprintf("%s Bytes", $size);
+                $ret = sprintf("%d Bytes", $size);
             } elsif ($size < 1024000) {
                 $ret = sprintf("%.1f KB", $size / 1024);
             } else {
