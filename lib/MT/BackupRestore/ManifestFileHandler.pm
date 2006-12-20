@@ -40,7 +40,8 @@ sub start_element {
 
     my $name = $data->{LocalName};
     my %attrs = map {
-        $data->{Attributes}->{$_}->{LocalName} => $data->{Attributes}->{$_}->{Value}
+        $data->{Attributes}->{$_}->{LocalName} => 
+            MT::I18N::encode_text(MT::I18N::utf8_off($data->{Attributes}->{$_}->{Value}), 'utf-8')
     } keys(%{$data->{Attributes}});
     my $ns = $data->{NamespaceURI};
 

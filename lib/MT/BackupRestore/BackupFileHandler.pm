@@ -85,14 +85,19 @@ sub start_element {
                 }
 
                 my $obj = $class->new;
-                my %column_data = map { $attrs->{$_}->{LocalName} => $attrs->{$_}->{Value} } keys(%$attrs);
-                $obj->set_values(\%column_data);
+                my %column_data = map { $attrs->{$_}->{LocalName} => 
+                        MT::I18N::encode_text(MT::I18N::utf8_off($attrs->{$_}->{Value}), 'utf-8')
+                    } keys(%$attrs);
                 $callback->(MT->translate("Restoring [_1]...\n", $class));
                 my $success = $obj->restore_parent_ids(\%column_data, $objects);
                 if ($success) {
+                    $obj->set_values(\%column_data);
                     $self->{current} = $obj;
                 } else {
-                    $callback->(MT->translate("Restoring [_1] (ID: [_2]) was deferred because its parents objects have not been restored yet.\n", $class, $column_data{id}));
+                    $callback->(
+                        MT->translate("Restoring [_1] (ID: [_2]) was deferred because its parents objects have not been restored yet.\n", 
+                            $class, $column_data{id})
+                    );
                     $deferred->{$class . '#' . $column_data{id}} = 1;
                     $self->{deferred} = $deferred;
                     $self->{skip} += 1;
@@ -112,7 +117,6 @@ sub characters {
 
     return if $self->{skip};
     return if !exists($self->{current});
-use Data::Dumper;
     if (my $text_data = $self->{current_text}) {
         push @$text_data, $data->{Data};
         $self->{current_text} = $text_data;
@@ -134,6 +138,7 @@ sub end_element {
             my $column_name = shift @{$self->{current_text}};
             my $text;
             $text .= $_ foreach @{$self->{current_text}};
+            $text = MT::I18N::encode_text(MT::I18N::utf8_off($text), 'utf-8');
             $obj->column($column_name, $text);
             delete $self->{current_text};
         } else {

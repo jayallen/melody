@@ -326,7 +326,7 @@ sub restore_asset {
     if (!-w "$vol$dir") {
         my $voldir =  "$vol$dir";
         # we do need decode_utf8 here
-        $errors->{$id} = MT::I18N::decode_utf8(MT->translate('[_1] is not writable.', $voldir));
+        $errors->{$id} = MT->translate('[_1] is not writable.', MT::I18N::utf8_off($voldir));
     } else {
         my $filename = "$id-" . $asset_element->{name};
         $callback->(MT->translate("Copying [_1] to [_2]...", $filename, $path));
@@ -846,7 +846,11 @@ package MT::Permission;
 
 sub parent_names {
     my $obj = shift;
-    { author => 'MT::Author', blog => 'MT::Blog' };
+    my $parents = {
+        author => 'MT::Author',
+        blog => 'MT::Blog'
+    };
+    $parents;
 }
 
 package MT::Placement;

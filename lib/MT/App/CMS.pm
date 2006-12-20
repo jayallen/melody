@@ -11313,9 +11313,9 @@ sub restore_file {
             . $app->translate('Detailed information is in the <a href="[_1]">activity log</a>.', $log_url);
         return 0;
     }
-    if ($errormsg) {
+    if ($$errormsg) {
         $app->log({
-            message => $errormsg,
+            message => $$errormsg,
             level => MT::Log::ERROR(),
             class => 'system',
             category => 'restore',
