@@ -11,7 +11,7 @@ function highlightSwitch(selection) {
                 el_name.style.display = 'block';
                 el_name.innerHTML = '(<MT_TRANS phrase="None Selected.">)';
             }
-            openDialog(this.form, 'dialog_select_weblog');
+            openDialog(false, 'dialog_select_weblog');
             descriptionObject.innerHTML = '<MT_TRANS phrase="This option allows you to choose exactly what you want to backup.">';
         } else {
             var el_id = getByID('selected_blog_ids');
@@ -175,7 +175,9 @@ function highlightSwitch(selection) {
 
 <TMPL_IF NAME=OPEN_DIALOG>
 <script type="text/javascript">
-openDialog(this.form, 'dialog_restore_upload', 'magic_token=<TMPL_VAR NAME=MAGIC_TOKEN>&amp;files=<TMPL_VAR NAME=FILES>&amp;assets=<TMPL_VAR NAME=ASSETS>&amp;current_file=<TMPL_VAR NAME=FILENAME>&amp;last=<TMPL_VAR NAME=LAST>&amp;redirect=1;');
+<!--
+openDialog(false, 'dialog_restore_upload', 'magic_token=<TMPL_VAR NAME=MAGIC_TOKEN>&amp;files=<TMPL_VAR NAME=FILES>&amp;assets=<TMPL_VAR NAME=ASSETS>&amp;current_file=<TMPL_VAR NAME=FILENAME>&amp;last=<TMPL_VAR NAME=LAST>&amp;redirect=1;');
+//-->
 </script>
 </TMPL_IF>
 

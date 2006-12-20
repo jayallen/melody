@@ -73,7 +73,7 @@ TC.attachLoadEvent( init );
 <li class="special">
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New File">" width="9" height="9" />
 
-<a href="#" onclick="return openDialog(this.form, 'start_upload', '__type=asset&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New File"></a></li>
+<a href="#" onclick="return openDialog(false, 'start_upload', 'blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New File"></a></li>
 
 </TMPL_IF>
 </TMPL_IF>

@@ -50,7 +50,7 @@ TC.attachLoadEvent( init );
 <TMPL_IF NAME=CAN_CREATE_ASSOCIATION>
 <li class="special">
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/<TMPL_IF NAME=STATUS_ENABLED>create<TMPL_ELSE>create-disabled</TMPL_IF>.gif" alt="<MT_TRANS phrase="Add user to a weblog">" width="9" height="9" />
-<TMPL_IF NAME=STATUS_ENABLED><a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role', 'author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>%26author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>')"><TMPL_ELSE><span class="no_link" title="<MT_TRANS phrase="You can not create associations for disabled users.">"></TMPL_IF><MT_TRANS phrase="Add [_1] to a weblog" params="<TMPL_VAR NAME=EDIT_AUTHOR_NAME>"><TMPL_IF NAME=STATUS_ENABLED></a><TMPL_ELSE></span></TMPL_IF>
+<TMPL_IF NAME=STATUS_ENABLED><a href="javascript:void(0)" onclick="return openDialog(false, 'dialog_grant_role', 'author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>%26author_id=<TMPL_VAR NAME=EDIT_AUTHOR_ID>')"><TMPL_ELSE><span class="no_link" title="<MT_TRANS phrase="You can not create associations for disabled users.">"></TMPL_IF><MT_TRANS phrase="Add [_1] to a weblog" params="<TMPL_VAR NAME=EDIT_AUTHOR_NAME>"><TMPL_IF NAME=STATUS_ENABLED></a><TMPL_ELSE></span></TMPL_IF>
 </li>
 </TMPL_IF>
 </TMPL_IF>
@@ -60,7 +60,7 @@ TC.attachLoadEvent( init );
 <TMPL_IF NAME=CAN_CREATE_ASSOCIATION>
 <li class="special">
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Assign role to a new user"> width="9" height="9" />
-<a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role', '_type=user&amp;role_id=<TMPL_VAR NAME=ROLE_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>%26role_id=<TMPL_VAR NAME=ROLE_ID>')"><MT_TRANS phrase="Assign Role to User"></a>
+<a href="javascript:void(0)" onclick="return openDialog(false, 'dialog_grant_role', '_type=user&amp;role_id=<TMPL_VAR NAME=ROLE_ID>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>%26role_id=<TMPL_VAR NAME=ROLE_ID>')"><MT_TRANS phrase="Assign Role to User"></a>
 </li>
 </TMPL_IF>
 </TMPL_IF>
@@ -75,12 +75,12 @@ TC.attachLoadEvent( init );
 <TMPL_IF NAME=BLOG_VIEW>
 <li class="special">
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Add a user to this weblog">" width="9" height="9" />
-<a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role', '_type=user<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Add a user to this weblog"></a>
+<a href="javascript:void(0)" onclick="return openDialog(false, 'dialog_grant_role', '_type=user<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Add a user to this weblog"></a>
 </li>
 <TMPL_ELSE>
 <li class="special">
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Create a User Association">" width="9" height="9" />
-<a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role', '_type=user<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Create a User Association"></a>
+<a href="javascript:void(0)" onclick="return openDialog(false, 'dialog_grant_role', '_type=user<TMPL_IF NAME=BLOG_ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID></TMPL_IF>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Create a User Association"></a>
 </li>
 </TMPL_IF>
 </TMPL_IF>

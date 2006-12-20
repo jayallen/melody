@@ -37,7 +37,7 @@ TC.attachLoadEvent( init );
 
 <li class="special">
 <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Grant a new role">" width="9" height="9" />
-<a href="javascript:void(0)" onclick="return openDialog(this.form, 'dialog_grant_role')"><MT_TRANS phrase="Grant another role to [_1]" params="<TMPL_VAR NAME=EDIT_AUTHOR_NAME ESCAPE=HTML>"></a>
+<a href="javascript:void(0)" onclick="return openDialog(false, 'dialog_grant_role')"><MT_TRANS phrase="Grant another role to [_1]" params="<TMPL_VAR NAME=EDIT_AUTHOR_NAME ESCAPE=HTML>"></a>
 </li>
 <TMPL_ELSE>
 <li><a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=list_associations"><MT_TRANS phrase="Associations"></a></li>
