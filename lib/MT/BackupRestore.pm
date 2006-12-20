@@ -47,7 +47,7 @@ sub backup {
             args => undef
             }};
         push @$obj_to_backup, {'MT::Template' => { 
-            term => { 'id' => $blog_ids }, 
+            term => { 'blog_id' => $blog_ids }, 
             args => undef
             }};
         push @$obj_to_backup, {'MT::TemplateMap' => {
