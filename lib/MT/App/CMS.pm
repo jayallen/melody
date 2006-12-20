@@ -917,10 +917,7 @@ sub list_assets {
 
     my $hasher = sub {
         my ($obj, $row) = @_;
-        my $blog;
-        unless ($blog_id) {
-            $blog = $blogs{$obj->blog_id} ||= $obj->blog;
-        }
+        my $blog = $blogs{$obj->blog_id} ||= $obj->blog;
         $row->{blog_name} = $blog ? $blog->name : '-';
         $row->{file_name} = File::Basename::basename($row->{file_path});
         my $meta = $obj->metadata;
