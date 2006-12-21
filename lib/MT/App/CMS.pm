@@ -253,13 +253,13 @@ sub init_core_itemset_actions {
                               key => "unapprove_ping",
                               label => "Unpublish TrackBack(s)",
                               code => \&unapprove_item,
-                              condition => sub { $_[0] ne 'junk' }, # param is tab name
+                              condition => sub { @_ && ($_[0] ne 'junk') }, # param is tab name
                           }, 1);
     $app->add_itemset_action({type => 'comment',
                               key => "unapprove_comment",
                               label => "Unpublish Comment(s)",
                               code => \&unapprove_item,
-                              condition => sub { $_[0] ne 'junk' },
+                              condition => sub { @_ && ($_[0] ne 'junk') },
                           }, 1);
     $app->add_itemset_action({type => 'comment',
                               key => "trust_commenter",
@@ -935,25 +935,21 @@ sub list_assets {
             } else {
                 $row->{file_size_formatted} = sprintf("%.1f MB", $size / 1024000);
             }
-            my $ts = $obj->created_on;
-            unless ($ts) {
-                $ts = $stat[10];
-                $ts = epoch2ts($blog, $ts);
-            }
-            if (my $by = $obj->created_by) {
-                my $user = MT::Author->load($by, { cached_ok => 1 });
-                $row->{created_by} = $user ? $user->name : '';
-            }
-            if ($ts) {
-                $row->{created_on_formatted} =
-                    format_ts("%Y.%m.%d", $ts); 
-                $row->{created_on_time_formatted} =
-                    format_ts("%Y-%m-%d %H:%M:%S", $ts); 
-                $row->{created_on_relative} =
-                    relative_date($ts, time, $blog);
-            }
         } else {
             $row->{file_is_missing} = 1;
+        }
+        my $ts = $obj->created_on;
+        if (my $by = $obj->created_by) {
+            my $user = MT::Author->load($by, { cached_ok => 1 });
+            $row->{created_by} = $user ? $user->name : '';
+        }
+        if ($ts) {
+            $row->{created_on_formatted} =
+                format_ts("%Y.%m.%d", $ts); 
+            $row->{created_on_time_formatted} =
+                format_ts("%Y-%m-%d %H:%M:%S", $ts); 
+            $row->{created_on_relative} =
+                relative_date($ts, time, $blog);
         }
         $row->{metadata_json} = JSON::objToJson($meta);
     };
@@ -5684,15 +5680,8 @@ sub rebuild_phase {
     my @ids = $app->param('id');
     $app->{goback} = "window.location='". $app->return_uri . "'";
     if ($type eq 'entry') {
-        require MT::Entry;
-        foreach (@ids) {
-            my $entry = MT::Entry->load($_, {cached_ok=>1});
-            next unless $entry;
-            if ($entry->status == MT::Entry::RELEASE()) {
-                $app->rebuild_entry(Entry => $entry, BuildDependencies => 1)
-                    or return;
-            }
-        }
+        my %ids = map { $_ => 1 } @ids;
+        return $app->rebuild_these(\%ids);
     } elsif ($type eq 'template') {
         require MT::Template;
         foreach (@ids) {
@@ -5705,45 +5694,47 @@ sub rebuild_phase {
 }
 
 sub draft_entries {
+    my $app = shift;
     require MT::Entry;
-    $_[0]->update_entry_status(MT::Entry::HOLD(), $_[0]->param('id'));
+    $app->update_entry_status(MT::Entry::HOLD(), $_[0]->param('id'));
 }
 
 sub publish_entries {
+    my $app = shift;
     require MT::Entry;
-    $_[0]->update_entry_status(MT::Entry::RELEASE(), $_[0]->param('id'));
+    $app->update_entry_status(MT::Entry::RELEASE(), $_[0]->param('id'));
 }
 
 sub update_entry_status {
     my $app = shift;
     my ($new_status, @ids) = @_;
-    return $app->errtrans("Need a status to update entries") unless $new_status;
-    return $app->errtrans("Need entries to update status") unless @ids;
+    return $app->errtrans("Need a status to update entries")
+        unless $new_status;
+    return $app->errtrans("Need entries to update status")
+        unless @ids;
     my @bad_ids;
     my @rebuild_list;
+    my %rebuild_these;
     require MT::Entry;
     foreach my $id (@ids) {
         my $entry = MT::Entry->load($id, {cached_ok=>1}) or return $app->errtrans("One of the entries ([_1]) did not actually exist", $id);
-        push @rebuild_list, $entry if $entry->status != $new_status;
+        next if $entry->status != $new_status;
         $entry->status($new_status);
-        $entry->save() or (push @bad_ids, $id);
+        $entry->save() and $rebuild_these{$id} = 1;
     }
-    return $app->errtrans("Some entries failed to save") if (@bad_ids); # FIXME: we don't really want this
-    $app->rebuild_entry(Entry => $_, BuildDependencies => 1) 
-        foreach @rebuild_list; # FIXME: optimize, phase out to another page.
-    my $blog_id = $app->param('blog_id');
-    $app->add_return_arg('saved' => 1);
-    $app->call_return;
+    $app->rebuild_these(\%rebuild_these, how => NEW_PHASE);
 }
 
 sub approve_item {
-    $_[0]->param('approve', 1);
-    $_[0]->set_item_visible;
+    my $app = shift;
+    $app->param('approve', 1);
+    $app->set_item_visible;
 }
 
 sub unapprove_item {
-    $_[0]->param('unapprove', 1);
-    $_[0]->set_item_visible;
+    my $app = shift;
+    $app->param('unapprove', 1);
+    $app->set_item_visible;
 }
 
 sub set_item_visible {
@@ -9265,25 +9256,27 @@ sub upload_file {
     my $local_basename = File::Basename::basename($local_file);
     my $ext = (File::Basename::fileparse($local_file, qr/[A-Za-z]+$/))[2];
 
-    # Does the file have dimensions with a recognized image extension?
-    require MT::Asset::Image;
-    my $is_image = defined($w) && defined($h) && MT::Asset::Image->can_handle($local_basename)
-        ? 1 : 0;
-
     require MT::Asset;
-    my $img_pkg = MT::Asset->class_handler($is_image ? 'image' : 'file');
-    my $asset = $img_pkg->new();
+    my $asset_pkg = MT::Asset->handler_for_file($local_basename);
+    my $is_image = defined($w) && defined($h)
+        && $asset_pkg->isa('MT::Asset::Image');
+    my $asset;
+    if (!($asset = $asset_pkg->load({ file_path => $local_file, blog_id => $blog_id }))) {
+        $asset = $asset_pkg->new();
+        $asset->file_path($local_file);
+        $asset->file_name($local_basename);
+        $asset->file_ext($ext);
+        $asset->blog_id($blog_id);
+        $asset->created_by($app->user->id);
+    } else {
+        $asset->modified_by($app->user->id);
+    }
     my $original = $asset->clone;
-    $asset->blog_id($blog_id);
     $asset->url($url);
-    $asset->file_path($local_file);
-    $asset->file_name($local_basename);
-    $asset->file_ext($ext);
     if ($is_image) {
         $asset->image_width($w);
         $asset->image_height($h);
     }
-    $asset->created_by($app->user->id);
     $asset->save;
     MT->run_callbacks('CMSPostSave.asset', $app, $asset, $original);
 
@@ -10341,26 +10334,59 @@ sub rebuild_these {
 
     # if there's nothing to rebuild, just return
     if (!keys %$rebuild_set) {
+        # now, rebuild indexes for affected blogs
+        my @blogs = $app->param('blog_ids');
+        foreach my $blog_id (@blogs) {
+            my $blog = MT::Blog->load($blog_id) or next;
+            $app->rebuild_indexes( Blog => $blog );
+        }
         return $app->call_return;
     }
 
-    if ($options{how} eq NEW_PHASE) {
+    if (exists $options{how} && ($options{how} eq NEW_PHASE)) {
         my $params = {
             return_args => $app->return_args,
+            blog_id => $app->param('blog_id') || 0,
             id => [ keys %$rebuild_set ]
         };
         my %param = (is_full_screen => 1,
                      redirect_target => $app->uri( mode => 'rebuild_phase',
                                                    args => $params));
         return $app->build_page('rebuilding.tmpl', \%param);
-
     } else {
-        require MT::Entry;
-        for my $id (keys %$rebuild_set) {
-            my $e = ref $rebuild_set->{$id} ?
-                $rebuild_set->{$id} : MT::Entry->load($id, {cached_ok=>1});
-            $app->rebuild_entry(Entry => $e, BuildDependencies => 1);
+        my @blogs = $app->param('blog_ids');
+        my %blogs = map { $_ => () } @blogs;
+        my @set = keys %$rebuild_set;
+        my @rest;
+        my $entries_per_rebuild = $app->config('EntriesPerRebuild');
+        if (scalar @set > $entries_per_rebuild) {
+            @rest = $set[$entries_per_rebuild..$#set];
+            @set = $set[0..$entries_per_rebuild-1];
         }
+        require MT::Entry;
+        for my $id (@set) {
+            my $e = ref $id ?
+                $id : MT::Entry->load($id, {cached_ok=>1}) or next;
+            $blogs{$e->blog_id} = ();
+            $app->rebuild_entry(Entry => $e, BuildDependencies => 1,
+                BuildIndexes => 0);
+        }
+        if (@rest) {
+            foreach (@rest) {
+                $_ = $_->id if ref $_;
+            }
+        }
+        my $params = {
+            return_args => $app->param('return_args'),
+            build_type_name => $app->translate("entry"),
+            blog_id => $app->param('blog_id') || 0,
+            blog_ids => [ keys %blogs ],
+            id => \@rest,
+        };
+        my %param = (is_full_screen => 1,
+                     redirect_target => $app->uri( mode => 'rebuild_phase',
+                                                   args => $params));
+        return $app->build_page('rebuilding.tmpl', \%param);
     }
 }
 
