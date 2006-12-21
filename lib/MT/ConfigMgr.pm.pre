@@ -191,6 +191,7 @@ sub init {
         ['MaxTagAutoCompletionItems', { Default => 10000 } ],
         ['DefaultUserLanguage'],
         ['DefaultUserTagDelimiter', { Default => 'comma' }],
+        ['AssetCacheDir', { Default => 'assets_c' }],
     ]);
 }
 
