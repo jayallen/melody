@@ -33,13 +33,20 @@ sub thumbnail_file {
     my @imginfo = stat($file_path);
     return undef unless @imginfo;
 
-    my $h = $param{Height};
-    my $w = $param{Width};
-    require File::Basename;
-    my $path = File::Basename::dirname($file_path);
-    my $file = $asset->file_name;
-    $file =~ s!\.[a-z]+$!!i;
-    my $thumbnail = File::Spec->catfile($path, $file . '-thumb-' . $h . 'x' . $w . '.' . $asset->file_ext);
+    my $blog = $param{Blog} || $asset->blog;
+    return undef unless $blog;
+    my $fmgr;
+
+    require MT::Util;
+    my $asset_cache_path = File::Spec->catdir($blog->site_path,
+        MT->config('AssetCacheDir'));
+    if (!-d $asset_cache_path) {
+        $fmgr = $blog->file_mgr;
+        $fmgr->mkpath($asset_cache_path) or return undef;
+    }
+
+    my $file = $asset->thumbnail_filename(@_);
+    my $thumbnail = File::Spec->catfile($asset_cache_path, $file);
     my @thumbinfo = stat($thumbnail);
 
     # thumbnail file exists and is dated on or later than source image
@@ -48,10 +55,10 @@ sub thumbnail_file {
     }
 
     # stale or non-existent thumbnail. let's create one!
-    my $blog = $param{Blog} || $asset->blog;
-    return undef unless $blog;
-    my $fmgr = $blog->file_mgr;
+    $fmgr ||= $blog->file_mgr;
     return undef unless $fmgr;
+
+    return undef unless $fmgr->can_write($asset_cache_path);
 
     # create a thumbnail for this file
     require MT::Image;
@@ -64,6 +71,9 @@ sub thumbnail_file {
     #     scale the vertical to fit
     # 100000px wide/tall => 164x164
     #     scale the horizontal to fit
+
+    my $h = $param{Height};
+    my $w = $param{Width};
 
     # find the longest dimension of the image:
     my ($i_h, $i_w) = ($img->{height}, $img->{width});
@@ -103,6 +113,17 @@ sub thumbnail_file {
     $fmgr->put_data($data, $thumbnail, 'upload')
         or return $asset->error(MT->translate("Error creating thumbnail file: [_1]", $fmgr->errstr));
     return $thumbnail;
+}
+
+sub thumbnail_filename {
+    my $asset = shift;
+    my (%param) = @_;
+
+    require MT::Util;
+    my $signature = sprintf 'height:%d;width:%d',
+        $param{Height}, $param{Width};
+    my $suffix = MT::Util::perl_sha1_digest_hex($signature);
+    return $asset->id . '.' . $suffix . '.' . $asset->file_ext;
 }
 
 sub as_html {
@@ -205,6 +226,8 @@ sub on_upload {
     my $asset = shift;
     my ($param) = @_;
 
+    $asset->SUPER::on_upload(@_);
+
     my $app = MT->instance;
     require MT::Util;
 
@@ -283,7 +306,7 @@ sub on_upload {
         $url .= $file;
         $thumb = $url . MT::Util::encode_url($base . '-thumb' . $ext);
 
-        my $img_pkg = MT::Asset->class_handler('image');
+        my $img_pkg = MT::Asset->handler_for_file($t_file);
         my $asset_thumb = new $img_pkg;
         my $original = $asset_thumb->clone;
         $asset_thumb->blog_id($blog_id);
@@ -296,18 +319,19 @@ sub on_upload {
         $asset_thumb->image_width($thumb_width);
         $asset_thumb->image_height($thumb_height);
         $asset_thumb->created_by($app->user->id);
+        $asset_thumb->parent($asset->id);
         $asset_thumb->save;
         MT->run_callbacks('CMSPostSave.asset', $app, $asset_thumb, $original);
 
         $param->{thumb_asset_id} = $asset_thumb->id;
 
-        MT->run_callbacks('CMSUploadFile.thumbnail',
+        MT->run_callbacks('CMSUploadFile.' . $asset_thumb->class,
                           File => $t_file, Url => $thumb, Size => length($blob),
                           Asset => $asset_thumb,
                           Type => 'thumbnail',
                           Blog => $blog);
 
-        MT->run_callbacks('CMSUploadImage.thumbnail',
+        MT->run_callbacks('CMSUploadImage',
                           File => $t_file, Url => $thumb,
                           Asset => $asset_thumb,
                           Width => $thumb_width, Height => $thumb_height,
@@ -374,10 +398,11 @@ sub on_upload {
             $asset_html->file_name($basename);
             $asset_html->file_ext($blog->file_extension);
             $asset_html->created_by($app->user->id);
+            $asset_html->parent($asset->id);
             $asset_html->save;
             MT->run_callbacks('CMSPostSave.asset', $app, $asset_html, $original);
 
-            MT->run_callbacks('CMSUploadFile.popup',
+            MT->run_callbacks('CMSUploadFile.' . $asset_html->class,
                           File => $abs_file_path, Url => $url,
                           Asset => $asset_html,
                           Size => length($popup),

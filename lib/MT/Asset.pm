@@ -118,7 +118,7 @@ sub class_handler {
     my $pkg = shift;
     my ($class) = @_;
     my $package = $Classes{$class};
-   if ($package) {
+    if ($package) {
         if (defined *{$package.'::new'}) {
             return $package;
         } else {
@@ -180,7 +180,31 @@ sub remove {
             $blog->file_mgr->delete($file);
         }
     }
+    $asset->remove_cached_files;
     $asset->SUPER::remove(@_);
+}
+
+sub remove_cached_files {
+    my $asset = shift;
+
+    # remove any asset cache files that exist for this asset
+    my $blog = $asset->blog;
+    if ($asset->id && $blog) {
+        my $path = $blog->site_path;
+        my $cache_dir = MT->config('AssetCacheDir');
+        if ($path && $cache_dir) {
+            my $fmgr = $blog->file_mgr;
+            if ($fmgr) {
+                my $cache_glob = File::Spec->catfile($path, $cache_dir,
+                    $asset->id . '.*');
+                my @files = glob($cache_glob);
+                foreach my $file (@files) {
+                    $fmgr->delete($file);
+                }
+            }
+        }
+    }
+    1;
 }
 
 sub blog {
@@ -209,7 +233,13 @@ sub can_handle {
 sub handler_for_file {
     my $pkg = shift;
     my ($filename) = @_;
-    my $classes = $pkg->classes || [];
+    my $classes;
+    if ($pkg eq 'MT::Asset') {
+        # special case to check for all registered classes, not just
+        # those that are subclasses of this package.
+        $classes = [ values %Types ];
+    }
+    $classes ||= $pkg->classes || [];
     foreach my $class (@$classes) {
         my $this_pkg = $pkg->class_handler($class);
         if ($this_pkg->can_handle($filename)) {
@@ -238,21 +268,26 @@ sub thumbnail_file {
     undef;
 }
 
+sub thumbnail_filename {
+    undef;
+}
+
 sub stock_icon_url {
     undef;
 }
 
 sub thumbnail_url {
     my $asset = shift;
-    my $file_path = $asset->thumbnail_file(@_);
-    if ((defined $file_path) && (-f $file_path)) {
+    if (my $blog = $asset->blog) {
         require File::Basename;
-        my ($base) = File::Basename::basename($file_path);
-        my $url = $asset->url;
-        my $file = $asset->file_name;
-        $url =~ s/%([A-F0-9]{2})/chr(hex($1))/gei;
-        $url =~ s!\Q$file\E$!$base!;
-        return $url;
+        my $file = File::Basename::basename($asset->thumbnail_file(@_));
+        my $site_url = $blog->site_url;
+        if ($file && $site_url) {
+            $file =~ s/%([A-F0-9]{2})/chr(hex($1))/gei;
+            $site_url .= '/' unless $site_url =~ m#/$#;
+            $site_url .= MT->config('AssetCacheDir') . '/' . $file;
+            return $site_url;
+        }
     }
     # Use a stock icon
     return $asset->stock_icon_url(@_);
@@ -280,6 +315,7 @@ sub insert_options {
 sub on_upload {
     my $asset = shift;
     my ($param) = @_;
+    $asset->remove_cached_files;
     1;
 }
 
