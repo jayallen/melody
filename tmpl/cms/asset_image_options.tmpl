@@ -21,14 +21,8 @@ function adjustPixelsPct (f, width) {
 }
 
 function checkThumbs(f) {
-    var real_w = <TMPL_VAR NAME=WIDTH>;
-    var real_h = <TMPL_VAR NAME=HEIGHT>;
-    var thumb_w = <TMPL_VAR NAME=THUMB_WIDTH>;
-    var thumb_h = <TMPL_VAR NAME=THUMB_HEIGHT>;
-    if ((real_w != thumb_w) || (real_h != thumb_h)) {
-        f = document.forms[0];
-        adjustWidthHeight(f,1);
-    }
+    f = document.forms[0];
+    adjustWidthHeight(f,1);
 }
 
 function adjustWidthHeight (f, width) {
@@ -71,8 +65,7 @@ function adjustWidthHeight (f, width) {
             <p><input type="checkbox" name="thumb" value="1" <TMPL_IF NAME=MAKE_THUMB>checked="checked" </TMPL_IF>/> <MT_TRANS phrase="Create Thumbnail"> <a href="#" onclick="return openManual('file_upload', 'creating_thumbnails')" class="help">?</a>
             <label for="thumb_width"><MT_TRANS phrase="Width">:</label>
             <input name="thumb_width" id="thumb_width" value="<TMPL_VAR NAME=THUMB_WIDTH>" onchange="adjustWidthHeight(this.form, 1)" size="4" />
-            <label for="thumb_height"><MT_TRANS phrase="Height">:</label>
-            <input name="thumb_height" value="<TMPL_VAR NAME=THUMB_HEIGHT>" onchange="adjustWidthHeight(this.form, 0)" size="4" />
+            <input type="hidden" name="thumb_height" value="<TMPL_VAR NAME=THUMB_HEIGHT>" onchange="adjustWidthHeight(this.form, 0)" size="4" />
             <MT_TRANS phrase="Pixels">
 <img onload="checkThumbs('now');" src="<TMPL_VAR NAME=STATIC_URI>images/spacer.gif" alt="" width="1" height="1" />
             </p>
