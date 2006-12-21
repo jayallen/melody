@@ -20,7 +20,7 @@ sub metadata {
     my $obj = shift;
     my $meta = $obj->SUPER::metadata(@_);
     $meta->{MT->translate("Actual Dimensions")} = MT->translate(
-        "[_1] wide x [_2] high",
+        "[_1] wide, [_2] high",
         $obj->image_width, $obj->image_height
     ) if defined $obj->image_width && defined $obj->image_height;
     $meta;
@@ -210,19 +210,15 @@ sub insert_options {
     $param->{do_thumb} = $@ ? 0 : 1;
 
     $param->{can_save_image_defaults} = $perms->can_save_image_defaults ? 1 : 0;
-    $param->{constrain} = $blog->image_default_constrain ? 1 : 0;
+    #$param->{constrain} = $blog->image_default_constrain ? 1 : 0;
     $param->{popup} = $blog->image_default_popup ? 1 : 0;
-    $param->{image_defaults} = $blog->image_default_set ? 1 : 0;
     $param->{wrap_text} = $blog->image_default_wrap_text ? 1 : 0;
     $param->{make_thumb} = $blog->image_default_thumb ? 1 : 0;
     $param->{'align_'.$_} = $blog->image_default_align eq $_ ? 1 : 0
         for qw(left center right);
     $param->{'unit_w'.$_} = $blog->image_default_wunits eq $_ ? 1 : 0
         for qw(percent pixels);
-    $param->{'unit_h'.$_} = $blog->image_default_hunits eq $_ ? 1 : 0
-        for qw(percent pixels);
     $param->{thumb_width} = $blog->image_default_width || $asset->image_width || 0;
-    $param->{thumb_height} = $blog->image_default_height || $asset->image_height || 0;
 
     return $app->build_page('asset_image_options.tmpl', $param);
 }
@@ -246,20 +242,37 @@ sub on_upload {
     my $blog_id = $blog->id;
 
     my($thumb, $thumb_width, $thumb_height);
+    $thumb_width = $param->{thumb_width};
+    $thumb = $param->{thumb};
+    if ($thumb) {
+        if ($thumb_width && ($thumb_width !~ m/^\d+$/)) {
+            undef $thumb_width;
+        }
+        # width > 1000 not really a thumbnail, so consider invalid
+        if ($thumb_width > 1000) {
+            undef $thumb_width;
+        }
+    }
+    if ($thumb && !$thumb_width) {
+        undef $thumb;
+    }
     if($param->{image_defaults}) {
         return $app->error($app->translate(
             'Permission denied setting image defaults for blog #[_2]', $blog_id
         )) unless $app->{perms}->can_save_image_defaults;
         # Save new defaults if requested.
-        $blog->image_default_set(1);
         $blog->image_default_wrap_text($param->{wrap_text} ? 1 : 0);
         $blog->image_default_align($param->{align} || MT::Blog::ALIGN());
-        $blog->image_default_thumb($param->{thumb} ? 1 : 0);
-        $blog->image_default_width($param->{thumb_width} || MT::Blog::WIDTH());
-        $blog->image_default_wunits($param->{thumb_width_type} || MT::Blog::UNITS());
-        $blog->image_default_height($param->{thumb_height} || MT::Blog::WIDTH());
-        $blog->image_default_hunits($param->{thumb_height_type} || MT::Blog::UNITS());
-        $blog->image_default_constrain($param->{constrain} ? 1 : 0);
+        if ($thumb) {
+            $blog->image_default_thumb(1);
+            $blog->image_default_width($thumb_width);
+            $blog->image_default_wunits($param->{thumb_width_type} || MT::Blog::UNITS());
+        } else {
+            $blog->image_default_thumb(0);
+            $blog->image_default_width(0);
+            $blog->image_default_wunits(MT::Blog::UNITS());
+        }
+        #$blog->image_default_constrain($param->{constrain} ? 1 : 0);
         $blog->image_default_popup($param->{popup} ? 1 : 0);
         $blog->save;
     }

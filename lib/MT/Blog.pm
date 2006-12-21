@@ -78,11 +78,8 @@ __PACKAGE__->install_properties({
         'image_default_thumb' => 'boolean',
         'image_default_width' => 'integer',
         'image_default_wunits' => 'string(10)',
-        'image_default_height' => 'integer',
-        'image_default_hunits' => 'string(10)',
         'image_default_constrain' => 'boolean',
         'image_default_popup' => 'boolean',
-        'image_default_set' => 'boolean',
     },
     indexes => {
         name => 1,
@@ -101,7 +98,6 @@ __PACKAGE__->install_properties({
 
 # Image upload defaults.
 use constant ALIGN => 'left';
-use constant WIDTH => 100;
 use constant UNITS => 'pixels';
 
 sub set_defaults {
@@ -149,9 +145,7 @@ sub set_defaults {
     $blog->image_default_align('left');
     $blog->image_default_thumb(0);
     $blog->image_default_width(0);
-    $blog->image_default_height(0);
     $blog->image_default_wunits('pixels');
-    $blog->image_default_hunits('pixels');
     $blog->image_default_constrain(1);
     $blog->image_default_popup(0);
 
