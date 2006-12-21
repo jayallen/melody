@@ -11313,6 +11313,32 @@ sub restore {
     1;
 }
 
+sub _log_dirty_restore {
+    my $app = shift;
+    my ($deferred) = @_;
+    my %deferred_by_class;
+    for my $key (keys %$deferred) {
+        my ($class, $id) = split('#', $key);
+        if (exists $deferred_by_class{$class}) {
+            push @{$deferred_by_class{$class}}, $id;
+        } else {
+            $deferred_by_class{$class} = [ $id ];
+        
+        }
+    }
+    while (my ($class_name, $ids) = each %deferred_by_class) {
+        my $message = $app->translate('Some [_1] were not restored because their parent objects were not restored.', $class_name);
+        $app->log({
+            message => $message,
+            level => MT::Log::WARNING(),
+            class => 'system',
+            category => 'restore',
+            metadata => join(', ', @$ids),
+        });
+    }
+    1;
+}
+
 sub restore_file {
     my $app = shift;
     my ($fh, $errormsg) = @_;
@@ -11322,21 +11348,9 @@ sub restore_file {
     my $deferred = MT::BackupRestore->restore_file($fh, $errormsg, sub { $app->print(@_); });
 
     if (!defined($deferred) || scalar(keys %$deferred)) {
-        my @names = keys %$deferred;
-        my $data = '';
-        $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
-        $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
-        my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
-        $app->log({
-            message => $message,
-            level => MT::Log::WARNING(),
-            class => 'system',
-            category => 'restore',
-            metadata => $data,
-        });
+        $app->_log_dirty_restore($deferred);
         my $log_url = $app->uri(mode => 'view_log', args => {});
-        $$errormsg = $message . '  '
-            . $app->translate('Detailed information is in the <a href="[_1]">activity log</a>.', $log_url);
+        $$errormsg = $app->translate('Some objects were not restored because their parent objects were not restored.  Detailed information is in the <a href="[_1]">activity log</a>.', $log_url);
         return 0;
     }
     if ($$errormsg) {
@@ -11396,21 +11410,10 @@ sub restore_directory {
     }
 
     if (scalar(keys %$deferred)) {
-        my @names = keys %$deferred;
-        my $data = '';
-        $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
-        $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
-        my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
-        $app->log({
-            message => $message,
-            level => MT::Log::WARNING(),
-            class => 'system',
-            category => 'restore',
-            metadata => $data,
-        });
+        $app->_log_dirty_restore($deferred);
         my $log_url = $app->uri(mode => 'view_log', args => {});
-        $$error .= $message . '  '
-            . $app->translate('Detailed information is in the <a href="[_1]">activity log</a>.', $log_url);
+        $$error = $app->translate('Some objects were not restored because their parent objects were not restored.  Detailed information is in the <a href="[_1]">activity log</a>.', $log_url);
+        return 0;
     }
 
     return 0 if $$error;
@@ -11622,20 +11625,9 @@ sub dialog_restore_upload {
     if ($last) {
         $param->{restore_end} = 1;
         if ($param->{is_dirty}) {
-            my @names = keys %$deferred;
-            my $data = '';
-            $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
-            $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
-            my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
-            $app->log({
-                message => $message,
-                level => MT::Log::WARNING(),
-                class => 'system',
-                category => 'restore',
-                metadata => $data,
-            });
+            $app->_log_dirty_restore($deferred);
             my $log_url = $app->uri(mode => 'view_log', args => {});
-            $param->{error} = $message;
+            $param->{error} = $app->translate('Some objects were not restored because their parent objects were not restored.');
             $param->{error_url} = $log_url;
         } else {
             $app->log({
@@ -11670,20 +11662,10 @@ sub restore_premature_cancel {
     my $deferred = JSON::jsonToObj($app->param('deferred_json')) if $app->param('deferred_json');
     my $param = { restore_success => 1 };
     if (defined $deferred && (scalar(keys %$deferred))) {
-        my @names = keys %$deferred;
-        my $data = '';
-        $data .= join(',', splice(@names, 0, 5)) . "\n" while @names;
-        $data = "Objects which were not restored are listed below (#ID is the id value in the backup file):\n" . $data;
-        my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
-        $app->log({
-            message => $message,
-            level => MT::Log::WARNING(),
-            class => 'system',
-            category => 'restore',
-            metadata => $data,
-        });
+        $app->_log_dirty_restore($deferred);
         my $log_url = $app->uri(mode => 'view_log', args => {});
         $param->{restore_success} = 0;
+        my $message = $app->translate('Some objects were not restored because their parent objects were not restored.');
         $param->{error} = $message . '  '
             . $app->translate("Detailed information is in the <a href='javascript:void(0)' onclick='closeDialog(\"[_1]\")'>activity log</a>.", $log_url);
     } else {
