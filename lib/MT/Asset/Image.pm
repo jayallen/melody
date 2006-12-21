@@ -149,6 +149,11 @@ sub as_html {
         : ($asset->image_width, $asset->image_height)));
 
     if ($param->{popup}) {
+        my $popup = MT::Asset->load($param->{popup_asset_id}) ||
+            return $asset->error(
+                MT->translate("Can't load asset #[_1]",
+                    $param->{popup_asset_id})
+            );
         my $link = $thumb
             ? sprintf('<img src="%s" %s alt="%s" />',
                 MT::Util::encode_html($thumb->url),
@@ -158,8 +163,8 @@ sub as_html {
             : MT->translate('View image');
         $text = sprintf(
             q|<a href="%s" onclick="window.open('%s','popup','width=%d,height=%d,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false">%s</a>|,
-            MT::Util::encode_html($asset->url),
-            MT::Util::encode_html($asset->url),
+            MT::Util::encode_html($popup->url),
+            MT::Util::encode_html($popup->url),
             $asset->image_width, $asset->image_height, $link,
         );
     } elsif ($param->{include}) {
@@ -294,7 +299,8 @@ sub on_upload {
         ## sure to generate the name uniquely.
         my $i = 0;
         while ($fmgr->exists($t_file)) {
-            $t_file = File::Spec->catfile($path . $base . '-thumb' . (++$i) . $ext);
+            $basename = $base . '-thumb' . (++$i) . $ext;
+            $t_file = File::Spec->catfile($path . $basename);
         }
         $fmgr->put_data($blob, $t_file, 'upload')
             or return $app->error($app->translate(
@@ -304,7 +310,7 @@ sub on_upload {
         my $url = $param->{site_path} ? $blog->site_url : $blog->archive_url;
         $url .= '/' unless $url =~ m!/$!;
         $url .= $file;
-        $thumb = $url . MT::Util::encode_url($base . '-thumb' . $ext);
+        $thumb = $url . MT::Util::encode_url($basename);
 
         my $img_pkg = MT::Asset->handler_for_file($t_file);
         my $asset_thumb = new $img_pkg;
@@ -400,6 +406,9 @@ sub on_upload {
             $asset_html->created_by($app->user->id);
             $asset_html->parent($asset->id);
             $asset_html->save;
+
+            $param->{popup_asset_id} = $asset_html->id;
+
             MT->run_callbacks('CMSPostSave.asset', $app, $asset_html, $original);
 
             MT->run_callbacks('CMSUploadFile.' . $asset_html->class,

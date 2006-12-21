@@ -280,7 +280,7 @@ sub thumbnail_url {
     my $asset = shift;
     if (my $blog = $asset->blog) {
         require File::Basename;
-        if(my $thumbnail_file = $asset->thumbnail_file(@_)) {
+        if (my $thumbnail_file = $asset->thumbnail_file(@_)) {
             my $file = File::Basename::basename($thumbnail_file);
             my $site_url = $blog->site_url;
             if ($file && $site_url) {
