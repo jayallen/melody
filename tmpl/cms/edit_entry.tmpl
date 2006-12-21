@@ -255,7 +255,7 @@ function init()
     if (el) el.style.position = 'fixed';
     initDirty();
     entryFocus = new TC.Focus("edit-entry");
-    <TMPL_IF NAME=DEFER_TAG_LOAD>deferredTagLoad();<TMPL_ELSE>
+    <TMPL_IF NAME=DEFER_TAG_LOAD>window.setTimeout("deferredTagLoad()", 500);<TMPL_ELSE>
     <TMPL_IF NAME=TAGS_JS>initTags();</TMPL_IF></TMPL_IF>
     <TMPL_UNLESS NAME=ID>title.focus();</TMPL_UNLESS>
 }
@@ -275,7 +275,7 @@ function deferredTagLoad() {
 
 function tagsLoaded(c, result) {
     try {
-        tags = eval(result);
+        tags = eval('(' + result + ')');
         if (tags)
             initTags();
     } catch (e) {
@@ -647,7 +647,7 @@ with (document) {
 <a href="#" onclick="return openManual('entries', 'entry_tags')" class="help">?</a> <span class="hint"><TMPL_IF NAME=AUTH_PREF_TAG_DELIM_COMMA><MT_TRANS phrase="(comma-delimited list)"><TMPL_ELSE><TMPL_IF NAME=AUTH_PREF_TAG_DELIM_SPACE><MT_TRANS phrase="(space-delimited list)"><TMPL_ELSE><MT_TRANS phrase="(delimited by '[_1]')" params="<TMPL_VAR NAME=AUTH_PREF_TAG_DELIM>"></TMPL_IF></TMPL_IF></span>
 </div>
 <div class="textarea-wrapper">
-<input name="tags" id="tags" tabindex="7" value="<TMPL_VAR NAME=TAGS ESCAPE=HTML>" onchange="setDirty()" />
+<input name="tags" id="tags" tabindex="7" value="<TMPL_VAR NAME=TAGS ESCAPE=HTML>" onchange="setDirty()" autocomplete="0" />
 </div>
 <!--[if lte IE 6.5]><div id="iehack"><![endif]-->
 <div id="tags_completion" class="full-width"></div>
