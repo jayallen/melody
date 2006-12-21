@@ -259,7 +259,9 @@ sub rebuild_entry {
 
     if ($param{BuildDependencies} || $param{BuildIndexes}) {
         ## Rebuild all indexes, in case this entry is on an index.
-        $mt->rebuild_indexes( Blog => $blog ) or return;
+        if (!(exists $param{BuildIndexes}) || $param{BuildIndexes}) {
+            $mt->rebuild_indexes( Blog => $blog ) or return;
+        }
     }
 
     if ($param{BuildDependencies} || $param{BuildArchives}) {
