@@ -10330,7 +10330,8 @@ sub rebuild_new_phase {
 # but if the value is not a ref, the entry is loaded from the ID.
 # This is not a handler but a utility routine
 sub rebuild_these {
-    my ($app, $rebuild_set, %options) = @_;
+    my $app = shift;
+    my ($rebuild_set, %options) = @_;
 
     # if there's nothing to rebuild, just return
     if (!keys %$rebuild_set) {
@@ -10360,8 +10361,8 @@ sub rebuild_these {
         my @rest;
         my $entries_per_rebuild = $app->config('EntriesPerRebuild');
         if (scalar @set > $entries_per_rebuild) {
-            @rest = $set[$entries_per_rebuild..$#set];
-            @set = $set[0..$entries_per_rebuild-1];
+            @rest = @set[$entries_per_rebuild..$#set];
+            @set = @set[0..$entries_per_rebuild-1];
         }
         require MT::Entry;
         for my $id (@set) {
