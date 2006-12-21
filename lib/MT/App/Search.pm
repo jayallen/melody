@@ -12,7 +12,7 @@ package MT::App::Search;
 use strict;
 
 use File::Spec;
-use MT::Util qw(encode_html ts2epoch);
+use MT::Util qw(encode_html ts2epoch epoch2ts);
 use HTTP::Date qw(str2time time2str);
 
 use MT::App;
@@ -418,14 +418,37 @@ sub _tag_search {
     require MT::Blog;
     require MT::Entry;
 
-    if ($app->{searchparam}{SearchCutoff} &&
-        $app->{searchparam}{SearchCutoff} != 9999999) {
-        my @ago = MT::Util::offset_time_list(time - 3600 * 24 *
-            $app->{searchparam}{SearchCutoff});
-        my $ago = sprintf "%04d%02d%02d%02d%02d%02d",
-            $ago[5]+1900, $ago[4]+1, @ago[3,2,1,0];
-        $terms{created_on} = [ $ago ];
+    # Override SearchCutoff if If-Modified-Since header is present
+    if (my $mod_since = $app->get_header('If-Modified-Since')) {
+        my $tz_offset = 15;  # Start with maximum possible offset to UTC
+        my $blog_selected;
+        my $iter;
+        if ($app->{searchparam}{IncludeBlogs}) {
+            $iter = MT::Blog->load_iter({ id => [ keys %{ $app->{searchparam}{IncludeBlogs} }] });
+        } else {
+            $iter = MT::Blog->load_iter;
+        }
+        while (my $blog = $iter->()) {
+            my $blog_offset = $blog->server_offset ?
+                $blog->server_offset : 0;
+            if ($blog_offset < $tz_offset) {
+                $tz_offset = $blog_offset;
+                $blog_selected = $blog;
+            }
+        }
+        $mod_since = epoch2ts($blog_selected, str2time($mod_since));
+        $terms{created_on} = [ $mod_since ];
         $args{range} = { created_on => 1 };
+    } else {
+        if ($app->{searchparam}{SearchCutoff} &&
+            $app->{searchparam}{SearchCutoff} != 9999999) {
+            my @ago = MT::Util::offset_time_list(time - 3600 * 24 *
+                $app->{searchparam}{SearchCutoff});
+            my $ago = sprintf "%04d%02d%02d%02d%02d%02d",
+                $ago[5]+1900, $ago[4]+1, @ago[3,2,1,0];
+            $terms{created_on} = [ $ago ];
+            $args{range} = { created_on => 1 };
+        }
     }
 
     if (keys %{ $app->{searchparam}{IncludeBlogs} }) {
@@ -466,14 +489,37 @@ sub _straight_search {
     my %terms = (status => MT::Entry::RELEASE());
     my %args = (direction => $app->{searchparam}{ResultDisplay},
                 'sort' => 'created_on');
-    if ($app->{searchparam}{SearchCutoff} &&
-        $app->{searchparam}{SearchCutoff} != 9999999) {
-        my @ago = MT::Util::offset_time_list(time - 3600 * 24 *
-                  $app->{searchparam}{SearchCutoff});
-        my $ago = sprintf "%04d%02d%02d%02d%02d%02d",
-            $ago[5]+1900, $ago[4]+1, @ago[3,2,1,0];
-        $terms{created_on} = [ $ago ];
+    # Override SearchCutoff if If-Modified-Since header is present
+    if (my $mod_since = $app->get_header('If-Modified-Since')) {
+        my $tz_offset = 15;  # Start with maximum possible offset to UTC
+        my $blog_selected;
+        my $iter;
+        if ($app->{searchparam}{IncludeBlogs}) {
+            $iter = MT::Blog->load_iter({ id => [ keys %{ $app->{searchparam}{IncludeBlogs} }] });
+        } else {
+            $iter = MT::Blog->load_iter;
+        }
+        while (my $blog = $iter->()) {
+            my $blog_offset = $blog->server_offset ?
+                $blog->server_offset : 0;
+            if ($blog_offset < $tz_offset) {
+                $tz_offset = $blog_offset;
+                $blog_selected = $blog;
+            }
+        }
+        $mod_since = epoch2ts($blog_selected, str2time($mod_since));
+        $terms{created_on} = [ $mod_since ];
         $args{range} = { created_on => 1 };
+    } else {
+        if ($app->{searchparam}{SearchCutoff} &&
+            $app->{searchparam}{SearchCutoff} != 9999999) {
+            my @ago = MT::Util::offset_time_list(time - 3600 * 24 *
+                      $app->{searchparam}{SearchCutoff});
+            my $ago = sprintf "%04d%02d%02d%02d%02d%02d",
+                $ago[5]+1900, $ago[4]+1, @ago[3,2,1,0];
+            $terms{created_on} = [ $ago ];
+            $args{range} = { created_on => 1 };
+        }
     }
 
     if (keys %{ $app->{searchparam}{IncludeBlogs} }) {
