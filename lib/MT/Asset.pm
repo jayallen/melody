@@ -280,13 +280,15 @@ sub thumbnail_url {
     my $asset = shift;
     if (my $blog = $asset->blog) {
         require File::Basename;
-        my $file = File::Basename::basename($asset->thumbnail_file(@_));
-        my $site_url = $blog->site_url;
-        if ($file && $site_url) {
-            $file =~ s/%([A-F0-9]{2})/chr(hex($1))/gei;
-            $site_url .= '/' unless $site_url =~ m#/$#;
-            $site_url .= MT->config('AssetCacheDir') . '/' . $file;
-            return $site_url;
+        if(my $thumbnail_file = $asset->thumbnail_file(@_)) {
+            my $file = File::Basename::basename($thumbnail_file);
+            my $site_url = $blog->site_url;
+            if ($file && $site_url) {
+                $file =~ s/%([A-F0-9]{2})/chr(hex($1))/gei;
+                $site_url .= '/' unless $site_url =~ m#/$#;
+                $site_url .= MT->config('AssetCacheDir') . '/' . $file;
+                return $site_url;
+            }
         }
     }
     # Use a stock icon
