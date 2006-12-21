@@ -311,11 +311,8 @@ sub restore_asset {
     }
     my $asset = $objects->{"MT::Asset#$id"};
     unless (defined($asset)) {
-        $asset = $objects->{"MT::Asset::Image#$id"};
-        unless (defined($asset)) {
-            $callback->(MT->translate('The asset ([_1]) was not restored.', $id));
-            return 0;
-        }
+        $callback->(MT->translate('The asset ([_1]) was not restored.', $id));
+        return 0;
     }
     my $path = $asset->file_path;
     unless (defined($path)) {

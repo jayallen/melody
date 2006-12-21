@@ -148,7 +148,11 @@ sub end_element {
                 delete $self->{current};
                 my $objects = $self->{objects};
                 my $deferred = $self->{deferred};
-                my $key = ref($obj) . "#$old_id";
+                my $class = ref $obj;
+                if ($class =~ /MT::Asset(::.+)*/) {
+                    $class = 'MT::Asset';
+                }
+                my $key = "$class#$old_id";
                 $objects->{$key} = $obj;
                 $self->{objects} = $objects;
                 $self->{callback}->(
