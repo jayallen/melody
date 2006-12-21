@@ -252,7 +252,15 @@ function init()
 </TMPL_IF>
     }
     var el = getByID("dialog-container");
-    if (el) el.style.position = 'fixed';
+    if (navigator.appVersion.indexOf('MSIE') != -1) {
+        var temp = navigator.appVersion.split('MSIE');
+        var version = parseFloat(temp[1]);
+    }
+    if (version < 7) {
+    if (el) el.style.position = '';
+    } else {
+        if (el) el.style.position = 'fixed';
+    }
     initDirty();
     entryFocus = new TC.Focus("edit-entry");
     <TMPL_IF NAME=DEFER_TAG_LOAD>window.setTimeout("deferredTagLoad()", 500);<TMPL_ELSE>
