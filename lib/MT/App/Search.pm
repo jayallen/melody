@@ -12,7 +12,8 @@ package MT::App::Search;
 use strict;
 
 use File::Spec;
-use MT::Util qw( encode_html );
+use MT::Util qw(encode_html ts2epoch);
+use HTTP::Date qw(str2time time2str);
 
 use MT::App;
 @MT::App::Search::ISA = qw( MT::App );
@@ -349,10 +350,30 @@ sub execute {
         or return $app->error($app->translate(
             "Building results failed: [_1]", $build->errstr));
     $res = $app->_set_form_elements($res);
+
     if (defined($ctx->stash('content_type'))) {
         $app->{no_print_body} = 1;
-        $app->send_http_header($ctx->stash('content_type'));
-        $app->print($res);
+        if ($app->{searchparam}{Template} eq 'feed') {
+            my $last_update;
+            for (@results) {
+                my $created_on = ts2epoch($_->{blog}, $_->{entry}->created_on);
+                $last_update = $created_on if $created_on > $last_update;
+            }
+            my $mod_since = $app->get_header('If-Modified-Since');
+
+            if ( !@results || ($last_update && $mod_since && ($last_update <= str2time($mod_since))) ) {
+                $app->response_code(304);
+                $app->response_message('Not Modified');
+                $app->send_http_header($ctx->stash('content_type'));
+            } else {
+                $app->set_header('Last-Modified', time2str($last_update)) if $last_update;
+                $app->send_http_header($ctx->stash('content_type'));
+                $app->print($res);
+            }
+        } else {
+            $app->send_http_header($ctx->stash('content_type'));
+            $app->print($res);
+        }
     }
     $res;
 }
