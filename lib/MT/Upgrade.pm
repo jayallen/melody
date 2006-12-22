@@ -1408,11 +1408,22 @@ sub core_upgrade_end {
 
 sub core_finish {
     my $self = shift;
+
+    my $user;
+    if ((ref $App) && ($App->{author})) {
+        $user = $App->{author};
+    }
+
     my $cfg = MT::ConfigMgr->instance;
     my $cur_schema = MT->instance->schema_version;
     my $old_schema = $cfg->SchemaVersion || 0;
-    $self->progress($self->translate("Database has been upgraded to version [_1].", $cur_schema)) if $cur_schema > $old_schema;
-    $cfg->SchemaVersion( $cur_schema, 1 );
+    if ($cur_schema > $old_schema) {
+        $self->progress($self->translate("Database has been upgraded to version [_1].", $cur_schema)) ;
+        if ($user && !$DryRun) {
+            MT->log($self->translate("User '[_1]' upgraded database to version [_2]", $user->name, $cur_schema));
+        }
+        $cfg->SchemaVersion( $cur_schema, 1 );
+    }
 
     my $plugin_schema = $cfg->PluginSchemaVersion || {};
     foreach my $plugin (@MT::Plugins) {
@@ -1420,9 +1431,15 @@ sub core_finish {
         next unless $ver;
         my $old_plugin_schema = $plugin_schema->{$plugin->{plugin_sig}} || 0;
         if ($old_plugin_schema && ($ver > $old_plugin_schema)) {
-            $self->progress($self->translate("Plugin '[_1]' upgraded successfully.", $plugin->name));
+            $self->progress($self->translate("Plugin '[_1]' upgraded successfully to version [_2] (schema version [_3]).", $plugin->name, $plugin->version || '-', $ver));
+            if ($user && !$DryRun) {
+                MT->log($self->translate("User '[_1]' upgraded plugin '[_2]' to version [_3] (schema version [_4]).", $user->name, $plugin->name, $plugin->version || '-', $ver));
+            }
         } elsif ($ver && !$old_plugin_schema) {
             $self->progress($self->translate("Plugin '[_1]' installed successfully.", $plugin->name));
+            if ($user && !$DryRun) {
+                MT->log($self->translate("User '[_1]' installed plugin '[_2]', version [_3] (schema version [_4]).", $user->name, $plugin->name, $plugin->version || '-', $ver));
+            }
         }
         $plugin_schema->{$plugin->{plugin_sig}} = $ver;
     }
