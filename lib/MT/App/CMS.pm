@@ -5696,13 +5696,13 @@ sub rebuild_phase {
 sub draft_entries {
     my $app = shift;
     require MT::Entry;
-    $app->update_entry_status(MT::Entry::HOLD(), $_[0]->param('id'));
+    $app->update_entry_status(MT::Entry::HOLD(), $app->param('id'));
 }
 
 sub publish_entries {
     my $app = shift;
     require MT::Entry;
-    $app->update_entry_status(MT::Entry::RELEASE(), $_[0]->param('id'));
+    $app->update_entry_status(MT::Entry::RELEASE(), $app->param('id'));
 }
 
 sub update_entry_status {
@@ -5718,7 +5718,7 @@ sub update_entry_status {
     require MT::Entry;
     foreach my $id (@ids) {
         my $entry = MT::Entry->load($id, {cached_ok=>1}) or return $app->errtrans("One of the entries ([_1]) did not actually exist", $id);
-        next if $entry->status != $new_status;
+        next if $entry->status == $new_status;
         $entry->status($new_status);
         $entry->save() and $rebuild_these{$id} = 1;
     }
