@@ -84,13 +84,13 @@ function smarty_function_MTCommentFields($args, &$ctx) {
 $static_field
 <input type="hidden" name="entry_id" value="$entry_id" />
 
-<p><label for="url">URL:</label><br />
+<p><label for="url">URL</label>:<br />
 <input tabindex="1" type="text" name="url" id="url" value="$comment_url" />
 
 <MT_TRANS phrase="Remember me?">
 <input type="radio" id="remember" name="bakecookie" /><label for="bakecookie"><label for="remember"><MT_TRANS phrase="Yes"></label><input type="radio" id="forget" name="bakecookie" onclick="forgetMe(this.form)" value="Forget Info" style="margin-left: 15px;" /><label for="forget"><MT_TRANS phrase="No"></label><br style="clear: both;" /></p>
 
-<p><label for="text"><MT_TRANS phrase="Comments:"></label><br />
+<p><label for="text"><MT_TRANS phrase="Comments">:</label><br />
 <textarea tabindex="2" id="text" name="text" rows="10" cols="50" id="text">$comment_text</textarea></p>
 
 <div align="center">
@@ -130,10 +130,10 @@ HTML;
 <form method="post" action="$path$comment_script" name="comments_form" onsubmit="if (this.bakecookie[0].checked) rememberMe(this)">$static_field
 <input type="hidden" name="entry_id" value="$entry_id" />
 <div id="name_email">
-<p><label for="author"><MT_TRANS phrase="Name:"></label><br />
+<p><label for="author"><MT_TRANS phrase="Name">:</label><br />
 <input tabindex="1" name="author" id="author" value="$comment_author" /></p>
 
-<p><label for="email"><MT_TRANS phrase="Email Address:"></label><br />
+<p><label for="email"><MT_TRANS phrase="Email Address">:</label><br />
 <input tabindex="2" name="email" id="email" value="$comment_email" /></p>
 </div>
 HTML;
@@ -150,13 +150,13 @@ HTML;
             $result .= $ctx->mt->translate_templatized($tmpl);
         }
         $tmpl = <<<HTML
-<p><label for="url"><MT_TRANS phrase="URL:"></label><br />
+<p><label for="url"><MT_TRANS phrase="URL">:</label><br />
 <input tabindex="3" type="text" name="url" id="url" value="$comment_url" />
 
 <MT_TRANS phrase="Remember me?">
 <input type="radio" id="remember" name="bakecookie" /><label for="remember"><MT_TRANS phrase="Yes"></label><input type="radio" id="forget" name="bakecookie" onclick="forgetMe(this.form)" value="Forget Info" style="margin-left: 15px;" /><label for="forget"><MT_TRANS phrase="No"></label><br style="clear: both;" /></p>
 
-<p><label for="text"><MT_TRANS phrase="Comments:"></label> $allow_comment_html_note<br />
+<p><label for="text"><MT_TRANS phrase="Comments">:</label> $allow_comment_html_note<br />
 <textarea tabindex="4" name="text" rows="10" cols="50" id="text">$comment_text</textarea></p>
 
 <div align="center">

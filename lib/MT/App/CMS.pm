@@ -10910,7 +10910,7 @@ sub backup {
     return $app->errtrans("You must select what you want to backup.") if !$what;
 
     my $size = $q->param('size_limit') || 0;
-    return $app->errtrans('[_1] is not a number.', $size)
+    return $app->errtrans('[_1] is not a number.', MT::Util::encode_html($size))
         if $size !~ /^\d+$/;
 
     my $blog_ids = $q->param('selected_blog_ids') if $what eq 'custom';
@@ -11271,7 +11271,7 @@ sub restore {
                 if ($e = $@) {
                     $result = 0;
                     $error = $e;
-                    $app->print($app->translate("Uploaded file was invalid. $1"));
+                    $app->print($app->translate("Uploaded file was invalid: [_1]", $e));
                 } else {
                     for my $file ($tar->list_files) {
                         my $f = File::Spec->catfile($tmp, $file);

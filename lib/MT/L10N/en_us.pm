@@ -21,7 +21,6 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
     '_USER_STATUS_CAPTION' => 'status',
     '_external_link_target' => '_top',
     '_BACKUP_RESTORE_DESCRIPTION' => 'This screen allows you to backup and restore your Movable Type installation.',
-    '_BACKUP_FILES_DESCRIPTION' => 'TBD',
     '_BLOG_CONFIG_MODE_BASIC' => 'Basic Mode',
     '_BLOG_CONFIG_MODE_DETAIL' => 'Detailed Mode',
     '_SEARCH_SIDEBAR' => 'Search',
@@ -43,9 +42,6 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
     '_USAGE_FORGOT_PASSWORD_1' => 'You requested recovery of your Movable Type password. Your password has been changed in the system; here is the new password:',
     '_USAGE_FORGOT_PASSWORD_2' => 'You should be able to log in to Movable Type using this new password. Once you have logged in, you should change your password to something more memorable.',
 
-    '_USAGE_BACKUP' => 'TBD',
-    '_USAGE_BACKUP_FILES' => 'TBD',
-    '_USAGE_RESTORE' => 'TBD',
     '_BACKUP_TEMPDIR_WARNING' => 'Requesed data backed up successfully in the [_1] directory.  Make sure that you download and <strong>then delete</strong> files listed above from [_1] <strong>immediately</strong> because backup files contain sensitive information.',
     '_BACKUP_DOWNLOAD_MESSAGE' => 'Downloading of the backup file will start automatically in a few seconds.  If for some reason it does not, click <a href=\'#\' onclick=\'submit_form()\'>here</a> to start downloading manually.  Please note that you can download the backup file only once for a session.',
     '_USAGE_BOOKMARKLET_1' => 'Setting up QuickPost to post to Movable Type allows you to perform one-click posting and publishing without ever entering through the main Movable Type interface.',

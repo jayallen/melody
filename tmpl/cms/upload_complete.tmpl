@@ -35,7 +35,7 @@ function presubmit(f) {
 <input type="hidden" name="link" value="1" />
 </TMPL_UNLESS>
 
-<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>:</span> <MT_TRANS phrase="[_1] [_2]" params="<TMPL_IF NAME=ENTRY_INSERT>Insert<TMPL_ELSE>Upload</TMPL_IF>%%<TMPL_IF NAME=IS_IMAGE>Image<TMPL_ELSE>File</TMPL_IF>"></h2>
+<h2><span class="weblog-title-highlight"><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML>:</span> <TMPL_IF NAME=ENTRY_INSERT><TMPL_IF NAME=IS_IMAGE><MT_TRANS phrase="Insert Image"><TMPL_ELSE><MT_TRANS phrase="Insert File"></TMPL_IF><TMPL_ELSE><TMPL_IF NAME=IS_IMAGE><MT_TRANS phrase="Upload Image"><TMPL_ELSE><MT_TRANS phrase="Upload File"></TMPL_IF></TMPL_IF></h2>
 
 <div class="items-wrapper">
 <span class="modal_added">

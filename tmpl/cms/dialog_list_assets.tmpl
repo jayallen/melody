@@ -51,13 +51,13 @@ TC.attachLoadEvent( init );
 
     <h2><span class="weblog-title-highlight"><TMPL_IF NAME=EDIT_BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>: </span> <MT_TRANS phrase="Assets"></h2>
 
-    <span class="modal_added"><MT_TRANS phrase="Select the [_1] you would like to insert, or upload a new one." params="<TMPL_IF NAME=IS_IMAGE>image<TMPL_ELSE>file</TMPL_IF>"></span>
+    <span class="modal_added"><TMPL_IF NAME=IS_IMAGE><MT_TRANS phrase="Select the image you would like to insert, or upload a new one."><TMPL_ELSE><MT_TRANS phrase="Select the file you would like to insert, or upload a new one."></TMPL_IF></span>
 
     <p class="page-desc upload_from_dialog">
     <TMPL_IF NAME=EDIT_BLOG_ID>
         <TMPL_IF NAME=CAN_UPLOAD>
             <img src="<TMPL_VAR NAME=STATIC_URI>images/status_icons/create.gif" alt="<MT_TRANS phrase="Upload New Asset">" width="9" height="9" />
-            <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=start_upload&amp;_type=asset&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;entry_insert=1&amp;edit_field=<TMPL_VAR NAME=EDIT_FIELD>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><MT_TRANS phrase="Upload New [_1]" params="<TMPL_IF NAME=IS_IMAGE>Image<TMPL_ELSE>File</TMPL_IF>"></a>
+            <a href="<TMPL_VAR NAME=SCRIPT_URL>?__mode=start_upload&amp;_type=asset&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;entry_insert=1&amp;edit_field=<TMPL_VAR NAME=EDIT_FIELD>&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>')"><TMPL_IF NAME=IS_IMAGE><MT_TRANS phrase="Upload New Image"><TMPL_ELSE><MT_TRANS phrase="Upload New File"></TMPL_IF></a>
         </TMPL_IF>
     </TMPL_IF>
     </p>
@@ -148,7 +148,7 @@ TC.attachLoadEvent( init );
         <div class="panel-commands">
         <form action="" method="get" onsubmit="return false">
         <input class="cancel" type="button" value="<MT_TRANS phrase="Cancel">" />
-        <input class="close" type="submit" value="<MT_TRANS phrase="[_1]" params="<TMPL_IF NAME=IS_IMAGE>Next<TMPL_ELSE>Insert</TMPL_IF>">" disabled="disabled" />
+        <input class="close" type="submit" value="<TMPL_IF NAME=IS_IMAGE><MT_TRANS phrase="Next"><TMPL_ELSE><MT_TRANS phrase="Insert"></TMPL_IF>" disabled="disabled" />
         </form>
         </div>
 

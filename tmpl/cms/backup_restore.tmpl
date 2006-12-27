@@ -9,7 +9,7 @@ function highlightSwitch(selection) {
             var el_name = getByID('selected_blogs');
             if (el_name) {
                 el_name.style.display = 'block';
-                el_name.innerHTML = '(<MT_TRANS phrase="None Selected.">)';
+                el_name.innerHTML = '(<MT_TRANS phrase="None selected.">)';
             }
             openDialog(false, 'dialog_select_weblog');
             descriptionObject.innerHTML = '<MT_TRANS phrase="This option allows you to choose exactly what you want to backup.">';
@@ -92,7 +92,7 @@ function highlightSwitch(selection) {
 </TMPL_IF>
 </TMPL_IF>
 </select>
-<p><MT_TRANS phrase="Maximum file size per backup file."> <a href="#" onclick="return openManual('backup_restore', 'backup_num_size')" class="help">?</a></p>
+<p><MT_TRANS phrase="Approximate file size per backup file."> <a href="#" onclick="return openManual('backup_restore', 'backup_num_size')" class="help">?</a></p>
 </div>
 </div>
 <p style="text-align: center;"><input type="submit" value="<MT_TRANS phrase="Make Backup">" title="<MT_TRANS phrase="Make Backup (b)">" accesskey="b" /></p>
@@ -111,7 +111,7 @@ function highlightSwitch(selection) {
 
 <fieldset style="margin-top: 0px;">
 
-<h3>Upload Single File</h3>
+<h3><MT_TRANS phrase="Upload Single File"></h3>
 <div class="setting">
 <div class="label"><label><MT_TRANS phrase="Upload backup file: (optional)"></label></div>
 <div class="field">

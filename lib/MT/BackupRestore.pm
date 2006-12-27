@@ -266,7 +266,7 @@ sub restore_directory {
     for my $file (@$files) {
         my $fh = gensym;
         my $filepath = File::Spec->catfile($dir, $file);
-        open $fh, "<$filepath" or push @$errors, MT->translate('[_1] cannot open.'), next;
+        open $fh, "<$filepath" or push @$errors, MT->translate("Can't open [_1]."), next;
 
         my $result = __PACKAGE__->restore_process_single_file(
             $fh, \%objects, $deferred, $errors, $callback);

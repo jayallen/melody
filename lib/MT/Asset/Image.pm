@@ -258,7 +258,7 @@ sub on_upload {
     }
     if($param->{image_defaults}) {
         return $app->error($app->translate(
-            'Permission denied setting image defaults for blog #[_2]', $blog_id
+            'Permission denied setting image defaults for blog #[_1]', $blog_id
         )) unless $app->{perms}->can_save_image_defaults;
         # Save new defaults if requested.
         $blog->image_default_wrap_text($param->{wrap_text} ? 1 : 0);
