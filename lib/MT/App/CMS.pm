@@ -5719,6 +5719,9 @@ sub update_entry_status {
     foreach my $id (@ids) {
         my $entry = MT::Entry->load($id, {cached_ok=>1}) or return $app->errtrans("One of the entries ([_1]) did not actually exist", $id);
         next if $entry->status == $new_status;
+        if ($app->config('DeleteFilesAtRebuild') && (MT::Entry::RELEASE() eq $entry->status)) {
+            $app->publisher->remove_entry_archive_file( Entry => $entry );
+        }
         $entry->status($new_status);
         $entry->save() and $rebuild_these{$id} = 1;
     }
@@ -12660,7 +12663,9 @@ MTIfRegistrationNotRequired, MTIfRegistrationAllowed).
 
 Called by the draft_entries and publish_entries handlers to actually
 apply the updates to the entries identified and republish pages that
-are necessary.
+are necessary.  If DeleteFilesAtRebuild directive is set to 1, it also
+removes the previously published individual entry archive page if the
+new status for the entry is the one other than RELEASE.
 
 =head1 CUSTOM REBUILD OPTIONS
 
