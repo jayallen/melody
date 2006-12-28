@@ -133,10 +133,15 @@ sub setup {
     my $self = shift;
     my %args = @_;
 
+    my $prereq = 'ExtUtils::Install 1.37_02';
+    eval "use $prereq";
+    die( "ERROR: Can't handle plugin directory manipulation: $@" )
+        if ref($@) or $@ ne '';
+
     # Do we have SSL support?
-    my $ssl = 'Crypt::SSLeay';
-    eval { require $ssl };
-    warn( "WARNING: $ssl not found. Can't use SSL.\n" ) if $@;
+    $prereq = 'Crypt::SSLeay';
+    eval { require $prereq };
+    warn( "WARNING: $prereq not found. Can't use SSL.\n" ) if $@;
 
     # Replace the current language if given one as an argument.
     $self->{'lang=s'} = $args{language} if $args{language};
@@ -421,6 +426,11 @@ sub stage_distro {
         unless $self->{'debug'};
     $self->verbose( "Change to $stage_root" );
 
+    # Make sure there is a user-style so we don't barf unneccessarily into the error_log.
+    open STYLE, "> user_styles.css" or
+        die( "ERROR: Can't touch user_styles.css $@" );
+    close STYLE;
+
     # Our database is named the same as the distribution (but with _'s) except for LDAP.
     (my $db = $stage_dir) =~ s/[.-]/_/g;
     # Reset the db to have the same name, if we are LDAP.
@@ -626,11 +636,6 @@ sub export {
 sub plugin_export {
     my $self = shift;
     return unless $self->{'plugin=s@'};
-
-    my $prereq = 'ExtUtils::Install 1.37_02';
-    eval "use $prereq";
-    die( "ERROR: Can't handle plugin directory manipulation: $@" )
-        if ref($@) or $@ ne '';
 
     # Change to the export directory, if we are exporting.
     chdir( $self->{'export-dir=s'} ) or
