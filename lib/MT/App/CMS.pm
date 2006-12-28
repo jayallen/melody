@@ -11473,7 +11473,7 @@ sub restore_upload_manifest {
     }
     require JSON;
     require MT::Util;
-    $assets_json = MT::Util::encode_html(JSON::objToJson($assets)) if scalar(@$assets) > 0;
+    $assets_json = MT::Util::encode_url(JSON::objToJson($assets)) if scalar(@$assets) > 0;
     $param->{files} = join(',', @$files);
     $param->{assets} = $assets_json;
     $param->{filename} = $file_next;

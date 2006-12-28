@@ -2160,6 +2160,7 @@ use vars qw( @ISA %Lexicon );
     'Rebuild Again' => 'もう一度再構築する',
     ## tmpl/cms/reload_opener.tmpl
     ## tmpl/cms/dialog_restore_end.tmpl
+    'The page will redirect to a new page in 3 seconds.  Click <a href=\'javascript:void(0)\' onclick=\'return stopTimer()\'>here</a> to stop the timer.' => '3秒後に次のページへ自動的に進みます。<a href=\'javascript:void(0)\' onclick=\'return stopTimer()\'>ここ</a>をクリックすればタイマーをとめることができます。',
     'An error occurred during the restore process: [_1] Please check your restore file.' => '復元の途中でエラーが発生しました: [_1] バックアップ・ファイルを確認してください。',
     'All of the data have been restored successfully!' => 'すべてのデータが正しく復元されました。',
     'Next Page' => '次のページへ',
@@ -3051,6 +3052,7 @@ use vars qw( @ISA %Lexicon );
     'Upload backup file: (optional)' => 'バックアップファイルのアップロード(オプション)',
     'Restore (r)' => '復元(R)',
     'Upload manifest file:' => 'マニフェストファイルのアップロード',
+    'If your backup file is located on your computer, you can upload it here.  Otherwise, Movable Type will automatically look in the <code>import</code> folder of your Movable Type directory.' => 'バックアップファイルがコンピュータ上にある場合はここからアップロードできます。何も指定せずにボタンをクリックすると、Movable Typeが<code>import</code>ディレクトリからファイルを探して復元します。',
     'If you have a manifest file and multiple backup files, you first upload the manifest file here.  Movable Type will guide you through the restore process.' => 'マニフェストファイルと複数のバックアップファイルがある場合は、まずここからマニフェストファイルをアップロードします。その後Movable Typeの指示に従って復元を行います。',
     'Upload Single File' => '単一ファイルのアップロード',
     'Upload Multiple Files' => '複数ファイルのアップロード',
