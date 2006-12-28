@@ -1103,12 +1103,15 @@ in a string, or 1 for nothing.  $blog_ids has an ARRAY reference to
 blog_ids which indicates what weblog a user chose to backup.  It may
 be an empty array if a user chose Everything.
 
+If a plugin has an MT::Object derived type, the plugin will register 
+a callback to Backup callback, and Backup process will call the callbacks
+to give plugins a chance to add their own data to the backup file.
+
 =item Restore
 
 Restore callbacks are called in convention like below:
 
-    MT->run_callbacks("Restore.<xml_namespace>", 
-        $data, $objects, $deferred, $callback);
+    callback($cb, $data, $objects, $deferred, $callback);
 
 Where $data is a parameter which was passed to XML::SAX::Base's 
 start_element callback method.
@@ -1130,11 +1133,11 @@ $callback is a code reference which will print out the passed paramter.
 Callback method can use this to communicate with users.
 
 If a plugin has an MT::Object derived type, the plugin will register 
-a callback to Restore.<xmlnamespace> callback, so later the restore 
-operation will call the callback function with parameters described above.
-XML Namespace is required to be registered, so an xml node can be resolved 
-into what plugins to be called back, and can be distinguished the same 
-element name with each other.
+a callback to Restore.<element_name>:<xmlnamespace> callback, 
+so later the restore operation will call the callback function with 
+parameters described above.  XML Namespace is required to be registered, 
+so an xml node can be resolved into what plugins to be called back, 
+and can be distinguished the same element name with each other.
 
 =head1 AUTHOR & COPYRIGHT
 
