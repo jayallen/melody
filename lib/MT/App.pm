@@ -47,7 +47,10 @@ sub add_plugin_action {
     $page .= '/' unless $page =~ m!/$!;
     $page .= $plugin_envelope . '/' if $plugin_envelope;
     $page .= $action_link;
+    my $has_params = ($page =~ m/\?/)
+        && ($page !~ m!(&|;|\?)$!);
     my $param = { page => $page,
+        page_has_params => $has_params,
         link_text => $link_text,
         orig_link_text => $link_text,
         plugin => $plugin_sig };
@@ -114,11 +117,17 @@ sub send_http_header {
             $app->{apache}->status($app->response_code || 200);
         }
         $app->{apache}->send_http_header($type);
+        if ($MT::DebugMode & 128) {
+            print "Status: " . ($app->response_code || 200)
+                . ($app->{response_message} ? $app->{response_message} : '')
+                . "\n";
+            print "Content-Type: $type\n\n";
+        }
     } else {
         $app->{cgi_headers}{-status} = ($app->response_code || 200) . " "
                                      . ($app->{response_message} || "");
         $app->{cgi_headers}{-type} = $type;
-        print $app->{query}->header(%{ $app->{cgi_headers} });
+        $app->print($app->{query}->header(%{ $app->{cgi_headers} }));
     }
 }
 
@@ -128,6 +137,9 @@ sub print {
         $app->{apache}->print(@_);
     } else {
         CORE::print(@_);
+    }
+    if ($MT::DebugMode & 128) {
+        CORE::print STDERR @_;
     }
 }
 
@@ -713,6 +725,22 @@ sub run {
                     $code = \&{ *{ ref($app).'::'.$meth } };
                 }
             }
+            if ($MT::DebugMode & 128) {
+                print STDERR "=====START: $$===========================\n";
+                print STDERR "Package: " . ref($app) . "\n";
+                print STDERR "Session: " . $app->session->id . "\n"
+                    if $app->session;
+                print STDERR "Request: " . $app->param->request_method . "\n";
+                my @param = $app->param;
+                if (@param) {
+                    foreach my $key (@param) {
+                        my @val = $app->param($key);
+                        print STDERR "\t" . $key . ": " . $_ . "\n"
+                            for @val;
+                    }
+                }
+                print STDERR "-----Response:\n";
+            }
             if ($code) {
                 $body = $code->($app) if $code;
             } else {
@@ -748,13 +776,13 @@ sub run {
                 $app->response_code(Apache::Constants::REDIRECT());
                 $app->send_http_header;
             } else {
-                print $q->redirect(-uri => $url, %{ $app->{cgi_headers} });
+                $app->print($q->redirect(-uri => $url, %{ $app->{cgi_headers} }));
             }
         }
     } else {
         unless ($app->{no_print_body}) {
             $app->send_http_header;
-            if ($MT::DebugMode) {
+            if ($MT::DebugMode && !($MT::DebugMode & 128)) { # no need to emit twice
                 if ($body =~ m!</body>!i) {
                     if ($app->{trace} &&
                         (!defined $app->{warning_trace} || $app->{warning_trace})) {
@@ -774,6 +802,9 @@ sub run {
             }
             $app->print($body);
         }
+    }
+    if ($MT::DebugMode & 128) {
+        print STDERR "\n=====END: $$=============================\n";
     }
     $app->takedown();
 }
@@ -1337,6 +1368,15 @@ sub trace {
         require Carp;
         local $Carp::CarpLevel = 1;
         push @{$app->{trace}}, Carp::longmess("Stack trace:");
+    }
+    if ($MT::DebugMode & 128) {
+        my @caller = caller(1);
+        my $place = $caller[0] . '::' . $caller[3] . ' in ' . $caller[1] . ', line ' . $caller[2];
+        print STDERR "(warn from $place) @_\n";
+        if ($MT::DebugMode & 2) {
+            local $Carp::CarpLevel = 1;
+            print STDERR Carp::longmess("Stack trace:");
+        }
     }
 }
 

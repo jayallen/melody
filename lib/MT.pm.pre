@@ -1799,6 +1799,7 @@ The DebugMode is a bit-wise setting and offers the following options:
     2 - Display a stack trace for messages captured
     4 - Lists queries issued by MT::ObjectDriver
     8 - Reports on MT templates that take more than 1/4 second to build*
+    128 - Outputs app-level request/response information to STDERR.
 
 These can be combined, so if you want to display queries and debug messages,
 use a DebugMode of 5 for instance.

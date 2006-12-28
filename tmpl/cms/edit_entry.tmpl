@@ -551,8 +551,8 @@ if (canFormat) {
         write('<img title="<MT_TRANS phrase="Insert Email Link" escape="singlequotes">" onclick="return insertLink(document.entry_form.text, 1)" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/email.gif" alt="<MT_TRANS phrase="Insert Email Link" escape="singlequotes">" width="26" height="19" />');
         write('<img title="<MT_TRANS phrase="Quote" escape="singlequotes">" onclick="return formatStr(document.entry_form.text, \'blockquote\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/quote.gif" alt="<MT_TRANS phrase="Quote" escape="singlequotes">" width="26" height="19" />');
         write('<img title="|" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/separator.gif" alt="|" width="7" height="19" />');
-        write('<img title="<MT_TRANS phrase="Insert Image" escape=singlequotes">" onclick="openDialog(document.entry_form, \'list_assets\', \'_type=asset&amp;edit_field=text&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;filter=class&amp;filter_val=image&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/add_image.gif" alt="<MT_TRANS phrase="Insert Image" escape="singlequotes">" width="26" height="19" />');
-        write('<img title="<MT_TRANS phrase="Insert File" escape=singlequotes">" onclick="openDialog(document.entry_form, \'list_assets\', \'_type=asset&amp;edit_field=text&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;filter=class&amp;filter_val=file&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/upload_file.gif" alt="<MT_TRANS phrase="Insert File" escape="singlequotes">" width="26" height="19" />');
+        write('<img title="<MT_TRANS phrase="Insert Image" escape=singlequotes">" onclick="openDialog(document.entry_form, \'list_assets\', \'_type=asset&amp;edit_field=text&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;filter=class&amp;filter_val=image\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/add_image.gif" alt="<MT_TRANS phrase="Insert Image" escape="singlequotes">" width="26" height="19" />');
+        write('<img title="<MT_TRANS phrase="Insert File" escape=singlequotes">" onclick="openDialog(document.entry_form, \'list_assets\', \'_type=asset&amp;edit_field=text&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/upload_file.gif" alt="<MT_TRANS phrase="Insert File" escape="singlequotes">" width="26" height="19" />');
     }
 }
 //-->
@@ -596,8 +596,8 @@ if (canFormat) {
         write('<img title="<MT_TRANS phrase="Insert Email Link">" onclick="return insertLink(document.entry_form.text_more, 1)" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/email.gif" alt="<MT_TRANS phrase="Insert Email Link">" width="26" height="19" />');
         write('<img title="<MT_TRANS phrase="Quote">" onclick="return formatStr(document.entry_form.text_more, \'blockquote\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/quote.gif" alt="<MT_TRANS phrase="Quote">" width="26" height="19" />');
         write('<img title="|" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/separator.gif" alt="|" width="7" height="19" />');
-        write('<img title="<MT_TRANS phrase="Insert Image" escape=singlequotes">" onclick="openDialog(document.entry_form, \'list_assets\', \'_type=asset&amp;edit_field=text_more&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;filter=class&amp;filter_val=image&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/add_image.gif" alt="<MT_TRANS phrase="Insert Image" escape="singlequotes">" width="26" height="19" />');
-        write('<img title="<MT_TRANS phrase="Insert File" escape=singlequotes">" onclick="openDialog(document.entry_form, \'list_assets\', \'_type=asset&amp;edit_field=text_more&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;filter=class&amp;filter_val=file&amp;return_args=<TMPL_VAR NAME=RETURN_ARGS ESCAPE=URL>\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/upload_file.gif" alt="<MT_TRANS phrase="Insert File" escape="singlequotes">" width="26" height="19" />');
+        write('<img title="<MT_TRANS phrase="Insert Image" escape=singlequotes">" onclick="openDialog(document.entry_form, \'list_assets\', \'_type=asset&amp;edit_field=text_more&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1&amp;filter=class&amp;filter_val=image\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/add_image.gif" alt="<MT_TRANS phrase="Insert Image" escape="singlequotes">" width="26" height="19" />');
+        write('<img title="<MT_TRANS phrase="Insert File" escape=singlequotes">" onclick="openDialog(document.entry_form, \'list_assets\', \'_type=asset&amp;edit_field=text_more&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>&amp;dialog_view=1\')" src="<TMPL_VAR NAME=STATIC_URI>images/formatting-icons/upload_file.gif" alt="<MT_TRANS phrase="Insert File" escape="singlequotes">" width="26" height="19" />');
     }
 }
 //-->
@@ -931,7 +931,7 @@ with (document) {
 <div class="inner">
 <ul>
 <TMPL_LOOP NAME=PLUGIN_ACTION_LOOP>
-<li><a href="<TMPL_VAR NAME=PAGE>;from=edit_entry;id=<TMPL_VAR NAME=ID>;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=LINK_TEXT></a></li>
+<li><a href="<TMPL_VAR NAME=PAGE ESCAPE=HTML><TMPL_IF NAME=PAGE_HAS_PARAMS>&amp;</TMPL_IF>from=edit_entry&amp;id=<TMPL_VAR NAME=ID>&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=LINK_TEXT></a></li>
 </TMPL_LOOP>
 </ul>
 </div>

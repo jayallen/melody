@@ -70,7 +70,7 @@ function welcomeMessageToggle() {
 <div class="inner">
 <ul>
 <TMPL_LOOP NAME=PLUGIN_ACTION_LOOP>
-<li><a href="<TMPL_VAR NAME=PAGE>;from=blog_home;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=LINK_TEXT></a></li>
+<li><a href="<TMPL_VAR NAME=PAGE ESCAPE=HTML><TMPL_IF NAME=PAGE_HAS_PARAMS>&amp;</TMPL_IF>from=blog_home&amp;blog_id=<TMPL_VAR NAME=BLOG_ID>"><TMPL_VAR NAME=LINK_TEXT></a></li>
 </TMPL_LOOP>
 </ul>
 </div>
