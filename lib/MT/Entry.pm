@@ -186,6 +186,7 @@ sub trackback {
 sub author {
     my $entry = shift;
     $entry->cache_property('author', sub {
+        return undef unless $entry->author_id;
         my $req = MT::Request->instance();
         my $author_cache = $req->stash('author_cache');
         my $author = $author_cache->{$entry->author_id};
