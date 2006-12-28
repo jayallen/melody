@@ -1763,6 +1763,8 @@ methods and the code reference for it. Example:
 
 =head2 $app->add_plugin_action($where, $action_link, $link_text)
 
+  $app->add_plugin_action($where, $action_link, $link_text)
+
 Adds a link to the given plugin action from the location specified by
 $where. This allows plugins to create actions that apply to, for
 example, the entry which the user is editing. The type of object the
@@ -1812,7 +1814,9 @@ Returns a list of plugin actions that are registered for the C<$type>
 specified. The return value is an array of hashrefs with the following
 keys set for each: C<page> (the registered 'action link'),
 C<link_text> (the registered 'link text'), C<plugin> (the plugin's envelope).
-See the documentation for L<$app-E<gt>add_plugin_action> for more information.
+See the documentation for
+L<$app-E<gt>add_plugin_action($where, $action_link, $link_text)>
+for more information.
 
 =head2 $app->app_path
 
@@ -1886,7 +1890,7 @@ locates a directory where the templates for that plugin's own
 interface are found. If the I<plugin_template_path> is relative, it
 may be relative to either the I<app_dir>, or the I<mt_dir>; the former
 takes precedence if it exists. (for a definition of I<app_dir> and
-I<mt_dir>, see L<perldoc MT>)
+I<mt_dir>, see L<MT>)
 
 Given these values, the order of search is as follows:
 
@@ -1917,7 +1921,7 @@ and then L<translate_templatized> (to process any E<lt>MT_TRANSE<gt> tags).
 
 =head2 $app->process_mt_template($str)
 
-Processes the E<lt>MT_ACTION<gt> tags that are present in C<$str>. These tags
+Processes the E<lt>MT_ACTIONE<gt> tags that are present in C<$str>. These tags
 are in the following format:
 
     <MT_ACTION mode="mode_name" parameter="value">
