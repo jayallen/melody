@@ -4388,7 +4388,7 @@ sub _hdlr_assets {
             return $ctx->error(MT->translate(
                 "No such user '[_1]'", $author_name ));
         if ($assets) {
-            push @filters, sub { $_[0]->author_id == $author->id };
+            push @filters, sub { $_[0]->created_by == $author->id };
         } else {
             $terms{created_by} = $author->id;
         }
