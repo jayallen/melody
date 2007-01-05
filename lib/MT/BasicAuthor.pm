@@ -21,6 +21,11 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
 });
 
+sub nickname {
+    my $author = shift;
+    $author->name;
+}
+
 sub is_valid_password {
     my $auth = shift;
     my($pass, $crypted) = @_;
