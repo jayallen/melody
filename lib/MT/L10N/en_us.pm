@@ -20,6 +20,7 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
     '_USER_DISABLED' => 'Disabled',
     '_USER_STATUS_CAPTION' => 'status',
     '_external_link_target' => '_top',
+    '_BACKUP_DESCRIPTION' => 'This screen allows you to backup the weblog <strong>[_1]</strong>.',
     '_BACKUP_RESTORE_DESCRIPTION' => 'This screen allows you to backup and restore your Movable Type installation.',
     '_BLOG_CONFIG_MODE_BASIC' => 'Basic Mode',
     '_BLOG_CONFIG_MODE_DETAIL' => 'Detailed Mode',

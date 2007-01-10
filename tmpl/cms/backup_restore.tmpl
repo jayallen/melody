@@ -24,9 +24,9 @@ function highlightSwitch(selection) {
     return false;
 }
 </script>
-<h2><span class="weblog-title-highlight"><TMPL_IF NAME=BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>:</span> <MT_TRANS phrase="Backup / Restore"></h2>
+<h2><span class="weblog-title-highlight"><TMPL_IF NAME=BLOG_ID><TMPL_VAR NAME=BLOG_NAME ESCAPE=HTML><TMPL_ELSE><MT_TRANS phrase="System-wide"></TMPL_IF>:</span> <MT_TRANS phrase="Backup"><TMPL_UNLESS NAME=BLOG_ID> / <MT_TRANS phrase="Restore"></TMPL_UNLESS></h2>
 
-<p class="page-desc"><MT_TRANS phrase="_BACKUP_RESTORE_DESCRIPTION">
+<p class="page-desc"><TMPL_IF NAME=BLOG_ID><MT_TRANS phrase="_BACKUP_DESCRIPTION" params="<TMPL_VAR NAME=BLOG_NAME>"><TMPL_ELSE><MT_TRANS phrase="_BACKUP_RESTORE_DESCRIPTION"></TMPL_IF>
 <a href="#" onclick="return openManual('backup_restore', 'backup_restore_main')" class="help">?</a></p>
 
 <div class="tabs">
