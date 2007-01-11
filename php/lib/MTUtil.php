@@ -1185,7 +1185,7 @@ function tag_normalize($str) {
     return $str;
 }
 
-function get_thumbnail_file($filename, $width = 0, $height = 0, $scale = 0) {
+function get_thumbnail_file($prefix, $filename, $width = 0, $height = 0, $scale = 0) {
     # Get source image information
     list($src_w, $src_h, $src_type, $src_attr) = getimagesize($filename);
 
@@ -1217,21 +1217,30 @@ function get_thumbnail_file($filename, $width = 0, $height = 0, $scale = 0) {
     if ($scale > 0) {
         $thumb_w = $src_w * $scale / 100;
         $thumb_h = $src_h * $scale / 100;
-    } else {
+    } elseif ($width > 0 || $heigth > 0) {
         $x = $width; if ($width > 0) $thumb_w;
-        $y = $height; if ($height >= 0) $thumb_h;
-        $pct = $width ? ($x / $thumb_w) : ($y / $thumb_h);
+        $y = $height; if ($height > 0) $thumb_h;
+        $pct = $width > 0 ? ($x / $thumb_w) : ($y / $thumb_h);
         $thumb_w = (int)($thumb_w * $pct);
         $thumb_h = (int)($thumb_h * $pct);
     }
 
+    # Generate thumbnail file name
+    $hash = '';
+    $hash_src = "height:$thumb_h;width:$thumb_w";
+    if (floatval(PHP_VERSION) >= 4.3) {
+        $hash = @sha1($hash_src);
+    } else {
+        if (extension_loaded('mhash')) {
+            $hash = bin2hex(mhash(MHASH_SHA1, $hash_src));
+        }
+    }
+
     # Retrieve thumbnail
-    # Sunset-thumb-thumb-90x120.jpg
     $path_parts = pathinfo($filename);
     $dirname = $path_parts['dirname'];
     list($basename) = split("\.", $path_parts['basename']);
-    $thumb_name = $dirname . "/" . $basename . "-thumb-"
-                . $thumb_h . "x" . $thumb_w . "." . $path_parts['extension'];
+    $thumb_name = $dirname . "/" . $prefix . "." . $hash . "." . $path_parts['extension'];
 
     if(!file_exists($thumb_name)) {
         # Create thumbnail
