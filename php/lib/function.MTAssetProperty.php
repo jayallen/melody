@@ -18,9 +18,9 @@ function smarty_function_MTAssetProperty($args, &$ctx) {
             else
                 $filesize = sprintf("%.1f MB", $filesize / 1048576);
         } elseif ($format == 'k') {
-            $filesize = sprintf("%.1f KB", $filesize / 1024);
+            $filesize = sprintf("%.1f", $filesize / 1024);
         } elseif ($format == 'm') {
-            $filesize = sprintf("%.1f MB", $filesize / 1048576);
+            $filesize = sprintf("%.1f", $filesize / 1048576);
         }
         return $filesize;
     } elseif (($args['property'] == 'image_width') || ($args['property'] == 'image_height')) {
