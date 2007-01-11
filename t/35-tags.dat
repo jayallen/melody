@@ -309,28 +309,28 @@ http://creativecommons.org/images/public/somerights20.gif
 { "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size' format='1'$></MTAssets>", "e" : "84.1 KB"}, #257
 { "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size' format='k'$></MTAssets>", "e" : "84.1"}, #258
 { "t" : "<MTAssets lastn='1'><$MTAssetProperty property='file_size' format='m'$></MTAssets>", "e" : "0.1"}, #259
-{ "t" : "<MTAssets lastn='1' type="image"><$MTAssetProperty property='image_width'$></MTAssets>", "e" : "640"}, #260
-{ "t" : "<MTAssets lastn='1' type="image"><$MTAssetProperty property='image_height'$></MTAssets>", "e" : "480"}, #261
-{ "t" : "<MTAssets lastn='1' type="file"><$MTAssetProperty property='image_width'$></MTAssets>", "e" : "0"}, #262
-{ "t" : "<MTAssets lastn='1' type="file"><$MTAssetProperty property='image_height'$></MTAssets>", "e" : "0"}, #263
+{ "t" : "<MTAssets lastn='1' type='image'><$MTAssetProperty property='image_width'$></MTAssets>", "e" : "640"}, #260
+{ "t" : "<MTAssets lastn='1' type='image'><$MTAssetProperty property='image_height'$></MTAssets>", "e" : "480"}, #261
+{ "t" : "<MTAssets lastn='1' type='file'><$MTAssetProperty property='image_width'$></MTAssets>", "e" : "0"}, #262
+{ "t" : "<MTAssets lastn='1' type='file'><$MTAssetProperty property='image_height'$></MTAssets>", "e" : "0"}, #263
 { "t" : "<MTAssets lastn='1' sort_order='ascend'><$MTAssetProperty property='image_width'$></MTAssets>", "e" : "0"}, #264
 { "t" : "<MTAssets lastn='1' sort_order='ascend'><$MTAssetProperty property='image_height'$></MTAssets>", "e" : "0"}, #265
 { "t" : "<MTAssets lastn='1'><$MTAssetProperty property='label'$></MTAssets>", "e" : "Image photo"}, #266
 { "t" : "<MTAssets lastn='1'><$MTAssetProperty property='description'$></MTAssets>", "e" : "This is a test photo."}, #267
 { "t" : "<MTAssets lastn='1'><$MTAssetFileExt$></MTAssets>", "e" : "jpg"}, #268
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL width='160'$></MTAssets>", "e" : "http://narnia.na/nana/images/test-thumb-120x160.jpg"}, #269
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL height='240'$></MTAssets>", "e" : "http://narnia.na/nana/images/test-thumb-240x320.jpg"}, #270
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL scale='75'$></MTAssets>", "e" : "http://narnia.na/nana/images/test-thumb-360x480.jpg"}, #271
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL width='160'$></MTAssets>", "e" : "http://narnia.na/nana/images/1.5115f590dd5d87e9621ec6b8334b940c5ffc39a3.jpg"}, #269
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL height='240'$></MTAssets>", "e" : "http://narnia.na/nana/images/1.c03404b0da5f2c9c279be0a96d5c526a76f9c7e6.jpg"}, #270
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailURL scale='75'$></MTAssets>", "e" : "http://narnia.na/nana/images/1.543b5ac9edb0bdb4ae0a0fce8d8332f8ba321693.jpg"}, #271
 { "t" : "<MTAssets lastn='1'><$MTAssetLink$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\">test.jpg</a>"}, #272
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"\http://narnia.na/nana/images/test-thumb-120x160.jpg\" width=\"160\" height=\"120\"></a>"}, #273
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"\http://narnia.na/nana/images/test-thumb-120x160.jpg\" width=\"160\" height=\"120\"></a>"}, #274
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink height='240'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"\http://narnia.na/nana/images/test-thumb-240x320.jpg\" width=\"320\" height=\"240\"></a>"}, #275
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink scale='100'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"\http://narnia.na/nana/images/test-thumb-480x640.jpg\" width=\"640\" height=\"480\"></a>"}, #276
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"http://narnia.na/nana/images/1.5115f590dd5d87e9621ec6b8334b940c5ffc39a3.jpg\" width=\"160\" height=\"120\"></a>"}, #273
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"http://narnia.na/nana/images/1.5115f590dd5d87e9621ec6b8334b940c5ffc39a3.jpg\" width=\"160\" height=\"120\"></a>"}, #274
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink height='240'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"http://narnia.na/nana/images/1.c03404b0da5f2c9c279be0a96d5c526a76f9c7e6.jpg\" width=\"320\" height=\"240\"></a>"}, #275
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink scale='100'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\"><img src=\"http://narnia.na/nana/images/1.543b5ac9edb0bdb4ae0a0fce8d8332f8ba321693.jpg\" width=\"640\" height=\"480\"></a>"}, #276
 { "t" : "<MTAssets lastn='1'><$MTAssetLink new_window='1'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\">test.jpg</a>"}, #277
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"\http://narnia.na/nana/images/test-thumb-120x160.jpg\" width=\"160\" height=\"120\"></a>"}, #278
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"\http://narnia.na/nana/images/test-thumb-120x160.jpg\" width=\"160\" height=\"120\"></a>"}, #279
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' height='240'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"\http://narnia.na/nana/images/test-thumb-240x320.jpg\" width=\"320\" height=\"240\"></a>"}, #280
-{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' scale='100'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"\http://narnia.na/nana/images/test-thumb-480x640.jpg\" width=\"640\" height=\"480\"></a>"}, #281
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"http://narnia.na/nana/images/1.5115f590dd5d87e9621ec6b8334b940c5ffc39a3.jpg\" width=\"160\" height=\"120\"></a>"}, #278
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' width='160'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"http://narnia.na/nana/images/1.5115f590dd5d87e9621ec6b8334b940c5ffc39a3.jpg\" width=\"160\" height=\"120\"></a>"}, #279
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' scale='100'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"http://narnia.na/nana/images/1.c03404b0da5f2c9c279be0a96d5c526a76f9c7e6.jpg\" width=\"320\" height=\"240\"></a>"}, #280
+{ "t" : "<MTAssets lastn='1'><$MTAssetThumbnailLink new_window='1' scale='100'$></MTAssets>", "e" : "<a href=\"http://narnia.na/nana/images/test.jpg\" target=\"_blank\"><img src=\"http://narnia.na/nana/images/1.543b5ac9edb0bdb4ae0a0fce8d8332f8ba321693.jpg\" width=\"640\" height=\"480\"></a>"}, #281
 { "t" : "<$MTAssetCount$>", "e" : "2"}, #282
 { "t" : "<MTAssets lastn='1'><MTAssetTags><$MTTagName$>; </MTAssetTags></MTAssets>", "e" : "alpha; beta; gamma; "}, #283
 { "t" : "<MTAssets><MTAssetsHeader>(Head)</MTAssetsHeader><$MTAssetID$>;<MTAssetsFooter>(Last)</MTAssetsFooter></MTAssets>", "e" : "(Head)1;2;(Last)"} #284
