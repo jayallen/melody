@@ -4695,6 +4695,7 @@ sub _hdlr_asset_property {
     my $prop = $args->{property};
     return '' unless $prop;
 
+    my $class = ref($a);
     my $ret;
     if ($prop =~ m/file_size/i) {
         my @stat = stat($a->file_path);
@@ -4717,7 +4718,7 @@ sub _hdlr_asset_property {
         } else {
             $ret = $size;
         }
-    } elsif (($prop =~ m/^image_/) && $a->class_label ne 'Image') {
+    } elsif (($prop =~ m/^image_/) && $class !~ m/Image/) {
         $ret = 0;
     } else {
         $ret = $a->$prop || '';
@@ -4737,7 +4738,8 @@ sub _hdlr_asset_thumbnail_url {
     my $args = $_[1];
     my $a = $_[0]->stash('asset')
         or return $_[0]->_no_asset_error('MTAssetThumbnailURL');
-    return '' if $a->class_label ne 'Image';
+    my $class = ref($a);
+    return '' if $class !~ m/Image/;
     
     # Load MT::Image
     require MT::Image;
@@ -4774,7 +4776,8 @@ sub _hdlr_asset_thumbnail_link {
     my $args = $_[1];
     my $a = $_[0]->stash('asset')
         or return $_[0]->_no_asset_error('MTAssetThumbnailLink');
-    return '' if $a->class_label ne 'Image';
+    my $class = ref($a);
+    return '' if $class !~ m/Image/;
 
     # Load MT::Image
     require MT::Image;
