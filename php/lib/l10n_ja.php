@@ -1,5 +1,6 @@
 <?php
-$Lexicon_ja = array(
+global $Lexicon;
+$Lexicon = array(
     ## default_templates.pl
     'Continue reading' => '続きを読む',
     'Posted by' => '投稿者',
@@ -71,10 +72,13 @@ $Lexicon_ja = array(
     'Discussion on' => 'トラックバック: ',
     'Continuing the discussion...' => 'トラックバック',
     'from' => ',',
+    'file' => 'ファイル',
+    'image' => '画像',
 );
+
 function translate_phrase($str, $params = null) {
-    global $Lexicon, $Lexicon_ja;
-    $l10n_str = isset($Lexicon_ja[$str]) ? $Lexicon_ja[$str] : isset($Lexicon[$str]) ? $Lexicon[$str] : $str;
+    global $Lexicon;
+    $l10n_str = isset($Lexicon[$str]) == true ? $Lexicon[$str] : $str;
     if (extension_loaded('mbstring')) {
         $str = mb_convert_encoding($l10n_str,mb_internal_encoding(),"UTF-8");
     } else {
