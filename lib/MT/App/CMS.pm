@@ -10856,8 +10856,12 @@ sub backup_restore {
     }
 
     my %param = ();
-    $param{blog_id} = $blog_id if $blog_id;
-    $app->add_breadcrumb($app->translate('Backup & Restore'));
+    if (defined($blog_id)) {
+        $param{blog_id} = $blog_id;
+        $app->add_breadcrumb($app->translate('Backup'));
+    } else {
+        $app->add_breadcrumb($app->translate('Backup & Restore'));
+    }
     $param{system_overview_nav} = 1 unless $blog_id;
     $param{nav_backup} = 1;
     my $missing_tgz = 0;

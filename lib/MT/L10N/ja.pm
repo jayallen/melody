@@ -3034,6 +3034,7 @@ use vars qw( @ISA %Lexicon );
     'This option will backup Users, Roles, Associations, Weblogs, Entries, Categories, Templates and Tags.' => 'このオプションではユーザー、ロール、関連付け、ブログ、エントリー、カテゴリー、テンプレート、タグがバックアップされます。',
     'Backup / Restore' => 'バックアップ / 復元',
     '_BACKUP_RESTORE_DESCRIPTION' => 'Movable Typeシステムのバックアップと復元ができます。',
+    '_BACKUP_DESCRIPTION' => '<strong>[_1]</strong>をバックアップできます。', 
     'Backup System Objects' => 'システムオブジェクトのバックアップ',
     'Backup' => 'バックアップ',
     'Restore System Objects' => 'システムオブジェクトの復元',
