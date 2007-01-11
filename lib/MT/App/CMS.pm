@@ -11246,7 +11246,7 @@ sub restore {
             }
             if ($e) {
                 $result = 0;
-                $error = 'Required modules (Archive::Tar and/or IO::Uncompress::Gunzip) are missing.';
+                $error = $app->translate('Required modules (Archive::Tar and/or IO::Uncompress::Gunzip) are missing.');
             } else {
                 my $temp_dir = $app->config('TempDir');
                 require File::Temp;
@@ -11291,7 +11291,7 @@ sub restore {
             eval "require Archive::Zip;";
             if ($@) {
                 $result = 0;
-                $error = 'Required module (Archive::Zip) is missing.';
+                $error = $app->translate('Required module (Archive::Zip) is missing.');
             } else {
                 my $temp_dir = $app->config('TempDir');
                 require File::Temp;;
@@ -11589,15 +11589,15 @@ sub dialog_restore_upload {
     $assets = [] if !defined($assets);
     my $asset;
     my @errors;
+    my $error_assets = {};
     require MT::BackupRestore;
     if ($is_asset) {
         $asset = shift @$assets;
-        my $error_assets = {};
         $asset->{fh} = $fh;
         MT::BackupRestore->restore_asset(undef, $asset, $objects, $error_assets, sub { $app->print(@_); });
         if (defined($error_assets->{$asset->{asset_id}})) {
             $app->log({
-                message => $app->translate('Restoring an actual file for an asset failed: [_1]', $error_assets->{$asset->{asset_id}}),
+                message => $app->translate('Restoring an actual file for an asset failed: ') . $error_assets->{$asset->{asset_id}},
                 level => MT::Log::WARNING(),
                 class => 'system',
                 category => 'restore',
@@ -11635,6 +11635,10 @@ sub dialog_restore_upload {
             $app->_log_dirty_restore($deferred);
             my $log_url = $app->uri(mode => 'view_log', args => {});
             $param->{error} = $app->translate('Some objects were not restored because their parent objects were not restored.');
+            $param->{error_url} = $log_url;
+        } elsif (scalar(keys %$error_assets)) {
+            $param->{error} = $app->translate('Some of actual files for assets are not restored correctly.');
+            my $log_url = $app->uri(mode => 'view_log', args => {});
             $param->{error_url} = $log_url;
         } else {
             $app->log({

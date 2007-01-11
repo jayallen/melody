@@ -255,7 +255,7 @@ use vars qw( @ISA %Lexicon );
     'Uploaded file was not a valid Movable Type backup manifest file.' => 'ファイルはMovable Typeのバックアップ・ファイルではありません。',
     '[_1] is not a subject to be restored by Movable Type.' => '[_1]はMovable Typeで復元できる対象ではありません。',
     "Restoring [_1]...\n" => "[_1]を復元中...\n",
-    "Restoring [_1] (ID: [_2]) was deferred because its parents objects have not been restored yet.\n" => "親オブジェクトが見つからないため[_1](ID: [_2])の復元は延期されました。",
+    "Restoring [_1] (ID: [_2]) was deferred because its parents objects have not been restored yet.\n" => "親オブジェクトが見つからないため[_1](ID: [_2])の復元は延期されました。\n",
     "[_1] [_2] (ID: [_3]) has been restored successfully with new ID: [_4]\n" => "[_2](ID: [_3])が新しくID:[_4]で復元されました。\n",
 
     ## lib/MT/BackupRestore/ManifestFileHandler.pm
@@ -983,13 +983,16 @@ use vars qw( @ISA %Lexicon );
     'No manifest file was uploaded.' => 'マニフェスト・ファイルがアップロードされませんでした。',
     'Please upload [_1] in this page.' => 'このページでは[_1]をアップロードしてください。',
     'File was not uploaded.' => 'ファイルがアップロードされませんでした。',
-    'Restoring an actual file for an asset failed: [_1]' => 'アイテムの実際のファイルを復元できませんでした] [_1]',
+    'Restoring an actual file for an asset failed: ' => 'アイテムの実際のファイルを復元できませんでした。',
+    'Some of actual files for assets are not restored correctly.' => '実際のファイルを復元できなかったアイテムがあります。',
     'Some objects were not restored because their parent objects were not restored.' => '親オブジェクトが見つからないので復元できなかったオブジェクトがあります。',
     'Detailed information is in the <a href=\'javascript:void(0)\' onclick=\'closeDialog(\"[_1]\")\'>activity log</a>.' => '詳細は<a href=\'javascript:void(0)\' onclick=\'closeDialog(\"[_1]\")\'>ログ</a>を参照してください。',
     '[_1] has canceled the multiple files restore operation prematurely.' => '[_1]が複数ファイルの復元処理を途中で強制終了しました。',
     'Select Weblog' => 'ブログを選択',
     'Selected Weblog' => '選択されたブログ',
-
+    'Required modules (Archive::Tar and/or IO::Uncompress::Gunzip) are missing.' => 'Archive::TarまたはIO::Uncompress::Gunzipが見つからないので処理できません。',
+    'Required module (Archive::Zip) is missing.' => 'Archive::Zipが見つからないので処理できません。',
+    
     ## lib/MT/Asset.pm
     'File' => 'ファイル',
     'Location' => '場所',
