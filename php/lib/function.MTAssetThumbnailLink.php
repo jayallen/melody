@@ -3,6 +3,8 @@ function smarty_function_MTAssetThumbnailLink($args, &$ctx) {
     $asset = $ctx->stash('asset');
     if (!$asset) return '';
     if ($asset['asset_class'] != 'image') return '';
+    $blog = $ctx->stash('blog');
+    if (!$blog) return '';
 
     require_once('MTUtil.php');
 
@@ -17,10 +19,12 @@ function smarty_function_MTAssetThumbnailLink($args, &$ctx) {
     if (isset($args['scale']))
         $scale = $args['scale'];
 
-    list($thumb, $thumb_w, $thumb_h) = get_thumbnail_file($asset['asset_id'], $asset['asset_file_path'], $width, $height, $scale);
+    list($thumb, $thumb_w, $thumb_h) = get_thumbnail_file($asset['asset_id'], $asset['asset_file_path'], $blog['blog_site_path'], $width, $height, $scale);
     if ($thumb != '') {
-        $thumb = basename($thumb);
-        $thumb = ereg_replace($asset['asset_file_name'], $thumb, $asset['asset_url']);
+        global $mt;
+        $cache_path = $mt->config['AssetCacheDir'];
+        $basename = basename($thumb);
+        $thumb = $blog['blog_site_url'] . $cache_path . '/' . $basename;
     }
 
     $target = "";

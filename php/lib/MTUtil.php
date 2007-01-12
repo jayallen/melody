@@ -1185,7 +1185,7 @@ function tag_normalize($str) {
     return $str;
 }
 
-function get_thumbnail_file($prefix, $filename, $width = 0, $height = 0, $scale = 0) {
+function get_thumbnail_file($prefix, $filename, $site_path, $width = 0, $height = 0, $scale = 0) {
     # Get source image information
     list($src_w, $src_h, $src_type, $src_attr) = getimagesize($filename);
 
@@ -1237,10 +1237,10 @@ function get_thumbnail_file($prefix, $filename, $width = 0, $height = 0, $scale 
     }
 
     # Retrieve thumbnail
+    global $mt;
     $path_parts = pathinfo($filename);
-    $dirname = $path_parts['dirname'];
-    list($basename) = split("\.", $path_parts['basename']);
-    $thumb_name = $dirname . "/" . $prefix . "." . $hash . "." . $path_parts['extension'];
+    $cache_path = $mt->config['AssetCacheDir'];
+    $thumb_name = $site_path . "/" . $cache_path . '/' . $prefix . "." . $hash . "." . $path_parts['extension'];
 
     if(!file_exists($thumb_name)) {
         # Create thumbnail
