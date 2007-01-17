@@ -1,6 +1,6 @@
 /*
-Copyright 2003 Six Apart. This code cannot be redistributed without
-permission from www.sixapart.com.
+Copyright 2003-2007 Six Apart, Ltd. This code cannot be redistributed
+without permission from www.sixapart.com.
 
 $Id$
 */

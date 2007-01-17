@@ -1,3 +1,8 @@
+# Copyright 2001-2007 Six Apart. This code cannot be redistributed without
+# permission from www.sixapart.com.  For more information, consult your
+# Movable Type license.
+#
+# $Id$
 package MT::JunkFilter;
 
 use strict;
@@ -315,7 +320,7 @@ Movable Type.
 
 =head1 AUTHOR & COPYRIGHT
 
-Except where otherwise noted, MT is Copyright 2001-2006 Six Apart.
+Except where otherwise noted, MT is Copyright 2001-2007 Six Apart.
 All rights reserved.
 
 =cut
