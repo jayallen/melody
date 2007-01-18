@@ -625,7 +625,8 @@ sub _migrate_permission_to_role {
     # '0' permission, not used for permissions, just prefs
     return unless $role_mask;
 
-    my $name = MT->translate($perm_role_names->{$role_mask});
+    my $name = $perm_role_names->{$role_mask};
+    $name = MT->translate($name) if defined $name;
     $name ||= MT->translate("Custom ([_1])", $role_mask);
     require MT::Role;
     my $role = MT::Role->load({ name => $name });
