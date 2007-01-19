@@ -481,9 +481,9 @@ Returns a true value if the category is an ancestor of $child.
 
 =head1 DATA LOOKUP
 
-In addition to numeric ID lookup, you can look up or sort records by any
-combination of the following fields. See the I<load> documentation in
-I<MT::Object> for more information.
+In addition to numeric ID lookup, you can look up or sort records by
+any combination of the following fields. See the L<MT::Object/load>
+documentation for more information.
 
 =over 4
 
@@ -495,30 +495,56 @@ I<MT::Object> for more information.
 
 =head1 NOTES
 
-=over 4
-
-=item *
-
 When you remove a category using I<MT::Category::remove>, in addition to
 removing the category record, all of the entry-category mappings
 (I<MT::Placement> objects) will be removed.
 
-=back
-
-=head1 CLASS METHODS
+=head1 METHODS
 
 =over 4
 
 =item * MT::Category->top_level_categories($blog_id)
 
-
 Returns an array of I<MT::Category> objects representing the top level of
 the category hierarchy in the blog identified by $blog_id.
 
+=item * cache(%param)
+
+Cache the category data given a C<blog_id> (if it has not been
+already) and then return the data.
+
+=item * cache_obj(%param)
+
+Cache and return the session object.
+
+=item * category_label_path()
+
+Compute and return the labeled path of the category.
+
+=item * category_path()
+
+Compute and return the path of the category.
+
+=item * copy_cat($old_cat)
+
+Set the category column values to those of the old category.
+
+=item * ping_url_list()
+
+Return the list of ping URLs for the category.
+
+=item * remove()
+
+Remove the cached object and all its children.
+
+=item * save()
+
+Save the category!
+
 =back
 
-=head1 AUTHOR & COPYRIGHTS
+=head1 AUTHOR & COPYRIGHT
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut
