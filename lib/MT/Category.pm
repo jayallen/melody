@@ -515,7 +515,7 @@ already) and then return the data.
 
 =item * cache_obj(%param)
 
-Cache and return the session object.
+Retrieve, cache and return the C<MT::Session> object.
 
 =item * category_label_path()
 
@@ -524,6 +524,10 @@ Compute and return the labeled path of the category.
 =item * category_path()
 
 Compute and return the path of the category.
+
+=item * clear_cache()
+
+Clear an existing cache record for the category.
 
 =item * copy_cat($old_cat)
 
