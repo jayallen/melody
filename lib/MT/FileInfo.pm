@@ -34,54 +34,6 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
 });
 
-=pod
-
-=head1 NAME
-
-MT::FileInfo
-
-=head1 SYNOPSIS
-
-A FileInfo gives you information about a certain file or
-server-relative URL (it assumes a one-to-one mapping between files and
-URLs).
-
-More precisely A FileInfo maps a file path to a "Specifier" which
-tells what kind of file it is and how to rebuild it; also included is
-the URL where it is expected to be served.
-
-A Specifier is a variant record with the following types and fields:
-
-            Index of template_id
-          | Entry of templatemap_id * entry_id
-          | DateBased of templatemap_id * date_spec * archive_type
-          | Category of templatemap_id * category_id
-
-A FileInfo is tagged with an archive_type field (from the set
-{Individual, Daily, Monthly, Weekly, Category, Index}), which
-determines which of those variants is held in the record.
-
-=head1 METHODS
-
-=over 4
-
-=item set_info_for_url($url, $file_path, $archive_type, $spec)
-
-Creates a FileInfo record in the database to indicate that the URL
-C<$url> serves the file at C<$file_path> and can be rebuilt from the
-parameters in C<$spec>.
-
-The C<$spec> argument is a hash ref with at least one of {TemplateMap,
-Template} defined, and at least one of the following: {Entry,
-StartDate, Category}.
-
-If $archive_type is 'index' then Template should be given; otherwise
-TemplateMap should be given.
-
-=back
-
-=cut
-
 # think: We need a set({a => v, ...}, {b => u, ...}) routine which
 #    guarantees that subsequently load({a => v, ...}) will return a
 #    record that matches {b => u}
@@ -122,3 +74,56 @@ sub parent_names {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::FileInfo
+
+=head1 SYNOPSIS
+
+A C<FileInfo> object provides information about a certain file or
+server-relative URL and assumes a one-to-one mapping between files and
+URLs.
+
+More precisely A C<FileInfo> object maps a file path to a "Specifier" which
+tells what kind of file it is and how to rebuild it; also included is
+the URL where it is expected to be served.
+
+A Specifier is a variant record with the following types and fields:
+
+            Index of template_id
+          | Entry of templatemap_id * entry_id
+          | DateBased of templatemap_id * date_spec * archive_type
+          | Category of templatemap_id * category_id
+
+A FileInfo is tagged with an archive_type field (from the set
+{Individual, Daily, Monthly, Weekly, Category, Index}), which
+determines which of those variants is held in the record.
+
+=head1 METHODS
+
+=over 4
+
+=item set_info_for_url($url, $file_path, $archive_type, $spec)
+
+Creates a FileInfo record in the database to indicate that the URL
+C<$url> serves the file at C<$file_path> and can be rebuilt from the
+parameters in C<$spec>.
+
+The C<$spec> argument is a hash ref with at least one of {TemplateMap,
+Template} defined, and at least one of the following: {Entry,
+StartDate, Category}.
+
+If $archive_type is 'index' then Template should be given; otherwise
+TemplateMap should be given.
+
+=item parent_names()
+
+Returns a hash of package names relating the data model to parent
+objects.
+
+=back
+
+=cut
