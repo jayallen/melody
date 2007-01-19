@@ -292,9 +292,46 @@ MT::ObjectDriver::DBI::sqlite
 
 =head1 METHODS
 
-TODO
+=head2 bind_param_attributes($driver, $data_type)
 
-=head1 AUTHOR & COPYRIGHT
+Return the value of the C<SQL_BLOB> constant if C<$data_type> is given
+as 'blob.'
+
+=head2 column_defs($type)
+
+Return the datasource column definitions given by C<$type>.
+
+=head2 db2ts($ts)
+
+Convert the DB timestamp format to our timestamp format.
+
+=head2 db2type($db_type)
+
+Return the generic data type given the given DB column specifier.
+
+=head2 fetch_id()
+
+Return the last inserted row id.
+
+=head2 init
+
+Initialize the SQLite DB driver.
+
+=head2 load_iter($class, $terms, $args)
+
+Return a "non-locking" iteration object for SQLite.  Please see the
+L<MT::Object/Loading an existing object or objects> documentation for
+method details.
+
+=head2 ts2db($ts)
+
+Return the DB formatted timestamp.
+
+=head2 type2db($def)
+
+Return the DB column specifier for the given column definition.
+
+=head2 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.
 
