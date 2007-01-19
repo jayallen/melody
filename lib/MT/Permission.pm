@@ -517,6 +517,15 @@ he/she has posted; false otherwise.
 Returns true if the user can upload files to the blog directories specified
 for this blog, false otherwise.
 
+=head2 $perms->can_edit_assets
+
+Returns true if the user can edit the assets of the blog.
+
+=head2 $perms->can_save_image_defaults
+
+Returns true if the user can save image defaults during the asset
+upload process.
+
 =head2 $perms->can_edit_all_posts
 
 Returns true if the user can edit B<all> entries posted to this blog (even
