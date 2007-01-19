@@ -171,6 +171,52 @@ __END__
 
 MT::FileMgr::Local
 
+=head1 METHODS
+
+=head2 $fm->can_write($file)
+
+The given file is writable.
+
+=head2 $fm->content_is_updated($file, $content)
+
+Returns true if the file does not exist or the contents have changed
+with respect to the given C<content>.
+
+=head2 $fm->delete($file)
+
+Delete the given file and return a translated error on failure.
+
+=head2 $fm->exists($file)
+
+The given file exists.
+
+=head2 $fm->get_data($from[, $type])
+
+Fetch and return the file contents given by <$from>.
+This method also accepts an optional C<type> argument, such as
+'upload', wich indicates that we sould set perl's C<binmode>.
+
+=head2 $fm->mkpath($path)
+
+Create the given path and return a translated error on failure.
+
+=head2 $fm->put($from, $to[, $type])
+
+Write the file, or file handle contents, given by C<$from> to C<$to>
+and calls the C<put_data> method, detailed below.
+
+=head2 $fm->put_data($from, $to[, $type])
+
+Write the non-file-handle contents, given by C<$from> to C<$to>.  This
+method also accepts an optional C<type> argument, such as 'upload',
+which sets C<UploadUmask> and C<UploadPerms>.  If not given,
+C<HTMLUmask> and <HTMLPerms> are set instead.
+
+=head2 $fm->rename($from, $to)
+
+Rename the given file to the given new name and return a translated
+error on failure.
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.
