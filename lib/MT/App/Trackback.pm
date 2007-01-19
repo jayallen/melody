@@ -516,6 +516,13 @@ Return the blog of the trackback.
 
 This function removes UTF-8 from scalars.
 
+=head2 ping
+
+Handle an incoming trackback ping and return the proper response, if
+we make it to the end.  This method involves a number of steps and
+error state trapping logic.  Please see the C<MT::App::Trackback>
+source for details.
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.
