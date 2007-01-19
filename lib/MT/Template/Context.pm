@@ -566,8 +566,32 @@ use
 
 to ensure this.
 
+=head1 METHODS
+
+=head2 new
+
+Return a new C<MT::Template::Context> instance.
+
+=head2 init
+
+Initialize a C<MT::Template::Context> instance with any defined
+handlers present in the runtime environment.
+
+=head2 handler_for($val)
+
+Return the value of the C<Handers> runtime hash for the given value.
+
+=head2 post_process_handler
+
+Alias for the </stock_post_process_handler> method.
+
+=head2 register_handler($key, $val)
+
+Set a key-value in the C<Handers> runtime hash for the given
+key-value arguemnts.
+
 =head1 AUTHOR & COPYRIGHT
 
-Please see the I<MT> manpage for author, copyright, and license information.
+Please see L<MT/AUTHOR & COPYRIGHT>.
 
 =cut
