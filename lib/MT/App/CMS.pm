@@ -11766,6 +11766,16 @@ Registers the core application itemset actions.
 
 Registers an itemset action with the CMS. The parameters accepted are:
 
+=head2 $app->backup_download
+
+=head2 $app->restore_directory
+
+=head2 $app->restore_file
+
+=head2 $app->restore_premature_cancel
+
+=head2 $app->restore_upload_manifest
+
 =over 4
 
 =item * type
@@ -12180,6 +12190,10 @@ the response using an application template.
 
 =over 4
 
+=item * add_tags_to_assets
+
+Applies a set of tags to one or more assets.
+
 =item * add_tags_to_entries
 
 Applies a set of tags to one or more entries.
@@ -12264,6 +12278,14 @@ Handles the deletion of registered data types.
 =item * delete_confirm
 
 Deprecated routine to confirm the deletion of an object.
+
+=item * dialog_restore_upload
+
+Handles display of the modal dialog for the upload restore process.
+
+=item * dialog_select_weblog
+
+Handles display of the modal dialog for selecting a weblog.
 
 =item * dialog_grant_role
 
@@ -12481,6 +12503,10 @@ QuickPost Windows registry file.
 
 Handler that returns the "mt.reg" for enabling a conext-menu QuickPost item
 that is suitable for Internet Explorer.
+
+=item * remove_tags_from_assets
+
+Itemset handler for removing a list of tags from one or more assets.
 
 =item * remove_tags_from_entries
 
@@ -12799,7 +12825,7 @@ Callbacks that apply to these object types are as follows:
 =over 4
 
 =item CMSViewPermissionFilter
-    
+
 Calling convention is:
 
     callback($cb, $app, $id, $obj_promise)
@@ -12819,11 +12845,11 @@ the user that s/he doesn't have permission to view the object.
     callback($cb, $app, $obj)
 
 =item CMSSavePermissionFilter
-    
+
 Calling convention is:
 
     callback($cb, $app, $id)
-    
+
 Where C<$id> is the ID of the object, if it already exists, or
 C<undef> if it is a new object with this request.
 
@@ -12841,7 +12867,7 @@ method is not called if the acting user is a superuser.
 This callback gives you the chance to "decline" for reasons other than lack of permissions.
 
 The routine is called as follows:
-    
+
     callback($cb, $app)
 
 Returning a false value will decline the request. It is advisibable to
@@ -12893,6 +12919,8 @@ This callback is invoked for each file the user uploads to the weblog.
 It is called for each file, regardless of type. If the user uploads an
 image, both the C<CMSUploadFile> and C<CMSUploadImage> callbacks are invoked.
 
+=back
+
 =head3 Parameters
 
 =over 4
@@ -12919,6 +12947,8 @@ The C<MT::Blog> object the uploaded file is associated with.
 
 =back
 
+=over 4
+
 =item CMSUploadImage
 
     callback($eh, %params)
@@ -12927,6 +12957,8 @@ This callback is invoked for each uploaded image. In the case the user
 creates a thumbnail for their uploaded image, this callback will be
 invoked twice-- once for the uploaded original image and a second time
 for the thumbnail that was generated for it.
+
+=back
 
 =over 4
 
@@ -12964,8 +12996,6 @@ The image identifier as reported by the C<Image::Size> module. Typically,
 =item * Blog
 
 The C<MT::Blog> object of the weblog the image is associated with.
-
-=back
 
 =back
 
