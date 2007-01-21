@@ -1039,6 +1039,20 @@ sub restore_parent_ids {
     $result;
 }
 
+package MT::FileInfo;
+
+sub parent_names {
+    my $obj = shift;
+    my $parents = {
+        blog => 'MT::Blog',
+        template => 'MT::Template',
+        templatemap => 'MT::TemplateMap',
+        category => 'MT::Category',
+        entry => 'MT::Entry',
+    };
+    $parents;
+}
+
 1;
 __END__
 

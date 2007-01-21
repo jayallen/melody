@@ -61,18 +61,6 @@ sub set_info_for_url {
     return $url_map;
 }
 
-sub parent_names {
-    my $obj = shift;
-    my $parents = {
-        blog => 'MT::Blog',
-        template => 'MT::Template',
-        templatemap => 'MT::TemplateMap',
-        category => 'MT::Category',
-        entry => 'MT::Entry',
-    };
-    $parents;
-}
-
 1;
 
 __END__
@@ -118,11 +106,6 @@ StartDate, Category}.
 
 If $archive_type is 'index' then Template should be given; otherwise
 TemplateMap should be given.
-
-=item parent_names()
-
-Returns a hash of package names relating the data model to parent
-objects.
 
 =back
 

@@ -1154,9 +1154,16 @@ use MT::BackupRestore to use this method.
 
 =item * $obj->parent_names()
 
-TODO - Should be overridden by subclasses to return correct hash
-whose keys are xml element names of the object's parent objects
-and values are class names of them.
+TODO - Should be overridden by subclasses and returns a hash
+reference whose keys are xml element names of the object's parent 
+objects and values are package names of each of them.
+
+   { 'blog' => 'MT::Blog' }
+
+Here, parent-child relationship is determined based on the data
+model, not based on "base class" and "derived class" in the paradigm of
+the object oriented programming.
+
 This method is defined in MT/BackupRestore.pm - you must first 
 use MT::BackupRestore to use this method.
 
