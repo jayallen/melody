@@ -11768,13 +11768,30 @@ Registers an itemset action with the CMS. The parameters accepted are:
 
 =head2 $app->backup_download
 
+Handler for the call to download backup files, used when multiple backup
+files can not be archived in a tar/zip file.
+
 =head2 $app->restore_directory
+
+Method which is called from backup_restore method and bridge the call
+to MT::BackupRestore::restore_directory, which then process the call
+and restore MT from files copied in the specified directory.
 
 =head2 $app->restore_file
 
+Method which is called from backup_restore method and bridge the call
+to MT::BackupRestore::restore_file, which then process the call
+and restore MT from specified file.
+
 =head2 $app->restore_premature_cancel
 
+Hanlder called when restore from multiple files is cancelled by user,
+before finishing the process.
+
 =head2 $app->restore_upload_manifest
+
+Handler called when user uploads a manifest file which has information
+about what to restore.
 
 =over 4
 
