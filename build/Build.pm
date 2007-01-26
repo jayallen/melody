@@ -591,7 +591,7 @@ sub remove_copy {
 }
 
 sub repo_rev {
-    my $revision = qx{ svn info | grep 'Revision' };
+    my $revision = qx{ svn info | grep 'Last Changed Rev' };
     chomp $revision;
     $revision =~ s/^Last Changed Rev: (\d+)$/r$1/o;
     die( "ERROR: $revision" ) if $revision =~ /is not a working copy/;
