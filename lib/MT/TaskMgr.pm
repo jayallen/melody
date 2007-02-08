@@ -251,7 +251,9 @@ up to date using a registered task.
 
 =head2 MT::TaskMgr->add_task($task_obj)
 
-=head2 MT::TaskMgr->add_task(\%task)
+  MT::TaskMgr->add_task($task_obj);
+
+  MT::TaskMgr->add_task(\%task);
 
 Registers a new I<MT::Task> object. If this method is called with a hashref,
 a I<MT::Task> will be constructed using that data.
