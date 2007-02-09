@@ -135,8 +135,8 @@ sub setup {
 
     my $prereq = 'ExtUtils::Install 1.37_02';
     eval "use $prereq";
-    die( "ERROR: Can't handle plugin directory manipulation: $@" )
-        if ref($@) or $@ ne '';
+    die( "ERROR: Can't handle @{ $self->{'plugin=s@'} } plugin installation: $prereq needed." )
+        if $@ && @{ $self->{'plugin=s@'} };
 
     # Do we have SSL support?
     $prereq = 'Crypt::SSLeay';
@@ -628,8 +628,8 @@ sub export {
     my $self = shift;
     return unless $self->{'export!'};
     # NOTE Subversion auto-creates the export directory.
-    $self->verbose_command( sprintf( '%s export --quiet %s %s',
-        'svn', $self->{'repo-uri=s'}, $self->{'export-dir=s'}
+    $self->verbose_command( sprintf( 'svn export --quiet %s %s',
+        $self->{'repo-uri=s'}, $self->{'export-dir=s'}
     ));
 }
 
@@ -647,39 +647,32 @@ sub plugin_export {
         my $uri = "$self->{'plugin-uri=s'}/$plugin";
         my $path = "plugins/$plugin";
         $self->verbose_command(
-            sprintf( '%s export %s %s', 'svn', $uri, $path )
+            sprintf( 'svn export --quiet %s %s', $uri, $path )
         );
         die "ERROR: Plugin not exported: $uri"
             unless $self->{debug} || -d $path;
 
         # Handle the plugin subdirectory.
-        my $subdir = "$path/plugins/$plugin";
+        $path = 'plugins';
+        my $subdir = "plugins/$plugin/$path";
         if( -d $subdir && !$self->{debug} ) {
             $self->dirmove( $subdir, $path ) or
-                die( "Can't move $subdir up to $path: $!" );
-            $self->verbose( "Moved $subdir up to $path" );
-            $subdir = "$path/plugins";
-            rmtree( $subdir ) or
-                die( "Can't rmtree() the $subdir $!" );
-            $self->verbose( "Removed $subdir" );
+                die( "Can't move $subdir to $path: $!" );
+            $self->verbose( "Moved $subdir to $path" );
+        }
+        # Handle the mt-static subdirectory.
+        $path = "mt-static/plugins";
+        $subdir = "plugins/$plugin/$path";
+        if( -d $subdir && !$self->{debug} ) {
+            $self->dirmove( $subdir, $path ) or
+                die( "Can't move directory $subdir to $path $!" );
+            $self->verbose( "Moved $subdir to $path" );
         }
 
-        # Handle the mt-static subdirectory.
-        my $static = "mt-static/plugins/$plugin";
-        $subdir = "$path/$static";
-        if( -d $subdir && !$self->{debug} ) {
-            unless( -d $static ) {
-                mkdir( $static ) or die( "Can't mkdir $static: $!" );
-                $self->verbose( "Created $static" );
-            }
-            $self->dirmove( $subdir, $static ) or
-                die( "Can't move directory $subdir to $static: $!" );
-            $self->verbose( "Moved $subdir to $static" );
-            $subdir = "$path/mt-static";
-            rmtree( $subdir ) or
-                die( "Can't rmtree() the $subdir: $!" );
-            $self->verbose( "Removed $subdir" );
-        }
+        $path = "plugins/$plugin";
+        rmtree( $path ) or
+            die( "Can't rmtree() $path: $!" );
+        $self->verbose( "Removed $path" );
     }
 
     chdir( '..' ) or die( "ERROR: Can't cd ..: $!" )
