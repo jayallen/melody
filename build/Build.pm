@@ -1,7 +1,7 @@
 # $Id$
 
 package Build;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 NAME
 
@@ -797,6 +797,12 @@ sub read_conf {
 
 sub inject_footer {
     my $self = shift;
+
+    # Do not inject the non-production footer if we are running in
+    # debug mode, doing a (local) make or are building an alpha/beta
+    # version.
+    return if $self->{'debug'} || $self->{'make'} ||
+        ($self->{'prod'} && !($self->{'beta=s'} || $self->{'alpha=s'}));
     $self->verbose( 'Entered inject_footer()' );
     return if $self->{'prod'} || $self->{'debug'} || $self->{'make'};
 
