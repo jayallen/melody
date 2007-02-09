@@ -1,7 +1,7 @@
 # $Id$
 
 package Build;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 NAME
 
@@ -591,9 +591,9 @@ sub remove_copy {
 }
 
 sub repo_rev {
-    my $revision = qx{ svn info | grep 'Revision' };
+    my $revision = qx{ svn info | grep 'Last Changed Rev' };
     chomp $revision;
-    $revision =~ s/^Revision: (\d+)$/r$1/o;
+    $revision =~ s/^Last Changed Rev: (\d+)$/r$1/o;
     die( "ERROR: $revision" ) if $revision =~ /is not a working copy/;
     return $revision;
 }
@@ -804,6 +804,7 @@ sub inject_footer {
     return if $self->{'debug'} || $self->{'make'} ||
         ($self->{'prod'} && !($self->{'beta=s'} || $self->{'alpha=s'}));
     $self->verbose( 'Entered inject_footer()' );
+    return if $self->{'prod'} || $self->{'debug'} || $self->{'make'};
 
     my $file = $self->{'export!'}
         ? File::Spec->catdir( $self->{'export-dir=s'}, $self->{'footer-tmpl=s'} )
