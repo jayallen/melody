@@ -13,6 +13,8 @@ use MT::App;
 @WidgetManager::App::ISA = qw( MT::App );
 use WidgetManager::Util;
 
+use constant NEW_WM => 'New Widget Manager';
+
 sub init {
     my $app = shift;
     my %param = @_;
@@ -159,7 +161,7 @@ sub save {
 
     # Load the current widgetmanager data
     my $current = $q->param('widgetmanager');
-    $current = $q->param('name') if $current eq 'New Widget Manager';
+    $current = $q->param('name') if $current eq NEW_WM;
     require WidgetManager::Plugin;
     my $modulesets = $app->plugin->load_selected_modules($blog_id);
     # my $modulesets = WidgetManager::Plugin::load_selected_modules($blog_id);
@@ -176,6 +178,9 @@ sub save {
     }
     # add it back with a potential new name
     $modulesets->{$q->param('name')} = $str;
+
+    # Set the widget manager name so it appears when the list is rendered.
+    $q->param('widgetmanager_name', $q->param('name'));
 
     $app->plugin->set_config_value('modulesets',$modulesets,"blog:$blog_id");
 
@@ -198,6 +203,9 @@ sub delete {
 
     my @ids = $q->param('id');
     delete $modulesets->{$_} for @ids;
+
+    # Reset the widget manager name so the default appears when the list is rendered.
+    $q->param('widgetmanager_name' => NEW_WM);
 
     $app->plugin->set_config_value('modulesets',$modulesets,"blog:$blog_id");
     
@@ -266,7 +274,7 @@ sub edit {
       }
 
       # Find non-conflicting name for new Widget Manager
-      if ($widgetmanager eq 'New Widget Manager') { 
+      if ($widgetmanager eq NEW_WM) { 
           $widgetmanager = $app->plugin->translate('Widget Manager');
           if (grep(/^\Q$widgetmanager\E$/, @names)) {
               my $i = 1;
@@ -351,7 +359,7 @@ sub list {
             widgets => $modulesets->{$key}
           };
       }
-      if ($widgetmanager eq 'New Widget Manager') { $widgetmanager = $q->param('name'); }
+      if ($widgetmanager eq NEW_WM) { $widgetmanager = $q->param('name'); }
 
       $tmpl->param(widgetmanagers => \@widgetmanagers);
 
@@ -360,6 +368,7 @@ sub list {
       $tmpl->param(plugin_version    => $MT::Plugin::WidgetManager::VERSION);
       $tmpl->param(rebuild           => $app->{rebuild});
       $tmpl->param(deleted           => $app->{deleted});
+      $tmpl->param(widgetmanager_name => $q->param('widgetmanager_name') || $widgetmanager);
       return $app->plugin->l10n_filter($tmpl->output);
 }
 
