@@ -1026,18 +1026,11 @@ sub view {
     $ctx->stash('commenter', $cmntr) if ($cmntr);
     $ctx->{current_timestamp} = $entry->created_on;
     my %cond;
-    my $tmpl = ($q->param('arch')) ?
-        (MT::Template->load({ type => 'individual',
-                              blog_id => $entry->blog_id })
-            or return $app->error($app->translate(
-                 "You must define an Individual template in order to " .
-                 "display dynamic comments.")))
-    :
-        (MT::Template->load({ type => 'comments',
+    my $tmpl = MT::Template->load({ type => 'comments',
                               blog_id => $entry->blog_id })
             or return $app->error($app->translate(
                  "You must define a Comment Listing template in order to " .
-                 "display dynamic comments.")));
+                 "display dynamic comments."));
 
     my $html = $tmpl->build($ctx, \%cond);
     $html = MT::Util::encode_html($tmpl->errstr) unless defined $html;
