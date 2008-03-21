@@ -955,9 +955,11 @@ sub post {
 
         # Rebuild the entry synchronously so that if the user gets
         # redirected to the indiv. page it will be up-to-date.
+        MT->logerr("START: Rebuild Entry");
         $app->rebuild_entry( Entry => $entry->id )
           or return $app->error(
             $app->translate( "Publish failed: [_1]", $app->errstr ) );
+        MT->logerr("END: Rebuild Entry");
     }
 
     if ( $comment->is_junk ) {
@@ -971,6 +973,7 @@ sub post {
     }
 
     # Index rebuilds and notifications are done in the background.
+    MT->logerr("START: Rebuild indexes");
     MT::Util::start_background_task(
         sub {
             $app->rebuild_indexes( Blog => $blog )
@@ -981,6 +984,7 @@ sub post {
               if ( $commenter && ( $commenter->type ne MT::Author::AUTHOR() ) );
         }
     );
+    MT->logerr("END: Rebuild indexes");
 
     if ( $blog->use_comment_confirmation ) {
         my $tmpl =
@@ -1043,7 +1047,9 @@ sub eval_comment {
     my $not_declined = MT->run_callbacks( 'CommentFilter', $app, $comment );
     return unless $not_declined;
 
+    MT->logerr("START: Junk Filters");
     MT::JunkFilter->filter($comment);
+    MT->logerr("END: Junk Filters");
 
     ## Here comes the built-in logic for deciding whether the
     ## comment is moderated or published.

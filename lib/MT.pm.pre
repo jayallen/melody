@@ -10,6 +10,7 @@ use strict;
 use base qw( MT::ErrorHandler );
 use File::Spec;
 use File::Basename;
+use MT::Util qw( weaken );
 
 our ( $VERSION,      $SCHEMA_VERSION );
 our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID );
@@ -397,7 +398,7 @@ sub config {
     ref $mt or $mt = MT->instance;
     unless ( $mt->{cfg} ) {
         require MT::ConfigMgr;
-        $mt->{cfg} = MT::ConfigMgr->instance;
+        weaken( $mt->{cfg} = MT::ConfigMgr->instance );
     }
     if (@_) {
         my $setting = shift;
@@ -421,6 +422,28 @@ sub request {
     else {
         $inst->{request};
     }
+}
+
+{
+my $depth = 0;
+my $start = time;
+sub logerr {
+    my $pkg = shift;
+    return unless $pkg->config('PerformanceLogging');
+
+    my ($msg) = @_;
+    if ($msg =~ m/^END:/) {
+        $depth--;
+    }
+    my $space = "  " x $depth;
+    print STDERR sprintf("%10d ", time - $start);
+    print STDERR $space;
+    $msg =~ s/\n/\n$space/g;
+    print STDERR $msg . "\n";
+    if ($msg =~ m/^START:/) {
+        $depth++;
+    }
+}
 }
 
 sub log {
@@ -855,7 +878,7 @@ sub init_config {
         $Data::Dumper::Indent   = 1;
     }
 
-    if ($cfg->ProcessMemoryCommand) {
+    if ($cfg->PerformanceLogging && $cfg->ProcessMemoryCommand) {
         $mt->log_times();
     }
 
@@ -1181,7 +1204,7 @@ sub core_upload_file_to_sync {
     my $job = TheSchwartz::Job->new();
     $job->funcname('MT::Worker::Sync');
     $job->uniqkey( $fi->id );
-    $job->coalesce( $$ . ':' . ( time - ( time % 100 ) ) );
+    $job->coalesce( ( $fi->blog_id || 0 ) . ':' . $$ . ':' . ( time - ( time % 10 ) ) );
     MT::TheSchwartz->insert($job);
 }
 

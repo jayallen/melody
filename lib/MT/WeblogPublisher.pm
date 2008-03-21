@@ -809,6 +809,7 @@ sub rebuild_categories {
             )
           );
     }
+    MT->logerr("START: rebuild_categories; blog " . $blog->id);
     my %arg;
     $arg{'sort'} = 'id';
     $arg{direction} = 'ascend';
@@ -831,6 +832,7 @@ sub rebuild_categories {
             NoStatic => $param{NoStatic},
         ) or return;
     }
+    MT->logerr("END: rebuild_categories");
     1;
 }
 
@@ -848,6 +850,7 @@ sub rebuild_authors {
             )
           );
     }
+    MT->logerr("START: rebuild_authors; blog " . $blog->id);
     my %arg;
     $arg{'sort'} = 'id';
     $arg{direction} = 'ascend';
@@ -878,6 +881,7 @@ sub rebuild_authors {
             NoStatic => $param{NoStatic},
         ) or return;
     }
+    MT->logerr("END: rebuild_authors");
     1;
 }
 
@@ -898,6 +902,7 @@ sub rebuild_entry {
         MT->translate( "Parameter '[_1]' is required", 'Entry' ) );
     require MT::Entry;
     $entry = MT::Entry->load($entry) unless ref $entry;
+    MT->logerr("START: rebuild_entry; entry [" . $entry->id . "]");
     my $blog;
     unless ( $blog = $param{Blog} ) {
         my $blog_id = $entry->blog_id;
@@ -921,6 +926,7 @@ sub rebuild_entry {
             if ( $archiver->category_based ) {
                 my $cats = $entry->categories;    # (ancestors => 1)
                 for my $cat (@$cats) {
+                    MT->logerr("Build category archive: ". $cat->label);
                     $mt->_rebuild_entry_archive_type(
                         Entry       => $entry,
                         Blog        => $blog,
@@ -934,6 +940,7 @@ sub rebuild_entry {
                 }
             }
             else {
+                MT->logerr("Build entry archive type $at");
                 $mt->_rebuild_entry_archive_type(
                     Entry       => $entry,
                     Blog        => $blog,
@@ -956,29 +963,35 @@ sub rebuild_entry {
     ## etc. There is not a good way to determine exact dependencies; it is
     ## easier to just rebuild, rebuild, rebuild.
 
-    return 1
-      unless $param{BuildDependencies}
+    unless ($param{BuildDependencies}
       || $param{BuildIndexes}
-      || $param{BuildArchives};
+      || $param{BuildArchives}) {
+        MT->logerr("END: rebuild_entry; BuildDependencies, BuildIndexes, BuildArchives unspecified: success!");
+        return 1;
+    }
 
     if ( $param{BuildDependencies} ) {
         ## Rebuild previous and next entry archive pages.
         if ( my $prev = $entry->previous(1) ) {
+            MT->logerr("Rebuild previous entry: entry id = " . $prev->id);
             $mt->rebuild_entry( Entry => $prev ) or return;
 
             ## Rebuild the old previous and next entries, if we have some.
             if ( $param{OldPrevious}
                 && ( my $old_prev = MT::Entry->load( $param{OldPrevious} ) ) )
             {
+                MT->logerr("Rebuild 'old' previous entry: entry id = " . $old_prev->id);
                 $mt->rebuild_entry( Entry => $old_prev ) or return;
             }
         }
         if ( my $next = $entry->next(1) ) {
+            MT->logerr("Rebuild next entry: entry id = " . $next->id);
             $mt->rebuild_entry( Entry => $next ) or return;
 
             if ( $param{OldNext}
                 && ( my $old_next = MT::Entry->load( $param{OldNext} ) ) )
             {
+                MT->logerr("Rebuild 'old' next entry: entry id = " . $old_next->id);
                 $mt->rebuild_entry( Entry => $old_next ) or return;
             }
         }
@@ -987,6 +1000,7 @@ sub rebuild_entry {
     if ( $param{BuildDependencies} || $param{BuildIndexes} ) {
         ## Rebuild all indexes, in case this entry is on an index.
         if ( !( exists $param{BuildIndexes} ) || $param{BuildIndexes} ) {
+            MT->logerr("Rebuild blog indexes");
             $mt->rebuild_indexes( Blog => $blog ) or return;
         }
     }
@@ -1005,6 +1019,7 @@ sub rebuild_entry {
                     if ( $archiver->category_based ) {
                         my $cats = $prev_arch->categories;
                         for my $cat (@$cats) {
+                            MT->logerr("Rebuild 'previous' entry category pages; at = $at; cat = " . $cat->label);
                             $mt->_rebuild_entry_archive_type(
                                 NoStatic => $param{NoStatic},
                                 Entry    => $prev_arch,
@@ -1018,6 +1033,7 @@ sub rebuild_entry {
                         }
                     }
                     else {
+                        MT->logerr("Rebuild 'previous' entry archives; at = $at");
                         $mt->_rebuild_entry_archive_type(
                             NoStatic    => $param{NoStatic},
                             Entry       => $prev_arch,
@@ -1034,6 +1050,7 @@ sub rebuild_entry {
                     if ( $archiver->category_based ) {
                         my $cats = $next_arch->categories;
                         for my $cat (@$cats) {
+                            MT->logerr("Rebuild 'next' entry category pages; at = $at; cat = " . $cat->label);
                             $mt->_rebuild_entry_archive_type(
                                 NoStatic => $param{NoStatic},
                                 Entry    => $next_arch,
@@ -1047,6 +1064,7 @@ sub rebuild_entry {
                         }
                     }
                     else {
+                        MT->logerr("Rebuild 'next' entry archives; at = $at");
                         $mt->_rebuild_entry_archive_type(
                             NoStatic    => $param{NoStatic},
                             Entry       => $next_arch,
@@ -1062,7 +1080,7 @@ sub rebuild_entry {
             }
         }
     }
-
+    MT->logerr("END: rebuild_entry: success!");
     1;
 }
 
@@ -1082,6 +1100,8 @@ sub _rebuild_entry_archive_type {
           )
       )
       : undef;
+
+    MT->logerr("START: _rebuild_entry_archive_type: at = [$at]; " . ($entry ? ("entry = [" . $entry->id . "]") : ( $param{Category} ? ("category = [" . $param{Category}->id . "]") : ( $param{Author} ? ("author = [" . $param{Author}->id . "]") : "" ) ) ) );
 
     my $blog;
     unless ( $blog = $param{Blog} ) {
@@ -1134,18 +1154,24 @@ sub _rebuild_entry_archive_type {
           $mt->archive_file_for( $entry, $blog, $at, $param{Category}, $map,
             undef, $param{Author} );
         if ( $file eq '' ) {
-
             # np
         }
         elsif ( !defined($file) ) {
             return $mt->error( MT->translate( $blog->errstr() ) );
         }
         else {
-            push @map_build, $map unless $done->{$file};
+            if ($done->{$file}) {
+                MT->logerr("Skipping [$file] since it has been published in this request.");
+            } else {
+                push @map_build, $map;
+            }
             $map->{__saved_output_file} = $file;
         }
     }
-    return 1 unless @map_build;
+    unless (@map_build) {
+        MT->logerr("END: _rebuild_entry_archive_type; nothing to build");
+        return 1;
+    }
     @map = @map_build;
 
     my (%cond);
@@ -1176,7 +1202,7 @@ sub _rebuild_entry_archive_type {
     ## file template.
     require MT::Template;
     for my $map (@map) {
-        $mt->rebuild_file(
+        if (!$mt->rebuild_file(
             $blog, $arch_root, $map, $at, $ctx, \%cond,
             !$param{NoStatic},
             Category  => $param{Category},
@@ -1184,9 +1210,13 @@ sub _rebuild_entry_archive_type {
             Author    => $param{Author},
             StartDate => $start,
             EndDate   => $end,
-        ) or return;
+        )) {
+            MT->logerr("END: error from rebuild_file");
+            return;
+        }
         $done->{ $map->{__saved_output_file} }++;
     }
+    MT->logerr("END: _rebuild_entry_archive_file: success!");
     1;
 }
 
@@ -1199,7 +1229,7 @@ sub rebuild_file {
     my $archiver = $mt->archiver($at);
     my ( $entry, $start, $end, $category, $author );
 
-    if ( $finfo = $specifier{FileInfo} ) {
+    if ( $finfo = delete $specifier{FileInfo} ) {
         $specifier{Author}   = $finfo->author_id   if $finfo->author_id;
         $specifier{Category} = $finfo->category_id if $finfo->category_id;
         $specifier{Entry}    = $finfo->entry_id    if $finfo->entry_id;
@@ -1262,6 +1292,7 @@ sub rebuild_file {
 
     # Calculate file path and URL for the new entry.
     my $file = File::Spec->catfile( $root_path, $map->{__saved_output_file} );
+    MT->logerr("START: rebuild_file - file: $file");
     require MT::FileInfo;
 
 # This kind of testing should be done at the time we save a post,
@@ -1391,8 +1422,14 @@ sub rebuild_file {
         }
     }
 
-    return 1 if ( $tmpl->build_dynamic );
-    return 1 if ( $entry && $entry->status != MT::Entry::RELEASE() );
+    if ( $tmpl->build_dynamic ) {
+        MT->logerr("END: rebuild_file aborted since template is dynamic");
+        return 1;
+    }
+    if ( $entry && $entry->status != MT::Entry::RELEASE() ) {
+        MT->logerr("END: rebuild_file aborted since entry is not published");
+        return 1;
+    }
 
     my $timer = MT->get_timer;
     if ($timer) {
@@ -1444,6 +1481,7 @@ sub rebuild_file {
         $html = $tmpl->build( $ctx, $cond );
         unless (defined($html)) {
             $timer->unpause if $timer;
+            MT->logerr("END: rebuild_file aborted due to build error");
             return $mt->error(
             (
                 $category ? MT->translate(
@@ -1501,6 +1539,7 @@ sub rebuild_file {
         ## file, so as not to modify the mtime.
         unless ($fmgr->content_is_updated( $file, \$html )) {
             $timer->unpause if $timer;
+            MT->logerr("END: rebuild_file aborted: file content did not change");
             return 1;
         }
 
@@ -1514,6 +1553,7 @@ sub rebuild_file {
         unless ( $fmgr->exists($path) ) {
             if (!$fmgr->mkpath($path)) {
                 $timer->unpause if $timer;
+                MT->logerr("END: rebuild_file aborted: error creating path");
                 return $mt->trans_error( "Error making path '[_1]': [_2]",
                     $path, $fmgr->errstr );
             }
@@ -1528,12 +1568,14 @@ sub rebuild_file {
         my $temp_file = $use_temp_files ? "$file.new" : $file;
         unless ( defined $fmgr->put_data( $html, $temp_file ) ) {
             $timer->unpause if $timer;
+            MT->logerr("END: rebuild_file aborted: error writing file");
             return $mt->trans_error( "Writing to '[_1]' failed: [_2]",
                 $temp_file, $fmgr->errstr );
         }
         if ($use_temp_files) {
             if (!$fmgr->rename( $temp_file, $file )) {
                 $timer->unpause if $timer;
+                MT->logerr("END: rebuild_file aborted: error renaming tempfile");
                 return $mt->trans_error(
                     "Renaming tempfile '[_1]' failed: [_2]",
                     $temp_file, $fmgr->errstr );
@@ -1572,6 +1614,9 @@ sub rebuild_file {
     }
     $timer->mark("total:rebuild_file[template_id:" . $tmpl->id . "]")
         if $timer;
+
+    MT->logerr("END: end of rebuild_file: success!");
+
     1;
 }
 
@@ -1599,10 +1644,12 @@ sub rebuild_indexes {
     return 1 if $blog->is_dynamic;
     my $iter;
     if ($tmpl) {
+        MT->logerr("START: rebuild_indexes: building '" . $tmpl->name . "'");
         my $i = 0;
         $iter = sub { $i++ < 1 ? $tmpl : undef };
     }
     else {
+        MT->logerr("START: rebuild_indexes: building all index templates for blog " . $blog->id);
         $iter = MT::Template->load_iter(
             {
                 type    => 'index',
@@ -1612,11 +1659,14 @@ sub rebuild_indexes {
     }
     local *FH;
     my $site_root = $blog->site_path;
-    return $mt->error(
-        MT->translate("You did not set your blog publishing path") )
-      unless $site_root;
+    unless ($site_root) {
+        MT->logerr("END: rebuild_indexes aborted: blog publishing path unset");
+        return $mt->error(
+            MT->translate("You did not set your blog publishing path") );
+    }
     my $fmgr = $blog->file_mgr;
     while ( my $tmpl = $iter->() ) {
+        MT->logerr("START: building index " . $tmpl->name);
         ## Skip index templates that the user has designated not to be
         ## rebuilt automatically. We need to do the defined-ness check
         ## because we added the flag in 2.01, and for templates saved
@@ -1626,19 +1676,27 @@ sub rebuild_indexes {
         ## Note that dynamic templates do need to be "rebuilt"--the
         ## FileInfo table needs to be maintained.
         if ( !$tmpl->build_dynamic && !$param{Force} ) {
-            next if ( defined $tmpl->rebuild_me && !$tmpl->rebuild_me );
+            if ( defined $tmpl->rebuild_me && !$tmpl->rebuild_me ) {
+                MT->logerr("END: skipping template due to unset rebuild_me flag");
+                next;
+            }
         }
         my $file = $tmpl->outfile;
         $file = '' unless defined $file;
         if ( $tmpl->build_dynamic && ( $file eq '' ) ) {
+            MT->logerr("END: skipping template because it is dynamic");
             next;
         }
-        return $mt->error(
-            MT->translate(
-                "Template '[_1]' does not have an Output File.",
-                $tmpl->name
-            )
-        ) unless $file ne '';
+        unless ($file ne '') {
+            MT->logerr("END: end of template build; no output file");
+            MT->logerr("END: rebuild_indexes aborted; no output file for template");
+            return $mt->error(
+                MT->translate(
+                    "Template '[_1]' does not have an Output File.",
+                    $tmpl->name
+                )
+            );
+        }
         my $url = join( '/', $blog->site_url, $file );
         unless ( File::Spec->file_name_is_absolute($file) ) {
             $file = File::Spec->catfile( $site_root, $file );
@@ -1658,6 +1716,7 @@ sub rebuild_indexes {
                 template_id => $tmpl->id
             }
         );
+        MT->logerr("Loading FileInfo records for this template; " . scalar(@finfos) . " found");
         if (   ( scalar @finfos == 1 )
             && ( $finfos[0]->file_path eq $file )
             && ( ( $finfos[0]->url || '' ) eq $rel_url ) )
@@ -1666,6 +1725,7 @@ sub rebuild_indexes {
         }
         else {
             foreach (@finfos) { $_->remove(); }
+            MT->logerr("Removed existing FileInfo records and creating new one for this template");
             $finfo = MT::FileInfo->set_info_for_url(
                 $rel_url, $file, 'index',
                 {
@@ -1685,7 +1745,10 @@ sub rebuild_indexes {
             }
         }
 
-        next if ( $tmpl->build_dynamic );
+        if ( $tmpl->build_dynamic ) {
+            MT->logerr("END: end build template because it is dynamic");
+            next;
+        }
 
         ## We're not building dynamically, so if the FileInfo is currently
         ## set as dynamic (virtual), change it to static.
@@ -1701,8 +1764,7 @@ sub rebuild_indexes {
         local $timer->{elapsed} = 0 if $timer;
 
         my $ctx = MT::Template::Context->new;
-        next
-          unless (
+        unless (
             MT->run_callbacks(
                 'build_file_filter',
                 Context      => $ctx,
@@ -1718,7 +1780,10 @@ sub rebuild_indexes {
                 File         => $file,
                 file         => $file
             )
-          );
+          ) {
+              MT->logerr("END: rebuild index skipped because of build_file_filter returned false");
+              next;
+        }
         $ctx->stash( 'blog', $blog );
 
         require MT::Request;
@@ -1727,6 +1792,8 @@ sub rebuild_indexes {
         my $html = $tmpl->build($ctx);
         unless (defined $html) {
             $timer->unpause if $timer;
+            MT->logerr("END: end of rebuild index due to error");
+            MT->logerr("END: end of rebuild_indexes due to error");
             return $mt->error( $tmpl->errstr );
         }
 
@@ -1755,7 +1822,10 @@ sub rebuild_indexes {
 
         ## First check whether the content is actually changed. If not,
         ## we won't update the published file, so as not to modify the mtime.
-        next unless $fmgr->content_is_updated( $file, \$html );
+        unless ($fmgr->content_is_updated( $file, \$html )) {
+            MT->logerr("END: end of rebuild index; file content was not updated");
+            next;
+        }
 
         ## Determine if we need to build directory structure,
         ## and build it if we do. DirUmask determines
@@ -1767,6 +1837,8 @@ sub rebuild_indexes {
         unless ( $fmgr->exists($path) ) {
             if (! $fmgr->mkpath($path) ) {
                 $timer->unpause if $timer;
+                MT->logerr("END: end of rebuild index; could not create path");
+                MT->logerr("END: end of rebuild_indexes; could not create path");
                 return $mt->trans_error( "Error making path '[_1]': [_2]",
                     $path, $fmgr->errstr );
             }
@@ -1777,12 +1849,16 @@ sub rebuild_indexes {
         my $temp_file = $use_temp_files ? "$file.new" : $file;
         unless (defined( $fmgr->put_data( $html, $temp_file ) )) {
             $timer->unpause if $timer;
+            MT->logerr("END: end of rebuild index; could not create file");
+            MT->logerr("END: end of rebuild_indexes; could not create file");
             return $mt->trans_error( "Writing to '[_1]' failed: [_2]",
                 $temp_file, $fmgr->errstr );
         }
         if ($use_temp_files) {
             if (!$fmgr->rename( $temp_file, $file )) {
                 $timer->unpause if $timer;
+                MT->logerr("END: end of rebuild index; could not rename tempfile");
+                MT->logerr("END: end of rebuild_indexes; could not rename tempfile");
                 return $mt->trans_error( "Renaming tempfile '[_1]' failed: [_2]",
                     $temp_file, $fmgr->errstr );
             }
@@ -1809,9 +1885,12 @@ sub rebuild_indexes {
             file         => $file
         );
 
+        MT->logerr("END: end of rebuild index: success!");
+
         $timer->mark("total:rebuild_indexes[template_id:" . $tmpl->id . ";file:$file]")
             if $timer;
     }
+    MT->logerr("END: end of rebuild_indexes: success!");
     1;
 }
 
@@ -2198,12 +2277,25 @@ sub queue_build_file_filter {
     my $fi = $args{file_info};
     return 1 if $fi->{from_queue};
 
+    if (my $tmpl = $args{template}) {
+        # Synchronously publish high-priority index templates:
+        # main index and atom/rss feeds
+        return 1 if $fi->archive_type eq 'index'
+            && ($tmpl->identifier || '') =~ m/^main_index|atom|rss$/;
+    }
+
+    # Synchronously publish preferred individual archive template
+    if (my $tmpl_map = $args{template_map}) {
+        return 1 if $fi->archive_type eq 'Individual'
+            && $tmpl_map->is_preferred;
+    }
+
     require MT::TheSchwartz;
     require TheSchwartz::Job;
     my $job = TheSchwartz::Job->new();
     $job->funcname('MT::Worker::Publish');
     $job->uniqkey( $fi->id );
-    $job->coalesce( $$ . ':' . ( time - ( time % 100 ) ) );
+    $job->coalesce( ( $fi->blog_id || 0 ) . ':' . $$ . ':' . ( time - ( time % 10 ) ) );
 
     # my $at = $fi->archive_type || '';
     #
@@ -2797,22 +2889,22 @@ sub weekly_group_iter {
         },
         {
             ( $ts && $tsend ? ( range_incl => { authored_on => 1 } ) : () ),
-            group => [ "extract(year from authored_on)", "week_number" ],
+            group => [ "week_number" ],
             $args->{lastn} ? ( limit => $args->{lastn} ) : (),
-            sort => "extract(year from authored_on) $order,
-                       week_number $order"
+            sort => "week_number $order"
         }
     ) or return $ctx->error("Couldn't get weekly archive list");
 
     return sub {
         while ( my @row = $iter->() ) {
+            my $year = unpack 'A4', $row[1];
             my $date =
-              sprintf( "%04d%02d%02d000000", week2ymd( $row[1], $row[2] ) );
+              sprintf( "%04d%02d%02d000000", week2ymd( $year, $row[1] ) );
             my ( $start, $end ) = start_end_week($date);
             return (
                 $row[0],
-                year  => $row[1],
-                week  => $row[2],
+                year  => $year,
+                week  => $row[1],
                 start => $start,
                 end   => $end
             );

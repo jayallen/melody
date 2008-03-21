@@ -24,10 +24,10 @@ our $drivers = [
 
 our @drivers;
 
-sub init {
-    @drivers = ();
-    __PACKAGE__->new();
-}
+#sub init {
+#    @drivers = ();
+#    __PACKAGE__->new();
+#}
 
 sub new {
     my $pkg = shift;
@@ -59,20 +59,20 @@ sub new {
         ($class ? ( dbd => $class) : ()),
     );
 
-    require Data::ObjectDriver::Driver::Cache::RAM;
+    require MT::ObjectDriver::Driver::Cache::RAM;
     require MT::Memcached;
 
     my $driver;
     if (MT::Memcached->is_available) {
         require Data::ObjectDriver::Driver::Cache::Memcached;
-        $driver = Data::ObjectDriver::Driver::Cache::RAM->new(
+        $driver = MT::ObjectDriver::Driver::Cache::RAM->new(
             fallback => Data::ObjectDriver::Driver::Cache::Memcached->new(
                 cache => MT::Memcached->instance,
                 fallback => $dbi_driver,
             ),
         );
     } else {
-        $driver = Data::ObjectDriver::Driver::Cache::RAM->new(
+        $driver = MT::ObjectDriver::Driver::Cache::RAM->new(
             fallback => $dbi_driver,
         );
     }
@@ -84,6 +84,16 @@ sub new {
 sub configure {
     my $pkg = shift;
     $_->configure(@_) for @drivers;
+}
+
+sub cleanup {
+    @drivers = ();
+    if ( my $driver = $MT::Object::DRIVER ) {
+        if ( my $dbh = $driver->dbh ) {
+            $dbh->disconnect;
+        }
+        $MT::Object::DRIVER = undef;
+    }
 }
 
 1;

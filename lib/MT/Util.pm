@@ -24,7 +24,17 @@ our @EXPORT_OK = qw( start_end_day start_end_week start_end_month start_end_year
                  start_background_task launch_background_tasks substr_wref
                  extract_urls extract_domain extract_domains is_valid_date
                  epoch2ts ts2epoch escape_unicode unescape_unicode
-                 sax_parser trim ltrim rtrim asset_cleanup caturl multi_iter );
+                 sax_parser trim ltrim rtrim asset_cleanup caturl multi_iter
+                 weaken );
+
+{
+my $Has_Weaken;
+sub weaken {
+    $Has_Weaken = eval 'use Scalar::Util; 1' && Scalar::Util->can('weaken') ? 1 : 0
+        unless defined $Has_Weaken;
+    Scalar::Util::weaken($_[0]) if $Has_Weaken;
+}
+}
 
 sub leap_day {
     my ($y, $m, $d) = @_;
@@ -491,13 +501,16 @@ sub decode_url {
 }
 
 {
-    my $Have_Entities = eval 'use HTML::Entities; 1' ? 1 : 0;
+    my $Have_Entities;
 
     sub encode_html {
         my($html, $can_double_encode) = @_;
         return '' unless defined $html;
         $html =~ tr!\cM!!d;
         #Encode::_utf8_on($html) if MT->instance->charset eq 'utf-8';
+        unless (defined($Have_Entities)) {
+            $Have_Entities = eval 'use HTML::Entities; 1' ? 1 : 0;
+        }
         if ($Have_Entities && !MT->config->NoHTMLEntities) {
             $html = HTML::Entities::encode_entities($html);
         } else {
@@ -520,6 +533,9 @@ sub decode_url {
         my($html) = @_;
         return '' unless defined $html;
         $html =~ tr!\cM!!d;
+        unless (defined($Have_Entities)) {
+            $Have_Entities = eval 'use HTML::Entities; 1' ? 1 : 0;
+        }
         if ($Have_Entities && !MT->config->NoHTMLEntities) {
             $html = HTML::Entities::decode_entities($html);
         } else {
@@ -1365,6 +1381,7 @@ sub start_background_task {
     my ($func) = @_;
     if (!launch_background_tasks()) { $func->(); }
     else {
+        MT::ObjectDriverFactory->cleanup();
         $| = 1;            # Flush open filehandles
         my $pid = fork();
         if (!$pid) {
@@ -1373,12 +1390,12 @@ sub start_background_task {
             close STDOUT; open STDOUT, ">/dev/null"; 
             close STDERR; open STDERR, ">/dev/null"; 
 
-            MT::ObjectDriverFactory->init();
+            MT::Object->driver; # This inititalizes driver
             MT::ObjectDriverFactory->configure();
             $func->();
             CORE::exit(0) if defined($pid) && !$pid;
         } else {
-            MT::ObjectDriverFactory->init();
+            MT::Object->driver; # This inititalizes driver
             MT::ObjectDriverFactory->configure();
             return 1;
         }
@@ -1389,7 +1406,6 @@ sub start_background_task {
     eval { require bytes; 1; };
 
     sub addbin {
-        #local $ENV{LANG} = undef;
         my ($a, $b) = @_;
         my $length = (length $a > length $b ? length $a : length $b);
 
@@ -1432,7 +1448,6 @@ sub start_background_task {
     }
 
     sub divbindec {
-        # local $ENV{LANG} = undef;
         my ($a, $b) = @_;
         # $b is decimal-ascii, $b < 256
 
@@ -1542,15 +1557,18 @@ sub perl_sha1_digest_base64 {
     MIME::Base64::encode_base64(perl_sha1_digest(@_), '');
 }
 
+{
+my $has_crypt_dsa;
 sub dsa_verify {
     my %param = @_;
 
-    eval {
-        require Crypt::DSA;
-    };
-    my $has_crypt_dsa = $@ ? 0 : 1;
-    $has_crypt_dsa = 0 if $param{ForcePerl};
-    if ($has_crypt_dsa) {
+    unless (defined $has_crypt_dsa) {
+        eval {
+            require Crypt::DSA;
+        };
+        $has_crypt_dsa = $@ ? 0 : 1;
+    }
+    if ($has_crypt_dsa && !$param{ForcePerl}) {
         $param{Key} = bless $param{Key}, 'Crypt::DSA::Key';
         $param{Signature} = bless $param{Signature}, 'Crypt::DSA::Signature';
         Crypt::DSA->new->verify(%param);
@@ -1588,6 +1606,7 @@ sub dsa_verify {
     my $result = $u1->bcmp($sig->{r});
     return defined($result) ? $result == 0 : 0;
     }
+}
 }
 
 # TBD: fill in the contracts of these.

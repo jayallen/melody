@@ -500,6 +500,7 @@ BEGIN {
             'PerformanceLoggingThreshold' => { default => 0.1 },
             'PerformanceLoggingPath' => { handler => \&PerformanceLoggingPath },
             'ProcessMemoryCommand' => { handler => \&ProcessMemoryCommand },
+            'DashboardCachePeriod'  => { default => 600 },
         },
         upgrade_functions => \&load_upgrade_fns,
         applications      => {

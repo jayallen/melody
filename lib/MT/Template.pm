@@ -8,12 +8,13 @@ package MT::Template;
 
 use strict;
 use base qw( MT::Object );
+use MT::Util qw( weaken );
 
-use constant NODE => 'MT::Template::Node';
+sub NODE () { 'MT::Template::Node' }
 
-use constant NODE_TEXT => 1;
-use constant NODE_BLOCK => 2;
-use constant NODE_FUNCTION => 3;
+sub NODE_TEXT ()     { 1 }
+sub NODE_BLOCK ()    { 2 }
+sub NODE_FUNCTION () { 3 }
 
 my $resync_to_db;
 
@@ -127,7 +128,7 @@ sub load_file {
             $file = $test_file, last if -f $test_file;
         }
     }
-    return $tmpl->trans_error(Carp::longmess("File not found: [_1]"), $file) unless -e $file;
+    return $tmpl->trans_error("File not found: [_1]", $file) unless -e $file;
     local *FH;
     open FH, $file
         or return $tmpl->trans_error("Error reading file '[_1]': [_2]", $file, $!);
@@ -142,7 +143,7 @@ sub context {
     return $tmpl->{context} = shift if @_;
     require MT::Template::Context;
     my $ctx = $tmpl->{context} ||= MT::Template::Context->new;
-    $ctx->stash('template', $tmpl);
+    weaken($ctx->{__stash}{'template'} = $tmpl);
     return $ctx;
 }
 
@@ -354,7 +355,7 @@ sub text {
                 ## template, so saving would try to write-lock it).
                 if (!defined $resync_to_db) {
                     $resync_to_db = {};
-                    MT->add_callback('TakeDown', 9, undef, \&_resync_to_db);
+                    MT->add_callback('takedown', 9, undef, \&_resync_to_db);
                 }
                 $resync_to_db->{$tmpl->id} = $tmpl;
                 $tmpl->{needs_db_sync} = 1;
@@ -615,13 +616,17 @@ sub getElementById {
 sub createElement {
     my $tmpl = shift;
     my ($tag, $attr) = @_;
-    return bless [ $tag, $attr, undef, undef, undef, undef, $tmpl ], NODE;
+    my $node = bless [ $tag, $attr, undef, undef, undef, undef, $tmpl ], NODE;
+    weaken($node->[6]);
+    return $node;
 }
 
 sub createTextNode {
     my $tmpl = shift;
     my ($text) = @_;
-    return bless [ 'TEXT', $text, undef, undef, undef, undef, $tmpl ], NODE;
+    my $node = bless [ 'TEXT', $text, undef, undef, undef, undef, $tmpl ], NODE;
+    weaken($node->[6]);
+    return $node;
 }
 
 sub insertAfter {
@@ -700,9 +705,9 @@ sub appendChild {
 package MT::Template::Tokens;
 
 use strict;
-use constant NODE_TEXT => 1;
-use constant NODE_BLOCK => 2;
-use constant NODE_FUNCTION => 3;
+sub NODE_TEXT ()     { 1 }
+sub NODE_BLOCK ()    { 2 }
+sub NODE_FUNCTION () { 3 }
 
 sub getElementsByTagName {
     my ($tokens, $name) = @_;
@@ -739,6 +744,7 @@ sub getElementsByName {
 package MT::Template::Node;
 
 use strict;
+use MT::Util qw( weaken );
 
 sub setAttribute {
     my $node = shift;
@@ -821,7 +827,7 @@ sub previousSibling {
 
 sub parentNode {
     my $node = shift;
-    $node->[5] = shift if @_;
+    weaken($node->[5] = shift) if @_;
     $node->[5];
 }
 

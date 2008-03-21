@@ -15,7 +15,7 @@ use MT::Util qw( encode_html offset_time_list decode_html encode_url is_valid_em
 use MT::I18N qw( encode_text wrap_text );
 
 my $COOKIE_NAME = 'mt_user';
-use constant COMMENTER_COOKIE_NAME => "mt_commenter";
+sub COMMENTER_COOKIE_NAME () { "mt_commenter" }
 use vars qw( %Global_actions );
 
 sub core_menus {
@@ -2318,8 +2318,13 @@ sub takedown {
     my $sess = $app->session;
     $sess->save if $sess && $sess->is_dirty;
 
-    my $driver = $MT::Object::DRIVER;
-    $driver->clear_cache if $driver;
+    $app->user( undef );
+    delete $app->{$_}
+        for qw( cookies perms session trace response_content _blog
+            WeblogPublisher );
+
+     my $driver = $MT::Object::DRIVER;
+     $driver->clear_cache if $driver && $driver->can('clear_cache');
 
     require MT::Auth;
     MT::Auth->release;
@@ -2330,7 +2335,7 @@ sub takedown {
 
     $app->request->finish;
     delete $app->{request};
-    delete $app->{cookies};
+
     $app->{request_read_config} = 1;
 }
 
@@ -2434,6 +2439,7 @@ sub build_widgets {
     foreach my $widget_inst (@$order) {
         my $widget_id = $widget_inst;
         $widget_id =~ s/-\d+$//;
+        MT->logerr("START: build_widget - $widget_id");
         my $widget = $widgets->{$widget_id};
         next unless $widget;
         my $widget_cfg = $widget_cfgs->{$widget_inst} || {};
@@ -2495,6 +2501,7 @@ sub build_widgets {
         foreach (@$passthru_param) {
             $param->{$_} = ($param->{$_} || '') . "\n" . $tmpl->param($_);
         }
+        MT->logerr("END: build_widget - $widget_id");
     }
 
     return $param;
@@ -2631,6 +2638,9 @@ sub load_list_actions {
         }
         $param->{more_list_actions} = \@plugin_actions;
         $param->{list_actions}      = \@core_actions;
+        $param->{has_list_actions} =
+            ( @plugin_actions || @core_actions ) ? 1 : 0
+            if !defined $param->{has_list_actions};
         $param->{has_list_actions} =
           ( @plugin_actions || @core_actions ) ? 1 : 0;
     }
@@ -2841,7 +2851,7 @@ sub uri_params {
     push @params, '__mode=' . $param{mode} if $param{mode};
     if ($param{args}) {
         foreach my $p (keys %{$param{args}}) {
-            if (ref $param{args}{$p}) {
+            if (ref $param{args}{$p} eq 'ARRAY') {
                 push @params, ($p . '=' . encode_url($_)) foreach @{$param{args}{$p}};
             } else {
                 push @params, ($p . '=' . encode_url($param{args}{$p}))

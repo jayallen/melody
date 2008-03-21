@@ -308,6 +308,7 @@ sub core_blog_stats_tabs {
         },
         tag_cloud => {
             label    => 'Tag Cloud',
+            handler  => \&mt_blog_stats_tag_cloud_tab,
             template => 'widget/blog_stats_tag_cloud.tmpl',
         },
     };
@@ -2906,35 +2907,75 @@ sub list_tag_for {
     my $total = $pkg->tag_count( $blog_id ? { blog_id => $blog_id } : undef )
       || 0;
 
-    $arg{'sort'} = 'name';
-    $arg{limit} = $limit + 1;
-    if ( $total && $offset > $total - 1 ) {
-        $arg{offset} = $offset = $total - $limit;
-    }
-    elsif ( $offset && ( ( $offset < 0 ) || ( $total - $offset < $limit ) ) ) {
-        $arg{offset} = $offset = $total - $limit;
-    }
-    else {
-        $arg{offset} = $offset if $offset;
-    }
-    $arg{join} = $ot_class->join_on(
-        'tag_id',
-        {
-            object_datasource => $pkg->datasource,
-            ( $blog_id ? ( blog_id => $blog_id ) : () )
-        },
-        {
-            unique => 1,
-            'join' => $pkg->join_on(
-                undef,
-                {
-                    id => \'= objecttag_object_id',
-                    ( $pkg =~ m/asset/i ? () : ( class => $pkg->class_type ) )
-                }
-            )
+    my @tag_ids;
+    my $driver = MT::Object->driver;
+    if ($app->config('ObjectDriver') =~ m/mysql/i) {
+        # optimization for MySQL, supporting subselects; MySQL 4.1 or later
+        my $dbh = $driver->r_handle;
+        my $dbver = $dbh->get_info( 18 ); # 18 = SQL_DBMS_VER
+        if ($dbver =~ m/^(\d+\.\d+)/) { # 5.x.x => 5.x
+            $dbver = $1;
         }
-    );
+        if ($dbver >= 4.1) {
+            my $blog_clause = '';
+            if ($blog_id) {
+                $blog_clause = " and objecttag_blog_id = $blog_id";
+            }
+            my $query_limit = $limit + 1;
+            my $pkg_table = $pkg->table_name;
+            my $pkg_id_col = $pkg->datasource . '_id';
+            my $class_clause = $pkg =~ m/asset/i ? '' : ' and ' . $pkg->datasource . '_class = \'' . $pkg->class_type . '\'';
+            my $query = qq{
+                select tag_id from mt_tag
+                    where tag_id in (select objecttag_tag_id from mt_objecttag,
+                        $pkg_table
+                        where objecttag_object_datasource = ?
+                          and $pkg_id_col = objecttag_object_id
+                            $class_clause
+                            $blog_clause)
+                    order by tag_name
+                    limit $offset, $query_limit
+            };
+            @tag_ids = map { $_->{tag_id} } @{ $dbh->selectall_arrayref($query, { Slice => {} }, $pkg->datasource) };
+        }
+    }
 
+    if (@tag_ids) {
+        $terms{id} = \@tag_ids;
+    } else {
+        $arg{'sort'} = 'name';
+        $arg{limit} = $limit + 1;
+        if ( $total && $offset > $total - 1 ) {
+            $arg{offset} = $offset = $total - $limit;
+        }
+        elsif ( $offset && ( ( $offset < 0 ) || ( $total - $offset < $limit ) ) ) {
+            $arg{offset} = $offset = $total - $limit;
+        }
+        else {
+            $arg{offset} = $offset if $offset;
+        }
+        $arg{join} = $ot_class->join_on(
+            'tag_id',
+            {
+                object_datasource => $pkg->datasource,
+                ( $blog_id ? ( blog_id => $blog_id ) : () )
+            },
+            {
+                unique => 1,
+                'join' => $pkg->join_on(
+                    undef,
+                    {
+                        id => \'= objecttag_object_id',
+                        ( $pkg =~ m/asset/i ? () : ( class => $pkg->class_type ) )
+                    }
+                )
+            }
+        );
+    }
+
+    # This is slow, for large tag collections; the join between
+    # mt_tag and mt_objecttag should be changed to a select from
+    # mt_tag alone with an "IN" and subselect of mt_objecttag.
     my $data = $app->build_tag_table(
         load_args => [ \%terms, \%arg ],
         'package' => $pkg,
@@ -3322,7 +3363,7 @@ sub generate_dashboard_stats {
 
         my $time = ( stat($path) )[9] if -f $path;
 
-        if ( !$time || ( time - $time > $cache_time ) ) {
+        if ( !$time || ( (time - $time) > $cache_time ) ) {
             my $gen_stats = $tab->{stats};
             next if !$gen_stats;
             $gen_stats = $app->handler_to_coderef($gen_stats);
@@ -3342,12 +3383,14 @@ sub generate_dashboard_stats_entry_tab {
     my $app = shift;
     my ($tab) = @_;
     
-    my $blog_id = $app->blog ? $app->blog->id : 0;
+    my $blog    = $app->blog;
+    my $blog_id = $blog ? $blog->id : 0;
     my $user    = $app->user;
     my $user_id = $user->id;
 
     my $entry_class = $app->model('entry');
-    my $terms       = { status => MT::Entry::RELEASE() };
+    my $terms       = { status => MT::Entry::RELEASE(),
+        authored_on => [ ] };
     my $args        = {
         group => [
             "extract(year from authored_on)",
@@ -3355,6 +3398,14 @@ sub generate_dashboard_stats_entry_tab {
             "extract(day from authored_on)"
         ],
     };
+
+    require MT::Util;
+    my @ts = MT::Util::offset_time_list(time - (121 * 24 * 60 * 60), $blog_id);
+    my $earliest = sprintf('%04d%02d%02d%02d%02d%02d',
+        $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0]);
+    $terms->{authored_on} = [ $earliest, undef ];
+    $args->{range_incl}{authored_on} = 1;
+
     $terms->{blog_id} = $blog_id if $blog_id;
     if ( !$user->is_superuser && !$blog_id ) {
         $args->{join} = MT::Permission->join_on(
@@ -3403,6 +3454,14 @@ sub generate_dashboard_stats_comment_tab {
             },
         );
     }
+
+    require MT::Util;
+    my @ts = MT::Util::offset_time_list(time - (121 * 24 * 60 * 60), $blog_id);
+    my $earliest = sprintf('%04d%02d%02d%02d%02d%02d',
+        $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0]);
+    $terms->{created_on} = [ $earliest, undef ];
+    $args->{range_incl}{created_on} = 1;
+
     my $cmt_iter = $cmt_class->count_group_by( $terms, $args );
 
     my %counts;
@@ -4024,6 +4083,22 @@ sub dashboard {
     return $app->load_tmpl( "dashboard.tmpl", $param );
 }
 
+sub mt_blog_stats_tag_cloud_tab {
+    my ($app, $tmpl, $param) = @_;
+    my $blog = $app->blog;
+    my $blog_id = $blog->id if $blog;
+    my $has_tags;
+    if ($blog_id) {
+        $has_tags = MT::ObjectTag->count({
+            object_datasource => 'entry',
+            blog_id => $blog_id,
+        }) > 0;
+    } else {
+        $has_tags = MT::Tag->count() > 0;
+    }
+    $param->{tag_cloud} = $has_tags;
+}
+
 sub mt_blog_stats_widget_comment_tab {
     my ($app, $tmpl, $param) = @_;
 
@@ -4055,7 +4130,7 @@ sub mt_blog_stats_widget_comment_tab {
         my @c = MT::Comment->load(
             {
                 ( $blog_id ? ( blog_id => $blog_id ) : () ),
-                junk_status => [ 0, 1 ],
+                visible => 1,
             },
             $args
         );
@@ -5600,15 +5675,9 @@ sub edit_object {
               || format_ts( "%Y-%m-%d", $obj->authored_on, $blog, $app->user ? $app->user->preferred_language : undef );
             $param{'authored_on_time'} = $q->param('authored_on_time')
               || format_ts( "%H:%M:%S", $obj->authored_on, $blog, $app->user ? $app->user->preferred_language : undef );
-            my $comments = $obj->comments;
-            my @c_data;
             my $i = 1;
-            @$comments = grep { $_->junk_status > -1 } @$comments;
-            @$comments = sort { $a->created_on cmp $b->created_on } @$comments;
-            my $c_data =
-              $app->build_comment_table( items => $comments, param => \%param );
-            $param{num_comment_rows} = @$c_data + 3;
-            $param{num_comments}     = @$c_data;
+            require MT::Comment;
+            $param{num_comments}     = MT::Comment->count({ entry_id => $obj->id, junk_status => [0, 1] });
 
             # Check permission to send notifications and if the
             # blog has notification list subscribers
@@ -5625,29 +5694,7 @@ sub edit_object {
             require MT::Trackback;
             require MT::TBPing;
             my $tb = MT::Trackback->load( { entry_id => $obj->id } );
-            my $tb_data;
-            if ($tb) {
-                my $iter = MT::TBPing->load_iter(
-                    {
-                        tb_id         => $tb->id,
-                        'junk_status' => [ 0, 1 ]
-                    },
-                    {
-                        'sort'    => 'created_on',
-                        direction => 'descend'
-                    }
-                );
-                $tb_data =
-                  $app->build_ping_table( iter => $iter, param => \%param );
-            }
-            else {
-                $tb_data = [];
-            }
-            $param{num_ping_rows} = @$tb_data + 3;
-            $param{num_pings}     = @$tb_data;
-
-            $param{show_pings_tab}    = @$tb_data || $obj->allow_pings;
-            $param{show_comments_tab} = @$c_data  || $obj->allow_comments;
+            $param{num_pings}     = $tb ? MT::TBPing->count( { tb_id => $tb->id, junk_status => [0, 1] }) : 0;
 
             ## Load next and previous entries for next/previous links
             if ( my $next = $obj->next ) {
@@ -5671,7 +5718,6 @@ sub edit_object {
             }
 
             $app->load_list_actions( $type, \%param );
-
         }
         elsif ( ( $type eq 'category' ) || ( $type eq 'folder' ) ) {
             $param{nav_categories} = 1;

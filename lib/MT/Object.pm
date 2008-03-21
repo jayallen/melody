@@ -512,60 +512,18 @@ sub nextprev {
     # id as a secondary sort column.
 
     my ($id, $ts) = ($obj->id, $obj->$by_field());
-    local @$args{qw( sort direction range_incl )}
-        = ($by_field, $next ? 'ascend' : 'descend', { $by_field => 1 });
-    my $iter = $class->load_iter({
+    local @$args{qw( sort range_incl )}
+        = ( [ { column => $by_field, desc => $next ? 'ASC' : 'DESC' },
+            { column => 'id', desc => $next ? 'ASC' : 'DESC' } ],
+            { $by_field => 1 });
+
+    my $sibling = $class->load({
         $by_field => ($next ? [ $ts, undef ] : [ undef, $ts ]),
+        'id' => $id,
         %{$terms}
-    }, $args);
+    }, { not => { 'id' => 1 }, limit => 1, %$args });
 
-    # This selection should always succeed, but handle situation if
-    # it fails by returning undef.
-    return unless $iter;
-
-    # The 'same' array will hold any entries that have matching
-    # timestamps; we will then sort those by id to find the correct
-    # adjacent object.
-    my @same; 
-    while (my $e = $iter->()) {
-        # Don't consider the object that is 'current'
-        next if $e->id == $id;
-        my $e_ts = $e->$by_field();
-        if ($e_ts eq $ts) {
-            # An object with the same timestamp should only be
-            # considered if the id is in the scope we're looking for
-            # (greater than for the 'next' object; less than for
-            # the 'previous' object).
-            push @same, $e
-                if $next && $e->id > $id or !$next && $e->id < $id;
-        } else {
-            # We found an object with a timestamp different than
-            # the 'current' object.
-            if (!@same) {
-                push @same, $e;
-                # We should check to see if this new timestamped object also
-                # has entries adjacent to _it_ that have the same timestamp.
-                while (my $e = $iter->()) {
-                    push(@same, $e), next if $e->$by_field() eq $e_ts;
-                    $iter->('finish'), last;
-                }
-            } else {
-                $iter->('finish');
-            }
-            return $e unless @same;
-            last;
-        }
-    }
-    if (@same) {
-        # If we only have 1 element in @same, return that.
-        return $same[0] if @same == 1;
-        # Sort remaining elements in @same by id.
-        @same = sort { $a->id <=> $b->id } @same;
-        # Return front of list (smallest id) if selecting 'next'
-        # object. Return tail of list (largest id) if selection 'previous'.
-        return $same[$next ? 0 : $#same];
-    }
-    return;
+    return $sibling;
 }
 
 ## Drivers.
@@ -967,14 +925,33 @@ sub cache_property {
     }
     $key ||= (caller(1))[3];
 
+    my $r = MT->request;
+    my $oc = $r->cache('object_cache');
+    unless ($oc) {
+        $oc = {};
+        $r->cache('object_cache', $oc);
+    }
+    $oc = $oc->{"$obj"};
+
     if (@_) {
-        $obj->{__cache}{$key} = $_[0];
+        $oc->{$key} = $_[0];
     } else {
-        if ((!exists $obj->{__cache}{$key}) && $code) {
-            $obj->{__cache}{$key} = $code->($obj, @_);
+        if ((!exists $oc->{$key}) && $code) {
+            $oc->{$key} = $code->($obj, @_);
         }
     }
-    return exists $obj->{__cache}{$key} ? $obj->{__cache}{$key} : undef;
+    return exists $oc->{$key} ? $oc->{$key} : undef;
+}
+
+sub clear_cache {
+    my $obj = shift;
+    my $oc = MT->request('object_cache') or return;
+    if (@_) {
+        $oc = $oc->{"$obj"};
+        delete $oc->{shift} if $oc;
+    } else {
+        delete $oc->{"$obj"};
+    }
 }
 
 sub to_hash {

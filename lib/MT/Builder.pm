@@ -8,8 +8,9 @@ package MT::Builder;
 
 use strict;
 use base qw( MT::ErrorHandler );
+use MT::Util qw( weaken );
 
-use constant NODE => 'MT::Template::Node';
+sub NODE () { 'MT::Template::Node' }
 
 sub new { bless { }, $_[0] }
 
@@ -207,8 +208,8 @@ sub compile {
                 $rec->[3] = '';
             }
         }
-        $rec->[5] = $opt->{parent} || $tmpl;
-        $rec->[6] = $tmpl;
+        weaken($rec->[5] = $opt->{parent} || $tmpl);
+        weaken($rec->[6] = $tmpl);
         push @{ $state->{tokens} }, $rec;
         $pos = pos $text;
     }
@@ -254,8 +255,13 @@ sub _consume_up_to {
 
 sub _text_block {
     my $text = substr ${ $_[0]->{text} }, $_[1], $_[2] - $_[1];
-    push @{ $_[0]->{tokens} }, bless [ 'TEXT', $text, undef, undef, undef, $_[0]->{tokens}, $_[0]->{tmpl} ], NODE
-        if (defined $text) && ($text ne '');
+    if ((defined $text) && ($text ne '')) {
+        my $rec = bless [ 'TEXT', $text, undef, undef, undef, $_[0]->{tokens}, $_[0]->{tmpl} ], NODE;
+        # Avoids circular reference between NODE and TOKENS, MT::Template.
+        weaken($rec->[5]);
+        weaken($rec->[6]);
+        push @{ $_[0]->{tokens} }, $rec;
+    }
 }
 
 sub syntree2str {
@@ -275,12 +281,9 @@ sub syntree2str {
     return $string;
 }
 
-my $count=0;
 sub build {
     my $build = shift;
     my($ctx, $tokens, $cond) = @_;
-
-    #print STDERR syntree2str($tokens,0) unless $count++ == 1;
 
     my $timer;
     if ($MT::DebugMode & 8) {
@@ -295,7 +298,8 @@ sub build {
     } else {
         $cond = {};
     }
-    $ctx->stash('builder', $build);
+    # Avoids circular reference between MT::Template::Context and MT::Builder.
+    local $ctx->{__stash}{builder} = $build;
     my $res = '';
     my $ph = $ctx->post_process_handler;
 

@@ -1781,8 +1781,10 @@ sub _tags_for_blog {
             'join' => MT::ObjectTag->join_on('object_id', { object_datasource => $class->datasource, %$terms }, $args),
             'asset' eq lc $type ? (no_class => 1) : (),
             %$args
-        });            
+        });
+        my $tagc = 0;
         while (my ($count, $tag_id) = $count_iter->()) {
+            $tagc++;
             $tags{$tag_id}->{__entry_count} = $count;
             $min = $count if ($count && ($count < $min)) || $min == 0;
             $max = $count if $count && ($count > $max);
