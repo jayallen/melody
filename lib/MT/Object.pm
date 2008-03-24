@@ -931,7 +931,7 @@ sub cache_property {
         $oc = {};
         $r->cache('object_cache', $oc);
     }
-    $oc = $oc->{"$obj"};
+    $oc = $oc->{"$obj"} ||= {};
 
     if (@_) {
         $oc->{$key} = $_[0];
