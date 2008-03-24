@@ -4184,6 +4184,10 @@ body.dialog {
     margin-left: 160px;
 }
 
+.content-nav #zero-state.msg {
+    margin-left: 0;
+}
+
 /* Plugin Settings ---------------------------------------------------------------------------------- */
 
 #list-plugins .plugin-group a:link,
