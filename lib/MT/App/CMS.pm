@@ -4089,6 +4089,7 @@ sub mt_blog_stats_tag_cloud_tab {
     my $blog_id = $blog->id if $blog;
     my $has_tags;
     if ($blog_id) {
+        require MT::ObjectTag;
         $has_tags = MT::ObjectTag->count({
             object_datasource => 'entry',
             blog_id => $blog_id,
