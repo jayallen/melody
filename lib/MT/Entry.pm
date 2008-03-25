@@ -19,7 +19,7 @@ use MT::Placement;
 use MT::Comment;
 use MT::TBPing;
 use MT::Util qw( archive_file_for discover_tb start_end_period extract_domain
-                 extract_domains );
+                 extract_domains weaken );
 
 sub CATEGORY_CACHE_TIME () { 604800 } ## 7 * 24 * 60 * 60 == 1 week
 
@@ -87,7 +87,7 @@ __PACKAGE__->install_properties({
         # For most publishing listings, where we list entries in a blog
         # with a particular class, publish status (2) and authored on date
         blog_stat_date => {
-            columns => ['blog_id', 'class', 'status', 'authored_on'],
+            columns => ['blog_id', 'class', 'status', 'authored_on', 'id'],
         },
     },
     child_of => 'MT::Blog',
@@ -203,11 +203,7 @@ sub _nextprev {
     my $label = '__' . $direction;
     $label .= ':author='. $terms->{author_id} if exists $terms->{author_id};
     $label .= ':category='. $terms->{category_id} if exists $terms->{category_id};
-    if ($obj->{$label}) {
-        my $o = $class->load($obj->{$label});
-        return $o if $o;
-        delete $obj->{$label}; # FAIL
-    }
+    return $obj->{$label} if $obj->{$label};
 
     my $args = {};
     if (my $cat_id = delete $terms->{category_id}) {
@@ -223,7 +219,7 @@ sub _nextprev {
         args      => $args,
         by        => 'authored_on',
     );
-    $o->{$label} = $o->id if $o;
+    weaken($o->{$label} = $o) if $o;
     return $o;
 }
 
@@ -765,7 +761,6 @@ sub remove {
             $o->remove;
         }
     }
-
 
     $entry->SUPER::remove(@_);
 }

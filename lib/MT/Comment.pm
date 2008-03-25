@@ -8,6 +8,7 @@ package MT::Comment;
 
 use strict;
 use base qw( MT::Object MT::Scorable );
+use MT::Util qw( weaken );
 
 __PACKAGE__->install_properties({
     column_defs => {
@@ -34,7 +35,10 @@ __PACKAGE__->install_properties({
         email => 1,
         commenter_id => 1,
         parent_id => 1,
-        last_moved_on => 1, # used for junk expiration
+        # used for junk expiration
+        blog_last_moved => {
+            columns => [ 'blog_id', 'junk_status', 'last_moved_on' ],
+        },
         # For URL lookups to aid spam filtering
         blog_url => {
             columns => [ 'blog_id', 'visible', 'url' ],
@@ -43,13 +47,16 @@ __PACKAGE__->install_properties({
             columns => [ 'blog_id', 'junk_status', 'created_on' ],
         },
         blog_visible => {
-            columns => [ 'blog_id', 'visible', 'created_on' ],
+            columns => [ 'blog_id', 'visible', 'created_on', 'id' ],
         },
         visible_date => {
             columns => [ 'visible', 'created_on' ],
         },
         junk_date => {
             columns => [ 'junk_status', 'created_on' ],
+        },
+        entry_visible => {
+            columns => [ 'entry_id', 'visible' ],
         },
     },
     defaults => {
@@ -129,48 +136,39 @@ sub _nextprev {
     my $next = $direction eq 'next';
 
     my $label = '__' . $direction;
-    if ($obj->{$label}) {
-        my $o = $class->load($obj->{$label});
-        return $o if $o;
-        delete $obj->{$label}; # FAIL
-    }
+    return $obj->{$label} if $obj->{$label};
 
     my $o = $obj->nextprev(
         direction => $direction,
         terms     => { blog_id => $obj->blog_id, %$terms },
         by        => 'created_on',
     );
-    $o->{$label} = $o->id if $o;
+    weaken( $o->{$label} = $o ) if $o;
     return $o;
 }
 
 sub entry {
     my ($comment) = @_;
-    my $entry = $comment->{__entry};
-    unless ($entry) {
-        my $entry_id = $comment->entry_id;
-        return undef unless $entry_id;
+    return $comment->cache_property('entry', sub {
+        my $entry_id = $comment->entry_id or return undef;
         require MT::Entry;
-        $entry = MT::Entry->load($entry_id) or
+        my $entry = MT::Entry->load($entry_id) or
             return $comment->error(MT->translate(
             "Load of entry '[_1]' failed: [_2]", $entry_id, MT::Entry->errstr));
-        $comment->{__entry} = $entry;
-    }
-    return $entry;
+        return $entry;
+    });
 }
 
 sub blog {
     my ($comment) = @_;
-    my $blog = $comment->{__blog};
-    unless ($blog) {
-        my $blog_id = $comment->blog_id;
+    return $comment->cache_property('blog', sub {
+        my $blog_id = $comment->blog_id or return;
         require MT::Blog;
-        $blog = MT::Blog->load($blog_id) or
+        my $blog = MT::Blog->load($blog_id) or
             return $comment->error(MT->translate(
             "Load of blog '[_1]' failed: [_2]", $blog_id, MT::Blog->errstr));
-        $comment->{__blog} = $blog;
-    }
-    return $blog;
+        return $blog;
+    });
 }
 
 sub junk {

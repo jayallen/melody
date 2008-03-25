@@ -422,7 +422,7 @@ sub __meta_column {
             return $obj->column($meta_col, $var);
         }
         my $meta = $obj->column($meta_col);
-        if (!ref $meta) {
+        if (defined($meta) && (!ref $meta)) {
             $meta = __thaw_meta(\$meta);
             $obj->{column_values}{$meta_col} = $meta;
         }

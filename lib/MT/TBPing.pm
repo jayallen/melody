@@ -32,7 +32,10 @@ __PACKAGE__->install_properties({
         created_on => 1,
         tb_id => 1,
         ip => 1,
-        last_moved_on => 1, # used for junk expiration
+        # used for junk expiration
+        blog_last_moved => {
+            columns => [ 'blog_id', 'junk_status', 'last_moved_on' ],
+        },
         # For URL lookups to aid spam filtering
         blog_url => {
             columns => ['blog_id', 'visible', 'source_url'],
@@ -41,13 +44,16 @@ __PACKAGE__->install_properties({
             columns => ['blog_id', 'junk_status', 'created_on'],
         },
         blog_visible => {
-            columns => ['blog_id', 'visible', 'created_on'],
+            columns => ['blog_id', 'visible', 'created_on', 'id'],
         },
         visible_date => {
             columns => [ 'visible', 'created_on' ],
         },
         junk_date => {
             columns => [ 'junk_status', 'created_on' ],
+        },
+        tb_visible => {
+            columns => [ 'tb_id', 'visible' ],
         },
     },
     defaults => {
