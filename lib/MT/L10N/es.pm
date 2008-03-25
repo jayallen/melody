@@ -4318,6 +4318,21 @@ que la dirección provista es correcta y le pertenece.',
 	'Feeds.App Lite helps you republish feeds on your blogs. Want to do more with feeds in Movable Type?' => 'Feeds.App Lite le ayuda a publicar fuentes de sindicación en los blogs. ¿Desea hacer más cosas con fuentes en Movable Type?',
 	'Upgrade to Feeds.App' => 'Actualícese a Feeds.App',
 	'Create a Feed Widget' => 'Crear un widget de fuente',
+	
+	'Assigning blog template set...' => 'Asignando conjunto de plantillas del blog...', # Translate - New
+        'You have [quant,_1,registration,registrations] from [_2]' => 'Tiene [quant,_1,registro,registros] en [_2]', # Translate - New
+        '[_1] Forum' => 'Foro [_1]', # Translate - New
+        'You are now following [_1]' => 'Ahora sigue a [_1]', # Translate - New
+        'You have stopped following [_1]' => 'Ha dejado de seguir a [_1]', # Translate - New
+        'Click here to follow' => 'Clic aquí para seguir a', # Translate - New
+        'Click here to leave' => 'Clic aquí para dejar de seguir a', # Translate - New
+        'Friends' => 'Amigos', # Translate - New
+        'Friends Of' => 'Amigos de', # Translate - New
+        'No profile view template defined' => 'Sin plantilla de perfil definida', # Translate - New
+        'Your friends\' activity' => 'Actividad de tus amigos', # Translate - New
+        'Many Friends' => 'Muchos amigos', # Translate - New
+        'Many Friends Of' => 'Muchos amigos de', # Translate - New 
+        'Profile Friends Activity' => 'Actividad de los perfiles de los amigos', # Translate - New
 
 );
 

@@ -4320,6 +4320,21 @@ use vars qw( @ISA %Lexicon );
 	'Feeds.App Lite helps you republish feeds on your blogs. Want to do more with feeds in Movable Type?' => 'Feeds.App Lite helpt u om feeds te herpubliceren op uw weblogs.  Wenst u meer te doen met feeds in Movable Type?',
 	'Upgrade to Feeds.App' => 'Upgraden naar Feeds.App',
 	'Create a Feed Widget' => 'Feedwidget aanmaken',
+	
+	'Assigning blog template set...' => 'Blogsjabloonset toekennen', # Translate - New # OK
+'You have [quant,_1,registration,registrations] from [_2]' => 'U heeft [quant,_1,registratie,registraties] van [_2]', # Translate - New # OK
+'[_1] Forum' => '[_1]-forum', # Translate - New # OK
+'You are now following [_1]' => 'U volgt nu [_1]', # Translate - New # OK
+'You have stopped following [_1]' => 'U volgt [_1] niet langer', # Translate - New # OK
+'Click here to follow' => 'Hier klikken om te volgen', # Translate - New # OK
+'Click here to leave' => 'Hier klikken om niet meer te volgen', # Translate - New # OK
+'Friends' => 'Vrienden', # Translate - New # OK
+'Friends Of' => 'Vrienden van', # Translate - New # OK
+'No profile view template defined' => 'Geen sjabloon gedefiniëerd voor het profielscherm', # Translate - New # OK
+'Your friends\' activity' => 'De activiteit van uw vrienden', # Translate - New # OK
+'Many Friends' => 'Veel vrienden', # Translate - New # OK
+'Many Friends Of' => 'Veel vrienden van', # Translate - New # OK
+'Profile Friends Activity' => 'Profiel activiteit vrienden', # Translate - New
 
 );
 
