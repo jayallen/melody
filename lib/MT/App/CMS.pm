@@ -5978,11 +5978,6 @@ sub edit_object {
         }
         elsif ( $type eq 'blog' ) {
             require MT::IPBanList;
-            if ($app->param('search_result')) {
-                $app->blog($obj) unless $app->blog;
-                $app->param('blog_id', $id);
-                $param{blog_id} = $id;
-            }
             my $output = $param{output} ||= 'cfg_prefs.tmpl';
             $param{need_full_rebuild}  = 1 if $q->param('need_full_rebuild');
             $param{need_index_rebuild} = 1 if $q->param('need_index_rebuild');
@@ -17014,6 +17009,7 @@ sub do_search_replace {
             }
 
             if ($obj) {
+                my $mode = 'view';
                 my %args = (
                     _type         => $type,
                     id            => $obj->id,
@@ -17021,8 +17017,12 @@ sub do_search_replace {
                 );
                 $args{blog_id} = $obj->blog_id
                     if $obj->has_column('blog_id');
+                if ($type eq 'blog') {
+                    $args{blog_id} = delete $args{id};
+                    $mode = 'cfg_prefs';
+                }
                 return $app->redirect($app->uri(
-                    mode => 'view',
+                    mode => $mode,
                     args => \%args,
                 ));
             }
