@@ -5978,7 +5978,8 @@ sub edit_object {
         }
         elsif ( $type eq 'blog' ) {
             require MT::IPBanList;
-            my $output = $param{output} || '';
+            my $output = $param{output} ||= 'cfg_prefs.tmpl';
+            $param{blog_id} = $id;
             $param{need_full_rebuild}  = 1 if $q->param('need_full_rebuild');
             $param{need_index_rebuild} = 1 if $q->param('need_index_rebuild');
             $param{show_ip_info} = $cfg->ShowIPInformation;
@@ -6017,7 +6018,7 @@ sub edit_object {
                   if exists( $cmtauth_reg->{$auth}->{condition} )
                   && !( $cmtauth_reg->{$auth}->{condition}->() );
             }
-            if ( my $auths = $blog->commenter_authenticators ) {
+            if ( my $auths = $obj->commenter_authenticators ) {
                 foreach ( split ',', $auths ) {
                     if ( 'MovableType' eq $_ ) {
                         $param{enabled_MovableType} = 1;
@@ -6041,7 +6042,7 @@ sub edit_object {
             }
             unshift @cmtauth_loop, $cmtauth_reg->{'TypeKey'}
               if exists( $cmtauth_reg->{'TypeKey'} )
-              && $blog->remote_auth_token;
+              && $obj->remote_auth_token;
             unshift @cmtauth_loop, $cmtauth_reg->{'Vox'}
               if exists $cmtauth_reg->{'Vox'};
             unshift @cmtauth_loop, $cmtauth_reg->{'LiveJournal'}
