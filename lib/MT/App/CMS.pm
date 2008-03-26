@@ -5978,8 +5978,12 @@ sub edit_object {
         }
         elsif ( $type eq 'blog' ) {
             require MT::IPBanList;
+            if ($app->param('search_result')) {
+                $app->blog($obj) unless $app->blog;
+                $app->param('blog_id', $id);
+                $param{blog_id} = $id;
+            }
             my $output = $param{output} ||= 'cfg_prefs.tmpl';
-            $param{blog_id} = $id;
             $param{need_full_rebuild}  = 1 if $q->param('need_full_rebuild');
             $param{need_index_rebuild} = 1 if $q->param('need_index_rebuild');
             $param{show_ip_info} = $cfg->ShowIPInformation;
