@@ -73,12 +73,12 @@ sub init_db {
         or die "No MT object " . MT->errstr;
 
     my $types = MT->registry('object_types');
-    my @classes = map { $types->{$_} } grep { $_ !~ /\./ } keys %$types;
+    my @classes = map { $types->{$_} } grep { $_ !~ /\./ } sort keys %$types;
     foreach my $class (@classes) {
         if (ref($class) eq 'ARRAY') {
             next; #TODO for now - it won't hurt when we do driver-tests.
         }
-        else {
+        elsif (!defined *{ $class . '::__properties' }) {
             eval 'require '.$class or die $@;
         }
     }

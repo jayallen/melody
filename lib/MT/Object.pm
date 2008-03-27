@@ -97,18 +97,6 @@ sub install_properties {
         }
     }
 
-    # Metadata column
-    $props->{meta_column} ||= 'meta' if exists $props->{meta};
-    if (my $col = $props->{meta_column}) {
-        if (!$props->{column_defs}{$col}) {
-            $props->{column_defs}{$col} = 'blob';
-            push @{ $props->{columns} }, $col;
-        }
-        no strict 'refs'; ## no critic
-        *{$class . '::' . $col} = \&__meta_column;
-        $class->add_trigger( pre_save => \&pre_save_serialize_metadata );
-    }
-
     # Classed object types
     $props->{class_column} ||= 'class' if exists $props->{class_type};
     if (my $col = $props->{class_column}) {
@@ -359,89 +347,139 @@ sub add_class {
 
 # 'meta' metadata column support
 
+sub new {
+    my $class = shift;
+    my $obj = $class->SUPER::new(@_);
+    if ($obj->properties->{meta_installed}) {
+        $obj->init_meta();
+    }
+    return $obj;
+}
+
+sub init_meta {
+    my $obj = shift;
+    require MT::Meta::Proxy;
+    $obj->{__meta} = MT::Meta::Proxy->new($obj);
+}
+
 sub install_meta {
     my $class = shift;
-    my ($props) = @_;
+    my ($params) = @_;
     if ( ( $class ne 'MT::Config' ) && (!$MT::plugins_installed) ) {
-        push @PRE_INIT_META, [$class, $props];
+        push @PRE_INIT_META, [$class, $params];
         return;
     }
-    my $cprops = $class->properties;
-    my $fields = $cprops->{meta_columns} ||= {};
-    my $meta_col = $cprops->{meta_column};
-    foreach my $name (@{ $props->{columns} }) {
-        $fields->{$name} = ();
-        # Skip adding this method if the class overloads it.
-        # this lets the SUPER::columnname magic do it's thing
-        unless ($class->can($name)) {
-            no strict 'refs'; ## no critic
-            *{"${class}::$name"} = sub { shift->$meta_col($name, @_) };
-        }
-    }
+
+    my $pkg = ref $class || $class;
+    $pkg->add_trigger( post_save => \&post_save_save_metadata );
+    $pkg->add_trigger( post_load => \&post_load_initialize_metadata );
+
+    my $cols = delete $params->{columns}
+        or return $class->error('No meta fields specified to install_meta');
+    $params->{fields} = [
+        map { +{ name => $_, type => 'vchar' } } @$cols
+    ];
+
+    $params->{datasource} ||= join q{_}, $class->datasource, 'meta';
+
+    require MT::Meta;
+    $class->properties->{meta_installed} = MT::Meta->install($pkg, $params);
+}
+
+sub meta_args {
+    my $class = shift;
+    my $id_field = $class->datasource . '_id';
+    return {
+        key         => $class->datasource,
+        column_defs => {
+            $id_field => 'integer not null',
+            type      => 'string(255) not null',
+            vchar     => 'string(255)',
+            vchar_indexed => 'string(255)',
+            vblob     => 'blob',
+        },
+        indexes => {
+            $id_field => 1,
+            id_type   => { columns => [ $id_field, 'type' ] },
+            id_type_vchar_indexed => { columns => [ $id_field, 'type', 'vchar_indexed' ] },
+        },
+        primary_key => [ $class->datasource . '_id', 'type' ],
+    };
 }
 
 sub has_meta {
-    my $props = $_[0]->properties;
-    return $props->{meta} && (@_ > 1 ? exists $props->{meta_columns}{$_[1]} : 1);
-}
-
-sub pre_save_serialize_metadata {
-    my ($obj) = shift;
-    my $meta_col = $obj->properties->{meta_column};
-    if ($obj->{changed_cols}{$meta_col}) {
-        require MT::Serialize;
-        my $meta = $obj->$meta_col;
-        $obj->$meta_col(MT::Serialize->serialize(\$meta));
-    }
-}
-
-sub __thaw_meta {
-    my ($meta) = @_;
-    $$meta = '' unless defined $$meta;
-    require MT::Serialize;
-    my $out = MT::Serialize->unserialize($$meta);
-    if (ref $out eq 'REF') {
-        return $$out;
-    } else {
-        return {};
-    }
-}
-
-# $obj->meta returns a hashref of metadata information
-# $obj->meta($scalar) allows assignment of a serialized value
-# $obj->meta('name', 'value') assigns an individual metadata element
-# $obj->meta('name') returns an individual metadata value
-# $obj->save will automatically serialize the metadata back to the database
-sub __meta_column {
     my $obj = shift;
-    my $meta_col = $obj->properties->{meta_column} or return;
+    return $obj->is_meta_column(@_) if @_;
+    return $obj->properties->{meta_installed} ? 1 : 0;
+}
 
-    if (@_) {
-        my $var = shift;
-        if ((defined $var) && ($var =~ m/^SERG\0\0\0\0/)) {
-            return $obj->column($meta_col, $var);
-        }
-        my $meta = $obj->column($meta_col);
-        if (!ref $meta && defined($meta)) {
-            $meta = __thaw_meta(\$meta);
-            $obj->{column_values}{$meta_col} = $meta;
-        }
-        if (@_) {
-            $meta->{$var} = shift if @_;
-            $obj->{changed_cols}{$meta_col}++;
-        }
-        return $meta->{$var};
-    } else {
-        my $meta = $obj->column($meta_col);
-        if (!ref $meta) {
-            $meta = __thaw_meta(\$meta);
-            $obj->{column_values}{$meta_col} = $meta;
-        }
-        # we should assume changes are going to be made, since
-        # we can't really monitor the hash once it has left us
-        $obj->{changed_cols}{$meta_col}++;
-        return $meta;
+sub post_load_initialize_metadata {
+    my $obj = shift;
+    if (defined $obj && exists $obj->{__meta}) {
+        $obj->{__meta}->set_primary_keys($obj);
     }
+}
+
+sub is_meta_column {
+    my $obj = shift;
+    return if !$obj->properties->{meta_installed};
+    my ($field) = @_;
+
+    my $meta = $obj->meta_pkg;
+    return 1 if $meta->properties->{fields}->{$field};
+    return;
+}
+
+sub meta_pkg {
+    my $class = shift;
+    my $meta = ref $class || $class;
+    $meta .= '::Meta';
+    return $meta;
+}
+
+sub has_column {
+    my $obj = shift;
+    return 1 if $obj->SUPER::has_column(@_);
+    return 1 if $obj->is_meta_column(@_);
+    return;
+}
+
+sub post_save_save_metadata {
+    my $obj = shift;
+    if (defined $obj && exists $obj->{__meta}) {
+        $obj->{__meta}->set_primary_keys($obj);
+        $obj->{__meta}->save;
+    }
+}
+
+sub meta {
+    my $obj = shift;
+    my ($name, $value) = @_;
+
+    return !$obj->{__meta} ? undef
+         : 2 == scalar @_  ? $obj->$name($value)
+         : 1 == scalar @_  ? $obj->$name()
+         :                   Carp::croak('TODO: implement returning a metadata hash')
+         ;
+}
+
+sub column_func {
+    my $obj = shift;
+    my ($col) = @_;
+    return if !$col;
+
+    return $obj->SUPER::column_func(@_)
+        if !$obj->is_meta_column($col);
+
+    return sub {
+        my $obj = shift;
+        if (@_) {
+            $obj->{__meta}->set($col, @_);
+        }
+        else {
+            $obj->{__meta}->get($col);
+        }
+    };
 }
 
 sub ts2db {  
@@ -451,7 +489,7 @@ sub ts2db {
     }  
     my $ret = sprintf '%04d-%02d-%02d %02d:%02d:%02d', unpack 'A4A2A2A2A2A2', $_[0];  
     return $ret;  
-}  
+}
   
 sub db2ts {  
     my $ts = $_[0];  
@@ -723,10 +761,17 @@ sub table_name {
     return $obj->driver->table_for($obj);
 }
 
+sub clone_all {
+    my $obj = shift;
+    my $clone = $obj->SUPER::clone_all();
+    $clone->{__meta} = $obj->{__meta};  # TODO: clone this too
+    return $clone;
+}
+
 sub clone {
     my $obj = shift;
     my($param) = @_;
-    my $clone = $obj->SUPER::clone_all;
+    my $clone = $obj->clone_all();
 
     ## If the caller has listed a set of columns not to copy to the clone,
     ## delete them from the clone.
@@ -977,6 +1022,30 @@ sub to_hash {
     }
     $hash;
 }
+
+package MT::Object::Meta;
+
+use base qw( Data::ObjectDriver::BaseObject );
+
+sub driver { $MT::Object::DRIVER ||= MT::ObjectDriverFactory->new }
+
+sub install_properties {
+    my $class = shift;
+    my ($props) = @_;
+    $props->{column_defs}->{$_} ||= 'string'
+        for @{ $props->{columns} };
+    $class->SUPER::install_properties(@_);
+}
+
+*table_name = \&MT::Object::table_name;
+*column_defs = \&MT::Object::column_defs;
+*column_def = \&MT::Object::column_def;
+*index_defs = \&MT::Object::index_defs;
+*__parse_defs = \&MT::Object::__parse_defs;
+*__parse_def = \&MT::Object::__parse_def;
+
+# TODO: copy this too
+sub blob_requires_zip {}
 
 1;
 __END__

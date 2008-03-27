@@ -1,62 +1,54 @@
 #!/usr/bin/perl
 
 use strict;
-use lib 'extlib', 'lib';
+use lib 't/lib', 'extlib', 'lib';
 
 use Data::Dumper;
-use Test::More tests => 13;
+use Test::More tests => 18;
 
 use MT;
 use MT::Object;
 
+use vars qw( $DB_DIR $T_CFG );
+use MT::Test qw(:db);
+
 my $mt = MT->instance;  # plugins are go!
 
+require MT::Awesome;
+require MT::Awesome::Image;
+my $file  = MT::Awesome->new;
+my $image = MT::Awesome::Image->new;
 
-package MT::Awesome;
+#ok($file->has_column('meta'), 'having meta auto-adds meta column');
 
-our @ISA = qw( MT::Object );
-
-__PACKAGE__->install_properties({
-    column_defs => {
-        id => 'integer not null auto_increment',
-        title => 'string(255)',
-        file => 'string(255)',
-    },
-    meta => 1,
-    class_type => 'foo',
-});
-__PACKAGE__->install_meta({
-    columns => [ 'mime_type' ]
-});
-
-package MT::Awesome::Image;
-
-our @ISA = qw( MT::Awesome );
-
-__PACKAGE__->install_properties({
-    class_type => 'image',
-});
-__PACKAGE__->install_meta({
-    columns => [ 'width', 'height' ]
-});
-
-package main;
-
-my $file = new MT::Awesome;
-my $image = new MT::Awesome::Image;
-
-ok($file->has_column('meta'), 'having meta auto-adds meta column');
+ok($file->is_meta_column('mime_type'), 'adding mime_type metadata field reports mime_type as a meta column');
+ok($file->has_column('mime_type'), 'adding mime_type metadata field reports mime_type as a column');
 ok(!defined $file->meta('mime_type'), 'unset metadata field is undefined');
+
 ok($file->meta('mime_type', 'archive/zip'), 'metadata field could be set');
 is($file->meta('mime_type'), 'archive/zip', 'new metadata value could be retrieved');
-ok($file->{changed_cols}{meta}, 'setting metadata field marked meta column as changed');
 is($file->mime_type, 'archive/zip', 'auto-installed metadata field method retrieved new value');
+
+diag('saving object');
+ok($file->save(), 'object with metadata could be saved');
+diag('object saved');
+ok($file->id, 'object with metadata received id when saved');
+is($file->meta('mime_type'), 'archive/zip', 'metadata value is still set after save');
+
+my $file_2 = MT::Awesome->load($file->id)
+    or diag('ERROR: ' . MT::Awesome->errstr);
+ok($file_2, 'object with metadata could be loaded');
+is($file_2->meta('mime_type'), 'archive/zip', 'metadata value is correct on loaded object');
+
+is($file_2->mime_type, 'archive/zip', 'metadata value as retrieved with auto-installed method is correct on loaded object');
+
+#ok($file->{changed_cols}{meta}, 'setting metadata field marked meta column as changed');
 ok(!$file->has_meta('width'), 'metadata field on subclass did not install on superclass');
 
 ok(!defined $image->width, 'auto-installed metadata field method returned undef for unset field');
 ok($image->width(300), 'metadata field on subclass could be set with auto-installed method');
 is($image->width, 300, 'auto-installed metadata field method retrieved new value for subclass');
-ok($image->{changed_cols}{meta}, 'setting metadata field on subclass with auto-installed method marked meta column as changed');
+#ok($image->{changed_cols}{meta}, 'setting metadata field on subclass with auto-installed method marked meta column as changed');
 ok($image->has_meta('width'), 'subclass has metadata field that was declared for subclass');
 ok($image->has_meta('mime_type'), 'subclass has metadata field that was declared for superclass');
 
