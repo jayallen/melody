@@ -60,8 +60,7 @@ function individualArchivesOnLoad(commenter_name) {
     }
     <MTElse>
     // comments are allowed but registration not required
-    if ( commenter_status == COMMENTER )
-    {
+    if ( commenter_status > 0 ) {
         hideDocumentElement('comment-form-name');
         hideDocumentElement('comment-form-email');
     } else if (is_preview) {
