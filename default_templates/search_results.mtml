@@ -1,41 +1,8 @@
-<MTSetVar name="body_class" value="mt-search-results">
-<MTSetVar name="system_template" value="1">
 <MTSetVar name="search_results_template" value="1">
 <MTSetVarBlock name="page_title"><__trans phrase="Search Results"></MTSetVarBlock>
-<MTSetVarBlock name="title"><$MTBlogName encode_html="1"$>: <$MTGetVar name="page_title"$></MTSetVarBlock>
-<MTIfStraightSearch>
-    <MTSetVar name="search_type" value="search">
-<MTElse>
-    <MTSetVar name="search_type" value="tag">
-</MTIfStraightSearch>
+<MTSetVarBlock name="title"><$MTBlogName encode_html="1"$>: <$MTVar name="page_title"$></MTSetVarBlock>
 
-<MTSetVarTemplate id="search_results" name="search_results">
-<div id="search-results"><span id="current-page" class="hidden"><MTCurrentPage></span>
-<MTSearchResults>
-    <MTBlogResultHeader>
-<h1 id="page-title" class="search-results-header">
-        <MTIfStraightSearch>
-    <__trans phrase="Results matching &ldquo;[_1]&rdquo; from [_2]" params="<$MTSearchString$>%%<$MTBlogName encode_html="1"$>">
-        </MTIfStraightSearch>
-        <MTIfTagSearch>
-    <__trans phrase="Results tagged &ldquo;[_1]&rdquo; from [_2]" params="<$MTSearchString$>%%<$MTBlogName encode_html="1"$>">
-        </MTIfTagSearch>
-</h1>
-<div class="search-results-container autopagerize_page_element">
-    </MTBlogResultHeader>
-    <$MTInclude module="<__trans phrase="Entry Summary">" hide_counts="1"$>
-    <MTBlogResultFooter>
-</div><div class="autopagerize_insert_before"></div>
-    </MTBlogResultFooter>
-</MTSearchResults>
-<MTIgnore>Used with the ajax search capability of the new search class</MTIgnore>
-    <div class="content-nav">
-<MTIfPreviousResults><a href="<MTPreviousLink>" rel="prev" onclick="return swapContent(-1);">&lt; <__trans phrase="Previous"></a>&nbsp;&nbsp;</MTIfPreviousResults><MTPagerBlock><MTIfCurrentPage><mt:var name="__value__"><MTElse><a href="<MTPagerLink>"><mt:var name="__value__"></a></MTIfCurrentPage><mt:unless name="__last__">&nbsp;</mt:unless></MTPagerBlock><MTIfMoreResults>&nbsp;&nbsp;<a href="<MTNextLink>" rel="next" onclick="return swapContent();"><__trans phrase="Next"> &gt;</a></MTIfMoreResults>
-    </div>
-</div>
-</MTSetVarTemplate>
-
-<MTIgnore>Used with the ajax search capability of the new search class</MTIgnore>
+<MTIgnore>Below Javascript adds ajax search capability</MTIgnore>
 <MTSetVarBlock name="html_head" append="1">
 <script type="text/javascript">
 <!--
@@ -117,9 +84,32 @@ function swapContent(direction) {
 </script>
 </MTSetVarBlock>
 
-<$MTInclude module="<__trans phrase="Header">"$>
+<$MTInclude module="<__trans phrase="Header">" body_class="mt-search-results"$>
 
-<$MTVar name="search_results"$>
+<MTSearchResults>
+    <MTBlogResultHeader>
+<div id="search-results">
+    <span id="current-page" class="hidden"><MTCurrentPage></span>
+    <h1 id="page-title" class="search-results-header">
+        <MTIfStraightSearch>
+        <__trans phrase="Results matching &ldquo;[_1]&rdquo; from [_2]" params="<$MTSearchString$>%%<$MTBlogName encode_html="1"$>">
+        </MTIfStraightSearch>
+        <MTIfTagSearch>
+        <__trans phrase="Results tagged &ldquo;[_1]&rdquo; from [_2]" params="<$MTSearchString$>%%<$MTBlogName encode_html="1"$>">
+        </MTIfTagSearch>
+    </h1>
+    <div class="search-results-container autopagerize_page_element">
+    </MTBlogResultHeader>
+    <$MTInclude module="<__trans phrase="Entry Summary">" hide_counts="1"$>
+    <MTBlogResultFooter>
+    </div><div class="autopagerize_insert_before"></div>
+        <MTIgnore>Used with the ajax search capability of the new search class</MTIgnore>
+    <div class="content-nav">
+        <MTIfPreviousResults><a href="<MTPreviousLink>" rel="prev" onclick="return swapContent(-1);">&lt; <__trans phrase="Previous"></a>&nbsp;&nbsp;</MTIfPreviousResults><MTPagerBlock><MTIfCurrentPage><MTVar name="__value__"><MTElse><a href="<MTPagerLink>"><MTVar name="__value__"></a></MTIfCurrentPage><mt:unless name="__last__">&nbsp;</mt:unless></MTPagerBlock><MTIfMoreResults>&nbsp;&nbsp;<a href="<MTNextLink>" rel="next" onclick="return swapContent();"><__trans phrase="Next"> &gt;</a></MTIfMoreResults>
+    </div>
+</div>
+    </MTBlogResultFooter>
+</MTSearchResults>
 
 <MTNoSearchResults>
 <h1 id="page-title" class="search-results-header">
