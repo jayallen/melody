@@ -377,7 +377,7 @@ sub install_meta {
     my $cols = delete $params->{columns}
         or return $class->error('No meta fields specified to install_meta');
     $params->{fields} = [
-        map { +{ name => $_, type => 'vchar' } } @$cols
+        map { +{ name => $_, type => 'vblob' } } @$cols
     ];
 
     $params->{datasource} ||= join q{_}, $class->datasource, 'meta';
