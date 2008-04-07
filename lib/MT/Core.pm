@@ -70,6 +70,7 @@ BEGIN {
             'user'            => 'MT::Author',
             'commenter'       => 'MT::Author',
             'blog'            => 'MT::Blog',
+            'blog_meta'       => 'MT::Blog::Meta',
             'template'        => 'MT::Template',
             'template_meta'   => 'MT::Template::Meta',
             'comment'         => 'MT::Comment',
