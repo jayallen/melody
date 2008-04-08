@@ -6,6 +6,8 @@ use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 use File::Spec;
 use MT;
 
+use Test::More;
+
 BEGIN {
     # if MT_HOME is not set, set it
     unless ($ENV{MT_HOME}) {
@@ -33,9 +35,17 @@ BEGIN {
 sub import {
     my $pkg = shift;
     foreach my $opt (@_) {
-        $pkg->init_db() if $opt eq ':db';
-        $pkg->init_test_db() if $opt eq ':testdb';
-        $pkg->sample_data() if $opt eq ':data';
+        if ($opt eq ':db') {
+            diag "Initializing database";
+            $pkg->init_db();
+        }
+        elsif ($opt eq ':testdb') {
+            $pkg->init_test_db();
+        }
+        elsif ($opt eq ':data') {
+            diag "Initializing sample data";
+            $pkg->sample_data();
+        }
     }
 }
 
@@ -150,6 +160,7 @@ sub sample_data {
     $blog->id(1);
     $blog->commenter_authenticators('enabled_TypeKey');
     $blog->save() or die "Couldn't save blog 1: ". $blog->errstr;
+    diag "Saved blog";
 
     require MT::Entry;
     require MT::Author;
@@ -168,6 +179,7 @@ sub sample_data {
     $chuckd->is_superuser(1);
     $chuckd->save()
         or die "Couldn't save author record 2: " . $chuckd->errstr;
+    diag "Saved user Chuck D";
 
     my $bobd = MT::Author->new();
     $bobd->set_values({
@@ -180,6 +192,7 @@ sub sample_data {
     $bobd->type(MT::Author::AUTHOR());
     $bobd->id(3);
     $bobd->save() or die "Couldn't save author record 3: " . $bobd->errstr;
+    diag "Saved user Bob D";
 
     my $johnd = MT::Author->new();
     $johnd->set_values({
@@ -192,6 +205,7 @@ sub sample_data {
     $johnd->password('(none)');
     $johnd->id(4);
     $johnd->save() or die "Couldn't save author record 4: " . $johnd->errstr;
+    diag "Saved user John Doe";
 
     my $hiro = MT::Author->new();
     $hiro->set_values({
@@ -205,6 +219,7 @@ sub sample_data {
     $hiro->id(5);
     $hiro->status(2);
     $hiro->save() or die "Couldn't save author record 5: " . $hiro->errstr;
+    diag "Saved user Hiro";
 
     require MT::Association;
     my $assoc = MT::Association->new();
@@ -254,6 +269,7 @@ sub sample_data {
         $entry->id(1);
         $entry->tags('rain', 'grandpa', 'strolling');
         $entry->save() or die "Couldn't save entry record 1: ".$entry->errstr;
+        diag "Saved entry #1";
     }
 
     $entry = MT::Entry->load(2);
@@ -274,6 +290,7 @@ sub sample_data {
         });
         $entry->id(2);
         $entry->save() or die "Couldn't save entry record 2: ".$entry->errstr;
+        diag "Saved entry #2";
     }
 
     $entry = MT::Entry->load(3);
@@ -296,6 +313,7 @@ sub sample_data {
         $entry->id(3);
         $entry->tags('anemones');
         $entry->save() or die "Couldn't save entry record 3: ".$entry->errstr;
+        diag "Saved entry #3";
     }
 
     require MT::Trackback;
@@ -326,6 +344,7 @@ sub sample_data {
         $ping->id(1);
         $ping->visible(1);
         $ping->save or die "Couldn't save TBPing record 1: " . $ping->errstr;
+        diag "Saved a trackback ping";
     }
 
     my @verses = (
@@ -354,6 +373,7 @@ It\'s a hard rain\'s a-gonna fall',
         $cat->parent(0);
         $cat->id(1);
         $cat->save or die "Couldn't save category record 1: ". $cat->errstr;
+        diag "Saved category foo";
     }
 
     $cat = MT::Category->load({ label => 'bar', blog_id => 1});
@@ -366,6 +386,7 @@ It\'s a hard rain\'s a-gonna fall',
         $cat->parent(0);
         $cat->id(2);
         $cat->save or die "Couldn't save category record 2: ". $cat->errstr;
+        diag "Saved category bar";
     }
 
     $tb = MT::Trackback->load(2);
@@ -378,6 +399,7 @@ It\'s a hard rain\'s a-gonna fall',
         $tb->category_id(2);
         $tb->id(2);
         $tb->save or die "Couldn't save Trackback record 2: " . $tb->errstr;;
+        diag "Saved category bar's trackback target";
     }
 
     $cat = MT::Category->load({ label => 'subfoo', blog_id => 1});
@@ -390,6 +412,7 @@ It\'s a hard rain\'s a-gonna fall',
         $cat->parent(1);
         $cat->id(3);
         $cat->save or die "Couldn't save category record 3: ". $cat->errstr;
+        diag "Saved subcategory subfoo";
     }
 
     require MT::Placement;
@@ -421,6 +444,7 @@ It\'s a hard rain\'s a-gonna fall',
                 $place->is_primary(1);
                 $place->save
                     or die "Couldn't save placement record: ".$place->errstr;
+                diag "Placed entry Verse 3 in category foo";
             }
             if ($i == 4) {
                 my $place = new MT::Placement;
@@ -430,6 +454,7 @@ It\'s a hard rain\'s a-gonna fall',
                 $place->is_primary(1);
                 $place->save
                     or die "Couldn't save placement record: ".$place->errstr;
+                diag "Placed entry Verse 4 in category subfoo";
             }
         }
     }
@@ -452,6 +477,7 @@ It\'s a hard rain\'s a-gonna fall',
         });
         $cmt->id(1);
         $cmt->save() or die "Couldn't save comment record 1: ".$cmt->errstr;
+        diag "Saved comment #1";
 
         $cmt->id(11);
         $cmt->text('Comment reply for comment 1');
@@ -459,6 +485,7 @@ It\'s a hard rain\'s a-gonna fall',
         $cmt->created_on('20040812182900');
         $cmt->parent_id(1);
         $cmt->save() or die "Couldn't save comment record 11: ".$cmt->errstr;
+        diag "Saved child comment #11";
 
         $cmt->id(12);
         $cmt->text('Comment reply for comment 11');
@@ -466,6 +493,7 @@ It\'s a hard rain\'s a-gonna fall',
         $cmt->created_on('20040810183000');
         $cmt->parent_id(11);
         $cmt->save() or die "Couldn't save comment record 12: ".$cmt->errstr;
+        diag "Saved child comment #12";
     }
     # entry id 5 - 1 comment, commenting is off (closed)
     unless (MT::Comment->count({entry_id => 5})) {
@@ -581,6 +609,7 @@ It\'s a hard rain\'s a-gonna fall',
     $tmpl->text('<MTBlogName>');
     $tmpl->type('custom');
     $tmpl->save or die "Couldn't save template record 1: ".$tmpl->errstr;
+    diag "Saved blog-name template";
 
     ### Asset
     use MT::Asset;
@@ -594,13 +623,16 @@ It\'s a hard rain\'s a-gonna fall',
     $asset->file_name('test.jpg');
     $asset->file_ext('jpg');
     $asset->image_width(640);
+    diag "Set image asset's width metadata field";
     $asset->image_height(480);
     $asset->mime_type('image/jpeg');
     $asset->label('Image photo');
     $asset->description('This is a test photo.');
     $asset->created_by(1);
     $asset->tags('alpha', 'beta', 'gamma');
-    $asset->save;
+    diag "Tagged image asset";
+    $asset->save or die "Couldn't save asset record 1: " . $asset->errstr;
+    diag "Saved image asset";
 
     $asset->set_score('unit test', $bobd, 5, 1);
     $asset->set_score('unit test', $johnd, 3, 1);
@@ -618,7 +650,8 @@ It\'s a hard rain\'s a-gonna fall',
     $asset->created_by(1);
     $asset->created_on('19780131074500');
     $asset->tags('beta');
-    $asset->save;
+    $asset->save or die "Couldn't save file asset record: " . $asset->errstr;
+    diag "Saved file asset";
 
     $asset->set_score('unit test', $chuckd, 2, 1);
     $asset->set_score('unit test', $johnd, 3, 1);
@@ -636,6 +669,7 @@ It\'s a hard rain\'s a-gonna fall',
     my $e4 = MT::Entry->load(4);
     $e4->set_score('unit test', $chuckd, 2, 1);
     $e4->set_score('unit test', $johnd, 3, 1);
+    diag "Saved scores for entry #4";
 
     ## Page
     require MT::Page;
@@ -666,6 +700,7 @@ It\'s a hard rain\'s a-gonna fall',
     $folder->parent(0);
     $folder->id(20);
     $folder->save or die "Could'n sae folder record 20:" . $folder->errstr;
+    diag "Saved folder #20";
 
     $folder = MT::Folder->new();
     $folder->blog_id(1);
