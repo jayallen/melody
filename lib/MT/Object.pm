@@ -457,8 +457,8 @@ sub meta {
     my ($name, $value) = @_;
 
     return !$obj->{__meta} ? undef
-         : 2 == scalar @_  ? $obj->$name($value)
-         : 1 == scalar @_  ? $obj->$name()
+         : 2 == scalar @_  ? $obj->{__meta}->set($name, $value)
+         : 1 == scalar @_  ? $obj->{__meta}->get($name)
          :                   Carp::croak('TODO: implement returning a metadata hash')
          ;
 }
