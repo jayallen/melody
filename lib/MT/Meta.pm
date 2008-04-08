@@ -102,9 +102,6 @@ sub install {
     ## build subclass
     $class->_build_subclass($pkg, $params);
 
-    ## install hook to the caller so it does init_meta
-    $pkg->add_trigger('post_load' => sub { $_[0]->init_meta if $_[0]->properties->{meta_installed} });
-
     return 1;
 }
 

@@ -55,11 +55,11 @@ sub install_properties {
     my $super_props = $class->SUPER::properties();
     if ($super_props) {
         # subclass; merge hash
-        for (qw(primary_key meta_column class_column datasource driver audit meta)) {
+        for (qw(primary_key class_column datasource driver audit)) {
             $props->{$_} = $super_props->{$_}
                 if exists $super_props->{$_} && !(exists $props->{$_});
         }
-        for my $p (qw(column_defs defaults indexes meta_columns)) {
+        for my $p (qw(column_defs defaults indexes)) {
             if (exists $super_props->{$p}) {
                 foreach my $k (keys %{ $super_props->{$p} }) {
                     if (!exists $props->{$p}{$k}) {
@@ -207,6 +207,11 @@ sub install_properties {
 
         $class->add_trigger( pre_save  => get_date_translator(\&ts2db, 1) );
         $class->add_trigger( post_load => get_date_translator(\&db2ts, 0) );
+    }
+
+    # inherit parent's metadata setup
+    if ($super_props && $super_props->{meta_installed}) {
+        $class->install_meta({ columns => [] });  # no add'l columns
     }
 
     return $props;
@@ -371,14 +376,20 @@ sub install_meta {
     }
 
     my $pkg = ref $class || $class;
-    $pkg->add_trigger( post_save => \&post_save_save_metadata );
-    $pkg->add_trigger( post_load => \&post_load_initialize_metadata );
+    if (!$pkg->SUPER::properties->{meta_installed}) {
+        $pkg->add_trigger( post_save => \&post_save_save_metadata );
+        $pkg->add_trigger( post_load => \&post_load_initialize_metadata );
+    }
 
-    my $cols = delete $params->{columns}
-        or return $class->error('No meta fields specified to install_meta');
-    $params->{fields} = [
-        map { +{ name => $_, type => 'vblob' } } @$cols
-    ];
+    if (!$params->{columns} && !$params->{fields}) {
+        return $class->error('No meta fields specified to install_meta');
+    }
+
+    $params->{fields} ||= [];
+    if (my $cols = delete $params->{columns}) {
+        push @{ $params->{fields} },
+            map { +{ name => $_, type => 'vblob' } } @$cols;
+    }
 
     $params->{datasource} ||= join q{_}, $class->datasource, 'meta';
 
@@ -415,7 +426,8 @@ sub has_meta {
 
 sub post_load_initialize_metadata {
     my $obj = shift;
-    if (defined $obj && exists $obj->{__meta}) {
+    if (defined $obj && $obj->properties->{meta_installed}) {
+        $obj->init_meta();
         $obj->{__meta}->set_primary_keys($obj);
     }
 }
