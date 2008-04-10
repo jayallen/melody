@@ -30,31 +30,34 @@ sub DEBUG () { 0 }
 ## Specify if the faster REPLACE INTO can be used instead of INSERT/UPDATE
 our $REPLACE_ENABLED = 0;
 
-our %Types = (
-    TYPE_VCHAR()             => "vchar",
-    TYPE_VCHAR_INDEXED()     => "vchar_indexed",
-    TYPE_VINTEGER()          => "vinteger",
-    TYPE_VINTEGER_INDEXED()  => "vinteger_indexed",
-    TYPE_VDATETIME()         => "vdatetime",
-    TYPE_VDATETIME_INDEXED() => "vdatetime_indexed",
-    TYPE_VFLOAT()            => "vfloat",
-    TYPE_VFLOAT_INDEXED()    => "vfloat_indexed",
-    TYPE_VBLOB()             => "vblob",
-);
+our (%Types, %TypesByName);
+BEGIN {
+    %Types = (
+        TYPE_VCHAR()             => "vchar",
+        TYPE_VCHAR_INDEXED()     => "vchar_indexed",
+        TYPE_VINTEGER()          => "vinteger",
+        TYPE_VINTEGER_INDEXED()  => "vinteger_indexed",
+        TYPE_VDATETIME()         => "vdatetime",
+        TYPE_VDATETIME_INDEXED() => "vdatetime_indexed",
+        TYPE_VFLOAT()            => "vfloat",
+        TYPE_VFLOAT_INDEXED()    => "vfloat_indexed",
+        TYPE_VBLOB()             => "vblob",
+    );
 
-our %TypesByName = reverse %Types;
+    %TypesByName = reverse %Types;
 
-# some other aliases
-$TypesByName{string} = TYPE_VCHAR;
-$TypesByName{integer} = TYPE_VINTEGER;
-$TypesByName{datetime} = TYPE_VDATETIME;
-$TypesByName{float} = TYPE_VFLOAT;
-$TypesByName{string_indexed} = TYPE_VCHAR_INDEXED;
-$TypesByName{integer_indexed} = TYPE_VINTEGER_INDEXED;
-$TypesByName{datetime_indexed} = TYPE_VDATETIME_INDEXED;
-$TypesByName{float_indexed} = TYPE_VFLOAT_INDEXED;
-$TypesByName{hash} = TYPE_VBLOB;
-$TypesByName{array} = TYPE_VBLOB;
+    # some other aliases
+    $TypesByName{string} = TYPE_VCHAR;
+    $TypesByName{integer} = TYPE_VINTEGER;
+    $TypesByName{datetime} = TYPE_VDATETIME;
+    $TypesByName{float} = TYPE_VFLOAT;
+    $TypesByName{string_indexed} = TYPE_VCHAR_INDEXED;
+    $TypesByName{integer_indexed} = TYPE_VINTEGER_INDEXED;
+    $TypesByName{datetime_indexed} = TYPE_VDATETIME_INDEXED;
+    $TypesByName{float_indexed} = TYPE_VFLOAT_INDEXED;
+    $TypesByName{hash} = TYPE_VBLOB;
+    $TypesByName{array} = TYPE_VBLOB;
+}
 
 ## $Registry = {
 ##   'foo' => { # key
@@ -144,7 +147,7 @@ sub register {
 #            if $pkg->can($name);
 
         my $type_id = $TypesByName{$type}
-            or Carp::croak("Invalid metadata type '$type' for field $pkg $field");
+            or Carp::croak("Invalid metadata type '$type' for field $pkg $field->{name}");
 
         ## load registry
         print STDERR "$pkg is registering metadata $key\t$name\n" if DEBUG;
