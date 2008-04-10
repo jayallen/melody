@@ -89,7 +89,7 @@ sub init_db {
             next; #TODO for now - it won't hurt when we do driver-tests.
         }
         elsif (!defined *{ $class . '::__properties' }) {
-            eval 'require '.$class or die $@;
+            eval '# line ' . __LINE__ . ' ' . __FILE__ . "\n" . 'require '.$class or die $@;
         }
     }
 
@@ -118,6 +118,7 @@ sub init_db {
         Blog    => {}
     );
     eval {
+        # line __LINE__ __FILE__
         MT::Entry->remove;
         MT::Comment->remove;
     };
