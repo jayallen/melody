@@ -3,8 +3,6 @@ key:  awesome
 id:   awesome
 
 object_types:
-    blog_meta:     MT::Blog::Meta
     awesome:       MT::Awesome
-    awesome_meta:  MT::Awesome::Meta
     awesome_image: MT::Awesome::Image
 

@@ -4,7 +4,7 @@ use strict;
 use lib 't/lib', 'extlib', 'lib';
 
 use Data::Dumper;
-use Test::More tests => 18;
+use Test::More tests => 26;
 
 use MT;
 use MT::Object;
@@ -16,6 +16,7 @@ my $mt = MT->instance;  # plugins are go!
 
 require MT::Awesome;
 require MT::Awesome::Image;
+
 my $file  = MT::Awesome->new;
 my $image = MT::Awesome::Image->new;
 
@@ -51,4 +52,16 @@ is($image->width, 300, 'auto-installed metadata field method retrieved new value
 #ok($image->{changed_cols}{meta}, 'setting metadata field on subclass with auto-installed method marked meta column as changed');
 ok($image->has_meta('width'), 'subclass has metadata field that was declared for subclass');
 ok($image->has_meta('mime_type'), 'subclass has metadata field that was declared for superclass');
+ok($image->mime_type('image/jpeg'), 'subclass object mime type set');
+ok($image->save(), 'image object saved');
+
+ok($image->id, 'image object with metadata received id when saved');
+
+my $image_2 = MT::Awesome->load($image->id);
+ok($image_2, 'subclass object could be loaded');
+is($image_2->mime_type, 'image/jpeg', 'metadata value as retrieved with auto-installed method is correct on loaded image object');
+
+ok(MT::Asset::Image->has_meta('image_width'), 'MT::Asset::Image has an image_width meta column.');
+ok(MT::Entry->has_meta, 'MT::Entry has a meta support.');
+ok(MT::Page->has_meta, 'MT::Page has a meta support.');
 

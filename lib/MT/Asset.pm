@@ -40,10 +40,6 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
 });
 
-__PACKAGE__->install_meta({
-    columns => [],
-});
-
 require MT::Asset::Image;
 require MT::Asset::Audio;
 require MT::Asset::Video;

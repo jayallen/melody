@@ -15,7 +15,7 @@ our $HAS_ZLIB = 0;
 eval "require Compress::Zlib;";
 $HAS_ZLIB = 1 unless $@;
 
-my $serializer = MT::Serialize->new('Storable');
+my $serializer = MT::Serialize->new('MT');
 
 sub new {
     my $class = shift;
@@ -62,6 +62,7 @@ sub get {
     my ($col) = @_;
 
     $proxy->lazy_load_objects;
+
     if (exists $proxy->{__objects}->{$col}) {
         my $pkg  = $proxy->{pkg};
         my $meta = $proxy->{__objects}->{$col};
@@ -70,7 +71,7 @@ sub get {
             or Carp::croak("Metadata $col on $pkg not found.");
         my $type = $field->{type}
             or Carp::croak("$col not found on $pkg meta fields");
-            
+
         unless ($meta->has_column($type)) {
             Carp::croak("something is wrong: $type not in column_values of metadata");
         }
@@ -79,6 +80,39 @@ sub get {
         ## no metadata row in the database ... return undef, not ''
         return undef;
     }
+}
+
+sub get_hash {
+    my $proxy = shift;
+    my ($col) = @_;
+
+    $proxy->lazy_load_objects;
+
+    my $collection = {};
+
+    foreach my $name (keys %{ $proxy->{__objects} }) {
+        $collection->{$name} = $proxy->get($name);
+    }
+
+    return $collection;
+}
+
+sub get_collection {
+    my $proxy = shift;
+    my ($col) = @_;
+
+    $proxy->lazy_load_objects;
+
+    my $collection = {};
+
+    foreach my $name (keys %{ $proxy->{__objects} }) {
+        if ($name =~ m/^\Q$col\E\.(.+)$/) {
+            my $suffix = $1;
+            $collection->{$suffix} = $proxy->get($name);
+        }
+    }
+
+    return $collection;
 }
 
 sub meta_pkg {
@@ -225,7 +259,8 @@ sub load_objects {
         my $name  = $field->{name};
         my $type  = $field->{type};
 
-        unserialize_blob($meta_obj) if ($meta_obj->properties->{column_defs}->{$type}||'') eq 'blob';
+        unserialize_blob($meta_obj)
+            if ($meta_obj->properties->{column_defs}->{$type}||'') eq 'blob';
         $proxy->{__objects}->{$name} = $meta_obj;
     }
 }

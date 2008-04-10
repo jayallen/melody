@@ -104,10 +104,6 @@ __PACKAGE__->install_properties({
     class_type => 'entry',
 });
 
-__PACKAGE__->install_meta({
-    columns => [],
-});
-
 sub HOLD ()    { 1 }
 sub RELEASE () { 2 }
 sub REVIEW ()  { 3 }

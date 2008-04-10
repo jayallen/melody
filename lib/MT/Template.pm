@@ -34,6 +34,11 @@ __PACKAGE__->install_properties({
         'identifier' => 'string(50)',
         'build_type' => 'smallint',
         'build_interval' => 'integer',
+
+        # meta properties
+        'last_rebuild_time' => 'integer meta',
+        'page_layout' => 'string meta',
+        'include_with_ssi' => 'integer meta',
     },
     indexes => {
         blog_id => 1,
@@ -53,13 +58,6 @@ __PACKAGE__->install_properties({
     audit => 1,
     datasource => 'template',
     primary_key => 'id',
-});
-__PACKAGE__->install_meta({
-    columns => [
-        'last_rebuild_time',
-        'page_layout',
-        'include_with_ssi',
-    ],
 });
 __PACKAGE__->add_trigger('pre_remove' => \&pre_remove_children);
 

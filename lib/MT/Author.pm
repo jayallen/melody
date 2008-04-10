@@ -36,6 +36,10 @@ __PACKAGE__->install_properties({
         'auth_type' => 'string(255)',
         'userpic_asset_id' => 'integer',
         'basename' => 'string(255)',
+
+        # meta properties
+        'widgets' => 'hash meta',
+        'favorite_blogs' => 'array meta',
     },
     defaults => {
         type => 1,
@@ -57,12 +61,6 @@ __PACKAGE__->install_properties({
     datasource => 'author',
     primary_key => 'id',
     audit => 1,
-});
-__PACKAGE__->install_meta({
-    columns => [
-        'favorite_blogs',
-        'widgets',
-    ],
 });
 
 sub class_label {
