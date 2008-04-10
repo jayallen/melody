@@ -24,6 +24,7 @@ sub TYPE_VDATETIME ()         { 6 }
 sub TYPE_VDATETIME_INDEXED () { 7 }
 sub TYPE_VFLOAT ()            { 8 }
 sub TYPE_VFLOAT_INDEXED ()    { 9 }
+sub TYPE_VCLOB ()             { 10 }
 
 sub DEBUG () { 0 }
 
@@ -42,6 +43,7 @@ BEGIN {
         TYPE_VFLOAT()            => "vfloat",
         TYPE_VFLOAT_INDEXED()    => "vfloat_indexed",
         TYPE_VBLOB()             => "vblob",
+        TYPE_VCLOB()             => "vclob",
     );
 
     %TypesByName = reverse %Types;
@@ -55,6 +57,7 @@ BEGIN {
     $TypesByName{integer_indexed} = TYPE_VINTEGER_INDEXED;
     $TypesByName{datetime_indexed} = TYPE_VDATETIME_INDEXED;
     $TypesByName{float_indexed} = TYPE_VFLOAT_INDEXED;
+    $TypesByName{text} = TYPE_VCLOB;
     $TypesByName{hash} = TYPE_VBLOB;
     $TypesByName{array} = TYPE_VBLOB;
 }
@@ -117,15 +120,6 @@ sub install {
         $params->{fields}{ $_->{name} } = 1;
         $params->{blob_zip_cfg}{ $_->{name} } = $_->{zip} if $_->{zip};
     }
-    
-    ## Assume columns are the default types, if they weren't specified.
-    # if(!$params->{columns} && $params->{column_defs}) {
-    #     $params->{columns} = [ keys %{ $params->{column_defs} } ];
-    # }
-    # elsif (!$params->{columns}) {
-    #     push @{ $params->{columns} }, qw( vchar vchar_indexed vblob );
-    #     @{ $params->{column_defs} }{qw( vchar vchar_indexed vblob )} = qw( string(255) string(255) blob );
-    # }
 
     ## build subclass
     $class->_build_subclass($pkg, $params);

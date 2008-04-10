@@ -462,6 +462,7 @@ sub meta_args {
             vfloat            => 'float',
             vfloat_indexed    => 'float',
             vblob             => 'blob',
+            vclob             => 'text',
         },
         columns => [ $id_field, qw(
             type
@@ -474,6 +475,7 @@ sub meta_args {
             vfloat
             vfloat_indexed
             vblob
+            vclob
         ) ],
         indexes => {
             $id_field => 1,
