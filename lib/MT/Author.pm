@@ -260,7 +260,7 @@ sub can_edit_entry {
     my $perms = $author->permissions($entry->blog_id);
     die unless $perms->isa('MT::Permission');
     $perms->can_edit_all_posts ||
-    ($perms->can_create_post && $entry->author_id == $author->id);
+        ($perms->can_create_post && $entry->author_id == $author->id);
 }
 
 sub is_superuser {
