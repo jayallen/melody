@@ -83,6 +83,11 @@ sub init_db {
         or die "No MT object " . MT->errstr;
 
     my $types = MT->registry('object_types');
+    $types->{$_} = MT->model($_) for
+        grep { MT->model($_) }
+        map  { $_ . ':meta' }
+        grep { MT->model($_)->meta_pkg }
+        sort keys %$types;
     my @classes = map { $types->{$_} } grep { $_ !~ /\./ } sort keys %$types;
     foreach my $class (@classes) {
         if (ref($class) eq 'ARRAY') {
