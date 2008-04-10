@@ -222,25 +222,29 @@ sub sample_data {
     $hiro->save() or die "Couldn't save author record 5: " . $hiro->errstr;
     diag "Saved user Hiro";
 
+    require MT::Role;
+    my ($admin_role, $author_role) = map { MT::Role->load({ name => $_ }) }
+        ('Blog Administrator', 'Author');
+
     require MT::Association;
     my $assoc = MT::Association->new();
     $assoc->author_id($chuckd->id);
     $assoc->blog_id(1);
-    $assoc->role_id(3);
+    $assoc->role_id($admin_role->id);
     $assoc->type(1);
     $assoc->save();
 
     $assoc = MT::Association->new();
     $assoc->author_id($bobd->id);
     $assoc->blog_id(1);
-    $assoc->role_id(4);
+    $assoc->role_id($author_role->id);
     $assoc->type(1);
     $assoc->save();
 
     $assoc = MT::Association->new();
     $assoc->author_id($hiro->id);
     $assoc->blog_id(1);
-    $assoc->role_id(3);
+    $assoc->role_id($admin_role->id);
     $assoc->type(1);
     $assoc->save();
 
