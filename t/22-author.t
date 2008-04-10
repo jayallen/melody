@@ -57,6 +57,34 @@ ok($perm->can_manage_feedback, 'can_manage_feedback');
 }
 
 {
+diag('meta field tests');
+
+my $author = MT::Author->load({ name => 'Chuck D' });
+ok(eval { $author->widgets(); 1 }, 'Author obj has widgets accessor');
+ok(!defined $author->widgets, "Author's widgets are undefined by default");
+
+    # same as in MT::CMS::Dashboard, but that's not necessary
+    my $default_widgets = {
+        'blog_stats' =>
+          { param => { tab => 'entry' }, order => 1, set => 'main' },
+        'this_is_you-1' => { order => 1, set => 'sidebar' },
+        'mt_shortcuts'  => { order => 2, set => 'sidebar' },
+        'mt_news'       => { order => 3, set => 'sidebar' },
+    };
+
+ok($author->widgets($default_widgets), "Author's widgets can be set");
+ok($author->save(), "Author with modified widgets can be saved");
+
+require MT::ObjectDriver::Driver::Cache::RAM;
+MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
+
+$author = MT::Author->load({ name => 'Chuck D' });
+ok($author->widgets, "Modified author has widgets");
+diag(Data::Dumper::Dumper($author->widgets));
+is_deeply($author->widgets, $default_widgets, "Author's widgets survived being saved accurately");
+}
+
+{
 my $author = MT::Author->load({ name => 'Bob D' });
 $author = MT::Author->load($author->id);  # silly ruse to force caching.... 
 isa_ok($author, 'MT::Author');
