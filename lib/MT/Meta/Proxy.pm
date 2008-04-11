@@ -261,8 +261,10 @@ sub load_objects {
         my $name  = $field->{name};
         my $type  = $field->{type};
 
-        unserialize_blob($meta_obj)
-            if ($meta_obj->properties->{column_defs}->{$type}||'') eq 'blob';
+        my $meta_col_def = $meta_obj->column_def($type);
+        my $meta_is_blob = $meta_col_def ? $meta_col_def->{type} eq 'blob' : 0;
+
+        unserialize_blob($meta_obj) if $meta_is_blob;
         $proxy->{__objects}->{$name} = $meta_obj;
     }
 }
