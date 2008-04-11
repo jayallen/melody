@@ -1154,6 +1154,7 @@ sub meta_pkg { undef }
 *__parse_defs = \&MT::Object::__parse_defs;
 *__parse_def = \&MT::Object::__parse_def;
 *count = \&MT::Object::count;
+*columns_of_type = \&MT::Object::columns_of_type;
 
 # TODO: copy this too
 sub blob_requires_zip {}

@@ -176,7 +176,9 @@ sub save {
         my $meta = MT::Meta->metadata_by_name($pkg, $field)
             or Carp::croak("Metadata $field on $pkg not found.");
         my $type = $meta->{type};
-        my $meta_is_blob = ($meta_obj->properties->{column_defs}->{$type}||'') eq 'blob';
+
+        my $meta_col_def = $meta_obj->column_def($type);
+        my $meta_is_blob = $meta_col_def ? $meta_col_def->{type} eq 'blob' : 0;
 
         ## xxx can be a hook?
         if ( ! defined $meta_obj->$type() ) {
