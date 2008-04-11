@@ -7,7 +7,7 @@ use lib 't/lib';
 use lib 'lib';
 use lib 'extlib';
 
-use Test::More tests => 60;
+use Test::More tests => 64;
 
 use MT;
 use MT::Author;
@@ -62,6 +62,7 @@ diag('meta field tests');
 my $author = MT::Author->load({ name => 'Chuck D' });
 ok(eval { $author->widgets(); 1 }, 'Author obj has widgets accessor');
 ok(!defined $author->widgets, "Author's widgets are undefined by default");
+ok(!defined $author->favorite_blogs, "Author's favorite blogs are undefined by default");
 
     # same as in MT::CMS::Dashboard, but that's not necessary
     my $default_widgets = {
@@ -72,16 +73,22 @@ ok(!defined $author->widgets, "Author's widgets are undefined by default");
         'mt_news'       => { order => 3, set => 'sidebar' },
     };
 
+my $fav_blogs = [1, 7];  # not actually a blog #7, but meh
+
 ok($author->widgets($default_widgets), "Author's widgets can be set");
+ok($author->favorite_blogs($fav_blogs), "Author's favorite blogs can be set");
 ok($author->save(), "Author with modified widgets can be saved");
 
 require MT::ObjectDriver::Driver::Cache::RAM;
 MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
 $author = MT::Author->load({ name => 'Chuck D' });
+
 ok($author->widgets, "Modified author has widgets");
-diag(Data::Dumper::Dumper($author->widgets));
 is_deeply($author->widgets, $default_widgets, "Author's widgets survived being saved accurately");
+
+ok($author->favorite_blogs, "Modified author has favorite blogs");
+is_deeply($author->favorite_blogs, $fav_blogs, "Author's favorite blogs survived being saved accurately");
 }
 
 {
