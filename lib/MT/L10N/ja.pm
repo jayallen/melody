@@ -163,8 +163,8 @@ use vars qw( @ISA %Lexicon );
 	'Main Index' => 'メインページ',
 
 ## default_templates/comments.mtml
-	'1 Comment' => '1件',
-	'# Comments' => '#件',
+	'1 Comment' => 'コメント(1)',
+	'# Comments' => 'コメント(#)',
 	'[_1] replied to <a href="[_2]">comment from [_3]</a>' => '[_1]から<a href="[_2]">[_3]</a>への返信',
 	'Leave a comment' => 'コメントする',
 	'Name' => '名前',
@@ -208,8 +208,8 @@ use vars qw( @ISA %Lexicon );
 
 ## default_templates/entry.mtml
 	'By [_1] on [_2]' => '[_1] ([_2])',
-	'1 TrackBack' => '1件',
-	'# TrackBacks' => '#件',
+	'1 TrackBack' => 'コメント(1)',
+	'# TrackBacks' => 'コメント(#)',
 	'Tags' => 'タグ',
 
 ## default_templates/trackbacks.mtml
