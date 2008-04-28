@@ -9,8 +9,9 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use English qw( -no_match_vars );
 
-$| = 1;
+$OUTPUT_AUTOFLUSH = 1;
 
 # Run this script as a symlink, in the form of 99-driver.t, ie:
 # ln -s driver-tests.pl 99-driver.t
@@ -23,8 +24,10 @@ BEGIN {
     $ENV{MT_CONFIG} = "$driver-test.cfg";
 }
 
-use Test::More tests => 233;
-use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
+use constant TESTS => 232;
+
+use Test::More;
+use lib 't/lib';
 use MT::Test qw(:testdb);
 
 package Zot;
@@ -40,11 +43,13 @@ __PACKAGE__->install_properties({
 
 package main;
 
-print "Please configure for this test by creating $ENV{MT_CONFIG} with your database, username, and password\n"
-    unless -r $ENV{MT_CONFIG};
-SKIP: {
-    skip("$ENV{MT_CONFIG} configuration not found", 227)
-        unless ok(-r $ENV{MT_CONFIG}, "$ENV{MT_CONFIG} configuration");
+if (-r $ENV{MT_CONFIG}) {
+    plan tests => TESTS();
+}
+else {
+    print "Please configure for this test by creating $ENV{MT_CONFIG} with your database, username, and password\n";
+    plan skip_all => "$ENV{MT_CONFIG} configuration not found";
+}
 
 my(@foo, @bar);
 my($tmp, @tmp);
@@ -713,8 +718,6 @@ SKIP: {
     ok($tmp[1] && ($tmp[1]->name eq 'this'), 'name');
 }
 
-}
-
 # -or
 my $newdata = Foo->new;
 $newdata->status(11);
@@ -742,7 +745,7 @@ $newdata->name('Apple');
 $newdata->text('iBook');
 $newdata->save;
 
-my $count = Foo->count( [{status => 10}, -or => {name => 'Apple'}] );
+$count = Foo->count( [{status => 10}, -or => {name => 'Apple'}] );
 # ==> select count(*) from mt_foo where foo_status = 10 or foo_name = 'Apple'
 is($count, 3, '-or count');
 
