@@ -103,23 +103,23 @@ sub is_first_foo {
     is_deeply(\%obj_values, $foo[0]->{column_values}, "$name is equivalent to the first Foo");
 }
 
-is_first_foo(scalar Foo->load($foo[0]->id), 'Foo #1 by id');
-is_first_foo(scalar Foo->load({ id => $foo[0]->id }), 'Foo #1 by id hash');
-is_first_foo(scalar Foo->load({ id => $foo[0]->id, name => $foo[0]->name }), 'Foo #1 by id-name hash');
-is_first_foo(scalar Foo->load({ name => $foo[0]->name }), 'Foo #1 by name hash');
+is_first_foo(scalar Foo->load(1), 'Foo #1 by id');
+is_first_foo(scalar Foo->load({ id => 1 }), 'Foo #1 by id hash');
+is_first_foo(scalar Foo->load({ id => 1, name => 'foo' }), 'Foo #1 by id-name hash');
+is_first_foo(scalar Foo->load({ name => 'foo' }), 'Foo #1 by name hash');
 is_first_foo(scalar Foo->load({ created_on => $foo[0]->created_on }), 'Foo #1 by created_on hash');
-is_first_foo(scalar Foo->load({ status => $foo[0]->status }), 'Foo #1 by status hash');
+is_first_foo(scalar Foo->load({ status => 2 }), 'Foo #1 by status hash');
 
 ##     Change column value, save, try to load using old value (fail?),
 ##     then load again using new value
 $foo[0]->status(0);
-ok($foo[0]->save, 'saved' );
+ok($foo[0]->save, 'Foo #1 saved with new status (0)');
 $tmp = Foo->load({ status => 2 });
-ok(!$tmp, 'no Foo');
+ok(!$tmp, 'Foo #1 no longer loads with old status (2)');
 $tmp = Foo->load({ status => 0 });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
-is($tmp->status, 0, 'status');
+isa_ok($tmp, 'Foo', 'Foo #1 by new status (0)');
+is($tmp->id, 1, 'Foo #1 still has id of 1');
+is($tmp->status, 0, 'Foo #1 has its new status (0)');
 
 ## Create a new object so we can do range and last/first lookups.
 ## Sleep first so that they get different created_on timestamps.
