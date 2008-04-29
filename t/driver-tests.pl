@@ -29,7 +29,7 @@ BEGIN {
     *CORE::GLOBAL::sleep = sub { CORE::sleep };
 }
 
-use constant TESTS => 232;
+use constant TESTS => 223;
 
 use Test::More;
 use lib 't/lib';
