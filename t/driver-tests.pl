@@ -75,48 +75,28 @@ ok($foo[0]->save, 'A Foo could be saved');
 is($foo[0]->id, 1, 'First Foo was given an id of 1, says accessor method');
 is($foo[0]->column('id'), $foo[0]->id, 'First Foo was given an id of 1, says column()');
 
-# TODO: loop the tests for these three test loads
-## Test loading object using ID
-$tmp = Foo->load($foo[0]->id);
-isa_ok($tmp, 'Foo', 'Loaded Foo #1');
-is($tmp->id, $foo[0]->id, 'Loaded Foo #1 has 1 for an id');
-is($tmp->name, $foo[0]->name, 'Loaded Foo #1 has the same name as the saved Foo');
-is($tmp->text, $foo[0]->text, 'Loaded Foo #1 has the same text as the saved Foo');
-is($tmp->status, $foo[0]->status, 'Loaded Foo #1 has the same status as the saved Foo');
-is($tmp->created_on, $foo[0]->created_on, 'Loaded Foo #1 has the same created_on as the saved Foo');
-is(length($tmp->created_on), 14, "Loaded Foo's created_on is 14 characters");
+sub is_first_foo {
+    my ($obj, $name) = @_;
 
-## Test loading object using ID in a hash (new in MT 3.0)
-$tmp = Foo->load({id => $foo[0]->id});
+    isa_ok($obj, 'Foo', $name);
+    isnt($obj, $foo[0], "$name is not the same instance as the first Foo");
 
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
-is($tmp->name, $foo[0]->name, 'name');
-is($tmp->text, $foo[0]->text, 'text');
-is($tmp->status, $foo[0]->status, 'status');
-is($tmp->created_on, $foo[0]->created_on, 'created_on');
-is(length($tmp->created_on), 14, 'length is 14');
+    # Ignore object columns that have undefined values.
+    # TODO: test that the objects are unequal unless we ignore undef members
+    my %obj_values;
+    while (my ($field, $value) = each %{ $obj->{column_values} }) {
+        $obj_values{$field} = $value if defined $value;
+    }
 
-## Test loading object using ID in a hash, w/other params
-$tmp = Foo->load({id => $foo[0]->id, name => $foo[0]->name});
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
-is($tmp->name, $foo[0]->name, 'name');
-is($tmp->text, $foo[0]->text, 'text');
-is($tmp->status, $foo[0]->status, 'status');
-is($tmp->created_on, $foo[0]->created_on, 'created_on');
-is(length($tmp->created_on), 14, 'length is 14');
+    is_deeply(\%obj_values, $foo[0]->{column_values}, "$name is equivalent to the first Foo");
+}
 
-## Test loading object using indexes
-$tmp = Foo->load({ name => $foo[0]->name });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
-$foo[1] = Foo->load({ created_on => $foo[0]->created_on });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
-$tmp = Foo->load({ status => $foo[0]->status });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
+is_first_foo(scalar Foo->load($foo[0]->id), 'Foo #1 by id');
+is_first_foo(scalar Foo->load({ id => $foo[0]->id }), 'Foo #1 by id hash');
+is_first_foo(scalar Foo->load({ id => $foo[0]->id, name => $foo[0]->name }), 'Foo #1 by id-name hash');
+is_first_foo(scalar Foo->load({ name => $foo[0]->name }), 'Foo #1 by name hash');
+is_first_foo(scalar Foo->load({ created_on => $foo[0]->created_on }), 'Foo #1 by created_on hash');
+is_first_foo(scalar Foo->load({ status => $foo[0]->status }), 'Foo #1 by status hash');
 
 ## Sleep first so that they get different created_on timestamps.
 # TODO: can we replace CORE::time to fake this?
