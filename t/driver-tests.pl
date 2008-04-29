@@ -29,7 +29,7 @@ BEGIN {
     *CORE::GLOBAL::sleep = sub { CORE::sleep };
 }
 
-use constant TESTS => 245;
+use constant TESTS => 261;
 
 use Test::More;
 use lib 't/lib';
@@ -266,8 +266,7 @@ $tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'ascend',
     start_val => $foo[0]->created_on });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[1]->id, 'id');
+is_object($tmp, $foo[1], 'Next newer Foo after Foo #1');
 
 ## Given the first Foo object, try to load the "previous" one
 ## (the one with a smaller created_on time). This should fail.
@@ -276,7 +275,7 @@ $tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'descend',
     start_val => $foo[0]->created_on });
-ok(!$tmp, 'no Foo');
+ok(!$tmp, 'Search for next older Foo before Foo #1 found none');
 
 ## Given the second Foo object, try to load the "previous" one
 ## (the one with a smaller created_on time). This should work.
@@ -285,17 +284,16 @@ $tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'descend',
     start_val => $foo[1]->created_on });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
+is_object($tmp, $foo[0], 'Next older Foo before Foo #2');
 
 ## Given the second Foo object, try to load the "next" one
-## (the one with a larger created_on time). This should work.
+## (the one with a larger created_on time). This should fail.
 $tmp = Foo->load(undef, {
     limit => 1,
     sort => 'created_on',
     direction => 'ascend',
     start_val => $foo[1]->created_on });
-ok(!$tmp, 'no Foo');
+ok(!$tmp, 'Search for next newer Foo after Foo #2 found none');
 
 ## Now, given the second Foo object's created_on - 1, try to
 ## load the "previous" one. This should work.
@@ -304,8 +302,7 @@ $tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'descend',
     start_val => $foo[1]->created_on-1 });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
+is_object($tmp, $foo[0], 'Next older Foo before just before Foo #2');
 
 ## Now, given the second Foo object's created_on - 1, try to
 ## load the "next" one. This should work.
@@ -314,20 +311,18 @@ $tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'ascend',
     start_val => $foo[1]->created_on-1 });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[1]->id, 'id');
+is_object($tmp, $foo[1], 'Next newer Foo after just before Foo #2');
 
 ## Override created_on timestamp, make sure it works
 my $ts = substr($foo[1]->created_on, 0, -4) . '0000';
 $foo[1]->created_on($ts);
 $foo[1]->save;
+
 @tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'descend',
     limit => 2 });
-is(@tmp, 2, 'array length 2');
-is($tmp[0]->id, 1, 'id');
-is($tmp[1]->id, 2, 'id');
+are_objects(\@tmp, \@foo, 'Time-traveled Foos newest-first');
 
 ## Test limit of 2 with direction descend, but without
 ## a sort option. This should sort by the most recently-added
@@ -335,9 +330,7 @@ is($tmp[1]->id, 2, 'id');
 @tmp = Foo->load(undef, {
     direction => 'descend',
     limit => 2 });
-is(@tmp, 2, 'array length 2');
-is($tmp[0]->id, $foo[1]->id, 'id');
-is($tmp[1]->id, $foo[0]->id, 'id');
+are_objects(\@tmp, [ reverse @foo ], 'Foos highest-id-first');
 
 ## Test loading using offset.
 ## Should load the second Foo object.
@@ -346,8 +339,7 @@ $tmp = Foo->load(undef, {
     sort => 'created_on',
     limit => 1,
     offset => 1 });
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[1]->id, 'id');
+is_object($tmp, $foo[1], 'Second newest Foo');
 
 ## We only have 2 Foo objects, so this should load
 ## only the second Foo object (because offset is 1).
@@ -356,8 +348,7 @@ is($tmp->id, $foo[1]->id, 'id');
     sort => 'created_on',
     limit => 2,
     offset => 1 });
-is(@tmp, 1, 'array length 1');
-is($tmp[0]->id, $foo[1]->id, 'id');
+are_objects(\@tmp, [ $foo[1] ], 'Second and third newest Foos');
 
 ## Should load the first Foo object (ascend with offset of 1).
 $tmp = Foo->load(undef, {
@@ -365,8 +356,7 @@ $tmp = Foo->load(undef, {
     sort => 'created_on',
     limit => 1,
     offset => 1 });
-isa_ok($tmp, 'Foo');
-is($tmp->id, 1, 'id');
+is_object($tmp, $foo[0], 'Second oldest Foo');
 
 ## Now test join loads.
 ## First we need to create a couple of Bar objects.
