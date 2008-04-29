@@ -29,7 +29,7 @@ BEGIN {
     *CORE::GLOBAL::sleep = sub { CORE::sleep };
 }
 
-use constant TESTS => 223;
+use constant TESTS => 245;
 
 use Test::More;
 use lib 't/lib';
@@ -87,28 +87,30 @@ ok($foo[0]->save, 'A Foo could be saved');
 is($foo[0]->id, 1, 'First Foo was given an id of 1, says accessor method');
 is($foo[0]->column('id'), $foo[0]->id, 'First Foo was given an id of 1, says column()');
 
-sub is_first_foo {
-    my ($obj, $name) = @_;
+sub is_object {
+    my ($got, $expected, $name) = @_;
 
-    isa_ok($obj, 'Foo', $name);
-    isnt($obj, $foo[0], "$name is not the same instance as the first Foo");
+    isa_ok($got, ref $expected, $name);
+    isnt($got, $expected, "$name is not the same instance as the expected object");
 
     # Ignore object columns that have undefined values.
-    # TODO: test that the objects are unequal unless we ignore undef members
-    my %obj_values;
-    while (my ($field, $value) = each %{ $obj->{column_values} }) {
-        $obj_values{$field} = $value if defined $value;
+    my (%got_values, %expected_values);
+    while (my ($field, $value) = each %{ $got->{column_values} }) {
+        $got_values{$field} = $value if defined $value;
+    }
+    while (my ($field, $value) = each %{ $expected->{column_values} }) {
+        $expected_values{$field} = $value if defined $value;
     }
 
-    is_deeply(\%obj_values, $foo[0]->{column_values}, "$name is equivalent to the first Foo");
+    is_deeply(\%got_values, \%expected_values, "$name is equivalent to the expected object");
 }
 
-is_first_foo(scalar Foo->load(1), 'Foo #1 by id');
-is_first_foo(scalar Foo->load({ id => 1 }), 'Foo #1 by id hash');
-is_first_foo(scalar Foo->load({ id => 1, name => 'foo' }), 'Foo #1 by id-name hash');
-is_first_foo(scalar Foo->load({ name => 'foo' }), 'Foo #1 by name hash');
-is_first_foo(scalar Foo->load({ created_on => $foo[0]->created_on }), 'Foo #1 by created_on hash');
-is_first_foo(scalar Foo->load({ status => 2 }), 'Foo #1 by status hash');
+is_object(scalar Foo->load(1), $foo[0], 'Foo #1 by id');
+is_object(scalar Foo->load({ id => 1 }), $foo[0], 'Foo #1 by id hash');
+is_object(scalar Foo->load({ id => 1, name => 'foo' }), $foo[0], 'Foo #1 by id-name hash');
+is_object(scalar Foo->load({ name => 'foo' }), $foo[0], 'Foo #1 by name hash');
+is_object(scalar Foo->load({ created_on => $foo[0]->created_on }), $foo[0], 'Foo #1 by created_on hash');
+is_object(scalar Foo->load({ status => 2 }), $foo[0], 'Foo #1 by status hash');
 
 ##     Change column value, save, try to load using old value (fail?),
 ##     then load again using new value
@@ -117,9 +119,7 @@ ok($foo[0]->save, 'Foo #1 saved with new status (0)');
 $tmp = Foo->load({ status => 2 });
 ok(!$tmp, 'Foo #1 no longer loads with old status (2)');
 $tmp = Foo->load({ status => 0 });
-isa_ok($tmp, 'Foo', 'Foo #1 by new status (0)');
-is($tmp->id, 1, 'Foo #1 still has id of 1');
-is($tmp->status, 0, 'Foo #1 has its new status (0)');
+is_object($tmp, $foo[0], 'Foo #1 by new status (0)');
 
 ## Create a new object so we can do range and last/first lookups.
 ## Sleep first so that they get different created_on timestamps.
@@ -136,32 +136,19 @@ $foo[1]->save;
 
 ## Load all objects via iterator
 my $iter = Foo->load_iter(undef, { sort => 'created_on', direction => 'ascend' });
-isa_ok($iter, 'CODE', "load_iter() for all Foos returned an iterator");
+isa_ok($iter, 'CODE', "Iterator for all Foos");
 ok($tmp = $iter->(), 'Iterator for our two Foos had one object');
-is($tmp->id, $foo[0]->id, "All Foo iterator's first Foo was Foo #1");
+is_object($tmp, $foo[0], "All Foo iterator's first Foo");
 ok($tmp = $iter->(), 'Iterator for our two Foos had two objects');
-is($tmp->id, $foo[1]->id, "All Foo iterator's second Foo was Foo #2");
+is_object($tmp, $foo[1], "All Foo iterator's second Foo");
 ok(!$iter->(), 'Iterator for our two Foos did not have a third object');
 
 ## Load all objects with status == 1 via iterator
 $iter = Foo->load_iter({ status => 1 });
-isa_ok($iter, 'CODE', "load_iter() for status=1 Foos returned an iterator");
+isa_ok($iter, 'CODE', "Iterator for status=1 Foos");
 ok($tmp = $iter->(), 'Iterator for our status=1 Foos had one object');
-is($tmp->id, $foo[1]->id, "Status=1 Foo iterator's first Foo was Foo #2");
+is_object($tmp, $foo[1], "Status=1 Foo iterator's first Foo");
 ok(!$iter->(), "Iterator for our status=1 Foos did not have a second object");
-
-# TODO: didn't we already do these tests?
-## Load using ID
-$tmp = Foo->load($foo[1]->id);
-isa_ok($iter, 'CODE');  # TODO: useless test
-is($foo[1]->id, $tmp->id, 'id');
-is($foo[1]->name, $tmp->name, 'name');
-is($foo[1]->text, $tmp->text, 'text');
-
-## Load using single-column index
-$tmp = Foo->load({ name => $foo[1]->name, });
-isa_ok($iter, 'CODE');  # TODO: useless test
-is($foo[1]->id, $tmp->id, 'id');
 
 ## Load using non-existent ID (should fail)
 $tmp = Foo->load(3);
@@ -172,64 +159,65 @@ $tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'descend',
     limit => 1 });
-is($tmp->id, 2, 'id');
+is_object($tmp, $foo[1], 'Newest Foo');
 
 ## Load using ascending sort (oldest)
 $tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'ascend',
     limit => 1 });
-is($tmp->id, 1, 'id');
+is_object($tmp, $foo[0], 'Oldest Foo');
+
+sub are_objects {
+    my ($got, $expected, $name) = @_;
+
+    my $count = scalar @$expected;
+    is(scalar @$got, $count, "$name got $count objects");
+    is_object($$got[$_], $$expected[$_], "$name #$_") for (0..$count-1);
+}
 
 ## Load using descending sort with limit = 2
 @tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'descend',
     limit => 2 });
-is(@tmp, 2, 'array length 2');
-is($tmp[0]->id, 2, 'id');
-is($tmp[1]->id, 1, 'id');
+are_objects(\@tmp, [ reverse @foo ], 'Two Foos newest-first load()');
 
 ## Load using descending sort by created_on, no limit
 @tmp = Foo->load(undef, {
     sort => 'created_on',
     direction => 'descend' });
-is(@tmp, 2, 'array length 2');
-is($tmp[0]->id, 2, 'id');
-is($tmp[1]->id, 1, 'id');
+are_objects(\@tmp, [ reverse @foo ], 'All Foos newest-first load()');
 
 ## Load using ascending sort by status, no limit
 @tmp = Foo->load(undef, { sort => 'status', });
-is(@tmp, 2, 'array length 2');
-is($tmp[0]->id, 1, 'id');
-is($tmp[1]->id, 2, 'id');
+are_objects(\@tmp, \@foo, 'All Foos lowest-status-first load()');
 
 ## Load using 'last' where status == 0
 $tmp = Foo->load({ status => 0 }, {
     sort => 'created_on',
     direction => 'descend',
     limit => 1 });
-is($tmp->id, 1, 'id');
+is_object($tmp, $foo[0], 'Newest status=0 Foo');
 
 ## Load using range search, one less than foo[1]->created_on and newer
 $tmp = Foo->load(
     { created_on => [ $foo[1]->column('created_on')-1 ] },
     { range => { created_on => 1 } });
-isa_ok($tmp, 'Foo');
-is($tmp->id, 2, 'id');
+is_object($tmp, $foo[1], 'Foo from open-ended date range before Foo #2');
 
 ## Load using EXCLUSIVE range search, up through the momment $foo[1] created
 $tmp = Foo->load(
     { created_on => [ $foo[1]->column('created_on')-1, 
                       $foo[1]->column('created_on') ] },
     { range => { created_on => 1 } });
-ok(!$tmp, 'no Foo');
+ok(!$tmp, "Exclusive date range load() ending at Foo #1's date found no Foos");
 
 $tmp = Foo->load(
     { created_on => [ $foo[1]->column('created_on'), 
                       $foo[1]->column('created_on')+1 ] },
     { range => { created_on => 1 } });
-ok(!$tmp, 'no Foo');
+ok(!$tmp, "Exclusive date range load() starting at Foo #1's date found no Foos");
 
 ## Load using INCLUSIVE range search, up through the momment $foo[1] created
 $tmp = Foo->load(
@@ -237,40 +225,34 @@ $tmp = Foo->load(
                       $foo[1]->column('created_on') ] },
     { range_incl => { created_on => 1 } });
 ok($tmp, 'Loaded an object based on range_incl (ts-1 to ts)');
-is($tmp->id, 2, 'id');
+is_object($tmp, $foo[1], "Foo from inclusive date-range load() ending at Foo #1's date");
 
 $tmp = Foo->load(
     { created_on => [ $foo[1]->column('created_on'), 
                       $foo[1]->column('created_on')+1 ] },
     { range_incl => { created_on => 1 } });
 ok($tmp, 'Loaded an object based on range_incl (ts to ts+1)');
-is($tmp->id, 2, 'id');
+is_object($tmp, $foo[1], "Foo from inclusive date-range load() starting at Foo #1's date");
 
 ## Check that range searches return nothing when nothing is in the range.
 $tmp = Foo->load( { created_on => [ undef, '19690101000000' ] },
 		  { range => { created_on => 1 } });
-ok(!$tmp, 'no Foo');
+ok(!$tmp, 'Prehistoric date range load() found no Foos');
 
 ## Range search, all items with created_on less than foo[1]->created_on
 $tmp = Foo->load(
     { created_on => [ undef, $foo[1]->column('created_on')-1 ] },
     { range => { created_on => 1 } });
-isa_ok($tmp, 'Foo');
-is($tmp->id, 1, 'id');
-
-## Range search, all items with created_on >= to foo[1]->created_on
-$tmp = Foo->load(
-    { created_on => [ $foo[1]->column('created_on')-1 ] },
-    { range_incl => { created_on => 1 } });
-isa_ok($tmp, 'Foo');
-is($tmp->id, 2, 'id');
+is_object($tmp, $foo[0], "Foo from exclusive open-started date-range load() ending before Foo #1");
 
 ## Get count of objects
-is(Foo->count, 2, 'count1');
-is(Foo->count({ status => 0 }), 1, 'count2');
-is(Foo->count(
+is(Foo->count(), 2, 'Count of all Foos finds both');
+is(Foo->count({ status => 0 }), 1, 'Count of all status=0 Foos finds all one');
+my $ranged_count = Foo->count(
     { created_on => [ $foo[1]->column('created_on')-1 ] },
-    { range => { created_on => 1 } }), 1, 'count3');
+    { range => { created_on => 1 } }
+);
+is($ranged_count, 1, 'Count of all Foos in open-ended date range starting before Foo #1 finds all one');
 
 ## Update status for later tests.
 $foo[0]->status(2);
