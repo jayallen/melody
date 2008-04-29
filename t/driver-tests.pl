@@ -55,35 +55,36 @@ my(@foo, @bar);
 my($tmp, @tmp);
 
 # Test for existing table
-ok(MT::Object->driver->dbd->ddl_class->column_defs('Foo'), "table mt_foo exists");
+ok(MT::Object->driver->dbd->ddl_class->column_defs('Foo'), "table mt_foo exists after upgrade");
 # Test for non-existent table
-ok(!MT::Object->driver->dbd->ddl_class->column_defs('Zot'), "table mt_zot does not exist");
+ok(!MT::Object->driver->dbd->ddl_class->column_defs('Zot'), "table mt_zot does not exist after upgrade where undefined");
 
 ## Test creating object with new
 ##     test column access through column, then through AUTOLOAD
 $foo[0] = Foo->new;
-isa_ok($foo[0], 'Foo');
+isa_ok($foo[0], 'Foo', 'New Foo');
 $foo[0]->column('name', 'foo');
-is($foo[0]->column('name'), 'foo', 'foo');
+is($foo[0]->column('name'), 'foo', 'Setting name field with column() persists through access');
 $foo[0]->name('foo');
-is($foo[0]->name, 'foo', 'foo');
+is($foo[0]->name, 'foo', 'Setting name field with mutator method persists through access');
 $foo[0]->status(2);
 $foo[0]->text('bar');
 
 ## Test saving created object
-ok($foo[0]->save, 'saved');
-is($foo[0]->id, 1, 'id is 1');
-is($foo[0]->column('id'), $foo[0]->id, 'id');
+ok($foo[0]->save, 'A Foo could be saved');
+is($foo[0]->id, 1, 'First Foo was given an id of 1, says accessor method');
+is($foo[0]->column('id'), $foo[0]->id, 'First Foo was given an id of 1, says column()');
 
+# TODO: loop the tests for these three test loads
 ## Test loading object using ID
 $tmp = Foo->load($foo[0]->id);
-isa_ok($tmp, 'Foo');
-is($tmp->id, $foo[0]->id, 'id');
-is($tmp->name, $foo[0]->name, 'name');
-is($tmp->text, $foo[0]->text, 'text');
-is($tmp->status, $foo[0]->status, 'status');
-is($tmp->created_on, $foo[0]->created_on, 'created_on');
-is(length($tmp->created_on), 14, 'length is 14');
+isa_ok($tmp, 'Foo', 'Loaded Foo #1');
+is($tmp->id, $foo[0]->id, 'Loaded Foo #1 has 1 for an id');
+is($tmp->name, $foo[0]->name, 'Loaded Foo #1 has the same name as the saved Foo');
+is($tmp->text, $foo[0]->text, 'Loaded Foo #1 has the same text as the saved Foo');
+is($tmp->status, $foo[0]->status, 'Loaded Foo #1 has the same status as the saved Foo');
+is($tmp->created_on, $foo[0]->created_on, 'Loaded Foo #1 has the same created_on as the saved Foo');
+is(length($tmp->created_on), 14, "Loaded Foo's created_on is 14 characters");
 
 ## Test loading object using ID in a hash (new in MT 3.0)
 $tmp = Foo->load({id => $foo[0]->id});
@@ -117,6 +118,8 @@ $tmp = Foo->load({ status => $foo[0]->status });
 isa_ok($tmp, 'Foo');
 is($tmp->id, $foo[0]->id, 'id');
 
+## Sleep first so that they get different created_on timestamps.
+# TODO: can we replace CORE::time to fake this?
 sleep(2);
 
 ##     Change column value, save, try to load using old value (fail?),
@@ -145,35 +148,36 @@ $foo[1]->save;
 
 ## Load all objects via iterator
 my $iter = Foo->load_iter(undef, { sort => 'created_on', direction => 'ascend' });
-isa_ok($iter, 'CODE');
-ok($tmp = $iter->(), 'set');
-is($tmp->id, $foo[0]->id, 'id');
-ok($tmp = $iter->(), 'set');
-is($tmp->id, $foo[1]->id, 'id');
-ok(!$iter->(), 'no $iter');
+isa_ok($iter, 'CODE', "load_iter() for all Foos returned an iterator");
+ok($tmp = $iter->(), 'Iterator for our two Foos had one object');
+is($tmp->id, $foo[0]->id, "All Foo iterator's first Foo was Foo #1");
+ok($tmp = $iter->(), 'Iterator for our two Foos had two objects');
+is($tmp->id, $foo[1]->id, "All Foo iterator's second Foo was Foo #2");
+ok(!$iter->(), 'Iterator for our two Foos did not have a third object');
 
 ## Load all objects with status == 1 via iterator
 $iter = Foo->load_iter({ status => 1 });
-isa_ok($iter, 'CODE');
-ok($tmp = $iter->(), 'set');
-is($tmp->id, $foo[1]->id, 'id');
-ok(!$iter->(), 'no $iter');
+isa_ok($iter, 'CODE', "load_iter() for status=1 Foos returned an iterator");
+ok($tmp = $iter->(), 'Iterator for our status=1 Foos had one object');
+is($tmp->id, $foo[1]->id, "Status=1 Foo iterator's first Foo was Foo #2");
+ok(!$iter->(), "Iterator for our status=1 Foos did not have a second object");
 
+# TODO: didn't we already do these tests?
 ## Load using ID
 $tmp = Foo->load($foo[1]->id);
-isa_ok($iter, 'CODE');
+isa_ok($iter, 'CODE');  # TODO: useless test
 is($foo[1]->id, $tmp->id, 'id');
 is($foo[1]->name, $tmp->name, 'name');
 is($foo[1]->text, $tmp->text, 'text');
 
 ## Load using single-column index
 $tmp = Foo->load({ name => $foo[1]->name, });
-isa_ok($iter, 'CODE');
+isa_ok($iter, 'CODE');  # TODO: useless test
 is($foo[1]->id, $tmp->id, 'id');
 
 ## Load using non-existent ID (should fail)
 $tmp = Foo->load(3);
-ok(!$tmp, 'no Foo');
+ok(!$tmp, 'There is no Foo #3');
 
 ## Load using descending sort (newest)
 $tmp = Foo->load(undef, {
