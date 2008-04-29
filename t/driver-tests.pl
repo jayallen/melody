@@ -24,6 +24,11 @@ BEGIN {
     $ENV{MT_CONFIG} = "$driver-test.cfg";
 }
 
+BEGIN {
+    *CORE::GLOBAL::time  = sub { CORE::time };
+    *CORE::GLOBAL::sleep = sub { CORE::sleep };
+}
+
 use constant TESTS => 232;
 
 use Test::More;
@@ -42,6 +47,13 @@ __PACKAGE__->install_properties({
 });
 
 package main;
+
+my $core_time = time;
+{
+    no warnings 'redefine';
+    *CORE::GLOBAL::time  = sub { $core_time };
+    *CORE::GLOBAL::sleep = sub { $core_time += shift };
+}
 
 if (-r $ENV{MT_CONFIG}) {
     plan tests => TESTS();
@@ -97,10 +109,6 @@ is_first_foo(scalar Foo->load({ id => $foo[0]->id, name => $foo[0]->name }), 'Fo
 is_first_foo(scalar Foo->load({ name => $foo[0]->name }), 'Foo #1 by name hash');
 is_first_foo(scalar Foo->load({ created_on => $foo[0]->created_on }), 'Foo #1 by created_on hash');
 is_first_foo(scalar Foo->load({ status => $foo[0]->status }), 'Foo #1 by status hash');
-
-## Sleep first so that they get different created_on timestamps.
-# TODO: can we replace CORE::time to fake this?
-sleep(2);
 
 ##     Change column value, save, try to load using old value (fail?),
 ##     then load again using new value
