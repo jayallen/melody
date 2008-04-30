@@ -457,10 +457,8 @@ class MTDatabaseBase extends ezsql {
             $blog = $this->fetch_blog($blog_id);
         }
 
-        $pagination = 0;
         # automatically include offset if in request
         if ($args['offset'] == 'auto') {
-            $pagination = 1;
             $args['offset'] = 0;
             if ($args['limit'] || $args['lastn']) {
                 if ($_REQUEST['offset'] > 0) {
