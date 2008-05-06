@@ -10046,6 +10046,7 @@ sub _hdlr_comment_author_link {
         $str = spam_protect($str) if $args->{'spam_protect'};
         return sprintf qq(<a href="%s">%s</a>), $str, $name;
     }
+    return $name;
 }
 
 ###########################################################################
