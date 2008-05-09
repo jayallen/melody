@@ -531,6 +531,10 @@ sub edit {
     $param->{can_preview} = 1
         if (!$param->{is_special}) && (!$obj || ($obj && ($obj->outfile || '') !~ m/\.(css|xml|rss|js)$/));
 
+    $param->{can_rebuild} = $param->{can_preview} = 0
+        if ($param->{type} ne 'index') &&
+            (!$obj || ($obj && !$param->{enabled_archive_types}));
+
     1;
 }
 
