@@ -2094,6 +2094,9 @@ optgroup option {
     background: #fff;
     border-bottom: 1px solid #CDDEE7;
 }
+.system .listing-header {
+    border-color: #C1C1C1;
+}
 
 #list-template .listing-header,
 #list-widget-set .listing-header {
