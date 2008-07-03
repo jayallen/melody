@@ -4,7 +4,7 @@
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
-# $Id: mt-check.cgi.pre 2579 2008-06-16 04:24:33Z fumiakiy $
+# $Id$
 
 use strict;
 sub BEGIN {

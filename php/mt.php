@@ -3,7 +3,7 @@
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
-# $Id: mt.php.pre 2651 2008-06-30 02:26:07Z takayama $
+# $Id$
 
 define('VERSION', '4.2');
 define('VERSION_ID', '4.2');
