@@ -4,7 +4,7 @@
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
-# $Id$
+# $Id: mt-check.cgi.pre 2579 2008-06-16 04:24:33Z fumiakiy $
 
 use strict;
 sub BEGIN {
@@ -54,13 +54,16 @@ use CGI;
 my $cgi = new CGI;
 my $view = $cgi->param("view");
 my $version = $cgi->param("version");
-$version ||= '__PRODUCT_VERSION_ID__';
+# $version ||= '__PRODUCT_VERSION_ID__';
 
 my ($mt, $LH);
-my $lang = '__BUILD_LANGUAGE__';
+my $lang = $cgi->param("language");
 eval {
     require MT::App::Wizard;
     $mt = MT::App::Wizard->new();
+    
+    require MT::Util;
+    $lang ||= MT::Util::browser_language();
     my $cfg = $mt->config;
     $cfg->PublishCharset('utf-8');
     $cfg->DefaultLanguage($lang);
