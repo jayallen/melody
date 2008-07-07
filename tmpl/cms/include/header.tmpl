@@ -1,4 +1,6 @@
 <mt:setvarblock name="related_content"><$mt:var name="related_content" trim="1"$></mt:setvarblock>
+<mt:setvar name="__NOT_BUILT__" value="1">
+<mt:setvarblock name="verbose_static"><mt:var name="mt_debug"><mt:var name="__NOT_BUILT__"></mt:setvarblock>    
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html lang="<$mt:var name="language_tag"$>" xmlns="http://www.w3.org/1999/xhtml" xmlns:mt="http://www.sixapart.com/ns/mt">
 <head>
@@ -9,7 +11,7 @@
 <mt:if name="feed_url">
     <link type="application/atom+xml" rel="alternate" <mt:if name="feed_name">title="<mt:var name="feed_name" escape="html">" </mt:if>href="<mt:var name="feed_url" escape="html">" />
 </mt:if>
-<mt:if name="mt_debug">
+<mt:if name="verbose_static">
     <link rel="stylesheet" href="<$mt:var name="static_uri"$>styles.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
 <mt:else>
     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/main.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
@@ -23,7 +25,7 @@
 <mt:if name="local_lang_id" ne="en-us">
     <link rel="stylesheet" href="<$mt:var name="static_uri"$>styles_<$mt:var name="local_lang_id"$>.css?v=<mt:var name="mt_version_id" escape="url">" />
 </mt:if>
-<mt:if name="mt_debug">
+<mt:if name="verbose_static">
     <script type="text/javascript" src="<$mt:var name="static_uri"$>js/common/Core.js?v=<mt:var name="mt_version_id" escape="url">"></script>
     <script type="text/javascript" src="<$mt:var name="static_uri"$>js/common/JSON.js?v=<mt:var name="mt_version_id" escape="url">"></script>
     <script type="text/javascript" src="<$mt:var name="static_uri"$>js/common/Timer.js?v=<mt:var name="mt_version_id" escape="url">"></script>
