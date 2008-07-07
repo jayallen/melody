@@ -1,12 +1,10 @@
-<mt:setvar name="__NOT_BUILT__" value="1">
-<mt:setvarblock name="verbose_static"><mt:var name="mt_debug"><mt:var name="__NOT_BUILT__"></mt:setvarblock>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html lang="<mt:var name="language_tag">">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=<mt:var name="language_encoding">" />
 <title><mt:loop name="page_titles"><mt:var name="bc_name" escape="html"> | </mt:loop><mt:var name="mt_product_name"></title>
-<mt:if name="verbose_static">
+<mt:if name="mt_debug">
     <link rel="stylesheet" href="<$mt:var name="static_uri"$>styles.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
 <mt:else>
     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/main.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
@@ -14,7 +12,7 @@
 <!--[if IE]>
 <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/hacks/ie.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
 <![endif]-->
-<mt:if name="verbose_static">
+<mt:if name="mt_debug">
 <script type="text/javascript" src="<$mt:var name="static_uri"$>js/common/Core.js?v=<mt:var name="mt_version_id" escape="url">"></script>
 <script type="text/javascript" src="<$mt:var name="static_uri"$>js/common/Timer.js?v=<mt:var name="mt_version_id" escape="url">"></script>
 <script type="text/javascript" src="<$mt:var name="static_uri"$>js/common/Timer.js?v=<mt:var name="mt_version_id" escape="url">"></script>

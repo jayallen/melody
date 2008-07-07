@@ -1,5 +1,3 @@
-<mt:setvar name="__NOT_BUILT__" value="1">
-<mt:setvarblock name="verbose_static"><mt:var name="mt_debug"><mt:var name="__NOT_BUILT__"></mt:setvarblock>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
 <html>
 <head>
@@ -9,7 +7,7 @@
 
 <mt:setvarblock name="html_head" prepend="1">
     <link rel="icon" href="<$mt:var name="static_uri"$>images/favicon.ico" type="image/ico" />
-<mt:if name="verbose_static">
+<mt:if name="mt_debug">
     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/reset.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/utilities.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/messaging.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
