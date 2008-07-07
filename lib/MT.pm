@@ -95,6 +95,12 @@ sub version_slug {
 SLUG
 }
 
+sub build_id {
+    my $build_id = '__BUILD_ID__';
+    $build_id = '' if $build_id eq '__BUILD_' . 'ID__';
+    return $build_id;
+}
+
 sub import {
     my $pkg = shift;
     return unless @_;
@@ -2067,6 +2073,7 @@ sub set_default_tmpl_params {
     $param->{mt_product_name} = $mt->translate(MT->product_name);
     $param->{language_tag} = substr($mt->current_language, 0, 2);
     $param->{language_encoding} = $mt->charset;
+    $param->{optimize_ui} = $mt->build_id && !$MT::DebugMode;
     if ($mt->isa('MT::App')) {
         if (my $author = $mt->user) {
             $param->{author_id} = $author->id;
