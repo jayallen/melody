@@ -1158,7 +1158,7 @@ sub __parse_def {
     $def{key} = 1 if $def =~ m/\bprimary key\b/i;
     $def{key} = 1 if ($props->{primary_key}) && ($props->{primary_key} eq $col);
     $def{auto} = 1 if $def =~ m/\bauto[_ ]increment\b/i;
-    $def{versioned} = 1 if $def =~ m/\bversioned\b/i;
+    $def{revisioned} = 1 if $def =~ m/\brevisioned\b/i;
     $def{default} = $props->{defaults}{$col}
         if exists $props->{defaults}{$col};
     \%def;

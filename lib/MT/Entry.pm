@@ -45,28 +45,28 @@ __PACKAGE__->install_properties({
             type        => 'string',
             size        => 255,
             label       => 'Title',
-            versioned   => 1
+            revisioned  => 1
         },
         'excerpt' => {
             type        => 'text',
             label       => 'Excerpt',
-            versioned   => 1
+            revisioned  => 1
         },
         'text' => {
             type        => 'text',
             label       => 'Body',
-            versioned   => 1
+            revisioned  => 1
         },
         'text_more' => {
             type        => 'text',
             label       => 'Extended',
-            versioned   => 1
+            revisioned  => 1
         },
         'convert_breaks' => {
             type        => 'string',
             size        => 30,
             label       => 'Format',
-            versioned   => 1
+            revisioned  => 1
         },
         'to_ping_urls' => 'text',
         'pinged_urls' => 'text',
@@ -77,20 +77,20 @@ __PACKAGE__->install_properties({
         'keywords' => {
             type        => 'text',
             label       => 'Keywords',
-            versioned   => 1
+            revisioned  => 1
         },
         'tangent_cache' => 'text',
         'basename' => {
             type        => 'string',
             size        => 255,
             label       => 'Basename',
-            versioned   => 1 
+            revisioned  => 1 
         },
         'atom_id' => 'string(255)',
         'authored_on' => {
             type        => 'datetime',
             label       => 'Publish Date',
-            versioned   => 1
+            revisioned  => 1
         },
         'week_number' => 'integer',
         'template_id' => 'integer',
