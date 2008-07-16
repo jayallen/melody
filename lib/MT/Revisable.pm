@@ -10,17 +10,14 @@ package MT::Revisable;
 
 use strict;
 
-# sub install_properties {
-#     my $pkg = shift;
-#     my ($class) = @_;
-#     
-#     my $props = $class->properties;
-#     # unless($props->{revision_installed}) {
-#         $class->install_revisioning();
-#         die if $class->class_type eq 'page';
-#         # $props->{revision_installed} = 1;
-#     # }
-# }
+sub install_properties {
+    my $pkg = shift;
+    my ($class) = @_;
+    my $datasource = $class->datasource;
+    
+    MT->add_callback('api_post_save.' . $datasource, 1, undef, \&save_revision);
+    MT->add_callback('cms_post_save.' . $datasource, 1, undef, \&save_revision);
+}
 
 sub revision_pkg {
     my $class = shift;
@@ -56,6 +53,7 @@ sub revision_props {
 
 sub install_revisioning {
     my $class = shift;
+    my $datasource = $class->datasource;
     
     my $subclass = $class->revision_pkg;
     return unless $subclass;
@@ -92,6 +90,80 @@ sub install_revisioning {
     eval $subclass_src or print STDERR "Could not create package $subclass!\n";
 
     $subclass->install_properties($rev_props);    
+}
+
+sub revisioned_columns {
+    my $obj = shift;
+    my $defs = $obj->column_defs;
+    
+    my @cols;
+    foreach my $col (keys %$defs) {
+        push @cols, $col
+            if $defs->{$col} && exists $defs->{$col}{revisioned};
+    }
+    
+    return \@cols;
+}
+
+sub is_revisioned_column {
+    my $obj = shift;
+    my ($col) = @_;
+    my $defs = $obj->column_defs;
+    
+    return $defs->{$col} && exists $defs->{$col}{revisioned};
+}
+
+sub changed_columns {
+    my ($obj, $orig) = @_;
+    my @changed_cols;
+    my $revisioned_cols = $obj->revisioned_columns;
+    
+    foreach my $col (@$revisioned_cols) {
+        push @changed_cols, $col
+            if $obj->$col ne $orig->$col;
+    }    
+    
+    return \@changed_cols;
+}
+
+sub pack_revision {
+    my $obj = shift;
+    my $values;
+    my $cols = $obj->revisioned_columns;
+    
+    foreach my $col (@$cols) {
+        $values->{$col} = $obj->$col
+    }
+
+    my $meta_values = $obj->meta;
+    foreach my $key (%$meta_values) {
+        $values->{$key} = $meta_values->{$key};
+    }
+    
+    return $values;
+}
+
+sub save_revision {
+    my $cb = shift;
+    my ($mt, $obj, $orig) = @_;
+    return 1 unless $orig->id;
+    
+    my $datasource = $obj->datasource;    
+    my $obj_id = $datasource . '_id';
+    my $packed_obj = $orig->pack_revision();
+    my $changed_cols = $obj->changed_columns($orig);    
+    
+    require MT::Serialize;
+    my $rev_class = MT->model($datasource . ':revision');
+    my $revision = $rev_class->new;
+    $revision->set_values({
+        $obj_id     => $orig->id,
+        $datasource => MT::Serialize->serialize(\$packed_obj),
+        changed     => join ',', @$changed_cols
+    });
+    $revision->save or return;
+    
+    return 1;
 }
 
 1;
