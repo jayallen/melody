@@ -1741,10 +1741,15 @@ sub check_type {
     my ($type) = @_;
 
     my $class = MT->model($type);
-
+    
     # handle schema updates for meta table
     if ($class->meta_pkg) {
         $self->check_type($type . ':meta');
+    }
+    
+    # handle schema updates for revision table
+    if ($class->isa('MT::Revisable')) {
+        $self->check_type($type . ':revision');
     }
 
     if (my $result = $self->type_diff($type)) {

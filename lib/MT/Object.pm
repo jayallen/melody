@@ -235,6 +235,11 @@ sub install_properties {
         $class->install_meta({ ( %meta ? ( column_defs => \%meta ) : ( columns => [] ) ) });
         $class->add_trigger( post_remove => \&remove_meta );
     }
+    
+    # Because of the inheritance of MT::Entry by MT::Page, we need to do this here
+    if($class->isa('MT::Revisable')) {
+        $class->install_revisioning();
+    }
 
     return $props;
 }
