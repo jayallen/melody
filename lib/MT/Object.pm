@@ -1120,10 +1120,12 @@ sub column_defs {
     my $defs = $props->{column_defs};
     return undef if !$defs;
     my ($key) = keys %$defs;
-    if (!(ref $defs->{$key})) {
+    unless ($props->{column_defs_parsed}) { 
         $obj->__parse_defs($props->{column_defs});
-    }
-    $props->{column_defs};
+        $props->{column_defs_parsed} = 1; 
+    } 
+    
+    return $props->{column_defs};
 }
 
 sub __parse_defs {
@@ -1151,6 +1153,7 @@ sub __parse_def {
     $def{key} = 1 if $def =~ m/\bprimary key\b/i;
     $def{key} = 1 if ($props->{primary_key}) && ($props->{primary_key} eq $col);
     $def{auto} = 1 if $def =~ m/\bauto[_ ]increment\b/i;
+    $def{versioned} = 1 if $def =~ m/\bversioned\b/i;
     $def{default} = $props->{defaults}{$col}
         if exists $props->{defaults}{$col};
     \%def;

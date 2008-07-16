@@ -27,22 +27,71 @@ __PACKAGE__->install_properties({
     column_defs => {
         'id' => 'integer not null auto_increment',
         'blog_id' => 'integer not null',
-        'status' => 'smallint not null',
-        'author_id' => 'integer not null',
-        'allow_comments' => 'boolean',
-        'title' => 'string(255)',
-        'excerpt' => 'text',
-        'text' => 'text',
-        'text_more' => 'text',
-        'convert_breaks' => 'string(30)',
+        'status' => {
+            type        => 'smallint',
+            not_null    => 1,
+            label       => 'Status'
+        },
+        'author_id' => {
+            type        => 'integer',
+            not_null    => 1,
+            label       => 'Author'
+        },
+        'allow_comments' => {
+            type        => 'boolean',
+            label       => 'Accept Comments'
+        },
+        'title' => {
+            type        => 'string',
+            size        => 255,
+            label       => 'Title',
+            versioned   => 1
+        },
+        'excerpt' => {
+            type        => 'text',
+            label       => 'Excerpt',
+            versioned   => 1
+        },
+        'text' => {
+            type        => 'text',
+            label       => 'Body',
+            versioned   => 1
+        },
+        'text_more' => {
+            type        => 'text',
+            label       => 'Extended',
+            versioned   => 1
+        },
+        'convert_breaks' => {
+            type        => 'string',
+            size        => 30,
+            label       => 'Format',
+            versioned   => 1
+        },
         'to_ping_urls' => 'text',
         'pinged_urls' => 'text',
-        'allow_pings' => 'boolean',
-        'keywords' => 'text',
+        'allow_pings' => {
+            type        => 'boolean',
+            label       => 'Accept Trackbacks'
+        },
+        'keywords' => {
+            type        => 'text',
+            label       => 'Keywords',
+            versioned   => 1
+        },
         'tangent_cache' => 'text',
-        'basename' => 'string(255)',
+        'basename' => {
+            type        => 'string',
+            size        => 255,
+            label       => 'Basename',
+            versioned   => 1 
+        },
         'atom_id' => 'string(255)',
-        'authored_on' => 'datetime',
+        'authored_on' => {
+            type        => 'datetime',
+            label       => 'Publish Date',
+            versioned   => 1
+        },
         'week_number' => 'integer',
         'template_id' => 'integer',
         'comment_count' => 'integer',
