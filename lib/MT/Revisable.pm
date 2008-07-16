@@ -15,8 +15,8 @@ sub install_properties {
     my ($class) = @_;
     my $datasource = $class->datasource;
     
-    MT->add_callback('api_post_save.' . $datasource, 1, undef, \&save_revision);
-    MT->add_callback('cms_post_save.' . $datasource, 1, undef, \&save_revision);
+    MT->add_callback('api_post_save.' . $datasource, 1, undef, \&mt_save_revision);
+    MT->add_callback('cms_post_save.' . $datasource, 1, undef, \&mt_save_revision);
 }
 
 sub revision_pkg {
@@ -143,9 +143,22 @@ sub pack_revision {
     return $values;
 }
 
+sub unpack_revision {
+    my $obj = shift;
+    my ($packed_obj) = @_;
+    
+    $obj->set_values($packed_obj);
+}
+
+sub mt_save_revision {
+    my ($cb, $mt, $obj, $orig) = @_;
+    
+    $obj->save_revision($orig);
+}
+
 sub save_revision {
-    my $cb = shift;
-    my ($mt, $obj, $orig) = @_;
+    my $obj = shift;
+    my ($orig) = @_;
     return 1 unless $orig->id;
     
     my $datasource = $obj->datasource;    
@@ -164,6 +177,73 @@ sub save_revision {
     $revision->save or return;
     
     return 1;
+}
+
+sub object_from_revision {
+    my $obj = shift;
+    my ($rev) = @_;
+    my $datasource = $obj->datasource;
+    
+    my $serialized_obj = $rev->$datasource;
+    require MT::Serialize;
+    my $packed_obj = MT::Serialize->unserialize($serialized_obj);
+    $obj->unpack_revision($$packed_obj);
+    
+    my @changed = split ',', $rev->changed;
+    
+    return [ $obj, \@changed];
+}
+
+sub load_revision {
+    my $obj = shift;
+    my ($rev_id) = @_;
+    my $datasource = $obj->datasource;
+    
+    my $rev_class = MT->model($datasource . ':revision');
+    
+    my $terms = {
+        $datasource . '_id' => $obj->id,
+        $rev_id ? ( id => $rev_id ) : ()
+    };
+    my $args;
+    if(!$rev_id && !wantarray) {
+        $args = {
+            sort => 'id',
+            direction => 'descend',
+            limit => 1
+        }; 
+    }
+    
+    if ( wantarray ) {
+        my @rev = map { $obj->object_from_revision($_); }
+            $rev_class->load( $terms, $args );
+        unless (@rev) {
+            return $obj->error( $rev_class->errstr );
+        }
+        return @rev;
+    }
+    else {
+        my $rev = $rev_class->load( $terms, $args )
+            or return $obj->error( $rev_class->errstr );
+        my $o = $obj->object_from_revision($rev);
+        return $o;
+    }    
+}
+
+sub apply_revision {
+    my $obj = shift;
+    my ( $rev_id ) = @_;
+
+    my $orig = $obj->clone; # Reverting is a revision
+    my $rev = $obj->load_revision( $rev_id )
+        or return $obj->error(
+            MT->translate('Revision (ID: [_1]) not found.', $rev_id));
+    my $rev_object = $rev->[0];
+    $rev_object->save
+        or return $obj->error($rev_object->errstr);
+
+    $rev_object->save_revision($orig);
+    return $rev_object;
 }
 
 1;
