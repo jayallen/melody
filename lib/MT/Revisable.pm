@@ -15,8 +15,11 @@ sub install_properties {
     my ($class) = @_;
     my $datasource = $class->datasource;
     
-    MT->add_callback('api_post_save.' . $datasource, 1, undef, \&mt_save_revision);
-    MT->add_callback('cms_post_save.' . $datasource, 1, undef, \&mt_save_revision);
+    MT->add_callback( 'api_pre_save.entry', 1, undef,
+               \&mt_remove_unchanged_cols );
+    MT->add_callback( 'cms_pre_save.entry', 1, undef,
+               \&mt_remove_unchanged_cols );
+    $class->add_trigger( post_save => \&save_revision );
 }
 
 sub revision_pkg {
@@ -110,20 +113,38 @@ sub is_revisioned_column {
     my ($col) = @_;
     my $defs = $obj->column_defs;
     
-    return $defs->{$col} && exists $defs->{$col}{revisioned};
+    return 1 if $defs->{$col} && exists $defs->{$col}{revisioned};
 }
 
-sub changed_columns {
+sub mt_remove_unchanged_cols {
+    my ($cb, $app, $obj, $orig) = @_;
+    remove_unchanged_cols($obj, $orig);
+}
+
+sub remove_unchanged_cols {
     my ($obj, $orig) = @_;
-    my @changed_cols;
-    my $revisioned_cols = $obj->revisioned_columns;
-    
-    foreach my $col (@$revisioned_cols) {
-        push @changed_cols, $col
-            if $obj->$col ne $orig->$col;
-    }    
-    
-    return \@changed_cols;
+
+    return 1 unless defined $orig;
+    return 1 unless $obj->id;
+
+    my %date_cols = map { $_ => 1 }
+        @{$obj->columns_of_type('datetime', 'timestamp')};
+
+    if ( my @changed_cols = $obj->changed_cols ) {
+        for my $col ( @changed_cols ) {
+            unless($obj->is_revisioned_column($col)) {        
+                delete $obj->{changed_cols}->{$col};
+            }
+            if ( $obj->$col eq $orig->$col ) {
+                delete $obj->{changed_cols}->{$col};
+            }
+            elsif ( exists $date_cols{$col} ) {
+                delete $obj->{changed_cols}->{$col}
+                    if $orig->$col eq MT::Object::_db2ts($obj->$col);
+            }
+        }
+    }
+    1;
 }
 
 sub pack_revision {
@@ -163,8 +184,7 @@ sub save_revision {
     
     my $datasource = $obj->datasource;    
     my $obj_id = $datasource . '_id';
-    my $packed_obj = $orig->pack_revision();
-    my $changed_cols = $obj->changed_columns($orig);    
+    my $packed_obj = $orig->pack_revision(); 
     
     require MT::Serialize;
     my $rev_class = MT->model($datasource . ':revision');
@@ -172,7 +192,7 @@ sub save_revision {
     $revision->set_values({
         $obj_id     => $orig->id,
         $datasource => MT::Serialize->serialize(\$packed_obj),
-        changed     => join ',', @$changed_cols
+        changed     => join ',', $obj->changed_cols
     });
     $revision->save or return;
     
@@ -183,15 +203,16 @@ sub object_from_revision {
     my $obj = shift;
     my ($rev) = @_;
     my $datasource = $obj->datasource;
-    
+
+    my $rev_obj = $obj->clone;
     my $serialized_obj = $rev->$datasource;
     require MT::Serialize;
     my $packed_obj = MT::Serialize->unserialize($serialized_obj);
-    $obj->unpack_revision($$packed_obj);
+    $rev_obj->unpack_revision($$packed_obj);
     
     my @changed = split ',', $rev->changed;
     
-    return [ $obj, \@changed];
+    return [ $rev_obj, \@changed];
 }
 
 sub load_revision {
@@ -234,16 +255,14 @@ sub apply_revision {
     my $obj = shift;
     my ( $rev_id ) = @_;
 
-    my $orig = $obj->clone; # Reverting is a revision
     my $rev = $obj->load_revision( $rev_id )
         or return $obj->error(
             MT->translate('Revision (ID: [_1]) not found.', $rev_id));
     my $rev_object = $rev->[0];
-    $rev_object->save
-        or return $obj->error($rev_object->errstr);
-
-    $rev_object->save_revision($orig);
-    return $rev_object;
+    $obj->set_values($rev_object->column_values);
+    $obj->save
+        or return $obj->error($obj->errstr);
+    return $obj;
 }
 
 1;
