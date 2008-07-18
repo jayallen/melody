@@ -13,12 +13,22 @@ use strict;
 sub install_properties {
     my $pkg = shift;
     my ($class) = @_;
-    my $datasource = $class->datasource;
+    my $props = $class->properties;
+    
+    $props->{column_defs}{current_revision} = {
+        label => 'Revision Number',
+        type  => 'integer',
+        not_null => 1        
+    };
+    $class->install_column('current_revision');
+    $props->{defaults}{current_revision} = 0;
     
     MT->add_callback( 'api_pre_save.entry', 1, undef,
                \&mt_remove_unchanged_cols );
     MT->add_callback( 'cms_pre_save.entry', 1, undef,
                \&mt_remove_unchanged_cols );
+               
+    $class->add_trigger( pre_save => \&increment_revision );           
     $class->add_trigger( post_save => \&save_revision );
 }
 
@@ -44,11 +54,16 @@ sub revision_props {
             id      => 'integer not null auto_increment',
             $obj_id => 'integer not null',
             $obj_ds => 'blob not null',
+            rev_number => 'integer not null',
             changed => 'string(255) not null'
         },
         indexes => {
             $obj_id => 1
         },
+        defaults => {
+            rev_number => 0
+        },
+        audit => 1,
         primary_key => 'id',
         datasource  => $class->datasource . '_rev'
     };
@@ -171,10 +186,14 @@ sub unpack_revision {
     $obj->set_values($packed_obj);
 }
 
-sub mt_save_revision {
-    my ($cb, $mt, $obj, $orig) = @_;
+sub increment_revision {
+    my $obj = shift;
+    my ($orig) = @_;
     
-    $obj->save_revision($orig);
+    # We default current_revision to 0 so we can always increment
+    # Initial save = rev 1
+    my $current_revision = $obj->current_revision;
+    $obj->current_revision(++$current_revision);
 }
 
 sub save_revision {
@@ -194,6 +213,7 @@ sub save_revision {
         $datasource => MT::Serialize->serialize(\$packed_obj),
         changed     => join ',', $obj->changed_cols
     });
+    $revision->rev_number($obj->current_revision);
     $revision->save or return;
     
     return 1;
@@ -210,9 +230,13 @@ sub object_from_revision {
     my $packed_obj = MT::Serialize->unserialize($serialized_obj);
     $rev_obj->unpack_revision($$packed_obj);
     
+    # Here we cheat since audit columns aren't revisioned
+    $rev_obj->modified_by($rev->created_by);
+    $rev_obj->modified_on($rev->modified_on);    
+    
     my @changed = split ',', $rev->changed;
     
-    return [ $rev_obj, \@changed];
+    return [ $rev_obj, \@changed, $rev->rev_number];
 }
 
 sub load_revision {
