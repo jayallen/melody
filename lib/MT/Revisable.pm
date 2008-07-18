@@ -241,23 +241,16 @@ sub object_from_revision {
 
 sub load_revision {
     my $obj = shift;
-    my ($rev_id) = @_;
-    my $datasource = $obj->datasource;
-    
+    my ($terms, $args) = @_;
+    my $datasource = $obj->datasource;    
     my $rev_class = MT->model($datasource . ':revision');
     
-    my $terms = {
-        $datasource . '_id' => $obj->id,
-        $rev_id ? ( id => $rev_id ) : ()
-    };
-    my $args;
-    if(!$rev_id && !wantarray) {
-        $args = {
-            sort => 'id',
-            direction => 'descend',
-            limit => 1
-        }; 
-    }
+    $args ||= {};
+    # Only specified a revision_id
+    if(defined $terms && ref $terms ne 'HASH') { 
+        $terms = { id => $_[0] };         
+    }    
+    $terms->{$datasource . '_id'} ||= $obj->id;    
     
     if ( wantarray ) {
         my @rev = map { $obj->object_from_revision($_); }
