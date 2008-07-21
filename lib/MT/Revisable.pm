@@ -244,11 +244,10 @@ sub load_revision {
     my ($terms, $args) = @_;
     my $datasource = $obj->datasource;    
     my $rev_class = MT->model($datasource . ':revision');
-    
-    $args ||= {};
-    # Only specified a revision_id
+
+    # Only specified a rev_number
     if(defined $terms && ref $terms ne 'HASH') { 
-        $terms = { id => $_[0] };         
+        $terms = { rev_number => $_[0] };         
     }    
     $terms->{$datasource . '_id'} ||= $obj->id;    
     
@@ -280,6 +279,61 @@ sub apply_revision {
     $obj->save
         or return $obj->error($obj->errstr);
     return $obj;
+}
+
+sub diff_revision {
+    my $obj = shift;
+    my ($terms, $diff_args) = @_;
+    # Only specified a rev_number so diff with current
+    if(defined $terms && ref $terms ne 'HASH') { 
+        $terms = { rev_number => [$_[0], $obj->current_revision] };         
+    }
+    my $args = {
+        limit => 2,
+        sort_by => 'created_on',
+        direction => 'ascend'
+    };
+    
+    my @revisions = $obj->load_revision($terms, $args);
+    my $obj_a = $revisions[0]->[0];
+    my $obj_b = $revisions[1]->[0];
+    my %diff;
+    
+    my $cols = $obj->revisioned_columns();
+    foreach my $col (@$cols) {
+        $diff{$col} = _diff_string($obj_a->$col, $obj_b->$col, $diff_args);
+    }    
+    
+    return \%diff;
+}
+
+sub _diff_string {
+    my ($str_a, $str_b, $diff_args) = @_;
+    $diff_args ||= {};
+    my $diff_method = $diff_args->{method} || 'html_word_diff';
+    my $limit_unchanged = $diff_args->{limit_unchanged};
+    
+    require HTML::Diff;
+    my $diff_result = eval "HTML::Diff::$diff_method(\$str_a, \$str_b)";
+    my @result;
+    foreach my $diff (@$diff_result) {        
+        unless($diff->[0] eq 'c') { # changed has adds and removes
+            push @result, {
+                flag => $diff->[0],
+                value => ($diff->[0] eq '+') ? $diff->[2] : $diff->[1]
+            };
+        } else {
+            push @result, {
+                flag => '-',
+                value => $diff->[1]
+            };
+            push @result, {
+                flag => '+',
+                value => $diff->[2]
+            };
+        }
+    }
+    return \@result;
 }
 
 1;
