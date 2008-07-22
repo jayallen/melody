@@ -14,6 +14,7 @@ sub install_properties {
     my $pkg = shift;
     my ($class) = @_;
     my $props = $class->properties;
+    my $datasource = $class->datasource;
     
     $props->{column_defs}{current_revision} = {
         label => 'Revision Number',
@@ -23,13 +24,16 @@ sub install_properties {
     $class->install_column('current_revision');
     $props->{defaults}{current_revision} = 0;
     
-    MT->add_callback( 'api_pre_save.entry', 1, undef,
-               \&mt_remove_unchanged_cols );
-    MT->add_callback( 'cms_pre_save.entry', 1, undef,
-               \&mt_remove_unchanged_cols );
+    # Callbacks: clean list of changed columns to only
+    # include versioned columns
+    MT->add_callback( 'api_pre_save.' . $datasource, 1, undef, \&mt_presave_obj );
+    MT->add_callback( 'cms_pre_save.' . $datasource, 1, undef, \&mt_presave_obj );
                
-    $class->add_trigger( pre_save => \&increment_revision );           
-    $class->add_trigger( post_save => \&save_revision );
+    # Callbacks: object-level callbacks could not be 
+    # prioritized and thus caused problems with plugins
+    # registering a post_save and saving     
+    MT->add_callback( 'api_post_save.' . $datasource, 9, undef, \&mt_postsave_obj);
+    MT->add_callback( 'cms_post_save.' . $datasource, 9, undef, \&mt_postsave_obj);               
 }
 
 sub revision_pkg {
@@ -131,34 +135,39 @@ sub is_revisioned_column {
     return 1 if $defs->{$col} && exists $defs->{$col}{revisioned};
 }
 
-sub mt_remove_unchanged_cols {
+sub mt_presave_obj {
     my ($cb, $app, $obj, $orig) = @_;
-    remove_unchanged_cols($obj, $orig);
+    
+    $obj->gather_changed_cols($orig);
+    
+    $obj->increment_revision($orig); # Added here for consistency
 }
 
-sub remove_unchanged_cols {
-    my ($obj, $orig) = @_;
+sub mt_postsave_obj {
+    my ($cb, $app, $obj, $orig) = @_;
+    
+    $obj->save_revision();
+}
 
-    return 1 unless defined $orig;
-    return 1 unless $obj->id;
-
+sub gather_changed_cols {
+    my $obj = shift;
+    my ($orig) = @_;
+    
+    my @changed_cols;
+    my $revisioned_cols = $obj->revisioned_columns;
+    
     my %date_cols = map { $_ => 1 }
         @{$obj->columns_of_type('datetime', 'timestamp')};
-
-    if ( my @changed_cols = $obj->changed_cols ) {
-        for my $col ( @changed_cols ) {
-            unless($obj->is_revisioned_column($col)) {        
-                delete $obj->{changed_cols}->{$col};
-            }
-            if ( $obj->$col eq $orig->$col ) {
-                delete $obj->{changed_cols}->{$col};
-            }
-            elsif ( exists $date_cols{$col} ) {
-                delete $obj->{changed_cols}->{$col}
-                    if $orig->$col eq MT::Object::_db2ts($obj->$col);
-            }
-        }
-    }
+    
+    foreach my $col (@$revisioned_cols) {
+        next if $obj->$col eq $orig->$col;
+        next if exists $date_cols{$col} 
+                        && $orig->$col eq MT::Object::_db2ts($obj->$col);
+        
+        push @changed_cols, $col;
+    }    
+    
+    $obj->{changed_revisioned_cols} = \@changed_cols;
     1;
 }
 
@@ -172,7 +181,7 @@ sub pack_revision {
     }
 
     my $meta_values = $obj->meta;
-    foreach my $key (%$meta_values) {
+    foreach my $key (keys %$meta_values) {
         $values->{$key} = $meta_values->{$key};
     }
     
@@ -190,6 +199,9 @@ sub increment_revision {
     my $obj = shift;
     my ($orig) = @_;
     
+    my $changed_cols = $obj->{changed_revisioned_cols};
+    return 1 unless scalar @$changed_cols > 0;
+    
     # We default current_revision to 0 so we can always increment
     # Initial save = rev 1
     my $current_revision = $obj->current_revision;
@@ -198,20 +210,22 @@ sub increment_revision {
 
 sub save_revision {
     my $obj = shift;
-    my ($orig) = @_;
-    return 1 unless $orig->id;
+    return 1 unless $obj->id;
+    
+    my $changed_cols = $obj->{changed_revisioned_cols};
+    return 1 unless scalar @$changed_cols > 0;
     
     my $datasource = $obj->datasource;    
     my $obj_id = $datasource . '_id';
-    my $packed_obj = $orig->pack_revision(); 
+    my $packed_obj = $obj->pack_revision(); 
     
     require MT::Serialize;
     my $rev_class = MT->model($datasource . ':revision');
     my $revision = $rev_class->new;
     $revision->set_values({
-        $obj_id     => $orig->id,
+        $obj_id     => $obj->id,
         $datasource => MT::Serialize->serialize(\$packed_obj),
-        changed     => join ',', $obj->changed_cols
+        changed     => join ',', @$changed_cols
     });
     $revision->rev_number($obj->current_revision);
     $revision->save or return;
@@ -312,8 +326,11 @@ sub _diff_string {
     $diff_args ||= {};
     my $diff_method = $diff_args->{method} || 'html_word_diff';
     my $limit_unchanged = $diff_args->{limit_unchanged};
-    
+
     require HTML::Diff;
+    Carp::croak(MT->translate("Unknown method [_1]", 'HTML::Diff::' . $diff_method))
+        unless HTML::Diff->can($diff_method);
+
     my $diff_result = eval "HTML::Diff::$diff_method(\$str_a, \$str_b)";
     my @result;
     foreach my $diff (@$diff_result) {        
