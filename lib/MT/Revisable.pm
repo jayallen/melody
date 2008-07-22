@@ -160,8 +160,8 @@ sub gather_changed_cols {
         @{$obj->columns_of_type('datetime', 'timestamp')};
     
     foreach my $col (@$revisioned_cols) {
-        next if $obj->$col eq $orig->$col;
-        next if exists $date_cols{$col} 
+        next if $orig && $obj->$col eq $orig->$col;
+        next if $orig && exists $date_cols{$col} 
                         && $orig->$col eq MT::Object::_db2ts($obj->$col);
         
         push @changed_cols, $col;
@@ -174,7 +174,7 @@ sub gather_changed_cols {
 sub pack_revision {
     my $obj = shift;
     my $values;
-    my $cols = $obj->column_values;
+    my $values = $obj->column_values;
 
     my $meta_values = $obj->meta;
     foreach my $key (keys %$meta_values) {
@@ -307,8 +307,11 @@ sub diff_revision {
     my @revisions = $obj->load_revision($terms, $args);
     my $obj_a = $revisions[0]->[0];
     my $obj_b = $revisions[1]->[0];
-    my %diff;
     
+    return $obj->error(MT->translate("Did not get two [_1]", lc $obj->class_label_plural))
+        if ref $obj_a ne 'MT::Entry' || ref $obj_b ne 'MT::Entry';
+    
+    my %diff;    
     my $cols = $obj->revisioned_columns();
     foreach my $col (@$cols) {
         $diff{$col} = _diff_string($obj_a->$col, $obj_b->$col, $diff_args);
