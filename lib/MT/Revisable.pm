@@ -174,11 +174,7 @@ sub gather_changed_cols {
 sub pack_revision {
     my $obj = shift;
     my $values;
-    my $cols = $obj->revisioned_columns;
-    
-    foreach my $col (@$cols) {
-        $values->{$col} = $obj->$col
-    }
+    my $cols = $obj->column_values;
 
     my $meta_values = $obj->meta;
     foreach my $key (keys %$meta_values) {
