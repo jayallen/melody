@@ -30,16 +30,19 @@ __PACKAGE__->install_properties({
         'status' => {
             type        => 'smallint',
             not_null    => 1,
-            label       => 'Status'
+            label       => 'Status',
+            revisioned  => 1
         },
         'author_id' => {
             type        => 'integer',
             not_null    => 1,
-            label       => 'Author'
+            label       => 'Author',
+            revisioned  => 1
         },
         'allow_comments' => {
             type        => 'boolean',
-            label       => 'Accept Comments'
+            label       => 'Accept Comments',
+            revisioned  => 1
         },
         'title' => {
             type        => 'string',
@@ -72,7 +75,8 @@ __PACKAGE__->install_properties({
         'pinged_urls' => 'text',
         'allow_pings' => {
             type        => 'boolean',
-            label       => 'Accept Trackbacks'
+            label       => 'Accept Trackbacks',
+            revisioned  => 1
         },
         'keywords' => {
             type        => 'text',

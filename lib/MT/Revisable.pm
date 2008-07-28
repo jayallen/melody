@@ -10,6 +10,8 @@ package MT::Revisable;
 
 use strict;
 
+our $MAX_REVISIONS = 20;
+
 sub install_properties {
     my $pkg = shift;
     my ($class) = @_;
@@ -23,6 +25,13 @@ sub install_properties {
     };
     $class->install_column('current_revision');
     $props->{defaults}{current_revision} = 0;
+    
+    # To track how many revisions to store for each object, add
+    # a meta column in MT::Blog
+    # my $blog_class = MT->model('blog');
+    # $blog_class->install_meta({ column_defs => {
+    #     "max_${datasource}_revision" => 'integer'
+    # }});
     
     # Callbacks: clean list of changed columns to only
     # include versioned columns
@@ -140,6 +149,22 @@ sub mt_presave_obj {
     
     $obj->gather_changed_cols($orig);
     
+    # Collision Checking
+    my $changed_cols = $obj->{changed_revisioned_cols};
+    my $modified_by = $orig->author;
+    
+    if(scalar @$changed_cols) {
+        if($app->isa('MT::App::CMS') 
+                && $app->param('current_revision') != $orig->current_revision) {
+            my %param = (
+                collision   => 1,
+                return_args => $app->param('return_args'),
+                modified_by_nickname => $modified_by->nickname
+            );
+            return $app->forward( "view", \%param );
+        }
+    }    
+    
     $obj->increment_revision($orig); # Added here for consistency
 }
 
@@ -173,7 +198,6 @@ sub gather_changed_cols {
 
 sub pack_revision {
     my $obj = shift;
-    my $values;
     my $values = $obj->column_values;
 
     my $meta_values = $obj->meta;
@@ -291,6 +315,23 @@ sub apply_revision {
     return $obj;
 }
 
+sub diff_object {
+    my $obj_a = shift;
+    my ($obj_b, $diff_args) = @_;
+    
+    return $obj_a->error(MT->translate("There aren't the same types of objects, expecting two [_1]",
+                                            lc $obj_a->class_label_plural))
+        if ref $obj_a ne ref $obj_b;
+        
+    my %diff;    
+    my $cols = $obj_a->revisioned_columns();
+    foreach my $col (@$cols) {
+        $diff{$col} = _diff_string($obj_a->$col, $obj_b->$col, $diff_args);
+    }    
+
+    return \%diff;    
+}
+
 sub diff_revision {
     my $obj = shift;
     my ($terms, $diff_args) = @_;
@@ -309,7 +350,7 @@ sub diff_revision {
     my $obj_b = $revisions[1]->[0];
     
     return $obj->error(MT->translate("Did not get two [_1]", lc $obj->class_label_plural))
-        if ref $obj_a ne 'MT::Entry' || ref $obj_b ne 'MT::Entry';
+        if ref $obj_a ne ref $obj || ref $obj_b ne ref $obj;
     
     my %diff;    
     my $cols = $obj->revisioned_columns();
@@ -336,16 +377,16 @@ sub _diff_string {
         unless($diff->[0] eq 'c') { # changed has adds and removes
             push @result, {
                 flag => $diff->[0],
-                value => ($diff->[0] eq '+') ? $diff->[2] : $diff->[1]
+                text => ($diff->[0] eq '+') ? $diff->[2] : $diff->[1]
             };
         } else {
             push @result, {
                 flag => '-',
-                value => $diff->[1]
+                text => $diff->[1]
             };
             push @result, {
                 flag => '+',
-                value => $diff->[2]
+                text => $diff->[2]
             };
         }
     }
