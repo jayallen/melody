@@ -155,7 +155,8 @@ sub mt_presave_obj {
     
     if(scalar @$changed_cols) {
         if($app->isa('MT::App::CMS') 
-                && $app->param('current_revision') != $orig->current_revision) {
+                && $app->param('current_revision') # not submitted if a user saves again on collision
+                    && $app->param('current_revision') != $orig->current_revision) {
             my %param = (
                 collision   => 1,
                 return_args => $app->param('return_args'),
@@ -165,7 +166,7 @@ sub mt_presave_obj {
         }
     }    
     
-    $obj->increment_revision($orig); # Added here for consistency
+    $obj->increment_revision($orig);
 }
 
 sub mt_postsave_obj {
