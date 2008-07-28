@@ -6,7 +6,7 @@
 
 # An interface for any MT::Object that wishes to utilize versioning
 
-package MT::Versioned;
+package MT::Revisable;
 
 use strict;
 
