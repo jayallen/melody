@@ -9,7 +9,7 @@ package MT::Entry;
 use strict;
 
 use MT::Tag; # Holds MT::Taggable
-use base qw( MT::Object MT::Taggable MT::Scorable MT::Revisable );
+use base qw( MT::Object MT::Taggable MT::Scorable MT::Versioned );
 
 use MT::Blog;
 use MT::Author;

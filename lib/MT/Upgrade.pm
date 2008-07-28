@@ -1748,7 +1748,7 @@ sub check_type {
     }
     
     # handle schema updates for revision table
-    if ($class->isa('MT::Revisable')) {
+    if ($class->isa('MT::Versioned')) {
         $self->check_type($type . ':revision');
     }
 
