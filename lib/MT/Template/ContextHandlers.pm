@@ -11428,6 +11428,33 @@ sub _hdlr_commenter_username {
 Returns a JSON-formatted data structure that represents the user that is
 currently logged in.
 
+=for html <p>This tag is usually only used in the context of system
+templates. The blog accesses this data once per user session via javascript.
+See the <a href="/default_templates/4.2/javascript.mtml">JavaScript index
+template from the default template set</a> for an example of this.</p>
+
+B<Example:>
+
+The tag L<UserSessionState> will output the following JSON data structure
+(formatted with whitespace for readability):
+
+    {
+        "sid":"Hk8lPRoJ1FBuxnQrdZUUvC8qHo9ngmgyNDEKLIkW",
+        "userpic":"/mt-static/support/assets_c/userpics/userpic-1-100x100.png",
+        "profile":"",
+        "auth_type":1,
+        "is_trusted":1,
+        "is_anonymous":0,
+        "name":"Melody P Nelson",
+        "email":"melody@sixapart.com",
+        "is_author":1,
+        "is_banned":0,
+        "is_authenticated":1,
+        "can_comment":1,
+        "can_post":1,
+        "url":"http://sixapart.com"
+    }
+
 =for tags comments, authentication
 
 =cut
