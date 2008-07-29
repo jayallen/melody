@@ -456,7 +456,6 @@ BEGIN {
             'SQLSetNames'     => undef,
             'UseSQLite2'      => { default => 0, },
             'UseJcodeModule'  => { default => 0, },
-            'RevisioningDriver' => { default => 'Local' },
             'DefaultTimezone' => {
                 default => '0',
             },
@@ -524,6 +523,10 @@ BEGIN {
             'ProcessMemoryCommand' => { handler => \&ProcessMemoryCommand },
             'EnableAddressBook' => { default => 0 },
             'SingleCommunity' => { default => 0 },
+            
+            # Revision History
+            'TrackRevisions'     => { default => 1 },
+            'RevisioningDriver'  => { default => 'Local' },
         },
         upgrade_functions => \&load_upgrade_fns,
         applications      => {

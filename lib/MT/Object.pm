@@ -238,7 +238,7 @@ sub install_properties {
     
     # Because of the inheritance of MT::Entry by MT::Page, we need to do this here
     if($class->isa('MT::Revisable')) {
-        $class->install_revisioning();
+        $class->init_revisioning();
     }
 
     return $props;

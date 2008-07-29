@@ -27,6 +27,8 @@ sub _driver {
 }
 
 sub _handle {
+    return 1 unless MT->config->TrackRevisions; 
+    
     my $method = ( caller(1) )[3];
     $method =~ s/.*:://;
     my $driver = $driver ||= _driver();
@@ -44,6 +46,8 @@ sub install_properties {
     my ($class) = @_;
     my $props = $class->properties;
     my $datasource = $class->datasource;
+    
+    return 1 unless MT->config->TrackRevisions;
     
     $props->{column_defs}{current_revision} = {
         label => 'Revision Number',
