@@ -227,6 +227,7 @@ sub cfg_system_general {
         }
     }
     $param{system_email_address} = $cfg->EmailAddressMain;
+    $param{track_revisions}      = $cfg->TrackRevisions;
     $param{saved}                = $app->param('saved');
     $param{error}                = $app->param('error');
     $param{screen_class}         = "settings-screen system-general-settings";
@@ -242,7 +243,8 @@ sub save_cfg_system_general {
     my $cfg = $app->config;
     $app->config( 'EmailAddressMain',
         $app->param('system_email_address') || undef, 1 );
-
+    $app->config( 'TrackRevisions',
+        $app->param('track_revisions') || undef, 1 );    
     $cfg->save_config();
 
     my $args = ();
