@@ -57,13 +57,6 @@ sub install_properties {
     $class->install_column('current_revision');
     $props->{defaults}{current_revision} = 0;
     
-    # To track how many revisions to store for each object, add
-    # a meta column in MT::Blog
-    # my $blog_class = MT->model('blog');
-    # $blog_class->install_meta({ column_defs => {
-    #     "max_${datasource}_revision" => 'integer'
-    # }});
-    
     # Callbacks: clean list of changed columns to only
     # include versioned columns
     MT->add_callback( 'api_pre_save.' . $datasource, 1, undef, \&mt_presave_obj );
@@ -129,10 +122,7 @@ sub mt_presave_obj {
 sub mt_postsave_obj {
     my ($cb, $app, $obj, $orig) = @_;
     
-    my $current_revision = $obj->save_revision();
-    
-    $obj->current_revision($current_revision);
-    $obj->save or return $obj->error($obj->errstr);
+    $obj->save_revision();
     
     return 1;
 }
@@ -161,6 +151,7 @@ sub gather_changed_cols {
 
 sub pack_revision {
     my $obj = shift;
+    my $class = ref $obj || $obj;
     my $values = $obj->column_values;
 
     my $meta_values = $obj->meta;
@@ -168,17 +159,39 @@ sub pack_revision {
         $values->{$key} = $meta_values->{$key};
     }
     
+    MT->run_callbacks($class . '::pack_revision', $obj, $values);
+    
     return $values;
 }
 
 sub unpack_revision {
     my $obj = shift;
     my ($packed_obj) = @_;
+    my $class = ref $obj || $obj;
     
     $obj->set_values($packed_obj);
+    
+    MT->run_callbacks($class . '::unpack_revision', $obj, $packed_obj);
 }
 
-sub save_revision { _handle(@_); }
+sub save_revision { 
+    my $obj = shift;
+    my $class = ref $obj || $obj;
+    
+    my $filter_result = MT->run_callbacks( $class . '::save_revision_filter', $obj );
+    return if !$filter_result;
+    
+    MT->run_callbacks( $class . '::pre_save_revision', $obj );
+    
+    my $current_revision = _handle($obj);    
+    $obj->current_revision($current_revision);
+    $obj->save or return $obj->error($obj->errstr);
+    
+    MT->run_callbacks( $class . '::post_save_revision', $obj, $current_revision );
+    
+    1;
+}
+    
 sub object_from_revision { _handle(@_); }
 sub load_revision { _handle(@_); }
 
