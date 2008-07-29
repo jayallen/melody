@@ -99,6 +99,7 @@ sub save_revision {
     my $obj_id = $datasource . '_id';
     my $packed_obj = $obj->pack_revision(); 
     my $changed_cols = $obj->{changed_revisioned_cols};
+    my $current_revision = $obj->current_revision;
     
     require MT::Serialize;
     my $rev_class = MT->model($datasource . ':revision');
@@ -108,10 +109,10 @@ sub save_revision {
         $datasource => MT::Serialize->serialize(\$packed_obj),
         changed     => join ',', @$changed_cols
     });
-    $revision->rev_number($obj->current_revision);
+    $revision->rev_number(++$current_revision);
     $revision->save or return;
     
-    return 1;
+    return $current_revision;
 }
 
 sub object_from_revision {

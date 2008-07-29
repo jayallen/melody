@@ -68,8 +68,8 @@ sub install_properties {
     # Callbacks: object-level callbacks could not be 
     # prioritized and thus caused problems with plugins
     # registering a post_save and saving     
-    MT->add_callback( 'api_post_save.' . $datasource, 9, undef, \&mt_postsave_obj);
-    MT->add_callback( 'cms_post_save.' . $datasource, 9, undef, \&mt_postsave_obj);               
+    MT->add_callback( 'api_post_save.' . $datasource, 9, undef, \&mt_postsave_obj );
+    MT->add_callback( 'cms_post_save.' . $datasource, 9, undef, \&mt_postsave_obj );               
 }
 
 sub revision_pkg { _handle(@_); }
@@ -104,12 +104,12 @@ sub mt_presave_obj {
     
     # Collision Checking
     my $changed_cols = $obj->{changed_revisioned_cols};
-    my $modified_by = $orig->author;
+    my $modified_by = $obj->author;
     
     if(scalar @$changed_cols) {
         if($app->isa('MT::App::CMS') 
                 && $app->param('current_revision') # not submitted if a user saves again on collision
-                    && $app->param('current_revision') != $orig->current_revision) {
+                    && $app->param('current_revision') != $obj->current_revision) {
             my %param = (
                 collision   => 1,
                 return_args => $app->param('return_args'),
@@ -117,15 +117,20 @@ sub mt_presave_obj {
             );
             return $app->forward( "view", \%param );
         }
-    }    
+    }
     
-    $obj->increment_revision($orig);
+    return 1;
 }
 
 sub mt_postsave_obj {
     my ($cb, $app, $obj, $orig) = @_;
     
-    $obj->save_revision();
+    my $current_revision = $obj->save_revision();
+    
+    $obj->current_revision($current_revision);
+    $obj->save or return $obj->error($obj->errstr);
+    
+    return 1;
 }
 
 sub gather_changed_cols {
@@ -169,19 +174,6 @@ sub unpack_revision {
     $obj->set_values($packed_obj);
 }
 
-sub increment_revision {
-    my $obj = shift;
-    my ($orig) = @_;
-    
-    my $changed_cols = $obj->{changed_revisioned_cols};
-    return 1 unless scalar @$changed_cols > 0;
-    
-    # We default current_revision to 0 so we can always increment
-    # Initial save = rev 1
-    my $current_revision = $obj->current_revision;
-    $obj->current_revision(++$current_revision);
-}
-
 sub save_revision { _handle(@_); }
 sub object_from_revision { _handle(@_); }
 sub load_revision { _handle(@_); }
@@ -192,7 +184,7 @@ sub apply_revision {
 
     my $rev = $obj->load_revision($terms, $args)
         or return $obj->error(
-            MT->translate('Revision (ID: [_1]) not found.', $rev_id));
+            MT->translate('Revision not found: [_1]', $obj->errstr));
     my $rev_object = $rev->[0];
     $obj->set_values($rev_object->column_values);
     $obj->save
