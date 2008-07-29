@@ -729,13 +729,19 @@ sub list {
 }
 
 sub preview {
-    my $app         = shift;
-    my $q           = $app->param;
-    my $type        = $q->param('_type') || 'entry';
+    my $app = shift;
+    my $entry = _create_temp_entry($app);
+    
+    return _build_entry_preview($app, $entry);
+}
+
+sub _create_temp_entry {
+    my $app = shift;
+    my $type        = $app->param('_type') || 'entry';
     my $entry_class = $app->model($type);
-    my $blog_id     = $q->param('blog_id');
+    my $blog_id     = $app->param('blog_id');
     my $blog        = $app->blog;
-    my $id          = $q->param('id');
+    my $id          = $app->param('id');
     my $entry;
     my $user_id = $app->user->id;
 
@@ -750,23 +756,36 @@ sub preview {
         $entry->id(-1); # fake out things like MT::Taggable::__load_tags
         $entry->blog_id($blog_id);
     }
-    my $cat;
-    my $names = $entry->column_names;
 
+    my $names = $entry->column_names;
     my %values = map { $_ => scalar $app->param($_) } @$names;
-    delete $values{'id'} unless $q->param('id');
+    delete $values{'id'} unless $app->param('id');
     ## Strip linefeed characters.
     for my $col (qw( text excerpt text_more keywords )) {
         $values{$col} =~ tr/\r//d if $values{$col};
     }
     $values{allow_comments} = 0
       if !defined( $values{allow_comments} )
-      || $q->param('allow_comments') eq '';
+      || $app->param('allow_comments') eq '';
     $values{allow_pings} = 0
       if !defined( $values{allow_pings} )
-      || $q->param('allow_pings') eq '';
+      || $app->param('allow_pings') eq '';
     $entry->set_values( \%values );
+    
+    return $entry;
+}
 
+sub _build_entry_preview {
+    my $app = shift;
+    my ($entry, %param) = @_;
+    my $q           = $app->param;
+    my $type        = $q->param('_type') || 'entry';
+    my $entry_class = $app->model($type);
+    my $blog_id     = $q->param('blog_id');
+    my $blog        = $app->blog;
+    my $id          = $q->param('id');
+    my $user_id = $app->user->id;
+    my $cat;
     my $cat_ids = $q->param('category_ids');
     if ($cat_ids) {
         my @cats = split /,/, $cat_ids;
@@ -860,7 +879,6 @@ sub preview {
     $ctx->var('archive_class',     'entry-archive');
     $ctx->var('preview_template',  1);
     my $html = $tmpl->output;
-    my %param;
     unless ( defined($html) ) {
         my $preview_error = $app->translate( "Publish error: [_1]",
             MT::Util::encode_html( $tmpl->errstr ) );
@@ -963,7 +981,8 @@ sub preview {
           || $col eq 'class'
           || $col eq 'meta'
           || $col eq 'comment_count'
-          || $col eq 'ping_count';
+          || $col eq 'ping_count'
+          || $col eq 'current_revision';
         if ( $col eq 'basename' ) {
             if (   ( !defined $q->param('basename') )
                 || ( $q->param('basename') eq '' ) )
@@ -1019,6 +1038,15 @@ sub preview {
     }
     $param{object_type}  = $type;
     $param{object_label} = $entry_class->class_label;
+    
+    $param{diff_view} = $app->param('rev_numbers') || $app->param('collision');
+    $param{collision} = 1;
+    if(my @rev_numbers = split /,/, $app->param('rev_numbers')) {
+        $param{comparing_revisions} = 1;
+        $param{rev_a} = $rev_numbers[0];
+        $param{rev_b} = $rev_numbers[1];
+    }
+    
     if ($fullscreen) {
         return $app->load_tmpl( 'preview_entry.tmpl', \%param );
     }
@@ -1263,8 +1291,6 @@ $ao
 
     $app->_translate_naughty_words($obj);
 
-    $obj->modified_by( $author->id ) unless $is_new;
-
     $app->run_callbacks( 'cms_pre_save.' . $type, $app, $obj, $orig_obj )
       || return $app->error(
         $app->translate(
@@ -1272,6 +1298,10 @@ $ao
             $class->class_label, $app->errstr
         )
       );
+      
+    # Setting modified_by updates modified_on which we want to do before
+    # a save but after pre_save callbacks fire.  
+    $obj->modified_by( $author->id ) unless $is_new;
 
     $obj->save
       or return $app->error(
