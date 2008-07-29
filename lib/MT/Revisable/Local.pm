@@ -32,11 +32,13 @@ sub revision_props {
     return {
         key         => $class->datasource,
         column_defs => {
-            id      => 'integer not null auto_increment',
-            $obj_id => 'integer not null',
-            $obj_ds => 'blob not null',
-            rev_number => 'integer not null',
-            changed => 'string(255) not null'
+            id          => 'integer not null auto_increment',
+            label       => 'string(255)',
+            description => 'string(255)',
+            $obj_id     => 'integer not null',
+            $obj_ds     => 'blob not null',
+            rev_number  => 'integer not null',
+            changed     => 'string(255) not null'
         },
         indexes => {
             $obj_id => 1
