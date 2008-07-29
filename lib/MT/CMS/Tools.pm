@@ -244,7 +244,8 @@ sub save_cfg_system_general {
     $app->config( 'EmailAddressMain',
         $app->param('system_email_address') || undef, 1 );
     $app->config( 'TrackRevisions',
-        $app->param('track_revisions') || undef, 1 );    
+        $app->param('track_revisions') ? 1 : 0, 1  );       
+         
     $cfg->save_config();
 
     my $args = ();
