@@ -12,6 +12,33 @@ use strict;
 
 our $MAX_REVISIONS = 20;
 
+{
+my $driver;
+sub _driver {
+    my $driver_name = 'MT::Revisable::' . MT->config->RevisioningDriver;
+    eval 'require ' . $driver_name;
+    if (my $err = $@) {
+        die (MT->translate("Bad RevisioningDriver config '[_1]': [_2]", $driver_name, $err));
+    }
+    my $driver = $driver_name->new;
+    die $driver_name->errstr
+        if (!$driver || (ref(\$driver) eq 'SCALAR'));
+    return $driver;
+}
+
+sub _handle {
+    my $method = ( caller(1) )[3];
+    $method =~ s/.*:://;
+    my $driver = $driver ||= _driver();
+    return undef unless $driver->can($method);
+    $driver->$method(@_);
+}
+
+sub release {
+    undef $driver;
+}
+}
+
 sub install_properties {
     my $pkg = shift;
     my ($class) = @_;
@@ -45,83 +72,9 @@ sub install_properties {
     MT->add_callback( 'cms_post_save.' . $datasource, 9, undef, \&mt_postsave_obj);               
 }
 
-sub revision_pkg {
-    my $class = shift;
-    my $props = $class->properties;
-
-    return $props->{revision_pkg} if $props->{revision_pkg};
-
-    my $rev = ref $class || $class;
-    $rev .= '::Revision';
-    
-    return $props->{revision_pkg} = $rev;
-}
-
-sub revision_props {
-    my $class = shift;
-    my $obj_ds = $class->datasource;
-    my $obj_id = $obj_ds . '_id';
-    return {
-        key         => $class->datasource,
-        column_defs => {
-            id      => 'integer not null auto_increment',
-            $obj_id => 'integer not null',
-            $obj_ds => 'blob not null',
-            rev_number => 'integer not null',
-            changed => 'string(255) not null'
-        },
-        indexes => {
-            $obj_id => 1
-        },
-        defaults => {
-            rev_number => 0
-        },
-        audit => 1,
-        primary_key => 'id',
-        datasource  => $class->datasource . '_rev'
-    };
-}
-
-sub install_revisioning {
-    my $class = shift;
-    my $datasource = $class->datasource;
-    
-    my $subclass = $class->revision_pkg;
-    return unless $subclass;
-    
-    my $rev_props = $class->revision_props;
-    
-    no strict 'refs'; ## no critic
-    return if defined ${"${subclass}::VERSION"};
-    
-    ## Try to use this subclass first to see if it exists
-    my $subclass_file = $subclass . '.pm';
-    $subclass_file =~ s{::}{/}g;
-    eval "# line " . __LINE__ . " " . __FILE__ . "\nno warnings 'all';require '$subclass_file';$subclass->import();";
-    if ($@) {
-        ## Die if we get an unexpected error
-        die $@ unless $@ =~ /Can't locate /;
-    } else {
-        ## This class exists.  We don't need to do anything.
-        return 1;
-    }
-
-    my $base_class = 'MT::Object';
-
-    my $subclass_src = "
-        # line " . __LINE__ . " " . __FILE__ . "
-        package $subclass;
-        our \$VERSION = 1.0;
-        use base qw($base_class);
-        
-        1;
-    ";
-
-    ## no critic ProhibitStringyEval 
-    eval $subclass_src or print STDERR "Could not create package $subclass!\n";
-
-    $subclass->install_properties($rev_props);    
-}
+sub revision_pkg { _handle(@_); }
+sub revision_props { _handle(@_); }
+sub init_revisioning { _handle(@_); }
 
 sub revisioned_columns {
     my $obj = shift;
@@ -229,84 +182,15 @@ sub increment_revision {
     $obj->current_revision(++$current_revision);
 }
 
-sub save_revision {
-    my $obj = shift;
-    return 1 unless $obj->id;
-    
-    my $changed_cols = $obj->{changed_revisioned_cols};
-    return 1 unless scalar @$changed_cols > 0;
-    
-    my $datasource = $obj->datasource;    
-    my $obj_id = $datasource . '_id';
-    my $packed_obj = $obj->pack_revision(); 
-    
-    require MT::Serialize;
-    my $rev_class = MT->model($datasource . ':revision');
-    my $revision = $rev_class->new;
-    $revision->set_values({
-        $obj_id     => $obj->id,
-        $datasource => MT::Serialize->serialize(\$packed_obj),
-        changed     => join ',', @$changed_cols
-    });
-    $revision->rev_number($obj->current_revision);
-    $revision->save or return;
-    
-    return 1;
-}
-
-sub object_from_revision {
-    my $obj = shift;
-    my ($rev) = @_;
-    my $datasource = $obj->datasource;
-
-    my $rev_obj = $obj->clone;
-    my $serialized_obj = $rev->$datasource;
-    require MT::Serialize;
-    my $packed_obj = MT::Serialize->unserialize($serialized_obj);
-    $rev_obj->unpack_revision($$packed_obj);
-    
-    # Here we cheat since audit columns aren't revisioned
-    $rev_obj->modified_by($rev->created_by);
-    $rev_obj->modified_on($rev->modified_on);    
-    
-    my @changed = split ',', $rev->changed;
-    
-    return [ $rev_obj, \@changed, $rev->rev_number];
-}
-
-sub load_revision {
-    my $obj = shift;
-    my ($terms, $args) = @_;
-    my $datasource = $obj->datasource;    
-    my $rev_class = MT->model($datasource . ':revision');
-
-    # Only specified a rev_number
-    if(defined $terms && ref $terms ne 'HASH') { 
-        $terms = { rev_number => $_[0] };         
-    }    
-    $terms->{$datasource . '_id'} ||= $obj->id;    
-    
-    if ( wantarray ) {
-        my @rev = map { $obj->object_from_revision($_); }
-            $rev_class->load( $terms, $args );
-        unless (@rev) {
-            return $obj->error( $rev_class->errstr );
-        }
-        return @rev;
-    }
-    else {
-        my $rev = $rev_class->load( $terms, $args )
-            or return $obj->error( $rev_class->errstr );
-        my $o = $obj->object_from_revision($rev);
-        return $o;
-    }    
-}
+sub save_revision { _handle(@_); }
+sub object_from_revision { _handle(@_); }
+sub load_revision { _handle(@_); }
 
 sub apply_revision {
     my $obj = shift;
-    my ( $rev_id ) = @_;
+    my ($terms, $args) = @_;
 
-    my $rev = $obj->load_revision( $rev_id )
+    my $rev = $obj->load_revision($terms, $args)
         or return $obj->error(
             MT->translate('Revision (ID: [_1]) not found.', $rev_id));
     my $rev_object = $rev->[0];

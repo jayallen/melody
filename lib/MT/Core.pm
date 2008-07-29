@@ -456,6 +456,7 @@ BEGIN {
             'SQLSetNames'     => undef,
             'UseSQLite2'      => { default => 0, },
             'UseJcodeModule'  => { default => 0, },
+            'RevisioningDriver' => { default => 'Local' },
             'DefaultTimezone' => {
                 default => '0',
             },
