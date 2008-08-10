@@ -288,3 +288,210 @@ sub _diff_string {
 }
 
 1;
+
+__END__
+  
+=head1 NAME
+
+MT::Revisable - An interface for any MT::Object that wishes to be versioned.
+
+=head1 SUBCLASS INHERITANCE
+
+To be versioned, an MT::Object subclass must first inherit MT::Revisable:
+
+    package MT::Foo;
+    use base qw( MT::Object MT::Revisable );
+    
+When a revision is saved, the entire object is taken and serialized. 
+However, in order to curb bloat, the saving of a revision is only triggered
+when a versioned column has changed. To mark a column as versioned, simply add
+the keyword C<revisioned> to the column definition:
+
+    __PACKAGE__->install_properties({
+        column_defs => {
+            melody_nelson => 'string(255) not null revisioned
+        }
+    });
+    
+If at least one versioned column is changed 
+    
+=head1 METHODS
+
+=head2 $class->revision_pkg
+
+Returned by C<MT->model($class->datasource . ':revision')> - the namespace of
+the class that stores revisions for the class. 
+
+=head2 $class->revision_props
+
+Returns a hashref of the install properties for the C<revision_pkg>
+
+=head2 $class->init_revisioning
+
+Called by the base C<MT::Object> class to initialize the revisioning framework
+for the particular class. This may involve creating the C<revision_pkg>.
+
+=head2 $class->revisioned_columns
+
+Returns an arrayref of column names that are marked as being revisioned. 
+
+=head2 $class->is_revisioned_column($col)
+
+Checks whether the passed column name has been marked as being revisioned
+
+=head2 $obj->gather_changed_cols($orig)
+
+Compares the revisioned columns of C<$orig> with C<$obj> and stores an arrayref
+of changed columns in C<$obj->{changed_revisioned_columns}>
+
+=head2 $obj->pack_revision()
+
+Creates the hashref that will be stored as a particular revision of the object.
+By default, this hashref contains the values of the object's normal and meta
+columns. The C<<package>::pack_revision> callback can be used to add further
+values to be stored with the revision. 
+
+=head2 $obj->unpack_revision($packed_obj)
+
+The opposite of C<pack_revision>, takes the C<$packed_obj> hashref and unpacks
+it, setting the values of C<$obj> as needed. The C<<package>::unpack_revision>
+callback can be used for any other keys added to C<$packged_obj> that are not
+part of the normal or meta columns. 
+
+=head2 $obj->save_revision()
+
+Called automatically when an object is saved from the MT web interface or
+posted via a 3rd party client (on a low priority api/cms_post_save callback).
+Saves a revision only if at least one revisioned column has changed. 
+
+# =head2 $obj->object_from_revision($revision)
+
+=head2 $obj->load_revision(\%terms, \%args)
+
+Loads revisions for the C<$obj>. Arguments work similarly to C<MT::Object->load>. 
+Thus, one can simply do C<$obj->load_revision($rev_numer)> or pass terms and 
+args. Terms can be any of the following:
+
+=over
+
+=item * id 
+
+=item * label
+
+=item * description
+
+=item * rev_number
+
+=item * changed
+
+=back
+
+C<load_revision> should return an/array of arrayref(s) of:
+
+=over
+
+=item 0. The object stored at the revision
+
+=item 1. An array ref of the changed columns that triggered the revision
+
+=item 2. The revision number
+
+=back
+
+=head2 $obj->apply_revision(\%terms, \%args)
+
+Rolls back to the state of the object at C<$obj->load_revision(\%terms, \%args)>
+and saves this action as a revision. 
+
+=head2 $obj->diff_object($obj_b)
+
+Returns a hashref of column names with the values being an arrayref representation
+of the diff:
+
+    [<flag>, <left>, <right>]
+    
+with the flag being C<'u', '+', '-', 'c'>. See the C<HTML::Diff> POD for more
+information. 
+
+=head2 $obj->diff_revision(\%terms, \%diff_args)
+
+Loads the first object at C<$obj->load_revision(\%terms, \%args)> and returns
+a hashref of column names with the values being an arrayref representation
+of the diff:
+
+    [<flag>, <left>, <right>]
+    
+with the flag being C<'u', '+', '-', 'c'>. See the C<HTML::Diff> POD for more
+information.
+
+=head1 CALLBACKS
+
+=head2 <package>::pack_revision
+
+    sub pack_revision {
+        my ($cb, $obj, $values) = @_;
+        
+    }
+    
+This callback is run after C<$values> is initially populated by C<$obj->pack-revision()>
+and is a hashref of the normal and meta column values and allows you to modify
+C<$values> before it is saved with the revision. Thus, you can use this callback
+to augment what is stored with every revision. 
+
+=head2 <package>::unpack_revision
+
+    sub unpack_revision {
+        my ($cb, $obj, $packed_obj) = @_;
+        
+    }
+
+This callback is the complement of C<pack_revision> and allows you to restore
+values that are within C<$packed_obj>.
+
+=head2 <package>::save_revision_filter
+
+    sub save_revision_filter {
+        my ($cb, $obj) = @_;
+    }
+
+Similar to the C<cms_save_filter> callbacks, this filter will allow you to 
+prevent the saving of a particular revision. 
+
+=head2 <package>::pre_save_revision
+
+    sub pre_save_revision {
+        my ($cb, $obj) = @_;
+        
+    }
+
+This callback is called just before the revision is saved. 
+
+=head2 <package>::post_save_revision
+
+    sub post_save_revision {
+        my ($cb, $obj, $rev_number) = @_;
+        
+    }
+    
+This callback is called immediately after a revision is saved. 
+
+=head1 DRIVERS
+
+The majority of the methods MT::Revisable provides are implemented by driver
+modules. These driver modules specify how versions of an object are saved and 
+retrieved from a data store. By default, MT::Revisable uses the 
+MT::Revisable::Local driver which saves versions within the Movable Type database. 
+To change this, you would first need to create a driver that implements the
+following methods:
+
+=item * revision_pkg
+
+=item * revision_props
+
+=item * init_revisioning
+
+=item * save_revision
+
+=item * load_revision
+
+If some of the above methods are not applicable to your driver, simply return undef. 
