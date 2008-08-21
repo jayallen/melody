@@ -59,26 +59,32 @@ sub parse_options {
 
     my @options = $class->options();
 
-    my $addl_settings = ref $options[0] ? $options[0] : {};
+    my $addl_settings = @options && ref $options[0] ? $options[0] : {};
+    my ($opts_good, $help, $usage, $verbose);
     my %addl_options = (
-        'help!'      => \$addl_settings{help},
-        'usage!'     => \$addl_settings{usage},
-        'verbose|v+' => \$addl_settings{verbose},
+        'help!'      => \$help,
+        'usage!'     => \$usage,
+        'verbose|v+' => \$verbose,
     );
 
-    my $opts_good = GetOptions(@options,
-        ref $options[0] ? keys %addl_options : %addl_options);
+    if (@options && ref $options[0]) {
+        $opts_good = GetOptions(@options, keys %addl_options);
+        ($help, $usage, $verbose) = @$addl_settings{qw( help usage verbose )};
+    }
+    else {
+        $opts_good = GetOptions(@options, %addl_options);
+    }
 
-    if (!$opts_good || $addl_settings->{usage}) {
+    if (!$opts_good || $usage) {
         $class->show_usage();
         exit;
     }
-    if ($addl_settings->{help}) {
+    if ($help) {
         $class->show_help();
         exit;
     }
 
-    return $addl_settings->{verbose};
+    return $verbose;
 }
 
 sub main {
