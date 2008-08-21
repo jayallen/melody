@@ -57,19 +57,35 @@ sub set_up_app {
 sub main {
     my $class = shift;
 
-    $class->set_up_app();
+    $class->set_up_app(@_);
+    return $class->parse_options(@_);
+}
 
-    my $verbose;
-    my $opts_good = GetOptions(
-        'help!'      => sub { $class->show_help();  exit; },
-        'usage!'     => sub { $class->show_usage(); exit; },
-        'verbose|v+' => \$verbose,
+sub parse_options {
+    my $class = shift;
 
-        $class->options(),
+    my @options = $class->options();
+
+    my $addl_settings = ref $options[0] ? $options[0] : {};
+    my %addl_options = (
+        'help!'      => \$addl_settings{help},
+        'usage!'     => \$addl_settings{usage},
+        'verbose|v+' => \$addl_settings{verbose},
     );
-    $class->show_usage(), exit if !$opts_good;
 
-    return $verbose;
+    my $opts_good = GetOptions(@options,
+        ref $options[0] ? keys %addl_options : %addl_options);
+
+    if (!$opts_good || $addl_settings->{usage}) {
+        $class->show_usage();
+        exit;
+    }
+    if ($addl_settings->{help}) {
+        $class->show_help();
+        exit;
+    }
+
+    return $addl_settings->{verbose};
 }
 
 1;
