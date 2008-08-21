@@ -16,6 +16,10 @@ use Getopt::Long;
 
 sub show_help {
     my $class = shift;
+    
+    # By default, display usage too.
+    $class->show_usage();
+    
     my $help = $class->help();
     # TODO: strip spaces more smartly for people who may format
     # their help() methods differently.
@@ -57,8 +61,8 @@ sub main {
 
     my $verbose;
     my $opts_good = GetOptions(
-        'help!'      => sub { $class->show_usage(); $class->show_help(); exit; },
-        'usage!'     => sub { $class->show_usage();                      exit; },
+        'help!'      => sub { $class->show_help();  exit; },
+        'usage!'     => sub { $class->show_usage(); exit; },
         'verbose|v+' => \$verbose,
 
         $class->options(),
