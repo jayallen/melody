@@ -54,13 +54,6 @@ sub set_up_app {
     return $mt;
 }
 
-sub main {
-    my $class = shift;
-
-    $class->set_up_app(@_);
-    return $class->parse_options(@_);
-}
-
 sub parse_options {
     my $class = shift;
 
@@ -86,6 +79,13 @@ sub parse_options {
     }
 
     return $addl_settings->{verbose};
+}
+
+sub main {
+    my $class = shift;
+
+    $class->set_up_app(@_);
+    return $class->parse_options(@_);
 }
 
 1;
