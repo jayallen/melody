@@ -531,6 +531,14 @@ sub edit {
               defined $q->param($col) ? $q->param($col) : $obj->$col();
         }
 
+        # Populate meta data into template params
+        my @meta_columns = MT::Meta->metadata_by_class( ref $obj );
+        foreach (@meta_columns) {
+            if ($_->{name} !~ /^field\.(.*)/) {
+                $param{'meta_' . $_->{name}} = $obj->meta($_->{name});
+            }
+        }
+
         # Make certain any blog-specific element matches the blog we're
         # dealing with. If not, call shenanigans.
         if (   ( exists $param{blog_id} )
