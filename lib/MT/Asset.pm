@@ -440,7 +440,23 @@ sub _make_cache_path {
     if (!-d $real_cache_path) {
         require MT::FileMgr;
         my $fmgr = $blog ? $blog->file_mgr : MT::FileMgr->new('Local');
-        $fmgr->mkpath($real_cache_path) or return undef;
+        # The change below is related to 
+        # http://bugs.movabletype.org/?82495
+        unless ($fmgr->mkpath($real_cache_path)) {
+            my $app = MT->instance;
+            $app->log(
+                {
+                    message => $app->translate(
+                        "Could not create asset cache path: [_1]",
+                        $fmgr->errstr
+                    ),
+                    level    => MT::Log::ERROR(),
+                    class    => 'asset',
+                    category => 'cache',
+                }
+            );            
+            return undef;
+        }
     }
 
     my $asset_cache_path = File::Spec->catdir(($pseudo ? $format : $root_path),
