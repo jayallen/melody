@@ -16435,6 +16435,12 @@ sub _hdlr_assets {
         }
     }
 
+    # Patch to handle mt:Else
+    # http://bugs.movabletype.org/?86618
+    if (!@assets) {
+        return _hdlr_pass_tokens_else(@_);
+    }
+
     my $res = '';
     my $tok = $ctx->stash('tokens');
     my $builder = $ctx->stash('builder');
