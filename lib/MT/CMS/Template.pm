@@ -2049,6 +2049,11 @@ sub clone_templates {
           || $perms->can_administer_blog ) );
 
     my @id = $app->param('id');
+
+    # Divergence from mtos in this method relate to
+    # http://bugs.movabletype.org/?79288
+    my $last_clone_id = (@id > 1) ? undef : 0;
+
     require MT::Template;
     foreach my $tmpl_id (@id) {
         my $tmpl = MT::Template->load($tmpl_id);
@@ -2070,10 +2075,14 @@ sub clone_templates {
         }
 
         $new_tmpl->name($new_name);
-        $new_tmpl->save;
+        $new_tmpl->save
+            or return $app->errtrans('Could not clone template: [_1]',
+                                    $new_tmpl->errmsg);
+        defined $last_clone_id and $last_clone_id = $new_tmpl->id;
     }
 
-    $app->add_return_arg( 'saved_copied' => 1 );
+    $app->add_return_arg( 'saved_copied' => 1,
+                        ($last_clone_id ? (clone_id => $last_clone_id) : ()));
     $app->call_return;
 }
 

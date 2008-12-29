@@ -87,6 +87,14 @@
             <__trans phrase="Your [_1] has been published." params="<mt:var name="name" escape="html">">
         </mtapp:statusmsg>
     </mt:if>
+    <mt:Ignore>See http://bugs.movabletype.org/?79288</mt:Ignore>
+    <mt:if name="saved_copied">
+        <mtapp:statusmsg
+            id="saved-copied"
+            class="success">
+            <__trans phrase="This template has been cloned ([_1])." params="<mt:var name="request.clone_id">">
+        </mtapp:statusmsg>
+    </mt:if>
 </mt:setvarblock>
 <mt:setvarblock name="related_content">
     <mtapp:widget
