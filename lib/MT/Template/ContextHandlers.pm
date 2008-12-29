@@ -7728,7 +7728,8 @@ the request.
 =item * category or categories (optional)
 
 This attribute allows you to filter the entries based on category
-assignment. The simple case is to filter for a single category,
+assignment. Values may be category labels or IDs.
+The simple case is to filter for a single category,
 where the full category name is specified:
 
     <mt:Entries category="Featured">
