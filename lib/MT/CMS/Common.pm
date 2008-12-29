@@ -532,6 +532,7 @@ sub edit {
         }
 
         # Populate meta data into template params
+        # See http://bugs.movabletype.org/?86639
         my @meta_columns = MT::Meta->metadata_by_class( ref $obj );
         foreach (@meta_columns) {
             if ($_->{name} !~ /^field\.(.*)/) {
