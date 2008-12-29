@@ -6998,6 +6998,17 @@ For example:
 
 would iterate over only the blogs with IDs 1, 12, 19, 37 and 112.
 
+=item * glue (optional)
+
+Specifies a string that is output in between output produce within the
+L<Blogs> container tags. For example:
+
+    <mt:Blogs glue=","><$mt:BlogID$></mt:Blogs>
+
+might output something like this:
+
+    1,2,5,10,28,32,33,34
+
 =back
 
 =for tags multiblog, loop, blogs
@@ -7032,6 +7043,7 @@ sub _hdlr_blogs {
     my $res = '';
     my $count = 0;
     my $next = $iter->();
+    my $glue = $args->{glue};
     my $vars = $ctx->{__stash}{vars} ||= {};
     while ($next) {
         my $blog = $next;
@@ -7046,6 +7058,8 @@ sub _hdlr_blogs {
         local $vars->{__counter__} = $count;
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error($builder->errstr);
+        $res .= $glue
+            if defined $glue && ($count > 1) && length($res) && length($out);
         $res .= $out;
     }
     $res;
