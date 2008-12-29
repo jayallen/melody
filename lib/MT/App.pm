@@ -2413,14 +2413,12 @@ sub upload_info {
             $no_upload = 1;
         }
     }
+    elsif ( $fh = $q->upload($param_name) ) {
+        $info = $q->uploadInfo($fh);
+    }
     else {
-        ## Older versions of CGI.pm didn't have an 'upload' method.
-        eval { $fh = $q->upload($param_name) };
-        if ( $@ && $@ =~ /^Undefined subroutine/ ) {
-            $fh = $q->param($param_name);
-        }
-        $no_upload = !$fh;
-        $info      = $q->uploadInfo($fh);
+        warn "upload failed: ".$q->cgi_error;
+        $no_upload = 1;
     }
 
     return if $no_upload;
@@ -3953,6 +3951,15 @@ request.
 
 Returns a string composed of the C<$app-E<gt>uri> and the
 C<$app-E<gt>return_args>.
+
+=head2 $app->upload_info($param_name)
+
+    ($fh,$info_href) = $app->upload_info('field_name');
+
+Automatically selecting either Apache::Request or CGI.pm, returns
+a file handle and a hashref of header details for a given field name.
+If there is a problem with the upload, undef will be returned instead
+and a warning may be logged with more detail.
 
 =head2 $app->uri_params(%param)
 
