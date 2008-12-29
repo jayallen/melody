@@ -203,6 +203,14 @@ sub page_actions {
     my ( $type, @param ) = @_;
     my $actions = $app->registry( "page_actions", $type ) or return;
     foreach my $a ( keys %$actions ) {
+        # The change below relates to http://bugs.movabletype.org/?80960
+        if ('HASH' ne ref($actions->{$a})||'') {            
+            MT->log({     # Developer debug message...
+                message => MT->translate('Malformed page_action data found for mode "[_1]" (Key: [_2]). Skipping page_actions.', $type, $a),
+                level => MT::Log::ERROR(),
+            });
+            return;
+        }
         $actions->{$a}{key} = $a;
         __massage_page_action( $app, $actions->{$a}, $type );
     }
