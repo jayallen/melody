@@ -660,6 +660,37 @@ sub sync_assets {
     return 1;
 }
 
+# See http://bugs.movabletype.org/?82628
+sub set_defaults {
+    my $e    = shift or return;    
+    my $app  = MT->instance or return;
+    my $blog = $app->model('blog')->load($e->blog_id) if $e->blog_id
+    $blog    ||= $app->blog;
+    my $user = $app->user;
+
+    my (%user_defaults, %blog_defaults);
+    
+    if ( $user ) { 
+        %user_defaults = (
+            author_id      => $user->id,
+            convert_breaks => ($user->text_format || ''),
+        );
+    }
+
+    if ( $blog ) {
+        %blog_defaults = (
+            status        => $blog->status_default,
+            allow_comments => $blog->allow_comments_default,
+            allow_pings    => $blog->allow_pings_default,
+            convert_breaks => ($blog->convert_paras || '__default__'),
+        );
+        delete $blog_defaults{convert_breaks}
+            if $user_defaults{convert_breaks};
+    }
+    
+    $e->set_values({ %user_defaults, %blog_defaults });
+}
+
 sub save {
     my $entry = shift;
     my $is_new = $entry->id ? 0 : 1;
@@ -813,6 +844,14 @@ at the I<MT::Object> documentation for details about creating a new object,
 loading an existing object, saving an object, etc.
 
 The following methods are unique to the I<MT::Entry> interface:
+
+=head2 $entry->set_defaults
+
+A convenience method which discovers and, if present, sets default values for
+author_id, convert_breaks, status, allow_comments and allow_pings.  You would
+call this method directly after MT::Entry->new() to populate the defaults
+before populating the object with other data including that which overrides
+the defaults.
 
 =head2 $entry->next
 
