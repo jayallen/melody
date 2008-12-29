@@ -342,7 +342,8 @@ sub core_tags {
             EntryAuthorEmail => \&_hdlr_entry_author_email,
             EntryAuthorURL => \&_hdlr_entry_author_url,
             EntryAuthorLink => \&_hdlr_entry_author_link,
-            EntryAuthorNickname => \&_hdlr_entry_author_nick,
+            # Deprecated in favor of EntryAuthorDisplayName
+            EntryAuthorNickname => \&_hdlr_entry_author_display_name,
             EntryAuthorID => \&_hdlr_entry_author_id,
             EntryAuthorUserpic => \&_hdlr_entry_author_userpic,
             EntryAuthorUserpicURL => \&_hdlr_entry_author_userpic_url,
@@ -9104,28 +9105,18 @@ Outputs the display name of the author for the current entry in context.
 If the author has not provided a display name for publishing, this tag
 will output an empty string.
 
-=cut
-
-sub _hdlr_entry_author_display_name {
-    my ($ctx) = @_;
-    my $e = $ctx->stash('entry')
-        or return $ctx->_no_entry_error();
-    my $a = $e->author;
-    return $a ? $a->nickname || '' : '';
-}
-
-###########################################################################
+=for tags author entry
 
 =head2 EntryAuthorNickname
 
 An alias of L<EntryAuthorDisplayName>. B<This tag is deprecated in
 favor of L<EntryAuthorDisplayName>.>
 
-=for tags deprecated
+=for tags entry author deprecated
 
 =cut
 
-sub _hdlr_entry_author_nick {
+sub _hdlr_entry_author_display_name {
     my ($ctx) = @_;
     my $e = $ctx->stash('entry')
         or return $ctx->_no_entry_error();
