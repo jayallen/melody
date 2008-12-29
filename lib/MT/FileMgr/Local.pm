@@ -7,6 +7,10 @@
 package MT::FileMgr::Local;
 use strict;
 
+# See http://bugs.movabletype.org/?80021
+# and http://search.cpan.org/dist/perl/lib/filetest.pm
+use filetest 'access';
+
 use MT::FileMgr;
 @MT::FileMgr::Local::ISA = qw( MT::FileMgr );
 
