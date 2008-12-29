@@ -152,8 +152,20 @@ sub load_registry {
     $path = File::Spec->catfile( $c->path, $file );
     return unless -f $path;
     require YAML::Tiny;
-    my $y = eval { YAML::Tiny->read($path) }
-        or die "Error reading $path: " . (YAML::Tiny->errstr||$@||$!);
+    # Change related MT case: http://bugs.movabletype.org/?82426
+    my $y = eval { YAML::Tiny->read($path) };
+    if (!$y) {
+        if ($c->isa('MT::Plugin')) {
+            my $msg = sprintf  "PLUGIN Error reading %s: %s", $path, (YAML::Tiny->errstr||$@||$!);
+            print STDERR $msg."\n";
+            $c->error($msg);
+            return 0;
+        }
+        else {
+           die "Error reading $path: " . (YAML::Tiny->errstr||$@||$!); 
+        }
+    }
+    
     if ( ref($y) ) {
 
         # skip over non-hash elements
