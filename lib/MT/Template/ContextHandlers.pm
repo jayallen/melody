@@ -15193,9 +15193,19 @@ category attribute with square brackets:
 
 =item * glue
 
+A text string that is used to join each of the items together. For example:
+
+    <mt:SubCategories glue=", "><$mt:CategoryLabel$></mt:SubCategories>
+
+would print out each category label separated by a comma and a space.
+
+=item * class_type
+
+An argument for internal use specifying which entry class type (i.e. entries or pages) is in context.
+
 =back
 
-=for tags categories
+=for tags categories block
 
 =cut
 
