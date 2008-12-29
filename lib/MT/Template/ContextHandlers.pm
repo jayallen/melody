@@ -7810,14 +7810,13 @@ published.
 =item * recently_commented_on (optional)
 
 Selects the list of entries that have received published comments
-recently. The value of this attribute is the number of days to use
-to limit the selection. For instance:
+recently. The value of this attribute is the number of items to return.
+For instance:
 
     <mt:Entries recently_commented_on="10">
 
-will select entries that received published comments within the last
-10 days. The order of the entries is the date of the most recently
-received comment.
+will select the last 10 entries that received published comments. The 
+order of the entries is the date of the most recently received comment.
 
 =item * unique
 
