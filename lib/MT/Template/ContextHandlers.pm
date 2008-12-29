@@ -7058,6 +7058,7 @@ sub _hdlr_blogs {
         local $vars->{__counter__} = $count;
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error($builder->errstr);
+        # See http://bugs.movabletype.org/?79873
         $res .= $glue
             if defined $glue && ($count > 1) && length($res) && length($out);
         $res .= $out;
