@@ -301,8 +301,10 @@ sub _hdlr_results {
     for ( my $i = 0; $i < $count; $i++) {
         $count_per_blog++;
         $ctx->stash($stash_key, $this_object);
-        local $ctx->{__stash}{blog} = $this_object->blog
-            if $this_object->can('blog');
+        # See case 81819 - http://bugs.movabletype.org/?81819
+        local $ctx->{__stash}{blog} =
+               $ctx->stash('template')->blog
+            || ($this_object->can('blog') ? $this_object->blog : undef);
         my $ts;
         if ( $this_object->isa('MT::Entry') ) {
             $ts = $this_object->authored_on;
