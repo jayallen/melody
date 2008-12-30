@@ -1157,6 +1157,8 @@ function tagarray_length_sort($a, $b) {
 	return $al == $bl ? 0 : $al < $bl ? 1 : -1;
 }
 
+// FIXME: Need to modify this function to act the same as
+// http://github.com/jayallen/mtos-community/commit/05b91c9cefacf219fe6167ec18cd45a770f74911
 function create_tag_expr_function($expr, &$tags, $datasource = 'entry') {
     $tags_used = array();
     $orig_expr = $expr;
