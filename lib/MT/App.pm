@@ -751,10 +751,12 @@ sub init_request {
             POST_MAX => $app->config->CGIMaxUpload );
     }
     else {
+        # Patched from http://bugs.movabletype.org/?81733
+        require CGI;
+        $CGI::POST_MAX = $app->config->CGIMaxUpload;
+
         if ( $param{CGIObject} ) {
             $app->{query} = $param{CGIObject};
-            require CGI;
-            $CGI::POST_MAX = $app->config->CGIMaxUpload;
         }
         else {
             if ( my $path_info = $ENV{PATH_INFO} ) {
@@ -766,8 +768,6 @@ sub init_request {
                     delete $ENV{PATH_INFO};
                 }
             }
-            require CGI;
-            $CGI::POST_MAX = $app->config->CGIMaxUpload;
             $app->{query} = CGI->new( $app->{no_read_body} ? {} : () );
         }
     }
