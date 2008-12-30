@@ -1356,6 +1356,8 @@ sub _init_plugins_core {
                             $Plugins{$plugin_dir}{enabled} = 0;
                             next;
                         }
+                        # See http://bugs.movabletype.org/?79933
+                        next if exists $Plugins{$plugin_dir};
                         my $id = lc $plugin_dir;
                         $id =~ s/\.\w+$//;
                         my $p = $pclass->new(
