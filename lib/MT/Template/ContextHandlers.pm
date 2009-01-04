@@ -9776,9 +9776,9 @@ sub _hdlr_entry_category {
 
 =head2 EntryCategories
 
-A container tag that lists all of the categories (primary and secondary)
-to which the entry is assigned. This tagset creates a category context
-within which any category or subcategory tags may be used.
+A container tag that lists the categories to which the entry is assigned. 
+This tagset creates a category context within which any category or 
+subcategory tags may be used.
 
 B<Attributes:>
 
@@ -9787,6 +9787,12 @@ B<Attributes:>
 =item * glue (optional)
 
 If specified, this string is placed in between each result from the loop.
+
+=item * context (optional)
+
+Accepts either "primary" or "secondary". If unspecified, the container will list
+all categories assigned to the entry.
+If the glue attribute is used with "primary" context, it will be ignored.
 
 =back
 
@@ -9802,13 +9808,22 @@ sub _hdlr_entry_categories {
     my $tokens = $ctx->stash('tokens');
     my $res = '';
     my $glue = $args->{glue};
+    my $catcontext = $args->{context};
     local $ctx->{inside_mt_categories} = 1;
-    for my $cat (@$cats) {
-        local $ctx->{__stash}->{category} = $cat;
+    if ($catcontext eq 'primary') {
+        local $ctx->{__stash}->{category} = $e->category;
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error( $builder->errstr );
-        $res .= $glue if defined $glue && length($res) && length($out);
         $res .= $out;
+    } else {
+        for my $cat (@$cats) {
+            next if ($catcontext eq 'secondary') && ($e->category && ($cat->label eq $e->category->label));
+            local $ctx->{__stash}->{category} = $cat;
+            defined(my $out = $builder->build($ctx, $tokens, $cond))
+                or return $ctx->error( $builder->errstr );
+            $res .= $glue if defined $glue && length($res) && length($out);
+            $res .= $out;
+        }
     }
     $res;
 }
