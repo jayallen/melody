@@ -9790,9 +9790,9 @@ If specified, this string is placed in between each result from the loop.
 
 =item * context (optional)
 
-Accepts either "primary" or "secondary". If unspecified, the container will list
-all categories assigned to the entry.
-If the glue attribute is used with "primary" context, it will be ignored.
+Accepts either "primary" or "secondary". If unspecified, the container will 
+list all categories assigned to the entry. If the glue attribute is used with
+"primary" context, it will be ignored.
 
 =back
 
@@ -9814,10 +9814,11 @@ sub _hdlr_entry_categories {
         local $ctx->{__stash}->{category} = $e->category;
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error( $builder->errstr );
-        $res .= $out;
+        $res = $out;
     } else {
         for my $cat (@$cats) {
-            next if ($catcontext eq 'secondary') && ($e->category && ($cat->label eq $e->category->label));
+            next if ($catcontext eq 'secondary')
+                && ($e->category && ($cat->label eq $e->category->label));
             local $ctx->{__stash}->{category} = $cat;
             defined(my $out = $builder->build($ctx, $tokens, $cond))
                 or return $ctx->error( $builder->errstr );
