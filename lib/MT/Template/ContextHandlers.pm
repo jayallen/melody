@@ -9808,16 +9808,16 @@ sub _hdlr_entry_categories {
     my $tokens = $ctx->stash('tokens');
     my $res = '';
     my $glue = $args->{glue};
-    my $catcontext = $args->{context};
+    my $cat_context = $args->{context};
     local $ctx->{inside_mt_categories} = 1;
-    if ($catcontext eq 'primary') {
+    if ($cat_context eq 'primary') {
         local $ctx->{__stash}->{category} = $e->category;
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error( $builder->errstr );
         $res = $out;
     } else {
         for my $cat (@$cats) {
-            next if ($catcontext eq 'secondary')
+            next if ($cat_context eq 'secondary')
                 && ($e->category && ($cat->label eq $e->category->label));
             local $ctx->{__stash}->{category} = $cat;
             defined(my $out = $builder->build($ctx, $tokens, $cond))
@@ -14228,34 +14228,24 @@ sub _hdlr_if_category {
 
 =head2 EntryAdditionalCategories
 
-This block tag iterates over all secondary categories for the entry in
-context. Must be used in an entry context (entry archive or L<Entries> loop).
+An alias for the L<EntryCategories> tag with context set to "secondary"
 
-All categories can be listed using L<EntryCategories> loop tag.
+B<Notes:>
 
-=for tags entries, categories
+Deprecated in favor of L<EntryCategories>
+
+=for tags deprecated, entries, categories
 
 =cut
 
 sub _hdlr_entry_additional_categories {
     my($ctx, $args, $cond) = @_;
-    my $e = $ctx->stash('entry')
-        or return $ctx->_no_entry_error();
-    my $cats = $e->categories;
-    return '' unless $cats && @$cats;
-    my $builder = $ctx->stash('builder');
-    my $tokens = $ctx->stash('tokens');
-    my $res = '';
-    my $glue = $args->{glue};
-    for my $cat (@$cats) {
-        next if $e->category && ($cat->label eq $e->category->label);
-        local $ctx->{__stash}->{category} = $cat;
-        defined(my $out = $builder->build($ctx, $tokens, $cond))
-            or return $ctx->error( $builder->errstr );
-        $res .= $glue if defined $glue && length($res) && length($out);
-        $res .= $out if length($out);
-    }
-    $res;
+
+    local $args->{context} = 'secondary';
+
+    # Over to mt:EntryCategories
+    &_hdlr_entry_categories;
+
 }
 
 ###########################################################################
