@@ -12467,12 +12467,20 @@ sub _hdlr_archive_set {
     my $tokens = $ctx->stash('tokens');
     my $builder = $ctx->stash('builder');
     my $old_at = $blog->archive_type_preferred();
+    my $i = 0;
+    my $vars = $ctx->{__stash}{vars} ||= {};
     foreach my $type (@at) {
+        local $vars->{__first__} = !$i;
+        local $vars->{__last__} = !defined $at[$i+1];
+        local $vars->{__odd__} = ($i % 2) == 0; # 0-based $i
+        local $vars->{__even__} = ($i % 2) == 1;
+        local $vars->{__counter__} = $i+1;
         $blog->archive_type_preferred($type);
         local $ctx->{current_archive_type} = $type;
         defined(my $out = $builder->build($ctx, $tokens, $cond)) or
             return $ctx->error( $builder->errstr );
         $res .= $out;
+        $i++;
     }
     $blog->archive_type_preferred($old_at);
     $res;
