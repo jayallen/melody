@@ -4180,7 +4180,7 @@ sub _hdlr_entry_tags {
     my $builder = $ctx->stash('builder');
     my $tokens = $ctx->stash('tokens');
     my $res = '';
-    my $count = 0;
+    my $i = 0;
     my $vars = $ctx->{__stash}{vars} ||= {};
     my $tags = $entry->get_tag_objects;
     for my $tag (@$tags) {
@@ -4188,16 +4188,16 @@ sub _hdlr_entry_tags {
         local $ctx->{__stash}{Tag} = $tag;
         local $ctx->{__stash}{tag_count} = undef;
         local $ctx->{__stash}{tag_entry_count} = undef;
-        local $vars->{__first__} = !$count;
-        #local $vars->{__last__} = !$count; #FIXME: Work this one out later
-        local $vars->{__odd__} = ($count % 2) == 0; # $count is 0-based
-        local $vars->{__even__} = ($count % 2) == 1;
-        local $vars->{__counter__} = $count;
+        local $vars->{__first__} = !$i;
+        #local $vars->{__last__} = !$i; #FIXME: Work this one out later
+        local $vars->{__odd__} = ($i % 2) == 0; # $i is 0-based
+        local $vars->{__even__} = ($i % 2) == 1;
+        local $vars->{__counter__} = $i;
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error( $builder->errstr );
         $res .= $glue if defined $glue && length($res) && length($out);
         $res .= $out;
-        $count++
+        $i++
     }
     $res;
 }
