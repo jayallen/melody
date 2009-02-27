@@ -644,17 +644,13 @@ sub handler ($$) {
     return Apache::Constants::OK();
 }
 
-sub new {
-    my $pkg = shift;
-    my $app = $pkg->SUPER::new(@_);
-    $app->{init_request} = 0;
-    $app;
-}
-
 sub init {
     my $app   = shift;
     my %param = @_;
     $app->{apache} = $param{ApacheObject} if exists $param{ApacheObject};
+
+    # start tracing even prior to 'init'
+    local $SIG{__WARN__} = sub { $app->trace( $_[0] ) };
     $app->SUPER::init(%param) or return;
     $app->{vtbl}                 = {};
     $app->{is_admin}             = 0;
@@ -721,12 +717,6 @@ sub init_request {
     return if $app->{init_request};
 
     if ($MT::DebugMode) {
-        if ( $MT::DebugMode & 4 ) {    # SQL profile reporting is enabled
-            my $h = MT::Object->driver->r_handle;
-            if ( my $Profile = $h->{Profile} ) { # if DBI profiling is enabled
-                $Profile->{Data} = {};           # reset the profile data
-            }
-        }
         require Time::HiRes;
         $app->{start_request_time} = Time::HiRes::time();
     }
@@ -2892,6 +2882,7 @@ sub assert {
 
 sub takedown {
     my $app = shift;
+    my $cfg = $app->config;
 
     MT->run_callbacks( ref($app) . '::take_down', $app )
         ;    # arg is the app object
@@ -2904,7 +2895,7 @@ sub takedown {
     $app->user(undef);
     delete $app->{$_}
         for qw( cookies perms session trace response_content _blog
-        WeblogPublisher );
+        WeblogPublisher init_request );
 
     my $driver = $MT::Object::DRIVER;
     $driver->clear_cache if $driver && $driver->can('clear_cache');
@@ -2912,7 +2903,7 @@ sub takedown {
     require MT::Auth;
     MT::Auth->release;
 
-    if ( $app->config->PerformanceLogging ) {
+    if ( $cfg->PerformanceLogging ) {
         $app->log_times();
     }
 
@@ -2920,12 +2911,15 @@ sub takedown {
     if ( UNIVERSAL::isa( $app, 'MT::App::Upgrader' ) ) {
 
         # mt_config table doesn't exist during installation
-        if ( $driver->table_exists('MT::Config') ) {
-            $app->config->save_config();
+        if (my $cfg_pkg = $app->model('config')) {
+            my $driver = $cfg_pkg->driver;
+            if ( $driver->table_exists($cfg_pkg) ) {
+                $cfg->save_config();
+            }
         }
     }
     else {
-        $app->config->save_config();
+        $cfg->save_config();
     }
 
     $app->request->finish;
@@ -3600,11 +3594,15 @@ sub log {
 sub trace {
     my $app = shift;
     $app->{trace} ||= [];
-    push @{ $app->{trace} }, "@_";
     if ( $MT::DebugMode & 2 ) {
         require Carp;
         local $Carp::CarpLevel = 1;
-        push @{ $app->{trace} }, Carp::longmess("Stack trace:");
+        my $msg = "@_";
+        chomp $msg;
+        push @{ $app->{trace} }, Carp::longmess($msg);
+    }
+    else {
+        push @{ $app->{trace} }, "@_";
     }
     if ( $MT::DebugMode & 128 ) {
         my @caller = caller(1);
@@ -3614,10 +3612,13 @@ sub trace {
             . $caller[1]
             . ', line '
             . $caller[2];
-        print STDERR "(warn from $place) @_\n";
         if ( $MT::DebugMode & 2 ) {
             local $Carp::CarpLevel = 1;
-            print STDERR Carp::longmess("Stack trace:");
+            my $msg = "@_";
+            chomp $msg;
+            print STDERR Carp::longmess("(warn from $place) $msg");
+        } else {
+            print STDERR "(warn from $place) @_\n";
         }
     }
 }
