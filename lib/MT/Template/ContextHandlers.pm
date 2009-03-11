@@ -6335,6 +6335,11 @@ exclude system administrators who do not have explicit association
 to the blog(s).  This attribute requires blog context which
 can be created by include_blogs, exclude_blogs, and blog_ids.
 
+=item * need_userpic (optional; default "0")
+
+Identifies whether the author(s) must have a custom userpic
+to be included or not.
+
 =item * status (optional; default "enabled")
 
 Supported values: enabled, disabled.
@@ -6400,6 +6405,12 @@ List all Authors and Commenters for a blog:
         <a href="<$mt:AuthorURL$>"><mt:AuthorDisplayName$></a>
     </mt:Authors>
 
+List all Commenters with a userpic:
+
+   <mt:Authors need_userpic="1" roles="Commenter">
+       <a href="<$mt:AuthorURL$>"><mt:AuthorDisplayName$></a>
+   </mt:Authors>
+
 =for tags multiblog, loop, scoring, authors
 
 =cut
@@ -6458,6 +6469,10 @@ sub _hdlr_authors {
             }
             push @filters, sub { $cexpr->($_[0]->id, \%map) };
         }
+    }
+
+    if (defined $args->{need_userpic} ? $args->{need_userpic} : 0) {
+	$terms{'userpic_asset_id'} = { '>' => 0 };
     }
 
     if (defined $args->{need_entry} ? $args->{need_entry} : 1) {

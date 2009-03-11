@@ -57,6 +57,7 @@ __PACKAGE__->install_properties({
         email => 1,
         type => 1,
         status => 1,
+        userpic_asset_id => 1,
         external_id => 1,
         auth_type_name => {
             columns => ['auth_type', 'name', 'type'],
