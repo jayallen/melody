@@ -29,31 +29,12 @@ our $plugins_installed;
 BEGIN {
     $plugins_installed = 0;
 
-<<<<<<< HEAD:lib/MT.pm.pre
     ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', '__SCHEMA_VERSION__' );
     ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID ) = (
         '__PRODUCT_NAME__',    '__PRODUCT_CODE__',
         '__PRODUCT_VERSION__', '__PRODUCT_VERSION_ID__'
     );
 
-=======
-    ( $VERSION, $SCHEMA_VERSION ) = ( '4.23', '4.0068' );
-    ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
-        '__PRODUCT_NAME__', 'OM',
-        '4.23', '4.23+dev',
-        '__PORTAL_URL__'
-    );
-
-    # To allow MT to run straight from svn, if no build process (pre-processing)
-    # is run, then default to MTOS
-    if ($PRODUCT_NAME eq '__PRODUCT' . '_NAME__') {
-        $PRODUCT_NAME = 'OpenMelody';
-    }
-    if ($PORTAL_URL eq '__PORTAL' . '_URL__') {
-        $PORTAL_URL = 'http://github.com/jayallen/openmelody/';
-    }
-
->>>>>>> Changing PRODUCT_NAME and PRODUCT_VERSION to relfect fork name and version:lib/MT.pm
     $DebugMode = 0;
 
     # Alias lowercase to uppercase package; note: this is an equivalence
