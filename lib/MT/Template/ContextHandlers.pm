@@ -4218,10 +4218,6 @@ If specified, outputs the "normalized" form of the tag. A normalized
 tag has been stripped of any spaces and punctuation and is only
 lowercase.
 
-=back
-
-=over 4
-
 =item * quote (optional; default "0")
 
 If specified, causes any tag with spaces in it to be wrapped in quote
@@ -18395,6 +18391,8 @@ sub _hdlr_folder_count {
 The path to the folder, relative to the L<BlogURL>.
 
 B<Attributes:>
+
+=over 4
 
 =item * separator
 
