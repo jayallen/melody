@@ -4576,7 +4576,7 @@ tag used to include this "Some Module" template module, like so:
 
 B<Important:> Modules used as IncludeBlocks should never be processed as a Server Side Include or be cached.
 
-+B<Attributes:>
+B<Attributes:>
 
 =over 4
 
