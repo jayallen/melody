@@ -664,7 +664,7 @@ sub sync_assets {
 sub set_defaults {
     my $e    = shift or return;    
     my $app  = MT->instance or return;
-    my $blog = $app->model('blog')->load($e->blog_id) if $e->blog_id
+    my $blog = $app->model('blog')->load($e->blog_id) if $e->blog_id;
     $blog    ||= $app->blog;
     my $user = $app->user;
 
@@ -729,8 +729,8 @@ sub save {
     ## If pings are allowed on this entry, create or update
     ## the corresponding TrackBack object for this entry.
     require MT::Trackback;
+    my $tb;
     if ($entry->allow_pings) {
-        my $tb;
         unless ($tb = $entry->trackback) {
             $tb = MT::Trackback->new;
             $tb->blog_id($entry->blog_id);
@@ -748,7 +748,7 @@ sub save {
         ## If there is a TrackBack item for this entry, but
         ## pings are now disabled, make sure that we mark the
         ## object as disabled.
-        if (my $tb = $entry->trackback) {
+        if ($tb = $entry->trackback) {
             $tb->is_disabled(1);
             $tb->save
                 or return $entry->error($tb->errstr);
