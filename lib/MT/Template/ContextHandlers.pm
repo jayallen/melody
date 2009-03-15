@@ -7039,12 +7039,30 @@ sub _hdlr_blogs {
     require MT::Blog;
     $args{'sort'} = 'name';
     $args{direction} = 'ascend';
+
     my $iter = MT::Blog->load_iter(\%terms, \%args);
+    my $vars = $ctx->{__stash}{vars} ||= {};
+
+    if ($args->{gatefn}) {
+        return $ctx->compile_iterator_block_tag({
+            iterator   => $iter,
+            attributes => $args,
+            condition  => $cond,
+            prerun     => sub {
+                my ($ctx, $args, $obj, $next) = @_;
+                $ctx->{__stash}{blog}    = $obj;
+                $ctx->{__stash}{blog_id} = $obj->id;
+                $ctx;
+            },
+            postrun    => sub { },
+            skip       => sub { },
+        });
+    }
+
     my $res = '';
     my $count = 0;
-    my $next = $iter->();
     my $glue = $args->{glue};
-    my $vars = $ctx->{__stash}{vars} ||= {};
+    my $next = $iter->();
     while ($next) {
         my $blog = $next;
         $next = $iter->();

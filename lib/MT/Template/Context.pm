@@ -274,6 +274,97 @@ sub post_process_handler {
     \&stock_post_process_handler;
 }
 
+sub block_tag_iterator {
+    my ($ctx, $args) = @_;
+
+    # Initialize the iterator
+    # Accepted values are a code reference or an array reference
+    my $iter;
+    if (! defined $args->{iterator}) {
+        return $ctx->error('No iterator defined');
+    }
+    elsif (! ref $args->{iterator}) {
+        return $ctx->error('Iterator must be an ARRAY or CODE reference');
+    }
+    elsif ('Data::ObjectDriver::Iterator' eq ref($args->{iterator})) {
+        $iter = $args->{iterator};
+    }
+    elsif ('CODE' eq ref($args->{iterator})) {
+        $iter = $args->{iterator};
+    }
+    elsif ('ARRAY' eq ref($args->{iterator})) {
+        require Data::ObjectDriver;
+        $iter = Data::ObjectDriver->list_or_iterator($args->{iterator});        
+    }
+
+    # Check for compilation hookpoints
+    # Return error if defined and not code refs as something is wrong
+    foreach my $hook (qw(prerun postrun skip)) {
+        next if ! defined $args->{$hook} or 'CODE' eq ref($args->{$hook});
+        return $ctx->error(
+            sprintf 'Non-code reference in "%s" hookpoint "%s"',
+                $ctx->stash('tag'), $hook);
+    }
+
+    # Initialize the loop variables
+    my $res     = '';                               # Cumulative output
+    my $count   = 0;                                # Loop counter
+    my $attr    = $args->{attributes} || {};        # Tag attributes
+    my $glue    = $attr->{glue};                    # Glue for output
+    my $vars    = $ctx->{__stash}{vars} ||= {};     # Template variables
+    my $builder = $ctx->stash('builder');           # Builder objects
+    my $tokens  = $ctx->stash('tokens');            # Current template tokens
+    my $next    = $iter->();                        # Initialize first object
+
+    # Start iterating over each object
+    while ($next) {
+
+        # Populate current and next object variables
+        my $obj = $next;        
+        $next = $iter->();
+
+        # Run tag-specific skip test for conditional object processing
+        next if $args->{skip} and $args->{skip}->($ctx, $args, $obj, $next);
+        
+        # Set template loop meta variables
+        local $vars->{__counter__} = ++$count;
+        local $vars->{__first__}   = $count == 1;
+        local $vars->{__last__}    = !$next;           # ...why we needed next
+        local $vars->{__odd__}     = ($count % 2) == 1;
+        local $vars->{__even__}    = ($count % 2) == 0;
+
+        # Run tag-specific pre-processing code
+        # Return value is ignored, return on context error
+        $ctx = $args->{prerun}->($ctx, $args, $obj, $next) if $args->{prerun};
+        return if $ctx->errstr;
+
+        # Build the code from the available context, passing in
+        # conditional tests for subtags
+        my $out =
+            $builder->build($ctx, $tokens, $args->{condition});
+
+        # Undefined return value indicates an error
+        defined $out or return $ctx->error($builder->errstr);
+    
+        # Run tag-specific post-processing code
+        # Output for current object is passed as a scalarref for changes
+        # Return value is ignored, retrun on context error
+        $ctx = $args->{postrun}->($ctx, $args, $obj, $next, \$out)
+            if $args->{postrun};
+        return if $ctx->errstr;
+
+        # Add glue and output to cumulative results
+        $res .= $glue if defined $glue && length($res) && length($out);
+        $res .= $out if defined $out;
+    }
+
+     if (! $count) {
+        return _hdlr_pass_tokens_else(
+            $ctx, $attr, $args->{condition});
+    }
+    $res;
+}
+
 sub slurp {
     my ($ctx, $args, $cond) = @_;
     my $tokens  = $ctx->stash('tokens');
