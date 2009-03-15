@@ -39,9 +39,13 @@ mt-static/themes/unity-purple
 mt-static/themes/unity-tricolor
 
 # Conditional SKIP rule; format: #?(var=value) RULE
+^COPYING
 #?package=MT ^COPYING
+^COPYRIGHT
 #?package=MT ^COPYRIGHT
+^addons/Enterprise.pack
 #?package=MT ^addons/Enterprise.pack
+^mt-static/addons/Enterprise.pack
 #?package=MT ^mt-static/addons/Enterprise.pack
 
 #?package=MTOS ^addons
@@ -184,4 +188,3 @@ index\.html\..*
 readme\.html\..*
 build-language-stamp
 ^mt-config.cgi$
-
