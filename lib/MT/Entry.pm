@@ -665,8 +665,8 @@ sub set_defaults {
     my $e    = shift or return;    
     my $app  = MT->instance or return;
     my $blog = $app->model('blog')->load($e->blog_id) if $e->blog_id;
-    $blog    ||= $app->blog;
-    my $user = $app->user;
+    $blog  ||= $app->blog if $app and $app->can('blog');
+    my $user = $app->user if $app and $app->can('user');
 
     my (%user_defaults, %blog_defaults);
     
