@@ -245,9 +245,9 @@ sub _post_load_rebless_object {
     my $obj = shift;
     my $props = $obj->properties;
     if (my $col = $props->{class_column}) {
-        my $type = $obj->column($col);
         my $pkg = ref($obj);
-        if ($pkg->class_type ne $type) {
+        my $type = $obj->column($col);
+        if ($type and $pkg->class_type ne $type) {
             if (my $class = $props->{__type_to_class}{$type}) {
                 bless $obj, $class;
             } else {
