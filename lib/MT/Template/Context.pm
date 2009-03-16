@@ -335,8 +335,10 @@ sub block_tag_iterator {
 
         # Run tag-specific pre-processing code
         # Return value is ignored, return on context error
-        $ctx = $args->{prerun}->($ctx, $args, $obj, $next) if $args->{prerun};
-        return if $ctx->errstr;
+        if ($args->{prerun}) {
+            $ctx = $args->{prerun}->($ctx, $args, $obj, $next)
+                or return;
+        }
 
         # Build the code from the available context, passing in
         # conditional tests for subtags
