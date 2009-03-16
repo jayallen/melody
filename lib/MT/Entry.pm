@@ -662,14 +662,23 @@ sub sync_assets {
 
 # See http://bugs.movabletype.org/?82628
 sub set_defaults {
-    my $e    = shift or return;    
-    my $app  = MT->instance or return;
-    my $blog = $app->model('blog')->load($e->blog_id) if $e->blog_id;
-    $blog  ||= $app->blog if $app and $app->can('blog');
-    my $user = $app->user if $app and $app->can('user');
+    my $e      = shift or return;    
 
-    my (%user_defaults, %blog_defaults);
+    my $app    = MT->instance or return;
+    # Entry blog takes precedence, $app->blog fallback
+    my $blog   = $app->model('blog')->load($e->blog_id) if $e->blog_id;
+    $blog    ||= $app->blog if $app and $app->can('blog');
+    # $app->user is the only thing that matters
+    my $user   = $app->user if $app and $app->can('user');
+
+    my (%entry_defaults, %user_defaults, %blog_defaults);
     
+    %entry_defaults = (
+        ping_count => 0,
+        class      => 'entry',
+        status     => 0,
+    );
+
     if ( $user ) { 
         %user_defaults = (
             author_id      => $user->id,
@@ -679,7 +688,7 @@ sub set_defaults {
 
     if ( $blog ) {
         %blog_defaults = (
-            status        => $blog->status_default,
+            status         => $blog->status_default,
             allow_comments => $blog->allow_comments_default,
             allow_pings    => $blog->allow_pings_default,
             convert_breaks => ($blog->convert_paras || '__default__'),
@@ -688,7 +697,10 @@ sub set_defaults {
             if $user_defaults{convert_breaks};
     }
     
-    $e->set_values({ %user_defaults, %blog_defaults });
+    $e->set_values({ %entry_defaults, %user_defaults, %blog_defaults });
+    # use Data::Dumper;
+    # print 'Entry default values: '.Dumper($e);
+    
 }
 
 sub save {
