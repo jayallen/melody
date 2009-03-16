@@ -319,8 +319,9 @@ sub init_data {
     # TODO: this test entry is never created; upgrading already adds entry #1.
     if (!$entry) {
         $entry = MT::Entry->new();
+        $entry->blog_id(1);
+        $entry->set_defaults();
         $entry->set_values({
-            blog_id => 1,
             title => 'A Rainy Day',
             text => 'On a drizzly day last weekend,',
             text_more => 'I took my grandpa for a walk.',
@@ -346,8 +347,10 @@ sub init_data {
     $entry = MT::Entry->load(2);
     if (!$entry) {
         $entry = MT::Entry->new();
+        $entry->blog_id(1);
+        $entry->set_defaults();
+
         $entry->set_values({
-            blog_id => 1,
             title => 'A preponderance of evidence',
             text => 'It is sufficient to say...',
             text_more => 'I suck at making up test data.',
@@ -368,8 +371,9 @@ sub init_data {
     $entry = MT::Entry->load(3);
     if (!$entry) {
         $entry = MT::Entry->new();
+        $entry->blog_id(1);
+        $entry->set_defaults();
         $entry->set_values({
-            blog_id => 1,
             title => 'Spurious anemones',
             text => '...are better than the non-spurious',
             text_more => 'variety.',
@@ -493,8 +497,9 @@ It\'s a hard rain\'s a-gonna fall',
         $entry = MT::Entry->load($i+3);
         if (!$entry) {
             $entry = MT::Entry->new();
+            $entry->blog_id(1);
+            $entry->set_defaults();
             $entry->set_values({
-                blog_id => 1,
                 title => "Verse $i",
                 text => $verses[$i],
                 author_id => ($i == 3 ? $bobd->id : $chuckd->id),
