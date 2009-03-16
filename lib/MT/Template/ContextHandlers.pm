@@ -7043,6 +7043,7 @@ sub _hdlr_blogs {
     my $iter = MT::Blog->load_iter(\%terms, \%args);
     my $vars = $ctx->{__stash}{vars} ||= {};
 
+    # Temporary attribute to use for the new block tag gating function
     if ($args->{gatefn}) {
         return $ctx->compile_iterator_block_tag({
             iterator   => $iter,
