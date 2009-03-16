@@ -276,25 +276,20 @@ sub post_process_handler {
 
 sub block_tag_iterator {
     my ($ctx, $args) = @_;
+    my $iter         = $args->{iterator};
 
-    # Initialize the iterator
-    # Accepted values are a code reference or an array reference
-    my $iter;
-    if (! defined $args->{iterator}) {
-        return $ctx->error('No iterator defined');
+    if (! ref $iter) {
+        return $ctx->error(
+            defined $iter ?
+                'Iterator must be an ARRAY or CODE reference or a '
+                .' Data::ObjectDriver::Iterator object'
+              : 'No iterator defined';
+        $err);
     }
-    elsif (! ref $args->{iterator}) {
-        return $ctx->error('Iterator must be an ARRAY or CODE reference');
-    }
-    elsif ('Data::ObjectDriver::Iterator' eq ref($args->{iterator})) {
-        $iter = $args->{iterator};
-    }
-    elsif ('CODE' eq ref($args->{iterator})) {
-        $iter = $args->{iterator};
-    }
-    elsif ('ARRAY' eq ref($args->{iterator})) {
+    # Convert an ARRAY ref to an iterator object if needed
+    elsif ('ARRAY' eq ref($iter)) {
         require Data::ObjectDriver;
-        $iter = Data::ObjectDriver->list_or_iterator($args->{iterator});        
+        $iter = Data::ObjectDriver->list_or_iterator( $iter );
     }
 
     # Check for compilation hookpoints
