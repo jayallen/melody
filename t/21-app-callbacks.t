@@ -3,11 +3,21 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3;
+use Test::More tests => 5;
 use CGI;
 
 use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 use MT::App::CMS;
+# use MT::Test;
+
+use MT::Test qw(:db :data);
+
+use MT;
+use vars qw( $DB_DIR $T_CFG );
+
+my $mt = MT->new( Config => $T_CFG ) or die MT->errstr;
+isa_ok($mt, 'MT', 'Is MT');
+
 
 ### Test app callbacks
 
@@ -18,6 +28,7 @@ my $cms = MT::App::CMS->new();
 my $plugin = MT::Plugin->new({name => "21-callbacks.t"});
 
 my $entry2 = MT::Entry->load({}, { limit => 1 });
+isa_ok($entry2, 'MT::Entry');
 
 my $app_post_save_called;
 MT->add_callback('AppPostEntrySave', 1, $plugin, 
