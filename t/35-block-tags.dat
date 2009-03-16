@@ -1,0 +1,8 @@
+[
+{ "r" : "1", "t" : "", "e" : ""}, #1
+{ "r" : "1", "t" : "<MTBlogs><MTVar name=\"__counter__\"></MTBlogs>", "e" : "1"}, #2
+{ "r" : "1", "t" : "<MTBlogs><MTVar name=\"__first__\"></MTBlogs>", "e" : "1"}, #3
+{ "r" : "1", "t" : "<MTBlogs><MTVar name=\"__last__\"></MTBlogs>", "e" : "1"}, #4
+{ "r" : "1", "t" : "<MTBlogs><MTVar name=\"__odd__\"></MTBlogs>", "e" : "1"}, #5
+{ "r" : "1", "t" : "<MTBlogs><MTVar name=\"__even__\"></MTBlogs>", "e" : ""} #6
+]

@@ -3182,6 +3182,49 @@ sub _hdlr_loop {
         }
     }
 
+
+    # Temporary attribute to use for the new block tag gating function
+    if ($args->{gatefn} or $ctx->stash('use_gatefn')) {
+
+        my $prerun = sub {
+            my ($ctx, $args, $obj, $next) = @_;
+            my @names;
+            my $vars = $ctx->{__stash}{vars} ||= {};
+            if (UNIVERSAL::isa($obj, 'MT::Object')) {
+                @names = @{ $obj->column_names };
+            } else {
+                if (ref($obj) eq 'HASH') {
+                    @names = keys %$obj;
+                } elsif ( $hash_var ) {
+                    @names = ( '__key__', '__value__' );
+                } else {
+                    @names = '__value__';
+                }
+            }
+            my @var_names;
+            push @var_names, lc $_ for @names;
+            local @{$vars}{@var_names};
+            if (UNIVERSAL::isa($obj, 'MT::Object')) {
+                $vars->{lc($_)} = $obj->column($_) for @names;
+            } elsif (ref($obj) eq 'HASH') {
+                $vars->{lc($_)} = $obj->{$_} for @names;
+            } elsif ( $hash_var ) {
+                $vars->{'__key__'} = $obj;
+                $vars->{'__value__'} = $hash_var->{$obj};
+            } else {
+                $vars->{'__value__'} = $obj;
+            }
+            $ctx;
+        };
+
+        return $ctx->block_tag_iterator({
+            iterator   => $var,
+            attributes => $args,
+            condition  => $cond,
+            prerun     => $prerun,
+        });
+    }
+
     my $builder = $ctx->stash('builder');
     my $tokens = $ctx->stash('tokens');
     my $out = '';
@@ -7044,8 +7087,8 @@ sub _hdlr_blogs {
     my $vars = $ctx->{__stash}{vars} ||= {};
 
     # Temporary attribute to use for the new block tag gating function
-    if ($args->{gatefn}) {
-        return $ctx->compile_iterator_block_tag({
+    if ($args->{gatefn} or $ctx->stash('use_gatefn')) {
+        return $ctx->block_tag_iterator({
             iterator   => $iter,
             attributes => $args,
             condition  => $cond,
@@ -7055,8 +7098,6 @@ sub _hdlr_blogs {
                 $ctx->{__stash}{blog_id} = $obj->id;
                 $ctx;
             },
-            postrun    => sub { },
-            skip       => sub { },
         });
     }
 

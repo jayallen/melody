@@ -283,8 +283,8 @@ sub block_tag_iterator {
             defined $iter ?
                 'Iterator must be an ARRAY or CODE reference or a '
                 .' Data::ObjectDriver::Iterator object'
-              : 'No iterator defined';
-        $err);
+              : 'No iterator defined'
+        );
     }
     # Convert an ARRAY ref to an iterator object if needed
     elsif ('ARRAY' eq ref($iter)) {
