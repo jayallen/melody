@@ -352,7 +352,9 @@ sub block_tag_iterator {
         }
 
         # Add glue and output to cumulative results
-        $res .= $glue if defined $glue && length($res) && length($out);
+        # See http://bugs.movabletype.org/?79873
+        $res .= $glue
+            if defined $glue && ($count > 1) && length($res) && length($out);
         $res .= $out if defined $out;
     }
 

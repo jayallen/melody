@@ -3183,66 +3183,15 @@ sub _hdlr_loop {
     }
 
 
-    # Temporary attribute to use for the new block tag gating function
-    if ($args->{gatefn} or $ctx->stash('use_gatefn')) {
-
-        my $prerun = sub {
-            my ($ctx, $args, $obj, $next) = @_;
-            my @names;
-            my $vars = $ctx->{__stash}{vars} ||= {};
-            if (UNIVERSAL::isa($obj, 'MT::Object')) {
-                @names = @{ $obj->column_names };
-            } else {
-                if (ref($obj) eq 'HASH') {
-                    @names = keys %$obj;
-                } elsif ( $hash_var ) {
-                    @names = ( '__key__', '__value__' );
-                } else {
-                    @names = '__value__';
-                }
-            }
-            my @var_names;
-            push @var_names, lc $_ for @names;
-            local @{$vars}{@var_names};
-            if (UNIVERSAL::isa($obj, 'MT::Object')) {
-                $vars->{lc($_)} = $obj->column($_) for @names;
-            } elsif (ref($obj) eq 'HASH') {
-                $vars->{lc($_)} = $obj->{$_} for @names;
-            } elsif ( $hash_var ) {
-                $vars->{'__key__'} = $obj;
-                $vars->{'__value__'} = $hash_var->{$obj};
-            } else {
-                $vars->{'__value__'} = $obj;
-            }
-            $ctx;
-        };
-
-        return $ctx->block_tag_iterator({
-            iterator   => $var,
-            attributes => $args,
-            condition  => $cond,
-            prerun     => $prerun,
-        });
-    }
-
-    my $builder = $ctx->stash('builder');
-    my $tokens = $ctx->stash('tokens');
-    my $out = '';
-    my $i = 1;
-    my $vars = $ctx->{__stash}{vars} ||= {};
-    my $glue = $args->{glue};
-    foreach my $item (@$var) {
-        local $vars->{__first__} = $i == 1;
-        local $vars->{__last__} = $i == scalar @$var;
-        local $vars->{__odd__} = ($i % 2 ) == 1;
-        local $vars->{__even__} = ($i % 2 ) == 0;
-        local $vars->{__counter__} = $i;
+    my $prerun = sub {
+        my ($ctx, $args, $obj, $next) = @_;
         my @names;
-        if (UNIVERSAL::isa($item, 'MT::Object')) {
-            @names = @{ $item->column_names };
+        my $vars = $ctx->{__stash}{vars} ||= {};
+        if (UNIVERSAL::isa($obj, 'MT::Object')) {
+            @names = @{ $obj->column_names };
         } else {
-            if (ref($item) eq 'HASH') {
-                @names = keys %$item;
+            if (ref($obj) eq 'HASH') {
+                @names = keys %$obj;
             } elsif ( $hash_var ) {
                 @names = ( '__key__', '__value__' );
             } else {
@@ -3251,26 +3200,30 @@ sub _hdlr_loop {
         }
         my @var_names;
         push @var_names, lc $_ for @names;
-        local @{$vars}{@var_names};
-        if (UNIVERSAL::isa($item, 'MT::Object')) {
-            $vars->{lc($_)} = $item->column($_) for @names;
-        } elsif (ref($item) eq 'HASH') {
-            $vars->{lc($_)} = $item->{$_} for @names;
+        # TODO: Had to remove local for scoping reasons, but need to test
+        # to make sure there's no bleed out of variables into other scopes
+        # local @{$vars}{@var_names};
+        @{$vars}{@var_names};
+        if (UNIVERSAL::isa($obj, 'MT::Object')) {
+            $vars->{lc($_)} = $obj->column($_) for @names;
+        } elsif (ref($obj) eq 'HASH') {
+            $vars->{lc($_)} = $obj->{$_} for @names;
         } elsif ( $hash_var ) {
-            $vars->{'__key__'} = $item;
-            $vars->{'__value__'} = $hash_var->{$item};
+            $vars->{'__key__'} = $obj;
+            $vars->{'__value__'} = $hash_var->{$obj};
         } else {
-            $vars->{'__value__'} = $item;
+            $vars->{'__value__'} = $obj;
         }
-        my $res = $builder->build($ctx, $tokens, $cond);
-        return $ctx->error($builder->errstr) unless defined $res;
-        if ($res ne '') {
-            $out .= $glue if defined $glue && $i > 1 && length($out) && length($res);
-            $out .= $res;
-            $i++;
-        }
-    }
-    return $out;
+        $ctx->{__stash}{vars} = $vars;
+        return 1;
+    };
+
+    return $ctx->block_tag_iterator({
+        iterator   => $var,
+        attributes => $args,
+        condition  => $cond,
+        prerun     => $prerun,
+    });
 }
 
 ###########################################################################
@@ -7086,44 +7039,17 @@ sub _hdlr_blogs {
     my $iter = MT::Blog->load_iter(\%terms, \%args);
     my $vars = $ctx->{__stash}{vars} ||= {};
 
-    # Temporary attribute to use for the new block tag gating function
-    if ($args->{gatefn} or $ctx->stash('use_gatefn')) {
-        return $ctx->block_tag_iterator({
-            iterator   => $iter,
-            attributes => $args,
-            condition  => $cond,
-            prerun     => sub {
-                my ($ctx, $args, $obj, $next) = @_;
-                $ctx->{__stash}{blog}    = $obj;
-                $ctx->{__stash}{blog_id} = $obj->id;
-                $ctx;
-            },
-        });
-    }
-
-    my $res = '';
-    my $count = 0;
-    my $glue = $args->{glue};
-    my $next = $iter->();
-    while ($next) {
-        my $blog = $next;
-        $next = $iter->();
-        $count++;
-        local $ctx->{__stash}{blog} = $blog;
-        local $ctx->{__stash}{blog_id} = $blog->id;
-        local $vars->{__first__} = $count == 1;
-        local $vars->{__last__} = !$next;
-        local $vars->{__odd__} = ($count % 2) == 1;
-        local $vars->{__even__} = ($count % 2) == 0;
-        local $vars->{__counter__} = $count;
-        defined(my $out = $builder->build($ctx, $tokens, $cond))
-            or return $ctx->error($builder->errstr);
-        # See http://bugs.movabletype.org/?79873
-        $res .= $glue
-            if defined $glue && ($count > 1) && length($res) && length($out);
-        $res .= $out;
-    }
-    $res;
+    return $ctx->block_tag_iterator({
+        iterator   => $iter,
+        attributes => $args,
+        condition  => $cond,
+        prerun     => sub {
+            my ($ctx, $args, $obj, $next) = @_;
+            $ctx->{__stash}{blog}    = $obj;
+            $ctx->{__stash}{blog_id} = $obj->id;
+            1;
+        },
+    });
 }
 
 ###########################################################################
