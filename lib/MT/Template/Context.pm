@@ -329,7 +329,7 @@ sub block_tag_iterator {
         local $vars->{__even__}    = ($count % 2) == 0;
 
         # Run tag-specific pre-processing code
-        # Return value is ignored, return on context error
+        # Undefined return value is assumed to be context error
         if ($args->{prerun}) {
             defined $args->{prerun}->($ctx, $attr, $obj, $next)
                 or return;
@@ -345,7 +345,7 @@ sub block_tag_iterator {
 
         # Run tag-specific post-processing code
         # Output for current object is passed as a scalarref for changes
-        # Return value is ignored, retrun on context error
+        # Undefined return value is assumed to be context error
         if ($args->{postrun}) {
             defined $args->{postrun}->($ctx, $attr, $obj, $next, \$out)
                 or return;
