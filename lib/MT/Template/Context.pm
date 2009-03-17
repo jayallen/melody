@@ -276,7 +276,7 @@ sub post_process_handler {
 
 sub block_tag_iterator {
     my ($ctx, $args) = @_;
-    my $iter         = $args->{iterator};
+    my $iter         = delete $args->{iterator};
 
     if (! ref $iter) {
         return $ctx->error(
@@ -319,7 +319,7 @@ sub block_tag_iterator {
         $next = $iter->();
 
         # Run tag-specific skip test for conditional object processing
-        next if $args->{skip} and $args->{skip}->($ctx, $args, $obj, $next);
+        next if $args->{skip} and $args->{skip}->($ctx, $attr, $obj, $next);
         
         # Set template loop meta variables
         local $vars->{__counter__} = ++$count;
@@ -331,7 +331,7 @@ sub block_tag_iterator {
         # Run tag-specific pre-processing code
         # Return value is ignored, return on context error
         if ($args->{prerun}) {
-            $ctx = $args->{prerun}->($ctx, $args, $obj, $next)
+            defined $args->{prerun}->($ctx, $attr, $obj, $next)
                 or return;
         }
 
@@ -342,13 +342,14 @@ sub block_tag_iterator {
 
         # Undefined return value indicates an error
         defined $out or return $ctx->error($builder->errstr);
-    
+
         # Run tag-specific post-processing code
         # Output for current object is passed as a scalarref for changes
         # Return value is ignored, retrun on context error
-        $ctx = $args->{postrun}->($ctx, $args, $obj, $next, \$out)
-            if $args->{postrun};
-        return if $ctx->errstr;
+        if ($args->{postrun}) {
+            defined $args->{postrun}->($ctx, $attr, $obj, $next, \$out)
+                or return;
+        }
 
         # Add glue and output to cumulative results
         $res .= $glue if defined $glue && length($res) && length($out);
