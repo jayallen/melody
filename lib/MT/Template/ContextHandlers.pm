@@ -8523,6 +8523,55 @@ sub _hdlr_entries {
     local $ctx->{__stash}{entries} = (@entries && defined $entries[0]) ? \@entries: undef;
     my $glue = $args->{glue};
     my $vars = $ctx->{__stash}{vars} ||= {};
+
+
+
+    return $ctx->block_tag_iterator({
+        iterator   => \@entries,
+        attributes => $args,
+        condition  => {
+            %$cond,
+            DateHeader => ($this_day ne $last_day),
+            DateFooter => $footer,
+            EntriesHeader => !$i,
+            EntriesFooter => !defined $entries[$i+1],
+            PagesHeader => !$i,
+            PagesFooter => !defined $entries[$i+1],
+        },
+        prerun     => sub {
+            my ($ctx, $attr, $obj, $next) = @_;
+            local $ctx->{__stash}{blog} = $e->blog;
+            local $ctx->{__stash}{blog_id} = $e->blog_id;
+            local $ctx->{__stash}{entry} = $e;
+            local $ctx->{current_timestamp} = $e->authored_on;
+            local $ctx->{current_timestamp_end} = $e->authored_on;
+            local $ctx->{modification_timestamp} = $e->modified_on;
+            my $this_day = substr $e->authored_on, 0, 8;
+            my $next_day = $this_day;
+            my $footer = 0;
+            if (defined $entries[$i+1]) {
+                $next_day = substr($entries[$i+1]->authored_on, 0, 8);
+                $footer = $this_day ne $next_day;
+            } else { $footer++ }
+            my $allow_comments ||= 0;
+            $published->{$e->id}++;
+        },
+        postrun => sub {
+            my ($ctx, $attr, $obj, $next, $outref) = @_;
+            $last_day = $this_day;
+        }
+    });
+
+
+
+
+
+
+
+
+
+
+
     for my $e (@entries) {
         local $vars->{__first__} = !$i;
         local $vars->{__last__} = !defined $entries[$i+1];

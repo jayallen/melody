@@ -274,6 +274,27 @@ sub post_process_handler {
     \&stock_post_process_handler;
 }
 
+# This function is the master controller function for all block tags
+# It functions as a controller
+sub block_tag_handler {
+    my ($ctx, $args) = @_;
+    # Run handler for tag which defines the callbacks below for the tag
+    # Run pre-load callbacks which build load terms/args
+    # Load elements for tag
+    # Run post-load callbacks which filter returned results
+    # Call block_tag_iterator function with $iter of objects
+    #   For each item:
+    #       Run "skip" callback for element (necessary with filter callback?)
+    #       Set the global stash loop metavars for the current element
+    #       Run "prebuild" callback for localized stash modifications
+    #       Build the output
+    #       Run "postbuild" callback which allows modifications to the output
+    #       Concatenate the output with glue if provided
+    #   If no items and ELSE block exists, run ELSE block
+    MT->run_callbacks(join('.', 'iter_tag_filter.', $ctx->stash('tag')),
+                            iterator => $iter );
+}
+
 sub block_tag_iterator {
     my ($ctx, $args) = @_;
     my $iter         = delete $args->{iterator};
@@ -292,14 +313,10 @@ sub block_tag_iterator {
         $iter = Data::ObjectDriver->list_or_iterator( $iter );
     }
 
-    # Check for compilation hookpoints
-    # Return error if defined and not code refs as something is wrong
-    foreach my $hook (qw(prerun postrun skip)) {
-        next if ! defined $args->{$hook} or 'CODE' eq ref($args->{$hook});
-        return $ctx->error(
-            sprintf 'Non-code reference in "%s" hookpoint "%s"',
-                $ctx->stash('tag'), $hook);
-    }
+    # Run tag-specific post-processing code
+    # Output for current object is passed as a scalarref for changes
+    MT->run_callbacks(join('.', 'iter_tag_filter.', $ctx->stash('tag')),
+                            iterator => $iter );
 
     # Initialize the loop variables
     my $res     = '';                               # Cumulative output
@@ -321,6 +338,15 @@ sub block_tag_iterator {
         # Run tag-specific skip test for conditional object processing
         next if $args->{skip} and $args->{skip}->($ctx, $attr, $obj, $next);
         
+        # Run tag-specific pre-processing code
+        MT->run_callbacks(
+            join('.', 'iter_tag_skip.', $ctx->stash('tag')),
+            context      => $ctx,
+            attributes   => $attr,
+            object       => $obj,
+            object_next  => $next,
+        );
+
         # Set template loop meta variables
         local $vars->{__counter__} = ++$count;
         local $vars->{__first__}   = $count == 1;
@@ -329,11 +355,13 @@ sub block_tag_iterator {
         local $vars->{__even__}    = ($count % 2) == 0;
 
         # Run tag-specific pre-processing code
-        # Undefined return value is assumed to be context error
-        if ($args->{prerun}) {
-            defined $args->{prerun}->($ctx, $attr, $obj, $next)
-                or return;
-        }
+        MT->run_callbacks(
+            join('.', 'iter_tag_prebuild.', $ctx->stash('tag')),
+            context      => $ctx,
+            attributes   => $attr,
+            object       => $obj,
+            object_next  => $next,
+        );
 
         # Build the code from the available context, passing in
         # conditional tests for subtags
@@ -345,11 +373,14 @@ sub block_tag_iterator {
 
         # Run tag-specific post-processing code
         # Output for current object is passed as a scalarref for changes
-        # Undefined return value is assumed to be context error
-        if ($args->{postrun}) {
-            defined $args->{postrun}->($ctx, $attr, $obj, $next, \$out)
-                or return;
-        }
+        MT->run_callbacks(
+            join('.', 'iter_tag_postbuild.', $ctx->stash('tag')),
+            context      => $ctx,
+            attributes   => $attr,
+            object       => $obj,
+            object_next  => $next,
+            output       => \$out,
+        );
 
         # Add glue and output to cumulative results
         # See http://bugs.movabletype.org/?79873
