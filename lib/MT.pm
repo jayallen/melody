@@ -2121,6 +2121,13 @@ sub set_default_tmpl_params {
     $param->{mt_product_name} = $mt->translate(MT->product_name);
     $param->{language_tag} = substr($mt->current_language, 0, 2);
     $param->{language_encoding} = $mt->charset;
+    
+    if('__MAKE_ME__' eq '__MAKE_' . 'ME_' && !$MT::DebugMode) {
+        # Either DebugMode has been enabled or make hasn't been run
+        # which means css/js files may not have been combined for optimization
+        $param->{optimize_ui} = 1; 
+    }
+    
     if ($mt->isa('MT::App')) {
         if (my $author = $mt->user) {
             $param->{author_id} = $author->id;

@@ -109,7 +109,8 @@ lib/MT.pm: %: %.pre build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk buil
 	    $< > $@
 
 php/mt.php: %: %.pre build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk
-	sed -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
+	sed -e 's!__MAKE_ME__!1!g' \
+	    -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
 	    -e 's!__PUBLISH_CHARSET__!$(PUBLISH_CHARSET)!g' \
 	    -e 's!__PRODUCT_NAME__!$(PRODUCT_NAME)!g' \
 	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
