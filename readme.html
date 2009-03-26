@@ -9,7 +9,7 @@
 	</style>
 	<script type="text/javascript">
 	<!--
-	    var languages = new Array('de', 'en_us', 'es', 'fr', 'ja', 'nl');
+	    var languages = new Array('de', 'en-us', 'es', 'fr', 'ja', 'nl');
 	    function swapLanguage(lang) {
 	        for(var i = 0; i < languages.length; i++) {
 	            var d = document.getElementById(languages[i]);
@@ -21,6 +21,12 @@
             if(ld)
                 ld.style.display = 'block';
 	    }
+	    
+     	// Attempt to detect the language 
+     	window.onload = function() { 
+     	    var userLang = (navigator.language) ? navigator.language : navigator.userLanguage;  
+     	    swapLanguage(userLang.toLowerCase()); 
+     	}
 	//-->
 	</script>
 </head>
@@ -28,13 +34,13 @@
   <div id="container">
     <img src="mt-static/readme/mt4-logo.png" width="750" height="250" />
     <a href="#" onclick="swapLanguage('de');">Deutsch</a> | 
-    <a href="#" onclick="swapLanguage('en_us');">English</a> |
+    <a href="#" onclick="swapLanguage('en-us');">English</a> |
     <a href="#" onclick="swapLanguage('es');">Español</a> |
     <a href="#" onclick="swapLanguage('fr');">Français</a> |
     <a href="#" onclick="swapLanguage('ja');">日本語</a> |
     <a href="#" onclick="swapLanguage('nl');">Nederlands</a>
     
-    <div id="en_us"><!-- Start English -->
+    <div id="en-us"><!-- Start English -->
         <h1>Welcome to Movable Type</h1>
         <p>Thank you for choosing Movable Type, the premiere solution for all your blogging needs. This file will show you how to get up and running; click on the highlighted sections for more information on that subject.</p>
 
