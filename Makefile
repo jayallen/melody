@@ -60,10 +60,10 @@ mt-static/css/simple.css: $(simple_css)
 
 .PHONY: code-common code code-en_US code-de code-fr code-nl \
 	code-es code-ja
-code_common = lib/MT.pm php/mt.php mt-check.cgi \
+code_common = lib/MT.pm php/mt.php \
         mt-static/js/mt_core_compact.js \
-        mt-static/css/main.css \
-        mt-static/css/simple.css \
+#        mt-static/css/main.css \
+#        mt-static/css/simple.css \
 	mt-config.cgi-original index.html readme.html
 
 code: check code-$(BUILD_LANGUAGE)
@@ -86,7 +86,8 @@ check:
 		echo updated build-language-stamp;             \
 	fi
 
-lib/MT.pm: %: %.pre build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk build/mt-dists/default.mk
+lib/MT.pm: build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk build/mt-dists/default.mk 
+	mv  lib/MT.pm lib/MT.pm.pre
 	sed -e 's!__MAKE_ME__!1!g' \
 	    -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
 	    -e 's!__PRODUCT_CODE__!$(PRODUCT_CODE)!g' \
@@ -106,30 +107,33 @@ lib/MT.pm: %: %.pre build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk buil
 	    -e 's!__LOG_EXPORT_ENCODING__!$(LOG_EXPORT_ENCODING)!g' \
 	    -e 's!__CATEGORY_NAME_NODASH__!$(CATEGORY_NAME_NODASH)!g' \
 	    -e 's!__PUBLISH_CHARSET__!$(PUBLISH_CHARSET)!g' \
-	    $< > $@
+	    lib/MT.pm.pre > lib/MT.pm
+	rm  lib/MT.pm.pre
 
-php/mt.php: %: %.pre build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk
+php/mt.php: build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk
+	mv  php/mt.php php/mt.php.pre
 	sed -e 's!__MAKE_ME__!1!g' \
 	    -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
 	    -e 's!__PUBLISH_CHARSET__!$(PUBLISH_CHARSET)!g' \
 	    -e 's!__PRODUCT_NAME__!$(PRODUCT_NAME)!g' \
 	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
 	    -e 's!__PRODUCT_VERSION_ID__!$(BUILD_VERSION_ID)!g' \
-        -e 's!__API_VERSION__!$(API_VERSION)!g' \
-        -e 's!__DEFAULT_TIMEZONE__!$(DEFAULT_TIMEZONE)!g' \
-	$< > $@
+	    -e 's!__API_VERSION__!$(API_VERSION)!g' \
+	    -e 's!__DEFAULT_TIMEZONE__!$(DEFAULT_TIMEZONE)!g' \
+	    php/mt.php.pre > php/mt.php
+	rm  php/mt.php.pre
 
-mt-config.cgi-original: mt-config.cgi-original.pre build-language-stamp
-	sed -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
-	    -e 's!__HELP_URL__!$(HELP_URL)!g' \
-	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
-        $< > $@
-
-mt-check.cgi: %: %.pre build-language-stamp
-	sed -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
-	    -e 's!__PRODUCT_VERSION_ID__!$(BUILD_VERSION_ID)!g' \
-	$< > $@
-	chmod +x $@
+# mt-config.cgi-original: mt-config.cgi-original.pre build-language-stamp
+# 	sed -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
+# 	    -e 's!__HELP_URL__!$(HELP_URL)!g' \
+# 	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
+#         $< > $@
+# 
+# mt-check.cgi: %: %.pre build-language-stamp
+# 	sed -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
+# 	    -e 's!__PRODUCT_VERSION_ID__!$(BUILD_VERSION_ID)!g' \
+# 	$< > $@
+# 	chmod +x $@
 
 $(local_js): mt-static/mt_%.js: mt-static/mt.js lib/MT/L10N/%.pm
 	perl build/mt-dists/make-js
@@ -137,21 +141,21 @@ $(local_js): mt-static/mt_%.js: mt-static/mt.js lib/MT/L10N/%.pm
 $(latin1_modules): %-iso-8859-1.pm: %.pm
 	iconv -f utf-8 -t iso-8859-1 $< > $@
 
-index.html: check build-language-stamp
-	cp index.html.en_US $@.pre
-	-cp index.html.$(BUILD_LANGUAGE) $@.pre
-	sed -e 's!__HELP_URL__!$(HELP_URL)!g' \
-	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
-	index.html.pre > index.html
-	rm $@.pre
-
-readme.html: check build-language-stamp
-	cp readme.html.en_US $@.pre
-	-cp readme.html.$(BUILD_LANGUAGE) $@.pre
-	sed -e 's!__HELP_URL__!$(HELP_URL)!g' \
-	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
-	readme.html.pre > readme.html
-	rm $@.pre
+# index.html: check build-language-stamp
+# 	cp index.html.en_US $@.pre
+# 	-cp index.html.$(BUILD_LANGUAGE) $@.pre
+# 	sed -e 's!__HELP_URL__!$(HELP_URL)!g' \
+# 	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
+# 	index.html.pre > index.html
+# 	rm $@.pre
+# 
+# readme.html: check build-language-stamp
+# 	cp readme.html.en_US $@.pre
+# 	-cp readme.html.$(BUILD_LANGUAGE) $@.pre
+# 	sed -e 's!__HELP_URL__!$(HELP_URL)!g' \
+# 	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \
+# 	readme.html.pre > readme.html
+# 	rm $@.pre
 
 ##### Other useful targets
 
