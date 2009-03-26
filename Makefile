@@ -87,7 +87,8 @@ check:
 	fi
 
 lib/MT.pm: %: %.pre build-language-stamp build/mt-dists/$(BUILD_PACKAGE).mk build/mt-dists/default.mk
-	sed -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
+	sed -e 's!__MAKE_ME__!1!g' \
+	    -e 's!__BUILD_LANGUAGE__!$(BUILD_LANGUAGE)!g' \
 	    -e 's!__PRODUCT_CODE__!$(PRODUCT_CODE)!g' \
 	    -e 's!__PRODUCT_NAME__!$(PRODUCT_NAME)!g' \
 	    -e 's!__PRODUCT_VERSION__!$(PRODUCT_VERSION)!g' \

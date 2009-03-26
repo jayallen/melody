@@ -5,10 +5,18 @@
 #
 # $Id$
 
-define('VERSION', '__API_VERSION__');
-define('VERSION_ID', '__PRODUCT_VERSION_ID__');
-define('PRODUCT_VERSION', '__PRODUCT_VERSION__');
-define('PRODUCT_NAME', '__PRODUCT_NAME__');
+if('__MAKE_ME__' == '__MAKE_' . 'ME__') { # If make is not run
+    define('VERSION', '4.25');
+    define('VERSION_ID', '1.0');
+    define('PRODUCT_VERSION', '1.0');
+    define('PRODUCT_NAME', 'OpenMelody Core');    
+} else {
+    define('VERSION', '__API_VERSION__');
+    define('VERSION_ID', '__PRODUCT_VERSION_ID__');
+    define('PRODUCT_VERSION', '__PRODUCT_VERSION__');
+    define('PRODUCT_NAME', '__PRODUCT_NAME__');    
+}
+
 
 global $Lexicon;
 $Lexicon = array();
@@ -329,7 +337,7 @@ class MT {
         isset($cfg['staticwebpath']) or
             $cfg['staticwebpath'] = $cfg['cgipath'] . 'mt-static/';
         isset($cfg['publishcharset']) or
-            $cfg['publishcharset'] = '__PUBLISH_CHARSET__';
+            $cfg['publishcharset'] = 'utf-8';
         isset($cfg['trackbackscript']) or
             $cfg['trackbackscript'] = 'mt-tb.cgi';
         isset($cfg['adminscript']) or
@@ -343,7 +351,7 @@ class MT {
         isset($cfg['searchscript']) or
             $cfg['searchscript'] = 'mt-search.cgi';
         isset($cfg['defaultlanguage']) or
-            $cfg['defaultlanguage'] = '__BUILD_LANGUAGE__';
+            $cfg['defaultlanguage'] = 'en_US';
         isset($cfg['globalsanitizespec']) or
             $cfg['globalsanitizespec'] = 'a href,b,i,br/,p,strong,em,ul,ol,li,blockquote,pre';
         isset($cfg['signonurl']) or
@@ -369,7 +377,7 @@ class MT {
         isset($cfg['pluginpath']) or
             $cfg['pluginpath'] = array($this->config('MTDir') . DIRECTORY_SEPARATOR . 'plugins');
         isset($cfg['timeoffset']) or
-            $cfg['timeoffset'] = '__DEFAULT_TIMEZONE__';
+            $cfg['timeoffset'] = '0';
         isset($cfg['includesdir']) or
             $cfg['includesdir'] = 'includes_c';
         isset($cfg['searchmaxresults']) or

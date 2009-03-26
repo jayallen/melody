@@ -29,11 +29,20 @@ our $plugins_installed;
 BEGIN {
     $plugins_installed = 0;
 
-    ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', '__SCHEMA_VERSION__' );
-    ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID ) = (
-        '__PRODUCT_NAME__',    '__PRODUCT_CODE__',
-        '__PRODUCT_VERSION__', '__PRODUCT_VERSION_ID__'
-    );
+    if('__MAKE_ME__' eq '__MAKE_' . 'ME__') { # If make is not run
+        ( $VERSION, $SCHEMA_VERSION ) = ( '4.25', '4.0070');
+        ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID ) = (
+            'OpenMelody Core',    'OM',
+            '1.0', '1.0'
+        );
+    } else {      
+        ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', 
+                                                        '__SCHEMA_VERSION__' );
+        ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID ) = (
+            '__PRODUCT_NAME__',    '__PRODUCT_CODE__',
+            '__PRODUCT_VERSION__', '__PRODUCT_VERSION_ID__'
+        );          
+    }
 
     $DebugMode = 0;
 
@@ -1070,7 +1079,7 @@ sub init_paths {
     unshift @INC, File::Spec->catdir( $orig_dir, 'lib' )
       if $orig_dir && ( $orig_dir ne $MT_DIR );
 
-    $mt->set_language('__BUILD_LANGUAGE__');
+    $mt->set_language('en_US');
 
     if ( my $cfg_file = $mt->find_config($param) ) {
         $cfg_file = File::Spec->rel2abs($cfg_file);
@@ -1113,23 +1122,37 @@ sub init_core {
       or die MT::Core->errstr;
     $Components{'core'} = $c;
 
-    # Additional locale-specific defaults
-    my $defaults = $c->{registry}{config_settings};
-    $defaults->{DefaultLanguage}{default} = '__BUILD_LANGUAGE__';
-    $defaults->{NewsboxURL}{default} = '__NEWSBOX_URL__';
-    $defaults->{LearningNewsURL}{default} = '__LEARNINGNEWS_URL__';
-    $defaults->{SupportURL}{default} = '__SUPPORT_URL__';
-    $defaults->{NewsURL}{default} = '__NEWS_URL__';
-    #$defaults->{HelpURL}{default} = '__HELP_URL__';
-    $defaults->{DefaultTimezone}{default} = '__DEFAULT_TIMEZONE__';
-    $defaults->{TimeOffset}{default} = '__DEFAULT_TIMEZONE__';
-    $defaults->{MailEncoding}{default} = '__MAIL_ENCODING__';
-    $defaults->{ExportEncoding}{default} = '__EXPORT_ENCODING__';
-    $defaults->{LogExportEncoding}{default} = '__LOG_EXPORT_ENCODING__';
-    $defaults->{CategoryNameNodash}{default} = '__CATEGORY_NAME_NODASH__';
-    $defaults->{PublishCharset}{default} = '__PUBLISH_CHARSET__';
-
     push @Components, $c;
+    
+    return 1; 
+} 
+ 
+sub init_lang_defaults { 
+    my $mt = shift; 
+    my $cfg = $mt->config; 
+     
+    $cfg->DefaultLanguage('en_US') unless $cfg->DefaultLanguage; 
+     
+    my %lang_settings = ( 
+        'NewsboxURL'         => 'NEWSBOX_URL', 
+        'LearningNewsURL'    => 'LEARNINGNEWS_URL', 
+        'SupportURL'         => 'SUPPORT_URL', 
+        'NewsURL'            => 'NEWS_URL', 
+        'DefaultTimezone'    => 'DEFAULT_TIMEZONE', 
+        'TimeOffset'         => 'DEFAULT_TIMEZONE', 
+        'MailEncoding'       => 'MAIL_ENCODING', 
+        'ExportEncoding'     => 'EXPORT_ENCODING', 
+        'LogExportEncoding'  => 'LOG_EXPORT_ENCODING', 
+        'CategoryNameNodash' => 'CATEGORY_NAME_NODASH', 
+        'PublishCharset'     => 'PUBLISH_CHARSET' 
+    ); 
+ 
+    require MT::I18N; 
+    foreach my $setting (keys %lang_settings) { 
+        my $const = $lang_settings{$setting}; 
+        $cfg->$setting(MT::I18N::const($const)); 
+    } 
+
     return 1;
 }
 
@@ -1147,6 +1170,7 @@ sub init {
     ## Initialize the language to the default in case any errors occur in
     ## the rest of the initialization process.
     $mt->init_config( \%param ) or return;
+    $mt->init_lang_defaults(@_) or return; 
     require MT::Plugin;
     $mt->init_addons(@_)       or return;
     $mt->init_config_from_db( \%param ) or return;
@@ -2175,7 +2199,7 @@ sub build_page {
     }
     @packs_installed = sort { $a->{label} cmp $b->{label} } @packs_installed;
     $param->{packs_installed} = \@packs_installed;
-    $param->{portal_url} = $mt->translate("__PORTAL_URL__");
+    $param->{portal_url} = MT::I18N::const('PORTAL_URL');
 
     for my $config_field (keys %{ MT::ConfigMgr->instance->{__var} || {} }) {
         $param->{ $config_field . '_readonly' } = 1;
