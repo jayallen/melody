@@ -197,12 +197,12 @@ me:
 	perl build/exportmt.pl --make
 
 clean:
-	-rm -rf lib/MT.pm mt-config.cgi-original mt-check.cgi $(latin1_modules) $(local_js)
-	-rm -rf php/mt.php
+#	-rm -rf lib/MT.pm mt-config.cgi-original mt-check.cgi $(latin1_modules) $(local_js)
+#	-rm -rf php/mt.php
 	-rm -rf mt-static/js/mt_core_compact.js
 	-rm -rf mt-static/css/main.css mt-static/css/simple.css
-	-rm -rf index.html
-	-rm -rf readme.html
+#	-rm -rf index.html
+#	-rm -rf readme.html
 	-rm -rf MANIFEST
 	-rm -rf build-language-stamp
 
