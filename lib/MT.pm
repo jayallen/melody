@@ -14,7 +14,7 @@ use MT::Util qw( weaken );
 use MT::I18N qw( encode_text );
 
 our ( $VERSION,      $SCHEMA_VERSION );
-our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID );
+our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL );
 our ( $MT_DIR,       $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
 our (
     $plugin_sig, $plugin_envelope, $plugin_registry,
@@ -31,16 +31,16 @@ BEGIN {
 
     if('__MAKE_ME__' eq '__MAKE_' . 'ME__') { # If make is not run
         ( $VERSION, $SCHEMA_VERSION ) = ( '4.25', '4.0070');
-        ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID ) = (
+        ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
             'OpenMelody Core',    'OM',
-            '1.0', '1.0'
+            '1.0', '1.0', 'http://openmelody.org'
         );
     } else {      
         ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', 
                                                         '__SCHEMA_VERSION__' );
-        ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID ) = (
+        ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
             '__PRODUCT_NAME__',    '__PRODUCT_CODE__',
-            '__PRODUCT_VERSION__', '__PRODUCT_VERSION_ID__'
+            '__PRODUCT_VERSION__', '__PRODUCT_VERSION_ID__', '__PORTAL_URL__'
         );          
     }
 
@@ -79,6 +79,14 @@ sub product_code    { $PRODUCT_CODE }
 sub product_name    { $PRODUCT_NAME }
 sub product_version { $PRODUCT_VERSION }
 sub schema_version  { $SCHEMA_VERSION }
+
+sub portal_url      {
+    require MT::I18N;
+    if ( my $url = MT::I18N::const('PORTAL_URL') ) {
+        return $url;
+    }
+    return $PORTAL_URL;
+}
 
 # Default id method turns MT::App::CMS => cms; Foo::Bar => foo/bar
 sub id {
@@ -1150,7 +1158,15 @@ sub init_lang_defaults {
     require MT::I18N; 
     foreach my $setting (keys %lang_settings) { 
         my $const = $lang_settings{$setting}; 
-        $cfg->$setting(MT::I18N::const($const)); 
+        my $value = $cfg->$setting;
+        my $i18n_val = MT::I18N::const($const);
+        if ( !$value ) {
+            $cfg->$setting($i18n_val);
+        }
+        elsif ( ( $value eq $cfg->default($setting) )
+             && ( $value ne $i18n_val ) ) {
+            $cfg->$setting($i18n_val);
+        }
     } 
 
     return 1;
@@ -2206,7 +2222,7 @@ sub build_page {
     }
     @packs_installed = sort { $a->{label} cmp $b->{label} } @packs_installed;
     $param->{packs_installed} = \@packs_installed;
-    $param->{portal_url} = MT::I18N::const('PORTAL_URL');
+    $param->{portal_url} = &portal_url;
 
     for my $config_field (keys %{ MT::ConfigMgr->instance->{__var} || {} }) {
         $param->{ $config_field . '_readonly' } = 1;
