@@ -391,7 +391,7 @@ sub build_page {
     $param->{'wizard_steps'} = $steps;
     $param->{'step'}         = $app->param('step');
     
-    $param->{'default_language'} = $app->param('default_language');
+    $param->{'default_language'} ||= $app->param('default_language');
 
     return $app->SUPER::build_page( $tmpl, $param );
 }
@@ -439,6 +439,7 @@ sub start {
         $param{set_static_uri_to} = $app->param('set_static_uri_to');
         return $app->build_page( "start.tmpl", \%param );
     }
+    $param{default_language} = $app->param('default_language');
     $param{config}      = $app->serialize_config(%param);
     $param{static_file} = $static_file_path;
 
