@@ -148,6 +148,13 @@ Decode UTF-8 in the given I<text>.
 
 Turn off UTF-8 encoding in the given I<text>
 
+=head2 languages_list($app, $current)
+
+Returns a reference to an array of hashes which contains necessary
+data to render a dropdown list of languages that MT supports.
+Dropdown lists appear on User Profile, System Settings, and the
+start page of the wizard, among others.
+
 =head2 const($id)
 
 Return the value of the given I<id> method from the C<MT::I18N>
