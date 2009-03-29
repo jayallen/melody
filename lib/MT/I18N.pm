@@ -75,6 +75,26 @@ sub _language {
     $Supported_Languages{$lang} ? $lang : 'default';
 }
 
+sub languages_list {
+    my ( $app, $curr ) = @_;
+
+    $app ||= MT->instance;
+    my $langs = $app->supported_languages;
+    my @data;
+    $curr ||= $app->config('DefaultLanguage');
+    $curr = 'en-us' if ( lc($curr) eq 'en_us' );
+    my $curr_lang = $app->current_language;
+    for my $tag ( keys %$langs ) {
+        ( my $name = $langs->{$tag} ) =~ s/\w+ English/English/;
+        $app->set_language($tag);
+        my $row = { l_tag => $tag, l_name => $app->translate($name) };
+        $row->{l_selected} = 1 if $curr eq $tag;
+        push @data, $row;
+    }
+    $app->set_language($curr_lang);
+    [ sort { $a->{l_name} cmp $b->{l_name} } @data ];
+}
+
 1;
 __END__
 
