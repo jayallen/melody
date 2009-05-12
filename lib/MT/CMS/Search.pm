@@ -399,11 +399,11 @@ sub do_search_replace {
     my $limit;
     # type-specific directives override global CMSSearchLimit
     my $directive = 'CMSSearchLimit' . ucfirst($type);
-	$limit = MT->config->$directive || MT->config->CMSSearchLimit || 125;
-	# don't allow passed limit to be higher than config limit
-	if ($q->param('limit') && ($q->param('limit') < $limit)) {
-		$limit = $q->param('limit');
-	}
+    $limit = MT->config->$directive || MT->config->CMSSearchLimit || 125;
+    # don't allow passed limit to be higher than config limit
+    if ($q->param('limit') && ($q->param('limit') < $limit)) {
+        $limit = $q->param('limit');
+    }
     $limit =~ s/\D//g;
     my $matches;
     $date_col = $api->{date_column} || 'created_on';
@@ -453,15 +453,15 @@ sub do_search_replace {
         my @terms;
         # MT::Object doesn't like multi-term hashes within arrays
         if (%terms) {
-        	for my $key (keys %terms) {
-        		push(@terms, { $key => $terms{$key} });
-        	}
-        	push(@terms, '-and');
+            for my $key (keys %terms) {
+                push(@terms, { $key => $terms{$key} });
+            }
+            push(@terms, '-and');
         }
         my @col_terms;
         my $query_string = "%$plain_search%";
         for my $col (@cols) {
-			push(@col_terms, { $col => { like => $query_string } }, '-or' );
+            push(@col_terms, { $col => { like => $query_string } }, '-or' );
         }
         delete $col_terms[$#col_terms];
         push(@terms, \@col_terms);
