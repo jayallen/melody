@@ -387,7 +387,6 @@ sub do_search_replace {
     ## Sometimes we need to pass in the search columns like 'title,text', so
     ## we look for a comma (not a valid character in a column name) and split
     ## on it if it's there.
-    my $plain_search = $search;
     if ( ($search || '') ne '' ) {
         $search = quotemeta($search) unless $is_regex;
         $search = '(?i)' . $search   unless $case;
@@ -478,13 +477,13 @@ sub do_search_replace {
               || ( $type eq 'blog' )
               || ( $app->mode eq 'dialog_grant_role' ) )
             {
-                $iter = $class->load_iter( \@terms, \%args ) or die $class->errstr;
+                $iter = $class->load_iter( \%terms, \%args ) or die $class->errstr;
             }
             else {
 
                 my @streams;
                 if ( $author->is_superuser ) {
-                    @streams = ( { iter => $class->load_iter( \@terms, \%args ) } );
+                    @streams = ( { iter => $class->load_iter( \%terms, \%args ) } );
                 } 
                 else {
                     # Get an iter for each accessible blog
@@ -494,10 +493,12 @@ sub do_search_replace {
                     );
                     if (@perms) {
                         @streams = map {
-                            $terms[0]{blog_id} = $_->blog_id;
                             {
                                 iter => $class->load_iter(
-                                    \@terms,
+                                    {
+                                        blog_id => $_->blog_id,
+                                        %terms
+                                    },
                                     \%args
                                 )
                             }
