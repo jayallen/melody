@@ -10,12 +10,6 @@ use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 use MT::App::CMS;
 use MT::Test qw(:db :data);
 
-use MT;
-use vars qw( $DB_DIR $T_CFG );
-
-my $mt = MT->new( Config => $T_CFG ) or die MT->errstr;
-isa_ok($mt, 'MT', 'Is MT');
-
 ### Test app callbacks
 
 my @result_cats = ();
