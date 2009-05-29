@@ -235,7 +235,7 @@
     <div id="<mt:var name="object_type">-fields">
         <ul>
         <mt:loop name="search_cols">
-            <mt:if name="__first__"><li class="first"><span id="limited-fields-label"><__trans phrase="Search Fields:"></span></li></mt:if>
+            <mt:if name="__first__"><li class="first"><__trans phrase="Search Fields:"></li></mt:if>
             <li><label for="search_cols-<mt:var name="field" escape="html">"><input type="checkbox" id="search_cols-<mt:var name="field" escape="html">" name="search_cols" value="<mt:var name="field" escape="html">"<mt:if name="selected"> checked="checked"</mt:if> class="cb" /> <mt:var name="label" escape="html"></label></li>
         </mt:loop>
         </ul>
