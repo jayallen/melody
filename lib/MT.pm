@@ -1055,8 +1055,12 @@ sub init_config_from_db {
 
     # Tell any instantiated drivers to reconfigure themselves as necessary
     require MT::ObjectDriverFactory;
-    my $driver = MT::ObjectDriverFactory->instance;
-    $driver->configure if $driver;
+    if (MT->config('ObjectDriver')) {
+        my $driver = MT::ObjectDriverFactory->instance;
+        $driver->configure if $driver;
+    } else {
+        MT::ObjectDriverFactory->configure();
+    }
 
     1;
 }
