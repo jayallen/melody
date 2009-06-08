@@ -5930,6 +5930,7 @@ Base de recherche : [_2]",
 	'Rebuild Indexes' => 'Republier les index',
 	'If selected, this blog\'s indexes will be rebuilt when new action stream events are discovered.' => 'Si sélectionner, les index des blogs seront republiés lorsque de nouveaux événements du flux d\'activité seront découverts.',
 	'Enable rebuilding' => 'Activer la republication',
+	'Clone of [_1]' => 'Clone de [_1]', # Translate - New
 
 	'A request has been made to change your password in Movable Type. To complete this process click on the link below to select a new password.' => 'Une requête a été faite pour changer votre mot de passe dans Movable Type. Pour terminer cliquez sur le lien ci-dessous pour choisir un nouveau mot de passe.', # Translate - New
       'If you did not request this change, you can safely ignore this email.' => 'Si vous n\'avez pas demandé ce changement, vous pouvez ignorer cet email.', # Translate - New
