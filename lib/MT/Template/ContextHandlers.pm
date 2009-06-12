@@ -10531,6 +10531,8 @@ sub _hdlr_comments {
 
     my $so = lc ($args->{sort_order} || ($blog ? $blog->sort_order_comments : undef) || 'ascend');
     my $no_resort;
+   
+    # if old comments are present in the stash
     if ($comments) {
         my $n = $args->{lastn};
         my $col = lc($args->{sort_by} || 'created_on');
@@ -10568,7 +10570,9 @@ sub _hdlr_comments {
                 @comments[$#comments-$max..$#comments] :
                 @comments[0..$max];
         }
-    } else {
+    } 
+    # if there are no comments in the stash
+    else {
         $terms{visible} = 1;
         $ctx->set_blog_load_context($args, \%terms, \%args)
             or return $ctx->error($ctx->errstr);
@@ -10578,10 +10582,14 @@ sub _hdlr_comments {
         ## otherwise, grab the N most recent comments for the entire blog.
         my $n = $args->{lastn};
         if (my $e = $ctx->stash('entry')) {
-            ## Sort in descending order, then grab the first $n ($n most
-            ## recent) comments.
+            ## Sort in descending order unless sort_order is specified
+            ## then grab the first $n ($n mos recent) comments.
             $args{'sort'} = 'created_on';
-            $args{'direction'} = 'descend';
+            if ($so) {
+                $args{'direction'} = $so;
+            } else {
+                $args{'direction'} = 'descend';
+            }
             my $cmts = $e->comments(\%terms, \%args);
             my $offset = $args->{offset} || 0;
             if (@filters) {
@@ -10612,7 +10620,9 @@ sub _hdlr_comments {
             } else {
                 @comments = @$cmts;
             }
-        } else {
+        } 
+        # else look for most recent comments in the entire blog
+        else {
             $args{'sort'} = lc $args->{sort_by} || 'created_on';
             if ($args->{lastn} || $args->{offset}) {
                 $args{'direction'} =  'descend';
