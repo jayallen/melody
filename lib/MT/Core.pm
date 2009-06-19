@@ -364,7 +364,8 @@ BEGIN {
                 default => 'a href,b,i,br/,p,strong,em,ul,ol,li,blockquote,pre',
             },
             'GenerateTrackBackRSS' => { default => 0, },
-
+            'RaiseError'           => { default => 1, },
+            
             ## Search settings, copied from Jay's mt-search and integrated
             ## into default config.
             'NoOverride'          => { default => '', },
@@ -530,7 +531,7 @@ BEGIN {
             'PerformanceLoggingThreshold' => { default => 0.1 },
             'ProcessMemoryCommand' => { handler => \&ProcessMemoryCommand },
             'EnableAddressBook' => { default => 0 },
-            'SingleCommunity' => { default => 0 },
+            'SingleCommunity' => { default => 1 },
             'DefaultTemplateSet' => { default => 'mt_blog' },
 
             'AssetFileTypes' => { type    => 'HASH' },
