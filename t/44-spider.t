@@ -7,7 +7,7 @@ use Test::More;
 
 BEGIN {
     plan $ENV{MT_TEST_SPIDER}
-        ? (tests => 4)
+        ? ('no_plan')
         : (skip_all => 'Enable spider test with MT_TEST_SPIDER environment variable')
         ;
 }
@@ -15,6 +15,7 @@ BEGIN {
 use LWP::UserAgent::Local;
 use URI;
 use MT::Test qw(:db :data);
+
 
 my $username = "Chuck D"; # Melody
 my $password = "bass"; # Nelson
@@ -59,8 +60,8 @@ while (keys %link_queue && $count < 500) {
     $link_count++;
     delete $link_queue{$curr_link};
 
-    next unless $curr_link =~ m/$must_match/;
-    next if $skip_pattern && $curr_link =~ m/$skip_pattern/;
+    next unless $curr_link =~ $must_match;
+    next if $skip_pattern && $curr_link =~ $skip_pattern;
 
     $curr_link = URI->new_abs($curr_link, $its_parent);
     next if $curr_link->scheme ne 'http' && $curr_link->scheme ne 'https';
@@ -71,36 +72,37 @@ while (keys %link_queue && $count < 500) {
         my $req = new HTTP::Request(GET => $curr_link)
                           or die "a thousand deaths";
         my $resp = $ua->request($req) or next;
-
-        #print STDERR "Response: [" . $resp->content() . "]\n" if $verbose;
-        use Data::Dumper;
-        print STDERR $resp->content() unless $resp->content() =~ m/$good_pattern/;
-
-        push @failures, $curr_link unless $resp->is_success;
-        my ($mode) = ($curr_link =~ m/__mode=([^&]*)/);
-        if ($mode) {
-            if (exists $modes_seen{$mode}) {
-                $modes_seen{$mode}++;
-            } else {
-                $modes_seen{$mode} = 1;
-            }
-        }
-        $count++;
         my $content = $resp->content();
-        push @notgoods, $curr_link unless $content =~ m/$good_pattern/;
-        push @notgoods, $curr_link if $content =~ m/$bad_pattern/;
-        push @warnings, $curr_link if $content =~ m/$warning_pattern/;
-        push @fetched, $curr_link;
-        my @form_actions = $content =~ m|<form[^>]* action="([^"]*)">|gi; #"
-        my @links = $content =~ m|<[^>]*href="([^"]*)">|gi;   #"
-        @links = grep {$_ =~ /\S/} @links;
-        @links = map { s/\&amp\;/&/g; $_ } @links;
-        @links = map { s/\&offset=\d+//; $_ } @links;
-        @links = map { URI->new_abs($_, $curr_link) } @links;
-        $link_queue{$_} = $curr_link foreach (@links);
-        $links_checked{$curr_link}++;
-#         print join "\n", (keys %link_queue);
-#         print "\n";
+        {
+            no warnings; # $content may be undefined, and that's OK here. 
+
+            like( $content, $good_pattern, "checking $curr_link for $good_pattern" ); 
+
+            push @failures, $curr_link unless $resp->is_success;
+            my ($mode) = ($curr_link =~ m/__mode=([^&]*)/);
+            if ($mode) {
+                if (exists $modes_seen{$mode}) {
+                    $modes_seen{$mode}++;
+                } else {
+                    $modes_seen{$mode} = 1;
+                }
+            }
+            $count++;
+
+            push @notgoods, $curr_link unless $content =~ $good_pattern;
+            push @notgoods, $curr_link if $content =~ $bad_pattern;
+            push @warnings, $curr_link if $content =~ $warning_pattern;
+
+            push @fetched, $curr_link;
+            my @form_actions = $content =~ m|<form[^>]* action="([^"]*)">|gi; #";
+            my @links = $content =~ m|<[^>]*href="([^"]*)">|gi;   #";
+            @links = grep {$_ =~ /\S/} @links;
+            @links = map { s/\&amp\;/&/g; $_ } @links;
+            @links = map { s/\&offset=\d+//; $_ } @links;
+            @links = map { URI->new_abs($_, $curr_link) } @links;
+            $link_queue{$_} = $curr_link foreach (@links);
+            $links_checked{$curr_link}++;
+        }
     }
 }
 
