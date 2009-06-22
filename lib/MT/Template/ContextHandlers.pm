@@ -1,6 +1,6 @@
-# Movable Type (r) Open Source (C) 2001-2009 Six Apart, Ltd.
-# This program is distributed under the terms of the
-# GNU General Public License, version 2.
+# Movable Type (r) (C) 2001-2009 Six Apart, Ltd. All Rights Reserved.
+# This code cannot be redistributed without permission from www.sixapart.com.
+# For more information, consult your Movable Type license.
 #
 # $Id$
 
@@ -6362,7 +6362,7 @@ If 'namespace' is also specified, filters the authors based on
 the score within that namespace. This specifies the maximum score
 to consider the author for inclusion.
 
-=item * min_rank
+=item * min_rate
 
 If 'namespace' is also specified, filters the authors based on
 the rank within that namespace. This specifies the minimum rank
@@ -8016,19 +8016,19 @@ sub _hdlr_entries {
                 (($cat_class_type eq 'category' && !$args->{include_subcategories}) ||
                  ($cat_class_type ne 'category' && !$args->{include_subfolders})))
             {
-                my @cats = cat_path_to_category($category_arg, [ \%blog_terms, \%blog_args ], $cat_class_type);
-                if (@cats) {
-                    $cats = \@cats;
+                if ($blog_terms{blog_id}) {
+                    my %cat_blog_terms = %blog_terms;
+                    $cat_blog_terms{label} = $category_arg;
+                    $cats = [ $cat_class->load(\%cat_blog_terms, \%blog_args) ];
+                } else {
+                    my @cats = cat_path_to_category($category_arg, [ \%blog_terms, \%blog_args ], $cat_class_type);
+                    if (@cats) {
+                        $cats = \@cats;
+                        $cexpr = $ctx->compile_category_filter(undef, $cats, { 'and' => 0 });
+                    }
                 }
-                $cexpr = $ctx->compile_category_filter($category_arg, $cats);
             } else {
-                my @cats;
-                my @args_cat = split /\s*\b(?:AND|OR|NOT)\b\s|[\s*(?:|&)\s*]/i, $category_arg;
-                @args_cat = grep { $_ } @args_cat;
-                for my $c (@args_cat) {
-                    my @categories = cat_path_to_category($c, [ \%blog_terms, \%blog_args ], $cat_class_type);
-                    push @cats, @categories;
-                }
+                my @cats = $cat_class->load(\%blog_terms, \%blog_args);
                 if (@cats) {
                     $cats = \@cats;
                     $cexpr = $ctx->compile_category_filter($category_arg, $cats,
@@ -8038,6 +8038,11 @@ sub _hdlr_entries {
                         });
                 }
             }
+            $cexpr ||= $ctx->compile_category_filter($category_arg, $cats,
+                { children => $cat_class_type eq 'category' ?
+                    ($args->{include_subcategories} ? 1 : 0) :
+                    ($args->{include_subfolders} ? 1 : 0) 
+                });
         }
         if ($cexpr) {
             my %map;
@@ -8109,9 +8114,12 @@ sub _hdlr_entries {
                 if ($tag_arg !~ m/\bNOT\b/i) {
                     return '' unless @tag_ids;
                     $args{join} = MT::ObjectTag->join_on( 'object_id', {
-                        tag_id => \@tag_ids, object_datasource => 'entry',
-                        %blog_terms
-                    }, { %blog_args, unique => 1 } );
+                            tag_id => \@tag_ids, object_datasource => 'entry',
+                            %blog_terms
+                        }, { %blog_args, unique => 1 } );
+                    if (my $last = $args->{lastn} || $args->{limit}) {
+                        $args{limit} = $last;
+                    }
                 }
             }
             push @filters, sub { $cexpr->($preloader->($_[0]->id)) };
@@ -10425,7 +10433,7 @@ If 'namespace' is also specified, filters the comments based on
 the score within that namespace. This specifies the maximum score
 to consider the comment for inclusion.
 
-=item * min_rank
+=item * min_rate
 
 If 'namespace' is also specified, filters the comments based on
 the rank within that namespace. This specifies the minimum rank
@@ -12579,7 +12587,7 @@ sub _hdlr_archives {
     return '' unless $archiver;
 
     my $save_stamps;
-    if ($ctx->{current_archive_type} && $arg_at && ($ctx->{current_archive_type} eq $arg_at)) {
+    if (!$ctx->{inside_archive_list} || $ctx->{current_archive_type} && $arg_at && ($ctx->{current_archive_type} eq $arg_at)) {
         $save_stamps = 1;
     }
 
