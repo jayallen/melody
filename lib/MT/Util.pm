@@ -674,6 +674,7 @@ sub iso_dirify {
     $s =~ s!&[^;\s]+;!!gs;        ## remove HTML entities.
     $s =~ s![^\w\s-]!!gs;          ## remove non-word/space chars.
     $s =~ s!\s+!$sep!gs;          ## change space chars to underscores.
+    $s =~ s!([_-]){2,}!$sep!gs;   ## compact 2 or more hypens or underscores
     $s;    
 }
 
@@ -692,6 +693,7 @@ sub utf8_dirify {
     $s =~ s!&[^;\s]+;!!gs;        ## remove HTML entities.
     $s =~ s![^\w\s-]!!gs;          ## remove non-word/space chars.
     $s =~ s!\s+!$sep!gs;          ## change space chars to underscores.
+    $s =~ s!([_-]){2,}!$sep!gs;   ## compact 2 or more hypens or underscores
     $s;    
 }
 
