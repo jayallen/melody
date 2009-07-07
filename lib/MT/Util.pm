@@ -652,7 +652,7 @@ sub decode_url {
 sub remove_html {
     my($text) = @_;
     return '' if !defined $text;  # suppress warnings
-    $text =~ s/(<\!\[CDATA\[(.*?)\]\]>)|(<[^>]+>)/
+    $text =~ s/(<\!\[CDATA\[(.*?)\]\]>)|(<(?!\?)[^>]+>)/
         defined $1 ? $1 : ''
         /geisx;
     $text =~ s/<(?!\!\[CDATA\[)/&lt;/gis;
