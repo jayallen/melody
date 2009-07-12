@@ -288,9 +288,6 @@ BEGIN {
                 path    => 1,
             },
             'ObjectDriver'  => undef,
-            'ObjectCacheLimit' => { default => 1000 },
-            'ObjectCacheDisabled'  => undef,
-            'DisableObjectCache' => { default => 0, },
             'AllowedTextFilters' => undef,
             'Serializer'    => { default => 'MT', },
             'SendMailPath'  => { default => '/usr/lib/sendmail', },
@@ -817,11 +814,12 @@ sub remove_expired_sessions {
     require MT::Session;
 
     my $expired = MT->config->UserSessionTimeout;
-    MT::Session->remove(
-        { kind  => 'US',
-          start => [ undef, time - $expired ],
-          data  => { not_like => '%remember-%' } },
+    my @sesss = MT::Session->load(
+        { kind => 'US', start => [ undef, time - $expired ] },
         { range => { start => 1 } } );
+    foreach my $s (@sesss) {
+        $s->remove if !$s->get('remember');
+    }
     return '';
 }
 

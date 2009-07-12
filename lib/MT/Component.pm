@@ -50,6 +50,9 @@ sub new {
 sub init {
     my $c = shift;
     $c->init_registry() or return;
+
+    # plugin callbacks are initialized after they finish loading.
+    $c->init_callbacks() unless $c->isa('MT::Plugin');
     $c;
 }
 

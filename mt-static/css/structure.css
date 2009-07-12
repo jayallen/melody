@@ -1706,7 +1706,8 @@ fieldset h3 {
 .edit-author #main-content .field .field-content,
 .edit-folder #main-content .field .field-content,
 .edit-category #main-content .field .field-content,
-.field-left-label .field-content {
+#adjust-sitepath .field-left-label .field-content,
+#main-content .field-left-label .field-content {
     margin-left: 130px;
 }
 

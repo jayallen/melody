@@ -35,6 +35,7 @@ Movable Type distributions in multiple languages.
 
 use strict;
 use warnings;
+use Archive::Tar;
 use Cwd;
 use File::Basename;
 use File::Copy;
@@ -42,6 +43,8 @@ use File::Path;
 use File::Spec;
 use Getopt::Long;
 use IO::File;
+use LWP::UserAgent;
+use Net::SMTP;
 use Sys::Hostname;
 
 sub new {
@@ -665,7 +668,6 @@ sub set_repo {
 
     # Make sure that the repository actually exists.
     if( !$self->{'debug'} && $self->{'export!'} ) {
-        require LWP::UserAgent;
         $self->{'agent=s'} = LWP::UserAgent->new;
         my $request = HTTP::Request->new( HEAD => $self->{'repo-uri=s'} );
         $request->authorization_basic( $self->{'http-user=s'}, $self->{'http-pass=s'} )
@@ -790,7 +792,6 @@ sub notify {
         hostname(), join( "\n", @{ $distros->{path} } )
         if $self->{'qa'} or !$self->{'cleanup!'};
 
-    require Net::SMTP;
     my $smtp = Net::SMTP->new(
         $self->{'email-host=s'},
         Debug => $self->{'debug'},
