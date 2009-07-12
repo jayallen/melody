@@ -1,8 +1,7 @@
 PRODUCT_NAME = OpenMelody Core
-
-# Corresponds to MT 4.261
-PRODUCT_VERSION = 1.0
+PRODUCT_VERSION = 0.9.0
 SCHEMA_VERSION = 4.0071
+# Corresponds to MT 4.261
 API_VERSION = 4.261
 
 # BUILD_LANGUAGE = en_US
