@@ -404,7 +404,9 @@ sub do_search_replace {
 	if ($q->param('limit') && ($q->param('limit') < $limit)) {
 		$limit = $q->param('limit');
 	}
-    $limit =~ s/\D//g;
+    if ($limit ne 'all') {
+       $limit =~ s/\D//g;
+	}
     my $matches;
     $date_col = $api->{date_column} || 'created_on';
     if ( ( $do_search && $search ne '' ) || $show_all || $do_replace ) {
@@ -567,7 +569,7 @@ sub do_search_replace {
                 return $app->error(
                     $app->translate( "Error in search expression: [_1]", $@ ) );
             }
-        }
+        } 
         while ( my $obj = $iter->() ) {
             next unless $author->is_superuser || $api->{perm_check}->($obj);
             my $match = 0;
