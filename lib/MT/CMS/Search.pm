@@ -408,7 +408,7 @@ sub do_search_replace {
     if ($q->param('limit') && ($q->param('limit') < $limit)) {
         $limit = $q->param('limit');
     }
-    $limit =~ s/\D//g;
+    $limit =~ s/\D//g unless $limit eq 'all';
     my $matches;
     $date_col = $api->{date_column} || 'created_on';
     if ( ( $do_search && $search ne '' ) || $show_all || $do_replace ) {
@@ -457,26 +457,15 @@ sub do_search_replace {
         my @terms;
         # MT::Object doesn't like multi-term hashes within arrays
         if (%terms) {
-<<<<<<< HEAD:lib/MT/CMS/Search.pm
             for my $key (keys %terms) {
                 push(@terms, { $key => $terms{$key} });
             }
             push(@terms, '-and');
-=======
-        	for my $key (keys %terms) {
-        		push(@terms, { $key => $terms{$key} });
-        	}
-        	push(@terms, '-and');
->>>>>>> Patch by Kevin Shay: Prevents the do_search_replace from loading all possible objects and iterating over them in order to find the search string. More robust fix will be implemented in Slapshot (updated from revision 3707):lib/MT/CMS/Search.pm
         }
         my @col_terms;
         my $query_string = "%$plain_search%";
         for my $col (@cols) {
-<<<<<<< HEAD:lib/MT/CMS/Search.pm
             push(@col_terms, { $col => { like => $query_string } }, '-or' );
-=======
-			push(@col_terms, { $col => { like => $query_string } }, '-or' );
->>>>>>> Patch by Kevin Shay: Prevents the do_search_replace from loading all possible objects and iterating over them in order to find the search string. More robust fix will be implemented in Slapshot (updated from revision 3707):lib/MT/CMS/Search.pm
         }
         delete $col_terms[$#col_terms];
         push(@terms, \@col_terms);
