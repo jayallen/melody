@@ -358,6 +358,11 @@ sub templates {
                 $tmpl->{key} = $tmpl_id;
                 $tmpl->{identifier} = $tmpl_id;
 
+                # Even though they are stored as templates, widgetsets
+                # are special.  They don't have a "text" attribute value
+                # but instead an array of associated widgets which are
+                # later translated into template includes and stored
+                # in the "text" attribute.
                 if ( exists $tmpl->{widgets} ) {
                     my $widgets = $tmpl->{widgets};
                     my @widgets;
@@ -370,6 +375,8 @@ sub templates {
                         }
                     }
                     $tmpl->{widgets} = \@widgets if @widgets;
+                # All NON-widgetsets are processed by the block below
+                # and are defined with the common "text" attribute.
                 } else {
                     # load template if it hasn't been loaded already
                     if (!exists $tmpl->{text}) {
