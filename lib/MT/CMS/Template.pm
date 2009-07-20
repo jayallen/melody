@@ -1822,6 +1822,7 @@ sub refresh_all_templates {
             my $terms = {};
             $terms->{blog_id} = $blog_id;
             $terms->{type} = $val->{type};
+            # FIXME Enumeration of types
             if ( $val->{type} =~
                 m/^(archive|individual|page|category|index|custom|widget|widgetset)$/ )
             {
@@ -1881,6 +1882,7 @@ sub refresh_all_templates {
                 $tmpl->identifier( $val->{identifier} );
                 $tmpl->type( $val->{type} )
                   ; # fixes mismatch of types for cases like "archive" => "individual"
+                $tmpl->build_type( $val->{build_type} ) if defined $val->{build_type};
                 $tmpl->linked_file('');
                 $tmpl->save;
             }
@@ -1901,6 +1903,7 @@ sub refresh_all_templates {
                         identifier => $val->{identifier},
                         outfile    => $val->{outfile},
                         rebuild_me => $val->{rebuild_me},
+                        build_type => (defined($val->{build_type}) ? $val->{build_type} : 1),
                     }
                 );
                 $tmpl->blog_id($blog_id);
