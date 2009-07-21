@@ -1821,6 +1821,7 @@ sub refresh_all_templates {
 
             my $terms = {};
             $terms->{blog_id} = $blog_id;
+            # FIXME Enumeration of types
             $terms->{type} = $val->{type};
             # FIXME Enumeration of types
             if ( $val->{type} =~
