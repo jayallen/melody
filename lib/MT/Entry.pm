@@ -674,18 +674,24 @@ sub set_defaults {
     my $e      = shift or return;    
 
     my $app    = MT->instance or return;
+
     # Entry blog takes precedence, $app->blog fallback
     my $blog   = $app->model('blog')->load($e->blog_id) if $e->blog_id;
     $blog    ||= $app->blog if $app and $app->can('blog');
-    # $app->user is the only thing that matters
-    my $user   = $app->user if $app and $app->can('user');
+
+    # API usage will almost always set the entry author directly so if  
+    # it's not set, then it most likely means that the interaction is 
+    # via the browser and the $app->user is the most likely author.
+    my $user   = $e->author ? $e->author 
+                            : ($app and $app->can('user'))  ? $app->user
+                                                            : undef;
 
     my (%entry_defaults, %user_defaults, %blog_defaults);
     
     %entry_defaults = (
         ping_count => 0,
         class      => 'entry',
-        status     => 0,
+        status     => HOLD,
     );
 
     if ( $user ) { 
@@ -707,9 +713,6 @@ sub set_defaults {
     }
     
     $e->set_values({ %entry_defaults, %user_defaults, %blog_defaults });
-    # use Data::Dumper;
-    # print 'Entry default values: '.Dumper($e);
-    
 }
 
 sub save {
