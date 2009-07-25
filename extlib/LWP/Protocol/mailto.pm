@@ -1,11 +1,8 @@
-#
-# $Id: mailto.pm,v 1.9 1999/03/19 21:00:13 gisle Exp $
-#
+package LWP::Protocol::mailto;
+
 # This module implements the mailto protocol.  It is just a simple
 # frontend to the Unix sendmail program except on MacOS, where it uses
 # Mail::Internet.
-
-package LWP::Protocol::mailto;
 
 require LWP::Protocol;
 require HTTP::Request;
@@ -18,7 +15,19 @@ use vars qw(@ISA $SENDMAIL);
 
 @ISA = qw(LWP::Protocol);
 
-$SENDMAIL ||= "/usr/lib/sendmail";
+unless ($SENDMAIL = $ENV{SENDMAIL}) {
+    for my $sm (qw(/usr/sbin/sendmail
+		   /usr/lib/sendmail
+		   /usr/ucblib/sendmail
+		  ))
+    {
+	if (-x $sm) {
+	    $SENDMAIL = $sm;
+	    last;
+	}
+    }
+    die "Can't find the 'sendmail' program" unless $SENDMAIL;
+}
 
 sub request
 {
@@ -44,12 +53,12 @@ sub request
     }
 
     # check url
-    my $url = $request->url;
+    my $url = $request->uri;
 
     my $scheme = $url->scheme;
     if ($scheme ne 'mailto') {
 	return new HTTP::Response &HTTP::Status::RC_INTERNAL_SERVER_ERROR,
-				  "LWP::file::request called for '$scheme'";
+			 "LWP::Protocol::mailto::request called for '$scheme'";
     }
     if ($^O eq "MacOS") {
 	eval {
@@ -63,7 +72,8 @@ sub request
 	    return new HTTP::Response &HTTP::Status::RC_INTERNAL_SERVER_ERROR,
 	               "You don't have SMTPHOSTS defined";
 	}
-    } else {
+    }
+    else {
 	unless (-x $SENDMAIL) {
 	    return new HTTP::Response &HTTP::Status::RC_INTERNAL_SERVER_ERROR,
 	               "You don't have $SENDMAIL";
@@ -73,14 +83,16 @@ sub request
 	    $mail = Mail::Internet->new or
 	    return new HTTP::Response &HTTP::Status::RC_INTERNAL_SERVER_ERROR,
 	    "Can't get a Mail::Internet object";
-    } else {
+    }
+    else {
 	open(SENDMAIL, "| $SENDMAIL -oi -t") or
 	    return new HTTP::Response &HTTP::Status::RC_INTERNAL_SERVER_ERROR,
 	               "Can't run $SENDMAIL: $!";
     }
     if ($^O eq "MacOS") {
 	$addr = $url->encoded822addr;
-    } else {
+    }
+    else {
 	$request = $request->clone;  # we modify a copy
 	my @h = $url->headers;  # URL headers override those in the request
 	while (@h) {
@@ -89,7 +101,8 @@ sub request
 	    next unless defined $v;
 	    if (lc($k) eq "body") {
 		$request->content($v);
-	    } else {
+	    }
+	    else {
 		$request->push_header($k => $v);
 	    }
 	}
@@ -97,7 +110,8 @@ sub request
     if ($^O eq "MacOS") {
 	$mail->add(To => $addr);
 	$mail->add(split(/[:\n]/,$request->headers_as_string));
-    } else {
+    }
+    else {
 	print SENDMAIL $request->headers_as_string;
 	print SENDMAIL "\n";
     }
@@ -110,11 +124,13 @@ sub request
 		foreach (@text) {
 		    $_ .= "\n";
 		}
-	    } else {
+	    }
+	    else {
 	    print SENDMAIL $$contRef;
 	    }
 
-	} elsif (ref($contRef) eq 'CODE') {
+	}
+	elsif (ref($contRef) eq 'CODE') {
 	    # Callback provides data
 	    my $d;
 	    if ($^O eq "MacOS") {
@@ -126,7 +142,8 @@ sub request
 		foreach (@text) {
 		    $_ .= "\n";
 		}
-	    } else {
+	    }
+	    else {
 		print SENDMAIL $d;
 	    }
 	}
@@ -137,7 +154,8 @@ sub request
 	    return HTTP::Response->new(&HTTP::Status::RC_INTERNAL_SERVER_ERROR,
 				       "Mail::Internet->smtpsend unable to send message to <$addr>");
 	}
-    } else {
+    }
+    else {
 	unless (close(SENDMAIL)) {
 	    my $err = $! ? "$!" : "Exit status $?";
 	    return HTTP::Response->new(&HTTP::Status::RC_INTERNAL_SERVER_ERROR,
@@ -152,7 +170,8 @@ sub request
     if ($^O eq "MacOS") {
 	$response->header('Server' => "Mail::Internet $Mail::Internet::VERSION");
 	$response->content("Message sent to <$addr>\n");
-    } else {
+    }
+    else {
 	$response->header('Server' => $SENDMAIL);
 	my $to = $request->header("To");
 	$response->content("Message sent to <$to>\n");

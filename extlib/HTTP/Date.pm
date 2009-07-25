@@ -1,6 +1,6 @@
-package HTTP::Date;  # $Date: 2001/01/04 20:27:15 $
+package HTTP::Date;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.43 $ =~ /(\d+)\.(\d+)/);
+$VERSION = "5.810";
 
 require 5.004;
 require Exporter;
@@ -39,20 +39,20 @@ sub str2time ($;$)
     # fast exit for strictly conforming string
     if ($str =~ /^[SMTWF][a-z][a-z], (\d\d) ([JFMAJSOND][a-z][a-z]) (\d\d\d\d) (\d\d):(\d\d):(\d\d) GMT$/) {
 	return eval {
-	    my $t = Time::Local::timegm($6, $5, $4, $1, $MoY{$2}-1, $3-1900);
+	    my $t = Time::Local::timegm($6, $5, $4, $1, $MoY{$2}-1, $3);
 	    $t < 0 ? undef : $t;
 	};
     }
 
     my @d = parse_date($str);
     return undef unless @d;
-    $d[0] -= 1900;  # year
     $d[1]--;        # month
 
     my $tz = pop(@d);
     unless (defined $tz) {
 	unless (defined($tz = shift)) {
-	    return eval { my $t = Time::Local::timelocal(reverse @d);
+	    return eval { my $frac = $d[-1]; $frac -= ($d[-1] = int($frac));
+			  my $t = Time::Local::timelocal(reverse @d) + $frac;
 			  $t < 0 ? undef : $t;
 		        };
 	}
@@ -73,7 +73,8 @@ sub str2time ($;$)
 	return undef unless defined $offset;
     }
 
-    return eval { my $t = Time::Local::timegm(reverse @d);
+    return eval { my $frac = $d[-1]; $frac -= ($d[-1] = int($frac));
+		  my $t = Time::Local::timegm(reverse @d) + $frac;
 		  $t < 0 ? undef : $t - $offset;
 		};
 }
@@ -186,7 +187,7 @@ sub parse_date ($)
     # Translate month name to number
     $mon = $MoY{$mon} ||
            $MoY{"\u\L$mon"} ||
-	   ($mon >= 1 && $mon <= 12 && int($mon)) ||
+	   ($mon =~ /^\d\d?$/ && $mon >= 1 && $mon <= 12 && int($mon)) ||
            return;
 
     # If the year is missing, we assume first date before the current,
@@ -227,7 +228,8 @@ sub parse_date ($)
 
     if (defined $tz) {
 	$tz = "Z" if $tz =~ /^(GMT|UTC?|[-+]?0+)$/;
-    } else {
+    }
+    else {
 	$tz = "";
     }
     return sprintf("%04d-%02d-%02d %02d:%02d:%02d%s",
@@ -294,9 +296,10 @@ in this format is:
 =item str2time( $str [, $zone] )
 
 The str2time() function converts a string to machine time.  It returns
-C<undef> if the format of $str is unrecognized, or the time is outside
-the representable range.  The time formats recognized are the same as
-for parse_date().
+C<undef> if the format of $str is unrecognized, otherwise whatever the
+C<Time::Local> functions can make out of the parsed time.  Dates
+before the system's epoch may not work on all operating systems.  The
+time formats recognized are the same as for parse_date().
 
 The function also takes an optional second argument that specifies the
 default time zone to use when converting the date.  This parameter is
