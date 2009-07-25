@@ -13,10 +13,7 @@ package CGI::Fast;
 # wish, but if you redistribute a modified version, please attach a note
 # listing the modifications you have made.
 
-# The most recent version and complete docs are available at:
-#   http://www.genome.wi.mit.edu/ftp/pub/software/WWW/cgi_docs.html
-#   ftp://ftp-genome.wi.mit.edu/pub/software/WWW/
-$CGI::Fast::VERSION='1.04';
+$CGI::Fast::VERSION='1.07';
 
 use CGI;
 use FCGI;
@@ -57,6 +54,8 @@ sub new {
          return undef unless FCGI::accept() >= 0;
      }
      }
+     CGI->_reset_globals;
+     $self->_setup_symbols(@SAVED_SYMBOLS) if @CGI::SAVED_SYMBOLS;
      return $CGI::Q = $self->SUPER::new($initializer, @param);
 }
 
@@ -83,33 +82,17 @@ CGI::Fast - CGI Interface for Fast CGI
 
 =head1 DESCRIPTION
 
-CGI::Fast is a subclass of the CGI object created by
-CGI.pm.  It is specialized to work well with the Open Market
-FastCGI standard, which greatly speeds up CGI scripts by
-turning them into persistently running server processes.  Scripts
-that perform time-consuming initialization processes, such as
-loading large modules or opening persistent database connections,
-will see large performance improvements.
+CGI::Fast is a subclass of the CGI object created by CGI.pm.  It is
+specialized to work well FCGI module, which greatly speeds up CGI
+scripts by turning them into persistently running server processes.
+Scripts that perform time-consuming initialization processes, such as
+loading large modules or opening persistent database connections, will
+see large performance improvements.
 
 =head1 OTHER PIECES OF THE PUZZLE
 
-In order to use CGI::Fast you'll need a FastCGI-enabled Web
-server.  Open Market's server is FastCGI-savvy.  There are also
-freely redistributable FastCGI modules for NCSA httpd 1.5 and Apache.
-FastCGI-enabling modules for Microsoft Internet Information Server and
-Netscape Communications Server have been announced.
-
-In addition, you'll need a version of the Perl interpreter that has
-been linked with the FastCGI I/O library.  Precompiled binaries are
-available for several platforms, including DEC Alpha, HP-UX and 
-SPARC/Solaris, or you can rebuild Perl from source with patches
-provided in the FastCGI developer's kit.  The FastCGI Perl interpreter
-can be used in place of your normal Perl without ill consequences.
-
-You can find FastCGI modules for Apache and NCSA httpd, precompiled
-Perl interpreters, and the FastCGI developer's kit all at URL:
-
-  http://www.fastcgi.com/
+In order to use CGI::Fast you'll need the FCGI module.  See
+http://www.cpan.org/ for details.
 
 =head1 WRITING FASTCGI PERL SCRIPTS
 
@@ -122,7 +105,7 @@ waiting some more.
 
 A typical FastCGI script will look like this:
 
-    #!/usr/local/bin/perl    # must be a FastCGI version of perl!
+    #!/usr/bin/perl
     use CGI::Fast;
     &do_some_initialization();
     while ($q = new CGI::Fast) {

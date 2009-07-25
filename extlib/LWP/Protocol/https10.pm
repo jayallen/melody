@@ -1,20 +1,22 @@
-#
-# $Id: https10.pm,v 1.1 2001/10/26 17:27:19 gisle Exp $
+package LWP::Protocol::https10;
 
 use strict;
 
-package LWP::Protocol::https10;
-
 # Figure out which SSL implementation to use
 use vars qw($SSL_CLASS);
-if ($IO::Socket::SSL::VERSION) {
+if ($Net::SSL::VERSION) {
+    $SSL_CLASS = "Net::SSL";
+}
+elsif ($IO::Socket::SSL::VERSION) {
     $SSL_CLASS = "IO::Socket::SSL"; # it was already loaded
-} else {
+}
+else {
     eval { require Net::SSL; };     # from Crypt-SSLeay
     if ($@) {
 	require IO::Socket::SSL;
 	$SSL_CLASS = "IO::Socket::SSL";
-    } else {
+    }
+    else {
 	$SSL_CLASS = "Net::SSL";
     }
 }
