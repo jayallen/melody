@@ -1,9 +1,6 @@
-# $Id: Negotiate.pm,v 1.11 2001/11/27 22:41:33 gisle Exp $
-#
-
 package HTTP::Negotiate;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
+$VERSION = "5.813";
 sub Version { $VERSION; }
 
 require 5.002;
@@ -21,7 +18,7 @@ sub choose ($;$)
     my(%accept);
 
     unless (defined $request) {
-	# Create a request object from the CGI envirionment variables
+	# Create a request object from the CGI environment variables
 	$request = new HTTP::Headers;
 	$request->header('Accept', $ENV{HTTP_ACCEPT})
 	  if $ENV{HTTP_ACCEPT};
@@ -71,7 +68,8 @@ sub choose ($;$)
 	    if (defined $param{'q'}) {
 		$param{'q'} = 1 if $param{'q'} > 1;
 		$param{'q'} = 0 if $param{'q'} < 0;
-	    } else {
+	    }
+	    else {
 		$param{'q'} = $default_q;
 
 		# This makes sure that the first ones are slightly better off
@@ -107,7 +105,7 @@ sub choose ($;$)
     }
 
     my @Q = ();  # This is where we collect the results of the
-		 # quality calcualtions
+		 # quality calculations
 
     # Calculate quality for all the variants that are available.
     for (@$variants) {
@@ -128,9 +126,9 @@ sub choose ($;$)
 
 	# Calculate encoding quality
 	my $qe = 1;
-	# If the variant has no assignes Content-Encoding, or if no
+	# If the variant has no assigned Content-Encoding, or if no
 	# Accept-Encoding field is present, then the value assigned
-	# is "qe=1".  If *all* of the variant's content encoddings
+	# is "qe=1".  If *all* of the variant's content encodings
 	# are listed in the Accept-Encoding field, then the value
 	# assigned is "qw=1".  If *any* of the variant's content
 	# encodings are not listed in the provided Accept-Encoding
@@ -143,7 +141,8 @@ sub choose ($;$)
 		    print "no\n" if $DEBUG;
 		    $qe = 0;
 		    last;
-		} else {
+		}
+		else {
 		    print "yes\n" if $DEBUG;
 		}
 	    }
@@ -151,7 +150,7 @@ sub choose ($;$)
 
 	# Calculate charset quality
 	my $qc  = 1;
-	# If the variant's media-type has not charset parameter,
+	# If the variant's media-type has no charset parameter,
 	# or the variant's charset is US-ASCII, or if no Accept-Charset
 	# field is present, then the value assigned is "qc=1".  If the
 	# variant's charset is listed in the Accept-Charset field,
@@ -168,7 +167,7 @@ sub choose ($;$)
 	    my @lang = ref($lang) ? @$lang : ($lang);
 	    # If any of the variant's content languages are listed
 	    # in the Accept-Language field, the the value assigned is
-	    # the maximus of the "q" paramet values for thos language
+	    # the largest of the "q" parameter values for those language
 	    # tags.
 	    my $q = undef;
 	    for (@lang) {
@@ -179,7 +178,8 @@ sub choose ($;$)
 	    }
 	    if(defined $q) {
 	        $DEBUG and print " -- Exact language match at q=$q\n";
-	    } else {
+	    }
+	    else {
 		# If there was no exact match and at least one of
 		# the Accept-Language field values is a complete
 		# subtag prefix of the content language tag(s), then
@@ -188,14 +188,15 @@ sub choose ($;$)
 		$DEBUG and print " -- No exact language match\n";
 		my $selected = undef;
 		for $al (keys %{ $accept{'language'} }) {
-		    if (substr($lang, 0, 1 + length($al)) eq "$al-") {
+		    if (index($al, "$lang-") == 0) {
 		        # $lang starting with $al isn't enough, or else
 		        #  Accept-Language: hu (Hungarian) would seem
 		        #  to accept a document in hup (Hupa)
-		        $DEBUG and print " -- $lang ISA $al\n";
+		        $DEBUG and print " -- $al ISA $lang\n";
 			$selected = $al unless defined $selected;
 			$selected = $al if length($al) > length($selected);
-		    } else {
+		    }
+		    else {
 		        $DEBUG and print " -- $lang  isn't a $al\n";
 		    }
 		}
@@ -208,7 +209,8 @@ sub choose ($;$)
 		$q = 0.001 unless defined $q;
 	    }
 	    $ql = $q;
-	} else {
+	}
+	else {
 	    $ql = 0.5 if $any_lang && exists $accept{'language'};
 	}
 
@@ -273,7 +275,8 @@ sub choose ($;$)
 	my $Q;
 	if (!defined($mbx) || $mbx >= $bs) {
 	    $Q = $qs * $qe * $qc * $ql * $q;
-	} else {
+	}
+	else {
 	    $Q = 0;
 	    print "Variant's size is too large ==> Q=0\n" if $DEBUG;
 	}
@@ -303,11 +306,11 @@ __END__
 
 =head1 NAME
 
-choose - choose a variant of a document to serve (HTTP content negotiation)
+HTTP::Negotiate - choose a variant to serve
 
 =head1 SYNOPSIS
 
- use HTTP::Negotiate;
+ use HTTP::Negotiate qw(choose);
 
  #  ID       QS     Content-Type   Encoding Char-Set        Lang   Size
  $variants =
@@ -316,8 +319,8 @@ choose - choose a variant of a document to serve (HTTP content negotiation)
    ['var3',  0.3,   'image/gif',   undef,   undef,          undef, 43555],
   ];
 
- @prefered = choose($variants, $request_headers);
- $the_one  = choose($variants);
+ @preferred = choose($variants, $request_headers);
+ $the_one   = choose($variants);
 
 =head1 DESCRIPTION
 
@@ -345,12 +348,12 @@ parameter is missing, then the accept specification is initialized
 from the CGI environment variables HTTP_ACCEPT, HTTP_ACCEPT_CHARSET,
 HTTP_ACCEPT_ENCODING and HTTP_ACCEPT_LANGUAGE.
 
-In an array context, choose() returns a list of variant
-identifier/calculated quality pairs.  The values are sorted by
+In an array context, choose() returns a list of [variant
+identifier, calculated quality, size] tuples.  The values are sorted by
 quality, highest quality first.  If the calculated quality is the same
 for two variants, then they are sorted by size (smallest first). I<E.g.>:
 
-  (['var1' => 1], ['var2', 0.3], ['var3' => 0]);
+  (['var1', 1, 2000], ['var2', 0.3, 512], ['var3', 0.3, 1024]);
 
 Note that also zero quality variants are included in the return list
 even if these should never be served to the client.
@@ -458,7 +461,7 @@ F<draft-ietf-http-v11-spec-00.ps>):
 =item Accept
 
 This header can be used to indicate a list of media ranges which are
-acceptable as a reponse to the request.  The "*" character is used to
+acceptable as a response to the request.  The "*" character is used to
 group media types into ranges, with "*/*" indicating all media types
 and "type/*" indicating all subtypes of that type.
 

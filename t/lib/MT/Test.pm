@@ -551,25 +551,26 @@ sub init_data {
     # TODO: this test entry is never created; upgrading already adds entry #1.
     if ( !$entry ) {
         $entry = MT::Entry->new();
-        $entry->set_values(
-            {
-                blog_id        => 1,
-                title          => 'A Rainy Day',
-                text           => 'On a drizzly day last weekend,',
-                text_more      => 'I took my grandpa for a walk.',
-                excerpt        => 'A story of a stroll.',
-                keywords       => 'keywords',
-                created_on     => '19780131074500',
-                authored_on    => '19780131074500',
-                modified_on    => '19780131074600',
-                authored_on    => '19780131074500',
-                author_id      => $chuckd->id,
-                pinged_urls    => 'http://technorati.com/',
-                allow_comments => 1,
-                allow_pings    => 1,
-                status         => MT::Entry::RELEASE(),
-            }
-        );
+        # This is specifically different than MTOS because
+        # we have the set_defaults() method.
+        $entry->blog_id(1);
+        $entry->set_defaults();
+        $entry->set_values({
+            title          => 'A Rainy Day',
+            text           => 'On a drizzly day last weekend,',
+            text_more      => 'I took my grandpa for a walk.',
+            excerpt        => 'A story of a stroll.',
+            keywords       => 'keywords',
+            created_on     => '19780131074500',
+            authored_on    => '19780131074500',
+            modified_on    => '19780131074600',
+            authored_on    => '19780131074500',
+            author_id      => $chuckd->id,
+            pinged_urls    => 'http://technorati.com/',
+            allow_comments => 1,
+            allow_pings    => 1,
+            status         => MT::Entry::RELEASE(),
+        });
         $entry->id(1);
         $entry->tags( 'rain', 'grandpa', 'strolling' );
         $entry->save() or die "Couldn't save entry record 1: " . $entry->errstr;
@@ -579,21 +580,23 @@ sub init_data {
     $entry = MT::Entry->load(2);
     if ( !$entry ) {
         $entry = MT::Entry->new();
-        $entry->set_values(
-            {
-                blog_id        => 1,
-                title          => 'A preponderance of evidence',
-                text           => 'It is sufficient to say...',
-                text_more      => 'I suck at making up test data.',
-                created_on     => '19790131074500',
-                authored_on    => '19790131074500',
-                modified_on    => '19790131074600',
-                authored_on    => '19780131074500',
-                author_id      => $bobd->id,
-                allow_comments => 1,
-                status         => MT::Entry::FUTURE(),
-            }
-        );
+        # This is specifically different than MTOS because
+        # we have the set_defaults() method.
+        $entry->blog_id(1);
+        $entry->set_defaults();
+
+        $entry->set_values({
+            title          => 'A preponderance of evidence',
+            text           => 'It is sufficient to say...',
+            text_more      => 'I suck at making up test data.',
+            created_on     => '19790131074500',
+            authored_on    => '19790131074500',
+            modified_on    => '19790131074600',
+            authored_on    => '19780131074500',
+            author_id      => $bobd->id,
+            allow_comments => 1,
+            status         => MT::Entry::FUTURE(),
+        });
         $entry->id(2);
         $entry->save() or die "Couldn't save entry record 2: " . $entry->errstr;
     }
@@ -602,22 +605,23 @@ sub init_data {
     $entry = MT::Entry->load(3);
     if ( !$entry ) {
         $entry = MT::Entry->new();
-        $entry->set_values(
-            {
-                blog_id        => 1,
-                title          => 'Spurious anemones',
-                text           => '...are better than the non-spurious',
-                text_more      => 'variety.',
-                created_on     => '19770131074500',
-                authored_on    => '19790131074500',
-                modified_on    => '19770131074600',
-                authored_on    => '19780131074500',
-                author_id      => $chuckd->id,
-                allow_comments => 1,
-                allow_pings    => 0,
-                status         => MT::Entry::HOLD(),
-            }
-        );
+        # This is specifically different than MTOS because
+        # we have the set_defaults() method.
+        $entry->blog_id(1);
+        $entry->set_defaults();
+        $entry->set_values({
+            title          => 'Spurious anemones',
+            text           => '...are better than the non-spurious',
+            text_more      => 'variety.',
+            created_on     => '19770131074500',
+            authored_on    => '19790131074500',
+            modified_on    => '19770131074600',
+            authored_on    => '19780131074500',
+            author_id      => $chuckd->id,
+            allow_comments => 1,
+            allow_pings    => 0,
+            status         => MT::Entry::HOLD(),
+        });
         $entry->id(3);
         $entry->tags('anemones');
         $entry->save() or die "Couldn't save entry record 3: " . $entry->errstr;
@@ -626,7 +630,7 @@ sub init_data {
 
     require MT::Trackback;
     my $tb = MT::Trackback->load(1);
-    if (!$tb) {
+    if ( !$tb ) {
         $tb = new MT::Trackback;
         $tb->entry_id(1);
         $tb->blog_id(1);
@@ -706,63 +710,66 @@ It\'s a hard rain\'s a-gonna fall',
         $tb->save or die "Couldn't save Trackback record 2: " . $tb->errstr;
     }
 
-    $cat = MT::Category->load({ label => 'subfoo', blog_id => 1});
-    if (!$cat) {
+    $cat = MT::Category->load( { label => 'subfoo', blog_id => 1 } );
+    if ( !$cat ) {
         $cat = new MT::Category;
         $cat->blog_id(1);
         $cat->label('subfoo');
         $cat->description('subcat');
-        $cat->author_id($bobd->id);
+        $cat->author_id( $bobd->id );
         $cat->parent(1);
         $cat->id(3);
         $cat->save or die "Couldn't save category record 3: " . $cat->errstr;
     }
 
     require MT::Placement;
-    foreach my $i (1..@verses) {
+    foreach my $i ( 1 .. @verses ) {
         $entry = MT::Entry->load( $i + 3 );
-        if (!$entry) {
+        if ( !$entry ) {
             $entry = MT::Entry->new();
-            $entry->set_values(
-                {
-                    blog_id   => 1,
-                    title     => "Verse $i",
-                    text      => $verses[$i],
-                    author_id => ( $i == 3 ? $bobd->id : $chuckd->id ),
-                    created_on  => sprintf( "%04d0131074501", $i + 1960 ),
-                    authored_on => sprintf( "%04d0131074501", $i + 1960 ),
-                    modified_on => sprintf( "%04d0131074601", $i + 1960 ),
-                    authored_on => sprintf( "%04d0131074501", $i + 1960 ),
-                    allow_comments => ( $i <= 2 ? 0 : 1 ),
-                    status => MT::Entry::RELEASE(),
-                }
-            );
-            $entry->id( $i + 3 );
+            # This is specifically different than MTOS because
+            # we have the set_defaults() method.
+            $entry->blog_id(1);
+            $entry->set_defaults();
+            $entry->set_values({
+                title          => "Verse $i",
+                text           => $verses[$i],
+                author_id      => ($i == 3 ? $bobd->id : $chuckd->id),
+                created_on     => sprintf("%04d0131074501", $i + 1960),
+                authored_on    => sprintf("%04d0131074501", $i + 1960),
+                modified_on    => sprintf("%04d0131074601", $i + 1960),
+                authored_on    => sprintf("%04d0131074501", $i + 1960),
+                allow_comments => ($i <= 2 ? 0 : 1),
+                status         => MT::Entry::RELEASE(),
+            });
+            $entry->id($i+3);
             if ( $i == 1 || $i == 3 || $i == 5 ) {
-                $entry->tags('verse', 'rain');
+                $entry->tags( 'verse', 'rain' );
             }
             else {
-                $entry->tags('verse', 'anemones');
+                $entry->tags( 'verse', 'anemones' );
             }
             $entry->save()
-                or die "Couldn't save entry record ".($entry->id).": ". $entry->errstr;
-            if ($i == 3) {
+              or die "Couldn't save entry record "
+              . ( $entry->id ) . ": "
+              . $entry->errstr;
+            if ( $i == 3 ) {
                 my $place = new MT::Placement;
-                $place->entry_id($entry->id);
+                $place->entry_id( $entry->id );
                 $place->blog_id(1);
                 $place->category_id(1);
                 $place->is_primary(1);
                 $place->save
-                    or die "Couldn't save placement record: ".$place->errstr;
+                  or die "Couldn't save placement record: " . $place->errstr;
             }
-            if ($i == 4) {
+            if ( $i == 4 ) {
                 my $place = new MT::Placement;
-                $place->entry_id($entry->id);
+                $place->entry_id( $entry->id );
                 $place->blog_id(1);
                 $place->category_id(3);
                 $place->is_primary(1);
                 $place->save
-                    or die "Couldn't save placement record: ".$place->errstr;
+                  or die "Couldn't save placement record: " . $place->errstr;
             }
         }
     }

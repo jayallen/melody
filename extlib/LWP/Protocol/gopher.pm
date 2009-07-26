@@ -1,5 +1,4 @@
-#
-# $Id: gopher.pm,v 1.19 1998/11/19 20:28:40 aas Exp $
+package LWP::Protocol::gopher;
 
 # Implementation of the gopher protocol (RFC 1436)
 #
@@ -7,9 +6,6 @@
 # which in turn is a vastly modified version of Oscar's http'get()
 # dated 28/3/94 in <ftp://cui.unige.ch/PUBLIC/oscar/scripts/http.pl>
 # including contributions from Marc van Heyningen and Martijn Koster.
-#
-
-package LWP::Protocol::gopher;
 
 use strict;
 use vars qw(@ISA);
@@ -47,8 +43,6 @@ sub request
 {
     my($self, $request, $proxy, $arg, $size, $timeout) = @_;
 
-    LWP::Debug::trace('()');
-
     $size = 4096 unless $size;
 
     # check proxy
@@ -57,7 +51,7 @@ sub request
 				   'You can not proxy through the gopher');
     }
 
-    my $url = $request->url;
+    my $url = $request->uri;
     die "bad scheme" if $url->scheme ne 'gopher';
 
 
@@ -159,7 +153,8 @@ EOT
 	my $content = menu2html($response->content);
 	if (defined $user_arg) {
 	    $response = $self->collect_once($user_arg, $response, $content);
-	} else {
+	}
+	else {
 	    $response->content($content);
 	}
     }
@@ -178,7 +173,8 @@ sub gopher2url
 	# telnet session
 	$url = $HTTP::URI_CLASS->new($gophertype eq '8' ? 'telnet:':'tn3270:');
 	$url->user($path) if defined $path;
-    } else {
+    }
+    else {
 	$path = URI::Escape::uri_escape($path);
 	$url = $HTTP::URI_CLASS->new("gopher:/$gophertype$path");
     }

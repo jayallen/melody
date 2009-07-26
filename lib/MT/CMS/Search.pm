@@ -187,7 +187,11 @@ sub core_search_apis {
             'can_search_by_date' => 1,
             'setup_terms_args'   => sub {
                 my ($terms, $args, $blog_id) = @_;
-                $terms->{class} = '*';
+                $terms->{class}
+                    = ( $app->param('filter') 
+                        && $app->param('filter_val')
+                        && $app->param('filter') eq 'class'
+                        && $app->param('filter_val') eq 'image' ) ? 'image' : '*';
                 $terms->{blog_id} = $blog_id if $blog_id;
             }
         },
@@ -399,14 +403,12 @@ sub do_search_replace {
     my $limit;
     # type-specific directives override global CMSSearchLimit
     my $directive = 'CMSSearchLimit' . ucfirst($type);
-	$limit = MT->config->$directive || MT->config->CMSSearchLimit || 125;
-	# don't allow passed limit to be higher than config limit
-	if ($q->param('limit') && ($q->param('limit') < $limit)) {
-		$limit = $q->param('limit');
-	}
-    if ($limit ne 'all') {
-       $limit =~ s/\D//g;
-	}
+    $limit = MT->config->$directive || MT->config->CMSSearchLimit || 125;
+    # don't allow passed limit to be higher than config limit
+    if ($q->param('limit') && ($q->param('limit') < $limit)) {
+        $limit = $q->param('limit');
+    }
+    $limit =~ s/\D//g unless $limit eq 'all';
     my $matches;
     $date_col = $api->{date_column} || 'created_on';
     if ( ( $do_search && $search ne '' ) || $show_all || $do_replace ) {
@@ -455,15 +457,15 @@ sub do_search_replace {
         my @terms;
         # MT::Object doesn't like multi-term hashes within arrays
         if (%terms) {
-        	for my $key (keys %terms) {
-        		push(@terms, { $key => $terms{$key} });
-        	}
-        	push(@terms, '-and');
+            for my $key (keys %terms) {
+                push(@terms, { $key => $terms{$key} });
+            }
+            push(@terms, '-and');
         }
         my @col_terms;
         my $query_string = "%$plain_search%";
         for my $col (@cols) {
-			push(@col_terms, { $col => { like => $query_string } }, '-or' );
+            push(@col_terms, { $col => { like => $query_string } }, '-or' );
         }
         delete $col_terms[$#col_terms];
         push(@terms, \@col_terms);
@@ -569,7 +571,7 @@ sub do_search_replace {
                 return $app->error(
                     $app->translate( "Error in search expression: [_1]", $@ ) );
             }
-        } 
+        }
         while ( my $obj = $iter->() ) {
             next unless $author->is_superuser || $api->{perm_check}->($obj);
             my $match = 0;

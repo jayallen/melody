@@ -58,7 +58,7 @@ __PACKAGE__->install_properties({
         modified_on => 1,
         # For lookups 
         comment_count => 1,
-		# TODO: Figure out how we benefit from this (from Percona-Advance recommendation)
+        # TODO: Figure out how we benefit from this (from Percona-Advance recommendation)
         auth_stat_class => {
             columns => [ 'author_id', 'status', 'class' ],
         },
@@ -90,11 +90,11 @@ __PACKAGE__->install_properties({
         blog_stat_date => {
             columns => ['blog_id', 'class', 'status', 'authored_on', 'id'],
         },
-		# TODO: Figure out how we benefit from this (from Percona-Advance recommendation)
-		# TODO: Figure out why this looks surprisingly like tag_count
-		dd_entry_tag_count => {
-			columns => ['blog_id', 'status', 'class', 'id'],
-		},
+        # TODO: Figure out how we benefit from this (from Percona-Advance recommendation)
+        # TODO: Figure out why this looks surprisingly like tag_count
+        dd_entry_tag_count => {
+            columns => ['blog_id', 'status', 'class', 'id'],
+        },
         # for tag count
         tag_count => {
             columns => ['status', 'class', 'blog_id', 'id'],
@@ -671,21 +671,24 @@ sub sync_assets {
 
 # See http://bugs.movabletype.org/?82628
 sub set_defaults {
-    my $e      = shift or return;    
+    my $e    = shift or return;
+    my $app  = MT->instance;
+    my $blog = $e->blog;
+    my $user = $e->author;
 
-    my $app    = MT->instance or return;
-    # Entry blog takes precedence, $app->blog fallback
-    my $blog   = $app->model('blog')->load($e->blog_id) if $e->blog_id;
-    $blog    ||= $app->blog if $app and $app->can('blog');
-    # $app->user is the only thing that matters
-    my $user   = $app->user if $app and $app->can('user');
+    # If we have an $app fill in missing values from it if possible.
+    # $app can be a non-MT::App object so we have to check for methods
+    if ( $app ) {
+        $blog ||= $app->blog if $app->can('blog');
+        $user ||= $app->user if $app->can('user');
+    }
 
     my (%entry_defaults, %user_defaults, %blog_defaults);
     
     %entry_defaults = (
         ping_count => 0,
         class      => 'entry',
-        status     => 0,
+        status     => HOLD,
     );
 
     if ( $user ) { 
@@ -707,9 +710,6 @@ sub set_defaults {
     }
     
     $e->set_values({ %entry_defaults, %user_defaults, %blog_defaults });
-    # use Data::Dumper;
-    # print 'Entry default values: '.Dumper($e);
-    
 }
 
 sub save {

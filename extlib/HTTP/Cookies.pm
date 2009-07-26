@@ -2,77 +2,23 @@ package HTTP::Cookies;
 
 use strict;
 use HTTP::Date qw(str2time time2str);
-use HTTP::Headers::Util qw(split_header_words join_header_words);
-use LWP::Debug ();
+use HTTP::Headers::Util qw(_split_header_words join_header_words);
 
-use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/);
+use vars qw($VERSION $EPOCH_OFFSET);
+$VERSION = "5.827";
 
-my $EPOCH_OFFSET = 0;  # difference from Unix epoch
+# Legacy: because "use "HTTP::Cookies" used be the ONLY way
+#  to load the class HTTP::Cookies::Netscape.
+require HTTP::Cookies::Netscape;
+
+$EPOCH_OFFSET = 0;  # difference from Unix epoch
 if ($^O eq "MacOS") {
     require Time::Local;
     $EPOCH_OFFSET = Time::Local::timelocal(0,0,0,1,0,70);
 }
 
-=head1 NAME
-
-HTTP::Cookies - Cookie storage and management
-
-=head1 SYNOPSIS
-
- use HTTP::Cookies;
- $cookie_jar = HTTP::Cookies->new;
-
- $cookie_jar->add_cookie_header($request);
- $cookie_jar->extract_cookies($response);
-
-=head1 DESCRIPTION
-
-Cookies are a general mechanism which server side connections can use
-to both store and retrieve information on the client side of the
-connection.  For more information about cookies refer to
-<URL:http://www.netscape.com/newsref/std/cookie_spec.html> and
-<URL:http://www.cookiecentral.com/>.  This module also implements the
-new style cookies described in I<RFC 2965>.
-The two variants of cookies are supposed to be able to coexist happily.
-
-Instances of the class I<HTTP::Cookies> are able to store a collection
-of Set-Cookie2: and Set-Cookie: headers and are able to use this
-information to initialize Cookie-headers in I<HTTP::Request> objects.
-The state of a I<HTTP::Cookies> object can be saved in and restored from
-files.
-
-=head1 METHODS
-
-The following methods are provided:
-
-=over 4
-
-=cut
-
 # A HTTP::Cookies object is a hash.  The main attribute is the
 # COOKIES 3 level hash:  $self->{COOKIES}{$domain}{$path}{$key}.
-
-
-=item $cookie_jar = HTTP::Cookies->new;
-
-The constructor takes hash style parameters.  The following
-parameters are recognized:
-
-  file:            name of the file to restore cookies from and save cookies to
-  autosave:        save during destruction (bool)
-  ignore_discard:  save even cookies that are requested to be discarded (bool)
-  hide_cookie2:    don't add Cookie2 header to requests
-
-Future parameters might include (not yet implemented):
-
-  max_cookies               300
-  max_cookies_per_domain    20
-  max_cookie_size           4096
-
-  no_cookies   list of domain names that we never return cookies to
-
-=cut
 
 sub new
 {
@@ -89,22 +35,19 @@ sub new
 }
 
 
-=item $cookie_jar->add_cookie_header($request);
-
-The add_cookie_header() method will set the appropriate Cookie:-header
-for the I<HTTP::Request> object given as argument.  The $request must
-have a valid url attribute before this method is called.
-
-=cut
-
 sub add_cookie_header
 {
     my $self = shift;
     my $request = shift || return;
-    my $url = $request->url;
+    my $url = $request->uri;
+    my $scheme = $url->scheme;
+    unless ($scheme =~ /^https?\z/) {
+	return;
+    }
+
     my $domain = _host($request, $url);
     $domain = "$domain.local" unless $domain =~ /\./;
-    my $secure_request = ($url->scheme eq "https");
+    my $secure_request = ($scheme eq "https");
     my $req_path = _url_path($url);
     my $req_port = $url->port;
     my $now = time();
@@ -115,31 +58,32 @@ sub add_cookie_header
     my $netscape_only = 0; # An exact domain match applies to any cookie
 
     while ($domain =~ /\./) {
-
-        LWP::Debug::debug("Checking $domain for cookies");
+        # Checking $domain for cookies"
 	my $cookies = $self->{COOKIES}{$domain};
 	next unless $cookies;
+	if ($self->{delayload} && defined($cookies->{'//+delayload'})) {
+	    my $cookie_data = $cookies->{'//+delayload'}{'cookie'};
+	    delete $self->{COOKIES}{$domain};
+	    $self->load_cookie($cookie_data->[1]);
+	    $cookies = $self->{COOKIES}{$domain};
+	    next unless $cookies;  # should not really happen
+	}
 
 	# Want to add cookies corresponding to the most specific paths
 	# first (i.e. longest path first)
 	my $path;
 	for $path (sort {length($b) <=> length($a) } keys %$cookies) {
-            LWP::Debug::debug("- checking cookie path=$path");
 	    if (index($req_path, $path) != 0) {
-	        LWP::Debug::debug("  path $path:$req_path does not fit");
 		next;
 	    }
 
 	    my($key,$array);
 	    while (($key,$array) = each %{$cookies->{$path}}) {
 		my($version,$val,$port,$path_spec,$secure,$expires) = @$array;
-	        LWP::Debug::debug(" - checking cookie $key=$val");
 		if ($secure && !$secure_request) {
-		    LWP::Debug::debug("   not a secure requests");
 		    next;
 		}
 		if ($expires && $expires < $now) {
-		    LWP::Debug::debug("   expired");
 		    next;
 		}
 		if ($port) {
@@ -148,24 +92,20 @@ sub add_cookie_header
 			# The correponding Set-Cookie attribute was empty
 			$found++ if $port eq $req_port;
 			$port = "";
-		    } else {
+		    }
+		    else {
 			my $p;
 			for $p (split(/,/, $port)) {
 			    $found++, last if $p eq $req_port;
 			}
 		    }
 		    unless ($found) {
-		        LWP::Debug::debug("   port $port:$req_port does not fit");
 			next;
 		    }
 		}
 		if ($version > 0 && $netscape_only) {
-		    LWP::Debug::debug("   domain $domain applies to " .
-				      "Netscape-style cookies only");
 		    next;
 		}
-
-	        LWP::Debug::debug("   it's a match");
 
 		# set version number of cookie header.
 	        # XXX: What should it be if multiple matching
@@ -173,7 +113,8 @@ sub add_cookie_header
 		if (!$set_ver++) {
 		    if ($version >= 1) {
 			push(@cval, "\$Version=$version");
-		    } elsif (!$self->{hide_cookie2}) {
+		    }
+		    elsif (!$self->{hide_cookie2}) {
 			$request->header(Cookie2 => '$Version="1"');
 		    }
 		}
@@ -212,7 +153,8 @@ sub add_cookie_header
 
 	if ($domain =~ s/^\.+//) {
 	    $netscape_only = 1;
-	} else {
+	}
+	else {
 	    $domain =~ s/[^.]*//;
 	    $netscape_only = 0;
 	}
@@ -224,27 +166,18 @@ sub add_cookie_header
 }
 
 
-=item $cookie_jar->extract_cookies($response);
-
-The extract_cookies() method will look for Set-Cookie: and
-Set-Cookie2: headers in the I<HTTP::Response> object passed as
-argument.  Any of these headers that are found are used to update
-the state of the $cookie_jar.
-
-=cut
-
 sub extract_cookies
 {
     my $self = shift;
     my $response = shift || return;
 
-    my @set = split_header_words($response->_header("Set-Cookie2"));
+    my @set = _split_header_words($response->_header("Set-Cookie2"));
     my @ns_set = $response->_header("Set-Cookie");
 
     return $response unless @set || @ns_set;  # quick exit
 
     my $request = $response->request;
-    my $url = $request->url;
+    my $url = $request->uri;
     my $req_host = _host($request, $url);
     $req_host = "$req_host.local" unless $req_host =~ /\./;
     my $req_port = $url->port;
@@ -253,7 +186,7 @@ sub extract_cookies
 
     if (@ns_set) {
 	# The old Netscape cookie format for Set-Cookie
-        # http://www.netscape.com/newsref/std/cookie_spec.html
+	# http://wp.netscape.com/newsref/std/cookie_spec.html
 	# can for instance contain an unquoted "," in the expires
 	# field, so we have to use this ad-hoc parser.
 	my $now = time();
@@ -268,24 +201,38 @@ sub extract_cookies
 
 	my $set;
 	for $set (@ns_set) {
+            $set =~ s/^\s+//;
 	    my @cur;
 	    my $param;
 	    my $expires;
+	    my $first_param = 1;
 	    for $param (split(/;\s*/, $set)) {
+                next unless length($param);
 		my($k,$v) = split(/\s*=\s*/, $param, 2);
-		$v =~ s/\s+$//;
-		#print "$k => $v\n";
-		my $lc = lc($k);
-		if ($lc eq "expires") {
+		if (defined $v) {
+		    $v =~ s/\s+$//;
+		    #print "$k => $v\n";
+		}
+		else {
+		    $k =~ s/\s+$//;
+		    #print "$k => undef";
+		}
+		if (!$first_param && lc($k) eq "expires") {
 		    my $etime = str2time($v);
 		    if ($etime) {
 			push(@cur, "Max-Age" => str2time($v) - $now);
 			$expires++;
 		    }
-		} else {
+		}
+                elsif (!$first_param && lc($k) =~ /^(?:version|discard|ns-cookie)/) {
+                    # ignore
+                }
+		else {
 		    push(@cur, $k => $v);
 		}
+		$first_param = 0;
 	    }
+            next unless @cur;
 	    next if $in_set2{$cur[0]};
 
 #	    push(@cur, "Port" => $req_port);
@@ -302,8 +249,6 @@ sub extract_cookies
 
 	my $key = shift @$set;
 	my $val = shift @$set;
-
-        LWP::Debug::debug("Set cookie $key => $val");
 
 	my %hash;
 	while (@$set) {
@@ -330,28 +275,26 @@ sub extract_cookies
 
 	# Check domain
 	my $domain  = delete $hash{domain};
+	$domain = lc($domain) if defined $domain;
 	if (defined($domain)
 	    && $domain ne $req_host && $domain ne ".$req_host") {
 	    if ($domain !~ /\./ && $domain ne "local") {
-	        LWP::Debug::debug("Domain $domain contains no dot");
 		next SET_COOKIE;
 	    }
 	    $domain = ".$domain" unless $domain =~ /^\./;
 	    if ($domain =~ /\.\d+$/) {
-	        LWP::Debug::debug("IP-address $domain illeagal as domain");
 		next SET_COOKIE;
 	    }
 	    my $len = length($domain);
 	    unless (substr($req_host, -$len) eq $domain) {
-	        LWP::Debug::debug("Domain $domain does not match host $req_host");
 		next SET_COOKIE;
 	    }
 	    my $hostpre = substr($req_host, 0, length($req_host) - $len);
 	    if ($hostpre =~ /\./ && !$ns_cookie) {
-	        LWP::Debug::debug("Host prefix contain a dot: $hostpre => $domain");
 		next SET_COOKIE;
 	    }
-	} else {
+	}
+	else {
 	    $domain = $req_host;
 	}
 
@@ -362,10 +305,10 @@ sub extract_cookies
 	    _normalize_path($path) if $path =~ /%/;
 	    if (!$ns_cookie &&
                 substr($req_path, 0, length($path)) ne $path) {
-	        LWP::Debug::debug("Path $path is not a prefix of $req_path");
 		next SET_COOKIE;
 	    }
-	} else {
+	}
+	else {
 	    $path = $req_path;
 	    $path =~ s,/[^/]*$,,;
 	    $path = "/" unless length($path);
@@ -379,16 +322,15 @@ sub extract_cookies
 		my $found;
 		for my $p (split(/,/, $port)) {
 		    unless ($p =~ /^\d+$/) {
-		      LWP::Debug::debug("Bad port $port (not numeric)");
 			next SET_COOKIE;
 		    }
 		    $found++ if $p eq $req_port;
 		}
 		unless ($found) {
-		    LWP::Debug::debug("Request port ($req_port) not found in $port");
 		    next SET_COOKIE;
 		}
-	    } else {
+	    }
+	    else {
 		$port = "_$req_port";
 	    }
 	}
@@ -399,18 +341,11 @@ sub extract_cookies
     $response;
 }
 
-sub set_cookie_ok { 1 };
+sub set_cookie_ok
+{
+    1;
+}
 
-=item $cookie_jar->set_cookie($version, $key, $val, $path, $domain, $port, $path_spec, $secure, $maxage, $discard, \%rest)
-
-The set_cookie() method updates the state of the $cookie_jar.  The
-$key, $val, $domain, $port and $path arguments are strings.  The
-$path_spec, $secure, $discard arguments are boolean values. The $maxage
-value is a number indicating number of seconds that this cookie will
-live.  A value <= 0 will delete this cookie.  %rest defines
-various other attributes like "Comment" and "CommentURL".
-
-=cut
 
 sub set_cookie
 {
@@ -421,7 +356,7 @@ sub set_cookie
 
     # path and key can not be empty (key can't start with '$')
     return $self if !defined($path) || $path !~ m,^/, ||
-	            !defined($key)  || $key  !~ m,[^\$],;
+	            !defined($key)  || $key  =~ m,^\$,;
 
     # ensure legal port
     if (defined $port) {
@@ -449,20 +384,6 @@ sub set_cookie
     $self;
 }
 
-=item $cookie_jar->save( [$file] );
-
-This method file saves the state of the $cookie_jar to a file.
-The state can then be restored later using the load() method.  If a
-filename is not specified we will use the name specified during
-construction.  If the attribute I<ignore_discared> is set, then we
-will even save cookies that are marked to be discarded.
-
-The default is to save a sequence of "Set-Cookie3" lines.
-"Set-Cookie3" is a proprietary LWP format, not known to be compatible
-with any browser.  The I<HTTP::Cookies::Netscape> sub-class can
-be used to save in a format compatible with Netscape.
-
-=cut
 
 sub save
 {
@@ -476,13 +397,6 @@ sub save
     1;
 }
 
-=item $cookie_jar->load( [$file] );
-
-This method reads the cookies from the file and adds them to the
-$cookie_jar.  The file must be in the format written by the save()
-method.
-
-=cut
 
 sub load
 {
@@ -500,7 +414,7 @@ sub load
 	next unless s/^Set-Cookie3:\s*//;
 	chomp;
 	my $cookie;
-	for $cookie (split_header_words($_)) {
+	for $cookie (_split_header_words($_)) {
 	    my($key,$val) = splice(@$cookie, 0, 2);
 	    my %hash;
 	    while (@$cookie) {
@@ -528,12 +442,6 @@ sub load
     1;
 }
 
-=item $cookie_jar->revert;
-
-This method empties the $cookie_jar and re-loads the $cookie_jar
-from the last save file.
-
-=cut
 
 sub revert
 {
@@ -542,42 +450,29 @@ sub revert
     $self;
 }
 
-=item $cookie_jar->clear( [$domain, [$path, [$key] ] ]);
-
-Invoking this method without arguments will empty the whole
-$cookie_jar.  If given a single argument only cookies belonging to
-that domain will be removed.  If given two arguments, cookies
-belonging to the specified path within that domain are removed.  If
-given three arguments, then the cookie with the specified key, path
-and domain is removed.
-
-=cut
 
 sub clear
 {
     my $self = shift;
     if (@_ == 0) {
 	$self->{COOKIES} = {};
-    } elsif (@_ == 1) {
+    }
+    elsif (@_ == 1) {
 	delete $self->{COOKIES}{$_[0]};
-    } elsif (@_ == 2) {
+    }
+    elsif (@_ == 2) {
 	delete $self->{COOKIES}{$_[0]}{$_[1]};
-    } elsif (@_ == 3) {
+    }
+    elsif (@_ == 3) {
 	delete $self->{COOKIES}{$_[0]}{$_[1]}{$_[2]};
-    } else {
+    }
+    else {
 	require Carp;
         Carp::carp('Usage: $c->clear([domain [,path [,key]]])');
     }
     $self;
 }
 
-=item $cookie_jar->clear_temporary_cookies( );
-
-Discard all temporary cookies. Scans for all cookies in the jar 
-with either no expire field or a true C<discard> flag. To be 
-called when the user agent shuts down according to RFC 2965.
-
-=cut
 
 sub clear_temporary_cookies
 {
@@ -592,32 +487,14 @@ sub clear_temporary_cookies
       });
 }
 
+
 sub DESTROY
 {
     my $self = shift;
+    local($., $@, $!, $^E, $?);
     $self->save if $self->{'autosave'};
 }
 
-
-=item $cookie_jar->scan( \&callback );
-
-The argument is a subroutine that will be invoked for each cookie
-stored in the $cookie_jar.  The subroutine will be invoked with
-the following arguments:
-
-  0  version
-  1  key
-  2  val
-  3  path
-  4  domain
-  5  port
-  6  path_spec
-  7  secure
-  8  expires
-  9  discard
- 10  hash
-
-=cut
 
 sub scan
 {
@@ -637,14 +514,6 @@ sub scan
     }
 }
 
-=item $cookie_jar->as_string( [$skip_discard] );
-
-The as_string() method will return the state of the $cookie_jar
-represented as a sequence of "Set-Cookie3" header lines separated by
-"\n".  If $skip_discard is TRUE, it will not return lines for
-cookies with the I<Discard> attribute.
-
-=cut
 
 sub as_string
 {
@@ -677,9 +546,9 @@ sub _host
     my($request, $url) = @_;
     if (my $h = $request->header("Host")) {
 	$h =~ s/:\d+$//;  # might have a port as well
-	return $h;
+	return lc($h);
     }
-    return $url->host;
+    return lc($url->host);
 }
 
 sub _url_path
@@ -688,7 +557,8 @@ sub _url_path
     my $path;
     if($url->can('epath')) {
        $path = $url->epath;    # URI::URL method
-    } else {
+    }
+    else {
        $path = $url->path;           # URI::_generic method
     }
     $path = "/" unless length $path;
@@ -706,99 +576,184 @@ sub _normalize_path  # so that plain string compare can be used
     $_[0] =~ s/([\0-\x20\x7f-\xff])/sprintf("%%%02X",ord($1))/eg;
 }
 
-
-
-=back
-
-=head1 SUB CLASSES
-
-We also provide a subclass called I<HTTP::Cookies::Netscape> which
-loads and saves Netscape compatible cookie files.  You
-should be able to have LWP share Netscape's cookies by constructing
-your $cookie_jar like this:
-
- $cookie_jar = HTTP::Cookies::Netscape->new(
-                   File     => "$ENV{HOME}/.netscape/cookies",
-                   AutoSave => 1,
-               );
-
-Please note that the Netscape cookie file format is not able to store
-all the information available in the Set-Cookie2 headers, so you will
-probably loose some information if you save in this format.
-
-=cut
-
-package HTTP::Cookies::Netscape;
-
-use vars qw(@ISA);
-@ISA=qw(HTTP::Cookies);
-
-sub load
-{
-    my($self, $file) = @_;
-    $file ||= $self->{'file'} || return;
-    local(*FILE, $_);
-    local $/ = "\n";  # make sure we got standard record separator
-    my @cookies;
-    open(FILE, $file) || return;
-    my $magic = <FILE>;
-    unless ($magic =~ /^\# Netscape HTTP Cookie File/) {
-	warn "$file does not look like a netscape cookies file" if $^W;
-	close(FILE);
-	return;
-    }
-    my $now = time() - $EPOCH_OFFSET;
-    while (<FILE>) {
-	next if /^\s*\#/;
-	next if /^\s*$/;
-	chomp;
-	my($domain,$bool1,$path,$secure, $expires,$key,$val) = split(/\t/, $_);
-	$secure = ($secure eq "TRUE");
-	$self->set_cookie(undef,$key,$val,$path,$domain,undef,
-			  0,$secure,$expires-$now, 0);
-    }
-    close(FILE);
-    1;
-}
-
-sub save
-{
-    my($self, $file) = @_;
-    $file ||= $self->{'file'} || return;
-    local(*FILE, $_);
-    open(FILE, ">$file") || return;
-
-    print FILE <<EOT;
-# Netscape HTTP Cookie File
-# http://www.netscape.com/newsref/std/cookie_spec.html
-# This is a generated file!  Do not edit.
-
-EOT
-
-    my $now = time - $EPOCH_OFFSET;
-    $self->scan(sub {
-	my($version,$key,$val,$path,$domain,$port,
-	   $path_spec,$secure,$expires,$discard,$rest) = @_;
-	return if $discard && !$self->{ignore_discard};
-	$expires = $expires ? $expires - $EPOCH_OFFSET : 0;
-	return if $now > $expires;
-	$secure = $secure ? "TRUE" : "FALSE";
-	my $bool = $domain =~ /^\./ ? "TRUE" : "FALSE";
-	print FILE join("\t", $domain, $bool, $path, $secure, $expires, $key, $val), "\n";
-    });
-    close(FILE);
-    1;
-}
-
 1;
 
 __END__
 
+=head1 NAME
+
+HTTP::Cookies - HTTP cookie jars
+
+=head1 SYNOPSIS
+
+  use HTTP::Cookies;
+  $cookie_jar = HTTP::Cookies->new(
+    file => "$ENV{'HOME'}/lwp_cookies.dat',
+    autosave => 1,
+  );
+
+  use LWP;
+  my $browser = LWP::UserAgent->new;
+  $browser->cookie_jar($cookie_jar);
+
+Or for an empty and temporary cookie jar:
+
+  use LWP;
+  my $browser = LWP::UserAgent->new;
+  $browser->cookie_jar( {} );
+
+=head1 DESCRIPTION
+
+This class is for objects that represent a "cookie jar" -- that is, a
+database of all the HTTP cookies that a given LWP::UserAgent object
+knows about.
+
+Cookies are a general mechanism which server side connections can use
+to both store and retrieve information on the client side of the
+connection.  For more information about cookies refer to
+<URL:http://wp.netscape.com/newsref/std/cookie_spec.html> and
+<URL:http://www.cookiecentral.com/>.  This module also implements the
+new style cookies described in I<RFC 2965>.
+The two variants of cookies are supposed to be able to coexist happily.
+
+Instances of the class I<HTTP::Cookies> are able to store a collection
+of Set-Cookie2: and Set-Cookie: headers and are able to use this
+information to initialize Cookie-headers in I<HTTP::Request> objects.
+The state of a I<HTTP::Cookies> object can be saved in and restored from
+files.
+
+=head1 METHODS
+
+The following methods are provided:
+
+=over 4
+
+=item $cookie_jar = HTTP::Cookies->new
+
+The constructor takes hash style parameters.  The following
+parameters are recognized:
+
+  file:            name of the file to restore cookies from and save cookies to
+  autosave:        save during destruction (bool)
+  ignore_discard:  save even cookies that are requested to be discarded (bool)
+  hide_cookie2:    do not add Cookie2 header to requests
+
+Future parameters might include (not yet implemented):
+
+  max_cookies               300
+  max_cookies_per_domain    20
+  max_cookie_size           4096
+
+  no_cookies   list of domain names that we never return cookies to
+
+=item $cookie_jar->add_cookie_header( $request )
+
+The add_cookie_header() method will set the appropriate Cookie:-header
+for the I<HTTP::Request> object given as argument.  The $request must
+have a valid url attribute before this method is called.
+
+=item $cookie_jar->extract_cookies( $response )
+
+The extract_cookies() method will look for Set-Cookie: and
+Set-Cookie2: headers in the I<HTTP::Response> object passed as
+argument.  Any of these headers that are found are used to update
+the state of the $cookie_jar.
+
+=item $cookie_jar->set_cookie( $version, $key, $val, $path, $domain, $port, $path_spec, $secure, $maxage, $discard, \%rest )
+
+The set_cookie() method updates the state of the $cookie_jar.  The
+$key, $val, $domain, $port and $path arguments are strings.  The
+$path_spec, $secure, $discard arguments are boolean values. The $maxage
+value is a number indicating number of seconds that this cookie will
+live.  A value <= 0 will delete this cookie.  %rest defines
+various other attributes like "Comment" and "CommentURL".
+
+=item $cookie_jar->save
+
+=item $cookie_jar->save( $file )
+
+This method file saves the state of the $cookie_jar to a file.
+The state can then be restored later using the load() method.  If a
+filename is not specified we will use the name specified during
+construction.  If the attribute I<ignore_discard> is set, then we
+will even save cookies that are marked to be discarded.
+
+The default is to save a sequence of "Set-Cookie3" lines.
+"Set-Cookie3" is a proprietary LWP format, not known to be compatible
+with any browser.  The I<HTTP::Cookies::Netscape> sub-class can
+be used to save in a format compatible with Netscape.
+
+=item $cookie_jar->load
+
+=item $cookie_jar->load( $file )
+
+This method reads the cookies from the file and adds them to the
+$cookie_jar.  The file must be in the format written by the save()
+method.
+
+=item $cookie_jar->revert
+
+This method empties the $cookie_jar and re-loads the $cookie_jar
+from the last save file.
+
+=item $cookie_jar->clear
+
+=item $cookie_jar->clear( $domain )
+
+=item $cookie_jar->clear( $domain, $path )
+
+=item $cookie_jar->clear( $domain, $path, $key )
+
+Invoking this method without arguments will empty the whole
+$cookie_jar.  If given a single argument only cookies belonging to
+that domain will be removed.  If given two arguments, cookies
+belonging to the specified path within that domain are removed.  If
+given three arguments, then the cookie with the specified key, path
+and domain is removed.
+
+=item $cookie_jar->clear_temporary_cookies
+
+Discard all temporary cookies. Scans for all cookies in the jar
+with either no expire field or a true C<discard> flag. To be
+called when the user agent shuts down according to RFC 2965.
+
+=item $cookie_jar->scan( \&callback )
+
+The argument is a subroutine that will be invoked for each cookie
+stored in the $cookie_jar.  The subroutine will be invoked with
+the following arguments:
+
+  0  version
+  1  key
+  2  val
+  3  path
+  4  domain
+  5  port
+  6  path_spec
+  7  secure
+  8  expires
+  9  discard
+ 10  hash
+
+=item $cookie_jar->as_string
+
+=item $cookie_jar->as_string( $skip_discardables )
+
+The as_string() method will return the state of the $cookie_jar
+represented as a sequence of "Set-Cookie3" header lines separated by
+"\n".  If $skip_discardables is TRUE, it will not return lines for
+cookies with the I<Discard> attribute.
+
+=back
+
+=head1 SEE ALSO
+
+L<HTTP::Cookies::Netscape>, L<HTTP::Cookies::Microsoft>
+
 =head1 COPYRIGHT
 
-Copyright 1997-1999 Gisle Aas
+Copyright 1997-2002 Gisle Aas
 
 This library is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
-=cut
