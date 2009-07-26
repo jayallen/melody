@@ -163,6 +163,7 @@ sub import {
             my $charset = 'utf-8';
             eval {
                 # line __LINE__ __FILE__
+                require MT::ConfigMgr;
                 my $cfg = MT::ConfigMgr->instance;  #this is needed
                 $app ||= MT->instance;
                 my $c = $app->find_config;
@@ -193,6 +194,9 @@ sub import {
             }
             if (!$MT::DebugMode && ($err =~ m/^(.+?)( at .+? line \d+)(.*)$/s)) {
                 $err = $1;
+                $err .= '. '
+                      . $app->translate('Enable DebugMode for more details.');
+
             }
             print "Content-Type: text/plain; charset=$charset\n\n";
             print $app
