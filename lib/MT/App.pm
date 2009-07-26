@@ -2487,26 +2487,20 @@ sub show_error {
     }
 
     my $error = $param->{error};
+   
+    # Only remove unnecessary paths when we aren't in DebugMode.
 
-    if ( $MT::DebugMode ) {
-        if ( $@ ) {
-            # Use 'pre' tag to wrap Perl error
-            $error = '<pre>' . encode_html( $error ) . '</pre>';
-        }
-    }
-    else {
+    if (!$MT::DebugMode) {
         if ($error =~ m/^(.+?)( at .+? line \d+)(.*)$/s) {
-            # Hide any module path info from perl error message
-            # Information could be revealing info about where MT app
-            # resides on server, and what version is being used, which
-            # may be helpful forensics to an attacker.
-            $error = $1;
-        }
-        $error = encode_html( $error );
-        $error
-            =~ s!(https?://\S+)!<a href="$1" target="_blank">$1</a>!g;
-    }
-
+           # Hide any module path info from perl error message
+           # Information could be revealing info about where MT app
+           # resides on server, and what version is being used, which
+           # may be helpful forensics to an attacker.
+           $error = $1;
+        }        
+        $error =~ s!(https?://\S+)!<a href="$1" target="_blank">$1</a>!g;
+    } 
+    # $error = encode_html($error);
     $tmpl = $app->load_tmpl('error.tmpl');
     if (!$tmpl) {
         $error = '<pre>' . $error . '</pre>' unless $error =~ m/<pre>/;
