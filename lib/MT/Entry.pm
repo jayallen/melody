@@ -671,20 +671,17 @@ sub sync_assets {
 
 # See http://bugs.movabletype.org/?82628
 sub set_defaults {
-    my $e      = shift or return;    
+    my $e    = shift or return;
+    my $app  = MT->instance;
+    my $blog = $e->blog;
+    my $user = $e->author;
 
-    my $app    = MT->instance or return;
-
-    # Entry blog takes precedence, $app->blog fallback
-    my $blog   = $app->model('blog')->load($e->blog_id) if $e->blog_id;
-    $blog    ||= $app->blog if $app and $app->can('blog');
-
-    # API usage will almost always set the entry author directly so if  
-    # it's not set, then it most likely means that the interaction is 
-    # via the browser and the $app->user is the most likely author.
-    my $user   = $e->author ? $e->author 
-                            : ($app and $app->can('user'))  ? $app->user
-                                                            : undef;
+    # If we have an $app fill in missing values from it if possible.
+    # $app can be a non-MT::App object so we have to check for methods
+    if ( $app ) {
+        $blog ||= $app->blog if $app->can('blog');
+        $user ||= $app->user if $app->can('user');
+    }
 
     my (%entry_defaults, %user_defaults, %blog_defaults);
     
