@@ -2372,6 +2372,7 @@ sub show_error {
                         }
                     );
 
+            # fs = full screen
             if ( $app->param('fs') ) {
                 $param->{fs} = 1;
                 if ( exists $app->{goback} ) {
