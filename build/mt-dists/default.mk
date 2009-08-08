@@ -1,4 +1,4 @@
-PRODUCT_NAME = OpenMelody Core
+PRODUCT_NAME = Melody
 PRODUCT_VERSION = 0.9.1
 SCHEMA_VERSION = 4.0075
 # Corresponds to MT 4.3
