@@ -1,8 +1,5 @@
 package LWP::Protocol::GHTTP;
 
-# $Id: GHTTP.pm,v 1.2 2001/04/07 05:26:51 gisle Exp $
-
-#
 # You can tell LWP to use this module for 'http' requests by running
 # code like this before you make requests:
 #

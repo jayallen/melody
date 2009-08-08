@@ -1,14 +1,18 @@
 package Net::HTTPS;
 
-# $Id: HTTPS.pm,v 1.2 2001/11/17 02:05:31 gisle Exp $
-
 use strict;
 use vars qw($VERSION $SSL_SOCKET_CLASS @ISA);
 
-$VERSION = "0.01";
+$VERSION = "5.819";
 
 # Figure out which SSL implementation to use
-if ($IO::Socket::SSL::VERSION) {
+if ($SSL_SOCKET_CLASS) {
+    # somebody already set it
+}
+elsif ($Net::SSL::VERSION) {
+    $SSL_SOCKET_CLASS = "Net::SSL";
+}
+elsif ($IO::Socket::SSL::VERSION) {
     $SSL_SOCKET_CLASS = "IO::Socket::SSL"; # it was already loaded
 }
 else {

@@ -1,15 +1,10 @@
-#
-# $Id: nntp.pm,v 1.8 1998/11/19 21:45:02 aas Exp $
+package LWP::Protocol::nntp;
 
 # Implementation of the Network News Transfer Protocol (RFC 977)
-#
-
-package LWP::Protocol::nntp;
 
 require LWP::Protocol;
 @ISA = qw(LWP::Protocol);
 
-require LWP::Debug;
 require HTTP::Response;
 require HTTP::Status;
 require Net::NNTP;
@@ -21,8 +16,6 @@ sub request
 {
     my($self, $request, $proxy, $arg, $size, $timeout) = @_;
 
-    LWP::Debug::trace('()');
-
     $size = 4096 unless $size;
 
     # Check for proxy
@@ -32,9 +25,9 @@ sub request
     }
 
     # Check that the scheme is as expected
-    my $url = $request->url;
+    my $url = $request->uri;
     my $scheme = $url->scheme;
-    unless ($scheme eq 'news') {
+    unless ($scheme eq 'news' || $scheme eq 'nntp') {
 	return HTTP::Response->new(&HTTP::Status::RC_INTERNAL_SERVER_ERROR,
 				   "LWP::Protocol::nntp::request called for '$scheme'");
     }
@@ -44,7 +37,7 @@ sub request
     unless ($method eq 'GET' || $method eq 'HEAD' || $method eq 'POST') {
 	return HTTP::Response->new(&HTTP::Status::RC_BAD_REQUEST,
 				   'Library does not allow method ' .
-				   "$method for 'news:' URLs");
+				   "$method for '$scheme:' URLs");
     }
 
     # extract the identifier and check against posting to an article
@@ -56,7 +49,7 @@ sub request
 				   "Can't post to an article <$groupart>");
     }
 
-    my $nntp = Net::NNTP->new(undef,
+    my $nntp = Net::NNTP->new($url->host,
 			      #Port    => 18574,
 			      Timeout => $timeout,
 			      #Debug   => 1,
@@ -71,53 +64,63 @@ sub request
     my $response = HTTP::Response->new(&HTTP::Status::RC_OK, "OK");
 
     my $mess = $nntp->message;
-    LWP::Debug::debug($mess);
 
-    # Try to extract server name from greating message.
+    # Try to extract server name from greeting message.
     # Don't know if this works well for a large class of servers, but
     # this works for our server.
     $mess =~ s/\s+ready\b.*//;
     $mess =~ s/^\S+\s+//;
     $response->header(Server => $mess);
 
-
     # First we handle posting of articles
     if ($method eq 'POST') {
-	return HTTP::Response->new(&HTTP::Status::RC_NOT_IMPLEMENTED,
-				   "POST not implemented yet");
+	$nntp->quit; $nntp = undef;
+	$response->code(&HTTP::Status::RC_NOT_IMPLEMENTED);
+	$response->message("POST not implemented yet");
+	return $response;
     }
 
     # The method must be "GET" or "HEAD" by now
     if (!$is_art) {
 	if (!$nntp->group($groupart)) {
-	    return HTTP::Response->new(&HTTP::Status::RC_NOT_FOUND,
-				       $nntp->message);
+	    $response->code(&HTTP::Status::RC_NOT_FOUND);
+	    $response->message($nntp->message);
 	}
-	return HTTP::Response->new(&HTTP::Status::RC_NOT_IMPLEMENTED,
-				   "GET newsgroup not implemented yet");
+	$nntp->quit; $nntp = undef;
+	# HEAD: just check if the group exists
+	if ($method eq 'GET' && $response->is_success) {
+	    $response->code(&HTTP::Status::RC_NOT_IMPLEMENTED);
+	    $response->message("GET newsgroup not implemented yet");
+	}
+	return $response;
     }
 
     # Send command to server to retrieve an article (or just the headers)
     my $get = $method eq 'HEAD' ? "head" : "article";
     my $art = $nntp->$get("<$groupart>");
     unless ($art) {
-	return HTTP::Response->new(&HTTP::Status::RC_NOT_FOUND,
-				   $nntp->message);
+	$nntp->quit; $nntp = undef;
+	$response->code(&HTTP::Status::RC_NOT_FOUND);
+	$response->message($nntp->message);
+	return $response;
     }
-    LWP::Debug::debug($nntp->message);
-    
+
     # Parse headers
     my($key, $val);
+    local $_;
     while ($_ = shift @$art) {
 	if (/^\s+$/) {
 	    last;  # end of headers
-	} elsif (/^(\S+):\s*(.*)/) {
+	}
+	elsif (/^(\S+):\s*(.*)/) {
 	    $response->push_header($key, $val) if $key;
 	    ($key, $val) = ($1, $2);
-	} elsif (/^\s+(.*)/) {
+	}
+	elsif (/^\s+(.*)/) {
 	    next unless $key;
 	    $val .= $1;
-	} else {
+	}
+	else {
 	    unshift(@$art, $_);
 	    last;
 	}
@@ -132,7 +135,7 @@ sub request
     $response = $self->collect_once($arg, $response, join("", @$art))
       if @$art;
 
-    # Say godbye to the server
+    # Say goodbye to the server
     $nntp->quit;
     $nntp = undef;
 

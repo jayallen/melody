@@ -1,6 +1,3 @@
-#
-# $Id: file.pm,v 1.20 2001/08/06 23:47:42 gisle Exp $
-
 package LWP::Protocol::file;
 
 require LWP::Protocol;
@@ -14,16 +11,10 @@ require HTTP::Response;
 require HTTP::Status;
 require HTTP::Date;
 
-require URI::Escape;
-require HTML::Entities;
-
-
 
 sub request
 {
     my($self, $request, $proxy, $arg, $size) = @_;
-
-    LWP::Debug::trace('()');
 
     $size = 4096 unless defined $size and $size > 0;
 
@@ -43,12 +34,12 @@ sub request
     }
 
     # check url
-    my $url = $request->url;
+    my $url = $request->uri;
 
     my $scheme = $url->scheme;
     if ($scheme ne 'file') {
 	return new HTTP::Response &HTTP::Status::RC_INTERNAL_SERVER_ERROR,
-				  "LWP::file::request called for '$scheme'";
+			   "LWP::Protocol::file::request called for '$scheme'";
     }
 
     # URL OK, look at file
@@ -96,13 +87,15 @@ sub request
 	closedir(D);
 
 	# Make directory listing
+	require URI::Escape;
+	require HTML::Entities;
+        my $pathe = $path . ( $^O eq 'MacOS' ? ':' : '/');
 	for (@files) {
-	    if($^O eq "MacOS") {
-		$_ .= "/" if -d "$path:$_";
-	    } else {
-		$_ .= "/" if -d "$path/$_";
-	    }
 	    my $furl = URI::Escape::uri_escape($_);
+            if ( -d "$pathe$_" ) {
+                $furl .= '/';
+                $_ .= '/';
+            }
 	    my $desc = HTML::Entities::encode($_);
 	    $_ = qq{<LI><A HREF="$furl">$desc</A>};
 	}

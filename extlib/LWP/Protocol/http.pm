@@ -1,11 +1,7 @@
-# $Id: http.pm,v 1.63 2001/12/14 19:33:52 gisle Exp $
-#
-
 package LWP::Protocol::http;
 
 use strict;
 
-require LWP::Debug;
 require HTTP::Response;
 require HTTP::Status;
 require Net::HTTP;
@@ -72,9 +68,9 @@ sub _check_sock
 sub _get_sock_info
 {
     my($self, $res, $sock) = @_;
-    #if (defined(my $peerhost = $sock->peerhost)) {
-    #    $res->header("Client-Peer" => "$peerhost:" . $sock->peerport);
-    #}
+    if (defined(my $peerhost = $sock->peerhost)) {
+        $res->header("Client-Peer" => "$peerhost:" . $sock->peerport);
+    }
 }
 
 sub _fixup_header
@@ -83,17 +79,17 @@ sub _fixup_header
 
     # Extract 'Host' header
     my $hhost = $url->authority;
-    $hhost =~ s/^([^\@]*)\@//;  # get rid of potential "user:pass@"
-    $h->init_header('Host' => $hhost);
-
-    # add authorization header if we need them.  HTTP URLs do
-    # not really support specification of user and password, but
-    # we allow it.
-    if (defined($1) && not $h->header('Authorization')) {
-	require URI::Escape;
-	$h->authorization_basic(map URI::Escape::uri_unescape($_),
-				split(":", $1, 2));
+    if ($hhost =~ s/^([^\@]*)\@//) {  # get rid of potential "user:pass@"
+	# add authorization header if we need them.  HTTP URLs do
+	# not really support specification of user and password, but
+	# we allow it.
+	if (defined($1) && not $h->header('Authorization')) {
+	    require URI::Escape;
+	    $h->authorization_basic(map URI::Escape::uri_unescape($_),
+				    split(":", $1, 2));
+	}
     }
+    $h->init_header('Host' => $hhost);
 
     if ($proxy) {
 	# Check the proxy URI's userinfo() for proxy credentials
@@ -119,7 +115,6 @@ sub hlist_remove {
 sub request
 {
     my($self, $request, $proxy, $arg, $size, $timeout) = @_;
-    LWP::Debug::trace('()');
 
     $size ||= 4096;
 
@@ -131,7 +126,7 @@ sub request
 				  "$method for 'http:' URLs";
     }
 
-    my $url = $request->url;
+    my $url = $request->uri;
     my($host, $port, $fullpath);
 
     # Check if we're proxy'ing
@@ -147,7 +142,7 @@ sub request
 	$host = $url->host;
 	$port = $url->port;
 	$fullpath = $url->path_query;
-	$fullpath = "/" unless length $fullpath;
+	$fullpath = "/$fullpath" unless $fullpath =~ m,^/,;
     }
 
     # connect to remote site
@@ -160,6 +155,7 @@ sub request
 
     $request_headers->scan(sub {
 			       my($k, $v) = @_;
+			       $k =~ s/^://;
 			       $v =~ s/\n/ /g;
 			       push(@h, $k, $v);
 			   });
@@ -177,44 +173,61 @@ sub request
 	    $has_content++;
 	    $chunked++;
 	}
-    } else {
+    }
+    else {
 	# Set (or override) Content-Length header
 	my $clen = $request_headers->header('Content-Length');
 	if (defined($$content_ref) && length($$content_ref)) {
-	    $has_content++;
-	    if (!defined($clen) || $clen ne length($$content_ref)) {
+	    $has_content = length($$content_ref);
+	    if (!defined($clen) || $clen ne $has_content) {
 		if (defined $clen) {
 		    warn "Content-Length header value was wrong, fixed";
 		    hlist_remove(\@h, 'Content-Length');
 		}
-		push(@h, 'Content-Length' => length($$content_ref));
+		push(@h, 'Content-Length' => $has_content);
 	    }
 	}
 	elsif ($clen) {
-	    warn "Content-Length set when there is not content, fixed";
+	    warn "Content-Length set when there is no content, fixed";
 	    hlist_remove(\@h, 'Content-Length');
 	}
     }
 
+    my $write_wait = 0;
+    $write_wait = 2
+	if ($request_headers->header("Expect") || "") =~ /100-continue/;
+
     my $req_buf = $socket->format_request($method, $fullpath, @h);
     #print "------\n$req_buf\n------\n";
 
-    # XXX need to watch out for write timeouts
-    {
-	my $n = $socket->syswrite($req_buf, length($req_buf));
-	die $! unless defined($n);
-	die "short write" unless $n == length($req_buf);
-	#LWP::Debug::conns($req_buf);
+    if (!$has_content || $write_wait || $has_content > 8*1024) {
+      WRITE:
+        {
+            # Since this just writes out the header block it should almost
+            # always succeed to send the whole buffer in a single write call.
+            my $n = $socket->syswrite($req_buf, length($req_buf));
+            unless (defined $n) {
+                redo WRITE if $!{EINTR};
+                if ($!{EAGAIN}) {
+                    select(undef, undef, undef, 0.1);
+                    redo WRITE;
+                }
+                die "write failed: $!";
+            }
+            if ($n) {
+                substr($req_buf, 0, $n, "");
+            }
+            else {
+                select(undef, undef, undef, 0.5);
+            }
+            redo WRITE if length $req_buf;
+        }
     }
 
     my($code, $mess, @junk);
     my $drop_connection;
 
     if ($has_content) {
-	my $write_wait = 0;
-	$write_wait = 2
-	    if ($request_headers->header("Expect") || "") =~ /100-continue/;
-
 	my $eof;
 	my $wbuf;
 	my $woffset = 0;
@@ -223,30 +236,49 @@ sub request
 	    $buf = "" unless defined($buf);
 	    $buf = sprintf "%x%s%s%s", length($buf), $CRLF, $buf, $CRLF
 		if $chunked;
+	    substr($buf, 0, 0) = $req_buf if $req_buf;
 	    $wbuf = \$buf;
 	}
 	else {
-	    $wbuf = $content_ref;
+	    if ($req_buf) {
+		my $buf = $req_buf . $$content_ref;
+		$wbuf = \$buf;
+	    }
+	    else {
+		$wbuf = $content_ref;
+	    }
 	    $eof = 1;
 	}
 
 	my $fbits = '';
 	vec($fbits, fileno($socket), 1) = 1;
 
+      WRITE:
 	while ($woffset < length($$wbuf)) {
 
-	    my $time_before;
 	    my $sel_timeout = $timeout;
 	    if ($write_wait) {
-		$time_before = time;
 		$sel_timeout = $write_wait if $write_wait < $sel_timeout;
 	    }
+	    my $time_before;
+            $time_before = time if $sel_timeout;
 
 	    my $rbits = $fbits;
 	    my $wbits = $write_wait ? undef : $fbits;
-	    my $nfound = select($rbits, $wbits, undef, $sel_timeout);
-	    unless (defined $nfound) {
-		die "select failed: $!";
+            my $sel_timeout_before = $sel_timeout;
+          SELECT:
+            {
+                my $nfound = select($rbits, $wbits, undef, $sel_timeout);
+                unless (defined $nfound) {
+                    if ($!{EINTR} || $!{EAGAIN}) {
+                        if ($time_before) {
+                            $sel_timeout = $sel_timeout_before - (time - $time_before);
+                            $sel_timeout = 0 if $sel_timeout < 0;
+                        }
+                        redo SELECT;
+                    }
+                    die "select failed: $!";
+                }
 	    }
 
 	    if ($write_wait) {
@@ -258,12 +290,20 @@ sub request
 		# readable
 		my $buf = $socket->_rbuf;
 		my $n = $socket->sysread($buf, 1024, length($buf));
-		unless ($n) {
-		    die "EOF";
+                unless (defined $n) {
+                    die "read failed: $!" unless  $!{EINTR} || $!{EAGAIN};
+                    # if we get here the rest of the block will do nothing
+                    # and we will retry the read on the next round
+                }
+		elsif ($n == 0) {
+                    # the server closed the connection before we finished
+                    # writing all the request content.  No need to write any more.
+                    $drop_connection++;
+                    last WRITE;
 		}
 		$socket->_rbuf($buf);
-		if ($buf =~ /\015?\012\015?\012/) {
-		    # a whole response present
+		if (!$code && $buf =~ /\015?\012\015?\012/) {
+		    # a whole response header is present, so we can read it without blocking
 		    ($code, $mess, @h) = $socket->read_response_headers(laxed => 1,
 									junk_out => \@junk,
 								       );
@@ -273,16 +313,19 @@ sub request
 		    }
 		    else {
 			$drop_connection++;
-			last;
+			last WRITE;
 			# XXX should perhaps try to abort write in a nice way too
 		    }
 		}
 	    }
 	    if (defined($wbits) && $wbits =~ /[^\0]/) {
 		my $n = $socket->syswrite($$wbuf, length($$wbuf), $woffset);
-		unless ($n) {
-		    die "syswrite: $!" unless defined $n;
-		    die "syswrite: no bytes written";
+                unless (defined $n) {
+                    die "write failed: $!" unless $!{EINTR} || $!{EAGAIN};
+                    $n = 0;  # will retry write on the next round
+                }
+                elsif ($n == 0) {
+		    die "write failed: no bytes written";
 		}
 		$woffset += $n;
 
@@ -297,7 +340,7 @@ sub request
 		    $woffset = 0;
 		}
 	    }
-	}
+	} # WRITE
     }
 
     ($code, $mess, @h) = $socket->read_response_headers(laxed => 1, junk_out => \@junk)
@@ -308,9 +351,9 @@ sub request
     my $response = HTTP::Response->new($code, $mess);
     my $peer_http_version = $socket->peer_http_version;
     $response->protocol("HTTP/$peer_http_version");
-    while (@h) {
-	my($k, $v) = splice(@h, 0, 2);
-	$response->push_header($k, $v);
+    {
+	local $HTTP::Headers::TRANSLATE_UNDERSCORE;
+	$response->push_header(@h);
     }
     $response->push_header("Client-Junk" => \@junk) if @junk;
 
@@ -325,7 +368,7 @@ sub request
     if (my @te = $response->remove_header('Transfer-Encoding')) {
 	$response->push_header('Client-Transfer-Encoding', \@te);
     }
-    $response->push_header('Client-Response-Num', $socket->increment_response_count);
+    $response->push_header('Client-Response-Num', scalar $socket->increment_response_count);
 
     my $complete;
     $response = $self->collect($arg, $response, sub {
@@ -334,7 +377,10 @@ sub request
       READ:
 	{
 	    $n = $socket->read_entity_body($buf, $size);
-	    die "Can't read entity body: $!" unless defined $n;
+            unless (defined $n) {
+                redo READ if $!{EINTR} || $!{EAGAIN};
+                die "read failed: $!";
+            }
 	    redo READ if $n == -1;
 	}
 	$complete++ if !$n;
@@ -343,9 +389,9 @@ sub request
     $drop_connection++ unless $complete;
 
     @h = $socket->get_trailers;
-    while (@h) {
-	my($k, $v) = splice(@h, 0, 2);
-	$response->push_header($k, $v);
+    if (@h) {
+	local $HTTP::Headers::TRANSLATE_UNDERSCORE;
+	$response->push_header(@h);
     }
 
     # keep-alive support
@@ -356,7 +402,6 @@ sub request
 	    if (($peer_http_version eq "1.1" && !$connection{close}) ||
 		$connection{"keep-alive"})
 	    {
-		LWP::Debug::debug("Keep the http connection to $host:$port");
 		$conn_cache->deposit("http", "$host:$port", $socket);
 	    }
 	}
@@ -386,9 +431,24 @@ sub can_read {
     my($self, $timeout) = @_;
     my $fbits = '';
     vec($fbits, fileno($self), 1) = 1;
-    my $nfound = select($fbits, undef, undef, $timeout);
-    die "select failed: $!" unless defined $nfound;
-    return $nfound > 0;
+  SELECT:
+    {
+        my $before;
+        $before = time if $timeout;
+        my $nfound = select($fbits, undef, undef, $timeout);
+        unless (defined $nfound) {
+            if ($!{EINTR} || $!{EAGAIN}) {
+                # don't really think EAGAIN can happen here
+                if ($timeout) {
+                    $timeout -= time - $before;
+                    $timeout = 0 if $timeout < 0;
+                }
+                redo SELECT;
+            }
+            die "select failed: $!";
+        }
+        return $nfound > 0;
+    }
 }
 
 sub ping {
