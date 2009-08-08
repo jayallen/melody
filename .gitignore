@@ -27,3 +27,5 @@ mt-static/support/uploads
 # readme.html
 addons
 mt-static/addons
+*.tmproj
+.DS_Store
