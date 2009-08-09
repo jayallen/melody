@@ -3539,6 +3539,18 @@ sub param {
     }
 }
 
+# Eventually upon switching to CGI::Application the query
+# method would call cgiapp_get_query() and NOT set the query
+# object as it does now in MT::App::init_request. Besides
+# compatability, this would enable developers to do any
+# special request handling.
+sub query {
+	my $self = shift;
+	my ($query) = @_;
+	$self->{'query'} = $query if defined $query;
+	return $self->{'query'};
+}
+
 sub blog {
     my $app = shift;
     $app->{_blog} = shift if @_;
