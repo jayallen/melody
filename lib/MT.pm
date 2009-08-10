@@ -30,10 +30,10 @@ BEGIN {
     $plugins_installed = 0;
 
     if('__MAKE_ME__' eq '__MAKE_' . 'ME__') { # If make is not run
-        ( $VERSION, $SCHEMA_VERSION ) = ( '4.25', '4.0070');
+        ( $VERSION, $SCHEMA_VERSION ) = ( '4.3', '4.0075');
         ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
-            'OpenMelody Core',    'OM',
-            '1.0', '1.0', 'http://openmelody.org'
+            'Melody',    'OM',
+            '0.9.2', '0.9.2 (MT 4.3+)', 'http://openmelody.org'
         );
     } else {      
         ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', 
@@ -303,9 +303,9 @@ sub construct {
         $object_types{$k} = $_[1] if scalar @_ > 1;
         return $object_types{$k} if exists $object_types{$k};
 
-        if ($k =~ m/^(.+):meta$/) {
+        if ($k =~ m/^(.+):(meta|summary)$/) {
             my $ppkg = $pkg->model($1);
-            my $mpkg = $ppkg->meta_pkg;
+            my $mpkg = $ppkg->meta_pkg($2);
             return $mpkg ? $object_types{$k} = $mpkg : undef;
         }
 
@@ -860,7 +860,7 @@ sub init_config {
     my $cfg = $mt->config;
     $cfg->define( $mt->registry('config_settings') );
     $cfg->read_config($mt->{cfg_file}) or return $mt->error( $cfg->errstr );
-
+    
     my @mt_paths = $cfg->paths;
     for my $meth (@mt_paths) {
         my $path = $cfg->get( $meth, undef );
@@ -894,14 +894,6 @@ sub init_config {
 
     return $mt->trans_error("Bad ObjectDriver config")
       unless $cfg->ObjectDriver;
-
-    if ( $MT::DebugMode = $cfg->DebugMode ) {
-        require Data::Dumper;
-        $Data::Dumper::Terse    = 1;
-        $Data::Dumper::Maxdepth = 4;
-        $Data::Dumper::Sortkeys = 1;
-        $Data::Dumper::Indent   = 1;
-    }
 
     if ($cfg->PerformanceLogging && $cfg->ProcessMemoryCommand) {
         $mt->log_times();
@@ -1203,6 +1195,7 @@ sub init {
     require MT::Plugin;
     $mt->init_addons(@_)        or return;
     $mt->init_config_from_db( \%param ) or return;
+    $mt->init_debug_mode;
     $mt->init_plugins(@_)       or return;
     $plugins_installed = 1;
     $mt->init_schema();
@@ -1215,12 +1208,27 @@ sub init {
     return $mt;
 }
 
+sub init_debug_mode {
+    my $mt = shift;
+    my $cfg = $mt->config;
+
+    # init the debug mode
+    if ( $MT::DebugMode = $cfg->DebugMode ) {
+        require Data::Dumper;
+        $Data::Dumper::Terse    = 1;
+        $Data::Dumper::Maxdepth = 4;
+        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Indent   = 1;
+    }
+}
+
 sub init_callbacks {
     my $mt = shift;
     MT->_register_core_callbacks({
         'build_file_filter' => sub { MT->publisher->queue_build_file_filter(@_) },
         'cms_upload_file' => \&core_upload_file_to_sync,
         'api_upload_file' => \&core_upload_file_to_sync,
+        'post_init' => '$Core::MT::Summary::Triggers::post_init_add_triggers',
     });
 }
 

@@ -982,6 +982,14 @@ sub core_upgrade_functions {
             version_limit => 4.0068,
             code => \&core_update_password_recover_template,
         },
+        'core_disable_cloner_plugin' => {
+            version_limit => 4.0073,
+            code => sub {
+            	my $cfg = MT->config;
+                $cfg->PluginSwitch("Cloner/cloner.pl=0", 1);
+                $cfg->save_config;
+            }
+        },
     };
 }
 
@@ -1686,8 +1694,8 @@ sub do_upgrade {
             $self->run_step($step);
             if (@steps) {
                 push @these_steps, @steps;
-                @these_steps = sort { $fn->{$a->[0]}->{priority} <=>
-                                      $fn->{$b->[0]}->{priority} } @these_steps;
+                @these_steps = sort { ($fn->{$a->[0]}->{priority}||10) <=>
+                                      ($fn->{$b->[0]}->{priority}||10) } @these_steps;
             }
 
             # Reset the request to eliminate any caching that may be
@@ -1759,10 +1767,12 @@ sub check_type {
 
     my $class = MT->model($type);
 
-    # handle schema updates for meta table
-    if ($class->meta_pkg) {
-        $self->check_type($type . ':meta');
-    }
+    # handle schema updates for meta tables
+    for my $which (qw( meta summary )) {
+		if ($class->meta_pkg($which)) {
+			$self->check_type($type . ":$which");
+		}
+	}
 
     if (my $result = $self->type_diff($type)) {
         if ($result->{fix}) {
