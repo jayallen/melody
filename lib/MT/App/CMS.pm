@@ -465,8 +465,8 @@ sub core_list_actions {
                     $app->param('blog_id')
                         && ( $app->user->is_superuser()
                             || $app->permissions->can_edit_all_posts )
-                        && $app->param('filter_val') != MT::Entry::JUNK()
-                        && $app->param('filter_key') ne 'spam_entries'
+                        && !( defined  $app->param('filter_val') && $app->param('filter_val') == MT::Entry::JUNK())
+                        && !(defined $app->param('filter_key') && $app->param('filter_key') eq 'spam_entries')
                 },
             },
         },
