@@ -1459,7 +1459,7 @@ sub pre_save {
     }
     else {
 
-        #$obj->is_dynamic(0) unless defined $app->{query}->param('is_dynamic');
+        #$obj->is_dynamic(0) unless defined $app->query->param('is_dynamic');
     }
 
     if ( ( $obj->sanitize_spec || '' ) eq '1' ) {
@@ -1909,7 +1909,7 @@ sub build_blog_table {
 }
 
 sub cfg_blog {
-    my $q = $_[0]->{query};
+    my $q = $_[0]->query;
     $q->param( '_type', 'blog' );
     $q->param( 'id',    scalar $q->param('blog_id') );
     $_[0]->forward( "view", { output => 'cfg_prefs.tmpl' } );

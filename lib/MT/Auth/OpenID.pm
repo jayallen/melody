@@ -42,7 +42,7 @@ sub login {
 sub handle_sign_in {
     my $class = shift;
     my ($app, $auth_type) = @_;
-    my $q = $app->{query};
+    my $q = $app->query;
     my $INTERVAL = 60 * 60 * 24 * 7;
 
     $auth_type ||= 'OpenID';
@@ -408,7 +408,7 @@ sub _url_hash {
 sub check_url_params {
     my $class = shift;
     my ( $app, $blog ) = @_;
-    my $q = $app->{query};
+    my $q = $app->query;
 
     my $path = MT->config->CGIPath;
     if ($path =~ m!^/!) {

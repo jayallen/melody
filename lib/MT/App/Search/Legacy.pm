@@ -380,7 +380,7 @@ sub execute {
         or return $app->error($app->translate(
             "Publishing results failed: [_1]", $build->errstr));
     defined(my $res = $build->build($ctx, $tokens, { 
-        NoSearch => $app->{query}->param('help') ||
+        NoSearch => $app->query->param('help') ||
                     ($app->{searchparam}{Type} ne 'newcomments' &&
                       (!$ctx->stash('search_string') ||
                       $ctx->stash('search_string') !~ /\S/)) ? 1 : 0,

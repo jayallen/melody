@@ -597,7 +597,7 @@ sub send_http_header {
             . (
             $app->{response_message} ? ' ' . $app->{response_message} : '' );
         $app->{cgi_headers}{-type} = $type;
-        $app->print( $app->{query}->header( %{ $app->{cgi_headers} } ) );
+        $app->print( $app->query->header( %{ $app->{cgi_headers} } ) );
     }
 }
 
@@ -739,8 +739,8 @@ sub init_request {
     if ( $ENV{MOD_PERL} ) {
         require Apache::Request;
         $app->{apache} = $param{ApacheObject} || Apache->request;
-        $app->{query} = Apache::Request->instance( $app->{apache},
-            POST_MAX => $app->config->CGIMaxUpload );
+        $app->query(Apache::Request->instance( $app->{apache},
+            POST_MAX => $app->config->CGIMaxUpload ));
     }
     else {
         # Patched from http://bugs.movabletype.org/?81733
@@ -748,7 +748,7 @@ sub init_request {
         $CGI::POST_MAX = $app->config->CGIMaxUpload;
 
         if ( $param{CGIObject} ) {
-            $app->{query} = $param{CGIObject};
+            $app->query($param{CGIObject});
         }
         else {
             if ( my $path_info = $ENV{PATH_INFO} ) {
@@ -760,12 +760,12 @@ sub init_request {
                     delete $ENV{PATH_INFO};
                 }
             }
-            $app->{query} = CGI->new( $app->{no_read_body} ? {} : () );
+            $app->query = CGI->new( $app->{no_read_body} ? {} : () );
         }
     }
     $app->init_query();
 
-    $app->{return_args} = $app->{query}->param('return_args');
+    $app->{return_args} = $app->query->param('return_args');
     $app->cookies;
 
     ## Initialize the MT::Request singleton for this particular request.
@@ -779,7 +779,7 @@ sub init_request {
 
 sub init_query {
     my $app = shift;
-    my $q   = $app->{query};
+    my $q   = $app->query;
 
     # CGI.pm has this terrible flaw in that if a POST is in effect,
     # it totally ignores any query parameters.
@@ -2553,7 +2553,7 @@ sub pre_run {
     # allow language override
     my $lang = $app->session ? $app->session('lang') : '';
     $app->set_language($lang) if ($lang);
-    if ( $lang = $app->{query}->param('__lang') ) {
+    if ( $lang = $app->query->param('__lang') ) {
         $app->set_language($lang);
         if ( $app->session ) {
             $app->session( 'lang', $lang );
@@ -3275,7 +3275,7 @@ sub validate_magic {
 sub delete_param {
     my $app   = shift;
     my ($key) = @_;
-    my $q     = $app->{query};
+    my $q     = $app->query;
     return unless $q;
     if ( $ENV{MOD_PERL} ) {
         my $tab = $q->parms;
@@ -3288,7 +3288,7 @@ sub delete_param {
 
 sub param_hash {
     my $app = shift;
-    my $q   = $app->{query};
+    my $q   = $app->query;
     return () unless $q;
     my @params = $q->param();
     my %result;
@@ -3302,7 +3302,7 @@ sub param_hash {
 
 sub query_string {
     my $app = shift;
-    $ENV{MOD_PERL} ? $app->{apache}->args : $app->{query}->query_string;
+    $ENV{MOD_PERL} ? $app->{apache}->args : $app->query->query_string;
 }
 
 sub return_uri {
@@ -3416,8 +3416,8 @@ sub app_path {
         $path = $app->{apache}->uri;
         $path =~ s!/[^/]*$!!;
     }
-    elsif ( $app->{query} ) {
-        $path = $app->{query}->url;
+    elsif ( $app->query ) {
+        $path = $app->query->url;
         $path =~ s!/[^/]*$!!;
 
         # '@' within path is okay; this is for Yahoo!'s hosting environment.
@@ -3503,8 +3503,8 @@ sub path_info {
         }
     }
     else {
-        return undef unless $app->{query};
-        $path_info = $app->{query}->path_info;
+        return undef unless $app->query;
+        $path_info = $app->query->path_info;
     }
     $app->{__path_info} = $path_info;
 }
@@ -3513,7 +3513,7 @@ sub is_secure {
     my $app = shift;
     $ENV{MOD_PERL}
         ? $app->{apache}->subprocess_env('https')
-        : $app->{query}->protocol() eq 'https';
+        : $app->query->protocol() eq 'https';
 }
 
 sub redirect {
@@ -3530,12 +3530,12 @@ sub redirect {
 
 sub param {
     my $app = shift;
-    return unless $app->{query};
+    return unless $app->query;
     if (@_) {
-        $app->{query}->param(@_);
+        $app->query->param(@_);
     }
     else {
-        wantarray ? ( $app->{query}->param ) : $app->{query};
+        wantarray ? ( $app->query->param ) : $app->query;
     }
 }
 
@@ -3555,7 +3555,7 @@ sub blog {
     my $app = shift;
     $app->{_blog} = shift if @_;
     return $app->{_blog} if $app->{_blog};
-    return undef unless $app->{query};
+    return undef unless $app->query;
     my $blog_id = $app->param('blog_id');
     if ($blog_id) {
         $app->{_blog} = MT::Blog->load($blog_id);
@@ -4252,7 +4252,8 @@ perform additional checks which produce more specific error messages.
 
 Subclass authors can assume that $app->user is populated with the
 authenticated user when this routine is invoked, and that CGI query
-object is available through $app->{query} and $app->param().
+object is available through $app->query. Note that the use of 
+$app->{'query'} and $app->param() to fetch the query object is deprecated.
 
 =head2 $app->is_secure
 
@@ -4291,9 +4292,11 @@ Interface for getting and setting CGI query parameters. Example:
 
     my $title = $app->param('entry_title');
 
-Versions of MT before 3.16 did not support the MT::App::param()
-method. In that environment, $app->{query} is a CGI object whose
-C<param> method works identically with this one.
+Versions of MT before 3.16 did not support the
+MT::App::param() method. In that environment, $app->query is
+a CGI object whose C<param> method works identically with
+this one. Note that the previous means of accessing the
+query object using $app->{'query'} is deprecated.
 
 =head2 $app->param_hash
 

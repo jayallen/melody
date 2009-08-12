@@ -50,7 +50,7 @@ sub init_request {
 
 sub login {
     my $app     = shift;
-    my $q       = $app->{query};
+    my $q       = $app->query;
     my $cookies = $app->{cookies};
     my ( $user, $pass, $remember, $crypted, $cookie_middle );
     my $first_time  = 0;

@@ -1350,7 +1350,7 @@ sub _make_comment {
     return ( $comment, $commenter );
 }
 
-sub preview { my $app = shift; do_preview( $app, $app->{query}, @_ ) }
+sub preview { my $app = shift; do_preview( $app, $app->query, @_ ) }
 
 sub _make_commenter {
     my $app    = shift;
@@ -1636,7 +1636,7 @@ JS
 sub handle_error {
     my $app = shift;
     my ( $err, $status_line ) = @_;
-    my $html = do_preview( $app, $app->{query}, $err )
+    my $html = do_preview( $app, $app->query, $err )
         || return "An error occurred: " . $err;
     $app->{status_line} = $status_line;
     $html;
@@ -1891,7 +1891,7 @@ sub save_commenter_profile {
 sub blog {
     my $app = shift;
     return $app->{_blog} if $app->{_blog};
-    return undef unless $app->{query};
+    return undef unless $app->query;
     if ( my $entry_id = $app->param('entry_id') ) {
         require MT::Entry;
         my $entry = MT::Entry->load($entry_id);
