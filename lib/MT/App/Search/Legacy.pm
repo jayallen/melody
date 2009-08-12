@@ -60,7 +60,7 @@ sub init_request{
         delete $app->{$_} if exists $app->{$_}
     }
 
-    my $q = $app->param;
+    my $q = $app->query;
     my $cfg = $app->config;
 
     my $tag = $q->param('tag') || '';

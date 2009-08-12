@@ -18,7 +18,7 @@ sub password_exists { 0 }
 sub login {
     my $class = shift;
     my ($app) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
     my $blog = $app->model('blog')->load(scalar $q->param('blog_id'));
     my $identity = $q->param('openid_url');
     if (!$identity &&
@@ -155,7 +155,7 @@ sub set_extension_args {
 sub check_openid {
     my $class = shift;
     my ( $app, $blog, $identity ) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
 
     my %param = $app->param_hash;
     my $csr = $class->get_csr(\%param, $blog);

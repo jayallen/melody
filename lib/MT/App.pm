@@ -678,7 +678,7 @@ sub pre_run_debug {
         print STDERR "Session: " . $app->session->id . "\n"
             if $app->session;
         print STDERR "Request: " . $app->param->request_method . "\n";
-        my @param = $app->param;
+        my @param = $app->query;
         if (@param) {
             foreach my $key (@param) {
                 my @val = $app->param($key);
@@ -806,7 +806,7 @@ sub init_query {
             unless defined $has_encode;
         return 1 unless $has_encode;
 
-        my $q = $app->param;
+        my $q = $app->query;
 
         # validate all parameter data matches the expected character set.
         my @p       = $q->param();
@@ -1251,7 +1251,7 @@ sub session_user {
 
 sub get_commenter_session {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $session_key;
 
@@ -1999,7 +1999,7 @@ sub logout {
 
 sub create_user_pending {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my ($param) = @_;
     $param ||= {};
 
@@ -2392,7 +2392,7 @@ sub request_method {
 sub upload_info {
     my $app          = shift;
     my ($param_name) = @_;
-    my $q            = $app->param;
+    my $q            = $app->query;
 
     my ( $fh, $info, $no_upload );
     if ( $ENV{MOD_PERL} ) {
@@ -2570,7 +2570,7 @@ sub post_run { MT->run_callbacks( ( ref $_[0] ) . '::post_run', $_[0] ); 1 }
 
 sub run {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $timer;
     if ( $app->config->PerformanceLogging ) {

@@ -367,7 +367,7 @@ sub list_tag_for {
 
     my $pkg = $params{Package};
 
-    my $q         = $app->param;
+    my $q         = $app->query;
     my $blog_id   = $app->param('blog_id');
     my $list_pref = $app->list_pref('tag');
     my %param     = %$list_pref;

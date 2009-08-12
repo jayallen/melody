@@ -64,7 +64,7 @@ sub init_request {
     $app->SUPER::init_request(@_);
     $app->set_no_cache;
     $app->{default_mode} = 'post';
-    my $q = $app->param;
+    my $q = $app->query;
 
     if ( my $blog_id = $q->param('blog_id') ) {
         if ( $blog_id ne int($blog_id) ) {
@@ -150,7 +150,7 @@ sub login_form {
 
 sub login_external {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $authenticator = MT->commenter_authenticator( $q->param('key') );
     my $auth_class    = $authenticator->{class};
@@ -214,7 +214,7 @@ sub _create_commenter_assign_role {
 
 sub do_login {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $name    = $q->param('username');
     my $blog_id = $q->param('blog_id');
     my $blog    = MT::Blog->load($blog_id)
@@ -338,7 +338,7 @@ sub signup {
 
 sub do_signup {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     return $app->error( $app->translate("Invalid request") )
         if $app->request_method() ne 'POST';
@@ -490,7 +490,7 @@ sub _send_signup_confirmation {
 
 sub do_register {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my $cfg = $app->config;
 
     my $entry_id = $q->param('entry_id');
@@ -658,7 +658,7 @@ sub generate_captcha {
 
 sub do_red {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my $id  = $q->param('id')
         or return $app->error( $app->translate("No id") );
     my $comment = MT::Comment->load($id)
@@ -792,7 +792,7 @@ sub _builtin_throttle {
 
 sub post {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     return $app->error( $app->translate("Invalid request") )
         if $app->request_method() ne 'POST';
@@ -1271,7 +1271,7 @@ sub _check_commenter_author {
 #
 sub _make_comment {
     my ( $app, $entry, $blog ) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $nick  = $q->param('author');
     my $email = $q->param('email');
@@ -1377,7 +1377,7 @@ sub _expire_sessions {
 # This actually handles a UI-level sign-in or sign-out request.
 sub handle_sign_in {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $result = 0;
     if ( $q->param('logout') ) {
@@ -1422,7 +1422,7 @@ sub handle_sign_in {
 
 sub redirect_to_target {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $cfg = $app->config;
     my $target;
@@ -1807,7 +1807,7 @@ sub edit_commenter_profile {
 
 sub save_commenter_profile {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     return $app->error( $app->translate("Invalid request") )
         if $app->request_method() ne 'POST';

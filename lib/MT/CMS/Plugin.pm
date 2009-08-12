@@ -5,7 +5,7 @@ use MT::Util qw( remove_html );
 
 sub cfg_plugins {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my %param;
     $param{screen_class} = 'settings-screen';
     if ( $q->param('blog_id') ) {
@@ -39,7 +39,7 @@ sub cfg_plugins {
 sub save_config {
     my $app = shift;
 
-    my $q          = $app->param;
+    my $q          = $app->query;
     my $plugin_sig = $q->param('plugin_sig');
     my $profile    = $MT::Plugins{$plugin_sig};
     my $blog_id    = $q->param('blog_id');
@@ -73,7 +73,7 @@ sub save_config {
 sub reset_config {
     my $app = shift;
 
-    my $q          = $app->param;
+    my $q          = $app->query;
     my $plugin_sig = $q->param('plugin_sig');
     my $profile    = $MT::Plugins{$plugin_sig};
     my $blog_id    = $q->param('blog_id');

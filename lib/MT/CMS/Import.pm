@@ -85,7 +85,7 @@ sub start_import {
 sub do_import {
     my $app = shift;
 
-    my $q = $app->param;
+    my $q = $app->query;
     require MT::Blog;
     my $blog_id = $q->param('blog_id')
       or return $app->error( $app->translate("Please select a blog.") );

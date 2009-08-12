@@ -11,7 +11,7 @@ sub entry_notify {
     return $app->error( $app->translate("No permissions.") )
       unless $perms->can_send_notifications;
 
-    my $q        = $app->param;
+    my $q        = $app->query;
     my $entry_id = $q->param('entry_id')
       or return $app->error( $app->translate("No entry ID provided") );
     require MT::Entry;
@@ -28,7 +28,7 @@ sub entry_notify {
 sub send_notify {
     my $app = shift;
     $app->validate_magic() or return;
-    my $q        = $app->param;
+    my $q        = $app->query;
     my $entry_id = $q->param('entry_id')
       or return $app->error( $app->translate("No entry ID provided") );
     require MT::Entry;

@@ -8,7 +8,7 @@ sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my $perms = $app->permissions;
     my $blog = $app->blog;
     my $blog_id = $q->param('blog_id');
@@ -101,7 +101,7 @@ sub edit {
 
 sub list {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $perms = $app->permissions;
 
     my $can_empty_junk = 1;
@@ -326,7 +326,7 @@ sub list {
 
 sub cfg_trackbacks {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = scalar $q->param('blog_id');
     return $app->return_to_dashboard( redirect => 1 )
       unless $blog_id;

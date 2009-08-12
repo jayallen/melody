@@ -101,7 +101,7 @@ my %MimeTypes = (
 sub _view_index {
     my $app = shift;
     my ( $fi, $tmpl ) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $ctx = $tmpl->context;
     if ( $tmpl->text =~ m/<MT:?Entries/i ) {

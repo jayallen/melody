@@ -12,7 +12,7 @@ sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my $blog_id = $q->param('blog_id');
 
     # FIXME: enumeration of types
@@ -768,7 +768,7 @@ sub list {
 
 sub preview {
     my $app         = shift;
-    my $q           = $app->param;
+    my $q           = $app->query;
     my $blog_id     = $q->param('blog_id');
     my $blog        = $app->blog;
     my $id          = $q->param('id');
@@ -1053,7 +1053,7 @@ sub create_preview_content {
 
 sub reset_blog_templates {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $perms = $app->permissions
       or return $app->error( $app->translate("No permissions") );
     return $app->error( $app->translate("Permission denied.") )
@@ -1251,7 +1251,7 @@ sub delete_map {
     $app->validate_magic() or return;
     my $perms = $app->{perms}
       or return $app->error( $app->translate("No permissions") );
-    my $q  = $app->param;
+    my $q  = $app->query;
     my $id = $q->param('id');
 
     require MT::TemplateMap;
@@ -1270,7 +1270,7 @@ sub add_map {
     my $perms = $app->{perms}
       or return $app->error( $app->translate("No permissions") );
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     require MT::TemplateMap;
     my $blog_id = $q->param('blog_id');
@@ -1364,7 +1364,7 @@ sub pre_save {
     my $interval = $app->param('cache_expire_interval');
     my $sec      = _get_interval( $period, $interval );
     $obj->cache_expire_interval($sec) if defined $sec;
-    my $q = $app->param;
+    my $q = $app->query;
     my @events;
 
     foreach my $name ( $q->param('cache_expire_event') ) {
@@ -1409,7 +1409,7 @@ sub post_save {
     $sess_obj->remove if $sess_obj;
 
     my $dynamic = 0;
-    my $q = $app->param;
+    my $q = $app->query;
     my $type = $q->param('type');
     # FIXME: enumeration of types
     if ( $type eq 'custom'
@@ -2231,7 +2231,7 @@ sub publish_archive_templates {
 
 sub save_widget {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     $app->validate_magic() or return;
     my $author = $app->user;
@@ -2292,7 +2292,7 @@ sub edit_widget {
     my $app = shift;
     my (%opt) = @_;
 
-    my $q       = $app->param();
+    my $q       = $app->query();
     my $id      = scalar($q->param('id')) || $opt{id};
     my $name    = scalar($q->param('name'));
     my $blog_id = scalar $q->param('blog_id') || 0;
@@ -2409,7 +2409,7 @@ sub edit_widget {
 sub list_widget {
     my $app = shift;
     my (%opt) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $perms = $app->blog ? $app->permissions : $app->user->permissions;
     return $app->return_to_dashboard( redirect => 1 )
@@ -2480,7 +2480,7 @@ sub list_widget {
 
 sub delete_widget {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('_type');
 
     return $app->errtrans("Invalid request.")

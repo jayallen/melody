@@ -99,7 +99,7 @@ sub edit_role {
     $app->return_to_dashboard( redirect => 1 ) if $app->param('blog_id');
 
     my %param  = $_[0] ? %{ $_[0] } : ();
-    my $q      = $app->param;
+    my $q      = $app->query;
     my $author = $app->user;
     my $id     = $q->param('id');
 
@@ -732,7 +732,7 @@ sub list_role {
 
 sub save_role {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     $app->validate_magic()   or return;
     $app->user->is_superuser or return $app->errtrans("Invalid request.");
 
@@ -793,7 +793,7 @@ sub set_object_status {
     return $app->error( $app->translate("Invalid request.") )
       if $app->request_method ne 'POST';
 
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('_type');
     return $app->error( $app->translate('Invalid type') )
       unless ( $type eq 'user' )
@@ -1529,7 +1529,7 @@ sub dialog_grant_role {
 sub remove_userpic {
     my $app = shift;
     $app->validate_magic() or return;
-    my $q  = $app->param;
+    my $q  = $app->query;
     my $user_id = $q->param('user_id');
     my $user = $app->model('author')->load( { id => $user_id } )
         or return;

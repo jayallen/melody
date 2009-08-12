@@ -257,7 +257,7 @@ sub process_log_feed {
     my $chrome_tmpl = $app->load_tmpl('feed_chrome.tmpl');
     $param->{loop_entries} = \@entries;
     my $str = qq();
-    for my $key ( $app->param ) {
+    for my $key ( $app->param ) { # FIX ME!
         $str .= "&amp;" . encode_url($key) . "=" . encode_url($app->param($key));
     }
     $str =~ s/^&amp;(.+)$/?$1/;

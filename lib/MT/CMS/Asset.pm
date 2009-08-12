@@ -410,7 +410,7 @@ sub complete_insert {
         }
 
         require MT::ObjectTag;
-        my $q       = $app->param;
+        my $q       = $app->query;
         my $blog_id = $q->param('blog_id');
         $param->{tags_js} = MT::Util::to_json( MT::Tag->cache( blog_id => $blog_id, class => 'MT::Asset', private => 1 ) );
     }
@@ -456,7 +456,7 @@ sub complete_upload {
 
 sub start_upload_entry {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     $q->param( '_type', 'entry' );
     defined( my $text = _process_post_upload($app) ) or return;
     $q->param( 'text', $text );
@@ -712,7 +712,7 @@ sub build_asset_table {
 sub asset_insert_text {
     my $app     = shift;
     my ($param) = @_;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $id      = $app->param('id')
       or return $app->errtrans("Invalid request.");
     require MT::Asset;
@@ -745,7 +745,7 @@ sub _process_post_upload {
 # FIXME: need to make this work
 sub save {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $perms = $app->permissions;
     my $type  = $q->param('_type');
     my $class = $app->model($type)
@@ -895,7 +895,7 @@ sub _upload_file {
 
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my ($fh, $info) = $app->upload_info('file');
     my $mimetype;
     if ($info) {

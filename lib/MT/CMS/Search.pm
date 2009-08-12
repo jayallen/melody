@@ -5,7 +5,7 @@ use MT::Util qw( is_valid_date );
 
 sub core_search_apis {
     my $app = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = $q->param('blog_id');
     my $author  = $app->user;
     my @perms;
@@ -299,7 +299,7 @@ sub search_replace {
 
 sub do_search_replace {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = $q->param('blog_id');
     my $author  = $app->user;
 

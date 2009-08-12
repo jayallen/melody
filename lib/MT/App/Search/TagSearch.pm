@@ -113,7 +113,7 @@ sub add_join {
 
 sub search_terms {
     my $app = shift;
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $offset = $q->param('startIndex') || $q->param('offset') || 0;
     my $limit = $q->param('count') || $q->param('limit');

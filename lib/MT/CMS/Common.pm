@@ -6,7 +6,7 @@ use MT::Util qw( format_ts offset_time_list relative_date );
 
 sub save {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('_type');
 
     return $app->errtrans("Invalid request.")
@@ -433,7 +433,7 @@ sub save {
 
 sub edit {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('_type');
 
     return $app->errtrans("Invalid request.")
@@ -656,7 +656,7 @@ sub edit {
 
 sub list {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('_type');
 
     return $app->errtrans("Invalid request.")
@@ -877,7 +877,7 @@ sub list {
 
 sub delete {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('_type');
 
     return $app->errtrans("Invalid request.")

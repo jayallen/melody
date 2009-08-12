@@ -534,7 +534,7 @@ sub recover_profile_password {
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     require MT::Auth;
     require MT::Log;
@@ -652,7 +652,7 @@ sub start_restore {
 sub backup {
     my $app     = shift;
     my $user    = $app->user;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = $q->param('blog_id');
     my $perms   = $app->permissions;
     unless ( $user->is_superuser ) {
@@ -991,7 +991,7 @@ sub restore {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     my ($fh) = $app->upload_info('file');
     my $uploaded = $q->param('file');
@@ -1241,7 +1241,7 @@ sub adjust_sitepath {
 
     require MT::BackupRestore;
 
-    my $q         = $app->param;
+    my $q         = $app->query;
     my $tmp_dir   = $q->param('tmp_dir');
     my $error     = $q->param('error') || q();
     my %asset_ids = split ',', $q->param('asset_ids');
@@ -1425,7 +1425,7 @@ sub dialog_restore_upload {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $current        = $q->param('current_file');
     my $last           = $q->param('last');
@@ -1649,7 +1649,7 @@ sub dialog_adjust_sitepath {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    my $q         = $app->param;
+    my $q         = $app->query;
     my $tmp_dir   = $q->param('tmp_dir');
     my $error     = $q->param('error') || q();
     my $uploaded  = $q->param('restore_upload') || 0;
@@ -1848,7 +1848,7 @@ sub reset_password {
 sub restore_file {
     my $app = shift;
     my ( $fh, $errormsg ) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
     my $schema_version = $app->config->SchemaVersion;
     #my $schema_version =
     #  $q->param('ignore_schema_conflict')
@@ -1907,7 +1907,7 @@ sub restore_directory {
         return ( undef, undef );
     }
 
-    my $q = $app->param;
+    my $q = $app->query;
     my $schema_version = $app->config->SchemaVersion;
     #my $schema_version =
     #  $q->param('ignore_schema_conflict')
@@ -1989,7 +1989,7 @@ sub restore_upload_manifest {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     require MT::BackupRestore;
     my $backups = MT::BackupRestore->process_manifest($fh);

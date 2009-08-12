@@ -275,7 +275,7 @@ sub export {
     $enc = ( $app->charset || '' ) if ( !$enc );
     my $blog_enc = $app->config('PublishCharset');
 
-    my $q           = $app->param;
+    my $q           = $app->query;
     my $filter_args = $q->param('filter_args');
     my %terms;
     if ($filter_args) {

@@ -13,7 +13,7 @@ use MT::Author qw( AUTHOR );
 sub sanity_check {
     my $auth = shift;
     my ($app) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
     my $id = $q->param('id');
 
     if ($q->param('pass') ne $q->param('pass_verify')) {

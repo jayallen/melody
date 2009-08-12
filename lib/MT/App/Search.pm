@@ -89,7 +89,7 @@ sub init_request {
 
     $app->mode('tag') if $app->param('tag');
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $cfg = $app->config;
     my $blog_id = $q->param('blog_id') || $app->first_blog_id();
@@ -178,7 +178,7 @@ sub init_request {
 sub generate_cache_keys {
     my $app = shift;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my @p = sort { $a cmp $b } $q->param;
     my ( $key, $count_key );
     $key .= lc($_) . encode_url( $q->param($_) ) foreach @p;
@@ -223,7 +223,7 @@ sub create_blog_list {
     my $app = shift;
     my (%no_override) = @_;
 
-    my $q   = $app->param;
+    my $q   = $app->query;
     my $cfg = $app->config;
 
     unless (%no_override) {
@@ -391,7 +391,7 @@ sub execute {
 
 sub search_terms {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     if (my $limit = $app->param('limit_by')) {
         if ($limit eq 'all') {
@@ -585,7 +585,7 @@ sub template_paths {
 
 sub first_blog_id {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $blog_id;
     if ( $q->param('IncludeBlogs') ) {
@@ -611,7 +611,7 @@ sub first_blog_id {
 
 sub prepare_context {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my ( $count, $iter ) = @_;
 
     ## Initialize and set up the context object.
@@ -685,7 +685,7 @@ sub prepare_context {
 
 sub load_search_tmpl {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my ($ctx) = @_;
 
     my $tmpl;

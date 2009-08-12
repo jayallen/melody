@@ -10,7 +10,7 @@ sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my $type = $q->param('_type');
     my $perms = $app->permissions;
     my $blog_class = $app->model('blog');
@@ -470,7 +470,7 @@ sub list {
     my $type = $app->param('type') || MT::Entry->class_type;
     my $pkg = $app->model($type) or return "Invalid request.";
 
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $perms = $app->permissions;
     unless ($app->user->is_superuser) {
         if ( $type eq 'page' ) {
@@ -870,7 +870,7 @@ sub list {
 
 sub preview {
     my $app         = shift;
-    my $q           = $app->param;
+    my $q           = $app->query;
     my $type        = $q->param('_type') || 'entry';
     my $entry_class = $app->model($type);
     my $blog_id     = $q->param('blog_id');
@@ -1171,7 +1171,7 @@ sub preview {
 
 sub cfg_entry {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = scalar $q->param('blog_id');
     return $app->return_to_dashboard( redirect => 1 )
       unless $blog_id;
@@ -1641,7 +1641,7 @@ sub save_entries {
 
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my @p = $q->param;
     require MT::Entry;
     require MT::Placement;
@@ -1793,7 +1793,7 @@ sub save_entries {
 
 sub send_pings {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     $app->validate_magic() or return;
     require MT::Entry;
     require MT::Blog;
@@ -1850,7 +1850,7 @@ sub save_entry_prefs {
     my $perms = $app->permissions
       or return $app->error( $app->translate("No permissions") );
     $app->validate_magic() or return;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $prefs = $app->_entry_prefs_from_params;
     $perms->entry_prefs($prefs);
     $perms->save
@@ -2310,7 +2310,7 @@ sub delete {
     my $app = shift;
     $app->validate_magic() or return;
     require MT::Blog;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = $q->param('blog_id');
     my $blog    = MT::Blog->load($blog_id)
         or return $app->error($app->translate('Can\'t load blog #[_1].', $blog_id));

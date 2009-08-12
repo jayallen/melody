@@ -6,7 +6,7 @@ sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my $cfg = $app->config;
     my $blog = $app->blog;
     my $blog_id = $id;
@@ -435,7 +435,7 @@ sub cfg_archives {
     my $app = shift;
     my %param;
     %param = %{ $_[0] } if $_[0];
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $blog_id = $q->param('blog_id');
 
@@ -492,7 +492,7 @@ sub cfg_archives {
 
 sub cfg_prefs {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = scalar $q->param('blog_id');
     return $app->return_to_dashboard( redirect => 1 )
       unless $blog_id;
@@ -519,7 +519,7 @@ sub cfg_prefs {
 
 sub cfg_web_services {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = scalar $q->param('blog_id');
     return $app->return_to_dashboard( redirect => 1 )
       unless $blog_id;
@@ -563,7 +563,7 @@ sub rebuild_pages {
       or return $app->error( $app->translate("No permissions") );
     require MT::Entry;
     require MT::Blog;
-    my $q             = $app->param;
+    my $q             = $app->query;
     my $start_time    = $q->param('start_time');
 
     if ( ! $start_time ) {
@@ -923,7 +923,7 @@ sub rebuild_new_phase {
 
 sub start_rebuild_pages {
     my $app           = shift;
-    my $q             = $app->param;
+    my $q             = $app->query;
     my $start_time    = $q->param('start_time');
 
     if ( ! $start_time ) {

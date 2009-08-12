@@ -8,7 +8,7 @@ sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my $blog_id = $q->param('blog_id');
     my $perms = $app->permissions;
     my $blog = $app->blog;
@@ -124,7 +124,7 @@ sub edit_commenter {
     # We never create commenters through the UI, so this
     # is really the only valid condition
     if ($id) {
-        my $q = $app->param;
+        my $q = $app->query;
         my $blog_id = $q->param('blog_id');
         my $perms = $app->permissions;
         my $type = $q->param('_type');
@@ -484,7 +484,7 @@ sub list_commenter {
         return $app->error( $app->translate("Permission denied.") );
     }
 
-    my $q         = $app->param;
+    my $q         = $app->query;
     my $list_pref = $app->list_pref('commenter');
     my $blog_id   = $q->param('blog_id');
     my %param     = %$list_pref;
@@ -674,7 +674,7 @@ sub build_commenter_table {
 sub save_commenter_perm {
     my $app      = shift;
     my ($params) = @_;
-    my $q        = $app->param;
+    my $q        = $app->query;
     my $action   = $q->param('action');
 
     $app->validate_magic() or return;
@@ -844,7 +844,7 @@ sub unapprove_item {
 
 sub cfg_comments {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = scalar $q->param('blog_id');
     return $app->return_to_dashboard( redirect => 1 )
       unless $blog_id;
@@ -861,7 +861,7 @@ sub cfg_comments {
 
 sub cfg_registration {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = scalar $q->param('blog_id');
     return $app->return_to_dashboard( redirect => 1 )
       unless $blog_id;
@@ -880,7 +880,7 @@ sub cfg_registration {
 
 sub cfg_spam {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     $q->param( '_type', 'blog' );
     $q->param( 'id',    scalar $q->param('blog_id') );
 
@@ -1244,7 +1244,7 @@ sub save_cfg_system_feedback {
 
 sub reply {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $reply_to    = encode_html( $q->param('reply_to') );
     my $magic_token = encode_html( $q->param('magic_token') );
@@ -1281,7 +1281,7 @@ sub do_reply {
     return $app->error( $app->translate("Invalid request") )
       if $app->request_method() ne 'POST';
 
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $param = {
         reply_to    => $q->param('reply_to'),
@@ -1336,7 +1336,7 @@ sub reply_preview {
 
     $app->validate_magic or return;
 
-    my $q   = $app->param;
+    my $q   = $app->query;
     my $cfg = $app->config;
 
     my $param = {
@@ -1817,7 +1817,7 @@ sub map_comment_to_commenter {
 
 sub _prepare_reply {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $comment_class = $app->model('comment');
     my $parent        = $comment_class->load( $q->param('reply_to') );

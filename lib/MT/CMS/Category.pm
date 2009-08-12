@@ -52,7 +52,7 @@ sub edit {
 
 sub list {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $type  = $q->param('_type') || 'category';
     my $class = $app->model($type);
 
@@ -121,7 +121,7 @@ sub list {
 
 sub save {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $perms = $app->permissions;
     my $type  = $q->param('_type');
     my $class = $app->model($type)
@@ -198,7 +198,7 @@ sub save {
 
 sub category_add {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('_type') || 'category';
     my $pkg  = $app->model($type);
     my $data = $app->_build_category_list(
@@ -215,7 +215,7 @@ sub category_add {
 
 sub category_do_add {
     my $app    = shift;
-    my $q      = $app->param;
+    my $q      = $app->query;
     my $type   = $q->param('_type') || 'category';
     my $author = $app->user;
     my $pkg    = $app->model($type);

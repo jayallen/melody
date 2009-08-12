@@ -2603,7 +2603,7 @@ sub _translate_naughty_words {
 sub autosave_session_obj {
     my $app           = shift;
     my ($or_make_one) = @_;
-    my $q             = $app->param;
+    my $q             = $app->query;
     my $type          = $q->param('_type');
     return unless $type;
     my $id = $q->param('id');
@@ -2774,7 +2774,7 @@ sub archive_type_sorter {
 
 sub preview_object_basename {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my @parts;
     my $blog    = $app->blog;
     my $blog_id = $blog->id if $blog;
@@ -2842,7 +2842,7 @@ sub add_to_favorite_blogs {
 
 sub _entry_prefs_from_params {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('entry_prefs');
     my %fields;
     if ( $type && lc $type ne 'custom' ) {
