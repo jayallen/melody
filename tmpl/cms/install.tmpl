@@ -1,6 +1,6 @@
 <mt:setvarblock name="html_title">
     <mt:if name="version_warning">
-        <__trans phrase="Welcome to Movable Type">
+        <__trans phrase="Welcome to [_1]" params="<$mt:Var name="mt_product_name"$>">
     <mt:else>
         <__trans phrase="Create Your Account">
     </mt:if>
@@ -8,7 +8,7 @@
 <mt:setvarblock name="page_title">
     <mt:if name="version_warning">
     <span id="version-warning-header">
-        <__trans phrase="Welcome to Movable Type">
+        <__trans phrase="Welcome to [_1]" params="<$mt:Var name="mt_product_name"$>">
     </span>
     </mt:if>
     <span id="welcome-header"<mt:if name="version_warning"> style="display: none;"</mt:if>>
@@ -98,7 +98,7 @@ function validate(f) {
 <mt:if name="version_warning">
 <div class="warning" id="version-warning">
     <p><__trans phrase="The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2])." params="<mt:var name="perl_version">%%<mt:var name="perl_minimum">"></p>
-    <p><__trans phrase="While Movable Type may run, it is an <strong>untested and unsupported environment</strong>.  We strongly recommend upgrading to at least Perl [_1]." params="<mt:var name="perl_minimum">"></p>
+    <p><__trans phrase="While [_1] may run, it is an <strong>untested and unsupported environment</strong>.  We strongly recommend upgrading to at least Perl [_2]." params="<mt:var name="mt_product_name">%%<mt:var name="perl_minimum">"></p>
     <p><__trans phrase="Do you want to proceed with the installation anyway?"></p>
     <div class="actions-bar">
         <div class="actions-bar-inner pkg actions right">
@@ -122,7 +122,7 @@ function validate(f) {
 </mt:if>
 
 <div id="welcome"<mt:if name="version_warning"> style="display: none;"</mt:if>>
-<p class="intro"><__trans phrase="Before you can begin blogging, you must create an administrator account for your system. When you are done, Movable Type will then initialize your database."></p>  
+<p class="intro"><__trans phrase="Before you can begin blogging, you must create an administrator account for your system. When you are done, [_1] will then initialize your database." params="<$mt:Var name="mt_product_name"$>"></p>  
 
 <mt:if name="error">
 <mtapp:statusmsg
