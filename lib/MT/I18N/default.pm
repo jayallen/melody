@@ -29,8 +29,8 @@ sub DISPLAY_LENGTH_EDIT_ENTRY_TEXT_BREAK_UP ()         { 30 }
 
 sub PORTAL_URL()            { '' } # default PORTAL_URL is determined in building packages 
 sub SUPPORT_URL()           { 'http://www.sixapart.com/movabletype/support/' } 
-sub NEWS_URL()              { 'http://www.sixapart.com/movabletype/news/' } 
-sub NEWSBOX_URL()           { 'http://www.sixapart.com/movabletype/news/mt4_news_widget.html' } 
+sub NEWS_URL()              { 'http://openmelody.org/blog/' } 
+sub NEWSBOX_URL()           { 'http://openmelody.org/blog/melody_news_widget.html' } 
 sub LEARNINGNEWS_URL()      { 'http://learning.movabletype.org/newsbox.html' } 
 sub CATEGORY_NAME_NODASH()  { 0 } 
 sub DEFAULT_TIMEZONE()      { 0 } 
