@@ -44,6 +44,7 @@ sub quant {
 sub numerate {
     # return this lexical item in a form appropriate to this number
     my($handle, $num, @forms) = @_;
+    $num ||=0;
     my $s = ($num == 1);
 
     return '' unless @forms;
