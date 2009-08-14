@@ -3539,6 +3539,18 @@ sub param {
     }
 }
 
+# Eventually upon switching to CGI::Application the query
+# method would call cgiapp_get_query() and NOT set the query
+# object as it does now in MT::App::init_request. Besides
+# compatability, this would enable developers to do any
+# special request handling.
+sub query {
+	my $self = shift;
+	my ($query) = @_;
+	$self->{'query'} = $query if defined $query;
+	return $self->{'query'};
+}
+
 sub blog {
     my $app = shift;
     $app->{_blog} = shift if @_;
@@ -4250,6 +4262,28 @@ happening over a secure (HTTPS) connection.
 =head2 $app->l10n_filter
 
 Alias for C<MT-E<gt>translate_templatized>.
+
+=head2 $app->query([$cgi_or_apache_request])
+
+Returns the CGI or or Apache::Request object for the current
+request being handled. Optionaly this method can set the
+request object though that is best left to MT to handle when
+initializing a request.
+
+This method is a roughly the functional equivalent of the
+CGI::Application method of the same name. It is being
+introduced now for future compatability purposes as work
+continues towards using CGI::Application for the underlying
+application framework.
+
+Eventually upon switching to CGI::Application the query method would 
+call cgiapp_get_query() and NOT set the query object as it does now
+in MT::App::init_request. Besides compatability, this would enable 
+developers to do any pecial request handling.
+
+The previous technique of accessing the $app object hash key
+'query' is considered deprecated and is not recommended for use
+any longer.
 
 =head2 $app->param($name[, $value])
 
