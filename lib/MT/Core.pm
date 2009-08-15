@@ -406,6 +406,7 @@ BEGIN {
             },
             'GenerateTrackBackRSS' => { default => 0, },
             'DBIRaiseError'        => { default => 0, },
+            'SearchAlwaysAllowTemplateID' => { default => 0, },
             
             ## Search settings, copied from Jay's mt-search and integrated
             ## into default config.
@@ -453,13 +454,13 @@ BEGIN {
             'OneHourMaxPings'           => { default => 10, },
             'OneDayMaxPings'            => { default => 50, },
             'SupportURL'                => {
-                default => 'http://www.sixapart.com/movabletype/support/',
+                default => 'http://getsatisfaction.com/openmelody',
             },
             'NewsURL' => {
-                default => 'http://www.sixapart.com/movabletype/news/',
+                default => 'http://openmelody.org/blog/',
             },
             'NewsboxURL' => {
-                default => 'http://www.sixapart.com/movabletype/news/mt4_news_widget.html',
+                default => 'http://openmelody.org/blog/melody_news_widget.html',
             },
             # 'MTNewsURL' => {
             #     default => 'http://www.sixapart.com/movabletype/news/mt4_news_widget.html',

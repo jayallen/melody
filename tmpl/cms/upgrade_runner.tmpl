@@ -205,9 +205,9 @@
             <button
                 type="submit"
                 accesskey="s"
-                title="<mt:if name="installing"><__trans phrase="Sign in to Movable Type (s)"><mt:else><__trans phrase="Return to Movable Type (s)"></mt:if>"
+                title="<mt:if name="installing"><__trans phrase="Sign in to [_1] (s)" params="<$mt:Var name="mt_product_name"$>"><mt:else><__trans phrase="Return to [_1] (s)" params="<$mt:Var name="mt_product_name"$>"></mt:if>"
                 class="primary-button"
-                ><mt:if name="installing"><__trans phrase="Sign in to Movable Type"><mt:else><__trans phrase="Return to Movable Type"></mt:if></button>
+                ><mt:if name="installing"><__trans phrase="Sign in to [_1]" params="<$mt:Var name="mt_product_name"$>"><mt:else><__trans phrase="Return to [_1]" params="<$mt:Var name="mt_product_name"$>"></mt:if></button>
         </div>
     </div>
 </form>
@@ -222,9 +222,9 @@
             <button
                 type="submit"
                 accesskey="s"
-                title="<__trans phrase="Return to Movable Type (s)">"
+                title="<__trans phrase="Return to [_1] (s)" params="<$mt:Var name="mt_product_name"$>">"
                 class="primary-button"
-                ><__trans phrase="Return to Movable Type"></button>
+                ><__trans phrase="Return to [_1]" params="<$mt:Var name="mt_product_name"$>"></button>
         </div>
     </div>
 </form>
