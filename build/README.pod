@@ -1,0 +1,312 @@
+=pod
+
+=head1 NAME
+
+Melody Export/Build/Deploy/Notify Automation
+
+=head1 SYNOPSIS
+
+B<Important note>: This document relates to the Movable Type-specific process and, like the build scripts themselves, needs to be amended to fit Melody's workflow, version control system and deployment startegies.
+
+=head2 Quick Usage
+
+ cd $MT_DIR
+
+ svn status -u
+ svn update
+
+ #export BUILD_LANGUAGE=ja  # en_US default
+
+ make clean
+ make me  # Just like C<make> alone but with automatic version stamping.
+
+ make clean
+ make dist  # Build distribution zip and tgz files.
+
+=head2 Advanced Usage
+
+B<Always> use B<debug mode> I<before> running. Inspect your output and make sure it's sane first. Remember to check the B<Important Notes section> below.
+
+ perl build/exportmt.pl B<--debug>
+
+Dry-run showing only warnings:
+
+ perl build/exportmt.pl --debug --noverbose
+
+Make a local working copy:
+
+ perl build/exportmt.pl --make
+
+Make a local working copy and generate distribution files:
+
+ perl build/exportmt.pl --local
+
+For non-English MT builds, use <code>--lang=xx</code>:
+
+ perl build/exportmt.pl --lang=ja
+
+To build all languages, use:
+
+ perl build/exportmt.pl --lang=all
+
+To build specific languages, use:
+
+ perl build/exportmt.pl --lang=de,es
+
+To name a build what you want, use the <code>--stamp</code> option:
+
+ perl build/exportmt.pl --stamp=6.777-klingon
+
+To deploy a distribution, use the <code>--deploy</code> option:
+
+ perl build/exportmt.pl --deploy=/some/where
+
+You can deploy to another machine too:
+
+ perl build/exportmt.pl --deploy=you@host:/some/where
+
+To include plugins from the [http://code.sixapart.com/svn/mtplugins/ mtplugins public repository]:
+
+ perl build/exportmt.pl --plugin=RebuildQueue --plugin=SyntaxHighlighter
+
+To include plugins from the [http://svn.sixapart.com/repos/eng/mtplugins/trunk/ mtplugins internal repository]:
+
+ perl build/exportmt.pl --plugin-uri=http://svn.sixapart.com/repos/eng/mtplugins/trunk --plugin=mt-yahoosb
+
+To stage-install, use the <code>--stage</code> options (dir and uri defaults shown):
+
+ perl build/exportmt.pl --stage --stage-dir=/var/www/html/mt-stage --stage-uri=http://mt.sixapart.com
+
+(Staging and production builds are detailed below.)
+
+=head1 DESCRIPTION
+
+This program provides a friendly, command-line way to make and roll-out different Movable Type distributions.  It will export based on your current subversion info, build a distribution, version-package-rev-date-stamp it and then either leave the archive files in your current working directory, deploy them somewhere (and then optionally "stage-install" too).
+
+This program is basically a series of naming decisions and conditional overrides followed by a bunch of <code>make</code> calls with ssh deployment, staging installation and email notification tacked-on.  You can override I<everything> and the options are detailed below.
+
+The summary of both manual and automated nightly runs of this code are located on our intranet at http://mt.sixapart.com/index.html and http://mt.sixapart.com/build.html.
+
+These are the build system files:
+
+[http://code.sixapart.com/svn/movabletype/branches/wheeljack/build/exportmt.pl exportmt.pl],
+[http://code.sixapart.com/svn/movabletype/branches/wheeljack/build/Build.pm Build.pm],
+[http://code.sixapart.com/svn/movabletype/branches/wheeljack/build/mt-dists/make-dist make-dist],
+[http://code.sixapart.com/svn/movabletype/branches/wheeljack/build/ Makefile]
+
+=head2 IMPORTANT NOTES
+
+=over 4
+
+=item * Running this program requires one non-core, non-MT perl package for https support: [http://search.cpan.org/dist/Crypt-SSLeay/ Crypt::SSLeay]
+
+=item * This code does not require user environment variables to be set.  If BUILD_* variables B<are> defined in the user environment, the program will use them.
+
+=item * This code can't handle multiple language builds anymore. This will be fixed...
+
+=item * At least one argument must be supplied, even if only to redefine a default (e.g. <code>--verbose</code> (or <code>--noverbose</code>).  Otherwise, the usage/help will be displayed.
+
+=back
+
+=head2 HANDY THINGS TO KNOW
+
+=over 4
+
+=item * Instead of exporting environment variables (for language/package/version_id) doing make. you can use this program with the <code>--make</code> option.
+
+=item * Both tar.gz and zip files are created simultaneously.
+
+=item * Neither the <code>--notify=mt-dev@sixapart.com</code> nor the <code>--deploy=user@rongo:/usr/local/cifs/intranet/mt-interest/</code> settings are the default settings.  Declare them specifically, if desired.
+
+=item * When an official build is produced, please update the [http://mt.sixapart.com/build.html summary HTML] with the dates and subversion revisions/tags.
+
+=back
+
+=head1 DEFAULTS TO KNOW ABOUT
+
+This is a direct paste from the default presets section of the code:
+
+ 'agent=s'         => '',  # Constructed at run-time.
+ 'alpha=s'         => 0,  # Alpha build number.
+ 'arch=s@'          => [qw( .tar.gz .zip )],
+ 'beta=s'          => 0,  # Beta build number.
+ 'cleanup!'        => 1,  # Remove the exported directory after deployment.
+ 'date!'           => 1,  # Toggle date stamping.
+ 'debug'           => 0,  # Turn on/off the actual system calls.
+ 'deploy:s'        => '', #($ENV{USER}||$ENV{USERNAME}).'@rongo:/usr/local/cifs/intranet/mt-interest/',
+ 'deploy-uri=s'    => 'https://intranet.sixapart.com/mt-interest',
+ 'email-bcc:s'     => undef,
+ 'email-body=s'    => '',  # Constructed at run-time.
+ 'email-cc:s'      => undef,
+ 'email-from=s'    => ( $ENV{USER} || $ENV{USERNAME} ) .'@sixapart.com',
+ 'email-host=s'    => 'mail.sixapart.com',
+ 'email-subject=s' => '',  # Constructed at run-time.
+ 'export!'         => 1,  # To export or not to export. That is the question.
+ 'export-dir=s'    => '',  # Constructed at run-time.
+ 'footer=s'        => "<br/><b>SOFTWARE IS PROVIDED FOR TESTING ONLY - NOT FOR PRODUCTION USE.</b>\n",
+ 'footer-tmpl=s'   => 'tmpl/cms/footer.tmpl',
+ 'help|h'          => 0,  # Show the program usage.
+ 'http-user=s'     => undef,
+ 'http-pass=s'     => undef,
+ 'ldap'            => 0,  # Use LDAP (and don't initialize the database).
+ 'lang=s'          => $ENV{BUILD_LANGUAGE} || 'en_US',  # de,es,en_US,fr,ja,nl
+ 'local'           => 0,  # Command-line --option alias
+ 'notify:s'        => undef,  # Send email notification on completion.
+ 'pack=s'          => undef,  # Constructed at run-time.
+ 'plugin=s@'       => undef,  # Plugin list
+ 'plugin-uri=s'    => 'http://code.sixapart.com/svn/mtplugins/trunk',
+ 'prod'            => 0,  # Command-line --option alias
+ 'prod-dir'        => undef,  # Constructed at run-time.
+ 'qa'              => 0,  # Command-line --option alias
+ 'repo=s'          => 'trunk',  # Reset at runtime depending on branch,tag.
+ 'repo-uri=s'      => '',  #'https://intranet.sixapart.com/repos/eng',
+ 'rev!'            => 1,  # Toggle revision stamping.
+ 'revision=s'      => undef,  # Constructed at run-time.
+ 'stage'           => 0,  # Command-line --option alias
+ 'stage-dir=s'     => '/var/www/html/mt-stage',
+ 'stage-uri=s'     => 'http://mt.sixapart.com',
+ 'short-lang=s'    => '',  # Constructed at run-time.
+ 'stamp=s'         => $ENV{BUILD_VERSION_ID},
+ 'symlink!'        => 1,  # Make build symlinks when staging.
+ 'verbose!'        => 1,  # Express (the default) or suppress run output.
+
+=head1 SUPRESSING & OVERRIDING OPTIONS
+
+ --arch=zip              # Specify the archive type (default both tar.gz and zip)
+ --deploy=you@host:/foo  # Deploy via scp to host:/foo as you.
+ --deploy=/foo           # Deploy to /foo.
+ --http-user=you         # Specify the user to be used when making any http connections.
+ --http-pass=foo         # Specify the user password to be used...
+ --lang=xx               # Specify the language to build for.
+ --ldap                  # Stage with a persistent database and 6A LDAP auth.
+ --local                 # Does not cleanup or deploy anywhere.
+ --make                  # Command-line alias for --nobuild --noexport.
+ --nobuild               # Do not create distribution files.
+ --nocleanup             # Leaves the build files in the exported directory.
+ --nodate                # Do not date-stamp the build.
+ --noexport              # Do not export from subversion.
+ --norev                 # Do not stamp the build with the repository-revision.
+ --nostamp               # Supress build repo-date stamping.
+ --nosymlink             # Do not make a symlink when staging.
+ --notify=mt-dev@sixapart.com
+ --noverbose             # Supress run-time verbosity.
+ --pack=FOO              # Build something called FOO instead of MT or MTE.
+ --prod                  # Does not stamp archives, inject "TESTING ONLY" footer or symlink when staging.
+ --prod-dir=Foo          # Use stage-dir/Foo/ for --stage --prod MT builds.
+ --qa                    # Cc:'s QA if notifying.
+ --stage                 # Install the tar.gz archive on staging.
+ --stage-dir=/tmp        # Stage (deploy-install) wherever you want.
+ --stamp=Foo             # Override the stamp that is used to name the build. * This is a synonym for the BUILD_VERSION_ID
+
+=head3 STAGING
+
+=over 4
+
+=item * Running in <code>--debug</code> mode should produce no errors; only warnings.  Running normally should produce only status messages and (annoying but innocuous) <code>make</code> messages.
+
+=item * If <code>--stage</code> is given, the program will copy and extract the generated archive under the <code>--stage-dir</code>, which I<must exist>.
+
+=item * By default, <code>--stage-dir=/var/www/html/mt-stage</code> and <code>--stage-uri=http://mt.sixapart.com</code>.
+
+=item * All staging instances currently use MySQL (but this can be easily changed).
+
+=item * For LDAP auth, 6A-LDAP and a persistent database called <code>stage_ldap</code> is used.
+
+=item * For non-LDAP installs, a fresh database is created (and the previous one removed), the <code>tools/upgrade</code> script is run and friendly symlinks are made (unless <code>--nosymlink</code> is given).
+
+=item * Listings of staged releases are at http://mt.sixapart.com/ (simplistic) and http://mt.sixapart.com/build.html (detailed).
+
+=item * Here are the steps to take if you are doing this manually:
+
+ ssh koro64
+ sudo su - mtdev
+ cd svn/mt  # voltron, wheeljack, etc.
+ svn up
+ perl build/exportmt.pl --stage --lang=all --debug | less
+ perl build/exportmt.pl --stage --lang=all
+ perl build/exportmt.pl --stage --lang=all --ldap --debug | less
+ perl build/exportmt.pl --stage --lang=all --ldap
+
+=back
+
+=head3 Pair.com
+
+The I<[[Movable_Type:Mtdev-user|mtdev user]]> handles deployment and installation of the [http://mt.sixapart.com/build.html#mte MTE tar.gz] that is generated above, in the daily staging process.  Here are the commands to manually upload the staged voltron build:
+
+ sudo su - mtdev
+ cd svn/mtdev
+ svn up
+ scp bin/pair-install mte@qs1264.pair.com:/usr/home/mte/bin/
+ perl bin/pair-upload voltron-en
+ ssh mte@qs1264.pair.com /usr/home/mte/bin/pair-install
+
+=head3 ROLLING OUT BETAS
+
+=over 4
+
+=item 1. Make the builds:
+
+ cd svn/mt
+ svn st -u
+ svn up
+ # These builds are English only and staged under the production folder for convenience.
+ perl build/exportmt.pl --beta=42 --prod --stage
+
+=item 2. Update the [http://mt.sixapart.com/build.html build summary] with these builds.
+
+=item 3. Copy these builds (tgz and zip) to your ~/svn/distros folder.
+
+=item 4. Export and sanitize the FogBugz release notes (as HTML) and copy them to your ~/svn/distros folder.
+
+=item 5. svn add the new, svn rm the old and then svn commit.
+
+=item 6. Update the [http://www.sixapart.com/movabletype/beta/ beta-blog].
+
+=back
+
+=head3 Updating the Betablog
+
+* More to come...
+
+=head3 SPINNING PRODUCTION BUILDS
+
+ cd svn/mt
+ svn st -u
+ svn up
+ perl build/exportmt.pl --prod --lang=all --debug
+ # I also stage production builds:
+ perl build/exportmt.pl --prod --stage --lang=all
+
+=over 4
+
+=item * You can optionally specify a sub-directory of your staging directory with <code>--prod-dir=Foo</code> for your production builds.  On koro64, staging has a subdirectory called <code>Production_Builds/</code> that is used as the default.  If a <code>--prod-dir</code> does not exist, the program just uses the staging directory.
+
+=item * Remember that a <code>--stamp=foo</code> can be used to force the name of the build. For MTE this would result in "MTE-foo."
+
+=back
+
+=head1 TO DO
+
+=over 4
+
+=item * Run the tests before deployment, pretty please.
+
+=item * Add a <code>--log</code> option and log write iterator.
+
+=item * Handle interactive password request (for <code>--http-pass</code>).
+
+=item * Y/N proceed if interactive if there were no svn changes made since the last deployment. Related logic for this can be found in the [http://svn.sixapart.com/repos/docs/trunk/mt/Team_folders/mtdev/bin/beta-rotate beta-rotate script].
+
+=item * Add a "Fixes since the last build" file link.  Related logic for this can also be found in [http://svn.sixapart.com/repos/docs/trunk/mt/Team_folders/mtdev/bin/beta-rotate beta-rotate].
+
+=item * Utilize the help and version features of <code>GetOpt::Long</code>.
+
+=item * Make an inverse alias of <code>--verbose</code> called <code>--quiet</code>?
+
+=item * Expand globs for systems with poor shells (Win32): <code>local @ARGV = map glob, @ARGV;</code>
+
+=item * Improve plugin inclusion logic to better handle --plugin=uri://somewhere/someplugin and --plugin=/some/where/someplugin.tgz
+
+=back
+
+=cut
