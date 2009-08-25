@@ -55,6 +55,23 @@
 }
 
 
+/* System Info Messages ---------------------------------------------------------------------------------- */
+
+body#system-check .installed {
+    color: #93b06b;
+    padding-top: 0px;
+    margin-top: 0px;
+}
+
+body#system-check .warning {
+    padding-top: 0px;
+    margin-top: 4px;
+    border-left: 1px solid red;
+    padding-left: 10px;
+    margin-left: 20px;
+}
+
+
 /* Debug Panel Messages ---------------------------------------------------------------------------------- */
 
 .debug-panel {
