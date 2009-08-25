@@ -61,20 +61,6 @@ sub get_syscheck_content {
     my $syscheck_url = $app->base . $app->mt_path . $app->config('CheckScript') .
         '?view=tools&version=' . MT->version_id;
     if ( $syscheck_url && $syscheck_url ne 'disable' ) {
-        my $SYSCHECKCACHE_TIMEOUT = 60 * 60 * 24;
-        my $sess_class        = $app->model('session');
-        my ($syscheck_object)     = ("");
-        my $retries           = 0;
-        $syscheck_object = $sess_class->load( { id => 'SC' } );
-        if ( $syscheck_object
-            && ( $syscheck_object->start() < ( time - $SYSCHECKCACHE_TIMEOUT ) ) )
-        {
-            $syscheck_object->remove;
-            $syscheck_object = undef;
-        }
-        return encode_text( $syscheck_object->data(), 'utf-8', undef )
-          if ($syscheck_object);
-
         my $ua = $app->new_ua({ timeout => 20 });
         return unless $ua;
         $ua->max_size(undef) if $ua->can('max_size');
@@ -83,24 +69,7 @@ sub get_syscheck_content {
         my $resp = $ua->request($req);
         return unless $resp->is_success();
         my $result = $resp->content();
-        if ($result) {
-            require MT::Sanitize;
 
-            # allowed html
-            my $spec = '* style class id,ul,li,div,span,br,h2,h3,strong,code,blockquote,p';
-            $result = MT::Sanitize->sanitize( $result, $spec );
-            $syscheck_object = MT::Session->new();
-            $syscheck_object->set_values(
-                {
-                    id    => 'SC',
-                    kind  => 'SC',
-                    start => time(),
-                    data  => $result
-                }
-            );
-            $syscheck_object->save();
-            $result = encode_text( $result, 'utf-8', undef );
-        }
         return $result;
     }
 }
