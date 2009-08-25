@@ -473,20 +473,16 @@ for my $list (\@REQ, \@DATA, \@OPT) {
     }
     print trans_templ(qq{<h2><MT_TRANS phrase="[_1] [_2] Modules" params="$phrase%%$type"></h2>\n\t<div>\n});
     if (!$req && !$data) {
-        if (!$view) {
         print trans_templ(<<MSG);
     <p class="msg msg-info"><MT_TRANS phrase="The following modules are <strong>optional</strong>. If your server does not have these modules installed, you only need to install them if you require the functionality that the module provides."></p>
 
 MSG
-       }
     }
     if ($data) {
-        if (!$view) {
         print trans_templ(<<MSG);
         <p class="msg msg-info"><MT_TRANS phrase="Some of the following modules are required by the various data storage options in Movable Type. In order run the system, your server needs to have DBI and at least one of the other modules installed."></p>
 
 MSG
-        }
     }
     my $got_one_data = 0;
     my $dbi_is_okay = 0;

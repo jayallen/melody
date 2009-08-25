@@ -70,6 +70,10 @@ body#system-check .warning {
     padding-left: 10px;
     margin-left: 20px;
 }
+body#system-check .msg-info {
+    background-color: #eaf2ff;
+    border: 1px solid #999;
+}
 
 
 /* Debug Panel Messages ---------------------------------------------------------------------------------- */
