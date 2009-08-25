@@ -462,13 +462,7 @@ for my $list (\@REQ, \@DATA, \@OPT) {
     my $data = ($list == \@DATA);
     my $req = ($list == \@REQ);
     my $type;
-    my $phrase;
-
-    if (!$view) {
-        $phrase = translate("Checking for");
-    } else {
-        $phrase = translate("Installed");
-    }
+    my $phrase = translate("Checking for");
 
     if ($data) {
         $type = translate("Data Storage");
