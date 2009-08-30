@@ -497,9 +497,10 @@ MSG
         eval("use $mod" . ($ver ? " $ver;" : ";"));
         if ($@) {
             $is_good = 0 if $req;
+            my $link = 'http://search.cpan.org/perldoc?' . $mod;
             my $msg = $ver ?
-                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Either your server does not have [_1] installed, the version that is installed is too old, or [_1] requires another module that is not installed." params="$mod"> }) :
-                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Your server does not have [_1] installed, or [_1] requires another module that is not installed." params="$mod"> });
+                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Either your server does not have <a href="[_2]">[_1]</a> installed, the version that is installed is too old, or [_1] requires another module that is not installed." params="$mod%%$link"> }) :
+                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Your server does not have <a href="[_2]">[_1]</a> installed, or [_1] requires another module that is not installed." params="$mod%%$link"> });
             $msg   .= $desc .
                       trans_templ(qq{ <MT_TRANS phrase="Please consult the installation instructions for help in installing [_1]." params="$mod"></p>\n\n});
             print $msg . "\n\n";
