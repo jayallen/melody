@@ -12,6 +12,7 @@ use HTTP::Date qw( str2time );
 
 sub process {
     my $app = shift;
+	my $q    = $app->query;
     return $app->errtrans('TagSearch works with MT::App::Search.')
         unless $app->isa('MT::App::Search');
 
@@ -33,12 +34,12 @@ sub process {
         $app->run_callbacks( 'search_post_execute', $app, \$count, \$iter );
     }
 
-    my $format = $app->param('format') || q();
+    my $format = $q->param('format') || q();
     my $method = "render";
     if ( $format ) {
         $method .= $format if $app->can( $method . $format );
     }
-    elsif ( my $tmpl_name = $app->param('Template') ) {
+    elsif ( my $tmpl_name = $q->param('Template') ) {
         $method .= $tmpl_name if $app->can( $method . $tmpl_name );
     }
 
@@ -231,7 +232,7 @@ sub search_terms {
 
     my $blog_class = $app->model('blog');
     # Override SearchCutoff if If-Modified-Since header is present
-    if ((my $mod_since = $app->get_header('If-Modified-Since')) && $app->param('Template') eq 'feed') {
+    if ((my $mod_since = $app->get_header('If-Modified-Since')) && $q->param('Template') eq 'feed') {
         my $tz_offset = 15;  # Start with maximum possible offset to UTC
         my $blog_selected;
         my $iter;
