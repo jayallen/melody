@@ -64,13 +64,13 @@ sub init_request{
     my $cfg = $app->config;
 
     my $tag = $q->param('tag') || '';
-    $app->param('Type', 'tag') if $tag;
-    $app->param('search', $tag) if $tag;
+    $q->param('Type', 'tag') if $tag;
+    $q->param('search', $tag) if $tag;
     my $blog_id = $q->param('blog_id') || '';
     my $include_blog_id = $q->param('IncludeBlogs') || '';
 
     unless ($include_blog_id){
-        $app->param('IncludeBlogs', $blog_id) if $blog_id;
+        $q->param('IncludeBlogs', $blog_id) if $blog_id;
     }
 
     ## Get login information if user is logged in (via cookie).
@@ -161,7 +161,8 @@ sub init_request{
 
 sub throttle_response {
     my $app = shift;
-    my $tmpl = $app->param('Template') || '';
+	my $q    = $app->query;
+    my $tmpl = $q->param('Template') || '';
     my $msg = $app->translate(
         "You are currently performing a search. Please wait " .
         "until your search is completed.");
@@ -176,11 +177,12 @@ sub throttle_response {
 
 sub throttle_control {
     my $app = shift;
+	my $q    = $app->query;
 
     # Don't throttle MT registered users
     return 1 if $app->{user} && $app->{user}->type == MT::Author::AUTHOR();
 
-    my $type = $app->param('Type') || '';
+    my $type = $q->param('Type') || '';
 
     # Don't throttle tag listings
     return 1 if $type eq 'tag';
@@ -233,6 +235,7 @@ sub takedown {
 
 sub execute {
     my $app = shift;
+	my $q    = $app->query;
     return $app->error($app->errstr) if $app->errstr;
 
     my @results;
@@ -291,7 +294,7 @@ sub execute {
     ## the result list. If there is no result list, just load the first
     ## blog from the database.
     my($blog);
-    my $include = $app->param('IncludeBlogs') || '';  
+    my $include = $q->param('IncludeBlogs') || '';  
     $include =~ s/[^\d,]//g;  
     if ($include) {
         my @blog_ids = split ',', $include;
@@ -301,7 +304,7 @@ sub execute {
             $blog = $results[0]{blog};
         }
         if (!$blog) {
-            $blog = MT::Blog->load($app->param('blog_id'));
+            $blog = MT::Blog->load($q->param('blog_id'));
         }
         $include = $blog->id if $blog;  
     }  
@@ -614,7 +617,7 @@ sub _straight_search {
 
 sub _new_comments {
     my $app = shift;
-    return 1 if $app->param('help');
+    return 1 if $app->query->param('help');
 
     require MT::Log;
     $app->log({

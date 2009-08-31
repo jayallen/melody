@@ -247,7 +247,7 @@ sub do_login {
     {
         my $commenter = $app->user;
         if ( $q->param('external_auth') && !$commenter ) {
-            $app->param( 'name', $name );
+            $q->param( 'name', $name );
             if ( MT::Auth::NEW_USER() == $result ) {
                 $commenter = $app->_create_commenter_assign_role(
                     $q->param('blog_id') );
@@ -1509,7 +1509,7 @@ sub comment_listing {
         $limit = 100;
     }
     my $direction = 'ascend';
-    if ( $app->param('direction') eq 'descend' ) {
+    if ( $q->param('direction') eq 'descend' ) {
         $direction = 'descend';
     }
     my $method = $q->param('method');
@@ -1791,7 +1791,7 @@ sub edit_commenter_profile {
                     || $q->param('return_url') );
         }
 
-        my $blog_id = $app->param('blog_id');
+        my $blog_id = $q->param('blog_id');
 
         $app->user($commenter);
         my $param = {
@@ -1896,9 +1896,10 @@ sub save_commenter_profile {
 
 sub blog {
     my $app = shift;
+    my $q    = $app->query;
     return $app->{_blog} if $app->{_blog};
-    return undef unless $app->query;
-    if ( my $entry_id = $app->param('entry_id') ) {
+    return undef unless $q;
+    if ( my $entry_id = $q->param('entry_id') ) {
         require MT::Entry;
         my $entry = MT::Entry->load($entry_id);
         return undef unless $entry;
