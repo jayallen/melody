@@ -124,9 +124,10 @@ XML
 
 sub _get_params {
     my $app = shift;
+	my $q    = $app->query;
     my ( $tb_id, $pass );
-    if ( $tb_id = $app->param('tb_id') ) {
-        $pass = $app->param('pass');
+    if ( $tb_id = $q->param('tb_id') ) {
+        $pass = $q->param('pass');
     }
     else {
         if ( my $pi = $app->path_info ) {
