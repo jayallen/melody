@@ -260,7 +260,7 @@ sub init_core_registry {
             'Text::Balanced' => {
                 link => 'http://search.cpan.org/dist/Text-Balanced',
                 label =>
-                    'This module is required in mt-search.cgi if you are running Movable Type on Perl older than Perl 5.8.',
+                    'This module is required in mt-search.cgi if you are using a version of Perl older than Perl 5.8.',
             },
             'XML::Parser' => {
                 link => 'http://search.cpan.org/dist/Text-Balanced',
@@ -287,7 +287,7 @@ sub init_core_registry {
             'CGI' => {
                 link => 'http://search.cpan.org/dist/CGI.pm',
                 label =>
-                    'CGI is required for all Movable Type application functionality.',
+                    'CGI is required for all application functionality.',
             },
             'File::Spec' => {
                 link    => 'http://search.cpan.org/dist/File-Spec',
@@ -816,14 +816,16 @@ sub optional {
                 To => $param{test_mail_address},
                 From => $cfg->EmailAddressMain || $param{test_mail_address},
                 Subject => $app->translate(
-                    "Test email from Movable Type Configuration Wizard")
+                    "Test email from [_1] Configuration Wizard",
+                    MT->product_name)
             );
             my $charset = $cfg->MailEncoding || $cfg->PublishCharset;
             $head{'Content-Type'} = qq(text/plain; charset="$charset");
 
             my $body
                 = $app->translate(
-                "This is the test email sent by your new installation of Movable Type."
+                "This is the test email sent by your new installation of [_1].",
+                MT->product_name
                 );
 
             require MT::Mail;

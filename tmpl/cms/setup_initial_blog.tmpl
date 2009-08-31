@@ -116,7 +116,7 @@ function submit_form(f, command) {
 <div class="upgrade">
 
 <div id="warning_gone"<mt:if name="version_warning"> style="display:none;"</mt:if>>
-<p class="intro"><__trans phrase="In order to properly publish your blog, you must provide Movable Type with your blog's URL and the path on the filesystem where its files should be published."></p>
+<p class="intro"><__trans phrase="In order to properly publish your blog, you must provide [_1] with your blog's URL and the path on the filesystem where its files should be published." params="<$mt:Var name="mt_product_name"$>"></p>
 
 <mt:if name="error">
     <mtapp:statusmsg
@@ -153,7 +153,7 @@ function submit_form(f, command) {
         label="<__trans phrase="Publishing Path">"
         label_class="top-label">
         <input type="text" id="blog_path" class="ti" name="blog_path" value="<mt:if name="blog_path"><mt:var name="blog_path" escape="html"></mt:if>" />
-        <p class="hint"><__trans phrase="Your 'Publishing Path' is the path on your web server's file system where Movable Type will publish all the files for your blog. Your web server must have write access to this directory."></p>
+        <p class="hint"><__trans phrase="Your 'Publishing Path' is the path on your web server's file system where [_1] will publish all the files for your blog. Your web server must have write access to this directory." params="<$mt:Var name="mt_product_name"$>"></p>
     </mtapp:setting>
 
 <mt:if name="template_set_index">

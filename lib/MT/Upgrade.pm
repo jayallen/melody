@@ -1972,8 +1972,8 @@ sub seed_database {
     require MT::Entry;
     my $entry = MT::Entry->new;
     $entry->blog_id($blog->id);
-    $entry->title(MT->translate("I just finished installing Movable Type [_1]!", int(MT->product_version)));
-    $entry->text(MT->translate("Welcome to my new blog powered by Movable Type. This is the first post on my blog and was created for me automatically when I finished the installation process. But that is ok, because I will soon be creating posts of my own!"));
+    $entry->title(MT->translate("I just finished installing [_1] [_2]!", MT->product_name, int(MT->product_version) || MT->product_version));
+    $entry->text(MT->translate("Welcome to my new blog powered by [_1]. This is the first post on my blog and was created for me automatically when I finished the installation process. But that is ok, because I will soon be creating posts of my own!", MT->product_name));
     $entry->author_id($author->id);
     $entry->status(MT::Entry::RELEASE());
     $entry->save
