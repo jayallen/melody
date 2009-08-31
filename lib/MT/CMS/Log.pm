@@ -7,8 +7,9 @@ use MT::I18N qw( const break_up_text encode_text );
 
 sub view {
     my $app     = shift;
+	my $q		= $app->query;
     my $user    = $app->user;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     my $perms   = $app->permissions;
     if ($blog_id) {
         return $app->error( $app->translate("Permission denied.") )
@@ -22,15 +23,15 @@ sub view {
     my $blog_class = $app->model('blog');
     my $list_pref  = $app->list_pref('log');
     my $limit      = $list_pref->{rows};
-    my $offset     = $app->param('offset') || 0;
+    my $offset     = $q->param('offset') || 0;
     my $terms      = { $blog_id ? ( blog_id => $blog_id ) : () };
     my $cfg        = $app->config;
     my %param      = (%$list_pref);
     my ( $filter_col, $val );
     $param{filter_args} = "";
 
-    if (   ( $filter_col = $app->param('filter') )
-        && ( $val = $app->param('filter_val') ) )
+    if (   ( $filter_col = $q->param('filter') )
+        && ( $val = $q->param('filter_val') ) )
     {
         $param{filter}     = $filter_col;
         $param{filter_val} = $val;
@@ -115,7 +116,7 @@ sub view {
         $param{prev_offset_val} = $offset - $limit;
         $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
     }
-    $param{'reset'}      = $app->param('reset');
+    $param{'reset'}      = $q->param('reset');
     $param{nav_log}      = 1;
     $param{feed_name}    = $app->translate("System Activity Feed");
     $param{screen_class} = "list-log";
@@ -128,7 +129,7 @@ sub view {
         $param{feed_url} .= $param{filter_args};
     }
     $app->add_breadcrumb( $app->translate('Activity Log') );
-    unless ( $app->param('blog_id') ) {
+    unless ( $q->param('blog_id') ) {
         $param{system_overview_nav} = 1;
     }
     $app->load_tmpl( 'view_log.tmpl', \%param );

@@ -24,9 +24,9 @@ sub cfg_plugins {
         $param{nav_config}   = 1;
         $param{nav_settings} = 1;
         $param{nav_plugins}  = 1;
-        $param{switched}     = 1 if $app->param('switched');
-        $param{'reset'}  = 1 if $app->param('reset');
-        $param{saved}    = 1 if $app->param('saved');
+        $param{switched}     = 1 if $q->param('switched');
+        $param{'reset'}  = 1 if $q->param('reset');
+        $param{saved}    = 1 if $q->param('saved');
         $param{mod_perl} = 1 if $ENV{MOD_PERL};
         $app->add_breadcrumb( $app->translate("Plugin Settings") );
         $param{screen_id} = "list-plugins";
@@ -95,12 +95,12 @@ sub reset_config {
 
 sub plugin_control {
     my $app = shift;
-
+    my $q   = $app->query;
     $app->validate_magic or return;
     return unless $app->user->can_manage_plugins;
 
-    my $plugin_sig = $app->param('plugin_sig') || '';
-    my $state      = $app->param('state')      || '';
+    my $plugin_sig = $q->param('plugin_sig') || '';
+    my $state      = $q->param('state')      || '';
 
     my $cfg = $app->config;
     if ( $plugin_sig eq '*' ) {

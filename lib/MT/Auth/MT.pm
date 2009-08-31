@@ -54,11 +54,12 @@ sub login_credentials {
     my ($ctx) = @_;
 
     my $app = $ctx->{app} or return;
-    if ($app->param('username') && $app->param('password')) {
+	my $q   = $app->query;
+    if ($q->param('username') && $q->param('password')) {
         my ($user, $pass, $remember);
-        $user = $app->param('username');
-        $pass = $app->param('password');
-        $remember = $app->param('remember') ? 1 : 0;
+        $user = $q->param('username');
+        $pass = $q->param('password');
+        $remember = $q->param('remember') ? 1 : 0;
         return { %$ctx, username => $user, password => $pass, permanent => $remember, auth_type => 'MT' };
     }
     return undef;

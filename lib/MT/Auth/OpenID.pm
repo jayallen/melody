@@ -53,7 +53,7 @@ sub handle_sign_in {
     my $cmntr;
     my $session;
 
-    my %param = $app->param_hash;
+    my %param = $app->query->Vars;
     my $csr = $class->get_csr(\%param, $blog) or return 0;
 
     if(my $setup_url = $csr->user_setup_url( post_grant => 'return' )) {
@@ -157,7 +157,7 @@ sub check_openid {
     my ( $app, $blog, $identity ) = @_;
     my $q = $app->query;
 
-    my %param = $app->param_hash;
+    my %param = $app->query->Vars;
     my $csr = $class->get_csr(\%param, $blog);
     unless ( $csr ) {
         $app->errtrans('Could not load Net::OpenID::Consumer.');
