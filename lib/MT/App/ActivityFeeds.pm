@@ -330,7 +330,7 @@ sub apply_log_filter {
 
 sub _feed_ping {
     my ( $cb, $app, $view, $feed ) = @_;
-	my $q 	 = $app->param;
+	my $q 	 = $app->query;
     my $user = $app->user;
 
     require MT::Blog;

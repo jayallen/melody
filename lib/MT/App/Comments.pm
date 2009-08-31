@@ -123,14 +123,15 @@ sub _get_commenter_session {
 
 sub login_form {
     my $app   = shift;
+	my $q    = $app->query;
     my %param = @_;
 
     my $param = {
-        blog_id    => ( $app->param('blog_id')    || 0 ),
-        static     => ( $app->param('static')     || '' ),
-        return_url => ( $app->param('return_url') || '' ),
+        blog_id    => ( $q->param('blog_id')    || 0 ),
+        static     => ( $q->param('static')     || '' ),
+        return_url => ( $q->param('return_url') || '' ),
     };
-    $param->{entry_id} = $app->param('entry_id') if $app->param('entry_id');
+    $param->{entry_id} = $q->param('entry_id') if $q->param('entry_id');
     while ( my ( $key, $val ) = each %param ) {
         $param->{$key} = $val;
     }
@@ -163,6 +164,7 @@ sub login_external {
 
 sub _create_commenter_assign_role {
     my $app = shift;
+    my $q    = $app->query;
     my ($blog_id) = @_;
     require MT::Auth;
     my $error = MT::Auth->sanity_check($app);
@@ -177,11 +179,11 @@ sub _create_commenter_assign_role {
         return undef;
     }
     my $commenter = $app->model('author')->new;
-    $commenter->name( $app->param('username') );
-    $commenter->nickname( $app->param('nickname') );
-    $commenter->set_password( $app->param('password') );
-    $commenter->email( $app->param('email') );
-    $commenter->external_id( $app->param('external_id') );
+    $commenter->name( $q->param('username') );
+    $commenter->nickname( $q->param('nickname') );
+    $commenter->set_password( $q->param('password') );
+    $commenter->email( $q->param('email') );
+    $commenter->external_id( $q->param('external_id') );
     $commenter->type( MT::Author::AUTHOR() );
     $commenter->status( MT::Author::ACTIVE() );
     $commenter->auth_type( $app->config->AuthenticationModule );
@@ -312,9 +314,10 @@ sub do_login {
 
 sub signup {
     my $app   = shift;
+	my $q    = $app->query;
     my %opt   = @_;
     my $param = {};
-    $param->{$_} = $app->param($_)
+    $param->{$_} = $app->query($_)
         foreach qw(blog_id entry_id static username return_url );
     my $blog = $app->model('blog')->load( $param->{blog_id} || 0 )
         or return $app->error(
@@ -500,7 +503,7 @@ sub do_register {
     my $token    = $q->param('token');
 
     my $param = {};
-    $param->{$_} = $app->param($_) foreach qw(blog_id entry_id static);
+    $param->{$_} = $q->param($_) foreach qw(blog_id entry_id static);
 
     my $blog = $app->model('blog')->load($blog_id)
         or return $app->error(
@@ -1331,7 +1334,7 @@ sub _make_comment {
         }
     }
 
-    if ( my $parent_id = $app->param('parent_id') ) {
+    if ( my $parent_id = $q->param('parent_id') ) {
 
         # verify that parent_id is for a comment that is
         # published for this entry
@@ -1463,7 +1466,8 @@ sub redirect_to_target {
 
 sub session_js {
     my $app   = shift;
-    my $jsonp = $app->param('jsonp');
+    my $q    = $app->query;
+    my $jsonp = $q->param('jsonp');
     $jsonp = undef if $jsonp !~ m/^\w+$/;
     return $app->error("Invalid request.") unless $jsonp;
 
@@ -1478,6 +1482,7 @@ sub session_js {
 
 sub comment_listing {
     my ($app) = shift;
+	my $q    = $app->query;
     $app->{no_print_body} = 1;
     $app->response_code(200);
     $app->response_message('OK');
@@ -1488,17 +1493,17 @@ sub comment_listing {
     require MT::Template;
     require MT::Template::Context;
 
-    my $entry_id = $app->param('entry_id');
+    my $entry_id = $app->q('entry_id');
     return '1;' if ( !$entry_id );
     my $entry = MT::Entry->load($entry_id);
     return '1;' if ( !$entry );
-    my $offset = $app->param('offset');
+    my $offset = $q->param('offset');
     $offset ||= 0;
 
     if ( $offset !~ /^\d+$/ ) {
         $offset = 0;
     }
-    my $limit = $app->param('limit');
+    my $limit = $q->param('limit');
     $limit ||= 100;
     if ( $limit !~ /^\d+$/ ) {
         $limit = 100;
@@ -1507,7 +1512,7 @@ sub comment_listing {
     if ( $app->param('direction') eq 'descend' ) {
         $direction = 'descend';
     }
-    my $method = $app->param('method');
+    my $method = $q->param('method');
     $method ||= 'displayComments';
     my $tmpl = MT::Template->load(
         {   name    => 'Comment Listing',
@@ -1534,8 +1539,9 @@ sub comment_listing {
 # deprecated
 sub _commenter_status {
     my $app              = shift;
+	my $q    			 = $app->query;
     my ($commenter_id)   = @_;
-    my $blog_id          = $app->param('blog_id') || 0;
+    my $blog_id          = $q->param('blog_id') || 0;
     my $commenter_status = '0';
     my $user             = $app->model('author')->load($commenter_id);
     if ( $user && $user->is_superuser ) {
@@ -1728,7 +1734,7 @@ sub do_preview {
                 {   'body_class'                => 'mt-comment-error',
                     'comment_response_template' => 1,
                     'comment_error'             => 1,
-                    'return_to'                 => $app->param('return_url') || '',
+                    'return_to'                 => $q->param('return_url') || '',
                     'system_template'           => 1
                 }
             );
@@ -1765,14 +1771,14 @@ sub do_preview {
 
 sub edit_commenter_profile {
     my $app = shift;
-
+	my $q   = $app->query;
     my ( $sess_obj, $commenter ) = $app->get_commenter_session();
     if ($commenter) {
         $app->user($commenter);
         $app->{session} = $sess_obj;
 
         my $url;
-        my $entry_id = $app->param('entry_id');
+        my $entry_id = $q->param('entry_id');
         if ($entry_id) {
             my $entry = MT::Entry->load($entry_id);
             return $app->handle_error(
@@ -1781,8 +1787,8 @@ sub edit_commenter_profile {
             $url = $entry->permalink;
         }
         else {
-            $url = is_valid_url( $app->param('static')
-                    || $app->param('return_url') );
+            $url = is_valid_url( $q->param('static')
+                    || $q->param('return_url') );
         }
 
         my $blog_id = $app->param('blog_id');
@@ -1898,7 +1904,7 @@ sub blog {
         return undef unless $entry;
         $app->{_blog} = $entry->blog if $entry;
     }
-    elsif ( my $blog_id = $app->param('blog_id') ) {
+    elsif ( my $blog_id = $q->param('blog_id') ) {
         $app->{_blog} = MT::Blog->load( int($blog_id) );
     }
     return $app->{_blog};
