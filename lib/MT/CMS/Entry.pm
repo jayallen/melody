@@ -1888,7 +1888,7 @@ sub draft_entries {
 
 sub open_batch_editor {
     my $app = shift;
-    my $q = $q->param;
+    my $q = $app->param;
     my @ids = $q->param('id');
 
     $q->param( 'is_power_edit', 1 );

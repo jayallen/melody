@@ -707,6 +707,7 @@ sub _entry_label {
 
 sub core_list_filters {
     my $app = shift;
+    my $q = $app->query;
     return {
         asset => sub {
             require MT::CMS::Asset;

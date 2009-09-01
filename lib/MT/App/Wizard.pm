@@ -715,15 +715,12 @@ sub cfg_dir_conditions {
 
 sub cfg_dir {
     my $app   = shift;
+	my $q = $app->query;
     my %param = @_;
-
     $param{set_static_uri_to} = $q->param('set_static_uri_to');
-
     # set static web path
     $app->config->set( 'StaticWebPath', $param{set_static_uri_to} );
-
     $param{config} = $app->serialize_config(%param);
-
     my $temp_dir;
     if ( $q->param('test') ) {
         $param{changed} = 1;

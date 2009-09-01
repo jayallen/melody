@@ -369,9 +369,9 @@ sub can_view {
 
 sub can_save {
     my ( $eh, $app, $id ) = @_;
+	my $q = $app->param;    
     return 0 unless $id;    # Can't create new pings here
     return 1 if $app->user->is_superuser();
-
     my $perms = $app->permissions;
     return 1
       if $perms
