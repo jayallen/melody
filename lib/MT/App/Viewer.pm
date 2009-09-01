@@ -39,8 +39,8 @@ sub view {
     $R->stash( 'live_view', 1 );
 
     ## Process the path info.
-    my $uri = $app->param('uri') || $app->path_info;
-    my $blog_id = $app->param('blog_id');
+    my $uri = $q->param('uri') || $app->path_info;
+    my $blog_id = $q->param('blog_id');
 
     ## Check ExcludeBlogs and IncludeBlogs to see if this blog is
     ## private or not.
