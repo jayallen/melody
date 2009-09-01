@@ -181,7 +181,7 @@ sub edit {
        require MT::ObjectAsset;
        my $assets =();
        if ($q->param('reedit') && $q->param('include_asset_ids')) {
-           my $include_asset_ids = $app->param('include_asset_ids');
+           my $include_asset_ids = $q->param('include_asset_ids');
            my @asset_ids = split(',', $include_asset_ids);
            foreach my $asset_id (@asset_ids) {
                my $asset = MT::Asset->load($asset_id);
@@ -480,17 +480,17 @@ sub build_junk_table {
 sub list {
     my $app = shift;
     my ($param) = @_;
+	my $q = $app->query;
     $param ||= {};
-
     require MT::Entry;
-    my $type = $app->param('type') || MT::Entry->class_type;
+    my $type = $q->param('type') || MT::Entry->class_type;
     my $pkg = $app->model($type) or return "Invalid request.";
 
     my $q     = $app->query;
     my $perms = $app->permissions;
     unless ($app->user->is_superuser) {
         if ( $type eq 'page' ) {
-            if ( $app->param('blog_id') ) {
+            if ( $q->param('blog_id') ) {
                 return $app->errtrans("Permission denied.")
                     unless $perms && $perms->can_manage_pages;
             } else {
@@ -504,7 +504,7 @@ sub list {
                 return $app->errtrans("Permission denied.") unless @blogs;
             }
         } else {
-            if ( $app->param('blog_id') ) {
+            if ( $q->param('blog_id') ) {
                 return $app->errtrans("Permission denied.")
                     unless $perms && ( 
                                $perms->can_create_post
@@ -532,7 +532,7 @@ sub list {
     $terms{blog_id} = $blog_id if $blog_id;
     $terms{class} = $type;
     my $limit = $list_pref->{rows};
-    my $offset = $app->param('offset') || 0;
+    my $offset = $q->param('offset') || 0;
 
     if ( !$blog_id && !$app->user->is_superuser ) {
         require MT::Permission;
@@ -586,7 +586,7 @@ sub list {
         if ( 'power_edit' eq $filter_col ) {
             $filter_col = 'id';
             unless ( 'ARRAY' eq ref($filter_val) ) {
-                my @values = $app->param('filter_val');
+                my @values = $q->param('filter_val');
                 $filter_val = \@values;
             }
         }
@@ -909,7 +909,7 @@ sub preview {
     my $cat;
     my $names = $entry->column_names;
 
-    my %values = map { $_ => scalar $app->param($_) } @$names;
+    my %values = map { $_ => scalar $q->param($_) } @$names;
     delete $values{'id'} unless $q->param('id');
     ## Strip linefeed characters.
     for my $col (qw( text excerpt text_more keywords )) {
@@ -1203,15 +1203,14 @@ sub cfg_entry {
 
 sub save {
     my $app = shift;
-    $app->validate_magic or return;
-
+	my $q = $app->query;
+	$app->validate_magic or return;
     $app->remove_preview_file;
-
-    if ( $app->param('is_power_edit') ) {
+    if ( $q->param('is_power_edit') ) {
         return $app->save_entries(@_);
     }
     my $author = $app->user;
-    my $type = $app->param('_type') || 'entry';
+    my $type = $q->param('_type') || 'entry';
 
     my $class = $app->model($type)
       or return $app->errtrans("Invalid parameter");
@@ -1226,7 +1225,7 @@ sub save {
           unless $perms->can_manage_pages;
     }
 
-    my $id = $app->param('id');
+    my $id = $q->param('id');
     if ( !$id ) {
         return $app->errtrans("Permission denied.")
           unless ( ( 'entry' eq $type ) && $perms->can_create_post )
@@ -1236,12 +1235,12 @@ sub save {
     $app->validate_magic() or return;
 
     # check for autosave
-    if ( $app->param('_autosave') ) {
+    if ( $q->param('_autosave') ) {
         return $app->autosave_object();
     }
 
     require MT::Blog;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     my $blog    = MT::Blog->load($blog_id)
         or return $app->error($app->translate('Can\'t load blog #[_1].', $blog_id));
     
@@ -1258,7 +1257,7 @@ sub save {
             return $app->error( $app->translate("Permission denied.") )
               unless $perms->can_edit_entry( $obj, $author );
             return $app->error( $app->translate("Permission denied.") )
-              if ( $obj->status ne $app->param('status') )
+              if ( $obj->status ne $q->param('status') )
               && !( $perms->can_edit_entry( $obj, $author, 1 ) );
             $archive_type = 'Individual';
         }
@@ -1277,7 +1276,7 @@ sub save {
     ## Get rid of category_id param, because we don't want to just set it
     ## in the Entry record; save it for later when we will set the Placement.
     my ( $cat_id, @add_cat ) = split /\s*,\s*/,
-      ( $app->param('category_ids') || '' );
+      ( $q->param('category_ids') || '' );
     $app->delete_param('category_id');
     if ($id) {
         ## Delete the author_id param (if present), because we don't want to
@@ -1285,31 +1284,31 @@ sub save {
         $app->delete_param('author_id');
     }
 
-    my %values = map { $_ => scalar $app->param($_) } @$names;
-    delete $values{'id'} unless $app->param('id');
+    my %values = map { $_ => scalar $q->param($_) } @$names;
+    delete $values{'id'} unless $q->param('id');
     ## Strip linefeed characters.
     for my $col (qw( text excerpt text_more keywords )) {
         $values{$col} =~ tr/\r//d if $values{$col};
     }
     $values{allow_comments} = 0
       if !defined( $values{allow_comments} )
-      || $app->param('allow_comments') eq '';
+      || $q->param('allow_comments') eq '';
     delete $values{week_number}
-      if ( $app->param('week_number') || '' ) eq '';
+      if ( $q->param('week_number') || '' ) eq '';
     delete $values{basename}
       unless $perms->can_publish_post || $perms->can_edit_all_posts;
     $obj->set_values( \%values );
     $obj->allow_pings(0)
-      if !defined $app->param('allow_pings')
-      || $app->param('allow_pings') eq '';
-    my $ao_d = $app->param('authored_on_date');
-    my $ao_t = $app->param('authored_on_time');
+      if !defined $q->param('allow_pings')
+      || $q->param('allow_pings') eq '';
+    my $ao_d = $q->param('authored_on_date');
+    my $ao_t = $q->param('authored_on_time');
 
     if ( !$id ) {
 
         #  basename check for this new entry...
-        if (   ( my $basename = $app->param('basename') )
-            && !$app->param('basename_manual')
+        if (   ( my $basename = $q->param('basename') )
+            && !$q->param('basename_manual')
             && $type eq 'entry' )
         {
             my $exist =
@@ -1360,7 +1359,7 @@ sub save {
     if ( !$filter_result ) {
         my %param = ();
         $param{error}       = $app->errstr;
-        $param{return_args} = $app->param('return_args');
+        $param{return_args} = $q->param('return_args');
         return $app->forward( "view", \%param );
     }
 
@@ -1408,7 +1407,7 @@ $ao
             || ( MT::Util::days_in( $2, $1 ) < $3
                 && !MT::Util::leap_day( $0, $1, $2 ) )
           );
-        $param{return_args} = $app->param('return_args');
+        $param{return_args} = $q->param('return_args');
         return $app->forward( "view", \%param ) if $param{error};
         if ($obj->authored_on) {
             $previous_old = $obj->previous(1);
@@ -1442,7 +1441,7 @@ $ao
     ## look if any assets have been included/removed from this entry
     require MT::Asset;
     require MT::ObjectAsset;
-    my $include_asset_ids = $app->param('include_asset_ids');
+    my $include_asset_ids = $q->param('include_asset_ids');
     my @asset_ids = split(',', $include_asset_ids);
     my $obj_assets = ();
     my @obj_assets = MT::ObjectAsset->load({ object_ds => 'entry', object_id => $obj->id });
@@ -1643,8 +1642,9 @@ $ao
 
 sub save_entries {
     my $app   = shift;
+    my $q = $app->query;
     my $perms = $app->permissions;
-    my $type  = $app->param('_type');
+    my $type  = $q->param('_type');
     return $app->errtrans("Permission denied.")
       unless $perms
       && (
@@ -1656,8 +1656,6 @@ sub save_entries {
       );
 
     $app->validate_magic() or return;
-
-    my $q = $app->query;
     my @p = $q->param;
     require MT::Entry;
     require MT::Placement;
@@ -1850,7 +1848,7 @@ sub pinged_urls {
     my $perms = $app->permissions
       or return $app->error( $app->translate("No permissions") );
     my %param;
-    my $entry_id = $app->param('entry_id');
+    my $entry_id = $app->query->param('entry_id');
     require MT::Entry;
     my $entry = MT::Entry->load($entry_id)
         or return $app->error($app->translate('Can\'t load entry #[_1].', $entry_id));
@@ -1879,30 +1877,32 @@ sub save_entry_prefs {
 sub publish_entries {
     my $app = shift;
     require MT::Entry;
-    update_entry_status( $app, MT::Entry::RELEASE(), $app->param('id') );
+    update_entry_status( $app, MT::Entry::RELEASE(), $app->query->param('id') );
 }
 
 sub draft_entries {
     my $app = shift;
     require MT::Entry;
-    update_entry_status( $app, MT::Entry::HOLD(), $app->param('id') );
+    update_entry_status( $app, MT::Entry::HOLD(), $app->query->param('id') );
 }
 
 sub open_batch_editor {
     my $app = shift;
-    my @ids = $app->param('id');
+    my $q = $q->param;
+    my @ids = $q->param('id');
 
-    $app->param( 'is_power_edit', 1 );
-    $app->param( 'filter',        'power_edit' );
-    $app->param( 'filter_val',    \@ids );
-    $app->param( 'type', $app->param('_type') );
+    $q->param( 'is_power_edit', 1 );
+    $q->param( 'filter',        'power_edit' );
+    $q->param( 'filter_val',    \@ids );
+    $q->param( 'type', $q->param('_type') );
     $app->mode(
-        'list_' . ( 'entry' eq $app->param('_type') ? 'entries' : 'pages' ) );
-    $app->forward( "list_entry", { type => $app->param('_type') } );
+        'list_' . ( 'entry' eq $q->param('_type') ? 'entries' : 'pages' ) );
+    $app->forward( "list_entry", { type => $q->param('_type') } );
 }
 
 sub build_entry_table {
     my $app = shift;
+    my $q = $app->query;
     my (%args) = @_;
 
     my $app_author = $app->user;
@@ -1932,7 +1932,7 @@ sub build_entry_table {
     ## Load list of categories for display in filter pulldown (and selection
     ## pulldown on power edit page).
     my ( $c_data, %cats );
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     if ($blog_id) {
         $c_data = $app->_build_category_list(
             blog_id => $blog_id,
@@ -2143,9 +2143,9 @@ sub can_delete {
 sub pre_save {
     my $eh = shift;
     my ( $app, $obj ) = @_;
-
+    my $q = $app->query;
     # save tags
-    my $tags = $app->param('tags');
+    my $tags = $q->param('tags');
     if ( defined $tags ) {
         my $blog = $app->blog;
         my $fields = $blog->smart_replace_fields;
@@ -2167,7 +2167,7 @@ sub pre_save {
     # update text heights if necessary
     if ( my $perms = $app->permissions ) {
         my $prefs = $perms->entry_prefs || $app->load_default_entry_prefs;
-        my $text_height = $app->param('text_height');
+        my $text_height = $q->param('text_height');
         if ( defined $text_height ) {
             my ($pref_text_height) = $prefs =~ m/\bbody:(\d+)\b/;
             $pref_text_height ||= 0;
