@@ -7,7 +7,6 @@ use MT::I18N qw( const break_up_text substr_text length_text );
 sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
-
     my $q = $app->query;
     my $blog_id = $q->param('blog_id');
     my $perms = $app->permissions;
@@ -59,8 +58,8 @@ sub edit {
         $param->{created_on_day_formatted} =
           format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $obj->created_on(), $blog, $app->user ? $app->user->preferred_language : undef );
 
-        $param->{approved}   = $app->param('approved');
-        $param->{unapproved} = $app->param('unapproved');
+        $param->{approved}   = $q->param('approved');
+        $param->{unapproved} = $q->param('unapproved');
         $param->{is_junk}    = $obj->is_junk;
 
         $param->{entry_class_label} = $obj->entry->class_label;
@@ -154,7 +153,7 @@ sub edit_commenter {
 
 sub list {
     my $app = shift;
-
+	my $q = $app->query;
     my $trim_length =
       $app->config('ShowIPInformation')
       ? const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_SHORT')
@@ -175,7 +174,7 @@ sub list {
 	my %perms;
 	
     unless ($app->user->is_superuser) {
-        if ( $app->param('blog_id') ) {
+        if ( $q->param('blog_id') ) {
             return $app->errtrans("Permission denied.")
                 unless $perms && $perms->can_view_feedback;
         } else {
@@ -316,7 +315,7 @@ sub list {
 
     my %terms;
 
-    if ( !$app->param('blog_id') && !$app->user->is_superuser ) {
+    if ( !$q->param('blog_id') && !$app->user->is_superuser ) {
         require MT::Permission;
         $terms{blog_id} = [
             map { $_->blog_id }
@@ -325,8 +324,8 @@ sub list {
         ];
     }
 
-    my $filter_col = $app->param('filter');
-    if ( $filter_col && ( my $val = $app->param('filter_val') ) ) {
+    my $filter_col = $q->param('filter');
+    if ( $filter_col && ( my $val = $q->param('filter_val') ) ) {
         if ( $filter_col eq 'status' ) {
             if ( $val eq 'approved' ) {
                 $terms{visible} = 1;
@@ -344,13 +343,13 @@ sub list {
     }
 
     my %param;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     $param{feed_name} = $app->translate("Comments Activity Feed");
     $param{feed_url} =
       $app->make_feed_link( 'comment',
         $blog_id ? { blog_id => $blog_id } : undef );
     $param{filter_spam} =
-      ( $app->param('filter_key') && $app->param('filter_key') eq 'spam' );
+      ( $q->param('filter_key') && $q->param('filter_key') eq 'spam' );
     $param{has_expanded_mode} = 1;
     $param{object_type}       = 'comment';
     $param{screen_id}         = 'list-comment';
@@ -372,8 +371,8 @@ sub list {
 # list of all users, regardless of commenter/author on a blog
 sub list_member {
     my $app = shift;
-
-    my $blog_id = $app->param('blog_id');
+	my $q = $app->query;
+    my $blog_id = $q->param('blog_id');
     $app->return_to_dashboard( redirect => 1 )
       unless $blog_id;
 
@@ -393,7 +392,7 @@ sub list_member {
     $args->{sort_order} = 'created_on';
     $args->{direction}  = 'descend';
 
-    $param->{saved} = 1 if $app->param('saved');
+    $param->{saved} = 1 if $q->param('saved');
     $param->{search_label} = $app->translate('Users');
     $param->{object_type} = 'author';
 
@@ -409,16 +408,16 @@ sub list_member {
     my @all_roles = MT::Role->load( undef, { sort => 'name' });
 
     my $sel_role = 0;
-    my $filter = $app->param('filter') || '';
+    my $filter = $q->param('filter') || '';
     if ($filter eq 'role') {
-        my $val = scalar $app->param('filter_val');
+        my $val = scalar $q->param('filter_val');
         if ($val) {
             $sel_role = $val;
             $args->{join} = MT::Association->join_on('author_id', { blog_id => $blog_id, role_id => $val });
         }
     }
     elsif ($filter eq 'status') {
-        my $val = $app->param('filter_val');
+        my $val = $q->param('filter_val');
         if ($val eq 'disabled') {
             $terms->{status} = 2;
         }
@@ -579,7 +578,7 @@ sub list_commenter {
     $app->add_breadcrumb( $app->translate('Authenticated Commenters') );
     $param{nav_commenters} = 1;
     for my $msg (qw(trusted untrusted banned unbanned)) {
-        $param{$msg} = 1 if $app->param($msg);
+        $param{$msg} = 1 if $app->query->param($msg);
     }
     return $app->load_tmpl( 'list_commenter.tmpl', \%param );
 }
@@ -603,7 +602,7 @@ sub build_commenter_table {
 
     my $app_user  = $app->user;
     my $user_perm = $app->permissions;
-    my $blog_id   = $app->param('blog_id');
+    my $blog_id   = $app->query->param('blog_id');
 
     my @data;
     require MT::Blog;
@@ -691,7 +690,7 @@ sub save_commenter_perm {
 
     my $acted_on;
     my %rebuild_set;
-    my @ids     = $params ? @$params : $app->param('commenter_id');
+    my @ids     = $params ? @$params : $q->param('commenter_id');
     my $blog_id = $q->param('blog_id');
     my $author  = $app->user;
 
@@ -780,75 +779,83 @@ sub save_commenter_perm {
 
 sub trust_commenter_by_comment {
     my $app        = shift;
-    my @comments   = $app->param('id');
+	my $q = $app->query;
+    my @comments   = $q->param('id');
     my @commenters = map_comment_to_commenter( $app, \@comments );
-    $app->param( 'action', 'trust' );
+    $q->param( 'action', 'trust' ); # this should be a $app->param stash once the CGI::App switch is complete.
     save_commenter_perm( $app, \@commenters );
 }
 
 sub untrust_commenter_by_comment {
     my $app        = shift;
-    my @comments   = $app->param('id');
+	my $q = $app->query;
+    my @comments   = $q->param('id');
     my @commenters = map_comment_to_commenter( $app, \@comments );
-    $app->param( 'action', 'untrust' );
+    $q->param( 'action', 'untrust' ); # this should be a $app->param stash once the CGI::App switch is complete.
     save_commenter_perm( $app, \@commenters );
 }
 
 sub ban_commenter_by_comment {
     my $app        = shift;
-    my @comments   = $app->param('id');
+	my $q = $app->query;
+    my @comments   = $q->param('id');
     my @commenters = map_comment_to_commenter( $app, \@comments );
-    $app->param( 'action', 'ban' );
+    $q->param( 'action', 'ban' ); # this should be a $app->param stash once the CGI::App switch is complete.
     save_commenter_perm( $app, \@commenters );
 }
 
 sub unban_commenter_by_comment {
     my $app        = shift;
-    my @comments   = $app->param('id');
+	my $q = $app->query;
+    my @comments   = $q->param('id');
     my @commenters = map_comment_to_commenter( $app, \@comments );
-    $app->param( 'action', 'unban' );
+    $q->param( 'action', 'unban' ); # this should be a $app->param stash once the CGI::App switch is complete.
     save_commenter_perm( $app, \@commenters );
 }
 
 sub trust_commenter {
     my $app        = shift;
-    my @commenters = $app->param('id');
-    $app->param( 'action', 'trust' );
+	my $q = $app->query;
+    my @commenters = $q->param('id');
+    $q->param( 'action', 'trust' ); # this should be a $app->param stash once the CGI::App switch is complete.
     save_commenter_perm( $app, \@commenters );
 }
 
 sub ban_commenter {
     my $app        = shift;
-    my @commenters = $app->param('id');
-    $app->param( 'action', 'ban' );
+	my $q = $app->query;
+    my @commenters = $q->param('id');
+    $q->param( 'action', 'ban' ); # this should be a $app->param stash once the CGI::App switch is complete.
     save_commenter_perm( $app, \@commenters );
 }
 
 sub unban_commenter {
     my $app        = shift;
-    my @commenters = $app->param('id');
-    $app->param( 'action', 'unban' );
+	my $q = $app->query;
+    my @commenters = $q->param('id');
+    $q->param( 'action', 'unban' ); # this should be a $app->param stash once the CGI::App switch is complete.
     save_commenter_perm( $app, \@commenters );
 }
 
 sub untrust_commenter {
     my $app        = shift;
-    my @commenters = $app->param('id');
-    $app->param( 'action', 'untrust' );
+	my $q = $app->query;
+    my @commenters = $q->param('id');
+    $q->param( 'action', 'untrust' ); # this should be a $app->param stash once the CGI::App switch is complete.
     save_commenter_perm( $app, \@commenters );
 }
 
 sub approve_item {
     my $app   = shift;
     my $perms = $app->permissions;
-    $app->param( 'approve', 1 );
+    $app->query->param( 'approve', 1 ); # this should be a $app->param stash once the CGI::App switch is complete.
     set_item_visible($app);
 }
 
 sub unapprove_item {
     my $app   = shift;
     my $perms = $app->permissions;
-    $app->param( 'unapprove', 1 );
+    $app->query->param( 'unapprove', 1 ); # this should be a $app->param stash once the CGI::App switch is complete.
     set_item_visible($app);
 }
 
@@ -973,9 +980,10 @@ sub cfg_spam {
 
 sub empty_junk {
     my $app     = shift;
+	my $q 		= $app->query;    
     my $perms   = $app->permissions;
     my $user    = $app->user;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     return $app->errtrans("Permission denied.")
       if ( !$blog_id && !$user->is_superuser() )
       || (
@@ -987,7 +995,7 @@ sub empty_junk {
         )
       );
 
-    my $type  = $app->param('_type');
+    my $type  = $q->param('_type');
     my $class = $app->model($type);
     my $arg   = {};
     require MT::Comment;
@@ -1000,16 +1008,17 @@ sub empty_junk {
 
 sub handle_junk {
     my $app   = shift;
-    my @ids   = $app->param("id");
-    my $type  = $app->param("_type");
+	my $q	  = $app->query;    
+    my @ids   = $q->param("id");
+    my $type  = $q->param("_type");
     my $class = $app->model($type);
     my @item_loop;
     my $i       = 0;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     my ( %rebuild_entries, %rebuild_categories );
 
-    my @obj_ids = $app->param('id');
-    if ( my $req_nonce = $app->param('nonce') ) {
+    my @obj_ids = $q->param('id');
+    if ( my $req_nonce = $q->param('nonce') ) {
         if ( scalar @obj_ids == 1 ) {
             my $cmt_id = $obj_ids[0];
             if ( my $obj = $class->load($cmt_id) ) {
@@ -1046,7 +1055,7 @@ sub handle_junk {
     my $perms = $app->permissions;
     my $perm_checked = ( $app->user->is_superuser()
       || (
-        $app->param('blog_id')
+        $q->param('blog_id')
         && (   $perms->can_manage_feedback
             || $perms->can_edit_all_posts )
       ) ) ? 1 : 0;
@@ -1096,19 +1105,18 @@ sub handle_junk {
 
 sub not_junk {
     my $app = shift;
-
+	my $q	  = $app->query;    
     my $perms = $app->permissions;
-
-    my @ids = $app->param("id");
+    my @ids = $q->param("id");
     my @item_loop;
     my $i     = 0;
-    my $type  = $app->param('_type');
+    my $type  = $q->param('_type');
     my $class = $app->model($type);
     my %rebuild_set;
 
     my $perm_checked = ( $app->user->is_superuser()
       || (
-        $app->param('blog_id')
+        $q->param('blog_id')
         && (   $perms->can_manage_feedback
             || $perms->can_edit_all_posts )
       ) ) ? 1 : 0;
@@ -1141,7 +1149,7 @@ sub not_junk {
         }
         $obj->save();
     }
-    $app->param( 'approve', 1 );
+    $q->param( 'approve', 1 );
 
     $app->add_return_arg( 'unjunked' => 1 );
 
@@ -1150,13 +1158,14 @@ sub not_junk {
 
 sub cfg_system_feedback {
     my $app = shift;
+	my $q	  = $app->query;    
     my %param;
     return $app->redirect(
         $app->uri(
             mode => 'cfg_comments',
-            args => { blog_id => $app->param('blog_id') }
+            args => { blog_id => $q->param('blog_id') }
         )
-    ) if $app->param('blog_id');
+    ) if $q->param('blog_id');
 
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
@@ -1182,13 +1191,14 @@ sub cfg_system_feedback {
     else {
         $param{"trackback_send_any"} = 1;
     }
-    $param{saved}        = $app->param('saved');
+    $param{saved}        = $q->param('saved');
     $param{screen_class} = "settings-screen system-feedback-settings";
     $app->load_tmpl( 'cfg_system_feedback.tmpl', \%param );
 }
 
 sub save_cfg_system_feedback {
     my $app = shift;
+	my $q	  = $app->query;    
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
 
@@ -1197,23 +1207,23 @@ sub save_cfg_system_feedback {
     
     # construct the message to the activity log
     my @meta_messages = ();
-    if ($app->param('comment_disable')) {
+    if ($q->param('comment_disable')) {
         push(@meta_messages, 'Allow comments is on');
     } else {
         push(@meta_messages, 'Allow comments is off');
     } 
-    if ($app->param('ping_disable')) {
+    if ($q->param('ping_disable')) {
         push(@meta_messages, 'Allow trackbacks is on');
     } else {
         push(@meta_messages, 'Allow trackbacks is off');
     }
-    if ($app->param('disable_notify_ping')) {
+    if ($q->param('disable_notify_ping')) {
         push(@meta_messages, 'Allow outbound trackbacks is on');
     } else {
         push(@meta_messages, 'Allow outbound trackbacks is off');
     }
-    push(@meta_messages, 'Outbound trackback limit is ' . $app->param('trackback_send')) 
-        if ($app->param('trackback_send') =~ /\w+/);
+    push(@meta_messages, 'Outbound trackback limit is ' . $q->param('trackback_send')) 
+        if ($q->param('trackback_send') =~ /\w+/);
     
     # throw the messages in the activity log
     if (scalar(@meta_messages) > 0) {
@@ -1227,15 +1237,15 @@ sub save_cfg_system_feedback {
     }
     
     # actually assign the changes
-    $cfg->AllowComments( ( $app->param('comment_disable') ? 0 : 1 ), 1 );
-    $cfg->AllowPings(    ( $app->param('ping_disable')    ? 0 : 1 ), 1 );
+    $cfg->AllowComments( ( $q->param('comment_disable') ? 0 : 1 ), 1 );
+    $cfg->AllowPings(    ( $q->param('ping_disable')    ? 0 : 1 ), 1 );
     $cfg->DisableNotificationPings(
-        ( $app->param('disable_notify_ping') ? 1 : 0 ), 1 );
-    my $send = $app->param('trackback_send') || 'any';
+        ( $q->param('disable_notify_ping') ? 1 : 0 ), 1 );
+    my $send = $q->param('trackback_send') || 'any';
     if ( $send =~ m/^(any|off|selected|local)$/ ) {
         $cfg->OutboundTrackbackLimit( $send, 1 );
         if ( $send eq 'selected' ) {
-            my $domains = $app->param('trackback_send_domains') || '';
+            my $domains = $q->param('trackback_send_domains') || '';
             $domains =~ s/[\r\n]+/ /gs;
             $domains =~ s/\s{2,}/ /gs;
             my @domains = split /\s/, $domains;
@@ -1395,26 +1405,21 @@ sub reply_preview {
 
 sub dialog_post_comment {
     my $app = shift;
+	my $q	  = $app->query;    
     $app->validate_magic or return;
-
     my $user      = $app->user;
-    my $parent_id = $app->param('reply_to');
-
+    my $parent_id = $q->param('reply_to');
     return $app->errtrans('Parent comment id was not specified.')
       unless $parent_id;
-
     my $comment_class = $app->model('comment');
     my $parent        = $comment_class->load($parent_id)
       or return $app->errtrans('Parent comment was not found.');
     return $app->errtrans("You can't reply to unapproved comment.")
       unless $parent->is_published;
-
     my $perms = $app->{perms};
     return unless $perms;
-
     my $entry_class = $app->_load_driver_for('entry');
     my $entry       = $entry_class->load( $parent->entry_id );
-
     unless ( $user->is_superuser()
         || $perms->can_edit_all_posts
         || $perms->can_manage_feedback )
@@ -1425,8 +1430,8 @@ sub dialog_post_comment {
     }
 
     my $blog = $parent->blog
-            || $app->model('blog')->load($app->param('blog_id'));
-    return $app->error($app->translate('Can\'t load blog #[_1].', $app->param('blog_id'))) unless $blog;
+            || $app->model('blog')->load($q->param('blog_id'));
+    return $app->error($app->translate('Can\'t load blog #[_1].', $q->param('blog_id'))) unless $blog;
 
     require MT::Sanitize;
     my $spec = $blog->sanitize_spec
@@ -1442,7 +1447,7 @@ sub dialog_post_comment {
           . $app->config('CommentScript'),
         return_url => $app->base
           . $app->mt_uri . '?'
-          . $app->param('return_args'),
+          . $q->param('return_args'),
     };
 
     $app->load_tmpl( 'dialog/comment_reply.tmpl', $param );
@@ -1472,6 +1477,7 @@ sub can_view {
 
 sub can_save {
     my ( $eh, $app, $id ) = @_;
+	my $q	  = $app->query;    
     return 0 unless $id;    # Can't create new comments here
     return 1 if $app->user->is_superuser();
 
@@ -1488,17 +1494,17 @@ sub can_save {
     }
     elsif ( $perms && $perms->can_create_post ) {
         return ( $c->entry->author_id == $app->user->id )
-          && ( ( $c->is_junk && ( 'junk' eq $app->param('status') ) )
-            || ( $c->is_moderated && ( 'moderate' eq $app->param('status') ) )
-            || ( $c->is_published && ( 'publish' eq $app->param('status') ) ) );
+          && ( ( $c->is_junk && ( 'junk' eq $q->param('status') ) )
+            || ( $c->is_moderated && ( 'moderate' eq $q->param('status') ) )
+            || ( $c->is_published && ( 'publish' eq $q->param('status') ) ) );
     }
     elsif ( $perms && $perms->can_publish_post ) {
         return 0 unless $c->entry->author_id == $app->user->id;
         return 0
-          unless ( $c->text eq $app->param('text') )
-          && ( $c->author eq $app->param('author') )
-          && ( $c->email  eq $app->param('email') )
-          && ( $c->url    eq $app->param('url') );
+          unless ( $c->text eq $q->param('text') )
+          && ( $c->author eq $q->param('author') )
+          && ( $c->email  eq $q->param('email') )
+          && ( $c->url    eq $q->param('url') );
     }
     else {
         return 0;
@@ -1542,8 +1548,7 @@ sub pre_save {
           or return 1;
         return 1 unless $entry->author_id == $app->user->id;
     }
-
-    my $status = $app->param('status');
+    my $status = $app->query->param('status');
     if ( $status eq 'publish' ) {
         $obj->approve;
         if ( $original->junk_status != $obj->junk_status ) {
@@ -1674,16 +1679,15 @@ sub build_junk_table {
     \@junk;
 }
 
-sub set_item_visible {
+sub set_item_visible { # where this looks for values and flag needs to change once the cutover to CGI::App is complete.
     my $app    = shift;
+	my $q	  = $app->query;    
     my $perms  = $app->permissions;
     my $author = $app->user;
-
-    my $type    = $app->param('_type');
+    my $type    = $q->param('_type');
     my $class   = $app->model($type);
-    my @obj_ids = $app->param('id');
-
-    if ( my $req_nonce = $app->param('nonce') ) {
+    my @obj_ids = $q->param('id');
+    if ( my $req_nonce = $q->param('nonce') ) {
         if ( scalar @obj_ids == 1 ) {
             my $cmt_id = $obj_ids[0];
             if ( my $obj = $class->load($cmt_id) ) {
@@ -1718,10 +1722,10 @@ sub set_item_visible {
     }
 
     my $new_visible;
-    if ( $app->param('approve') ) {
+    if ( $q->param('approve') ) {
         $new_visible = 1;
     }
-    elsif ( $app->param('unapprove') ) {
+    elsif ( $q->param('unapprove') ) {
         $new_visible = 0;
     }
 
@@ -2020,8 +2024,7 @@ sub build_comment_table {
         last if $limit and @data > $limit;
     }
     return [] unless @data;
-
-    my $junk_tab = ( $app->param('tab') || '' ) eq 'junk';
+    my $junk_tab = ( $app->query->param('tab') || '' ) eq 'junk';
     $param->{comment_table}[0]              = {%$list_pref};
     $param->{comment_table}[0]{object_loop} = \@data;
     $param->{comment_table}[0]{object_type} = 'comment';
