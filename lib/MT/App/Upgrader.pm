@@ -219,6 +219,7 @@ my @keys
 
 sub init_user {
     my $app = shift;
+    my $q = $app->query;
     my ($param) = @_;
 
     my $method = $app->request_method;
@@ -229,19 +230,19 @@ sub init_user {
     $app->validate_magic or return;
 
     my %param = $app->unserialize_config;
-    if ( !$app->param('continue') ) {
+    if ( !$q->param('continue') ) {
         return $app->build_page( 'install.tmpl', \%param );
     }
 
     foreach my $key (@keys) {
-        $param{$key} = $app->param($key);
+        $param{$key} = $q->param($key);
     }
 
-    my $initial_user        = $app->param('admin_username');
+    my $initial_user        = $q->param('admin_username');
     my $initial_password    = '';
-    my $initial_nickname    = $app->param('admin_nickname') || '';
-    my $initial_email       = $app->param('admin_email') || '';
-    my $initial_lang        = $app->param('preferred_language');
+    my $initial_nickname    = $q->param('admin_nickname') || '';
+    my $initial_email       = $q->param('admin_email') || '';
+    my $initial_lang        = $q->param('preferred_language');
     my $initial_external_id = '';
     my $initial_use_system  = 0;
 
@@ -253,7 +254,7 @@ sub init_user {
     if ( !MT::Auth->password_exists ) {
 
         # external authentication; validate password
-        my $pass = $app->param('admin_password');
+        my $pass = $q->param('admin_password');
 
         # validate login
         my $err    = '';
@@ -261,19 +262,19 @@ sub init_user {
         $author->name($initial_user);
         if ( MT::Auth->is_valid_password( $author, $pass, 0, \$err ) ) {
             $initial_password = $pass;
-            $app->param( 'name', $initial_user );
+            $q->param( 'name', $initial_user );
             my $error = MT::Auth->sanity_check($app);
             if ($error) {
                 $param{error} = $error;
                 return $app->build_page( 'install.tmpl', \%param );
             }
             else {
-                $initial_email    = $app->param('email')    || '';
-                $initial_nickname = $app->param('nickname') || '';
+                $initial_email    = $q->param('email')    || '';
+                $initial_nickname = $q->param('nickname') || '';
                 $initial_external_id
                     = MT::Author->unpack_external_id(
-                    $app->param('external_id') )
-                    if $app->param('external_id');
+                    $q->param('external_id') )
+                    if $q->param('external_id');
             }
         }
         else {
@@ -285,8 +286,8 @@ sub init_user {
         }
     }
     else {
-        my $pass  = $app->param('admin_password');
-        my $pass2 = $app->param('admin_password_confirm');
+        my $pass  = $q->param('admin_password');
+        my $pass2 = $q->param('admin_password_confirm');
         $pass  = '' unless defined $pass;
         $pass2 = '' unless defined $pass2;
         if ( length($pass) ) {
@@ -329,19 +330,20 @@ sub init_user {
 
 sub init_blog {
     my $app = shift;
+	my $q = $app->query;
     my ($param) = @_;
     my %param;
 
-    $param{config}            = $param->{config} || $app->param('config');
-    $param{blog_name}         = $app->param('blog_name');
-    $param{blog_url}          = $app->param('blog_url') || '';
-    $param{blog_path}         = $app->param('blog_path') || '';
-    $param{blog_timezone}     = $app->param('blog_timezone');
-    $param{blog_template_set} = $app->param('blog_template_set');
+    $param{config}            = $param->{config} || $q->param('config');
+    $param{blog_name}         = $q->param('blog_name');
+    $param{blog_url}          = $q->param('blog_url') || '';
+    $param{blog_path}         = $q->param('blog_path') || '';
+    $param{blog_timezone}     = $q->param('blog_timezone');
+    $param{blog_template_set} = $q->param('blog_template_set');
     $param{blog_path} =~ s!(/|\\)$!!;
     $param{blog_url} .= '/' if $param{blog_url} !~ m!/$!;
 
-    my $tz = $app->param('blog_timezone') || $app->config('DefaultTimezone');
+    my $tz = $q->param('blog_timezone') || $app->config('DefaultTimezone');
     my $param_name = 'blog_timezone_' . $tz;
     $param_name =~ s/[\-\.]/_/g;
     $param{$param_name} = 1;
@@ -355,10 +357,10 @@ sub init_blog {
     $param{'template_set_loop'}  = $sets;
     $param{'template_set_index'} = $#$sets;
 
-    if ( $app->param('back') ) {
+    if ( $q->param('back') ) {
         return $app->init_user;
     }
-    if ( !$app->param('finish') ) {
+    if ( !$q->param('finish') ) {
 
         # suggest site_path & site_url
         my $path = $app->config('DefaultSiteRoot');
@@ -470,13 +472,13 @@ sub finish {
 
 sub run_actions {
     my $app = shift;
-
+    my $q = $app->query;
     $| = 1;
 
     $app->{no_print_body} = 1;
     $app->send_http_header('text/plain');
 
-    my $install_mode = $app->param('installing');
+    my $install_mode = $q->param('installing');
 
     if ( !$install_mode ) {
         $app->login;
@@ -490,7 +492,7 @@ sub run_actions {
         }
     }
 
-    my $steps = $app->param('steps');
+    my $steps = $q->param('steps');
     $steps = JSON::from_json($steps);
 
     my $start = time;
@@ -603,7 +605,7 @@ sub serialize_config {
 
 sub unserialize_config {
     my $app  = shift;
-    my $data = $app->param('config');
+    my $data = $app->query->param('config');
     my %config;
     if ($data) {
         $data = pack 'H*', $data;
@@ -639,7 +641,7 @@ sub main {
     if ( !$driver || !$driver->table_exists($author_class) ) {
         my $method = $app->request_method;
         if ( $param || ( $method ne 'POST' ) ) {
-            $param->{admin_username} ||= $app->param('admin_username') || '';
+            $param->{admin_username} ||= $app->query->param('admin_username') || '';
             return $app->build_page( "install.tmpl", $param );
         }
         $app->validate_magic or return;
