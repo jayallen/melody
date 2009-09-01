@@ -67,12 +67,12 @@ sub save {
     if ( !$filter_result ) {
         my %param = (%$param);
         $param{error}       = $app->errstr;
-        $param{return_args} = $app->param('return_args');
+        $param{return_args} = $q->param('return_args');
 
         if ( ( $type eq 'notification' ) || ( $type eq 'banlist' ) ) {
             return list( $app, \%param );
         }
-        elsif ( ( $app->param('cfg_screen') || '' ) eq 'cfg_archives' ) {
+        elsif ( ( $q->param('cfg_screen') || '' ) eq 'cfg_archives' ) {
             return edit( $app, \%param );
         }
         else {
@@ -191,7 +191,7 @@ sub save {
                 push @authenticators, $auth;
             }
             $obj->commenter_authenticators( join ',', @authenticators );
-            my $set = $app->param('template_set') || 'mt_blog';
+            my $set = $q->param('template_set') || 'mt_blog';
             $obj->template_set( $set );
         }
 
@@ -242,7 +242,7 @@ sub save {
                 return $app->$meth;
             }
         }
-        $param->{return_args} = $app->param('return_args');
+        $param->{return_args} = $q->param('return_args');
         return edit( $app,
             {
                 %$param,
@@ -623,7 +623,7 @@ sub edit {
 
     if ($param{autosave_support}) {
         # autosave support, but don't bother if we're reediting
-        if ( !$app->param('reedit') ) {
+        if ( !$q->param('reedit') ) {
             my $sess_obj = $app->autosave_session_obj;
             if ($sess_obj) {
                 $param{autosaved_object_exists} = 1;
@@ -693,7 +693,7 @@ sub list {
     %param = ( %param, %$list_pref );
     my $cols   = $class->column_names;
     my $limit  = $list_pref->{rows};
-    my $offset = $app->param('offset') || 0;
+    my $offset = $q->param('offset') || 0;
 
     for my $name (@$cols) {
         $terms{blog_id} = $blog_id, last
@@ -813,7 +813,7 @@ sub list {
         for my $ref ( \@index_data, \@custom_data, \@archive_data ) {
             @$ref = sort { $a->{name} cmp $b->{name} } @$ref;
         }
-        my $tab = $app->param('tab') || 'index';
+        my $tab = $q->param('tab') || 'index';
         $param{template_group}      = $tab;
         $param{"tab_$tab"}          = 1;
         $param{object_index_loop}   = \@index_data;
@@ -1106,12 +1106,13 @@ sub delete {
 
 sub clone_blog {
   my $app = shift;
+  my $q = $app->query;
   my($param) = {};
   my $user = $app->user;
   
   return $app->error($app->translate("Permission denied.")) unless $user->is_superuser;
 
-  my @id = $app->param('blog_id') || $app->param('id');
+  my @id = $q->param('blog_id') || $q->param('id');
   
   if (!@id) {
     return $app->error($app->translate("No blog was selected to clone."));
@@ -1131,33 +1132,33 @@ sub clone_blog {
   $base =~ s/\/$//;
   
   $param->{'blog_id'} = $blog->id;
-  $param->{'new_blog_name'} = $app->param('new_blog_name') || 'Clone of ' . MT::Util::encode_html($blog->name);
-  $param->{'site_url'} =  $app->param('site_url') || $base . '_clone';
-  $param->{'site_path'} = $app->param('site_path') || $blog->site_path . '_clone';
+  $param->{'new_blog_name'} = $q->param('new_blog_name') || 'Clone of ' . MT::Util::encode_html($blog->name);
+  $param->{'site_url'} =  $q->param('site_url') || $base . '_clone';
+  $param->{'site_path'} = $q->param('site_path') || $blog->site_path . '_clone';
   
-  if($app->param('clone_prefs_entries_pages')) {
-    $param->{'clone_prefs_entries_pages'} = $app->param('clone_prefs_entries_pages');
+  if($q->param('clone_prefs_entries_pages')) {
+    $param->{'clone_prefs_entries_pages'} = $q->param('clone_prefs_entries_pages');
   }
   
-  if($app->param('clone_prefs_comments')) {
-    $param->{'clone_prefs_comments'} = $app->param('clone_prefs_comments');
+  if($q->param('clone_prefs_comments')) {
+    $param->{'clone_prefs_comments'} = $q->param('clone_prefs_comments');
   }
   
-  if($app->param('clone_prefs_trackbacks')) {
-    $param->{'clone_prefs_trackbacks'} = $app->param('clone_prefs_trackbacks');
+  if($q->param('clone_prefs_trackbacks')) {
+    $param->{'clone_prefs_trackbacks'} = $q->param('clone_prefs_trackbacks');
   }
   
-  if($app->param('clone_prefs_categories')) {
-    $param->{'clone_prefs_categories'} = $app->param('clone_prefs_categories');
+  if($q->param('clone_prefs_categories')) {
+    $param->{'clone_prefs_categories'} = $q->param('clone_prefs_categories');
   }
   
-  my $clone = $app->param('back_to_form') ? 0 : $app->param('clone');
+  my $clone = $q->param('back_to_form') ? 0 : $q->param('clone');
   $param = _has_valid_form($app,$blog,$param);
   
   if ($blog_id && $clone && $param->{'isValidForm'}) {
     print_status_page($app,$blog,$param);
     return;
-  } elsif ($app->param('verify')) {
+  } elsif ($q->param('verify')) {
     # build form
     $param->{'verify'} = 1;
     $param->{'system_msg'} = 1;
@@ -1206,22 +1207,23 @@ sub print_status_page {
   my($param) = $_[2];
   my($cloning_prefs) = {};
   $| = 1;
+  my $q = $app->query;
 
-  if($app->param('clone_prefs_comments')) {
+  if($q->param('clone_prefs_comments')) {
     $cloning_prefs->{'MT::Comment'} = 0;
   }
   
-  if($app->param('clone_prefs_trackbacks')) {
+  if($q->param('clone_prefs_trackbacks')) {
     # need to exclude both Trackbacks and Pings
     $cloning_prefs->{'MT::Trackback'} = 0;
     $cloning_prefs->{'MT::TBPing'} = 0;
   }
   
-  if($app->param('clone_prefs_categories')) {
+  if($q->param('clone_prefs_categories')) {
     $cloning_prefs->{'MT::Category'} = 0;
   }
   
-  if($app->param('clone_prefs_entries_pages')) {
+  if($q->param('clone_prefs_entries_pages')) {
     $cloning_prefs->{'MT::Entry'} = 0;
   }
 

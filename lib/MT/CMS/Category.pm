@@ -12,7 +12,7 @@ sub edit {
     if ($id) {
         $param->{nav_categories} = 1;
 
-        #$param{ "tab_" . ( $app->param('tab') || 'details' ) } = 1;
+        #$param{ "tab_" . ( $app->query->param('tab') || 'details' ) } = 1;
 
         # $app->add_breadcrumb($app->translate('Categories'),
         #                      $app->uri( 'mode' => 'list_cat',
