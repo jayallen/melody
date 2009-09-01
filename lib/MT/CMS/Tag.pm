@@ -6,8 +6,8 @@ sub list {
     my $app = shift;
 	my $q = $app->query;
     my %param;
-    my $filter_key = $app->param('filter_key') || 'entry';
-    my $type       = $app->param('_type')      || $filter_key;
+    my $filter_key = $q->param('filter_key') || 'entry';
+    my $type       = $q->param('_type')      || $filter_key;
     my $plural;
     $param{TagObjectType} = $type;
     $param{Package}       = $app->model($type);
