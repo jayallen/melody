@@ -212,7 +212,7 @@ sub reset {
     my $author = $app->user;
     my $log_class = $app->model('log');
     my $args = { 'reset' => 1 };
-    if ( my $blog_id = $app->param('blog_id') ) {
+    if ( my $blog_id = $app->query->param('blog_id') ) {
         my $perms = $app->permissions;
         return $app->error( $app->translate("Permission denied.") )
           unless $perms && $perms->can_view_log;

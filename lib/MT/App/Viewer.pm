@@ -33,6 +33,7 @@ my %view_handlers = (
 
 sub view {
     my $app = shift;
+    my $q = $app->query;
 
     my $R = MT::Request->instance;
     $R->stash( 'live_view', 1 );

@@ -4,6 +4,7 @@ use strict;
 
 sub list {
     my $app = shift;
+	my $q = $app->query;
     my %param;
     my $filter_key = $app->param('filter_key') || 'entry';
     my $type       = $app->param('_type')      || $filter_key;
@@ -45,15 +46,16 @@ sub list {
 
 sub rename_tag {
     my $app     = shift;
+	my $q = $app->query;
     my $perms   = $app->permissions;
     my $blog_id = $app->blog->id if $app->blog;
     ( $blog_id && $perms && $perms->can_edit_tags )
       || ( $app->user->is_superuser() )
       or return $app->errtrans("Permission denied.");
-    my $id        = $app->param('__id');
-    my $name      = $app->param('tag_name')
+    my $id        = $q->param('__id');
+    my $name      = $q->param('tag_name')
       or return $app->error( $app->translate("New name of the tag must be specified.") );
-    my $obj_type  = $app->param('__type') || 'entry';
+    my $obj_type  = $q->param('__type') || 'entry';
     my $obj_class = $app->model($obj_type);
     my $tag_class = $app->model('tag');
     my $ot_class  = $app->model('objecttag');
@@ -98,9 +100,10 @@ sub rename_tag {
 
 sub js_tag_check {
     my $app       = shift;
-    my $name      = $app->param('tag_name');
-    my $blog_id   = $app->param('blog_id');
-    my $type      = $app->param('_type') || 'entry';
+	my $q = $app->query;
+    my $name      = $q->param('tag_name');
+    my $blog_id   = $q->param('blog_id');
+    my $type      = $q->param('_type') || 'entry';
     my $tag_class = $app->model('tag')
       or return $app->json_error( $app->translate("Invalid request.") );
     my $tag =
@@ -123,8 +126,9 @@ sub js_tag_check {
 
 sub js_tag_list {
     my $app     = shift;
-    my $blog_id = $app->param('blog_id');
-    my $type    = $app->param('_type') || 'entry';
+	my $q = $app->query;
+    my $blog_id = $q->param('blog_id');
+    my $type    = $q->param('_type') || 'entry';
 
     my $class = $app->model($type)
       or return $app->json_error( $app->translate("Invalid request.") );
@@ -147,14 +151,15 @@ sub js_tag_list {
 
 sub js_recent_entries_for_tag {
     my $app          = shift;
+	my $q = $app->query;
     my $user         = $app->user or return;
     my $tag_class    = $app->model('tag') or return;
     my $objtag_class = $app->model('objecttag') or return;
-    my $limit        = $app->param('limit') || 10;
-    my $obj_ds       = $app->param('_type') || 'entry';
-    my $blog_id      = $app->param('blog_id');
+    my $limit        = $q->param('limit') || 10;
+    my $obj_ds       = $q->param('_type') || 'entry';
+    my $blog_id      = $q->param('blog_id');
     my $obj_class    = $app->model($obj_ds) or return;
-    my $tag_name     = $app->param('tag') or return;
+    my $tag_name     = $q->param('tag') or return;
 
     my $tag_obj =
       $tag_class->load( { name => $tag_name }, { binary => { name => 1 } } );
@@ -207,11 +212,11 @@ sub js_recent_entries_for_tag {
 
 sub add_tags_to_entries {
     my $app = shift;
-
-    my @id = $app->param('id');
+	my $q = $app->query;
+    my @id = $q->param('id');
 
     require MT::Tag;
-    my $tags      = $app->param('itemset_action_input');
+    my $tags      = $q->param('itemset_action_input');
     my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
     my @tags      = MT::Tag->split( $tag_delim, $tags );
     return $app->call_return unless @tags;
@@ -240,11 +245,12 @@ sub add_tags_to_entries {
 
 sub remove_tags_from_entries {
     my $app = shift;
+	my $q = $app->query;
 
-    my @id = $app->param('id');
+    my @id = $q->param('id');
 
     require MT::Tag;
-    my $tags      = $app->param('itemset_action_input');
+    my $tags      = $q->param('itemset_action_input');
     my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
     my @tags      = MT::Tag->split( $tag_delim, $tags );
     return $app->call_return unless @tags;
@@ -272,11 +278,12 @@ sub remove_tags_from_entries {
 
 sub add_tags_to_assets {
     my $app = shift;
+	my $q = $app->query;
 
-    my @id = $app->param('id');
+    my @id = $q->param('id');
 
     require MT::Tag;
-    my $tags      = $app->param('itemset_action_input');
+    my $tags      = $q->param('itemset_action_input');
     my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
     my @tags      = MT::Tag->split( $tag_delim, $tags );
     return $app->call_return unless @tags;
@@ -305,11 +312,11 @@ sub add_tags_to_assets {
 
 sub remove_tags_from_assets {
     my $app = shift;
-
-    my @id = $app->param('id');
+	my $q = $app->query;
+    my @id = $q->param('id');
 
     require MT::Tag;
-    my $tags      = $app->param('itemset_action_input');
+    my $tags      = $q->param('itemset_action_input');
     my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
     my @tags      = MT::Tag->split( $tag_delim, $tags );
     return $app->call_return unless @tags;
@@ -368,12 +375,12 @@ sub list_tag_for {
     my $pkg = $params{Package};
 
     my $q         = $app->query;
-    my $blog_id   = $app->param('blog_id');
+    my $blog_id   = $q->param('blog_id');
     my $list_pref = $app->list_pref('tag');
     my %param     = %$list_pref;
 
     my $limit = $list_pref->{rows};
-    my $offset = $app->param('offset') || 0;
+    my $offset = $q->param('offset') || 0;
 
     my ( %terms, %arg );
 
@@ -438,7 +445,7 @@ sub list_tag_for {
 
     # load tag filters
     my $filters = $app->registry( "list_filters", "tag" ) || {};
-    my $filter_key = $app->param('filter_key') || 'entry';
+    my $filter_key = $app->query->param('filter_key') || 'entry';
     my $filter_label = '';
     if ( my $filter = $filters->{$filter_key} ) {
         $filter_label = $filter->{label};
@@ -502,7 +509,7 @@ sub build_tag_table {
     return [] unless $iter;
 
     my $param   = $args{param} || {};
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $app->query->param('blog_id');
     my $pkg     = $args{'package'};
 
     my @data;

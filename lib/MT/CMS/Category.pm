@@ -6,7 +6,7 @@ use MT::Util qw( encode_url encode_js );
 sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
-
+    my $blog_id = $app->query->param('blog_id');
     my $blog = $app->blog;
 
     if ($id) {
@@ -262,20 +262,21 @@ SCRIPT
 
 sub js_add_category {
     my $app = shift;
+	my $q = $app->query;
     unless ( $app->validate_magic ) {
         return $app->json_error( $app->translate("Invalid request.") );
     }
     my $user    = $app->user;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     my $perms   = $app->permissions;
-    my $type    = $app->param('_type') || 'category';
+    my $type    = $q->param('_type') || 'category';
     my $class   = $app->model($type);
     if ( !$class ) {
         return $app->json_error( $app->translate("Invalid request.") );
     }
 
-    my $label = $app->param('label');
-    my $basename = $app->param('basename');
+    my $label = $q->param('label');
+    my $basename = $q->param('basename');
     if ( !defined($label) || ( $label =~ m/^\s*$/ ) ) {
         return $app->json_error( $app->translate("Invalid request.") );
     }
@@ -286,7 +287,7 @@ sub js_add_category {
     }
 
     my $parent;
-    if ( my $parent_id = $app->param('parent') ) {
+    if ( my $parent_id = $q->param('parent') ) {
         if ( $parent_id != -1 ) {    # special case for 'root' folder
             $parent = $class->load( { id => $parent_id, blog_id => $blog_id } );
             if ( !$parent ) {
@@ -356,7 +357,7 @@ sub pre_save {
     my $eh = shift;
     my ( $app, $obj ) = @_;
     my $pkg = $app->model('category');
-    if ( defined( my $pass = $app->param('tb_passphrase') ) ) {
+    if ( defined( my $pass = $app->query->param('tb_passphrase') ) ) {
         $obj->{__tb_passphrase} = $pass;
     }
     my @siblings = $pkg->load(
@@ -407,8 +408,8 @@ sub save_filter {
     my $eh = shift;
     my ($app) = @_;
     return $app->errtrans( "The name '[_1]' is too long!",
-        $app->param('label') )
-      if ( length( $app->param('label') ) > 100 );
+        $app->query->param('label') )
+      if ( length( $app->query->param('label') ) > 100 );
     return 1;
 }
 
@@ -442,15 +443,16 @@ sub _adjust_ancestry {
 
 sub move_category {
     my $app   = shift;
-    my $type  = $app->param('_type');
+    my $q = $app->query;
+    my $type  = $q->param('_type');
     my $class = $app->model($type)
       or return $app->errtrans("Invalid request.");
     $app->validate_magic() or return;
 
-    my $cat        = $class->load( $app->param('move_cat_id') )
+    my $cat        = $class->load( $q->param('move_cat_id') )
         or return;
 
-    my $new_parent_id = $app->param('move-radio');
+    my $new_parent_id = $q->param('move-radio');
 
     return 1 if ( $new_parent_id == $cat->parent );
 
