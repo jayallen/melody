@@ -7,14 +7,15 @@ use MT::I18N qw( const break_up_text encode_text );
 
 sub view {
     my $app     = shift;
+    my $q       = $app->query;
     my $user    = $app->user;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     my $perms   = $app->permissions;
     my $log_class  = $app->model('log');
     my $blog_class = $app->model('blog');
     my $list_pref  = $app->list_pref('rptlog');
     my $limit      = $list_pref->{rows};
-    my $offset     = $app->param('offset') || 0;
+    my $offset     = $q->param('offset') || 0;
     my $terms      = { $blog_id ? ( blog_id => $blog_id ) : () };
     my $cfg        = $app->config;
     my %param      = (%$list_pref);
@@ -65,13 +66,13 @@ sub view {
     $param{next_offset}     = $param{next_offset_val} < $param{list_total} ? 1 : 0;
     $param{next_max}        = $param{list_total} - $limit;
     $param{next_max}        = 0 if ( $param{next_max} || 0 ) < $offset + 1;
-    $param{'reset'}             = $app->param('reset');
+    $param{'reset'}             = $q->param('reset');
     $param{nav_log}             = 1;
     $param{feed_name}           = $app->translate("System RPT Feed");
     $param{screen_class}        = "list-log";
     $param{screen_id}           = "list-log";
     $param{listing_screen}      = 1;
-    $param{system_overview_nav} = 1 unless ( $app->param('blog_id') );
+    $param{system_overview_nav} = 1 unless ( $q->param('blog_id') );
 
     # dude, if this is not 0 then do pagination stuff
     if ( $offset > 0 ) {

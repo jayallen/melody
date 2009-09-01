@@ -5,7 +5,7 @@ use MT::Util qw( is_valid_date );
 
 sub core_search_apis {
     my $app = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = $q->param('blog_id');
     my $author  = $app->user;
     my @perms;
@@ -160,10 +160,10 @@ sub core_search_apis {
             'setup_terms_args'   => sub {
                 my ($terms, $args, $blog_id) = @_;
                 $terms->{class}
-                    = ( $app->param('filter') 
-                        && $app->param('filter_val')
-                        && $app->param('filter') eq 'class'
-                        && $app->param('filter_val') eq 'image' ) ? 'image' : '*';
+                    = ( $q->param('filter') 
+                        && $q->param('filter_val')
+                        && $q->param('filter') eq 'class'
+                        && $q->param('filter_val') eq 'image' ) ? 'image' : '*';
                 $terms->{blog_id} = $blog_id if $blog_id;
             }
         },
@@ -188,10 +188,10 @@ sub core_search_apis {
             'setup_terms_args'   => sub {
                 my ($terms, $args, $blog_id) = @_;
                 $terms->{class}
-                    = ( $app->param('filter') 
-                        && $app->param('filter_val')
-                        && $app->param('filter') eq 'class'
-                        && $app->param('filter_val') eq 'image' ) ? 'image' : '*';
+                    = ( $q->param('filter') 
+                        && $q->param('filter_val')
+                        && $q->param('filter') eq 'class'
+                        && $q->param('filter_val') eq 'image' ) ? 'image' : '*';
                 $terms->{blog_id} = $blog_id if $blog_id;
             }
         },
@@ -267,17 +267,18 @@ sub core_search_apis {
 
 sub search_replace {
     my $app = shift;
+    my $q = $app->query;
     my $param = do_search_replace($app, @_) or return;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     $app->add_breadcrumb( $app->translate('Search & Replace') );
     $param->{nav_search}   = 1;
     $param->{screen_class} = "search-replace";
     $param->{screen_id}    = "search-replace";
     $param->{search_tabs}  = $app->search_apis($blog_id ? 'blog' : 'system');
-    $param->{entry_type}  = $app->param('entry_type');
+    $param->{entry_type}  = $q->param('entry_type');
     
-    if ($app->param('_type') =~ /entry|page|comment|template/) {
-        if ($app->param('blog_id')) {
+    if ($q->param('_type') =~ /entry|page|comment|template/) {
+        if ($q->param('blog_id')) {
             my $perms = $app->permissions;
             $param->{can_republish} = $perms->can_rebuild || $app->user->is_superuser;
             $param->{can_empty_junk} = $perms->can_rebuild || $app->user->is_superuser;
@@ -299,7 +300,7 @@ sub search_replace {
 
 sub do_search_replace {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = $q->param('blog_id');
     my $author  = $app->user;
 
@@ -318,7 +319,7 @@ sub do_search_replace {
 
     # trim 'search' parameter
     $search =~ s/(^\s+|\s+$)//g;
-    $app->param('search', $search);
+    $app->query->param('search', $search);
 
     if ( !$type || ( 'category' eq $type ) || ( 'folder' eq $type ) ) {
         $type = 'entry';
@@ -432,7 +433,7 @@ sub do_search_replace {
         my %args;
         ## we need to search all user/group for 'grant permissions',
         ## if $blog_id is specified. it affects the setup_terms_args.
-        if ( $app->param('__mode') eq 'dialog_grant_role' ) {
+        if ( $app->query->param('__mode') eq 'dialog_grant_role' ) {
             if ($blog_id) {
                 my $perm = $author->permissions($blog_id);
                 return $app->errtrans('Permission denied.')

@@ -35,7 +35,7 @@ sub init {
 sub validate_request_params {
     my $app = shift;
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     # attempt to determine character set encoding based on
     # 'charset' parameter:
@@ -46,7 +46,7 @@ sub validate_request_params {
 
 sub view {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     require MT::Template;
     require MT::Template::Context;
     require MT::Entry;
@@ -124,9 +124,10 @@ XML
 
 sub _get_params {
     my $app = shift;
+	my $q    = $app->query;
     my ( $tb_id, $pass );
-    if ( $tb_id = $app->param('tb_id') ) {
-        $pass = $app->param('pass');
+    if ( $tb_id = $q->param('tb_id') ) {
+        $pass = $q->param('pass');
     }
     else {
         if ( my $pi = $app->path_info ) {
@@ -183,7 +184,7 @@ sub _builtin_throttle {
 
 sub ping {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     return $app->_response(
         Error => $app->translate("Trackback pings must use HTTP POST") )

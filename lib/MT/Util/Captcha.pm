@@ -89,8 +89,8 @@ sub validate_captcha {
     my $self = shift;
     my ($app) = @_;
 
-    my $token = $app->param('token');
-    my $code = $app->param('captcha_code');
+    my $token = $app->query->param('token');
+    my $code = $app->query->param('captcha_code');
 
     my $from = time - EXPIRE();
     MT::Session->remove({ kind => 'CA', start => [undef, $from] }, { range => { start => 1 }});

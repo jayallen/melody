@@ -27,7 +27,7 @@ sub init {
 
 sub subscribe {
     my $app         = shift;
-    my $q           = $app->{query};
+    my $q           = $app->query;
     my $subscr_addr = lc $q->param('email');
     $subscr_addr =~ s/(^\s+|\s+$)//gs;
     return $app->errtrans("Please enter a valid email address.")
@@ -139,7 +139,7 @@ sub lookup {
 
 sub confirm {
     my $app = shift;
-    my $q   = $app->{query};
+    my $q   = $app->query;
 
     # email confirmed
 
@@ -218,7 +218,7 @@ sub confirm {
 sub unsubscribe {
     my $app = shift;
 
-    my $q = $app->{query};
+    my $q = $app->query;
 
     my $email = $q->param('email');
     require MT::Notification;

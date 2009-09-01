@@ -5,8 +5,9 @@ use MT::Util qw( dirify );
 
 sub start_export {
     my $app = shift;
+	my $q    = $app->query;
     my %param;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
 
     my $perms = $app->permissions;
     return $app->return_to_dashboard( permission => 1 )
@@ -18,9 +19,10 @@ sub start_export {
 
 sub export {
     my $app = shift;
+	my $q    = $app->query;
     my $charset = $app->charset;
     require MT::Blog;
-    my $blog_id = $app->param('blog_id')
+    my $blog_id = $q->param('blog_id')
       or return $app->error( $app->translate("Please select a blog.") );
     my $blog = MT::Blog->load($blog_id)
       or return $app->error(
@@ -38,7 +40,7 @@ sub export {
     if ( $file eq ".txt" ) {
         my @ts = localtime(time);
         $file = sprintf "export-%06d-%04d%02d%02d%02d%02d%02d.txt",
-          $app->param('blog_id'), $ts[5] + 1900, $ts[4] + 1, @ts[ 3, 2, 1, 0 ];
+          $q->param('blog_id'), $ts[5] + 1900, $ts[4] + 1, @ts[ 3, 2, 1, 0 ];
     }
 
     $app->{no_print_body} = 1;

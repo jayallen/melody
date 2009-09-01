@@ -11,10 +11,8 @@ use strict;
 sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
-
-    my $q = $app->param;
+    my $q = $app->query;
     my $blog_id = $q->param('blog_id');
-
     # FIXME: enumeration of types
     unless ( $blog_id ) {
         my $type = $q->param('type') || ( $obj ? $obj->type : undef );
@@ -116,14 +114,14 @@ sub edit {
         $param->{static_maps} = ( $obj->build_type != MT::PublishOption::DYNAMIC()
                                   && $obj->build_type != MT::PublishOption::DISABLED() );
 
-        my $filter = $app->param('filter_key');
+        my $filter = $q->param('filter_key');
         if ($param->{template_group} eq 'email') {
-            $app->param( 'filter_key', 'email_templates' );
+            $q->param( 'filter_key', 'email_templates' );
         }elsif  ($param->{template_group} eq 'system') {
-            $app->param( 'filter_key', 'system_templates' );
+            $q->param( 'filter_key', 'system_templates' );
         }
         $app->load_list_actions( 'template', $param );
-        $app->param( 'filter_key', $filter );
+        $q->param( 'filter_key', $filter );
 
         $obj->compile;
         if ( $obj->{errors} && @{ $obj->{errors} } ) {
@@ -422,8 +420,8 @@ sub edit {
           && $param->{type} ne 'widget'
           && !$param->{is_special};
 
-        $param->{name}       = MT::Util::decode_url( $app->param('name') )
-          if $app->param('name');
+        $param->{name}       = MT::Util::decode_url( $q->param('name') )
+          if $q->param('name');
     }
     $param->{publish_queue_available} = eval 'require List::Util; require Scalar::Util; 1;';
 
@@ -556,7 +554,7 @@ sub edit {
     $param->{cache_expire_interval} ||= 30;
 
     $param->{dirty} = 1
-        if $app->param('dirty');
+        if $q->param('dirty');
 
     $param->{can_preview} = 1
         if (!$param->{is_special}) && (!$obj || ($obj && ($obj->outfile || '') !~ m/\.(css|xml|rss|js)$/)) && (!exists $param->{can_preview});
@@ -566,7 +564,7 @@ sub edit {
 
 sub list {
     my $app = shift;
-
+    my $q = $app->query;
     my $perms = $app->blog ? $app->permissions : $app->user->permissions;
     return $app->return_to_dashboard( redirect => 1 )
       unless $perms || $app->user->is_superuser;
@@ -576,7 +574,7 @@ sub list {
     my $blog = $app->blog;
 
     require MT::Template;
-    my $blog_id = $app->param('blog_id') || 0;
+    my $blog_id = $q->param('blog_id') || 0;
     my $terms = { blog_id => $blog_id };
     my $args  = { sort    => 'name' };
 
@@ -618,7 +616,7 @@ sub list {
     };
 
     my $params        = {};
-    my $filter = $app->param('filter_key');
+    my $filter = $q->param('filter_key');
     my $template_type = $filter || '';
     $template_type =~ s/_templates//;
 
@@ -630,11 +628,11 @@ sub list {
     $params->{search_label} = $app->translate("Templates");
     $params->{object_type} = 'template';
     $params->{blog_view} = 1;
-    $params->{refreshed} = $app->param('refreshed');
-    $params->{published} = $app->param('published');
-    $params->{saved_copied} = $app->param('saved_copied');
-    $params->{saved_deleted} = $app->param('saved_deleted');
-    $params->{saved} = $app->param('saved');
+    $params->{refreshed} = $q->param('refreshed');
+    $params->{published} = $q->param('published');
+    $params->{saved_copied} = $q->param('saved_copied');
+    $params->{saved_deleted} = $q->param('saved_deleted');
+    $params->{saved} = $q->param('saved');
 
     # determine list of system template types:
     my $scope;
@@ -713,19 +711,19 @@ sub list {
     $app->delete_param('filter_key') if $filter;
     foreach my $tmpl_type (@types) {
         if ( $tmpl_type eq 'index' ) {
-            $app->param( 'filter_key', 'index_templates' );
+            $q->param( 'filter_key', 'index_templates' );
         }
         elsif ( $tmpl_type eq 'archive' ) {
-            $app->param( 'filter_key', 'archive_templates' );
+            $q->param( 'filter_key', 'archive_templates' );
         }
         elsif ( $tmpl_type eq 'system' ) {
-            $app->param( 'filter_key', 'system_templates' );
+            $q->param( 'filter_key', 'system_templates' );
         }
         elsif ( $tmpl_type eq 'email' ) {
-            $app->param( 'filter_key', 'email_templates' );
+            $q->param( 'filter_key', 'email_templates' );
         }
         elsif ( $tmpl_type eq 'module' ) {
-            $app->param( 'filter_key', 'module_templates' );
+            $q->param( 'filter_key', 'module_templates' );
         }
         my $tmpl_param = {};
         unless ( exists($types{$tmpl_type}->{type})
@@ -753,7 +751,7 @@ sub list {
         $params->{filter_key} = $filter;
         $params->{filter_label} = $types{$template_type}{label}
             if exists $types{$template_type};
-        $app->param('filter_key', $filter);
+        $q->param('filter_key', $filter);
     } else {
         # restore filter_key param (we modified it for the
         # sake of the individual table listings)
@@ -768,7 +766,7 @@ sub list {
 
 sub preview {
     my $app         = shift;
-    my $q           = $app->param;
+    my $q           = $app->query;
     my $blog_id     = $q->param('blog_id');
     my $blog        = $app->blog;
     my $id          = $q->param('id');
@@ -793,7 +791,7 @@ sub preview {
     }
 
     my $names = $tmpl->column_names;
-    my %values = map { $_ => scalar $app->param($_) } @$names;
+    my %values = map { $_ => scalar $q->param($_) } @$names;
     delete $values{'id'} unless $q->param('id');
 
     ## Strip linefeed characters.
@@ -1053,7 +1051,7 @@ sub create_preview_content {
 
 sub reset_blog_templates {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $perms = $app->permissions
       or return $app->error( $app->translate("No permissions") );
     return $app->error( $app->translate("Permission denied.") )
@@ -1251,7 +1249,7 @@ sub delete_map {
     $app->validate_magic() or return;
     my $perms = $app->{perms}
       or return $app->error( $app->translate("No permissions") );
-    my $q  = $app->param;
+    my $q  = $app->query;
     my $id = $q->param('id');
 
     require MT::TemplateMap;
@@ -1270,7 +1268,7 @@ sub add_map {
     my $perms = $app->{perms}
       or return $app->error( $app->translate("No permissions") );
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     require MT::TemplateMap;
     my $blog_id = $q->param('blog_id');
@@ -1318,6 +1316,7 @@ sub can_delete {
 sub pre_save {
     my $eh = shift;
     my ( $app, $obj ) = @_;
+    my $q = $app->query;
 
     ## Strip linefeed characters.
     ( my $text = $obj->text ) =~ tr/\r//d;
@@ -1333,7 +1332,7 @@ sub pre_save {
     # update text heights if necessary
     if ( $perms ) {
         my $prefs = $perms->template_prefs || '';
-        my $text_height = $app->param('text_height');
+        my $text_height = $q->param('text_height');
         if ( defined $text_height ) {
             my ($pref_text_height) = $prefs =~ m/\btext:(\d+)\b/;
             $pref_text_height ||= 0;
@@ -1354,17 +1353,17 @@ sub pre_save {
     }
 
     # module caching
-    $obj->include_with_ssi( $app->param('include_with_ssi') ? 1 : 0 );
-    $obj->cache_path( $app->param('cache_path'));
-    my $cache_expire_type = defined $app->param('cache_expire_type')
-      ? $app->param('cache_expire_type')
+    $obj->include_with_ssi( $q->param('include_with_ssi') ? 1 : 0 );
+    $obj->cache_path( $q->param('cache_path'));
+    my $cache_expire_type = defined $q->param('cache_expire_type')
+      ? $q->param('cache_expire_type')
       : '0';
     $obj->cache_expire_type($cache_expire_type);
-    my $period   = $app->param('cache_expire_period');
-    my $interval = $app->param('cache_expire_interval');
+    my $period   = $q->param('cache_expire_period');
+    my $interval = $q->param('cache_expire_interval');
     my $sec      = _get_interval( $period, $interval );
     $obj->cache_expire_interval($sec) if defined $sec;
-    my $q = $app->param;
+    my $q = $app->query;
     my @events;
 
     foreach my $name ( $q->param('cache_expire_event') ) {
@@ -1383,11 +1382,11 @@ sub pre_save {
     }
 
     require MT::PublishOption;
-    my $build_type = $app->param('build_type');
+    my $build_type = $q->param('build_type');
 
     if ( $build_type == MT::PublishOption::SCHEDULED() ) {
-        my $period   = $app->param('schedule_period');
-        my $interval = $app->param('schedule_interval');
+        my $period   = $q->param('schedule_period');
+        my $interval = $q->param('schedule_interval');
         my $sec      = _get_interval( $period, $interval );
         $obj->build_interval($sec);
     }
@@ -1409,7 +1408,7 @@ sub post_save {
     $sess_obj->remove if $sess_obj;
 
     my $dynamic = 0;
-    my $q = $app->param;
+    my $q = $app->query;
     my $type = $q->param('type');
     # FIXME: enumeration of types
     if ( $type eq 'custom'
@@ -1627,7 +1626,7 @@ sub dialog_publishing_profile {
     my $param = {};
     $param->{dynamicity} = $blog->custom_dynamic_templates || 'none';
     $param->{screen_id} = "publishing-profile-dialog";
-    $param->{return_args} = $app->param('return_args');
+    $param->{return_args} = $app->query->param('return_args');
 
     $app->build_page('dialog/publishing_profile.tmpl',
         $param);
@@ -1647,7 +1646,7 @@ sub dialog_refresh_templates {
 
     my $param = {};
     my $blog = $app->blog;
-    $param->{return_args} = $app->param('return_args');
+    $param->{return_args} = $app->query->param('return_args');
 
     if ($blog) {
         $param->{blog_id} = $blog->id;
@@ -1683,36 +1682,31 @@ sub dialog_refresh_templates {
 
 sub refresh_all_templates {
     my ($app) = @_;
-
+    my $q = $app->query;
     my $backup = 0;
-    if ($app->param('backup')) {
+    if ($q->param('backup')) {
         # refresh templates dialog uses a 'backup' field
         $backup = 1;
     }
-
-    my $template_set = $app->param('template_set');
-    my $refresh_type = $app->param('refresh_type') || 'refresh';
-
+    my $template_set = $q->param('template_set');
+    my $refresh_type = $q->param('refresh_type') || 'refresh';
     my $t = time;
-
     my @id;
-    if ($app->param('blog_id')) {
-        @id = ( scalar $app->param('blog_id') );
+    if ($q->param('blog_id')) {
+        @id = ( scalar $q->param('blog_id') );
     }
     else {
-        @id = $app->param('id');
+        @id = $q->param('id');
         if (! @id) {
             # refresh global templates
             @id = ( 0 );
         }
     }
-
     require MT::Template;
     require MT::DefaultTemplates;
     require MT::Blog;
     require MT::Permission;
     require MT::Util;
-
     my $user = $app->user;
     my @blogs_not_refreshed;
     my $refreshed;
@@ -1925,9 +1919,8 @@ sub refresh_all_templates {
 
 sub refresh_individual_templates {
     my ($app) = @_;
-
+    my $q = $app->query;
     require MT::Util;
-
     my $user = $app->user;
     my $perms = $app->blog ? $app->permissions : $app->user->permissions;
     return $app->error(
@@ -1941,7 +1934,7 @@ sub refresh_individual_templates {
           || $perms->can_administer_blog ) );
 
     my $set;
-    if ( my $blog_id = $app->param('blog_id') ) {
+    if ( my $blog_id = $q->param('blog_id') ) {
         my $blog = $app->model('blog')->load($blog_id)
             or return $app->error($app->translate('Can\'t load blog #[_1].', $blog_id));
         $set = $blog->template_set()
@@ -1971,7 +1964,7 @@ sub refresh_individual_templates {
     my $t = time;
 
     my @msg;
-    my @id = $app->param('id');
+    my @id = $q->param('id');
     require MT::Template;
     foreach my $tmpl_id (@id) {
         my $tmpl = MT::Template->load($tmpl_id);
@@ -2054,7 +2047,7 @@ sub clone_templates {
         && ( $perms->can_edit_templates()
           || $perms->can_administer_blog ) );
 
-    my @id = $app->param('id');
+    my @id = $app->query->param('id');
 
     # Divergence from mtos in this method relate to
     # http://bugs.movabletype.org/?79288
@@ -2094,16 +2087,16 @@ sub clone_templates {
 
 sub publish_templates_from_search {
     my $app = shift;
+    my $q = $app->query;
     my $blog = $app->blog;
     require MT::Blog;
-
-    my $templates = MT->model('template')->lookup_multi([ $app->param('id') ]);
+    my $templates = MT->model('template')->lookup_multi([ $q->param('id') ]);
     my @at_ids;
-    $app->param('from_search', 1);
+    $q->param('from_search', 1);
     TEMPLATE: for my $tmpl (@$templates) {
         return $app->errtrans("Cannot publish a global template.") if ($tmpl->blog_id == 0);
         if ($tmpl->type eq 'index') {
-            $app->param('id', $tmpl->id); 
+            $q->param('id', $tmpl->id); 
             publish_index_templates($app);
         }
         elsif ($tmpl->type eq 'archive' || $tmpl->type eq 'individual' || $tmpl eq 'page') {
@@ -2112,7 +2105,7 @@ sub publish_templates_from_search {
     }
 
     if (scalar(@at_ids) > 0) {
-        $app->param('id', @at_ids);
+        $q->param('id', @at_ids);
         publish_archive_templates($app) if (scalar(@at_ids) > 0);
     }
     else {
@@ -2122,8 +2115,8 @@ sub publish_templates_from_search {
 
 sub publish_index_templates {
     my $app = shift;
+    my $q = $app->query;
     $app->validate_magic or return;
-
     # permission check
     my $perms = $app->blog ? $app->permissions : $app->user->permissions;
     return $app->errtrans("Permission denied.")
@@ -2132,9 +2125,8 @@ sub publish_index_templates {
             $perms->can_rebuild;
 
     my $blog = $app->blog;
-
     require MT::Blog;
-    my $templates = MT->model('template')->lookup_multi([ $app->param('id') ]);
+    my $templates = MT->model('template')->lookup_multi([ $q->param('id') ]);
     TEMPLATE: for my $tmpl (@$templates) {
         return $app->errtrans("Cannot publish a global template.") if ($tmpl->blog_id == 0);
         unless ($blog) {
@@ -2151,13 +2143,13 @@ sub publish_index_templates {
         );
     }
 
-    $app->call_return( published => 1 ) unless ($app->param('from_search'));
+    $app->call_return( published => 1 ) unless ($q->param('from_search'));
 }
 
 sub publish_archive_templates {
     my $app = shift;
+    my $q = $app->query;
     $app->validate_magic or return;
-
     # permission check
     my $perms = $app->blog ? $app->permissions : $app->user->permissions;
     return $app->errtrans("Permission denied.")
@@ -2165,14 +2157,13 @@ sub publish_archive_templates {
       || $perms->can_administer_blog
       || $perms->can_rebuild;
 
-    my @ids = $app->param('id');
+    my @ids = $q->param('id');
     if (scalar @ids == 1) {
         # we also support a list of comma-delimited ids like this
         @ids = split ",", $ids[0];
     }
     return $app->error($app->translate("Invalid request."))
         unless @ids;
-
     my $tmpl_id;
     my %ats;
     require MT::TemplateMap;
@@ -2190,7 +2181,7 @@ sub publish_archive_templates {
 
     require MT::CMS::Blog;
     my $return_args;
-    my $reedit = $app->param('reedit');
+    my $reedit = $q->param('reedit');
     if (@ids) {
         # we have more to do after this, so save the list
         # of remaining archive templates...
@@ -2198,20 +2189,20 @@ sub publish_archive_templates {
             mode => 'publish_archive_templates',
             args => {
                 magic_token => $app->current_magic,
-                blog_id => scalar $app->param('blog_id'),
+                blog_id => scalar $q->param('blog_id'),
                 id => join(",", @ids),
                 reedit => $reedit,
-                from_search => $app->param('from_search'),
+                from_search => $q->param('from_search'),
             }
         );
     } else {
         my $mode = $reedit ? 'view' : 'list';
-        $mode = 'search_replace' if $app->param('from_search');
+        $mode = 'search_replace' if $q->param('from_search');
         $return_args = $app->uri_params(
             mode => $mode,
             args => {
                 _type     => 'template',
-                blog_id   => scalar $app->param('blog_id'),
+                blog_id   => scalar $q->param('blog_id'),
                 published => 1,
                 ( $reedit ? ( saved => 1 )       : () ),
                 ( $reedit ? ( id    => $reedit ) : () ),
@@ -2223,15 +2214,15 @@ sub publish_archive_templates {
     $app->return_args( $return_args );
     return $app->call_return unless %ats;
 
-    $app->param( 'template_id', $tmpl_id );
-    $app->param( 'single_template', 1 ); # forces fullscreen mode
-    $app->param( 'type', join(",", keys %ats) );
+    $q->param( 'template_id', $tmpl_id );
+    $q->param( 'single_template', 1 ); # forces fullscreen mode
+    $q->param( 'type', join(",", keys %ats) );
     return MT::CMS::Blog::start_rebuild_pages($app);
 }
 
 sub save_widget {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     $app->validate_magic() or return;
     my $author = $app->user;
@@ -2292,7 +2283,7 @@ sub edit_widget {
     my $app = shift;
     my (%opt) = @_;
 
-    my $q       = $app->param();
+    my $q       = $app->query();
     my $id      = scalar($q->param('id')) || $opt{id};
     my $name    = scalar($q->param('name'));
     my $blog_id = scalar $q->param('blog_id') || 0;
@@ -2409,7 +2400,7 @@ sub edit_widget {
 sub list_widget {
     my $app = shift;
     my (%opt) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $perms = $app->blog ? $app->permissions : $app->user->permissions;
     return $app->return_to_dashboard( redirect => 1 )
@@ -2480,7 +2471,7 @@ sub list_widget {
 
 sub delete_widget {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('_type');
 
     return $app->errtrans("Invalid request.")

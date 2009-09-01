@@ -262,7 +262,7 @@ sub as_html {
     my $text    = '';
 
     my $app = MT->instance;
-    $param->{enclose} = 0 unless ($app->param('edit_field') =~ /^customfield/);
+    $param->{enclose} = 0 unless ($app->query->param('edit_field') =~ /^customfield/);
     $param->{enclose} = 1 unless exists $param->{enclose};
 
     if ( $param->{include} ) {

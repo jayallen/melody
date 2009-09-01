@@ -9,7 +9,7 @@ use MT::Util qw( encode_url encode_html decode_html encode_js trim );
 sub system_check {
     my $app = shift;
 
-    if ( my $blog_id = $app->param('blog_id') ) {
+    if ( my $blog_id = $app->query->param('blog_id') ) {
         return $app->redirect(
             $app->uri(
                 'mode' => 'view_log',
@@ -107,18 +107,19 @@ sub get_syscheck_content {
 
 sub start_recover {
     my $app = shift;
+    my $q = $app->query;
     my ($param) = @_;
     my $cfg = $app->config;
     $param ||= {};
-    $param->{'email'} = $app->param('email');
-    $param->{'return_to'} = $app->param('return_to') || $cfg->ReturnToURL || '';
+    $param->{'email'} = $q->param('email');
+    $param->{'return_to'} = $q->param('return_to') || $cfg->ReturnToURL || '';
     $param->{'can_signin'} = (ref $app eq 'MT::App::CMS') ? 1 : 0;
     $app->add_breadcrumb( $app->translate('Password Recovery') );
 
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     $param->{'blog_id'} = $blog_id;
     my $tmpl = $app->load_global_tmpl( { identifier => 'new_password_reset_form',
-            $blog_id ? ( blog_id => $app->param('blog_id') ) : () } );
+            $blog_id ? ( blog_id => $q->param('blog_id') ) : () } );
     if (!$tmpl) {
         $tmpl = $app->load_tmpl( 'cms/dialog/recover.tmpl' );
     }
@@ -128,8 +129,9 @@ sub start_recover {
 
 sub recover_password {
     my $app      = shift;
-    my $email    = $app->param('email') || '';
-    my $username = $app->param('name');
+    my $q = $app->query;
+    my $email    = $q->param('email') || '';
+    my $username = $q->param('name');
 
     $email = trim($email);
     $username = trim($username) if $username;
@@ -175,8 +177,8 @@ sub recover_password {
 
     $user->password_reset($salt);
     $user->password_reset_expires($expires);
-    $user->password_reset_return_to($app->param('return_to'))
-        if $app->param('return_to');
+    $user->password_reset_return_to($q->param('return_to'))
+        if $q->param('return_to');
     $user->save;
 
     # Send mail to user
@@ -190,7 +192,7 @@ sub recover_password {
     my $mail_enc = uc( $app->config('MailEncoding') || $charset );
     $head{'Content-Type'} = qq(text/plain; charset="$mail_enc");
 
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     my $body = $app->build_email(
         'recover-password',
         {         link_to_login => $app->base
@@ -216,16 +218,16 @@ sub recover_password {
 
 sub new_password {
     my $app = shift;
+    my $q = $app->query;
     my ($param) = @_;
     $param ||= {};
-
-    my $token = $app->param('token');
+    my $token = $q->param('token');
     if ( !$token ) {
         return $app->start_recover(
             { error => $app->translate('Password reset token not found'), } );
     }
 
-    my $email = $app->param('email');
+    my $email = $q->param('email');
     if ( !$email ) {
         return $app->start_recover(
             { error => $app->translate('Email address not found'), } );
@@ -266,9 +268,9 @@ sub new_password {
     }
 
     # Password reset
-    my $new_password = $app->param('password');
+    my $new_password = $q->param('password');
     if ($new_password) {
-        my $again = $app->param('password_again');
+        my $again = $q->param('password_again');
         if ( !$again ) {
             $param->{'error'}
                 = $app->translate('Please confirm your new password');
@@ -284,7 +286,7 @@ sub new_password {
             $user->password_reset_expires(undef);
             $user->password_reset_return_to(undef);
             $user->save;
-            $app->param( 'username', $user->name )
+            $q->param( 'username', $user->name )
                 if $user->type == MT::Author::AUTHOR();
 
             if (ref $app eq 'MT::App::CMS' && !$redirect) {
@@ -307,14 +309,14 @@ sub new_password {
 
     $param->{'email'}          = $email;
     $param->{'token'}          = $token;
-    $param->{'password'}       = $app->param('password');
-    $param->{'password_again'} = $app->param('password_again');
+    $param->{'password'}       = $q->param('password');
+    $param->{'password_again'} = $q->param('password_again');
     $app->add_breadcrumb( $app->translate('Password Recovery') );
 
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     $param->{'blog_id'}        = $blog_id if $blog_id;
     my $tmpl = $app->load_global_tmpl( { identifier => 'new_password',
-            $blog_id ? ( blog_id => $app->param('blog_id') ) : () } );
+            $blog_id ? ( blog_id => $q->param('blog_id') ) : () } );
     if (!$tmpl) {
         $tmpl = $app->load_tmpl( 'cms/dialog/new_password.tmpl' );
     }
@@ -324,11 +326,11 @@ sub new_password {
 
 sub do_list_action {
     my $app = shift;
+    my $q = $app->query;
     $app->validate_magic or return;
-
     # plugin_action_selector should always (?) be in the query; use it?
-    my $action_name = $app->param('action_name');
-    my $type        = $app->param('_type');
+    my $action_name = $q->param('action_name');
+    my $type        = $q->param('_type');
     my ($the_action) =
       ( grep { $_->{key} eq $action_name } @{ $app->list_actions($type) } );
     return $app->errtrans( "That action ([_1]) is apparently not implemented!",
@@ -347,10 +349,10 @@ sub do_list_action {
 
 sub do_page_action {
     my $app = shift;
-
+    my $q = $app->query;
     # plugin_action_selector should always (?) be in the query; use it?
-    my $action_name = $app->param('action_name');
-    my $type        = $app->param('_type');
+    my $action_name = $q->param('action_name');
+    my $type        = $q->param('_type');
     my ($the_action) =
       ( grep { $_->{key} eq $action_name } @{ $app->page_actions($type) } );
     return $app->errtrans( "That action ([_1]) is apparently not implemented!",
@@ -369,8 +371,9 @@ sub do_page_action {
 
 sub cfg_system_general {
     my $app = shift;
+    my $q = $app->query;
     my %param;
-    if ( $app->param('blog_id') ) {
+    if ( $q->param('blog_id') ) {
         return $app->return_to_dashboard( redirect => 1 );
     }
 
@@ -408,14 +411,14 @@ sub cfg_system_general {
         }
     }
     
-    if ($app->param('to_email_address')) {
+    if ($q->param('to_email_address')) {
     	return $app->errtrans("You don't have a system email address configured.  Please set this first, save it, then try the test email again.")
     	  unless ($cfg->EmailAddressMain);
         return $app->errtrans("Please enter a valid email address") 
-          unless (MT::Util::is_valid_email($app->param('to_email_address')));
+          unless (MT::Util::is_valid_email($q->param('to_email_address')));
        
         my %head = (
-            To => $app->param('to_email_address'),
+            To => $q->param('to_email_address'),
             From => $cfg->EmailAddressMain,
             Subject => $app->translate("Test email from Movable Type")
         );
@@ -428,7 +431,7 @@ sub cfg_system_general {
         MT::Mail->send( \%head, $body ) or return $app->error( $app->translate("Mail was not properly sent") );
         
         $app->log({
-            message => $app->translate('Test e-mail was successfully sent to [_1]', $app->param('to_email_address')),
+            message => $app->translate('Test e-mail was successfully sent to [_1]', $q->param('to_email_address')),
             level    => MT::Log::INFO(),
             class    => 'system',
         });
@@ -448,14 +451,15 @@ sub cfg_system_general {
     $param{system_performance_logging} = $cfg->PerformanceLogging;
     $param{system_performance_logging_path} = $cfg->PerformanceLoggingPath;
     $param{system_performance_logging_threshold} = $cfg->PerformanceLoggingThreshold;
-    $param{saved}                = $app->param('saved');
-    $param{error}                = $app->param('error');
+    $param{saved}                = $q->param('saved');
+    $param{error}                = $q->param('error');
     $param{screen_class}         = "settings-screen system-general-settings";
     $app->load_tmpl( 'cfg_system_general.tmpl', \%param );
 }
 
 sub save_cfg_system_general {
     my $app = shift;
+    my $q = $app->query;
     $app->validate_magic or return;
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
@@ -463,19 +467,19 @@ sub save_cfg_system_general {
 
     # construct the message to the activity log
     my @meta_messages = (); 
-    push(@meta_messages, $app->translate('Email address is [_1]', $app->param('system_email_address'))) 
-        if ($app->param('system_email_address') =~ /\w+/);
-    push(@meta_messages, $app->translate('Debug mode is [_1]', $app->param('system_debug_mode')))
-        if ($app->param('system_debug_mode') =~ /\d+/);
-    if ($app->param('system_performance_logging')) {
+    push(@meta_messages, $app->translate('Email address is [_1]', $q->param('system_email_address'))) 
+        if ($q->param('system_email_address') =~ /\w+/);
+    push(@meta_messages, $app->translate('Debug mode is [_1]', $q->param('system_debug_mode')))
+        if ($q->param('system_debug_mode') =~ /\d+/);
+    if ($q->param('system_performance_logging')) {
         push(@meta_messages, $app->translate('Performance logging is on'));
     } else {
         push(@meta_messages, $app->translate('Performance logging is off'));
     }
-    push(@meta_messages, $app->translate('Performance log path is [_1]', $app->param('system_performance_logging_path')))
-        if ($app->param('system_performance_logging_path') =~ /\w+/);
-    push(@meta_messages, $app->translate('Performance log threshold is [_1]', $app->param('system_performance_logging_threshold')))
-        if ($app->param('system_performance_logging_threshold') =~ /\d+/);
+    push(@meta_messages, $app->translate('Performance log path is [_1]', $q->param('system_performance_logging_path')))
+        if ($q->param('system_performance_logging_path') =~ /\w+/);
+    push(@meta_messages, $app->translate('Performance log threshold is [_1]', $q->param('system_performance_logging_threshold')))
+        if ($q->param('system_performance_logging_threshold') =~ /\d+/);
     
     # throw the messages in the activity log
     if (scalar(@meta_messages) > 0) {
@@ -489,18 +493,18 @@ sub save_cfg_system_general {
     }
 
     # actually assign the changes
-    $app->config( 'EmailAddressMain', $app->param('system_email_address') || undef, 1 );
-    $app->config('DebugMode', $app->param('system_debug_mode'), 1)
-        if ($app->param('system_debug_mode') =~ /\d+/);
-    if ($app->param('system_performance_logging')) {
+    $app->config( 'EmailAddressMain', $q->param('system_email_address') || undef, 1 );
+    $app->config('DebugMode', $q->param('system_debug_mode'), 1)
+        if ($q->param('system_debug_mode') =~ /\d+/);
+    if ($q->param('system_performance_logging')) {
         $app->config('PerformanceLogging', 1, 1);
     } else {
         $app->config('PerformanceLogging', 0, 1);
     }
-    $app->config('PerformanceLoggingPath', $app->param('system_performance_logging_path'), 1)
-        if ($app->param('system_performance_logging_path') =~ /\w+/);
-    $app->config('PerformanceLoggingThreshold', $app->param('system_performance_logging_threshold'), 1)
-        if ($app->param('system_performance_logging_threshold') =~ /\d+/);
+    $app->config('PerformanceLoggingPath', $q->param('system_performance_logging_path'), 1)
+        if ($q->param('system_performance_logging_path') =~ /\w+/);
+    $app->config('PerformanceLoggingThreshold', $q->param('system_performance_logging_threshold'), 1)
+        if ($q->param('system_performance_logging_threshold') =~ /\d+/);
     $cfg->save_config();
     my $args = ();
     $args->{saved} = 1;
@@ -534,7 +538,7 @@ sub recover_profile_password {
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     require MT::Auth;
     require MT::Log;
@@ -576,14 +580,12 @@ sub recover_profile_password {
 sub start_backup {
     my $app     = shift;
     my $user    = $app->user;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $app->query->param('blog_id');
     my $perms   = $app->permissions;
-
     unless ( $user->is_superuser ) {
         return $app->errtrans("Permission denied.")
           unless defined($blog_id) && $perms->can_administer_blog;
     }
-
     my %param = ();
     if ( defined($blog_id) ) {
         $param{blog_id} = $blog_id;
@@ -597,7 +599,6 @@ sub start_backup {
     require MT::Util::Archive;
     my @formats = MT::Util::Archive->available_formats();
     $param{archive_formats} = \@formats;
-
     my $limit = $app->config('CGIMaxUpload') || 2048;
     $param{over_300}  = 1 if $limit >= 300 * 1024;
     $param{over_500}  = 1 if $limit >= 500 * 1024;
@@ -617,7 +618,7 @@ sub start_backup {
 sub start_restore {
     my $app     = shift;
     my $user    = $app->user;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $app->query->param('blog_id');
     my $perms   = $app->permissions;
 
     unless ( $user->is_superuser ) {
@@ -652,7 +653,7 @@ sub start_restore {
 sub backup {
     my $app     = shift;
     my $user    = $app->user;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = $q->param('blog_id');
     my $perms   = $app->permissions;
     unless ( $user->is_superuser ) {
@@ -895,16 +896,17 @@ sub backup {
 
 sub backup_download {
     my $app     = shift;
+    my $q = $app->query;
     my $user    = $app->user;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     unless ( $user->is_superuser ) {
         my $perms = $app->permissions;
         return $app->errtrans("Permission denied.")
           unless defined($blog_id) && $perms->can_administer_blog;
     }
     $app->validate_magic() or return;
-    my $filename  = $app->param('filename');
-    my $assetname = $app->param('assetname');
+    my $filename  = $q->param('filename');
+    my $assetname = $q->param('assetname');
     my $temp_dir  = $app->config('TempDir');
     my $newfilename;
     if ( defined($assetname) ) {
@@ -927,7 +929,7 @@ sub backup_download {
         $sess->remove;
     }
     else {
-        $newfilename = $app->param('name');
+        $newfilename = $q->param('name');
         return
           if $newfilename !~
 /Movable_Type-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-Backup(?:-\d+)?\.\w+/;
@@ -991,7 +993,7 @@ sub restore {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     my ($fh) = $app->upload_info('file');
     my $uploaded = $q->param('file');
@@ -1180,13 +1182,14 @@ sub restore {
 
 sub restore_premature_cancel {
     my $app  = shift;
+    my $q = $app->query;
     my $user = $app->user;
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
     require JSON;
-    my $deferred = JSON::from_json( $app->param('deferred_json') )
-      if $app->param('deferred_json');
+    my $deferred = JSON::from_json( $q->param('deferred_json') )
+      if $q->param('deferred_json');
     my $param = { restore_success => 1 };
     if ( defined $deferred && ( scalar( keys %$deferred ) ) ) {
         _log_dirty_restore( $app, $deferred );
@@ -1241,7 +1244,7 @@ sub adjust_sitepath {
 
     require MT::BackupRestore;
 
-    my $q         = $app->param;
+    my $q         = $app->query;
     my $tmp_dir   = $q->param('tmp_dir');
     my $error     = $q->param('error') || q();
     my %asset_ids = split ',', $q->param('asset_ids');
@@ -1425,7 +1428,7 @@ sub dialog_restore_upload {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $current        = $q->param('current_file');
     my $last           = $q->param('last');
@@ -1649,7 +1652,7 @@ sub dialog_adjust_sitepath {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    my $q         = $app->param;
+    my $q         = $app->query;
     my $tmp_dir   = $q->param('tmp_dir');
     my $error     = $q->param('error') || q();
     my $uploaded  = $q->param('restore_upload') || 0;
@@ -1690,10 +1693,11 @@ sub dialog_adjust_sitepath {
 
 sub convert_to_html {
     my $app    = shift;
-    my $format = $app->param('format') || '';
+    my $q = $app->query;
+    my $format = $q->param('format') || '';
     my @formats = split /\s*,\s*/, $format;
-    my $text   = $app->param('text') || '';
-    my $text_more = $app->param('text_more') || '';
+    my $text   = $q->param('text') || '';
+    my $text_more = $q->param('text_more') || '';
     my $result = {
         text      => $app->apply_text_filters( $text,      \@formats ),
         text_more => $app->apply_text_filters( $text_more, \@formats ),
@@ -1704,13 +1708,13 @@ sub convert_to_html {
 
 sub update_list_prefs {
     my $app   = shift;
-    my $prefs = $app->list_pref( $app->param('_type') );
+    my $prefs = $app->list_pref( $app->query->param('_type') );
     $app->call_return;
 }
 
 sub recover_passwords {
     my $app = shift;
-    my @id  = $app->param('id');
+    my @id  = $app->query->param('id');
 
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
@@ -1848,7 +1852,7 @@ sub reset_password {
 sub restore_file {
     my $app = shift;
     my ( $fh, $errormsg ) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
     my $schema_version = $app->config->SchemaVersion;
     #my $schema_version =
     #  $q->param('ignore_schema_conflict')
@@ -1907,7 +1911,7 @@ sub restore_directory {
         return ( undef, undef );
     }
 
-    my $q = $app->param;
+    my $q = $app->query;
     my $schema_version = $app->config->SchemaVersion;
     #my $schema_version =
     #  $q->param('ignore_schema_conflict')
@@ -1989,7 +1993,7 @@ sub restore_upload_manifest {
     return $app->errtrans("Permission denied.") if !$user->is_superuser;
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
 
     require MT::BackupRestore;
     my $backups = MT::BackupRestore->process_manifest($fh);
