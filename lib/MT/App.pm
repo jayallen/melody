@@ -283,9 +283,10 @@ sub search_apis {
 
 sub listing {
     my $app = shift;
+    my $q = $app->query;
     my ($opt) = @_;
 
-    my $type = $opt->{type} || $opt->{Type} || $app->param('_type');
+    my $type = $opt->{type} || $opt->{Type} || $q->param('_type');
     my $tmpl 
         = $opt->{template}
         || $opt->{Template}
@@ -300,7 +301,7 @@ sub listing {
     my $args     = $opt->{args}     || $opt->{Args} || {};
     my $no_html  = $opt->{no_html}  || $opt->{NoHTML};
     my $no_limit = $opt->{no_limit} || 0;
-    my $json     = $opt->{json}     || $app->param('json');
+    my $json     = $opt->{json}     || $q->param('json');
     my $pre_build = $opt->{pre_build} if ref( $opt->{pre_build} ) eq 'CODE';
     $param->{json} = 1 if $json;
 
@@ -309,15 +310,15 @@ sub listing {
     $param->{$_} = $list_pref->{$_} for keys %$list_pref;
     my $limit = $list_pref->{rows};
     $limit =~ s/\D//g;
-    my $offset = $app->param('offset') || 0;
+    my $offset = $q->param('offset') || 0;
     $offset =~ s/\D//g;
     $args->{offset} = $offset if $offset && !$no_limit;
     $args->{limit} = $limit + 1 unless $no_limit;
     $param->{limit_none} = 1 if $no_limit;
 
     # handle search parameter
-    if ( my $search = $app->param('search') ) {
-        $app->param( 'do_search', 1 );
+    if ( my $search = $q->param('search') ) {
+        $q->param( 'do_search', 1 );
         if ( $app->can('do_search_replace') ) {
             my $search_param = $app->do_search_replace();
             if ($hasher) {
@@ -337,8 +338,8 @@ sub listing {
     else {
 
         # handle filter options
-        my $filter_key = $app->param('filter_key');
-        if ( !$filter_key && !$app->param('filter') ) {
+        my $filter_key = $q->param('filter_key');
+        if ( !$filter_key && !$q->param('filter') ) {
             $filter_key = 'default';
         }
         if ($filter_key) {
@@ -360,8 +361,8 @@ sub listing {
                 }
             }
         }
-        if (   ( my $filter_col = $app->param('filter') )
-            && ( my $val = $app->param('filter_val') ) )
+        if (   ( my $filter_col = $q->param('filter') )
+            && ( my $val = $q->param('filter_val') ) )
         {
             if ((      ( $filter_col eq 'normalizedtag' )
                     || ( $filter_col eq 'exacttag' )
@@ -672,16 +673,17 @@ sub init {
 
 sub pre_run_debug {
     my $app = shift;
+	my $q = $app->query;
     if ( $MT::DebugMode & 128 ) {
         print STDERR "=====START: $$===========================\n";
         print STDERR "Package: " . ref($app) . "\n";
         print STDERR "Session: " . $app->session->id . "\n"
             if $app->session;
-        print STDERR "Request: " . $app->param->request_method . "\n";
+        print STDERR "Request: " . $q->param->request_method . "\n";
         my @param = $app->query;
         if (@param) {
             foreach my $key (@param) {
-                my @val = $app->param($key);
+                my @val = $q->param($key);
                 print STDERR "\t" . $key . ": " . $_ . "\n" for @val;
             }
         }
@@ -801,7 +803,7 @@ sub init_query {
 
     sub validate_request_params {
         my $app = shift;
-
+	    my $q = $app->query;
         $has_encode = eval { require Encode; 1 } ? 1 : 0
             unless defined $has_encode;
         return 1 unless $has_encode;
@@ -861,10 +863,10 @@ sub init_query {
         }
         while ( my ( $key, $val ) = each %params ) {
             if ( ref $val ) {
-                $app->param( $key, @{ $params{ $key } } ) ;
+                $q->param( $key, @{ $params{ $key } } ) ;
             }
             else {
-                $app->param( $key, $val );
+                $q->param( $key, $val );
             }
         }
 
@@ -1356,6 +1358,7 @@ sub make_commenter {
 
 sub make_commenter_session {
     my $app = shift;
+    my $q = $app->query;
     my ( $session_key, $email, $name, $nick, $id, $url ) = @_;
     my $user;
 
@@ -1371,7 +1374,7 @@ sub make_commenter_session {
     }
 
     # test
-    $session_key = $app->param('sig') if $user->auth_type eq 'TypeKey';
+    $session_key = $q->param('sig') if $user->auth_type eq 'TypeKey';
 
     require MT::Session;
     my $sess_obj = MT::Session->new();
@@ -1395,7 +1398,7 @@ sub make_commenter_session {
 
     my $timeout;
     if ( $user->type == MT::Author::AUTHOR() ) {
-        if ( $app->param('remember') ) {
+        if ( $q->param('remember') ) {
 
             # 10 years, same as app sign-in 'remember me'
             $timeout = '+3650d';
@@ -1508,6 +1511,7 @@ sub _get_options_tmpl {
 
 sub _get_options_html {
     my $app           = shift;
+    my $q = $app->query;
     my ($key)         = @_;
     my $authenticator = MT->commenter_authenticator($key);
     return q() unless $authenticator;
@@ -1528,14 +1532,14 @@ sub _get_options_html {
     }
 
     $app->set_default_tmpl_params($tmpl);
-    my $entry_id = $app->param('entry_id') || '';
+    my $entry_id = $q->param('entry_id') || '';
     $entry_id =~ s/\D//g;
-    my $blog_id = $app->param('blog_id') || '';
+    my $blog_id = $q->param('blog_id') || '';
     $blog_id =~ s/\D//g;
     my $static = MT::Util::remove_html(
-        $app->param('static') 
+        $q->param('static') 
             || encode_url(
-            $app->param('return_to') || $app->param('return_url') || ''
+            $q->param('return_to') || $q->param('return_url') || ''
             )
             || ''
     );
@@ -1698,13 +1702,13 @@ sub commenter_loggedin {
 
 sub login {
     my $app = shift;
-
+    my $q = $app->query;
     my $new_login = 0;
 
     require MT::Auth;
     my $ctx = MT::Auth->fetch_credentials( { app => $app } );
     unless ($ctx) {
-        if ( $app->param('submit') ) {
+        if ( $q->param('submit') ) {
             return $app->error( $app->translate('Invalid login.') );
         }
         return;
@@ -2475,11 +2479,12 @@ sub cookies {
 
 sub show_error {
     my $app = shift;
+    my $q = $app->query;
     my ($param) = @_;
     my $tmpl;
     my $mode    = $app->mode;
     my $url     = $app->uri;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
 
     if ( ref $param ne 'HASH' ) {
         # old scalar signature
@@ -2508,7 +2513,7 @@ sub show_error {
             . encode_html( $app->errstr )
             . "'. Giving up. Original error was: $error";
     }
-    my $type = $app->param('__type') || '';
+    my $type = $q->param('__type') || '';
     if ( $type eq 'dialog' ) {
         $param->{name}   ||= $app->{name}   || 'dialog';
         $param->{goback} ||= $app->{goback}
@@ -2540,8 +2545,9 @@ sub show_error {
 
 sub pre_run {
     my $app = shift;
+    my $q = $app->query;
     if ( my $auth = $app->user ) {
-        if ( my $lang = $app->param('__lang') ) {
+        if ( my $lang = $q->param('__lang') ) {
             $app->set_language($lang);
         }
         else {
@@ -2863,7 +2869,7 @@ sub mode {
         $app->{mode} = shift;
     }
     else {
-        if ( my $mode = $app->param('__mode') ) {
+        if ( my $mode = $app->query->param('__mode') ) {
             $mode =~ s/[<>"']//g;
             $app->{mode} ||= $mode;
         }
@@ -2965,7 +2971,7 @@ sub load_widgets {
 
            # Do not show new_version widget for users without specific widgets
            #$widgets->{new_version} = { order => -1, set => 'main' }
-           #    unless $app->param('installed');
+           #    unless $app->query->param('installed');
             }
         }
     }
@@ -3109,14 +3115,15 @@ sub build_widgets {
 
 sub update_widget_prefs {
     my $app  = shift;
+    my $q = $app->query;
     my $user = $app->user;
     $app->validate_magic or return;
 
     my $blog          = $app->blog;
     my $blog_id       = $blog->id if $blog;
-    my $widget_id     = $app->param('widget_id');
-    my $action        = $app->param('widget_action');
-    my $widget_scope  = $app->param('widget_scope');
+    my $widget_id     = $q->param('widget_id');
+    my $action        = $q->param('widget_action');
+    my $widget_scope  = $q->param('widget_scope');
     my $widgets       = $user->widgets || {};
     my $these_widgets = $widgets->{$widget_scope} ||= {};
     my $resave_widgets;
@@ -3129,7 +3136,7 @@ sub update_widget_prefs {
         }
     }
     if ( $action eq 'add' ) {
-        my $set = $app->param('widget_set') || 'main';
+        my $set = $q->param('widget_set') || 'main';
         my $all_widgets = $app->registry("widgets");
         if ( my $widget = $all_widgets->{$widget_id} ) {
             my $widget_inst = $widget_id;
@@ -3145,7 +3152,7 @@ sub update_widget_prefs {
         $resave_widgets = 1;
     }
     if ( ( $action eq 'save' ) && $these_widgets ) {
-        my %all_params = $app->param_hash;
+        my %all_params = $q->param;
         my $refresh = $all_params{widget_refresh} ? 1 : 0;
         delete $all_params{$_}
             for
@@ -3163,7 +3170,7 @@ sub update_widget_prefs {
         $user->widgets($widgets);
         $user->save;
     }
-    if ( $app->param('json') ) {
+    if ( $q->param('json') ) {
         return $app->json_result($result);
     }
     else {
@@ -3262,20 +3269,21 @@ sub current_magic {
 
 sub validate_magic {
     my $app = shift;
+    my $q = $app->query;
     return 1
-        if $app->param('username')
-            && $app->param('password')
+        if $q->param('username')
+            && $q->param('password')
             && $app->request('fresh_login');
     $app->{login_again} = 1, return undef
         unless ( $app->current_magic || '' ) eq
-        ( $app->param('magic_token') || '' );
+        ( $q->param('magic_token') || '' );
     1;
 }
 
 sub delete_param {
     my $app   = shift;
-    my ($key) = @_;
     my $q     = $app->query;
+    my ($key) = @_;
     return unless $q;
     if ( $ENV{MOD_PERL} ) {
         my $tab = $q->parms;
@@ -3325,11 +3333,11 @@ sub state_params {
 # already rendering.
 sub make_return_args {
     my $app = shift;
-
+    my $q     = $app->query;
     my @vars = $app->state_params;
     my %args;
     foreach my $v (@vars) {
-        if ( my @p = $app->param($v) ) {
+        if ( my @p = $q->param($v) ) {
             $args{$v} = ( scalar @p > 1 && $v eq 'filter_val' ) ? \@p : $p[0];
         }
     }
@@ -3556,7 +3564,7 @@ sub blog {
     $app->{_blog} = shift if @_;
     return $app->{_blog} if $app->{_blog};
     return undef unless $app->query;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $app->query->param('blog_id');
     if ($blog_id) {
         $app->{_blog} = MT::Blog->load($blog_id);
     }
@@ -3714,7 +3722,7 @@ sub set_no_cache {
         $app->{apache}->no_cache(1);
     }
     else {
-        $app->param->cache('no');
+        $app->query->param->cache('no');
     }
 }
 
@@ -3995,7 +4003,7 @@ Example:
     # saves the value of a 'color' parameter into the user's session
     # this value will persist from one request to the next, but will
     # be cleared when the user logs out or has to reauthenicate.
-    $app->session('color', $app->param('color'))
+    $app->session('color', $app->query->param('color'))
 
 =head2 $app->start_session([$author, $remember])
 
@@ -4253,7 +4261,7 @@ perform additional checks which produce more specific error messages.
 Subclass authors can assume that $app->user is populated with the
 authenticated user when this routine is invoked, and that CGI query
 object is available through $app->query. Note that the use of 
-$app->{'query'} and $app->param() to fetch the query object is deprecated.
+$app->{'query'} and $app->query->param() to fetch the query object is deprecated.
 
 =head2 $app->is_secure
 
@@ -4282,15 +4290,15 @@ call cgiapp_get_query() and NOT set the query object as it does now
 in MT::App::init_request. Besides compatability, this would enable 
 developers to do any pecial request handling.
 
-The previous technique of accessing the $app object hash key
+B<WARNING>:The previous technique of accessing the $app object hash key
 'query' is considered deprecated and is not recommended for use
 any longer.
 
-=head2 $app->param($name[, $value])
+=head2 $app->query->param($name[, $value])
 
 Interface for getting and setting CGI query parameters. Example:
 
-    my $title = $app->param('entry_title');
+    my $title = $app->query->param('entry_title');
 
 Versions of MT before 3.16 did not support the
 MT::App::param() method. In that environment, $app->query is
@@ -4298,13 +4306,26 @@ a CGI object whose C<param> method works identically with
 this one. Note that the previous means of accessing the
 query object using $app->{'query'} is deprecated.
 
+B<WARNING>: The previous use without the query method called
+is deprecated and whose backward compatability will break in
+a future release.
+
 =head2 $app->param_hash
 
-Returns a hash reference containing all of the query parameter names
-and their values. Example:
+B<WARNING>: This method is deprecated and whose backward
+compatability will break in a future release. Use
+$app->query->param; instead.
 
-    my $data = $app->param_hash;
+=head2 $app->query->param
+
+Returns a hash reference containing all of the query
+parameter names and their values. Example:
+
+    my $data = $app->query->param;
     my $title = $data->{entry_title};
+
+Called in an ARRAY context this method form will return a
+plain hash instead of a reference.
 
 =head2 $app->post_run
 
