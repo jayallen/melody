@@ -1,0 +1,12 @@
+/* Brand */
+.main-screen #brand {
+    position: absolute;
+    top: 0px;
+    left: 20px;
+}
+#brand a {
+    display: block;
+    width: 150px;
+    height: 41px;
+    background: url('melody-logo.jpg') no-repeat;
+}
