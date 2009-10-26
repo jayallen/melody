@@ -18,7 +18,7 @@ sub password_exists { 0 }
 sub login {
     my $class = shift;
     my ($app) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
     my $blog = $app->model('blog')->load(scalar $q->param('blog_id'));
     my $identity = $q->param('openid_url');
     if (!$identity &&
@@ -42,7 +42,7 @@ sub login {
 sub handle_sign_in {
     my $class = shift;
     my ($app, $auth_type) = @_;
-    my $q = $app->{query};
+    my $q = $app->query;
     my $INTERVAL = 60 * 60 * 24 * 7;
 
     $auth_type ||= 'OpenID';
@@ -53,7 +53,7 @@ sub handle_sign_in {
     my $cmntr;
     my $session;
 
-    my %param = $app->param_hash;
+    my %param = $app->query->Vars;
     my $csr = $class->get_csr(\%param, $blog) or return 0;
 
     if(my $setup_url = $csr->user_setup_url( post_grant => 'return' )) {
@@ -155,9 +155,9 @@ sub set_extension_args {
 sub check_openid {
     my $class = shift;
     my ( $app, $blog, $identity ) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
 
-    my %param = $app->param_hash;
+    my %param = $app->query->Vars;
     my $csr = $class->get_csr(\%param, $blog);
     unless ( $csr ) {
         $app->errtrans('Could not load Net::OpenID::Consumer.');
@@ -408,7 +408,7 @@ sub _url_hash {
 sub check_url_params {
     my $class = shift;
     my ( $app, $blog ) = @_;
-    my $q = $app->{query};
+    my $q = $app->query;
 
     my $path = MT->config->CGIPath;
     if ($path =~ m!^/!) {

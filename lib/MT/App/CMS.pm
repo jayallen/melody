@@ -379,7 +379,7 @@ sub init_request {
 
     # Global 'blog_id' parameter check; if we get something
     # other than an integer, die
-    if ( my $blog_id = $app->param('blog_id') ) {
+    if ( my $blog_id = $app->query->param('blog_id') ) {
         if ( $blog_id ne int($blog_id) ) {
             die $app->translate("Invalid request");
         }
@@ -421,6 +421,7 @@ sub init_request {
 
 sub core_list_actions {
     my $app = shift;
+    my $q = $app->query;
     my $pkg = '$Core::MT::CMS::';
     return {
         'entry' => {
@@ -462,11 +463,11 @@ sub core_list_actions {
                 order     => 500,
                 condition => sub {
                     return 0 if $app->mode eq 'view';
-                    $app->param('blog_id')
+                    $q->param('blog_id')
                         && ( $app->user->is_superuser()
                             || $app->permissions->can_edit_all_posts )
-                        && !( defined  $app->param('filter_val') && $app->param('filter_val') == MT::Entry::JUNK())
-                        && !(defined $app->param('filter_key') && $app->param('filter_key') eq 'spam_entries')
+                        && !( defined  $q->param('filter_val') && $q->param('filter_val') == MT::Entry::JUNK())
+                        && !(defined $q->param('filter_key') && $q->param('filter_key') eq 'spam_entries')
                 },
             },
         },
@@ -509,7 +510,7 @@ sub core_list_actions {
                 order     => 500,
                 condition => sub {
                     return 0 if $app->mode eq 'view';
-                    $app->param('blog_id')
+                    $q->param('blog_id')
                         && ( $app->user->is_superuser()
                         || $app->permissions->can_manage_pages );
                 },
@@ -625,7 +626,7 @@ sub core_list_actions {
                 },
                 code => sub {
                     my $app = MT->app;
-                    $app->param( 'backup', 1 );
+                    $q->param( 'backup', 1 );
                     require MT::CMS::Template;
                     MT::CMS::Template::refresh_all_templates( $app, @_ );
                 },
@@ -653,7 +654,7 @@ sub core_list_actions {
             #     permission => 'rebuild',
             #     condition => sub {
             #         my $app = MT->app;
-            #         my $tmpl_type = $app->param('filter_key');
+            #         my $tmpl_type = $q->param('filter_key');
             #         return $app->mode eq 'itemset_action'  ? 1
             #              : !$app->blog                     ? 0
             #              : !$tmpl_type                     ? 0
@@ -670,7 +671,7 @@ sub core_list_actions {
             #     permission => 'rebuild',
             #     condition  => sub {
             #         my $app       = MT->app;
-            #         my $tmpl_type = $app->param('filter_key');
+            #         my $tmpl_type = $q->param('filter_key');
             #         return $app->mode eq 'itemset_action' ? 1
             #           : !$app->blog ? 0
             #           : !$tmpl_type ? 0
@@ -685,7 +686,7 @@ sub core_list_actions {
                 permission => 'edit_templates',
                 condition  => sub {
                     my $app = MT->app;
-                    my $tmpl_type = $app->param('filter_key') || '';
+                    my $tmpl_type = $q->param('filter_key') || '';
                     return
                           $tmpl_type eq 'system_templates' ? 0
                         : $tmpl_type eq 'email_templates'  ? 0
@@ -699,12 +700,14 @@ sub core_list_actions {
 
 sub _entry_label {
     my $app = MT->instance;
-    my $type = $app->param('type') || 'entry';
+    my $q = $app->query;
+    my $type = $q->param('type') || 'entry';
     $app->model($type)->class_label_plural;
 }
 
 sub core_list_filters {
     my $app = shift;
+    my $q = $app->query;
     return {
         asset => sub {
             require MT::CMS::Asset;
@@ -778,7 +781,7 @@ sub core_list_filters {
             _by_date => {
                 label => sub {
                     my $app = MT->instance;
-                    my $val = $app->param('filter_val');
+                    my $val = $q->param('filter_val');
                     my ( $from, $to ) = split /-/, $val;
                     $from = undef unless $from =~ m/^\d{8}$/;
                     $to   = undef unless $to   =~ m/^\d{8}$/;
@@ -810,7 +813,7 @@ sub core_list_filters {
                 },
                 handler => sub {
                     my ( $terms, $args ) = @_;
-                    my $val = $app->param('filter_val');
+                    my $val = $q->param('filter_val');
                     my ( $from, $to ) = split /-/, $val;
                     $from = undef unless $from =~ m/^\d{8}$/;
                     $from .= '000000';
@@ -978,7 +981,7 @@ sub core_list_filters {
             _comments_by_user => {
                 label => sub {
                     my $app     = MT->app;
-                    my $user_id = $app->param('filter_val');
+                    my $user_id = $q->param('filter_val');
                     my $user    = MT::Author->load($user_id);
                     require MT::Author;
                     return $app->translate(
@@ -1017,7 +1020,7 @@ sub core_list_filters {
             _by_date => {
                 label => sub {
                     my $app = MT->instance;
-                    my $val = $app->param('filter_val');
+                    my $val = $q->param('filter_val');
                     my ( $from, $to ) = split /-/, $val;
                     $from = undef unless $from =~ m/^\d{8}$/;
                     $to   = undef unless $to   =~ m/^\d{8}$/;
@@ -1048,7 +1051,7 @@ sub core_list_filters {
                 handler => sub {
                     my ( $terms, $args ) = @_;
                     require MT::Comment;
-                    my $val = $app->param('filter_val');
+                    my $val = $q->param('filter_val');
                     my ( $from, $to ) = split /-/, $val;
                     $from = undef unless $from =~ m/^\d{8}$/;
                     $from .= '000000';
@@ -1125,6 +1128,7 @@ sub core_list_filters {
 
 sub core_menus {
     my $app = shift;
+    my $q = $app->query;
     return {
         'create' => {
             label => "Create",
@@ -1214,9 +1218,9 @@ sub core_menus {
             order     => 1000,
             condition => sub {
                 return 1 if $app->user->is_superuser;
-                if ( $app->param('blog_id') ) {
+                if ( $q->param('blog_id') ) {
                     my $perms
-                        = $app->user->permissions( $app->param('blog_id') );
+                        = $app->user->permissions( $q->param('blog_id') );
                     return 1
                         if $perms->can_create_post
                             || $perms->can_publish_post
@@ -1245,9 +1249,9 @@ sub core_menus {
             order     => 2000,
             condition => sub {
                 return 1 if $app->user->is_superuser;
-                if ( $app->param('blog_id') ) {
+                if ( $q->param('blog_id') ) {
                     my $perms
-                        = $app->user->permissions( $app->param('blog_id') );
+                        = $app->user->permissions( $q->param('blog_id') );
                     return 1
                         if $perms && $perms->can_view_feedback;
                 }
@@ -1728,7 +1732,7 @@ sub user_can_admin_commenters {
 
 sub validate_magic {
     my $app = shift;
-    if ( my $feed_token = $app->param('feed_token') ) {
+    if ( my $feed_token = $app->query->param('feed_token') ) {
         return unless $app->user;
         my $pw = $app->user->api_password;
         return undef if ( $pw || '' ) eq '';
@@ -1742,7 +1746,7 @@ sub validate_magic {
 
 sub is_authorized {
     my $app     = shift;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $app->query->param('blog_id');
     $app->permissions(undef);
     return 1 unless $blog_id;
     return unless my $user = $app->user;
@@ -1755,6 +1759,7 @@ sub is_authorized {
 
 sub set_default_tmpl_params {
     my $app = shift;
+    my $q = $app->query;
     $app->SUPER::set_default_tmpl_params(@_);
     my ($tmpl) = @_;
     my $param = {};
@@ -1774,7 +1779,7 @@ sub set_default_tmpl_params {
     $param->{language_id} = ( $lang !~ /en[_-]us/ ) ? $lang : '';
     $param->{mode} = $app->mode;
 
-    my $blog_id = $app->param('blog_id') || 0;
+    my $blog_id = $app->query->param('blog_id') || 0;
     my $blog;
     my $blog_class = $app->model('blog');
     $blog ||= $blog_class->load($blog_id) if $blog_id;
@@ -1840,7 +1845,7 @@ sub set_default_tmpl_params {
     $param->{help_url} = $app->help_url() || $static_app_url . 'docs/';
 
     $param->{show_ip_info} ||= $app->config('ShowIPInformation');
-    my $type = $app->param('_type') || '';
+    my $type = $q->param('_type') || '';
 
     $param->{ "mode_$mode" . ( $type ? "_$type" : '' ) } = 1;
     $param->{return_args} ||= $app->make_return_args;
@@ -1852,7 +1857,7 @@ sub build_page {
     my ( $page, $param ) = @_;
     $param ||= {};
 
-    my $blog_id = $app->param('blog_id') || 0;
+    my $blog_id = $app->query->param('blog_id') || 0;
     my $blog;
     my $blog_class = $app->model('blog');
     $blog ||= $blog_class->load($blog_id) if $blog_id;
@@ -1895,6 +1900,7 @@ sub build_page {
 
 sub build_blog_selector {
     my $app = shift;
+	my $q = $app->query;
     my ($param) = @_;
 
     return if exists $param->{top_blog_loop};
@@ -1920,7 +1926,7 @@ sub build_blog_selector {
     @fav_blogs = grep { $_ != $blog_id } @fav_blogs if $blog_id;
 
     # Special case for when a user only has access to a single blog.
-    if (   ( !defined( $app->param('blog_id') ) )
+    if (   ( !defined( $q->param('blog_id') ) )
         && ( @blogs == 1 )
         && ( scalar @fav_blogs <= 1 ) )
     {
@@ -1938,7 +1944,7 @@ sub build_blog_selector {
         );
         if ( !$app->blog ) {
             if ( $app->mode eq 'dashboard' ) {
-                $app->param( 'blog_id', $blog_id );
+                $q->param( 'blog_id', $blog_id );
                 $param->{blog_id}   = $blog_id;
                 $param->{blog_name} = $blog->name;
                 $app->permissions($perms);
@@ -2191,7 +2197,7 @@ sub return_to_dashboard {
     my $app = shift;
     my (%param) = @_;
     $param{redirect} = 1 unless %param;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $app->query->param('blog_id');
     $param{blog_id} = $blog_id if $blog_id;
     return $app->redirect(
         $app->uri( mode => 'dashboard', args => \%param ) );
@@ -2199,7 +2205,8 @@ sub return_to_dashboard {
 
 sub list_pref {
     my $app      = shift;
-    my ($list)   = @_;
+    my $q = $app->query;
+ 	my ($list)   = @_;
     my $updating = $app->mode eq 'update_list_prefs';
     unless ($updating) {
         my $pref = $app->request("list_pref_$list");
@@ -2258,36 +2265,36 @@ sub list_pref {
 
     if ($updating) {
         my $updated = 0;
-        if ( my $limit = $app->param('limit') ) {
+        if ( my $limit = $q->param('limit') ) {
             $limit = 20 if $limit eq 'none';
             $list_pref->{rows} = $limit > 0 ? $limit : 20;
             $updated = 1;
         }
-        if ( my $view = $app->param('verbosity') ) {
+        if ( my $view = $q->param('verbosity') ) {
             if ( $view =~ m!^compact|expanded$! ) {
                 $list_pref->{view} = $view;
                 $updated = 1;
             }
         }
-        if ( my $bar = $app->param('actions') ) {
+        if ( my $bar = $q->param('actions') ) {
             if ( $bar =~ m!^above|below|both$! ) {
                 $list_pref->{bar} = $bar;
                 $updated = 1;
             }
         }
-        if ( my $ord = $app->param('order') ) {
+        if ( my $ord = $q->param('order') ) {
             if ( $ord =~ m!^ascend|descend$! ) {
                 $list_pref->{order} = $ord;
                 $updated = 1;
             }
         }
-        if ( my $sort = $app->param('sort') ) {
+        if ( my $sort = $q->param('sort') ) {
             if ( $sort =~ m!^name|created|updated$! ) {
                 $list_pref->{'sort'} = $sort;
                 $updated = 1;
             }
         }
-        if ( my $dates = $app->param('dates') ) {
+        if ( my $dates = $q->param('dates') ) {
             if ( $dates =~ m!^relative|full$! ) {
                 $list_pref->{'dates'} = $dates;
                 $updated = 1;
@@ -2359,6 +2366,7 @@ sub make_feed_link {
 
 sub show_error {
     my $app = shift;
+	my $q = $app->query;
     my ($param) = @_;
 
     # handle legacy scalar error string signature
@@ -2381,7 +2389,7 @@ sub show_error {
                     );
 
             # fs = full screen
-            if ( $app->param('fs') ) {
+            if ( $q->param('fs') ) {
                 $param->{fs} = 1;
                 if ( exists $app->{goback} ) {
                     $param->{goback} = "window.location='" . $app->{goback} . "'";
@@ -2410,7 +2418,7 @@ sub show_error {
             $param->{goback} = "window.location='" . $app->{goback} . "'";
         }
         else {
-            my $blog_id = $app->param('blog_id');
+            my $blog_id = $q->param('blog_id');
             my $url     = $app->uri(
                 mode => 'rebuild_confirm',
                 args => { blog_id => $blog_id }
@@ -2603,7 +2611,7 @@ sub _translate_naughty_words {
 sub autosave_session_obj {
     my $app           = shift;
     my ($or_make_one) = @_;
-    my $q             = $app->param;
+    my $q             = $app->query;
     my $type          = $q->param('_type');
     return unless $type;
     my $id = $q->param('id');
@@ -2635,10 +2643,11 @@ sub autosave_session_obj {
 
 sub autosave_object {
     my $app = shift;
+	my $q = $app->query;
     my $sess_obj = $app->autosave_session_obj(1) or return;
     $sess_obj->data('');
-    my $class = $app->model( $app->param('_type') ) or return;
-    my %data = $app->param_hash;
+    my $class = $app->model( $q->param('_type') ) or return;
+    my %data = $q->param;
     delete $data{_autosave};
     delete $data{magic_token};
 
@@ -2678,7 +2687,7 @@ sub listify {
 sub user_blog_prefs {
     my $app   = shift;
     my $prefs = $app->request('user_blog_prefs');
-    return $prefs if $prefs && !$app->param('config_view');
+    return $prefs if $prefs && !$app->query->param('config_view');
 
     my $perms = $app->permissions;
     return {} unless $perms;
@@ -2689,7 +2698,7 @@ sub user_blog_prefs {
         $prefs{$name} = $value;
     }
     my $updated = 0;
-    if ( my $view = $app->param('config_view') ) {
+    if ( my $view = $app->query->param('config_view') ) {
         $prefs{'config_view'} = $view;
         $updated = 1;
     }
@@ -2774,7 +2783,7 @@ sub archive_type_sorter {
 
 sub preview_object_basename {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my @parts;
     my $blog    = $app->blog;
     my $blog_id = $blog->id if $blog;
@@ -2842,7 +2851,7 @@ sub add_to_favorite_blogs {
 
 sub _entry_prefs_from_params {
     my $app  = shift;
-    my $q    = $app->param;
+    my $q    = $app->query;
     my $type = $q->param('entry_prefs');
     my %fields;
     if ( $type && lc $type ne 'custom' ) {
@@ -2877,16 +2886,17 @@ sub _entry_prefs_from_params {
 # This is not a handler but a utility routine
 sub rebuild_these {
     my $app = shift;
+    my $q = $app->query;
     my ( $rebuild_set, %options ) = @_;
 
     # if there's nothing to rebuild, just return
     if ( !keys %$rebuild_set ) {
-        if ( my $start_time = $app->param('start_time') ) {
+        if ( my $start_time = $app->query->param('start_time') ) {
             $app->publisher->start_time($start_time);
         }
 
         # now, rebuild indexes for affected blogs
-        my @blogs = $app->param('blog_ids');
+        my @blogs = $q->param('blog_ids');
         if (@blogs) {
             $app->run_callbacks('pre_build') if @blogs;
             foreach my $blog_id (@blogs) {
@@ -2894,7 +2904,7 @@ sub rebuild_these {
                 $app->rebuild_indexes( Blog => $blog )
                     or return $app->publish_error();
             }
-            my $blog_id = int( $app->param('blog_id') );
+            my $blog_id = int( $q->param('blog_id') );
             my $this_blog = MT::Blog->load($blog_id) if $blog_id;
             $app->run_callbacks( 'rebuild', $this_blog );
             $app->run_callbacks('post_build');
@@ -2907,7 +2917,7 @@ sub rebuild_these {
         $app->run_callbacks('pre_build');
         my $params = {
             return_args => $app->return_args,
-            blog_id     => $app->param('blog_id') || 0,
+            blog_id     => $q->param('blog_id') || 0,
             id          => [ keys %$rebuild_set ],
             start_time  => $start_time,
         };
@@ -2921,8 +2931,8 @@ sub rebuild_these {
         return $app->load_tmpl( 'rebuilding.tmpl', \%param );
     }
     else {
-        my @blogs      = $app->param('blog_ids');
-        my $start_time = $app->param('start_time');
+        my @blogs      = $q->param('blog_ids');
+        my $start_time = $q->param('start_time');
         $app->publisher->start_time($start_time);
         my %blogs = map { $_ => () } @blogs;
         my @set = keys %$rebuild_set;
@@ -2956,9 +2966,9 @@ sub rebuild_these {
             }
         }
         my $params = {
-            return_args     => $app->param('return_args'),
+            return_args     => $q->param('return_args'),
             build_type_name => $app->translate("entry"),
-            blog_id         => $app->param('blog_id') || 0,
+            blog_id         => $q->param('blog_id') || 0,
             blog_ids        => [ keys %blogs ],
             id              => \@rest,
             start_time      => $start_time,
@@ -2976,10 +2986,10 @@ sub rebuild_these {
 
 sub remove_preview_file {
     my $app = shift;
-
+    my $q = $app->query;
     # Clear any preview file that may exist (returning from
     # a preview using the 'reedit', 'cancel' or 'save' buttons)
-    if ( my $preview = $app->param('_preview_file') ) {
+    if ( my $preview = $q->param('_preview_file') ) {
         require MT::Session;
         if (my $tf = MT::Session->load(
                 {   id   => $preview,

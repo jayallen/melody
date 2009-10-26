@@ -2080,7 +2080,7 @@ sub _hdlr_app_list_filters {
     my $filters = $ctx->var("list_filters");
     return '' if (ref($filters) ne 'ARRAY') || (! @$filters );
     my $mode = $app->mode;
-    my $type = $app->param('_type');
+    my $type = $app->query->param('_type');
     my $type_param = "";
     $type_param = "&amp;_type=" . encode_url($type) if defined $type;
     return $ctx->build(<<EOT, $cond);
@@ -7991,7 +7991,7 @@ sub _hdlr_entries {
         $args->{offset} = 0;
         if (($args->{lastn} || $args->{limit}) && (my $app = MT->instance)) {
             if ($app->isa('MT::App')) {
-                if (my $offset = $app->param('offset')) {
+                if (my $offset = $app->query->param('offset')) {
                     $args->{offset} = $offset;
                 }
             }

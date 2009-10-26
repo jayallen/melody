@@ -6,7 +6,7 @@ use MT::I18N qw( const );
 
 sub start_import {
     my $app     = shift;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $app->query->param('blog_id');
 
     my $perms = $app->permissions;
     return $app->return_to_dashboard( permission => 1 )
@@ -85,7 +85,7 @@ sub start_import {
 sub do_import {
     my $app = shift;
 
-    my $q = $app->param;
+    my $q = $app->query;
     require MT::Blog;
     my $blog_id = $q->param('blog_id')
       or return $app->error( $app->translate("Please select a blog.") );

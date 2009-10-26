@@ -2262,7 +2262,7 @@ sub build_page {
         ## If it's a login screen, direct the user to where they were going
         ## (query params including mode and all) unless they were logging in,
         ## logging out, or deleting something.
-        my $q = $mt->{query};
+        my $q = $mt->query;
         if ($mode) {
             my @query = map { { name => $_, value => scalar encode_text( $q->param($_) ) }; }
                 grep { ($_ ne 'username') && ($_ ne 'password') && ($_ ne 'submit') && ($mode eq 'logout' ? ($_ ne '__mode') : 1) } $q->param;

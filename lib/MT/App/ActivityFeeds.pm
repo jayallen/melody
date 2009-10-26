@@ -50,8 +50,9 @@ sub init_core_callbacks {
 # session records, since we aren't setting a login cookie for feeds.
 sub login {
     my $app      = shift;
-    my $username = $app->param('username');
-    my $token    = $app->param('token');
+    my $q 		 = $app->query;
+    my $username = $q->param('username');
+    my $token    = $q->param('token');
 
     my $user_class = $app->{user_class};
     eval "use $user_class;";
@@ -116,7 +117,8 @@ sub session {
 # elements if so desired, or can append things to a feed as well.
 sub mode_default {
     my $app = shift;
-    my $view = $app->param('view') || 'system';
+    my $q   = $app->query;
+    my $view = $q->param('view') || 'system';
 
     eval {
 
@@ -170,6 +172,7 @@ sub mode_default {
 # Generic log to feed; limit using $terms; returns the feed content
 sub process_log_feed {
     my $app = shift;
+	my $q = $app->query;
     my ( $terms, $param ) = @_;
 
     my %templates;
@@ -187,7 +190,7 @@ sub process_log_feed {
     my $host = $app->base;
     $host =~ s!^https?://!!;
     my $path  = $app->mt_uri;
-    my $token = $app->param('token');
+    my $token = $q->param('token');
 
     require MT::Log;
     my $cfg  = $app->config;
@@ -257,8 +260,8 @@ sub process_log_feed {
     my $chrome_tmpl = $app->load_tmpl('feed_chrome.tmpl');
     $param->{loop_entries} = \@entries;
     my $str = qq();
-    for my $key ( $app->param ) {
-        $str .= "&amp;" . encode_url($key) . "=" . encode_url($app->param($key));
+    for my $key ( $q->param ) {
+        $str .= "&amp;" . encode_url($key) . "=" . encode_url($q->param($key));
     }
     $str =~ s/^&amp;(.+)$/?$1/;
     $param->{feed_self} = $app->base . $app->app_path . $app->script . $str;
@@ -327,14 +330,14 @@ sub apply_log_filter {
 
 sub _feed_ping {
     my ( $cb, $app, $view, $feed ) = @_;
-
+	my $q 	 = $app->query;
     my $user = $app->user;
 
     require MT::Blog;
     my $blog;
 
     # verify user has permission to view entries for given weblog
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     if ($blog_id) {
         if ( !$user->is_superuser ) {
             require MT::Permission;
@@ -386,14 +389,14 @@ sub _feed_ping {
 
 sub _feed_comment {
     my ( $cb, $app, $view, $feed ) = @_;
-
+	my $q 	 = $app->query;
     my $user = $app->user;
 
     require MT::Blog;
     my $blog;
 
     # verify user has permission to view entries for given weblog
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     if ($blog_id) {
         if ( !$user->is_superuser ) {
             require MT::Permission;
@@ -445,14 +448,14 @@ sub _feed_comment {
 
 sub _feed_entry {
     my ( $cb, $app, $view, $feed ) = @_;
-
+	my $q    = $app->query;
     my $user = $app->user;
 
     require MT::Blog;
     my $blog;
 
     # verify user has permission to view entries for given weblog
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     if ($blog_id) {
         if ( !$user->is_superuser ) {
             require MT::Permission;
@@ -501,11 +504,11 @@ sub _feed_entry {
 
 sub _feed_blog {
     my ( $cb, $app, $view, $feed ) = @_;
-
+	my $q    = $app->query;
     my $user = $app->user;
 
     # verify user has permission to view entries for given weblog
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
 
     require MT::Blog;
     my $blog;
@@ -564,11 +567,11 @@ sub _feed_blog {
 
 sub _feed_system {
     my ( $cb, $app, $view, $feed ) = @_;
-
+	my $q    = $app->query;
     my $user       = $app->user;
-    my $blog_id    = $app->param('blog_id');
-    my $filter     = $app->param('filter');
-    my $filter_val = $app->param('filter_val');
+    my $blog_id    = $q->param('blog_id');
+    my $filter     = $q->param('filter');
+    my $filter_val = $q->param('filter_val');
 
     # verify user has permission to view entries for given weblog
     if ( !$user->is_superuser ) {
@@ -606,10 +609,10 @@ sub _feed_system {
 
 sub _feed_debug {
     my ( $cb, $app, $view, $feed ) = @_;
-
+	my $q    = $app->query;
     my $user = $app->user;
     return unless $user->is_superuser;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     my $args    = {
         'filter'     => 'class',
         'filter_val' => 'debug',
@@ -626,14 +629,14 @@ sub _feed_debug {
 
 sub _feed_page {
     my ( $cb, $app, $view, $feed ) = @_;
-
+	my $q    = $app->query;
     my $user = $app->user;
 
     require MT::Blog;
     my $blog;
 
     # verify user has permission to view entries for given weblog
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     if ($blog_id) {
         if ( !$user->is_superuser ) {
             require MT::Permission;
