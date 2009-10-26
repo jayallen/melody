@@ -5,26 +5,27 @@ use MT::Util qw( epoch2ts encode_html );
 
 sub dashboard {
     my $app = shift;
+	my $q    = $app->query;
     my (%param) = @_;
 
     if ( $app->request('fresh_login') ) {
-        if ( !$app->param('blog_id') ) {
+        if ( !$q->param('blog_id') ) {
 
             # return to the last blog they visted, if any
             my $fav_blogs = $app->user->favorite_blogs || [];
             my $blog_id = $fav_blogs->[0] if @$fav_blogs;
-            $app->param( 'blog_id', $blog_id ) if $blog_id;
+            $q->param( 'blog_id', $blog_id ) if $blog_id;
             $app->delete_param('blog_id') unless $app->is_authorized;
         }
     }
 
     my $param = \%param;
 
-    $param->{redirect}   ||= $app->param('redirect');
-    $param->{permission} ||= $app->param('permission');
-    $param->{saved}      ||= $app->param('saved');
+    $param->{redirect}   ||= $q->param('redirect');
+    $param->{permission} ||= $q->param('permission');
+    $param->{saved}      ||= $q->param('saved');
 
-    $param->{system_overview_nav} = $app->param('blog_id') ? 0 : defined($app->param('blog_id')) ? 1 : 0;
+    $param->{system_overview_nav} = $q->param('blog_id') ? 0 : defined($q->param('blog_id')) ? 1 : 0;
     $param->{quick_search}        = 0;
     $param->{no_breadcrumbs}      = 1;
     $param->{screen_class}        = "dashboard";

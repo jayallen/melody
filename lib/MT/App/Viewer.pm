@@ -33,13 +33,14 @@ my %view_handlers = (
 
 sub view {
     my $app = shift;
+    my $q = $app->query;
 
     my $R = MT::Request->instance;
     $R->stash( 'live_view', 1 );
 
     ## Process the path info.
-    my $uri = $app->param('uri') || $app->path_info;
-    my $blog_id = $app->param('blog_id');
+    my $uri = $q->param('uri') || $app->path_info;
+    my $blog_id = $q->param('blog_id');
 
     ## Check ExcludeBlogs and IncludeBlogs to see if this blog is
     ## private or not.
@@ -101,7 +102,7 @@ my %MimeTypes = (
 sub _view_index {
     my $app = shift;
     my ( $fi, $tmpl ) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $ctx = $tmpl->context;
     if ( $tmpl->text =~ m/<MT:?Entries/i ) {

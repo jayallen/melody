@@ -15,7 +15,7 @@ sub password_exists { 0 }
 sub handle_sign_in {
     my $class = shift;
     my ($app, $auth_type) = @_;
-    my $q = $app->param;
+    my $q = $app->query;
 
     my $sig_str = $q->param('sig');
     unless ($sig_str) {

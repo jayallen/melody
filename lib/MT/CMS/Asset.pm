@@ -95,8 +95,8 @@ sub edit {
 
 sub list {
     my $app = shift;
-
-    my $blog_id = $app->param('blog_id');
+	my $q = $app->query;
+    my $blog_id = $q->param('blog_id');
     my $blog;
     if ($blog_id) {
         my $blog_class = $app->model('blog');
@@ -118,13 +118,13 @@ sub list {
     my %args = ( sort => 'created_on', direction => 'descend' );
 
     my $class_filter;
-    my $filter = ( $app->param('filter') || '' );
+    my $filter = ( $q->param('filter') || '' );
     if ( $filter eq 'class' ) {
-        $class_filter = $app->param('filter_val');
+        $class_filter = $q->param('filter_val');
     }
     elsif ($filter eq 'userpic') {
         $class_filter = 'image';
-        $terms{created_by} = $app->param('filter_val');
+        $terms{created_by} = $q->param('filter_val');
 
         my $tag = MT::Tag->load( { name => '@userpic' },
             { binary => { name => 1 } } );
@@ -181,12 +181,12 @@ sub list {
     # Now, sort it
     @class_loop = sort { $a->{class_label} cmp $b->{class_label} } @class_loop;
 
-    my $dialog_view = $app->param('dialog_view') ? 1 : 0;
-    my $no_insert = $app->param('no_insert') ? 1 : 0;
+    my $dialog_view = $q->param('dialog_view') ? 1 : 0;
+    my $no_insert = $q->param('no_insert') ? 1 : 0;
     my $perms = $app->permissions;
-    my %carry_params = map { $_ => $app->param($_) || '' }
+    my %carry_params = map { $_ => $q->param($_) || '' }
         (qw( edit_field upload_mode require_type next_mode asset_select ));
-    $carry_params{'user_id'} = $app->param('filter_val')
+    $carry_params{'user_id'} = $q->param('filter_val')
         if $filter eq 'userpic';
     _set_start_upload_params($app, \%carry_params);
     $app->listing(
@@ -230,9 +230,10 @@ sub list {
 
 sub insert {
     my $app  = shift;
-    my $text = $app->param('no_insert') ? "" : _process_post_upload( $app );
+	my $q = $app->query;
+	my $text = $q->param('no_insert') ? "" : _process_post_upload( $app );
     return unless defined $text;
-    my $file_ext_changes = $app->param('changed_file_ext');
+    my $file_ext_changes = $q->param('changed_file_ext');
     my ($ext_from, $ext_to) = split(",", $file_ext_changes) if $file_ext_changes;
     my $extension_message = $app->translate("Extension changed from [_1] to [_2]", $ext_from, $ext_to) if ($ext_from && $ext_to);
     my $tmpl;
@@ -241,7 +242,7 @@ sub insert {
             'dialog/asset_insert.tmpl',
             {
                 upload_html => $text || '',
-                edit_field => scalar $app->param('edit_field') || '',
+                edit_field => scalar $q->param('edit_field') || '',
                 extension_message => $extension_message,
             },
         );
@@ -250,12 +251,12 @@ sub insert {
             'dialog/asset_insert.tmpl',
             {
                 upload_html => $text || '',
-                edit_field => scalar $app->param('edit_field') || '',
+                edit_field => scalar $q->param('edit_field') || '',
             },
         );
     }
     my $ctx = $tmpl->context;
-    my $id = $app->param('id') or return $app->errtrans("Invalid request.");
+    my $id = $q->param('id') or return $app->errtrans("Invalid request.");
     my $asset = MT::Asset->load( $id );
     $ctx->stash('asset', $asset);
     return $tmpl;
@@ -263,6 +264,7 @@ sub insert {
 
 sub asset_userpic {
     my $app = shift;
+	my $q = $app->query;
     my ($param) = @_;
 
     my ($id, $asset);
@@ -270,13 +272,13 @@ sub asset_userpic {
         $id = $asset->id;
     }
     else {
-        $id = $param->{asset_id} || scalar $app->param('id');
+        $id = $param->{asset_id} || scalar $q->param('id');
         $asset = $app->model('asset')->lookup($id);
     }
 
     my $thumb_html = $app->model('author')->userpic_html( Asset => $asset );
 
-    my $user_id = $param->{user_id} || $app->param('user_id');
+    my $user_id = $param->{user_id} || $q->param('user_id');
     if ($user_id) {
         my $user = $app->model('author')->load( {id => $user_id} );
         if ($user) {
@@ -297,7 +299,7 @@ sub asset_userpic {
         'dialog/asset_userpic.tmpl',
         {
             asset_id       => $id,
-            edit_field     => $app->param('edit_field') || '',
+            edit_field     => $q->param('edit_field') || '',
             author_userpic => $thumb_html,
         },
     );
@@ -305,6 +307,7 @@ sub asset_userpic {
 
 sub start_upload {
     my $app = shift;
+	my $q = $app->query;
     $app->add_breadcrumb( $app->translate('Upload File') );
     my %param;
     %param = @_ if @_;
@@ -313,7 +316,7 @@ sub start_upload {
 
     for my $field (qw( entry_insert edit_field upload_mode require_type
       asset_select )) {
-        $param{$field} ||= $app->param($field);
+        $param{$field} ||= $q->param($field);
     }
 
     $app->load_tmpl( 'dialog/asset_upload.tmpl', \%param );
@@ -321,9 +324,9 @@ sub start_upload {
 
 sub upload_file {
     my $app = shift;
-
+	my $q = $app->query;
     my ($asset, $bytes) = _upload_file( $app,
-        require_type => ($app->param('require_type') || ''),
+        require_type => ($q->param('require_type') || ''),
         @_,
     );
     return if !defined $asset;
@@ -337,13 +340,14 @@ sub upload_file {
 
 sub complete_insert {
     my $app = shift;
+	my $q = $app->query;
     my (%args) = @_;
     my $asset = $args{asset};
-    if ( !$asset && $app->param('id') ) {
+    if ( !$asset && $q->param('id') ) {
         require MT::Asset;
-        $asset = MT::Asset->load( $app->param('id') )
+        $asset = MT::Asset->load( $q->param('id') )
           || return $app->errtrans( "Can't load file #[_1].",
-            $app->param('id') );
+            $q->param('id') );
     }
     return $app->errtrans('Invalid request.') unless $asset;
 
@@ -352,13 +356,13 @@ sub complete_insert {
     require MT::Blog;
     my $blog = $asset->blog
       or
-      return $app->errtrans( "Can't load blog #[_1].", $app->param('blog_id') );
+      return $app->errtrans( "Can't load blog #[_1].", $q->param('blog_id') );
     my $perms = $app->permissions
       or return $app->errtrans('No permissions');
 
     # caller wants asset without any option step, so insert immediately
-    if ($app->param('asset_select') || $app->param('no_insert')) {
-        $app->param( 'id', $asset->id );
+    if ($q->param('asset_select') || $q->param('no_insert')) {
+        $q->param( 'id', $asset->id );
         return insert($app);
     }
     
@@ -368,23 +372,23 @@ sub complete_insert {
         fname               => $asset->file_name,
         is_image            => $args{is_image} || 0,
         url                 => $asset->url,
-        middle_path         => $app->param('middle_path') || '',
-        extra_path          => $app->param('extra_path') || '',
+        middle_path         => $q->param('middle_path') || '',
+        extra_path          => $q->param('extra_path') || '',
     };
     for my $field (qw( direct_asset_insert edit_field entry_insert site_path asset_select )) {
-        $param->{$field} = scalar $app->param($field) || '';
+        $param->{$field} = scalar $q->param($field) || '';
     }
     if ( $args{is_image} ) {
         $param->{width}  = $asset->image_width;
         $param->{height} = $asset->image_height;
-    } if ($app->param('changed_file_ext')) {
-        my ($ext_from, $ext_to) = split(",", $app->param('changed_file_ext'));
+    } if ($q->param('changed_file_ext')) {
+        my ($ext_from, $ext_to) = split(",", $q->param('changed_file_ext'));
         $param->{extension_message} = $app->translate("Extension changed from [_1] to [_2]", $ext_from, $ext_to) if ($ext_from && $ext_to);
     }
-    if ( !$app->param('asset_select') && ($perms->can_create_post || $app->user->is_superuser) ) {
+    if ( !$q->param('asset_select') && ($perms->can_create_post || $app->user->is_superuser) ) {
         my $html = $asset->insert_options($param);
         if ( $param->{direct_asset_insert} && !$html ) {
-            $app->param( 'id', $asset->id );
+            $q->param( 'id', $asset->id );
             return insert($app);
         }
         $param->{options_snippet} = $html;
@@ -410,17 +414,17 @@ sub complete_insert {
         }
 
         require MT::ObjectTag;
-        my $q       = $app->param;
+        my $q       = $app->query;
         my $blog_id = $q->param('blog_id');
         $param->{tags_js} = MT::Util::to_json( MT::Tag->cache( blog_id => $blog_id, class => 'MT::Asset', private => 1 ) );
     }
-    $param->{'no_insert'} = $app->param('no_insert');
+    $param->{'no_insert'} = $q->param('no_insert');
     $app->load_tmpl( 'dialog/asset_options.tmpl', $param );
 }
 
 sub complete_upload {
     my $app   = shift;
-    my %param = $app->param_hash;
+    my %param = $app->query->param;
     my $asset;
     require MT::Asset;
     $param{id} && ( $asset = MT::Asset->load( $param{id} ) )
@@ -449,20 +453,20 @@ sub complete_upload {
     return $app->redirect(
         $app->uri(
             'mode' => 'list_assets',
-            args   => { 'blog_id' => $app->param('blog_id') }
+            args   => { 'blog_id' => $app->query->param('blog_id') }
         )
     );
 }
 
 sub start_upload_entry {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     $q->param( '_type', 'entry' );
     defined( my $text = _process_post_upload($app) ) or return;
     $q->param( 'text', $text );
     $q->param ('asset_id', $q->param('id'));
     $q->param( 'id', 0 );
-    $app->param( 'tags', '' );
+    $q->param( 'tags', '' );
     $app->forward("view");
 }
 
@@ -482,9 +486,8 @@ sub can_delete {
 sub pre_save {
     my $eh = shift;
     my ( $app, $obj ) = @_;
-
     # save tags
-    my $tags = $app->param('tags');
+    my $tags = $app->query->param('tags');
     if ( defined $tags ) {
         my $blog = $app->blog;
         my $fields = $blog ? $blog->smart_replace_fields
@@ -712,8 +715,8 @@ sub build_asset_table {
 sub asset_insert_text {
     my $app     = shift;
     my ($param) = @_;
-    my $q       = $app->param;
-    my $id      = $app->param('id')
+    my $q       = $app->query;
+    my $id      = $q->param('id')
       or return $app->errtrans("Invalid request.");
     require MT::Asset;
     my $asset = MT::Asset->load($id)
@@ -723,7 +726,7 @@ sub asset_insert_text {
 
 sub _process_post_upload {
     my $app   = shift;
-    my %param = $app->param_hash;
+    my %param = $app->query->param;
     my $asset;
     require MT::Asset;
     $param{id} && ( $asset = MT::Asset->load( $param{id} ) )
@@ -745,7 +748,7 @@ sub _process_post_upload {
 # FIXME: need to make this work
 sub save {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $perms = $app->permissions;
     my $type  = $q->param('_type');
     my $class = $app->model($type)
@@ -798,7 +801,7 @@ sub _set_start_upload_params {
     if (my $perms = $app->permissions) {
         return $app->error( $app->translate("Permission denied.") )
           unless $perms->can_upload;
-        my $blog_id = $app->param('blog_id');
+        my $blog_id = $app->query->param('blog_id');
         require MT::Blog;
         my $blog = MT::Blog->load($blog_id)
             or return $app->error($app->translate('Can\'t load blog #[_1].', $blog_id));
@@ -895,7 +898,7 @@ sub _upload_file {
 
     $app->validate_magic() or return;
 
-    my $q = $app->param;
+    my $q = $app->query;
     my ($fh, $info) = $app->upload_info('file');
     my $mimetype;
     if ($info) {
@@ -1011,9 +1014,9 @@ sub _upload_file {
         $asset_file = $q->param('site_path') ? '%r' : '%a';
         $asset_file = File::Spec->catfile( $asset_file, $relative_path );
         $local_file = File::Spec->catfile( $path, $basename );
-        $base_url = $app->param('site_path') ? $blog->site_url
+        $base_url = $q->param('site_path') ? $blog->site_url
           : $blog->archive_url;
-        $asset_base_url = $app->param('site_path') ? '%r' : '%a';
+        $asset_base_url = $q->param('site_path') ? '%r' : '%a';
 
         ## Untaint. We have already tested $basename and $relative_path for security
         ## issues above, and we have to assume that we can trust the user's
@@ -1040,7 +1043,7 @@ sub _upload_file {
                     rename($local_file, $target_file);
                     $local_file =~ s/$ext_old/$ext_temp/;
                     $real_fh =~ s/$ext_old/$ext_temp/;
-                    $app->param("changed_file_ext", "$ext_old,$ext_temp");
+                    $q->param("changed_file_ext", "$ext_old,$ext_temp");
                 }
             }
         }
@@ -1123,7 +1126,7 @@ sub _upload_file {
                   );
                 close $tmp_fh;
                 my ( $vol, $path, $tmp ) = File::Spec->splitpath($tmp_file);
-                my ($ext_from, $ext_to) = split(",", $app->param('changed_file_ext'));
+                my ($ext_from, $ext_to) = split(",", $q->param('changed_file_ext'));
                 my $extension_message = $app->translate("Extension changed from [_1] to [_2]", $ext_from, $ext_to) if ($ext_from && $ext_to);
                 return $app->load_tmpl(
                     'dialog/asset_replace.tmpl',
@@ -1133,7 +1136,7 @@ sub _upload_file {
                         site_path    => scalar $q->param('site_path'),
                         asset_select => $q->param('asset_select'),
                         entry_insert => $q->param('entry_insert'),
-                        edit_field   => $app->param('edit_field'),
+                        edit_field   => $q->param('edit_field'),
                         middle_path  => $middle_path,
                         fname        => $basename,
                         no_insert    => $q->param('no_insert') || "",

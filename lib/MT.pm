@@ -30,10 +30,10 @@ BEGIN {
     $plugins_installed = 0;
 
     if('__MAKE_ME__' eq '__MAKE_' . 'ME__') { # If make is not run
-        ( $VERSION, $SCHEMA_VERSION ) = ( '4.3', '4.0075');
+        ( $VERSION, $SCHEMA_VERSION ) = ( '4.32', '4.0076');
         ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
             'Melody',    'OM',
-            '0.9.2', '0.9.2 (MT 4.3+)', 'http://openmelody.org'
+            '0.9.4', '0.9.4 (MT 4.32+)', 'http://openmelody.org'
         );
     } else {      
         ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', 
@@ -2262,7 +2262,7 @@ sub build_page {
         ## If it's a login screen, direct the user to where they were going
         ## (query params including mode and all) unless they were logging in,
         ## logging out, or deleting something.
-        my $q = $mt->{query};
+        my $q = $mt->query;
         if ($mode) {
             my @query = map { { name => $_, value => scalar encode_text( $q->param($_) ) }; }
                 grep { ($_ ne 'username') && ($_ ne 'password') && ($_ ne 'submit') && ($mode eq 'logout' ? ($_ ne '__mode') : 1) } $q->param;

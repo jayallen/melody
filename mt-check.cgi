@@ -462,13 +462,7 @@ for my $list (\@REQ, \@DATA, \@OPT) {
     my $data = ($list == \@DATA);
     my $req = ($list == \@REQ);
     my $type;
-    my $phrase;
-
-    if (!$view) {
-        $phrase = translate("Checking for");
-    } else {
-        $phrase = translate("Installed");
-    }
+    my $phrase = translate("Checking for");
 
     if ($data) {
         $type = translate("Data Storage");
@@ -479,20 +473,16 @@ for my $list (\@REQ, \@DATA, \@OPT) {
     }
     print trans_templ(qq{<h2><MT_TRANS phrase="[_1] [_2] Modules" params="$phrase%%$type"></h2>\n\t<div>\n});
     if (!$req && !$data) {
-        if (!$view) {
         print trans_templ(<<MSG);
     <p class="msg msg-info"><MT_TRANS phrase="The following modules are <strong>optional</strong>. If your server does not have these modules installed, you only need to install them if you require the functionality that the module provides."></p>
 
 MSG
-       }
     }
     if ($data) {
-        if (!$view) {
         print trans_templ(<<MSG);
         <p class="msg msg-info"><MT_TRANS phrase="Some of the following modules are required by the various data storage options in Movable Type. In order run the system, your server needs to have DBI and at least one of the other modules installed."></p>
 
 MSG
-        }
     }
     my $got_one_data = 0;
     my $dbi_is_okay = 0;
@@ -507,9 +497,10 @@ MSG
         eval("use $mod" . ($ver ? " $ver;" : ";"));
         if ($@) {
             $is_good = 0 if $req;
+            my $link = 'http://search.cpan.org/perldoc?' . $mod;
             my $msg = $ver ?
-                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Either your server does not have [_1] installed, the version that is installed is too old, or [_1] requires another module that is not installed." params="$mod"> }) :
-                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Your server does not have [_1] installed, or [_1] requires another module that is not installed." params="$mod"> });
+                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Either your server does not have <a href="[_2]">[_1]</a> installed, the version that is installed is too old, or [_1] requires another module that is not installed." params="$mod%%$link"> }) :
+                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Your server does not have <a href="[_2]">[_1]</a> installed, or [_1] requires another module that is not installed." params="$mod%%$link"> });
             $msg   .= $desc .
                       trans_templ(qq{ <MT_TRANS phrase="Please consult the installation instructions for help in installing [_1]." params="$mod"></p>\n\n});
             print $msg . "\n\n";

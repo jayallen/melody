@@ -71,9 +71,10 @@ sub post_save {
 sub save_filter {
     my $eh = shift;
     my ($app) = @_;
+	my $q    = $app->query;
     return $app->errtrans( "The name '[_1]' is too long!",
-        $app->param('label') )
-      if ( length( $app->param('label') ) > 100 );
+        $q->param('label') )
+      if ( length( $q->param('label') ) > 100 );
     return 1;
 }
 
