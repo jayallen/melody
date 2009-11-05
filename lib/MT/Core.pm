@@ -319,7 +319,7 @@ BEGIN {
                 path    => 1,
             },
             'PluginPath' => {
-                default => 'plugins',
+                default => [ 'plugins', 'addons/plugins' ],
                 path    => 1,
                 type    => 'ARRAY',
             },
