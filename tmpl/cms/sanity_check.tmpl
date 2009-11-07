@@ -1,0 +1,23 @@
+<mt:setvarblock name="page_title"><__trans phrase="Sanity Check"></mt:setvarblock>
+<mt:setvar name="sanity" value="1">
+<MTSetVarBlock name="content_nav">
+    <mt:include name="include/sysinfo_content_nav.tmpl">
+</MTSetVarBlock>
+<mt:include name="include/header.tmpl">
+
+<mtapp:setting
+    id="system_check"
+    label="System Info (MTCheck)"
+    label_class="top-label"
+    show_label="0"
+    hint="">
+    <div class="info">
+        <mt:if name="syscheck_html">
+            <$mt:var name="syscheck_html"$>
+        <mt:else>
+            <p><__trans phrase="Movable Type could not find the script named 'mt-check.cgi'. To resolve this issue, please ensure that the mt-check.cgi script exists and/or the CheckScript configuration parameter references it properly."></p>
+        </mt:if>
+    </div>
+</mtapp:setting>
+
+<mt:include name="include/footer.tmpl">
