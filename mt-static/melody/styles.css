@@ -4,9 +4,13 @@
     top: 0px;
     left: 20px;
 }
-#brand a {
+.system #brand a,
+.blog #brand a {
     display: block;
     width: 150px;
     height: 41px;
     background: url('melody-logo.jpg') no-repeat;
+}
+#enabled-plugins-table td.name {
+    width: 150px;
 }
