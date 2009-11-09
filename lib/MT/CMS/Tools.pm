@@ -4,7 +4,7 @@ use strict;
 use Symbol;
 
 use MT::I18N qw( encode_text wrap_text );
-use MT::Util qw( encode_url encode_html decode_html encode_js trim );
+use MT::Util qw( encode_url encode_html decode_html encode_js trim remove_html );
 
 sub system_check {
     my $app = shift;
@@ -53,6 +53,48 @@ sub system_check {
     $param{syscheck_html} = get_syscheck_content($app) || '';
 
     $app->load_tmpl( 'system_check.tmpl', \%param );
+}
+
+sub sanity_check {
+    my $app = shift;
+
+# Needed?
+#    if ( my $blog_id = $app->param('blog_id') ) {
+#        return $app->redirect(
+#            $app->uri(
+#                'mode' => 'view_log',
+#                args => { blog_id => $blog_id }
+#            )
+#        );
+#    }
+
+    my %param;
+    # licensed user count: someone who has logged in within 90 days  
+    $param{screen_id} = "system-check";
+
+    $param{syscheck_html} = get_syscheck_content($app) || '';
+
+    $app->load_tmpl( 'sanity_check.tmpl', \%param );
+}
+
+sub resources {
+    my $app = shift;
+    my $q   = $app->param;
+    my %param;
+    $param{screen_class} = 'settings-screen';
+
+    my $cfg = $app->config;
+    $param{can_config}  = $app->user->can_manage_plugins;
+    $param{use_plugins} = $cfg->UsePlugins;
+    build_resources_table( $app, param => \%param, scope => 'system' );
+    $param{nav_config}   = 1;
+    $param{nav_settings} = 1;
+    $param{nav_plugins}  = 1;
+    $param{mod_perl} = 1 if $ENV{MOD_PERL};
+    $param{screen_id} = "list-plugins";
+    $param{screen_class} = "plugin-settings";
+    
+    $app->load_tmpl( 'resources.tmpl', \%param );
 }
 
 sub get_syscheck_content {
@@ -2141,6 +2183,156 @@ sub _log_dirty_restore {
         );
     }
     1;
+}
+
+
+sub build_resources_table {
+    my $app = shift;
+    my (%opt) = @_;
+
+    my $param = $opt{param};
+    my $scope = $opt{scope} || 'system';
+    my $cfg   = $app->config;
+    my $data  = [];
+
+    # we have to sort the plugin list in an odd fashion...
+    #   PLUGINS
+    #     (those at the top of the plugins directory and those
+    #      that only have 1 .pl script in a plugin folder)
+    #   PLUGIN SET
+    #     (plugins folders with multiple .pl files)
+    my %list;
+    my %folder_counts;
+    for my $sig ( keys %MT::Plugins ) {
+        my $sub = $sig =~ m!/! ? 1 : 0;
+        my $obj = $MT::Plugins{$sig}{object};
+
+        # Prevents display of component objects
+        next if $obj && !$obj->isa('MT::Plugin');
+
+        my $err = $MT::Plugins{$sig}{error}   ? 0 : 1;
+        my $on  = $MT::Plugins{$sig}{enabled} ? 0 : 1;
+        my ( $fld, $plg );
+        ( $fld, $plg ) = $sig =~ m!(.*)/(.*)!;
+        $fld = '' unless $fld;
+        $folder_counts{$fld}++ if $fld;
+        $plg ||= $sig;
+        $list{  $sub
+              . sprintf( "%-100s", $fld )
+              . ( $obj ? '1' : '0' )
+              . $plg } = $sig;
+    }
+    my @keys = keys %list;
+    foreach my $key (@keys) {
+        my $fld = substr( $key, 1, 100 );
+        $fld =~ s/\s+$//;
+        if ( !$fld || ( $folder_counts{$fld} == 1 ) ) {
+            my $sig = $list{$key};
+            delete $list{$key};
+            my $plugin = $MT::Plugins{$sig};
+            my $name =
+              $plugin && $plugin->{object} ? $plugin->{object}->name : $sig;
+            $list{ '0' . ( ' ' x 100 ) . sprintf( "%-102s", $name ) } = $sig;
+        }
+    }
+
+    my $last_fld = '*';
+    my $next_is_first;
+    my $id = 0;
+    ( my $cgi_path = $cfg->AdminCGIPath || $cfg->CGIPath ) =~ s|/$||;
+    for my $list_key ( sort keys %list ) {
+        $id++;
+        my $plugin_sig = $list{$list_key};
+        next if $plugin_sig =~ m/^[^A-Za-z0-9]/;
+        my $profile = $MT::Plugins{$plugin_sig};
+        my ($plg);
+        ($plg) = $plugin_sig =~ m!(?:.*)/(.*)!;
+        my $fld = substr( $list_key, 1, 100 );
+        $fld =~ s/\s+$//;
+
+        my $row;
+
+        if ( my $plugin = $profile->{object} ) {
+            my $plugin_icon;
+            my $plugin_name = remove_html( $plugin->name() );
+
+            my $registry = $plugin->registry;
+
+            my $doc_link = $plugin->doc_link;
+            if ( $doc_link && ( $doc_link !~ m!^https?://! ) ) {
+                $doc_link =
+                  $app->static_path . $plugin->envelope . '/' . $doc_link;
+            }
+
+            my $row      = {
+                first                => $next_is_first,
+                plugin_name          => $plugin_name,
+                plugin_desc          => $plugin->description(),
+                plugin_version       => $plugin->version(),
+                plugin_doc_link      => $doc_link,
+            };
+            my $block_tags = $plugin->registry('tags', 'block');
+            my $function_tags = $plugin->registry('tags', 'function');
+            my $modifiers = $plugin->registry('tags', 'modifier');
+            my $junk_filters = $plugin->registry('junk_filters');
+            my $text_filters = $plugin->registry('text_filters');
+
+            $row->{plugin_tags} = MT::App::CMS::listify(
+                [
+
+                    # Filter out 'plugin' registry entry
+                    grep { !/^<\$?MTplugin\$?>$/ } (
+                        (
+
+                            # Format all 'block' tags with <MT(name)>
+                            map { s/\?$//; "<MT$_>" }
+                              ( keys %{ $block_tags || {} } )
+                        ),
+                        (
+
+                            # Format all 'function' tags with <$MT(name)$>
+                            map { "<\$MT$_\$>" }
+                              ( keys %{ $function_tags || {} } )
+                        )
+                    )
+                ]
+            ) if $block_tags || $function_tags;
+            $row->{plugin_attributes} = MT::App::CMS::listify(
+                [
+
+                    # Filter out 'plugin' registry entry
+                    grep { $_ ne 'plugin' }
+                      keys %{ $modifiers || {} }
+                ]
+            ) if $modifiers;
+            $row->{plugin_junk_filters} = MT::App::CMS::listify(
+                [
+
+                    # Filter out 'plugin' registry entry
+                    grep { $_ ne 'plugin' }
+                      keys %{ $junk_filters || {} }
+                ]
+            ) if $junk_filters;
+            $row->{plugin_text_filters} = MT::App::CMS::listify(
+                [
+
+                    # Filter out 'plugin' registry entry
+                    grep { $_ ne 'plugin' }
+                      keys %{ $text_filters || {} }
+                ]
+            ) if $text_filters;
+            if (   $row->{plugin_tags}
+                || $row->{plugin_attributes}
+                || $row->{plugin_junk_filters}
+                || $row->{plugin_text_filters} )
+            {
+                $row->{plugin_resources} = 1;
+            }
+            push @$data, $row if $profile->{enabled};
+        }
+        $next_is_first = 0;
+    }
+    $param->{plugin_loop} = $data;
 }
 
 1;

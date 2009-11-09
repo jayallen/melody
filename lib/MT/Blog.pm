@@ -116,6 +116,16 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
 });
 
+sub POLICY_MOD_NOONE ()  { 0 }
+sub POLICY_MOD_ANYONE ()    { 1 }
+sub POLICY_MOD_AUTHONLY ()  { 2 }
+
+use Exporter;
+*import = \&Exporter::import;
+use vars qw( @EXPORT_OK %EXPORT_TAGS);
+@EXPORT_OK = qw( POLICY_MOD_NOONE POLICY_MOD_ANYONE POLICY_MOD_AUTHONLY ); 
+%EXPORT_TAGS = (constants => [ qw(POLICY_MOD_NOONE POLICY_MOD_ANYONE POLICY_MOD_AUTHONLY) ]);
+
 # Image upload defaults.
 sub ALIGN () { 'none' }
 sub UNITS () { 'pixels' }
