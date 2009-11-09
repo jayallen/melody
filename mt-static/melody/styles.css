@@ -11,6 +11,16 @@
     height: 41px;
     background: url('melody-logo.jpg') no-repeat;
 }
+
+/* Redesigned Plugins Screen */
 #enabled-plugins-table td.name {
     width: 150px;
+}
+
+/* Redesign Blog Settings */
+.blog-preferences {
+    display: none;
+}
+#content-nav ul li.changed b { 
+    font-style: italic;
 }
