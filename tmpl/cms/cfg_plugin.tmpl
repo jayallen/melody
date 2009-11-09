@@ -1,11 +1,12 @@
-<mt:if name="blog_id">
-    <mt:setvar name="page_title" value="<__trans phrase="Plugin Settings">">
-    <mt:setvar name="plugins" value="1">
-<mt:else>
-    <mt:setvar name="page_title" value="<__trans phrase="System Plugin Settings">">
-    <$mt:setvar name="position_actions_top" value="1"$>
-    <mt:setvar name="system-plugin-settings" value="1">
-</mt:if>
+<$mt:setvar name="plugins" value="1"$>
+<$mt:setvar name="page_title" value="<__trans phrase="Installed Add-Ons &amp; Plugins">"$>
+<$mt:setvar name="position_actions_top" value="1"$>
+<$mt:setvar name="system-plugin-settings" value="1"$>
+<mt:setvarblock name="content_nav">
+    <mt:include name="include/sysinfo_content_nav.tmpl">
+</mt:setvarblock>
+
+<mt:ignore>
 <mt:setvarblock name="related_content">
     <mtapp:widget
         id="useful-links"
@@ -53,6 +54,8 @@
         </mtapp:widget>
     </mt:unless>
 </mt:setvarblock>
+</mt:ignore>
+
 <mt:setvarblock name="plugins"> class="active"</mt:setvarblock>
 <MTSetVarBlock name="system_msg">
     <mt:if name="blog_id">
@@ -178,6 +181,56 @@
 </mt:setvarblock>
 <mt:include name="include/header.tmpl">
 
+<mt:setvartemplate name="plugin_table">
+<mtapp:listing id="$id" loop="$loop" default="<__trans phrase="No plugins have been found in the system.">" empty_message="<__trans phrase="No plugins have been found in the system.">" hide_pager="1" class="show_all" show_actions="1">
+    <mt:if name="__first__">
+    <thead>
+        <tr>
+            <th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+            <th id="l-lbl"><__trans phrase="Name"></th>
+            <th id="l-mxw"><__trans phrase="Version"></th>
+            <th id="l-mxh"><__trans phrase="Description"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </mt:if>
+        <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if>">
+            <td class="cb">
+              <input type="checkbox" name="id" value="<$mt:var name="id"$>" class="select" />
+            </td>
+            <td class="name"><mt:if name="plugin_folder"><mt:var name="plugin_folder"><mt:else><$mt:var name="plugin_name" escape="html"$></mt:if></td>
+            <td class="version"><$mt:var name="plugin_version" escape="html"$></td>
+            <td class="desc"><$mt:var name="plugin_desc" escape="html"$></td>
+        </tr>
+    <mt:if name="__last__">
+    </tbody>
+    </mt:if>
+<mt:else>
+</mtapp:listing>
+</mt:setvartemplate>
+
+<mt:setvarblock name="action_buttons">
+  <a href="javascript:void(0)"
+     onclick="doForMarkedInThisWindow(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'disable_item', {}, '<__trans phrase="to publish" escape="js">'); return false;"
+     accesskey="a"
+     title="<__trans phrase="Disable selected plugins (a)">"
+  ><__trans phrase="Disable"></a></mt:if>
+</mt:setvarblock>
+<mt:setvarblock name="listing_header"><h3><__trans phrase="Enabled Plugins"></h3></mt:setvarblock>
+<mt:var name="plugin_table" loop="plugin_loop" id="enabled-plugins">
+
+<mt:setvarblock name="action_buttons">
+  <a href="javascript:void(0)"
+     onclick="doForMarkedInThisWindow(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'enable_item', {}, '<__trans phrase="to publish" escape="js">'); return false;"
+     accesskey="a"
+     title="<__trans phrase="Enable selected plugins (a)">"
+  ><__trans phrase="Enable"></a></mt:if>
+</mt:setvarblock>
+<mt:setvarblock name="listing_header"><h3><__trans phrase="Disabled Plugins"></h3></mt:setvarblock>
+
+<mt:var name="plugin_table" loop="disabled_loop" id="disabled-plugins">
+
+<mt:ignore>
 <!-- START mt:loop name="plugin_groups" -->
 <mt:loop name="plugin_loop">
 <mt:if name="plugin_folder">
@@ -379,5 +432,6 @@
         </mtapp:statusmsg>
     </mt:if>
 </mt:loop>
+</mt:ignore>
 
 <mt:include name="include/footer.tmpl">
