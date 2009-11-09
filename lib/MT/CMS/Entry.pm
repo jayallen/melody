@@ -1185,22 +1185,6 @@ sub preview {
     }
 }
 
-sub cfg_entry {
-    my $app     = shift;
-    my $q       = $app->query;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    $app->forward("view",
-        {
-            output       => 'cfg_entry.tmpl',
-            screen_class => 'settings-screen entry-screen'
-        }
-    );
-}
-
 sub save {
     my $app = shift;
 	my $q = $app->query;
@@ -2404,3 +2388,25 @@ sub delete {
 }
 
 1;
+__END__
+
+The following subroutines were removed by Byrne Reese for Melody.
+They are rendered obsolete by the new MT::CMS::Blog::cfg_blog_settings 
+handler.
+
+sub cfg_entry {
+    my $app     = shift;
+    my $q       = $app->param;
+    my $blog_id = scalar $q->param('blog_id');
+    return $app->return_to_dashboard( redirect => 1 )
+      unless $blog_id;
+    $q->param( '_type', 'blog' );
+    $q->param( 'id',    scalar $q->param('blog_id') );
+    $app->forward("view",
+        {
+            output       => 'cfg_entry.tmpl',
+            screen_class => 'settings-screen entry-screen'
+        }
+    );
+}
+

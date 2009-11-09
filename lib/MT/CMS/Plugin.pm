@@ -125,7 +125,8 @@ sub build_plugin_table {
     my $param = $opt{param};
     my $scope = $opt{scope} || 'system';
     my $cfg   = $app->config;
-    my $data  = [];
+    my $enabled_plugins  = [];
+    my $disabled_plugins  = [];
 
     # we have to sort the plugin list in an odd fashion...
     #   PLUGINS
@@ -181,10 +182,11 @@ sub build_plugin_table {
         ($plg) = $plugin_sig =~ m!(?:.*)/(.*)!;
         my $fld = substr( $list_key, 1, 100 );
         $fld =~ s/\s+$//;
-        my $folder =
-            $fld
-          ? $app->translate( "Plugin Set: [_1]", $fld )
-          : $app->translate("Individual Plugins");
+# Removed for Melody - obsolete
+#        my $folder =
+#            $fld
+#          ? $app->translate( "Plugin Set: [_1]", $fld )
+#          : $app->translate("Individual Plugins");
         my $row;
         my $icon = $app->static_path . 'images/plugin.gif';
 
@@ -245,17 +247,18 @@ sub build_plugin_table {
                 next if $scope ne 'system';
             }
 
-            if ( $last_fld ne $fld ) {
-                $row = {
-                    plugin_sig    => $plugin_sig,
-                    plugin_folder => $folder,
-                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
-                    plugin_error  => $profile->{error},
-                };
-                push @$data, $row;
-                $last_fld      = $fld;
-                $next_is_first = 1;
-            }
+# Removed for Melody - obsolete
+#            if ( $last_fld ne $fld ) {
+#                $row = {
+#                    plugin_sig    => $plugin_sig,
+#                    plugin_folder => $folder,
+#                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
+#                    plugin_error  => $profile->{error},
+#                };
+#                push @$enabled_plugins, $row;
+#                $last_fld      = $fld;
+#                $next_is_first = 1;
+#            }
 
             my $registry = $plugin->registry;
             my $row      = {
@@ -336,24 +339,25 @@ sub build_plugin_table {
             {
                 $row->{plugin_resources} = 1;
             }
-            push @$data, $row;
+            push @$enabled_plugins, $row if $profile->{enabled};
         }
         else {
 
             # don't list non-configurable plugins for blog scope...
             next if $scope ne 'system';
 
-            if ( $last_fld ne $fld ) {
-                $row = {
-                    plugin_sig    => $plugin_sig,
-                    plugin_folder => $folder,
-                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
-                    plugin_error  => $profile->{error},
-                };
-                push @$data, $row;
-                $last_fld      = $fld;
-                $next_is_first = 1;
-            }
+# Removed for Melody - obsolete
+#            if ( $last_fld ne $fld ) {
+#                $row = {
+#                    plugin_sig    => $plugin_sig,
+#                    plugin_folder => $folder,
+#                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
+#                    plugin_error  => $profile->{error},
+#                };
+#                push @$enabled_plugins, $row;
+#                $last_fld      = $fld;
+#                $next_is_first = 1;
+#            }
 
             # no registered plugin objects--
             $row = {
@@ -366,11 +370,13 @@ sub build_plugin_table {
                 plugin_disabled      => $profile->{enabled} ? 0 : 1,
                 plugin_id            => $id,
             };
-            push @$data, $row;
+            push @$enabled_plugins, $row if $profile->{enabled};
+            push @$disabled_plugins, $row if !$profile->{enabled};
         }
         $next_is_first = 0;
     }
-    $param->{plugin_loop} = $data;
+    $param->{plugin_loop} = $enabled_plugins;
+    $param->{disabled_loop} = $disabled_plugins;
 }
 
 1;

@@ -177,10 +177,11 @@ sub list {
         elsif ($filter_col eq 'category_id'
             || $filter_col eq 'entry_id' )
         {
+	    my $tbping_tb_id = '= tbping_tb_id';
             $arg{join} = $app->model('trackback')->join_on(
                 undef,
                 {
-                    id          => \'= tbping_tb_id',
+                    id          => \$tbping_tb_id,
                     $filter_col => $val,
                     $blog_id ? ( blog_id => $blog_id ) : (),
                 }
@@ -321,23 +322,6 @@ sub list {
     $param{listing_screen} = 1;
     $app->add_breadcrumb( $app->translate('TrackBacks') );
     $app->load_tmpl( "list_ping.tmpl", \%param );
-}
-
-sub cfg_trackbacks {
-    my $app     = shift;
-    my $q       = $app->query;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    $app->forward( "view",
-        {
-            output       => 'cfg_trackbacks.tmpl',
-            screen_class => 'settings-screen',
-            screen_id    => 'trackback-settings',
-        }
-    );
 }
 
 sub can_view {
@@ -716,3 +700,25 @@ sub build_ping_table {
 }
 
 1;
+__END__
+
+The following subroutines were removed by Byrne Reese for Melody.
+They are rendered obsolete by the new MT::CMS::Blog::cfg_blog_settings 
+handler.
+
+sub cfg_trackbacks {
+    my $app     = shift;
+    my $q       = $app->param;
+    my $blog_id = scalar $q->param('blog_id');
+    return $app->return_to_dashboard( redirect => 1 )
+      unless $blog_id;
+    $q->param( '_type', 'blog' );
+    $q->param( 'id',    scalar $q->param('blog_id') );
+    $app->forward( "view",
+        {
+            output       => 'cfg_trackbacks.tmpl',
+            screen_class => 'settings-screen',
+            screen_id    => 'trackback-settings',
+        }
+    );
+}

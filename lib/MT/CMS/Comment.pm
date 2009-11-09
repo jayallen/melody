@@ -859,125 +859,6 @@ sub unapprove_item {
     set_item_visible($app);
 }
 
-sub cfg_comments {
-    my $app     = shift;
-    my $q       = $app->query;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    $app->forward( "view",
-        {
-            output         => 'cfg_comments.tmpl',
-            screen_class   => 'settings-screen',
-            screen_id      => 'comment-settings',
-        }
-    );
-}
-
-sub cfg_registration {
-    my $app     = shift;
-    my $q       = $app->query;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    eval { require Digest::SHA1; };
-    my $openid_available = $@ ? 0 : 1;
-    $app->forward( "view",
-        {
-            output       => 'cfg_registration.tmpl',
-            screen_class => 'settings-screen registration-screen',
-            openid_enabled => $openid_available
-        }
-    );
-}
-
-sub cfg_spam {
-    my $app = shift;
-    my $q   = $app->query;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-
-    my $plugin_config_html;
-    my $plugin_name;
-    my $plugin;
-    if ( my $p = $q->param('plugin') ) {
-        $plugin = $MT::Plugins{$p};
-        if ($plugin) {
-            $plugin = $plugin->{object};
-        }
-        else {
-            $plugin = MT->component($p);
-        }
-        return $app->errtrans("Invalid request.") unless $plugin;
-
-        my $scope;
-        if ( $q->param('blog_id') ) {
-            $scope = 'blog:' . $q->param('blog_id');
-        }
-        else {
-            $scope = 'system';
-        }
-        $plugin_name = $plugin->name;
-        my %plugin_param;
-        $plugin->load_config( \%plugin_param, $scope );
-        my $snip_tmpl = $plugin->config_template( \%plugin_param, $scope );
-        my $tmpl;
-        if ( ref $snip_tmpl ne 'MT::Template' ) {
-            require MT::Template;
-            $tmpl = MT::Template->new(
-                type   => 'scalarref',
-                source => ref $snip_tmpl
-                ? $snip_tmpl
-                : \$snip_tmpl
-            );
-        }
-        else {
-            $tmpl = $snip_tmpl;
-        }
-
-        # Process template independent of $app to avoid premature
-        # localization (give plugin a chance to do L10N first).
-        $tmpl->param( \%plugin_param );
-        $plugin_config_html = $tmpl->output();
-        $plugin_config_html =
-          $plugin->translate_templatized($plugin_config_html)
-          if $plugin_config_html =~ m/<(?:__trans|mt_trans) /i;
-    }
-    my $filters = MT::Component->registry('junk_filters') || [];
-    my %plugins;
-    foreach my $set (@$filters) {
-        foreach my $f ( values %$set ) {
-            $plugins{ $f->{plugin} } = $f->{plugin};
-        }
-    }
-    my @plugins = values %plugins;
-    my $loop    = [];
-    foreach my $p (@plugins) {
-        push @$loop,
-          {
-            name   => $p->name,
-            plugin => $p->id,
-            active => ( $plugin && ( $p->id eq $plugin->id ) ? 1 : 0 ),
-          },
-          ;
-    }
-    @$loop = sort { $a->{name} cmp $b->{name} } @$loop;
-
-    $app->forward( "view",
-        {
-            plugin_config_html => $plugin_config_html,
-            plugin_name        => $plugin_name,
-            junk_filter_loop   => $loop,
-            output             => 'cfg_spam.tmpl',
-            screen_class       => 'settings-screen spam-screen'
-        }
-    );
-}
-
 sub empty_junk {
     my $app     = shift;
 	my $q 		= $app->query;    
@@ -2036,3 +1917,131 @@ sub build_comment_table {
 }
 
 1;
+
+__END__
+
+The following subroutines were removed by Byrne Reese for Melody.
+They are rendered obsolete by the new MT::CMS::Blog::cfg_blog_settings 
+handler.
+
+sub cfg_comments {
+    my $app     = shift;
+    my $q       = $app->param;
+    my $blog_id = scalar $q->param('blog_id');
+    return $app->return_to_dashboard( redirect => 1 )
+      unless $blog_id;
+    $q->param( '_type', 'blog' );
+    $q->param( 'id',    scalar $q->param('blog_id') );
+    $app->forward( "view",
+        {
+            output         => 'cfg_comments.tmpl',
+            screen_class   => 'settings-screen',
+            screen_id      => 'comment-settings',
+        }
+    );
+}
+
+sub cfg_registration {
+    my $app     = shift;
+    my $q       = $app->param;
+    my $blog_id = scalar $q->param('blog_id');
+    return $app->return_to_dashboard( redirect => 1 )
+      unless $blog_id;
+    $q->param( '_type', 'blog' );
+    $q->param( 'id',    scalar $q->param('blog_id') );
+    eval { require Digest::SHA1; };
+    my $openid_available = $@ ? 0 : 1;
+    $app->forward( "view",
+        {
+            output       => 'cfg_registration.tmpl',
+            screen_class => 'settings-screen registration-screen',
+            openid_enabled => $openid_available
+        }
+    );
+}
+
+# This subroutine especially seems to do a lot of work which is
+# no longer relevant or needed. I have contacted Brad Choate to learn
+# more. Removing completely just to see what happens...
+sub cfg_spam {
+    my $app = shift;
+    my $q   = $app->param;
+    $q->param( '_type', 'blog' );
+    $q->param( 'id',    scalar $q->param('blog_id') );
+
+    my $plugin_config_html;
+    my $plugin_name;
+    my $plugin;
+    if ( my $p = $q->param('plugin') ) {
+        $plugin = $MT::Plugins{$p};
+        if ($plugin) {
+            $plugin = $plugin->{object};
+        }
+        else {
+            $plugin = MT->component($p);
+        }
+        return $app->errtrans("Invalid request.") unless $plugin;
+
+        my $scope;
+        if ( $q->param('blog_id') ) {
+            $scope = 'blog:' . $q->param('blog_id');
+        }
+        else {
+            $scope = 'system';
+        }
+        $plugin_name = $plugin->name;
+        my %plugin_param;
+        $plugin->load_config( \%plugin_param, $scope );
+        my $snip_tmpl = $plugin->config_template( \%plugin_param, $scope );
+        my $tmpl;
+        if ( ref $snip_tmpl ne 'MT::Template' ) {
+            require MT::Template;
+            $tmpl = MT::Template->new(
+                type   => 'scalarref',
+                source => ref $snip_tmpl
+                ? $snip_tmpl
+                : \$snip_tmpl
+            );
+        }
+        else {
+            $tmpl = $snip_tmpl;
+        }
+
+        # Process template independent of $app to avoid premature
+        # localization (give plugin a chance to do L10N first).
+        $tmpl->param( \%plugin_param );
+        $plugin_config_html = $tmpl->output();
+        $plugin_config_html =
+          $plugin->translate_templatized($plugin_config_html)
+          if $plugin_config_html =~ m/<(?:__trans|mt_trans) /i;
+    }
+    my $filters = MT::Component->registry('junk_filters') || [];
+    my %plugins;
+    foreach my $set (@$filters) {
+        foreach my $f ( values %$set ) {
+            $plugins{ $f->{plugin} } = $f->{plugin};
+        }
+    }
+    my @plugins = values %plugins;
+    my $loop    = [];
+    foreach my $p (@plugins) {
+        push @$loop,
+          {
+            name   => $p->name,
+            plugin => $p->id,
+            active => ( $plugin && ( $p->id eq $plugin->id ) ? 1 : 0 ),
+          },
+          ;
+    }
+    @$loop = sort { $a->{name} cmp $b->{name} } @$loop;
+
+    $app->forward( "view",
+        {
+            plugin_config_html => $plugin_config_html,
+            plugin_name        => $plugin_name,
+            junk_filter_loop   => $loop,
+            output             => 'cfg_spam.tmpl',
+            screen_class       => 'settings-screen spam-screen'
+        }
+    );
+}
