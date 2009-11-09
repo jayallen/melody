@@ -83,15 +83,19 @@ sub core_methods {
         'preview_entry'       => "${pkg}Entry::preview",
 
         ## Blog configuration screens
-        'cfg_archives'     => "${pkg}Blog::cfg_archives",
-        'cfg_prefs'        => "${pkg}Blog::cfg_prefs",
-        'cfg_plugins'      => "${pkg}Plugin::cfg_plugins",
-        'cfg_comments'     => "${pkg}Comment::cfg_comments",
-        'cfg_trackbacks'   => "${pkg}TrackBack::cfg_trackbacks",
-        'cfg_registration' => "${pkg}Comment::cfg_registration",
-        'cfg_spam'         => "${pkg}Comment::cfg_spam",
-        'cfg_entry'        => "${pkg}Entry::cfg_entry",
-        'cfg_web_services' => "${pkg}Blog::cfg_web_services",
+        'cfg_blog_settings' => "${pkg}Blog::cfg_blog_settings",
+        'cfg_plugins'       => "${pkg}Plugin::cfg_plugins",
+
+        'cfg_spam'          => "${pkg}Comment::cfg_spam",
+
+# Rendered obsolete by cfg_blog_settings
+#        'cfg_archives'      => "${pkg}Blog::cfg_archives",
+#        'cfg_web_services'  => "${pkg}Blog::cfg_web_services",
+#        'cfg_prefs'         => "${pkg}Blog::cfg_prefs",
+#        'cfg_comments'      => "${pkg}Comment::cfg_comments",
+#        'cfg_registration'  => "${pkg}Comment::cfg_registration",
+#        'cfg_entry'         => "${pkg}Entry::cfg_entry",
+#        'cfg_trackbacks'    => "${pkg}TrackBack::cfg_trackbacks",
 
         ## Save
         'save_cat'     => "${pkg}Category::save",
@@ -100,6 +104,7 @@ sub core_methods {
         'save_entry'   => "${pkg}Entry::save",
         'save_role'    => "${pkg}User::save_role",
         'save_widget'  => "${pkg}Template::save_widget",
+	'save_blog'    => "${pkg}Blog::save",
 
         ## Delete
         'delete_entry'  => "${pkg}Entry::delete",
@@ -194,6 +199,8 @@ sub core_methods {
         'restore_premature_cancel' => "${pkg}Tools::restore_premature_cancel",
         'adjust_sitepath'          => "${pkg}Tools::adjust_sitepath",
         'system_check'             => "${pkg}Tools::system_check",
+        'resources'                => "${pkg}Tools::resources",
+        'sanity_check'             => "${pkg}Tools::sanity_check",
         'dialog_refresh_templates' =>
             "${pkg}Template::dialog_refresh_templates",
         'dialog_clone_blog' => "${pkg}Common::clone_blog",
@@ -927,9 +934,10 @@ sub core_list_filters {
                     # terms. And using a reference for the
                     # 'comment_entry_id' column name, to pass that
                     # on directly to the SQL statement that is generated.
+		    my $comment_entry_id = '= comment_entry_id';
                     $args->{join} = MT::Entry->join_on(
                         undef,
-                        {   id        => \'= comment_entry_id',
+                        {   id        => \$comment_entry_id,
                             author_id => $app->user->id
                         }
                     );
@@ -1363,70 +1371,84 @@ sub core_menus {
             view       => "system",
             permission => "administer",
         },
-        'prefs:settings' => {
-            label      => "General",
-            mode       => 'cfg_prefs',
-            order      => 100,
-            permission => 'administer_blog,edit_config,set_publish_paths',
-            system_permission => 'administer',
-            view              => "blog",
-        },
-        'prefs:publishing' => {
-            label      => "Publishing",
-            mode       => 'cfg_archives',
-            order      => 110,
-            permission => 'administer_blog,edit_config,set_publish_paths',
-            system_permission => 'administer',
-            view              => "blog",
-        },
-        'prefs:entry' => {
-            label      => "Entry",
-            mode       => 'cfg_entry',
-            order      => 120,
-            permission => 'administer_blog,edit_config,set_publish_paths',
-            system_permission => 'administer',
-            view              => "blog",
-        },
-        'prefs:comment' => {
-            label      => "Comment",
-            mode       => 'cfg_comments',
-            order      => 130,
-            permission => 'administer_blog,edit_config,set_publish_paths',
-            system_permission => 'administer',
-            view              => "blog",
-        },
-        'prefs:trackback' => {
-            label      => "TrackBack",
-            mode       => 'cfg_trackbacks',
-            order      => 140,
-            permission => 'administer_blog,edit_config,set_publish_paths',
-            system_permission => 'administer',
-            view              => "blog",
-        },
-        'prefs:registration' => {
-            label      => "Registration",
-            mode       => 'cfg_registration',
-            order      => 150,
-            permission => 'administer_blog,edit_config,set_publish_paths',
-            system_permission => 'administer',
-            view              => "blog",
-        },
-        'prefs:spam' => {
-            label      => "Spam",
-            mode       => 'cfg_spam',
-            order      => 160,
-            permission => 'administer_blog,edit_config,set_publish_paths',
-            system_permission => 'administer',
-            view              => "blog",
-        },
-        'prefs:web_services' => {
-            label      => "Web Services",
-            mode       => 'cfg_web_services',
-            order      => 170,
-            permission => 'administer_blog,edit_config,set_publish_paths',
-            system_permission => 'administer',
-            view              => "blog",
-        },
+        'prefs:blog' => {
+	    label      => "Blog Settings",
+	    order      => 100,
+	    mode       => "cfg_blog_settings",
+	    view       => "blog",
+	    permission => "administer_blog,edit_config",
+	},
+        'prefs:plugins' => {
+	    label      => "Plugins",
+	    order      => 110,
+	    mode       => "cfg_plugin_settings",
+	    view       => "blog",
+	    permission => "administer_blog",
+	},
+#        'prefs:settings' => {
+#            label      => "General",
+#            mode       => 'cfg_prefs',
+#            order      => 100,
+#            permission => 'administer_blog,edit_config,set_publish_paths',
+#            system_permission => 'administer',
+#            view              => "blog",
+#        },
+#        'prefs:publishing' => {
+#            label      => "Publishing",
+#            mode       => 'cfg_archives',
+#            order      => 110,
+#            permission => 'administer_blog,edit_config,set_publish_paths',
+#            system_permission => 'administer',
+#            view              => "blog",
+#        },
+#        'prefs:entry' => {
+#            label      => "Entry",
+#            mode       => 'cfg_entry',
+#            order      => 120,
+#            permission => 'administer_blog,edit_config,set_publish_paths',
+#            system_permission => 'administer',
+#            view              => "blog",
+#        },
+#        'prefs:comment' => {
+#            label      => "Comment",
+#            mode       => 'cfg_comments',
+#            order      => 130,
+#            permission => 'administer_blog,edit_config,set_publish_paths',
+#            system_permission => 'administer',
+#            view              => "blog",
+#        },
+#        'prefs:trackback' => {
+#            label      => "TrackBack",
+#            mode       => 'cfg_trackbacks',
+#            order      => 140,
+#            permission => 'administer_blog,edit_config,set_publish_paths',
+#            system_permission => 'administer',
+#            view              => "blog",
+#        },
+#        'prefs:registration' => {
+#            label      => "Registration",
+#            mode       => 'cfg_registration',
+#            order      => 150,
+#            permission => 'administer_blog,edit_config,set_publish_paths',
+#            system_permission => 'administer',
+#            view              => "blog",
+#        },
+#        'prefs:spam' => {
+#            label      => "Spam",
+#            mode       => 'cfg_spam',
+#            order      => 160,
+#            permission => 'administer_blog,edit_config,set_publish_paths',
+#            system_permission => 'administer',
+#            view              => "blog",
+#        },
+#        'prefs:web_services' => {
+#            label      => "Web Services",
+#            mode       => 'cfg_web_services',
+#            order      => 170,
+#            permission => 'administer_blog,edit_config,set_publish_paths',
+#            system_permission => 'administer',
+#            view              => "blog",
+#        },
         'prefs:ip_info' => {
             label      => "IP Banning",
             mode       => 'list',
@@ -1439,13 +1461,13 @@ sub core_menus {
             view => "blog",
         },
 
-        'tools:plugins' => {
-            label             => "Plugins",
-            order             => 100,
-            mode              => "cfg_plugins",
-            permission        => "administer_blog",
-            system_permission => "manage_plugins",
-        },
+#        'tools:plugins' => {
+#            label             => "Plugins",
+#            order             => 100,
+#            mode              => "cfg_plugins",
+#            permission        => "administer_blog",
+#            system_permission => "manage_plugins",
+#        },
         'tools:activity_log' => {
             label             => "Activity Log",
             order             => 200,
