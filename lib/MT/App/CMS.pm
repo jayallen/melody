@@ -72,6 +72,7 @@ sub core_methods {
         'list_tag'         => "${pkg}Tag::list",
         'list_association' => "${pkg}User::list_association",
         'list_role'        => "${pkg}User::list_role",
+        'list_plugin'       => "${pkg}Plugin::list_plugins",
 
         'asset_insert'        => "${pkg}Asset::insert",
         'asset_userpic'       => "${pkg}Asset::asset_userpic",
@@ -86,8 +87,6 @@ sub core_methods {
         'cfg_blog_settings' => "${pkg}Blog::cfg_blog_settings",
         'cfg_plugins'       => "${pkg}Plugin::cfg_plugins",
 
-        'cfg_spam'          => "${pkg}Comment::cfg_spam",
-
 # Rendered obsolete by cfg_blog_settings
 #        'cfg_archives'      => "${pkg}Blog::cfg_archives",
 #        'cfg_web_services'  => "${pkg}Blog::cfg_web_services",
@@ -95,6 +94,7 @@ sub core_methods {
 #        'cfg_comments'      => "${pkg}Comment::cfg_comments",
 #        'cfg_registration'  => "${pkg}Comment::cfg_registration",
 #        'cfg_entry'         => "${pkg}Entry::cfg_entry",
+#        'cfg_spam'          => "${pkg}Comment::cfg_spam",
 #        'cfg_trackbacks'    => "${pkg}TrackBack::cfg_trackbacks",
 
         ## Save
@@ -1385,7 +1385,7 @@ sub core_menus {
         'prefs:plugins' => {
 	    label      => "Plugins",
 	    order      => 110,
-	    mode       => "cfg_plugin_settings",
+	    mode       => "cfg_plugins",
 	    view       => "blog",
 	    permission => "administer_blog",
 	},

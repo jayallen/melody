@@ -17,6 +17,17 @@
     width: 150px;
 }
 
+/* New Plugins Settings Screen */
+.plugin_form { 
+    display: none; 
+}
+#list-plugins .plugin_form h3.plugin-name {
+    margin-bottom: 10px;
+} 
+#list-plugins #main-content-inner {
+    border-bottom: 0;
+}
+
 /* Redesign Blog Settings */
 .blog-preferences {
     display: none;

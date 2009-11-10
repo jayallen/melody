@@ -1,0 +1,24 @@
+<script type="text/javascript">
+$(document).ready( function() {
+  var url = document.URL;
+  var a   = url.match(/#(.+)$/);
+  $('#content-nav ul li a').click( function() {
+    var current = $(this).parent().parent().find('.active');
+    var newactive = $(this).attr('title');
+    current.removeClass('active');
+    $('#' + current.find('a').attr('title')).hide();
+    $(this).parent().addClass('active');
+    $('#' + newactive).show();
+  });  
+  if (a && $('#content-nav ul li a[title="'+a[1]+'"]')) {
+    $('#content-nav ul li a[title="'+a[1]+'"]').trigger('click');
+  } else {
+    $('#content-nav ul li:first-child').find('a').trigger('click');
+  }
+});
+</script>
+<ul>
+<mt:loop name="plugin_loop">
+    <li><a href="javascript:void(0)" title="plugin-<$mt:var name="plugin_id" dirify="1"$>"><b><$mt:var name="plugin_name"$></b></a></li>
+</mt:loop>
+</ul>
