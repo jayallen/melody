@@ -762,7 +762,7 @@ sub init_request {
                     delete $ENV{PATH_INFO};
                 }
             }
-            $app->query = CGI->new( $app->{no_read_body} ? {} : () );
+            $app->query ( CGI->new( $app->{no_read_body} ? {} : () ));
         }
     }
     $app->init_query();
@@ -3722,7 +3722,10 @@ sub set_no_cache {
         $app->{apache}->no_cache(1);
     }
     else {
-        $app->query->param->cache('no');
+		$app->query->cache('no'); 
+		# if(defined($app->query->param->{'cache'})) {
+			 #$app->query->param->cache('no');
+		# }
     }
 }
 
