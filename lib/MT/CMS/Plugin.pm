@@ -3,37 +3,43 @@ package MT::CMS::Plugin;
 use strict;
 use MT::Util qw( remove_html );
 
+sub list_plugins {
+    my $app = shift;
+    my $q   = $app->param;
+    my %param;
+
+    my $cfg = $app->config;
+    $param{can_config}  = $app->user->can_manage_plugins;
+    $param{use_plugins} = $cfg->UsePlugins;
+    $param{nav_config}   = 1;
+    $param{nav_settings} = 1;
+    $param{nav_plugins}  = 1;
+    $param{switched}     = 1 if $app->param('switched');
+    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
+    $param{screen_id}    = "list-plugins";
+    $param{screen_class} = "plugin-settings";
+    build_plugin_table( $app, param => \%param, scope => 'system' );
+    $app->load_tmpl( 'list_plugin.tmpl', \%param );
+}
+
 sub cfg_plugins {
     my $app = shift;
     my $q   = $app->param;
     my %param;
     $param{screen_class} = 'settings-screen';
-    if ( $q->param('blog_id') ) {
-        $q->param( '_type', 'blog' );
-        $q->param( 'id',    scalar $q->param('blog_id') );
-        $param{screen_id} = "list-plugins";
-        $param{screen_class} .= " plugin-settings";
-        $param{output} = 'cfg_plugin.tmpl';
-        $app->forward("view", \%param);
-    }
-    else {
-        my $cfg = $app->config;
-        $param{can_config}  = $app->user->can_manage_plugins;
-        $param{use_plugins} = $cfg->UsePlugins;
-        build_plugin_table( $app, param => \%param, scope => 'system' );
-        $param{nav_config}   = 1;
-        $param{nav_settings} = 1;
-        $param{nav_plugins}  = 1;
-        $param{switched}     = 1 if $app->param('switched');
-        $param{'reset'}  = 1 if $app->param('reset');
-        $param{saved}    = 1 if $app->param('saved');
-        $param{mod_perl} = 1 if $ENV{MOD_PERL};
-        $app->add_breadcrumb( $app->translate("Plugin Settings") );
-        $param{screen_id} = "list-plugins";
-        $param{screen_class} = "plugin-settings";
 
-        $app->load_tmpl( 'cfg_plugin.tmpl', \%param );
-    }
+    my $cfg = $app->config;
+    $param{can_config}  = $app->user->can_manage_plugins;
+    $param{use_plugins} = $cfg->UsePlugins;
+    $param{switched}     = 1 if $app->param('switched');
+    $param{reset}        = 1 if $app->param('reset');
+    $param{saved}        = 1 if $app->param('saved');
+    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
+    $param{screen_id}    = "list-plugins";
+    $param{screen_class} = "plugin-settings";
+    build_plugin_table( $app, param => \%param, scope => $q->param('blog_id') ? 'blog:'.$q->param('blog_id') : 'system' );
+
+    $app->load_tmpl( 'cfg_plugin.tmpl', \%param );
 }
 
 sub save_config {
