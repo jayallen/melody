@@ -1369,12 +1369,6 @@ sub core_menus {
 	    mode       => "cfg_plugins",
 	    permission => "manage_plugins",
 	},
-	'prefs:test' => {
-	    label      => "Test",
-	    order      => 110,
-	    dialog     => "plugin_config_dialog",
-            args       => { _plugin => 'typepadantispam' },
-	},
         'prefs:ip_info' => {
             label      => "IP Banning",
             mode       => 'list',
