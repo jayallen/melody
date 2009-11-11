@@ -6,7 +6,7 @@ use Symbol;
 use MT::I18N qw( encode_text wrap_text );
 use MT::Util qw( encode_url encode_html decode_html encode_js trim remove_html );
 
-sub system_check {
+sub system_info {
     my $app = shift;
 
     if ( my $blog_id = $app->param('blog_id') ) {
@@ -407,236 +407,6 @@ sub do_page_action {
         }
     }
     $the_action->{code}->($app);
-}
-
-sub cfg_system_settings {
-    my $app = shift;
-    my %param;
-    if ( $app->param('blog_id') ) {
-        return $app->return_to_dashboard( redirect => 1 );
-    }
-
-    return $app->errtrans("Permission denied.")
-      unless $app->user->is_superuser();
-    my $cfg = $app->config;
-    $param{languages} =
-      $app->languages_list( $app->config('DefaultUserLanguage') );
-    my $tag_delim = $app->config('DefaultUserTagDelimiter') || 'comma';
-    $param{"tag_delim_$tag_delim"} = 1;
-
-    ( my $tz = $app->config('DefaultTimezone') ) =~ s![-\.]!_!g;
-    $tz =~ s!_00$!!;
-    $param{ 'server_offset_' . $tz } = 1;
-
-    $param{default_site_root} = $app->config('DefaultSiteRoot');
-    $param{default_site_url}  = $app->config('DefaultSiteURL');
-    $param{personal_weblog_readonly} =
-      $app->config->is_readonly('NewUserAutoProvisioning');
-    $param{personal_weblog} = $app->config->NewUserAutoProvisioning ? 1 : 0;
-    if ( my $id = $param{new_user_template_blog_id} =
-        $app->config('NewUserTemplateBlogId') || '' )
-    {
-        my $blog = MT->model('blog')->load($id);
-        if ($blog) {
-            $param{new_user_template_blog_name} = $blog->name;
-        }
-        else {
-            $app->config( 'NewUserTemplateBlogId', undef, 1 );
-            $cfg->save_config();
-            delete $param{new_user_template_blog_id};
-        }
-    }
-    
-    if ($app->param('to_email_address')) {
-    	return $app->errtrans("You don't have a system email address configured.  Please set this first, save it, then try the test email again.")
-    	  unless ($cfg->EmailAddressMain);
-        return $app->errtrans("Please enter a valid email address") 
-          unless (MT::Util::is_valid_email($app->param('to_email_address')));
-       
-        my %head = (
-            To => $app->param('to_email_address'),
-            From => $cfg->EmailAddressMain,
-            Subject => $app->translate("Test email from Movable Type")
-        );
-
-        my $body = $app->translate(
-            "This is the test email sent by your installation of Movable Type."
-        );
-
-        require MT::Mail;
-        MT::Mail->send( \%head, $body ) 
-	    or return $app->error( $app->translate("Mail was not properly sent") );
-        
-        $app->log({
-            message => $app->translate('Test e-mail was successfully sent to [_1]', $app->param('to_email_address')),
-            level    => MT::Log::INFO(),
-            class    => 'system',
-        });
-        $param{test_mail_sent} = 1;
-    }
-    
-    my @config_warnings;
-    for my $config_directive ( qw( EmailAddressMain DebugMode PerformanceLogging 
-                                   PerformanceLoggingPath PerformanceLoggingThreshold ) ) {
-        push(@config_warnings, $config_directive) if $app->config->is_readonly($config_directive);
-    }
-    my $config_warning = join(", ", @config_warnings) if (@config_warnings);
-    
-    $param{config_warning} = $app->translate("These setting(s) are overridden by a value in the MT configuration file: [_1]. Remove the value from the configuration file in order to control the value on this page.", $config_warning) if $config_warning;
-    $param{system_email_address} = $cfg->EmailAddressMain;
-    $param{system_debug_mode}    = $cfg->DebugMode;        
-    $param{system_performance_logging} = $cfg->PerformanceLogging;
-    $param{system_performance_logging_path} = $cfg->PerformanceLoggingPath;
-    $param{system_performance_logging_threshold} = $cfg->PerformanceLoggingThreshold;
-    $param{saved}                = $app->param('saved');
-    $param{error}                = $app->param('error');
-    $param{screen_class}         = "settings-screen system-general-settings";
-    $app->load_tmpl( 'cfg_system_settings.tmpl', \%param );
-}
-
-sub cfg_system_general {
-    my $app = shift;
-    my %param;
-    if ( $app->param('blog_id') ) {
-        return $app->return_to_dashboard( redirect => 1 );
-    }
-
-    return $app->errtrans("Permission denied.")
-      unless $app->user->is_superuser();
-    my $cfg = $app->config;
-    $app->add_breadcrumb( $app->translate('General Settings') );
-    $param{nav_config}   = 1;
-    $param{nav_settings} = 1;
-    $param{languages} =
-      $app->languages_list( $app->config('DefaultUserLanguage') );
-    my $tag_delim = $app->config('DefaultUserTagDelimiter') || 'comma';
-    $param{"tag_delim_$tag_delim"} = 1;
-
-    ( my $tz = $app->config('DefaultTimezone') ) =~ s![-\.]!_!g;
-    $tz =~ s!_00$!!;
-    $param{ 'server_offset_' . $tz } = 1;
-
-    $param{default_site_root} = $app->config('DefaultSiteRoot');
-    $param{default_site_url}  = $app->config('DefaultSiteURL');
-    $param{personal_weblog_readonly} =
-      $app->config->is_readonly('NewUserAutoProvisioning');
-    $param{personal_weblog} = $app->config->NewUserAutoProvisioning ? 1 : 0;
-    if ( my $id = $param{new_user_template_blog_id} =
-        $app->config('NewUserTemplateBlogId') || '' )
-    {
-        my $blog = MT::Blog->load($id);
-        if ($blog) {
-            $param{new_user_template_blog_name} = $blog->name;
-        }
-        else {
-            $app->config( 'NewUserTemplateBlogId', undef, 1 );
-            $cfg->save_config();
-            delete $param{new_user_template_blog_id};
-        }
-    }
-    
-    if ($app->param('to_email_address')) {
-    	return $app->errtrans("You don't have a system email address configured.  Please set this first, save it, then try the test email again.")
-    	  unless ($cfg->EmailAddressMain);
-        return $app->errtrans("Please enter a valid email address") 
-          unless (MT::Util::is_valid_email($app->param('to_email_address')));
-       
-        my %head = (
-            To => $app->param('to_email_address'),
-            From => $cfg->EmailAddressMain,
-            Subject => $app->translate("Test email from Movable Type")
-        );
-
-        my $body = $app->translate(
-            "This is the test email sent by your installation of Movable Type."
-        );
-
-        require MT::Mail;
-        MT::Mail->send( \%head, $body ) or return $app->error( $app->translate("Mail was not properly sent") );
-        
-        $app->log({
-            message => $app->translate('Test e-mail was successfully sent to [_1]', $app->param('to_email_address')),
-            level    => MT::Log::INFO(),
-            class    => 'system',
-        });
-        $param{test_mail_sent} = 1;
-    }
-    
-    my @config_warnings;
-    for my $config_directive ( qw( EmailAddressMain DebugMode PerformanceLogging 
-                                   PerformanceLoggingPath PerformanceLoggingThreshold ) ) {
-        push(@config_warnings, $config_directive) if $app->config->is_readonly($config_directive);
-    }
-    my $config_warning = join(", ", @config_warnings) if (@config_warnings);
-    
-    $param{config_warning} = $app->translate("These setting(s) are overridden by a value in the MT configuration file: [_1]. Remove the value from the configuration file in order to control the value on this page.", $config_warning) if $config_warning;
-    $param{system_email_address} = $cfg->EmailAddressMain;
-    $param{system_debug_mode}    = $cfg->DebugMode;        
-    $param{system_performance_logging} = $cfg->PerformanceLogging;
-    $param{system_performance_logging_path} = $cfg->PerformanceLoggingPath;
-    $param{system_performance_logging_threshold} = $cfg->PerformanceLoggingThreshold;
-    $param{saved}                = $app->param('saved');
-    $param{error}                = $app->param('error');
-    $param{screen_class}         = "settings-screen system-general-settings";
-    $app->load_tmpl( 'cfg_system_general.tmpl', \%param );
-}
-
-sub save_cfg_system_general {
-    my $app = shift;
-    $app->validate_magic or return;
-    return $app->errtrans("Permission denied.")
-      unless $app->user->is_superuser();
-    my $cfg = $app->config;
-
-    # construct the message to the activity log
-    my @meta_messages = (); 
-    push(@meta_messages, $app->translate('Email address is [_1]', $app->param('system_email_address'))) 
-        if ($app->param('system_email_address') =~ /\w+/);
-    push(@meta_messages, $app->translate('Debug mode is [_1]', $app->param('system_debug_mode')))
-        if ($app->param('system_debug_mode') =~ /\d+/);
-    if ($app->param('system_performance_logging')) {
-        push(@meta_messages, $app->translate('Performance logging is on'));
-    } else {
-        push(@meta_messages, $app->translate('Performance logging is off'));
-    }
-    push(@meta_messages, $app->translate('Performance log path is [_1]', $app->param('system_performance_logging_path')))
-        if ($app->param('system_performance_logging_path') =~ /\w+/);
-    push(@meta_messages, $app->translate('Performance log threshold is [_1]', $app->param('system_performance_logging_threshold')))
-        if ($app->param('system_performance_logging_threshold') =~ /\d+/);
-    
-    # throw the messages in the activity log
-    if (scalar(@meta_messages) > 0) {
-        my $message = join(', ', @meta_messages);
-        $app->log({
-            message  => $app->translate('System Settings Changes Took Place'),
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            metadata => $message,
-        });
-    }
-
-    # actually assign the changes
-    $app->config( 'EmailAddressMain', $app->param('system_email_address') || undef, 1 );
-    $app->config('DebugMode', $app->param('system_debug_mode'), 1)
-        if ($app->param('system_debug_mode') =~ /\d+/);
-    if ($app->param('system_performance_logging')) {
-        $app->config('PerformanceLogging', 1, 1);
-    } else {
-        $app->config('PerformanceLogging', 0, 1);
-    }
-    $app->config('PerformanceLoggingPath', $app->param('system_performance_logging_path'), 1)
-        if ($app->param('system_performance_logging_path') =~ /\w+/);
-    $app->config('PerformanceLoggingThreshold', $app->param('system_performance_logging_threshold'), 1)
-        if ($app->param('system_performance_logging_threshold') =~ /\d+/);
-    $cfg->save_config();
-    my $args = ();
-    $args->{saved} = 1;
-    $app->redirect(
-        $app->uri(
-            'mode' => 'cfg_system',
-            args   => $args
-        )
-    );
 }
 
 sub upgrade {
@@ -2421,3 +2191,153 @@ sub build_resources_table {
 }
 
 1;
+__END__
+
+The following subroutines were removed by Byrne Reese for Melody.
+They are rendered obsolete by the new MT::CMS::Blog::cfg_blog_settings 
+handler.
+
+sub cfg_system_general {
+    my $app = shift;
+    my %param;
+    if ( $app->param('blog_id') ) {
+        return $app->return_to_dashboard( redirect => 1 );
+    }
+
+    return $app->errtrans("Permission denied.")
+      unless $app->user->is_superuser();
+    my $cfg = $app->config;
+    $app->add_breadcrumb( $app->translate('General Settings') );
+    $param{nav_config}   = 1;
+    $param{nav_settings} = 1;
+    $param{languages} =
+      $app->languages_list( $app->config('DefaultUserLanguage') );
+    my $tag_delim = $app->config('DefaultUserTagDelimiter') || 'comma';
+    $param{"tag_delim_$tag_delim"} = 1;
+
+    ( my $tz = $app->config('DefaultTimezone') ) =~ s![-\.]!_!g;
+    $tz =~ s!_00$!!;
+    $param{ 'server_offset_' . $tz } = 1;
+
+    $param{default_site_root} = $app->config('DefaultSiteRoot');
+    $param{default_site_url}  = $app->config('DefaultSiteURL');
+    $param{personal_weblog_readonly} =
+      $app->config->is_readonly('NewUserAutoProvisioning');
+    $param{personal_weblog} = $app->config->NewUserAutoProvisioning ? 1 : 0;
+    if ( my $id = $param{new_user_template_blog_id} =
+        $app->config('NewUserTemplateBlogId') || '' )
+    {
+        my $blog = MT::Blog->load($id);
+        if ($blog) {
+            $param{new_user_template_blog_name} = $blog->name;
+        }
+        else {
+            $app->config( 'NewUserTemplateBlogId', undef, 1 );
+            $cfg->save_config();
+            delete $param{new_user_template_blog_id};
+        }
+    }
+    
+    if ($app->param('to_email_address')) {
+    	return $app->errtrans("You don't have a system email address configured.  Please set this first, save it, then try the test email again.")
+    	  unless ($cfg->EmailAddressMain);
+        return $app->errtrans("Please enter a valid email address") 
+          unless (MT::Util::is_valid_email($app->param('to_email_address')));
+       
+        my %head = (
+            To => $app->param('to_email_address'),
+            From => $cfg->EmailAddressMain,
+            Subject => $app->translate("Test email from Movable Type")
+        );
+
+        my $body = $app->translate(
+            "This is the test email sent by your installation of Movable Type."
+        );
+
+        require MT::Mail;
+        MT::Mail->send( \%head, $body ) or return $app->error( $app->translate("Mail was not properly sent") );
+        
+        $app->log({
+            message => $app->translate('Test e-mail was successfully sent to [_1]', $app->param('to_email_address')),
+            level    => MT::Log::INFO(),
+            class    => 'system',
+        });
+        $param{test_mail_sent} = 1;
+    }
+    
+    my @config_warnings;
+    for my $config_directive ( qw( EmailAddressMain DebugMode PerformanceLogging 
+                                   PerformanceLoggingPath PerformanceLoggingThreshold ) ) {
+        push(@config_warnings, $config_directive) if $app->config->is_readonly($config_directive);
+    }
+    my $config_warning = join(", ", @config_warnings) if (@config_warnings);
+    
+    $param{config_warning} = $app->translate("These setting(s) are overridden by a value in the MT configuration file: [_1]. Remove the value from the configuration file in order to control the value on this page.", $config_warning) if $config_warning;
+    $param{system_email_address} = $cfg->EmailAddressMain;
+    $param{system_debug_mode}    = $cfg->DebugMode;        
+    $param{system_performance_logging} = $cfg->PerformanceLogging;
+    $param{system_performance_logging_path} = $cfg->PerformanceLoggingPath;
+    $param{system_performance_logging_threshold} = $cfg->PerformanceLoggingThreshold;
+    $param{saved}                = $app->param('saved');
+    $param{error}                = $app->param('error');
+    $param{screen_class}         = "settings-screen system-general-settings";
+    $app->load_tmpl( 'cfg_system_general.tmpl', \%param );
+}
+
+sub save_cfg_system_general {
+    my $app = shift;
+    $app->validate_magic or return;
+    return $app->errtrans("Permission denied.")
+      unless $app->user->is_superuser();
+    my $cfg = $app->config;
+
+    # construct the message to the activity log
+    my @meta_messages = (); 
+    push(@meta_messages, $app->translate('Email address is [_1]', $app->param('system_email_address'))) 
+        if ($app->param('system_email_address') =~ /\w+/);
+    push(@meta_messages, $app->translate('Debug mode is [_1]', $app->param('system_debug_mode')))
+        if ($app->param('system_debug_mode') =~ /\d+/);
+    if ($app->param('system_performance_logging')) {
+        push(@meta_messages, $app->translate('Performance logging is on'));
+    } else {
+        push(@meta_messages, $app->translate('Performance logging is off'));
+    }
+    push(@meta_messages, $app->translate('Performance log path is [_1]', $app->param('system_performance_logging_path')))
+        if ($app->param('system_performance_logging_path') =~ /\w+/);
+    push(@meta_messages, $app->translate('Performance log threshold is [_1]', $app->param('system_performance_logging_threshold')))
+        if ($app->param('system_performance_logging_threshold') =~ /\d+/);
+    
+    # throw the messages in the activity log
+    if (scalar(@meta_messages) > 0) {
+        my $message = join(', ', @meta_messages);
+        $app->log({
+            message  => $app->translate('System Settings Changes Took Place'),
+            level    => MT::Log::INFO(),
+            class    => 'system',
+            metadata => $message,
+        });
+    }
+
+    # actually assign the changes
+    $app->config( 'EmailAddressMain', $app->param('system_email_address') || undef, 1 );
+    $app->config('DebugMode', $app->param('system_debug_mode'), 1)
+        if ($app->param('system_debug_mode') =~ /\d+/);
+    if ($app->param('system_performance_logging')) {
+        $app->config('PerformanceLogging', 1, 1);
+    } else {
+        $app->config('PerformanceLogging', 0, 1);
+    }
+    $app->config('PerformanceLoggingPath', $app->param('system_performance_logging_path'), 1)
+        if ($app->param('system_performance_logging_path') =~ /\w+/);
+    $app->config('PerformanceLoggingThreshold', $app->param('system_performance_logging_threshold'), 1)
+        if ($app->param('system_performance_logging_threshold') =~ /\d+/);
+    $cfg->save_config();
+    my $args = ();
+    $args->{saved} = 1;
+    $app->redirect(
+        $app->uri(
+            'mode' => 'cfg_system',
+            args   => $args
+        )
+    );
+}

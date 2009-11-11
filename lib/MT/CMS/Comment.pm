@@ -1029,110 +1029,6 @@ sub not_junk {
     $app->rebuild_these( \%rebuild_set, how => MT::App::CMS::NEW_PHASE() );
 }
 
-sub cfg_system_feedback {
-    my $app = shift;
-    my %param;
-    return $app->redirect(
-        $app->uri(
-            mode => 'cfg_comments',
-            args => { blog_id => $app->param('blog_id') }
-        )
-    ) if $app->param('blog_id');
-
-    return $app->errtrans("Permission denied.")
-      unless $app->user->is_superuser();
-
-    my $cfg = $app->config;
-    $param{nav_config} = 1;
-    $app->add_breadcrumb( $app->translate('Feedback Settings') );
-    $param{nav_settings}         = 1;
-    $param{comment_disable}      = $cfg->AllowComments ? 0 : 1;
-    $param{ping_disable}         = $cfg->AllowPings ? 0 : 1;
-    $param{disabled_notify_ping} = $cfg->DisableNotificationPings ? 1 : 0;
-    $param{system_no_email}      = 1 unless $cfg->EmailAddressMain;
-    my $send = $cfg->OutboundTrackbackLimit || 'any';
-
-    if ( $send =~ m/^(any|off|selected|local)$/ ) {
-        $param{ "trackback_send_" . $cfg->OutboundTrackbackLimit } = 1;
-        if ( $send eq 'selected' ) {
-            my @domains = $cfg->OutboundTrackbackDomains;
-            my $domains = join "\n", @domains;
-            $param{trackback_send_domains} = $domains;
-        }
-    }
-    else {
-        $param{"trackback_send_any"} = 1;
-    }
-    $param{saved}        = $app->param('saved');
-    $param{screen_class} = "settings-screen system-feedback-settings";
-    $app->load_tmpl( 'cfg_system_feedback.tmpl', \%param );
-}
-
-sub save_cfg_system_feedback {
-    my $app = shift;
-    return $app->errtrans("Permission denied.")
-      unless $app->user->is_superuser();
-
-    $app->validate_magic or return;
-    my $cfg = $app->config;
-    
-    # construct the message to the activity log
-    my @meta_messages = ();
-    if ($app->param('comment_disable')) {
-        push(@meta_messages, 'Allow comments is on');
-    } else {
-        push(@meta_messages, 'Allow comments is off');
-    } 
-    if ($app->param('ping_disable')) {
-        push(@meta_messages, 'Allow trackbacks is on');
-    } else {
-        push(@meta_messages, 'Allow trackbacks is off');
-    }
-    if ($app->param('disable_notify_ping')) {
-        push(@meta_messages, 'Allow outbound trackbacks is on');
-    } else {
-        push(@meta_messages, 'Allow outbound trackbacks is off');
-    }
-    push(@meta_messages, 'Outbound trackback limit is ' . $app->param('trackback_send')) 
-        if ($app->param('trackback_send') =~ /\w+/);
-    
-    # throw the messages in the activity log
-    if (scalar(@meta_messages) > 0) {
-        my $message = join(', ', @meta_messages);
-        $app->log({
-            message  => 'System Settings Changes Took Place',
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            metadata => $message,
-        });
-    }
-    
-    # actually assign the changes
-    $cfg->AllowComments( ( $app->param('comment_disable') ? 0 : 1 ), 1 );
-    $cfg->AllowPings(    ( $app->param('ping_disable')    ? 0 : 1 ), 1 );
-    $cfg->DisableNotificationPings(
-        ( $app->param('disable_notify_ping') ? 1 : 0 ), 1 );
-    my $send = $app->param('trackback_send') || 'any';
-    if ( $send =~ m/^(any|off|selected|local)$/ ) {
-        $cfg->OutboundTrackbackLimit( $send, 1 );
-        if ( $send eq 'selected' ) {
-            my $domains = $app->param('trackback_send_domains') || '';
-            $domains =~ s/[\r\n]+/ /gs;
-            $domains =~ s/\s{2,}/ /gs;
-            my @domains = split /\s/, $domains;
-            $cfg->OutboundTrackbackDomains( \@domains, 1 );
-        }
-    }
-
-    $cfg->save_config();
-    $app->redirect(
-        $app->uri(
-            'mode' => 'cfg_system_feedback',
-            args   => { saved => 1 }
-        )
-    );
-}
-
 sub reply {
     my $app = shift;
     my $q   = $app->param;
@@ -2041,4 +1937,110 @@ sub cfg_spam {
             screen_class       => 'settings-screen spam-screen'
         }
     );
+}
+
+This routine has been moved to MT::CMS::System
+
+sub save_cfg_system_feedback {
+    my $app = shift;
+    return $app->errtrans("Permission denied.")
+      unless $app->user->is_superuser();
+
+    $app->validate_magic or return;
+    my $cfg = $app->config;
+    
+    # construct the message to the activity log
+    my @meta_messages = ();
+    if ($app->param('comment_disable')) {
+        push(@meta_messages, 'Allow comments is on');
+    } else {
+        push(@meta_messages, 'Allow comments is off');
+    } 
+    if ($app->param('ping_disable')) {
+        push(@meta_messages, 'Allow trackbacks is on');
+    } else {
+        push(@meta_messages, 'Allow trackbacks is off');
+    }
+    if ($app->param('disable_notify_ping')) {
+        push(@meta_messages, 'Allow outbound trackbacks is on');
+    } else {
+        push(@meta_messages, 'Allow outbound trackbacks is off');
+    }
+    push(@meta_messages, 'Outbound trackback limit is ' . $app->param('trackback_send')) 
+        if ($app->param('trackback_send') =~ /\w+/);
+    
+    # throw the messages in the activity log
+    if (scalar(@meta_messages) > 0) {
+        my $message = join(', ', @meta_messages);
+        $app->log({
+            message  => 'System Settings Changes Took Place',
+            level    => MT::Log::INFO(),
+            class    => 'system',
+            metadata => $message,
+        });
+    }
+    
+    # actually assign the changes
+    $cfg->AllowComments( ( $app->param('comment_disable') ? 0 : 1 ), 1 );
+    $cfg->AllowPings(    ( $app->param('ping_disable')    ? 0 : 1 ), 1 );
+    $cfg->DisableNotificationPings(
+        ( $app->param('disable_notify_ping') ? 1 : 0 ), 1 );
+    my $send = $app->param('trackback_send') || 'any';
+    if ( $send =~ m/^(any|off|selected|local)$/ ) {
+        $cfg->OutboundTrackbackLimit( $send, 1 );
+        if ( $send eq 'selected' ) {
+            my $domains = $app->param('trackback_send_domains') || '';
+            $domains =~ s/[\r\n]+/ /gs;
+            $domains =~ s/\s{2,}/ /gs;
+            my @domains = split /\s/, $domains;
+            $cfg->OutboundTrackbackDomains( \@domains, 1 );
+        }
+    }
+
+    $cfg->save_config();
+    $app->redirect(
+        $app->uri(
+            'mode' => 'cfg_system_feedback',
+            args   => { saved => 1 }
+        )
+    );
+}
+
+sub cfg_system_feedback {
+    my $app = shift;
+    my %param;
+    return $app->redirect(
+        $app->uri(
+            mode => 'cfg_comments',
+            args => { blog_id => $app->param('blog_id') }
+        )
+    ) if $app->param('blog_id');
+
+    return $app->errtrans("Permission denied.")
+      unless $app->user->is_superuser();
+
+    my $cfg = $app->config;
+    $param{nav_config} = 1;
+    $app->add_breadcrumb( $app->translate('Feedback Settings') );
+    $param{nav_settings}         = 1;
+    $param{comment_disable}      = $cfg->AllowComments ? 0 : 1;
+    $param{ping_disable}         = $cfg->AllowPings ? 0 : 1;
+    $param{disabled_notify_ping} = $cfg->DisableNotificationPings ? 1 : 0;
+    $param{system_no_email}      = 1 unless $cfg->EmailAddressMain;
+    my $send = $cfg->OutboundTrackbackLimit || 'any';
+
+    if ( $send =~ m/^(any|off|selected|local)$/ ) {
+        $param{ "trackback_send_" . $cfg->OutboundTrackbackLimit } = 1;
+        if ( $send eq 'selected' ) {
+            my @domains = $cfg->OutboundTrackbackDomains;
+            my $domains = join "\n", @domains;
+            $param{trackback_send_domains} = $domains;
+        }
+    }
+    else {
+        $param{"trackback_send_any"} = 1;
+    }
+    $param{saved}        = $app->param('saved');
+    $param{screen_class} = "settings-screen system-feedback-settings";
+    $app->load_tmpl( 'cfg_system_feedback.tmpl', \%param );
 }
