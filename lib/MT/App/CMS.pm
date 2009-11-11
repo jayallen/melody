@@ -171,9 +171,10 @@ sub core_methods {
         'handshake'            => "${pkg}Blog::handshake",
         'itemset_action'       => "${pkg}Tools::do_list_action",
         'page_action'          => "${pkg}Tools::do_page_action",
-        'cfg_system'           => "${pkg}Tools::cfg_system_general",
-        'cfg_system_users'     => "${pkg}User::cfg_system_users",
-        'cfg_system_feedback'  => "${pkg}Comment::cfg_system_feedback",
+        'cfg_system_settings'  => "${pkg}Tools::cfg_system_settings",
+#        'cfg_system'           => "${pkg}Tools::cfg_system_general",
+#        'cfg_system_users'     => "${pkg}User::cfg_system_users",
+#        'cfg_system_feedback'  => "${pkg}Comment::cfg_system_feedback",
         'save_plugin_config'   => "${pkg}Plugin::save_config",
         'reset_plugin_config'  => "${pkg}Plugin::reset_config",
         'save_cfg_system_feedback' =>
@@ -1354,31 +1355,10 @@ sub core_menus {
             system_permission => "edit_templates",
         },
 
-        'prefs:general' => {
-            label      => "General",
+        'prefs:system' => {
+            label      => "System Settings",
             order      => 100,
-            mode       => "cfg_system",
-            view       => "system",
-            permission => "administer",
-        },
-        'prefs:user' => {
-            label      => "User",
-            order      => 200,
-            mode       => "cfg_system_users",
-            view       => "system",
-            permission => "administer",
-        },
-        'prefs:feedback' => {
-            label      => "Feedback",
-            order      => 300,
-            mode       => "cfg_system_feedback",
-            view       => "system",
-            permission => "administer",
-        },
-        'prefs:general' => {
-            label      => "General",
-            order      => 100,
-            mode       => "cfg_system",
+            mode       => "cfg_system_settings",
             view       => "system",
             permission => "administer",
         },
