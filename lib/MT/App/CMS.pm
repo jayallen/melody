@@ -38,7 +38,7 @@ sub core_methods {
     my $app = shift;
     my $pkg = '$Core::MT::CMS::';
     return {
-        'tools'     => "${pkg}Tools::system_check",
+        'tools'     => "${pkg}Tools::system_info",
         'dashboard' => "${pkg}Dashboard::dashboard",
         'menu'      => "${pkg}Dashboard::dashboard",
         'admin'     => "${pkg}Dashboard::dashboard",
@@ -86,16 +86,6 @@ sub core_methods {
         ## Blog configuration screens
         'cfg_blog_settings' => "${pkg}Blog::cfg_blog_settings",
         'cfg_plugins'       => "${pkg}Plugin::cfg_plugins",
-
-# Rendered obsolete by cfg_blog_settings
-#        'cfg_archives'      => "${pkg}Blog::cfg_archives",
-#        'cfg_web_services'  => "${pkg}Blog::cfg_web_services",
-#        'cfg_prefs'         => "${pkg}Blog::cfg_prefs",
-#        'cfg_comments'      => "${pkg}Comment::cfg_comments",
-#        'cfg_registration'  => "${pkg}Comment::cfg_registration",
-#        'cfg_entry'         => "${pkg}Entry::cfg_entry",
-#        'cfg_spam'          => "${pkg}Comment::cfg_spam",
-#        'cfg_trackbacks'    => "${pkg}TrackBack::cfg_trackbacks",
 
         ## Save
         'save_cat'     => "${pkg}Category::save",
@@ -171,16 +161,16 @@ sub core_methods {
         'handshake'            => "${pkg}Blog::handshake",
         'itemset_action'       => "${pkg}Tools::do_list_action",
         'page_action'          => "${pkg}Tools::do_page_action",
-        'cfg_system_settings'  => "${pkg}Tools::cfg_system_settings",
-#        'cfg_system'           => "${pkg}Tools::cfg_system_general",
-#        'cfg_system_users'     => "${pkg}User::cfg_system_users",
-#        'cfg_system_feedback'  => "${pkg}Comment::cfg_system_feedback",
+        'cfg_system_settings'  => "${pkg}System::cfg_system_settings",
         'save_plugin_config'   => "${pkg}Plugin::save_config",
         'reset_plugin_config'  => "${pkg}Plugin::reset_config",
-        'save_cfg_system_feedback' =>
-            "${pkg}Comment::save_cfg_system_feedback",
-        'save_cfg_system_general' => "${pkg}Tools::save_cfg_system_general",
-        'save_cfg_system_users'   => "${pkg}User::save_cfg_system_users",
+        'save_cfg_system'      => "${pkg}System::save_cfg_system",
+
+#        'save_cfg_system_feedback' =>
+#            "${pkg}Comment::save_cfg_system_feedback",
+#        'save_cfg_system_general' => "${pkg}Tools::save_cfg_system_general",
+#        'save_cfg_system_users'   => "${pkg}User::save_cfg_system_users",
+
         'update_welcome_message'  => "${pkg}Blog::update_welcome_message",
         'upgrade'                 => {
             code           => "${pkg}Tools::upgrade",
@@ -199,9 +189,11 @@ sub core_methods {
         'restore'                  => "${pkg}Tools::restore",
         'restore_premature_cancel' => "${pkg}Tools::restore_premature_cancel",
         'adjust_sitepath'          => "${pkg}Tools::adjust_sitepath",
-        'system_check'             => "${pkg}Tools::system_check",
+
+        'system_check'             => "${pkg}Tools::system_info",
         'resources'                => "${pkg}Tools::resources",
         'sanity_check'             => "${pkg}Tools::sanity_check",
+
         'dialog_refresh_templates' =>
             "${pkg}Template::dialog_refresh_templates",
         'dialog_clone_blog' => "${pkg}Common::clone_blog",
