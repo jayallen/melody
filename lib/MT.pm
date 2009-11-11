@@ -440,16 +440,7 @@ sub config {
     }
     if (@_) {
         my $setting = shift;
-	open MTFILE, ">>/Users/breese/Sites/logs/mt.log";
-#        @_ ? $mt->{cfg}->set( $setting, @_ ) : $mt->{cfg}->get($setting);
-        if (@_) {
-	    print MTFILE "Setting $setting to " . @_ . "\n";
-	    $mt->{cfg}->set( $setting, @_ );
-	} else {
-	    print MTFILE "Getting $setting (" . $mt->{cfg}->get($setting) . ")\n";
-	    $mt->{cfg}->get($setting);
-	}
-#	close MTFILE;
+        @_ ? $mt->{cfg}->set( $setting, @_ ) : $mt->{cfg}->get($setting);
     }
     else {
         $mt->{cfg};
