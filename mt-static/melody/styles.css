@@ -30,6 +30,7 @@
 }
 
 /* Redesign Blog Settings */
+.sys-preferences,
 .blog-preferences {
     display: none;
 }
