@@ -35,6 +35,7 @@ sub cfg_plugins {
     $param{reset}        = 1 if $app->param('reset');
     $param{saved}        = 1 if $app->param('saved');
     $param{mod_perl}     = 1 if $ENV{MOD_PERL};
+    $param{plugin}       = $app->param('plugin');
     $param{screen_id}    = "list-plugins";
     $param{screen_class} = "plugin-settings";
     build_plugin_table( $app, param => \%param, scope => $q->param('blog_id') ? 'blog:'.$q->param('blog_id') : 'system' );
@@ -73,6 +74,7 @@ sub save_config {
     }
 
     $app->add_return_arg( saved => 1 );
+    $app->add_return_arg( plugin => $profile->{object}->id );
     $app->call_return;
 }
 
@@ -285,7 +287,8 @@ sub build_plugin_table {
                 plugin_config_link   => $plugin->config_link(),
                 plugin_config_html   => $config_html,
                 plugin_settings_id   => $settings->id,
-                plugin_id            => $id,
+                plugin_id            => $plugin->id,
+                plugin_num           => $id,
                 plugin_compat_errors => $registry->{compat_errors},
             };
             my $block_tags = $plugin->registry('tags', 'block');
