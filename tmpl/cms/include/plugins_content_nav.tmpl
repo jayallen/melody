@@ -10,15 +10,19 @@ $(document).ready( function() {
     $(this).parent().addClass('active');
     $('#' + newactive).show();
   });  
+<mt:if name="plugin">
+  $('#content-nav ul li a[title="plugin-<$mt:var name="plugin"$>"]').trigger('click');
+<mt:else>
   if (a && $('#content-nav ul li a[title="'+a[1]+'"]')) {
     $('#content-nav ul li a[title="'+a[1]+'"]').trigger('click');
   } else {
     $('#content-nav ul li:first-child').find('a').trigger('click');
   }
+</mt:if>
 });
 </script>
 <ul>
 <mt:loop name="plugin_loop">
-    <li><a href="javascript:void(0)" title="plugin-<$mt:var name="plugin_id" dirify="1"$>"><b><$mt:var name="plugin_name"$></b></a></li>
+    <li<mt:if name="plugin" eq="$plugin_id"> class="active"</mt:if>><a href="javascript:void(0)" title="plugin-<$mt:var name="plugin_id" dirify="1"$>"><b><$mt:var name="plugin_name"$></b></a></li>
 </mt:loop>
 </ul>
