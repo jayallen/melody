@@ -762,7 +762,7 @@ sub init_request {
                     delete $ENV{PATH_INFO};
                 }
             }
-            $app->query = CGI->new( $app->{no_read_body} ? {} : () );
+            $app->query( CGI->new( $app->{no_read_body} ? {} : ()) );
         }
     }
     $app->init_query();
