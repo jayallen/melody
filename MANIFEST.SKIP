@@ -140,7 +140,7 @@ lang-es
 lang-no
 lang-ja
 lang-it
-\.(en_us|fr|de|gb|ja|en|no|it)$
+\.(en_us|fr|de|gb|ja|en|no|it|ru)$ # Check the need for ignoring ru
 
 # Tools
 ^mt-inbox.pl$
@@ -188,3 +188,4 @@ index\.html\..*
 readme\.html\..*
 build-language-stamp
 ^mt-config.cgi$
+^ru-filter.pl$

@@ -1,0 +1,25 @@
+/*
+$Id: styles_ru.css 38 2008-04-20 10:52:51Z saahov $
+*/
+.widget-calendar th {
+    width: 3em;
+}
+.object-status-detail {
+	width: 33%;
+}
+#action-col-head {
+	width: 180px;
+}
+#image_alignment-field {
+	left:10px;
+	margin-top:70px;
+}
+#new_entry_prefs {
+	height:130px;
+}
+#image_alignment-label {
+	margin-bottom:4px;
+}
+body#edit-entry .object-nav {
+    right: 320px;
+}
