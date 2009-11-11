@@ -22,7 +22,7 @@ $(document).ready( function() {
 });
 </script>
 <ul>
-<mt:loop name="plugin_loop">
+<mt:loop name="plugin_loop"><mt:if name="plugin_has_config">
     <li<mt:if name="plugin" eq="$plugin_id"> class="active"</mt:if>><a href="javascript:void(0)" title="plugin-<$mt:var name="plugin_id" dirify="1"$>"><b><$mt:var name="plugin_name"$></b></a></li>
-</mt:loop>
+</mt:if></mt:loop>
 </ul>

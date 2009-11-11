@@ -24,6 +24,7 @@
 #list-plugins .plugin_form h3.plugin-name {
     margin-bottom: 10px;
 } 
+#list-plugins.system #main-content-inner,
 #list-plugins #main-content-inner {
     border-bottom: 0;
 }
