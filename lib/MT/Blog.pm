@@ -264,6 +264,14 @@ sub create_default_templates {
             my $modulesets = delete $val->{widgets};
             $obj->modulesets( MT::Template->widgets_to_modulesets($modulesets, $blog->id) );
         }
+        if ( 'module' eq $val->{set} || 'widget' eq $val->{set} ) {
+	    foreach (qw( expire_type expire_interval expire_event )) {
+		my $col = 'cache_' . $_;
+		my $prop = $val->{cache}->{$_};
+		$prop = ($prop * 60) if ($_ eq 'expire_interval');
+		$obj->$col($prop);
+	    }
+	}
         $obj->save;
         if ($val->{mappings}) {
             push @arch_tmpl, {
