@@ -59,7 +59,7 @@
 
 <!-- START mt:loop name="plugin_groups" -->
 <mt:loop name="plugin_loop">
-  <mt:if name="plugin_config_html"><mt:if name="can_config">
+  <mt:if name="plugin_has_config"><mt:if name="can_config">
 
     <div id="plugin-<$mt:var name="plugin_id" dirify="1"$>" class="plugin_form">
 
@@ -72,17 +72,18 @@
             <__trans phrase="Plugin error:"><br /><code style="white-space: pre"><mt:var name="plugin_error"></code>
         </mtapp:statusmsg>
       </mt:if>
-      <form method="post" action="<mt:var name="script_url">" 
-            id="plugin-<mt:var name="plugin_id">-form">
+
+      <form method="post" action="<$mt:var name="script_url"$>" 
+            id="plugin-<$mt:var name="plugin_id" dirify="1"$>-form">
         <input type="hidden" name="__mode" value="save_plugin_config" />
-      <mt:if name="blog_id">
-         <input type="hidden" name="blog_id" value="<mt:var name="blog_id">" />
-      </mt:if>
-         <input type="hidden" name="return_args" value="<mt:var name="return_args" escape="html">" />
-         <input type="hidden" name="plugin_sig" value="<mt:var name="plugin_sig" escape="html">" />
-         <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
+<mt:if name="blog_id">
+         <input type="hidden" name="blog_id" value="<$mt:var name="blog_id"$>" />
+</mt:if>
+         <input type="hidden" name="return_args" value="<$mt:var name="return_args" escape="html"$>" />
+         <input type="hidden" name="plugin_sig" value="<$mt:var name="plugin_sig" escape="html"$>" />
+         <input type="hidden" name="magic_token" value="<$mt:var name="magic_token"$>" />
          <fieldset>
-           <mt:var name="plugin_config_html">
+           <$mt:var name="plugin_config_html"$>
          </fieldset>
          <div class="actions-bar settings-actions-bar">
            <div class="actions-bar-inner pkg actions">
@@ -100,9 +101,8 @@
             </div>
           </div>
         </form>
-    </mt:unless>
-    </mt:if></mt:if>
     </div>
+    </mt:if></mt:if>
 <mt:else>
     <mt:if name="blog_view">
         <mtapp:statusmsg

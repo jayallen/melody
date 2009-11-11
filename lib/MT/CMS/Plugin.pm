@@ -227,8 +227,7 @@ sub build_plugin_table {
             {
                 my $tmpl;
                 if ( ref $snip_tmpl ne 'MT::Template' ) {
-                    require MT::Template;
-                    $tmpl = MT::Template->new(
+                    $tmpl = MT->model('template')->new(
                         type   => 'scalarref',
                         source => ref $snip_tmpl
                         ? $snip_tmpl
@@ -286,6 +285,7 @@ sub build_plugin_table {
                 plugin_key           => $plugin->key(),
                 plugin_config_link   => $plugin->config_link(),
                 plugin_config_html   => $config_html,
+		plugin_has_config    => $config_html ne '',
                 plugin_settings_id   => $settings->id,
                 plugin_id            => $plugin->id,
                 plugin_num           => $id,
