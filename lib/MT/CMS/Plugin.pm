@@ -43,6 +43,39 @@ sub cfg_plugins {
     $app->load_tmpl( 'cfg_plugin.tmpl', \%param );
 }
 
+# TODO move this to MT::Plugin
+sub find_plugin_by_id {
+    my ($id) = @_;
+    my @plugins = grep { $MT::Plugins{$_}->{object}->id eq $id } keys %MT::Plugins;
+#    use Data::Dumper;
+#    MT->log({ message => "Found " . Dumper(@plugins) });
+    return wantarray ? @plugins : $MT::Plugins{ $plugins[0] };
+}
+
+sub cfg_plugin_dialog {
+    my $app = shift;
+    my $q   = $app->param;
+    my %param;
+
+    my $profile = find_plugin_by_id($app->param('plugin'));
+    my $plugin  = $profile->{object};
+    my $scope   = $app->param('scope') eq 'system' ? 'system' : 'blog:' . $app->blog->id;
+
+    my $cfg = $app->config;
+    $param{can_config}  = $app->user->can_manage_plugins;
+    $param{use_plugins} = $cfg->UsePlugins;
+    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
+    $param{plugin}       = $app->param('plugin');
+    $param{plugin_name}  = $plugin->name;
+    $param{plugin_sig}   = $plugin->{plugin_sig};
+    my $scope            = $app->param('scope');
+    $param{scope}        = $scope;
+
+    $param{config_html}  = build_plugin_config_html( $app, $plugin, $scope );
+
+    $app->load_tmpl( 'dialog/cfg_plugin.tmpl', \%param );
+}
+
 sub save_config {
     my $app = shift;
 
@@ -72,7 +105,12 @@ sub save_config {
             return $app->error("Error saving plugin settings: " . $plugin->errstr);
         }
     }
-
+    if ($app->param('dialog')) {
+	my $tmpl = $app->load_tmpl('dialog/cfg_plugin.tmpl');
+	$tmpl->param( finish => 1 );
+	$tmpl->param( plugin_config_saved => 1 );
+	return $app->build_page($tmpl);
+    }
     $app->add_return_arg( saved => 1 );
     $app->add_return_arg( plugin => $profile->{object}->id );
     $app->call_return;
@@ -124,6 +162,52 @@ sub plugin_control {
 
     $app->add_return_arg( 'switched' => 1 );
     $app->call_return;
+}
+
+sub build_plugin_config_html {
+    my $app = shift;
+    my ($plugin, $scope) = @_;
+
+    my ($config_html);
+    my %plugin_param;
+    my $settings = $plugin->get_config_obj($scope);
+    $plugin->load_config( \%plugin_param, $scope );
+    if ( my $snip_tmpl =
+	 $plugin->config_template( \%plugin_param, $scope ) )
+    {
+	my $tmpl;
+	if ( ref $snip_tmpl ne 'MT::Template' ) {
+	    $tmpl = MT->model('template')->new(
+		type   => 'scalarref',
+		source => ref $snip_tmpl
+		? $snip_tmpl
+		: \$snip_tmpl
+		# TBD: add path for plugin template directory
+		);
+	}
+	else {
+	    $tmpl = $snip_tmpl;
+	}
+
+	# Process template independent of $app to avoid premature
+	# localization (give plugin a chance to do L10N first).
+	$tmpl->param( blog_id => $app->blog->id ) if $app->blog;
+	$tmpl->param( \%plugin_param );
+	
+	$app->run_callbacks('plugin_template_param' . $plugin->id, 
+			    $app, $scope, $tmpl->param, $tmpl);
+	
+	$config_html = $tmpl->output()
+	    or $config_html = "Error in configuration template: " . $tmpl->errstr;
+	$config_html = $plugin->translate_templatized($config_html)
+	    if $config_html =~ m/<(?:__trans|mt_trans) /i;
+            }
+    else {
+	
+	# don't list non-configurable plugins for blog scope...
+	next if $scope ne 'system';
+    }
+    return $config_html;
 }
 
 sub build_plugin_table {
@@ -218,41 +302,7 @@ sub build_plugin_table {
                   $app->static_path . $plugin->envelope . '/' . $doc_link;
             }
 
-            my ($config_html);
-            my %plugin_param;
-            my $settings = $plugin->get_config_obj($scope);
-            $plugin->load_config( \%plugin_param, $scope );
-            if ( my $snip_tmpl =
-                $plugin->config_template( \%plugin_param, $scope ) )
-            {
-                my $tmpl;
-                if ( ref $snip_tmpl ne 'MT::Template' ) {
-                    $tmpl = MT->model('template')->new(
-                        type   => 'scalarref',
-                        source => ref $snip_tmpl
-                        ? $snip_tmpl
-                        : \$snip_tmpl
-
-                          # TBD: add path for plugin template directory
-                    );
-                }
-                else {
-                    $tmpl = $snip_tmpl;
-                }
-
-                # Process template independent of $app to avoid premature
-                # localization (give plugin a chance to do L10N first).
-                $tmpl->param( \%plugin_param );
-                $config_html = $tmpl->output()
-                    or $config_html = "Error in configuration template: " . $tmpl->errstr;
-                $config_html = $plugin->translate_templatized($config_html)
-                  if $config_html =~ m/<(?:__trans|mt_trans) /i;
-            }
-            else {
-
-                # don't list non-configurable plugins for blog scope...
-                next if $scope ne 'system';
-            }
+	    my $config_html = build_plugin_config_html($app, $plugin,$scope);
 
 # Removed for Melody - obsolete
 #            if ( $last_fld ne $fld ) {
@@ -268,6 +318,7 @@ sub build_plugin_table {
 #            }
 
             my $registry = $plugin->registry;
+	    my $settings = $plugin->get_config_obj($scope);
             my $row      = {
                 first                => $next_is_first,
                 plugin_name          => $plugin_name,
@@ -291,6 +342,7 @@ sub build_plugin_table {
                 plugin_num           => $id,
                 plugin_compat_errors => $registry->{compat_errors},
             };
+
             my $block_tags = $plugin->registry('tags', 'block');
             my $function_tags = $plugin->registry('tags', 'function');
             my $modifiers = $plugin->registry('tags', 'modifier');

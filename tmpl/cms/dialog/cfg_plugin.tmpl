@@ -1,0 +1,62 @@
+<mt:setvarblock name="page_title"><__trans phrase="Settings for [_1]" params="<$mt:var name="plugin_name"$>"></mt:setvarblock>
+
+<mt:setvarblock name="html_head" append="1">
+
+<mt:if name="finish">
+<script type="text/javascript">
+<!--
+function init() {
+  closeDialog();
+  var w = window;
+  while (w.parent && (w.parent != w)) w = w.parent;
+  if (w.onUploadDialogClose) {
+    w.onUploadDialogClose();
+  }
+}
+TC.attachLoadEvent( init );
+//-->
+</script>
+</mt:if>
+</mt:setvarblock>
+
+<mt:include name="dialog/header.tmpl">
+
+<mt:if name="error">
+        <mtapp:statusmsg
+            id="error"
+            class="error">
+            <mt:var name="error">
+        </mtapp:statusmsg>
+</mt:if>
+
+      <form method="post" action="<$mt:var name="script_url"$>"
+            id="plugin-<$mt:var name="plugin_id" dirify="1"$>-form">
+        <input type="hidden" name="__mode" value="save_plugin_config" />
+<mt:if name="blog_id">
+         <input type="hidden" name="blog_id" value="<$mt:var name="blog_id"$>" />
+</mt:if>
+         <input type="hidden" name="return_args" value="<$mt:var name="return_args" escape="html"$>" />
+         <input type="hidden" name="plugin_sig" value="<$mt:var name="plugin_sig" escape="html"$>" />
+         <input type="hidden" name="magic_token" value="<$mt:var name="magic_token"$>" />
+         <input type="hidden" name="dialog" value="1" />
+         <fieldset>
+           <$mt:var name="config_html"$>
+         </fieldset>
+         <div class="actions-bar settings-actions-bar">
+           <div class="actions-bar-inner pkg actions">
+             <button
+                mt:mode="save_plugin_config"
+                type="submit"
+                class="primary-button"
+                ><__trans phrase="Save Changes"></button>
+<mt:if name="plugin_settings_id">
+             <button
+                onclick="resetPlugin(getByID('plugin-<mt:var name="plugin_id">-form')); return false"
+                type="submit"
+                ><__trans phrase="Reset to Defaults"></button>
+</mt:if>
+            </div>
+          </div>
+        </form>
+
+<mt:include name="dialog/footer.tmpl">

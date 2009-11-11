@@ -162,6 +162,7 @@ sub core_methods {
         'itemset_action'       => "${pkg}Tools::do_list_action",
         'page_action'          => "${pkg}Tools::do_page_action",
         'cfg_system_settings'  => "${pkg}System::cfg_system_settings",
+        'plugin_config_dialog' => "${pkg}Plugin::cfg_plugin_dialog",
         'save_plugin_config'   => "${pkg}Plugin::save_config",
         'reset_plugin_config'  => "${pkg}Plugin::reset_config",
         'save_cfg_system'      => "${pkg}System::save_cfg_system",
@@ -1363,6 +1364,12 @@ sub core_menus {
 	    order      => 110,
 	    mode       => "cfg_plugins",
 	    permission => "manage_plugins",
+	},
+	'prefs:test' => {
+	    label      => "Test",
+	    order      => 110,
+	    dialog     => "plugin_config_dialog",
+            args       => { _plugin => 'typepadantispam' },
 	},
         'prefs:ip_info' => {
             label      => "IP Banning",
