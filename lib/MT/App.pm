@@ -3722,10 +3722,7 @@ sub set_no_cache {
         $app->{apache}->no_cache(1);
     }
     else {
-        $app->query->cache('no'); 
-        # if(defined($app->query->param->{'cache'})) {
-             #$app->query->param->cache('no');
-        # }
+        $app->query->cache('no');
     }
 }
 
