@@ -47,8 +47,6 @@ sub cfg_plugins {
 sub find_plugin_by_id {
     my ($id) = @_;
     my @plugins = grep { $MT::Plugins{$_}->{object}->id eq $id } keys %MT::Plugins;
-#    use Data::Dumper;
-#    MT->log({ message => "Found " . Dumper(@plugins) });
     return wantarray ? @plugins : $MT::Plugins{ $plugins[0] };
 }
 
@@ -217,8 +215,8 @@ sub build_plugin_table {
     my $param = $opt{param};
     my $scope = $opt{scope} || 'system';
     my $cfg   = $app->config;
-    my $enabled_plugins  = [];
-    my $disabled_plugins  = [];
+    my @enabled_plugins;
+    my @disabled_plugins;
 
     # we have to sort the plugin list in an odd fashion...
     #   PLUGINS
@@ -229,11 +227,11 @@ sub build_plugin_table {
     my %list;
     my %folder_counts;
     for my $sig ( keys %MT::Plugins ) {
-        my $sub = $sig =~ m!/! ? 1 : 0;
+       my $sub = $sig =~ m!/! ? 1 : 0;
         my $obj = $MT::Plugins{$sig}{object};
 
         # Prevents display of component objects
-        next if $obj && !$obj->isa('MT::Plugin');
+#        next if $obj && !$obj->isa('MT::Plugin');
 
         my $err = $MT::Plugins{$sig}{error}   ? 0 : 1;
         my $on  = $MT::Plugins{$sig}{enabled} ? 0 : 1;
@@ -400,7 +398,7 @@ sub build_plugin_table {
             {
                 $row->{plugin_resources} = 1;
             }
-            push @$enabled_plugins, $row if $profile->{enabled};
+            push @enabled_plugins, $row if $profile->{enabled};
         }
         else {
 
@@ -431,13 +429,15 @@ sub build_plugin_table {
                 plugin_disabled      => $profile->{enabled} ? 0 : 1,
                 plugin_id            => $id,
             };
-            push @$enabled_plugins, $row if $profile->{enabled};
-            push @$disabled_plugins, $row if !$profile->{enabled};
+            push @enabled_plugins, $row if $profile->{enabled};
+            push @disabled_plugins, $row if !$profile->{enabled};
         }
         $next_is_first = 0;
     }
-    $param->{plugin_loop} = $enabled_plugins;
-    $param->{disabled_loop} = $disabled_plugins;
+    @enabled_plugins = sort { $a->{'plugin_name'} cmp $b->{'plugin_name'} } @enabled_plugins;
+    @disabled_plugins = sort { $a->{'plugin_name'} cmp $b->{'plugin_name'} } @disabled_plugins;
+    $param->{plugin_loop} = \@enabled_plugins;
+    $param->{disabled_loop} = \@disabled_plugins;
 }
 
 1;
