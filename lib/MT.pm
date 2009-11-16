@@ -1431,6 +1431,7 @@ sub _init_plugins_core {
 
                         # rebless? based on config?
                         local $plugin_sig = $plugin_dir;
+			$Plugins{$plugin_sig}{enabled} = 1;
                         MT->add_plugin($p);
                         $p->init_callbacks();
                         next;
