@@ -11,7 +11,7 @@ sub entry_notify {
     return $app->error( $app->translate("No permissions.") )
       unless $perms->can_send_notifications;
 
-    my $q        = $app->param;
+    my $q        = $app->query;
     my $entry_id = $q->param('entry_id')
       or return $app->error( $app->translate("No entry ID provided") );
     require MT::Entry;
@@ -28,7 +28,7 @@ sub entry_notify {
 sub send_notify {
     my $app = shift;
     $app->validate_magic() or return;
-    my $q        = $app->param;
+    my $q        = $app->query;
     my $entry_id = $q->param('entry_id')
       or return $app->error( $app->translate("No entry ID provided") );
     require MT::Entry;
@@ -227,16 +227,17 @@ sub can_save {
 sub save_filter {
     my $eh    = shift;
     my ($app) = @_;
-    my $email = lc $app->param('email');
+	my $q    = $app->query;
+    my $email = lc $q->param('email');
     $email =~ s/(^\s+|\s+$)//gs;
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     if ( !is_valid_email($email) ) {
         return $eh->error(
             $app->translate(
                 "The value you entered was not a valid email address")
         );
     }
-    my $url = $app->param('url');
+    my $url = $q->param('url');
     if ( $url && ( !is_url($url) ) ) {
         return $eh->error(
             $app->translate(
@@ -250,7 +251,7 @@ sub save_filter {
       MT::Notification->load_iter( { blog_id => $blog_id } );
     while ( my $obj = $notification_iter->() ) {
         if (   ( lc( $obj->email ) eq $email )
-            && ( $obj->id ne $app->param('id') ) )
+            && ( $obj->id ne $q->param('id') ) )
         {
             return $eh->error(
                 $app->translate(

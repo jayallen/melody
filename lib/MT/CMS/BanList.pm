@@ -12,16 +12,17 @@ sub can_save {
 sub save_filter {
     my $eh    = shift;
     my ($app) = @_;
-    my $ip    = $app->param('ip');
+	my $q    = $app->query;
+    my $ip    = $q->param('ip');
     $ip =~ s/(^\s+|\s+$)//g;
     return $eh->error(
         MT->translate("You did not enter an IP address to ban.") )
       if ( '' eq $ip );
-    my $blog_id = $app->param('blog_id');
+    my $blog_id = $q->param('blog_id');
     require MT::IPBanList;
     my $existing =
       MT::IPBanList->load( { 'ip' => $ip, 'blog_id' => $blog_id } );
-    my $id = $app->param('id');
+    my $id = $q->param('id');
 
     if ( $existing && ( !$id || $existing->id != $id ) ) {
         return $eh->error(

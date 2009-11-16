@@ -7,8 +7,7 @@ use MT::I18N qw( const break_up_text substr_text );
 sub edit {
     my $cb = shift;
     my ($app, $id, $obj, $param) = @_;
-
-    my $q = $app->param;
+    my $q = $app->query;
     my $perms = $app->permissions;
     my $blog = $app->blog;
     my $blog_id = $q->param('blog_id');
@@ -24,8 +23,8 @@ sub edit {
             )
         );
         $app->add_breadcrumb( $app->translate('Edit TrackBack') );
-        $param->{approved}           = $app->param('approved');
-        $param->{unapproved}         = $app->param('unapproved');
+        $param->{approved}           = $q->param('approved');
+        $param->{unapproved}         = $q->param('unapproved');
         $param->{has_publish_access} = 1 if $app->user->is_superuser;
         $param->{has_publish_access} = (
             ( $perms->can_manage_feedback || $perms->can_edit_all_posts )
@@ -101,7 +100,7 @@ sub edit {
 
 sub list {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $perms = $app->permissions;
 
     my $can_empty_junk = 1;
@@ -145,7 +144,7 @@ sub list {
     }
     my $cols           = $class->column_names;
     my $limit          = $list_pref->{rows};
-    my $offset         = $app->param('offset') || 0;
+    my $offset         = $q->param('offset') || 0;
     my $sort_direction = $q->param('sortasc') ? 'ascend' : 'descend';
 
     ## We load $limit + 1 records so that we can easily tell if we have a
@@ -155,9 +154,9 @@ sub list {
     $arg{'sort'}    = 'created_on';
     $arg{direction} = $sort_direction;
     require MT::TBPing;
-    if ( ( $app->param('tab') || '' ) eq 'junk' ) {
-        $app->param( 'filter',     'junk_status' );
-        $app->param( 'filter_val', MT::TBPing::JUNK() );
+    if ( ( $q->param('tab') || '' ) eq 'junk' ) {
+        $q->param( 'filter',     'junk_status' );
+        $q->param( 'filter_val', MT::TBPing::JUNK() );
         $param{filter_special} = 1;
         $param{filter_phrase}  = $app->translate('Junk TrackBacks');
     }
@@ -166,7 +165,7 @@ sub list {
     }
 
     my $filter_key = $q->param('filter_key');
-    if ( !$filter_key && !$app->param('filter') ) {
+    if ( !$filter_key && !$q->param('filter') ) {
         $filter_key = 'default';
     }
     my @val        = $q->param('filter_val');
@@ -303,15 +302,15 @@ sub list {
       || $app->page_actions('list_ping');
     $param{nav_trackbacks}    = 1;
     $param{has_expanded_mode} = 1;
-    $param{tab}               = $app->param('tab') || 'pings';
-    $param{ "tab_" . ( $app->param('tab') || 'pings' ) } = 1;
+    $param{tab}               = $q->param('tab') || 'pings';
+    $param{ "tab_" . ( $q->param('tab') || 'pings' ) } = 1;
 
     unless ($blog_id) {
         $param{system_overview_nav} = 1;
         $param{nav_pings}           = 1;
     }
     $param{filter_spam} =
-      ( $app->param('filter_key') && $app->param('filter_key') eq 'spam' );
+      ( $q->param('filter_key') && $q->param('filter_key') eq 'spam' );
     if ( $param{'tab'} ne 'junk' ) {
         $param{feed_name} = $app->translate("TrackBack Activity Feed");
         $param{feed_url} =
@@ -326,7 +325,7 @@ sub list {
 
 sub cfg_trackbacks {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = scalar $q->param('blog_id');
     return $app->return_to_dashboard( redirect => 1 )
       unless $blog_id;
@@ -370,9 +369,9 @@ sub can_view {
 
 sub can_save {
     my ( $eh, $app, $id ) = @_;
+	my $q = $app->param;    
     return 0 unless $id;    # Can't create new pings here
     return 1 if $app->user->is_superuser();
-
     my $perms = $app->permissions;
     return 1
       if $perms
@@ -388,20 +387,20 @@ sub can_save {
         elsif ( $perms->can_create_post ) {
             return ( $tbitem->author_id == $app->user->id )
               && (
-                ( $p->is_junk && ( 'junk' eq $app->param('status') ) )
+                ( $p->is_junk && ( 'junk' eq $q->param('status') ) )
                 || ( $p->is_moderated
-                    && ( 'moderate' eq $app->param('status') ) )
+                    && ( 'moderate' eq $q->param('status') ) )
                 || ( $p->is_published
-                    && ( 'publish' eq $app->param('status') ) )
+                    && ( 'publish' eq $q->param('status') ) )
               );
         }
         elsif ( $perms && $perms->can_publish_post ) {
             return 0 unless $tbitem->author_id == $app->user->id;
             return 0
-              unless ( $p->excerpt eq $app->param('excerpt') )
-              && ( $p->blog_name  eq $app->param('blog_name') )
-              && ( $p->title      eq $app->param('title') )
-              && ( $p->source_url eq $app->param('source_url') );
+              unless ( $p->excerpt eq $q->param('excerpt') )
+              && ( $p->blog_name  eq $q->param('blog_name') )
+              && ( $p->title      eq $q->param('title') )
+              && ( $p->source_url eq $q->param('source_url') );
         }
     }
     else {
@@ -441,6 +440,7 @@ sub can_delete {
 sub pre_save {
     my $eh = shift;
     my ( $app, $obj, $original ) = @_;
+    my $q = $app->query;
     my $perms = $app->permissions;
     return 1
       unless $perms->can_publish_post
@@ -469,7 +469,7 @@ sub pre_save {
         }
     }
 
-    my $status = $app->param('status');
+    my $status = $q->param('status');
     if ( $status eq 'publish' ) {
         $obj->approve;
         if ( $original->junk_status != $obj->junk_status ) {

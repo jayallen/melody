@@ -37,7 +37,7 @@ sub init {
 
 sub init_request {
     my $app = shift;
-
+    my $q = $app->query;
     $app->{default_mode} = 'pre_start';
 
     # prevents init_request from trying to process the configuration file.
@@ -45,7 +45,7 @@ sub init_request {
     $app->set_no_cache;
     $app->{requires_login} = 0;
     
-    my $default_lang = $app->param('default_language') || browser_language(); 
+    my $default_lang = $q->param('default_language') || browser_language(); 
     $app->set_language($default_lang);
 
     my $mode = $app->mode;
@@ -55,7 +55,7 @@ sub init_request {
             || $mode eq 'retry'
             || $mode eq 'test';
 
-    my $step = $app->param('step') || '';
+    my $step = $q->param('step') || '';
 
     my $prev_step = 'pre_start';
     my $new_step  = '';
@@ -72,7 +72,7 @@ sub init_request {
             if ( $mode eq 'next_step' ) {
                 if ( $prev_step eq $step ) {
                     $new_step = $s->{key};
-                    $app->param( 'save', 1 )
+                    $q->param( 'save', 1 )
                         if $app->request_method eq 'POST';
                     last;
                 }
@@ -96,7 +96,7 @@ sub init_request {
         return $app->build_page( "start.tmpl", \%param );
     }
 
-    $app->param( 'next_step', $new_step );
+    $q->param( 'next_step', $new_step );
     $app->mode('run_step');
 }
 
@@ -301,21 +301,22 @@ sub init_core_registry {
 
 sub run_step {
     my $app       = shift;
+	my $q = $app->query;
     my $steps     = $app->registry("wizard_steps");
-    my $next_step = $app->param('next_step');
-    my $curr_step = $app->param('step');
+    my $next_step = $q->param('next_step');
+    my $curr_step = $q->param('step');
     my $h         = $steps->{$curr_step}{handler};
 
     my %param = $app->unserialize_config;
     my $keys  = $app->config_keys;
     if ($curr_step) {
         foreach ( @{ $keys->{$curr_step} } ) {
-            $param{$_} = $app->param($_)
-                if defined $app->param($_);
+            $param{$_} = $q->param($_)
+                if defined $q->param($_);
         }
 
-        if ( $app->param('save') ) {
-            $app->param( 'config', $app->serialize_config(%param) );
+        if ( $q->param('save') ) {
+            $q->param( 'config', $app->serialize_config(%param) );
         }
     }
 
@@ -328,7 +329,7 @@ sub run_step {
     $h = $app->handler_to_coderef($h)
         unless ref($h) eq 'CODE';
 
-    $app->param( 'step', $next_step );
+    $q->param( 'step', $next_step );
     return $h->( $app, %param );
 }
 
@@ -370,9 +371,10 @@ sub pre_start {
 
 sub wizard_steps {
     my $app = shift;
+	my $q = $app->query;
     my @steps;
     my $steps       = $app->registry("wizard_steps");
-    my $active_step = $app->param('step') || 'start';
+    my $active_step = $app->query->param('step') || 'start';
     my %param       = $app->unserialize_config;
     foreach my $key ( keys %$steps ) {
         if ( my $cond = $steps->{$key}{condition} ) {
@@ -400,26 +402,27 @@ sub build_page {
     $param ||= {};
     my $steps = $app->wizard_steps;
     $param->{'wizard_steps'} = $steps;
-    $param->{'step'}         = $app->param('step');
+    $param->{'step'}         = $app->query->param('step');
     
-    $param->{'default_language'} ||= $app->param('default_language');
+    $param->{'default_language'} ||= $app->query->param('default_language');
 
     return $app->SUPER::build_page( $tmpl, $param );
 }
 
 sub start {
     my $app   = shift;
+	my $q = $app->query;
     my %param = @_;
 
-    my $static_path = $app->param('set_static_uri_to');
+    my $static_path = $q->param('set_static_uri_to');
     my $static_file_path
         = defined $param{set_static_file_to}
         ? $param{set_static_file_to}
-        : $app->param('set_static_file_to');
+        : $q->param('set_static_file_to');
     $param{set_static_file_to} = $static_file_path;
 
     # test for static_path
-    unless ( $app->param('set_static_uri_to') ) {
+    unless ( $q->param('set_static_uri_to') ) {
         $param{uri_invalid} = 1;
         return $app->build_page( "start.tmpl", \%param );
     }
@@ -431,7 +434,7 @@ sub start {
 
     unless ( $app->is_valid_static_path($static_path) ) {
         $param{uri_invalid}       = 1;
-        $param{set_static_uri_to} = $app->param('set_static_uri_to');
+        $param{set_static_uri_to} = $q->param('set_static_uri_to');
         return $app->build_page( "start.tmpl", \%param );
     }
 
@@ -447,10 +450,10 @@ sub start {
         || !( -f File::Spec->catfile( $static_file_path, "mt.js" ) ) )
     {
         $param{file_invalid}      = 1;
-        $param{set_static_uri_to} = $app->param('set_static_uri_to');
+        $param{set_static_uri_to} = $q->param('set_static_uri_to');
         return $app->build_page( "start.tmpl", \%param );
     }
-    $param{default_language} = $app->param('default_language');
+    $param{default_language} = $q->param('default_language');
     $param{config}      = $app->serialize_config(%param);
     $param{static_file} = $static_file_path;
 
@@ -530,14 +533,15 @@ sub object_drivers {
 
 sub configure {
     my $app   = shift;
+    my $q = $app->query;
     my %param = @_;
 
-    $param{set_static_uri_to} = $app->param('set_static_uri_to');
+    $param{set_static_uri_to} = $q->param('set_static_uri_to');
 
     # set static web path
     $app->config->set( 'StaticWebPath', $param{set_static_uri_to} );
     delete $param{publish_charset};
-    if ( my $dbtype = $param{dbtype} ) {
+    if ( my $dbtype = $param{dbtype} ) { # This needs to be fixed so it is pluggable.
         $param{"dbtype_$dbtype"} = 1;
         if ( $dbtype eq 'mysql' ) {
             $param{login_required} = 1;
@@ -550,7 +554,7 @@ sub configure {
         }
         elsif ( $dbtype eq 'mssqlserver' ) {
             $param{login_required}  = 1;
-            $param{publish_charset} = $app->param('publish_charset')
+            $param{publish_charset} = $q->param('publish_charset')
                 || ( $app->{cfg}->DefaultLanguage eq 'ja'
                 ? 'Shift_JIS'
                 : 'ISO-8859-1' );
@@ -621,7 +625,7 @@ sub configure {
 
     my $ok = 1;
     my ( $err_msg, $err_more );
-    if ( $app->param('test') ) {
+    if ( $q->param('test') ) {
 
         # if check successfully and push continue then goto next step
         $ok = 0;
@@ -711,17 +715,14 @@ sub cfg_dir_conditions {
 
 sub cfg_dir {
     my $app   = shift;
+	my $q = $app->query;
     my %param = @_;
-
-    $param{set_static_uri_to} = $app->param('set_static_uri_to');
-
+    $param{set_static_uri_to} = $q->param('set_static_uri_to');
     # set static web path
     $app->config->set( 'StaticWebPath', $param{set_static_uri_to} );
-
     $param{config} = $app->serialize_config(%param);
-
     my $temp_dir;
-    if ( $app->param('test') ) {
+    if ( $q->param('test') ) {
         $param{changed} = 1;
         if ( $param{temp_dir} ) {
             $temp_dir = $param{temp_dir};
@@ -764,9 +765,10 @@ sub cfg_dir {
 
 sub optional {
     my $app   = shift;
+	my $q = $app->query;
     my %param = @_;
 
-    $param{set_static_uri_to} = $app->param('set_static_uri_to');
+    $param{set_static_uri_to} = $q->param('set_static_uri_to');
 
     # set static web path
     $app->config->set( 'StaticWebPath', $param{set_static_uri_to} );
@@ -797,7 +799,7 @@ sub optional {
 
     my $ok = 1;
     my $err_msg;
-    if ( $app->param('test') ) {
+    if ( $q->param('test') ) {
         $ok = 0;
         if ( $param{test_mail_address} ) {
             my $cfg = $app->config;
@@ -848,11 +850,12 @@ sub optional {
 
 sub seed {
     my $app   = shift;
+    my $q = $app->query;
     my %param = @_;
 
     # input data unserialize to config
     unless ( keys(%param) ) {
-        $param{config} = $app->param('config');
+        $param{config} = $q->param('config');
     }
     else {
         $param{config} = $app->serialize_config(%param);
@@ -863,7 +866,7 @@ sub seed {
     require URI;
     my $uri = URI->new( $app->cgipath );
     $param{cgi_path} = $uri->path;
-    $uri = URI->new( $app->param->param('set_static_uri_to') );
+    $uri = URI->new( $q->param->param('set_static_uri_to') );
     $param{static_web_path} = $uri->path;
     $param{static_uri}      = $uri->path;
     my $drivers = $app->object_drivers;
@@ -961,12 +964,12 @@ sub seed {
         }
         $param{config_created} = 1 if -f $cfg_file;
         $param{config_file} = $cfg_file;
-        if ( ( !-f $cfg_file ) && $app->param->param('manually') ) {
+        if ( ( !-f $cfg_file ) && $q->param->param('manually') ) {
             $param{file_not_found} = 1;
             $param{manually}       = 1;
         }
     }
-    elsif ( $app->param->param('manually') ) {
+    elsif ( $q->param->param('manually') ) {
         $param{config_created} = 1 if -f $cfg_file;
         $param{config_file} = $cfg_file;
     }
@@ -994,7 +997,7 @@ sub serialize_config {
 
 sub unserialize_config {
     my $app  = shift;
-    my $data = $app->param('config');
+    my $data = $app->query->param('config');
     my %config;
     if ($data) {
         $data = pack 'H*', $data;

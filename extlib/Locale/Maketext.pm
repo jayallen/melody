@@ -30,8 +30,9 @@ my %isa_scan = ();
 
 sub quant {
     my($handle, $num, @forms) = @_;
-
+    
     return $num if @forms == 0; # what should this mean?
+    $num ||=0; 
     return $forms[2] if @forms > 2 and $num == 0; # special zeroth case
 
     # Normal case:
@@ -44,6 +45,7 @@ sub quant {
 sub numerate {
     # return this lexical item in a form appropriate to this number
     my($handle, $num, @forms) = @_;
+    $num ||=0;
     my $s = ($num == 1);
 
     return '' unless @forms;

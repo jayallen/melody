@@ -9,7 +9,7 @@ sub edit {
 }
 sub list {
     my $app = shift;
-    $app->param( 'type', 'page' );
+    $app->query->param( 'type', 'page' );
     return $app->forward('list_entry', { type => 'page' } );
 }
 
