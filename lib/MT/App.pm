@@ -673,7 +673,7 @@ sub init {
 
 sub pre_run_debug {
     my $app = shift;
-	my $q = $app->query;
+    my $q = $app->query;
     if ( $MT::DebugMode & 128 ) {
         print STDERR "=====START: $$===========================\n";
         print STDERR "Package: " . ref($app) . "\n";
@@ -803,7 +803,7 @@ sub init_query {
 
     sub validate_request_params {
         my $app = shift;
-	    my $q = $app->query;
+        my $q = $app->query;
         $has_encode = eval { require Encode; 1 } ? 1 : 0
             unless defined $has_encode;
         return 1 unless $has_encode;
@@ -3553,10 +3553,10 @@ sub param {
 # compatability, this would enable developers to do any
 # special request handling.
 sub query {
-	my $self = shift;
-	my ($query) = @_;
-	$self->{'query'} = $query if defined $query;
-	return $self->{'query'};
+    my $self = shift;
+    my ($query) = @_;
+    $self->{'query'} = $query if defined $query;
+    return $self->{'query'};
 }
 
 sub blog {
@@ -3722,10 +3722,10 @@ sub set_no_cache {
         $app->{apache}->no_cache(1);
     }
     else {
-		$app->query->cache('no'); 
-		# if(defined($app->query->param->{'cache'})) {
-			 #$app->query->param->cache('no');
-		# }
+        $app->query->cache('no'); 
+        # if(defined($app->query->param->{'cache'})) {
+             #$app->query->param->cache('no');
+        # }
     }
 }
 
