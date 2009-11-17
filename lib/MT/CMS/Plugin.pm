@@ -26,27 +26,8 @@ sub cfg_plugins {
     my $app = shift;
     my $q   = $app->param;
     my %param;
-
-    my $cfg = $app->config;
-    $param{can_config}  = $app->user->can_manage_plugins;
-    $param{use_plugins} = $cfg->UsePlugins;
-    $param{nav_config}   = 1;
-    $param{nav_settings} = 1;
-    $param{nav_plugins}  = 1;
-    $param{switched}     = 1 if $app->param('switched');
-    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
-    $param{screen_id}    = "list-plugins";
-    $param{screen_class} = "plugin-settings";
-    build_plugin_table( $app, param => \%param, scope => 'system' );
-    $app->load_tmpl( 'list_plugin.tmpl', \%param );
-}
-
-sub cfg_plugins {
-    my $app = shift;
-    my $q   = $app->query;
-    my %param;
     $param{screen_class} = 'settings-screen';
-
+ 
     my $cfg = $app->config;
     $param{can_config}  = $app->user->can_manage_plugins;
     $param{use_plugins} = $cfg->UsePlugins;
@@ -58,7 +39,7 @@ sub cfg_plugins {
     $param{screen_id}    = "list-plugins";
     $param{screen_class} = "plugin-settings";
     build_plugin_table( $app, param => \%param, scope => $q->param('blog_id') ? 'blog:'.$q->param('blog_id') : 'system' );
-
+ 
     $app->load_tmpl( 'cfg_plugin.tmpl', \%param );
 }
 
