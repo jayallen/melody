@@ -30,3 +30,4 @@ addons
 mt-static/addons
 *.tmproj
 .DS_Store
+ru-filter.pl
