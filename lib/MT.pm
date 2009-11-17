@@ -33,7 +33,7 @@ BEGIN {
         ( $VERSION, $SCHEMA_VERSION ) = ( '4.32', '4.0076');
         ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
             'Melody',    'OM',
-            '0.9.4', '0.9.4 (MT 4.32+)', 'http://openmelody.org'
+            '0.9.5', '0.9.5 (MT 4.32+)', 'http://openmelody.org'
         );
     } else {      
         ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', 
