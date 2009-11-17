@@ -363,7 +363,6 @@ sub save {
     if ( !$author->is_superuser ) {
     return $app->errtrans("Permisison denied.")
         if !$perms && $id;
-
         $app->run_callbacks( 'cms_save_permission_filter.blog', $app, $id )
           || return $app->error(
             $app->translate( "Permission denied: [_1]", $app->errstr() ) );
@@ -605,7 +604,7 @@ sub cfg_blog_settings {
 
     my %param;
     %param = %{ $_[0] } if $_[0];
-    my $q = $app->query;
+    my $q = $app->param;
 
     return $app->return_to_dashboard( redirect => 1 ) unless $blog_id;
     my $blog = $app->model('blog')->load($blog_id)
