@@ -23,6 +23,7 @@ sub error  {
     }
     return;
 }
+# TODO Send calls to error() through the proper MT::Logger channels
 
 sub trans_error {
     my $obj = shift;

@@ -474,12 +474,12 @@ sub request {
 
 sub log {
     my $mt = shift;
+    my $msg;
     unless ($plugins_installed) {
         # finish init_schema here since we have to log something
         # to the database.
         $mt->init_schema();
     }
-    my $msg;
     if ( !@_ ) {    # single parameter to log, so $mt must be message
         $msg = $mt;
         $mt  = MT->instance;
@@ -488,7 +488,7 @@ sub log {
         $msg = shift;
     }
     my $log_class = $mt->model('log');
-    my $log = $log_class->new();
+    my $log       = $log_class->new();
     if ( ref $msg eq 'HASH' ) {
         $log->set_values($msg);
     }
@@ -498,10 +498,8 @@ sub log {
     else {
         $log->message($msg);
     }
-    $log->level( MT::Log::INFO() )
-      unless defined $log->level;
-    $log->class('system')
-      unless defined $log->class;
+    $log->level( MT::Log::INFO() ) unless defined $log->level;
+    $log->class('system') unless defined $log->class;
     $log->save();
     print STDERR MT->translate( "Message: [_1]", $log->message ) . "\n"
       if $MT::DebugMode;
