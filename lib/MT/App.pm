@@ -3575,15 +3575,14 @@ sub blog {
 
 sub log {
     my $app = shift;
+    my ($msg)     = @_;
     unless ($MT::plugins_installed) {
-
         # finish init_schema here since we have to log something
         # to the database.
         $app->init_schema();
     }
-    my ($msg) = @_;
-    require MT::Log;
-    my $log = MT::Log->new;
+    my $log_class = $app->model('log');
+    my $log       = $log_class->new();
     if ( ref $msg eq 'HASH' ) {
         $log->set_values($msg);
         $msg = $msg->{'message'} || '';
@@ -3601,10 +3600,8 @@ sub log {
     if ( my $user = $app->user ) {
         $log->author_id( $user->id );
     }
-    $log->level( MT::Log::INFO() )
-        unless defined $log->level;
-    $log->class('system')
-        unless defined $log->class;
+    $log->level( MT::Log::INFO() ) unless defined $log->level;
+    $log->class('system') unless defined $log->class;
     $log->save;
 }
 

@@ -582,7 +582,7 @@ BEGIN {
 
             'AssetFileTypes' => { type    => 'HASH' },
 
-            'FastCGIMaxTime'  => { default => 60 * 60 }, # 1 hour
+            'FastCGIMaxTime'     => { default => 60 * 60 }, # 1 hour
             'FastCGIMaxRequests' => { default => 1000 }, # 1000 requests
 
             'RPTFreeMemoryLimit' => undef,
@@ -591,6 +591,9 @@ BEGIN {
             'SchwartzClientDeadline' => undef,
             'SchwartzFreeMemoryLimit' => undef,
             'SchwartzSwapMemoryLimit' => undef,
+
+            'LoggerModule'       => { default => 'MT::Logger::Log4perl' },
+            'LoggerConfigFile'   => { type => 'ARRAY' },
         },
         upgrade_functions => \&load_upgrade_fns,
         applications      => {
