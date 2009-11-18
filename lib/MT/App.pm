@@ -77,7 +77,7 @@ sub __massage_page_action {
         else {
             my $perms = $app->permissions;
             if ( my $p = $action->{permission} ) {
-                my @p = split /,/, $p;
+                my @p = split(/,/, $p);
                 foreach my $p (@p) {
                     my $perm = 'can_' . $p;
                     $action->{allowed} = 1, last
@@ -807,8 +807,6 @@ sub init_query {
         $has_encode = eval { require Encode; 1 } ? 1 : 0
             unless defined $has_encode;
         return 1 unless $has_encode;
-
-        my $q = $app->query;
 
         # validate all parameter data matches the expected character set.
         my @p       = $q->param();
