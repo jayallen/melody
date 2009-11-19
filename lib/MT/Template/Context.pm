@@ -83,10 +83,12 @@ sub init_handlers {
                     }
                     if (ref($block->{$orig_tag}) eq 'HASH') {
                         if ( $block->{$orig_tag}{handler} ) {
-                            $h->{$tag} = [ $block->{$orig_tag}{handler}, $type, $prev_hdlr ];
+                            my $dep = $block->{$orig_tag}{deprecated};
+                            $h->{$tag} = [  $block->{$orig_tag}{handler},
+                                            $type, $prev_hdlr, $dep ];
                         }
                     } else {
-                        $h->{$tag} = [ $block->{$orig_tag}, $type, $prev_hdlr ];
+                        $h->{$tag} = [ $block->{$orig_tag}, $type, $prev_hdlr, undef ];
                     }
                 }
             }
@@ -102,9 +104,11 @@ sub init_handlers {
                         $prev_hdlr = $h->{$tag};
                     }
                     if (ref($func->{$orig_tag}) eq 'HASH') {
-                        $h->{$tag} = [ $func->{$orig_tag}{handler}, 0, $prev_hdlr ];
+                        my $dep = $func->{$orig_tag}{deprecated};
+                        $h->{$tag} = [ $func->{$orig_tag}{handler}, 0,
+                                        $prev_hdlr, $dep ];
                     } else {
-                        $h->{$tag} = [ $func->{$orig_tag}, 0, $prev_hdlr ];
+                        $h->{$tag} = [ $func->{$orig_tag}, 0, $prev_hdlr, undef ];
                     }
                 }
             }
@@ -207,6 +211,12 @@ sub handler_for {
         $h[0] = MT->handler_to_coderef($h[0]);
         if (ref($v)) {
             $ctx->{__handlers}{$tag}[0] = $h[0];
+            if ($h[3]) {
+                my $m = MT->translate(
+                    "You are using a deprecated template tag: [_0]", $tag);
+                MT->log({   message => $m,
+                            level => MT::Log::WARNING() });
+            }
         } else {
             $ctx->{__handlers}{$tag} = $h[0];
         }

@@ -593,7 +593,7 @@ sub list {
 
 sub cfg_blog_settings {
     my $app     = shift;
-    my $q       = $app->param;
+    my $q       = $app->query;
     my $blog_id = scalar $q->param('blog_id');
 
     return $app->return_to_dashboard( redirect => 1 )
@@ -604,7 +604,6 @@ sub cfg_blog_settings {
 
     my %param;
     %param = %{ $_[0] } if $_[0];
-    my $q = $app->param;
 
     return $app->return_to_dashboard( redirect => 1 ) unless $blog_id;
     my $blog = $app->model('blog')->load($blog_id)
@@ -1189,7 +1188,8 @@ sub _create_build_order {
 
 sub rebuild_confirm {
     my $app     = shift;
-    my $blog_id = $app->param('blog_id');
+    my $q       = $app->query;
+    my $blog_id = $q->param('blog_id');
     my $blog = MT->model('blog')->load($blog_id)
         or return $app->error($app->translate('Can\'t load blog #[_1].', $blog_id));
 
@@ -1200,7 +1200,7 @@ sub rebuild_confirm {
 
     $param{index_selected} = ( $q->param('prompt') || "" ) eq 'index';
 
-    if ( my $tmpl_id = $app->param('tmpl_id') ) {
+    if ( my $tmpl_id = $q->param('tmpl_id') ) {
         my $tmpl = MT->model('template')->load($tmpl_id)
             or return $app->error($app->translate('Can\'t load template #[_1].', $tmpl_id));
         $param{index_tmpl_id}   = $tmpl->id;
@@ -1387,14 +1387,16 @@ sub pre_save {
     my $eh = shift;
     my ( $app, $obj ) = @_;
 
+    my $q = $app->query;
+
     if ( ( $obj->sanitize_spec || '' ) eq '1' ) {
-        $obj->sanitize_spec( scalar $app->param('sanitize_spec_manual') );
+        $obj->sanitize_spec( scalar $q->param('sanitize_spec_manual') );
     }
 
     # If this is a new blog, then just accept all the defaults.
     return 1 if !$obj->id;
 
-    if ( !$app->param('overlay') ) {
+    if ( !$q || !$q->param('overlay') ) {
         # Checkbox options have to be blanked if they aren't passed.
         my @booleans = qw( 
                            allow_comment_html 
@@ -1413,7 +1415,7 @@ sub pre_save {
         );
 
         for my $bool (@booleans) {
-            unless ( defined $app->param($bool) ) {
+            unless ( defined $q->param($bool) ) {
 
         # two possibilities: user unchecked the option, or user was not allowed to
         # set the value (and therefore there was no field to submit).
@@ -1437,18 +1439,18 @@ sub pre_save {
         }
 
     # Process Comment Preferences
-    if ( $app->param('allow_comments') ) {
+    if ( $q->param('allow_comments') ) {
         $obj->allow_reg_comments(MT::Blog::POLICY_MOD_ANYONE());
     }
     else {
         $obj->allow_unreg_comments(MT::Blog::POLICY_MOD_NOONE());
         $obj->allow_reg_comments(MT::Blog::POLICY_MOD_NOONE());
     }
-    $obj->moderate_unreg_comments( $app->param('moderate_comments') );
-    $obj->nofollow_urls( $app->param('nofollow_urls')         ? 1 : 0 );
-    $obj->follow_auth_links( $app->param('follow_auth_links') ? 1 : 0 );
+    $obj->moderate_unreg_comments( $q->param('moderate_comments') );
+    $obj->nofollow_urls( $q->param('nofollow_urls')         ? 1 : 0 );
+    $obj->follow_auth_links( $q->param('follow_auth_links') ? 1 : 0 );
     my $cp_old = $obj->captcha_provider;
-    $obj->captcha_provider( $app->param('captcha_provider') );
+    $obj->captcha_provider( $q->param('captcha_provider') );
     my $rebuild = $cp_old ne $obj->captcha_provider ? 1 : 0;
     $app->add_return_arg( need_full_rebuild => 1 ) if $rebuild;
 
@@ -1459,17 +1461,17 @@ sub pre_save {
     my $ping_servers = $app->registry('ping_servers');
     my @pings_list;
     push @pings_list, $_ foreach grep {
-        defined( $app->param( 'ping_' . $_ ) )
-        && $app->param( 'ping_' . $_ )
+        defined( $q->param( 'ping_' . $_ ) )
+        && $q->param( 'ping_' . $_ )
     }
     keys %$ping_servers;
     $obj->update_pings( join( ',', @pings_list ) );
 
     # Process TrackBack Preferences
-    if ( my $pings = $app->param('allow_pings') ) {
+    if ( my $pings = $q->param('allow_pings') ) {
         if ($pings) {
-        $obj->moderate_pings( $app->param('moderate_pings') );
-        $obj->nofollow_urls( $app->param('nofollow_urls') ? 1 : 0 );
+        $obj->moderate_pings( $q->param('moderate_pings') );
+        $obj->nofollow_urls( $q->param('nofollow_urls') ? 1 : 0 );
         }
         else {
         $obj->moderate_pings(1);
@@ -1479,11 +1481,11 @@ sub pre_save {
 
     # Process Login and Sign-up Preferences
     $obj->allow_commenter_regist(
-        $app->param('allow_commenter_regist') );
+        $q->param('allow_commenter_regist') );
     $obj->allow_unreg_comments( $app->param('allow_unreg_comments') );
-    if ( $app->param('allow_unreg_comments') ) {
+    if ( $q->param('allow_unreg_comments') ) {
         $obj->require_comment_emails(
-        $app->param('require_comment_emails') );
+        $q->param('require_comment_emails') );
     }
     else {
         $obj->require_comment_emails(0);
@@ -1491,19 +1493,19 @@ sub pre_save {
     my @authenticators;
     my $c = $app->registry('commenter_authenticators');
     foreach ( keys %$c ) {
-        if ( $app->param( 'enabled_' . $_ ) ) {
+        if ( $q->param( 'enabled_' . $_ ) ) {
         push @authenticators, $_;
         }
     }
     push @authenticators, 'MovableType'
-        if $app->param('enabled_MovableType');
+        if $q->param('enabled_MovableType');
     my $c_old = $obj->commenter_authenticators;
     $obj->commenter_authenticators( join( ',', @authenticators ) );
     my $rebuild = $obj->commenter_authenticators ne $c_old ? 1 : 0;
-    if ( $app->param('enabled_TypeKey') ) {
+    if ( $q->param('enabled_TypeKey') ) {
         $rebuild = $obj->require_typekey_emails ? 0 : 1;
         $obj->require_typekey_emails(
-        $app->param('require_typekey_emails') );
+        $q->param('require_typekey_emails') );
     }
     else {
         $obj->require_typekey_emails(0);
@@ -1514,15 +1516,15 @@ sub pre_save {
     $app->add_return_arg( need_full_rebuild => 1 ) if $rebuild;
 
     # Process Spam Preferences
-    my $threshold = $app->param('junk_score_threshold');
+    my $threshold = $q->param('junk_score_threshold');
     $threshold =~ s/\+//;
     $threshold ||= 0;
     $obj->junk_score_threshold($threshold);
-    if ( my $expiry = $app->param('junk_folder_expiry') ) {
+    if ( my $expiry = $q->param('junk_folder_expiry') ) {
         $obj->junk_folder_expiry($expiry);
     }
     my $perms = $app->permissions;
-    unless ( defined $app->param('auto_delete_junk') ) {
+    unless ( defined $q->param('auto_delete_junk') ) {
         if (
         $app->user->is_superuser
         || (
@@ -1548,12 +1550,12 @@ sub pre_save {
     $param{words_in_excerpt} = 40
         unless defined $param{words_in_excerpt}
     && $param{words_in_excerpt} ne '';
-    if ( $app->param('days_or_posts') eq 'days' ) {
-        $obj->days_on_index( $app->param('list_on_index') );
+    if ( $q->param('days_or_posts') eq 'days' ) {
+        $obj->days_on_index( $q->param('list_on_index') );
         $obj->entries_on_index(0);
     }
     else {
-        $obj->entries_on_index( $app->param('list_on_index') );
+        $obj->entries_on_index( $q->param('list_on_index') );
         $obj->days_on_index(0);
     }
     $obj->basename_limit(15)
@@ -1563,23 +1565,23 @@ sub pre_save {
 
     # Process NWC fields prior to saving
     my @fields;
-    push( @fields, 'title' )     if $app->param('nwc_title');
-    push( @fields, 'text' )      if $app->param('nwc_text');
-    push( @fields, 'text_more' ) if $app->param('nwc_text_more');
-    push( @fields, 'keywords' )  if $app->param('nwc_keywords');
-    push( @fields, 'excerpt' )   if $app->param('nwc_excerpt');
-    push( @fields, 'tags' )      if $app->param('nwc_tags');
+    push( @fields, 'title' )     if $q->param('nwc_title');
+    push( @fields, 'text' )      if $q->param('nwc_text');
+    push( @fields, 'text_more' ) if $q->param('nwc_text_more');
+    push( @fields, 'keywords' )  if $q->param('nwc_keywords');
+    push( @fields, 'excerpt' )   if $q->param('nwc_excerpt');
+    push( @fields, 'tags' )      if $q->param('nwc_tags');
     my $fields = @fields ? join( ',', @fields ) : 0;
     $obj->smart_replace_fields( $fields );
-    $obj->smart_replace( $app->param('nwc_smart_replace') );
+    $obj->smart_replace( $q->param('nwc_smart_replace') );
 
     # Process Publishing Paths and Preferences
-    $obj->include_system( $app->param('include_system') || '' );
-    if ( !$app->param('enable_archive_paths') ) {
+    $obj->include_system( $q->param('include_system') || '' );
+    if ( !$q->param('enable_archive_paths') ) {
         $obj->archive_url('');
         $obj->archive_path('');
     }
-    if ( my $dcty = $app->param('dynamicity') ) {
+    if ( my $dcty = $q->param('dynamicity') ) {
         $obj->custom_dynamic_templates($dcty);
     }
     }
@@ -2041,7 +2043,8 @@ sub build_blog_table {
 }
 
 sub cfg_blog {
-    my $q = $_[0]->query;
+    my $app = shift;
+    my $q = $app->query;
     $q->param( '_type', 'blog' );
     $q->param( 'id',    scalar $q->param('blog_id') );
     $_[0]->forward( "view", { output => 'cfg_prefs.tmpl' } );
