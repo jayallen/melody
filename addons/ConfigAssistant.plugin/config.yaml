@@ -1,8 +1,8 @@
 name: Configuration Assistant
 id: ConfigAssistant
 key: ConfigAssistant
-author_link: http://www.majordojo.com/
-author_name: Byrne Reese
+author_link: http://www.endevver.com/
+author_name: "Byrne Reese, Endevver Consulting"
 description: This plugin provides a simple YAML based framework for creating plugin configuration forms.
 version: 1.5
 
