@@ -26,6 +26,13 @@
             </mtapp:statusmsg>
         </mt:if>
     </mt:unless>
+    <mt:if name="dep_str">
+        <mtapp:statusmsg
+            id="deprecated-tags"
+            class="error">
+            <mt:var name="dep_str">
+        </mtapp:statusmsg>
+    </mt:if>
     <mt:if name="recovered_object">
         <mtapp:statusmsg
             id="recovered-object"
