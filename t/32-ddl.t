@@ -13,15 +13,6 @@ use English qw( -no_watch_vars );
 
 $OUTPUT_AUTOFLUSH = 1;
 
-# Run this script as a symlink, in the form of 99-driver.t, ie:
-# ln -s driver-tests.pl 99-driver.t
-
-BEGIN {
-    # Set config to driver-test.cfg when run as /path/to/99-driver.t
-    $ENV{MT_CONFIG} = "$1-test.cfg"
-        if __FILE__ =~ m{ ([^\\/-]+) \.t \z }xms;
-}
-
 use Test::More;
 use lib 't/lib';
 use MT::Test;
