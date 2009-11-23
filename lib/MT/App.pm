@@ -77,7 +77,7 @@ sub __massage_page_action {
         else {
             my $perms = $app->permissions;
             if ( my $p = $action->{permission} ) {
-                my @p = split /,/, $p;
+                my @p = split(/,/, $p);
                 foreach my $p (@p) {
                     my $perm = 'can_' . $p;
                     $action->{allowed} = 1, last
@@ -673,7 +673,7 @@ sub init {
 
 sub pre_run_debug {
     my $app = shift;
-	my $q = $app->query;
+    my $q = $app->query;
     if ( $MT::DebugMode & 128 ) {
         print STDERR "=====START: $$===========================\n";
         print STDERR "Package: " . ref($app) . "\n";
@@ -762,7 +762,7 @@ sub init_request {
                     delete $ENV{PATH_INFO};
                 }
             }
-            $app->query = CGI->new( $app->{no_read_body} ? {} : () );
+            $app->query( CGI->new( $app->{no_read_body} ? {} : ()) );
         }
     }
     $app->init_query();
@@ -803,12 +803,10 @@ sub init_query {
 
     sub validate_request_params {
         my $app = shift;
-	    my $q = $app->query;
+        my $q = $app->query;
         $has_encode = eval { require Encode; 1 } ? 1 : 0
             unless defined $has_encode;
         return 1 unless $has_encode;
-
-        my $q = $app->query;
 
         # validate all parameter data matches the expected character set.
         my @p       = $q->param();
@@ -3553,10 +3551,10 @@ sub param {
 # compatability, this would enable developers to do any
 # special request handling.
 sub query {
-	my $self = shift;
-	my ($query) = @_;
-	$self->{'query'} = $query if defined $query;
-	return $self->{'query'};
+    my $self = shift;
+    my ($query) = @_;
+    $self->{'query'} = $query if defined $query;
+    return $self->{'query'};
 }
 
 sub blog {
@@ -3722,7 +3720,7 @@ sub set_no_cache {
         $app->{apache}->no_cache(1);
     }
     else {
-        $app->query->param->cache('no');
+        $app->query->cache('no');
     }
 }
 

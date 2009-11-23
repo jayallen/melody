@@ -82,36 +82,7 @@ function scoreNudge(amount) {
 <input type="hidden" name="return_args" value="<mt:var name="return_args" escape="html">" />
 <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
 
-    <mtapp:setting
-        id="auto_delete_junk"
-        label="<__trans phrase="Auto-Delete Spam">"
-        content_class="field-content-text"
-        help_page="blog_settings_feedback"
-        help_section="autodelete_junk">
-        <input id="auto_delete_junk" name="auto_delete_junk" type="checkbox" value="1"<mt:if name="auto_delete_junk"> checked="checked"</mt:if> onclick="toggleSubPrefs(this)" class="cb" /> <span class="hint"><label for="auto_delete_junk"><__trans phrase="If enabled, feedback reported as spam will be automatically erased after a number of days."></label></span></li>
-    </mtapp:setting>
-
-<div id="auto_delete_junk_prefs" <mt:unless name="auto_delete_junk">style="display: none"</mt:unless>>
-    <mtapp:setting
-        id="junk_folder_expiry"
-        label="<__trans phrase="Delete Spam After">"
-        hint="<__trans phrase="When an item has been reported as spam for this many days, it is automatically deleted.">"
-        help_page="blog_settings_feedback"
-        help_section="delete_junk_after">
-<input type="text" id="junk_folder_expiry" name="junk_folder_expiry" value="<mt:var name="junk_folder_expiry" escape="html">" size="5" /> <__trans phrase="days">
-    </mtapp:setting>
-</div>
-
-    <mtapp:setting
-        id="junk_score_threshold"
-        label="<__trans phrase="Spam Score Threshold">"
-        hint="<__trans phrase="Comments and TrackBacks receive a spam score between -10 (complete spam) and +10 (not spam). Feedback with a score which is lower than the threshold shown above will be reported as spam.">"
-        help_page="blog_settings_feedback"
-        help_section="junk_score_threshold">
-<a href="javascript:void(0)" id="decrease-threshold" onclick="return scoreNudge(-1)"><__trans phrase="Less Aggressive"> <img src="<mt:var name="static_uri">images/decrease.gif" alt="<__trans phrase="Decrease">" width="12" height="8" /></a>
-<input type="text" id="junk_score_threshold" name="junk_score_threshold" value="<mt:var name="junk_score_threshold" escape="html">" size="3" style="text-align: center" />
-<a href="javascript:void(0)" id="increase-threshold" onclick="return scoreNudge(1)"><img src="<mt:var name="static_uri">images/increase.gif" alt="<__trans phrase="Increase">" width="12" height="8" /> <__trans phrase="More Aggressive"></a>
-    </mtapp:setting>
+<$mt:include name="prefs/spam.tmpl"$>
 
 <mt:setvarblock name="action_buttons">
     <button

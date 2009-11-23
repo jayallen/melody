@@ -3,37 +3,75 @@ package MT::CMS::Plugin;
 use strict;
 use MT::Util qw( remove_html );
 
+sub list_plugins {
+    my $app = shift;
+    my $q   = $app->param;
+    my %param;
+
+    my $cfg = $app->config;
+    $param{can_config}  = $app->user->can_manage_plugins;
+    $param{use_plugins} = $cfg->UsePlugins;
+    $param{nav_config}   = 1;
+    $param{nav_settings} = 1;
+    $param{nav_plugins}  = 1;
+    $param{switched}     = 1 if $app->param('switched');
+    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
+    $param{screen_id}    = "list-plugins";
+    $param{screen_class} = "plugin-settings";
+    build_plugin_table( $app, param => \%param, scope => 'system' );
+    $app->load_tmpl( 'list_plugin.tmpl', \%param );
+}
+
 sub cfg_plugins {
     my $app = shift;
-    my $q   = $app->query;
+    my $q   = $app->param;
     my %param;
     $param{screen_class} = 'settings-screen';
-    if ( $q->param('blog_id') ) {
-        $q->param( '_type', 'blog' );
-        $q->param( 'id',    scalar $q->param('blog_id') );
-        $param{screen_id} = "list-plugins";
-        $param{screen_class} .= " plugin-settings";
-        $param{output} = 'cfg_plugin.tmpl';
-        $app->forward("view", \%param);
-    }
-    else {
-        my $cfg = $app->config;
-        $param{can_config}  = $app->user->can_manage_plugins;
-        $param{use_plugins} = $cfg->UsePlugins;
-        build_plugin_table( $app, param => \%param, scope => 'system' );
-        $param{nav_config}   = 1;
-        $param{nav_settings} = 1;
-        $param{nav_plugins}  = 1;
-        $param{switched}     = 1 if $q->param('switched');
-        $param{'reset'}  = 1 if $q->param('reset');
-        $param{saved}    = 1 if $q->param('saved');
-        $param{mod_perl} = 1 if $ENV{MOD_PERL};
-        $app->add_breadcrumb( $app->translate("Plugin Settings") );
-        $param{screen_id} = "list-plugins";
-        $param{screen_class} = "plugin-settings";
+ 
+    my $cfg = $app->config;
+    $param{can_config}  = $app->user->can_manage_plugins;
+    $param{use_plugins} = $cfg->UsePlugins;
+    $param{switched}     = 1 if $app->param('switched');
+    $param{reset}        = 1 if $app->param('reset');
+    $param{saved}        = 1 if $app->param('saved');
+    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
+    $param{plugin}       = $app->param('plugin');
+    $param{screen_id}    = "list-plugins";
+    $param{screen_class} = "plugin-settings";
+    build_plugin_table( $app, param => \%param, scope => $q->param('blog_id') ? 'blog:'.$q->param('blog_id') : 'system' );
+ 
+    $app->load_tmpl( 'cfg_plugin.tmpl', \%param );
+}
 
-        $app->load_tmpl( 'cfg_plugin.tmpl', \%param );
-    }
+# TODO move this to MT::Plugin
+sub find_plugin_by_id {
+    my ($id) = @_;
+    my @plugins = grep { $MT::Plugins{$_}->{object}->id eq $id } keys %MT::Plugins;
+    return wantarray ? @plugins : $MT::Plugins{ $plugins[0] };
+}
+
+sub cfg_plugin_dialog {
+    my $app = shift;
+    my $q   = $app->param;
+    my %param;
+
+    my $profile = find_plugin_by_id($app->param('plugin'));
+    my $plugin  = $profile->{object};
+    my $scope   = $app->param('scope') eq 'system' ? 'system' : 'blog:' . $app->blog->id;
+
+    my $cfg = $app->config;
+    $param{can_config}  = $app->user->can_manage_plugins;
+    $param{use_plugins} = $cfg->UsePlugins;
+    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
+    $param{plugin}       = $app->param('plugin');
+    $param{plugin_name}  = $plugin->name;
+    $param{plugin_sig}   = $plugin->{plugin_sig};
+    my $scope            = $app->param('scope');
+    $param{scope}        = $scope;
+
+    $param{config_html}  = build_plugin_config_html( $app, $plugin, $scope );
+
+    $app->load_tmpl( 'dialog/cfg_plugin.tmpl', \%param );
 }
 
 sub save_config {
@@ -65,8 +103,14 @@ sub save_config {
             return $app->error("Error saving plugin settings: " . $plugin->errstr);
         }
     }
-
+    if ($app->param('dialog')) {
+	my $tmpl = $app->load_tmpl('dialog/cfg_plugin.tmpl');
+	$tmpl->param( finish => 1 );
+	$tmpl->param( plugin_config_saved => 1 );
+	return $app->build_page($tmpl);
+    }
     $app->add_return_arg( saved => 1 );
+    $app->add_return_arg( plugin => $profile->{object}->id );
     $app->call_return;
 }
 
@@ -118,6 +162,52 @@ sub plugin_control {
     $app->call_return;
 }
 
+sub build_plugin_config_html {
+    my $app = shift;
+    my ($plugin, $scope) = @_;
+
+    my ($config_html);
+    my %plugin_param;
+    my $settings = $plugin->get_config_obj($scope);
+    $plugin->load_config( \%plugin_param, $scope );
+    if ( my $snip_tmpl =
+	 $plugin->config_template( \%plugin_param, $scope ) )
+    {
+	my $tmpl;
+	if ( ref $snip_tmpl ne 'MT::Template' ) {
+	    $tmpl = MT->model('template')->new(
+		type   => 'scalarref',
+		source => ref $snip_tmpl
+		? $snip_tmpl
+		: \$snip_tmpl
+		# TBD: add path for plugin template directory
+		);
+	}
+	else {
+	    $tmpl = $snip_tmpl;
+	}
+
+	# Process template independent of $app to avoid premature
+	# localization (give plugin a chance to do L10N first).
+	$tmpl->param( blog_id => $app->blog->id ) if $app->blog;
+	$tmpl->param( \%plugin_param );
+	
+	$app->run_callbacks('plugin_template_param' . $plugin->id, 
+			    $app, $scope, $tmpl->param, $tmpl);
+	
+	$config_html = $tmpl->output()
+	    or $config_html = "Error in configuration template: " . $tmpl->errstr;
+	$config_html = $plugin->translate_templatized($config_html)
+	    if $config_html =~ m/<(?:__trans|mt_trans) /i;
+            }
+    else {
+	
+	# don't list non-configurable plugins for blog scope...
+	next if $scope ne 'system';
+    }
+    return $config_html;
+}
+
 sub build_plugin_table {
     my $app = shift;
     my (%opt) = @_;
@@ -125,7 +215,8 @@ sub build_plugin_table {
     my $param = $opt{param};
     my $scope = $opt{scope} || 'system';
     my $cfg   = $app->config;
-    my $data  = [];
+    my @enabled_plugins;
+    my @disabled_plugins;
 
     # we have to sort the plugin list in an odd fashion...
     #   PLUGINS
@@ -136,11 +227,11 @@ sub build_plugin_table {
     my %list;
     my %folder_counts;
     for my $sig ( keys %MT::Plugins ) {
-        my $sub = $sig =~ m!/! ? 1 : 0;
+       my $sub = $sig =~ m!/! ? 1 : 0;
         my $obj = $MT::Plugins{$sig}{object};
 
         # Prevents display of component objects
-        next if $obj && !$obj->isa('MT::Plugin');
+#        next if $obj && !$obj->isa('MT::Plugin');
 
         my $err = $MT::Plugins{$sig}{error}   ? 0 : 1;
         my $on  = $MT::Plugins{$sig}{enabled} ? 0 : 1;
@@ -181,10 +272,11 @@ sub build_plugin_table {
         ($plg) = $plugin_sig =~ m!(?:.*)/(.*)!;
         my $fld = substr( $list_key, 1, 100 );
         $fld =~ s/\s+$//;
-        my $folder =
-            $fld
-          ? $app->translate( "Plugin Set: [_1]", $fld )
-          : $app->translate("Individual Plugins");
+# Removed for Melody - obsolete
+#        my $folder =
+#            $fld
+#          ? $app->translate( "Plugin Set: [_1]", $fld )
+#          : $app->translate("Individual Plugins");
         my $row;
         my $icon = $app->static_path . 'images/plugin.gif';
 
@@ -208,56 +300,23 @@ sub build_plugin_table {
                   $app->static_path . $plugin->envelope . '/' . $doc_link;
             }
 
-            my ($config_html);
-            my %plugin_param;
-            my $settings = $plugin->get_config_obj($scope);
-            $plugin->load_config( \%plugin_param, $scope );
-            if ( my $snip_tmpl =
-                $plugin->config_template( \%plugin_param, $scope ) )
-            {
-                my $tmpl;
-                if ( ref $snip_tmpl ne 'MT::Template' ) {
-                    require MT::Template;
-                    $tmpl = MT::Template->new(
-                        type   => 'scalarref',
-                        source => ref $snip_tmpl
-                        ? $snip_tmpl
-                        : \$snip_tmpl
+	    my $config_html = build_plugin_config_html($app, $plugin,$scope);
 
-                          # TBD: add path for plugin template directory
-                    );
-                }
-                else {
-                    $tmpl = $snip_tmpl;
-                }
-
-                # Process template independent of $app to avoid premature
-                # localization (give plugin a chance to do L10N first).
-                $tmpl->param( \%plugin_param );
-                $config_html = $tmpl->output()
-                    or $config_html = "Error in configuration template: " . $tmpl->errstr;
-                $config_html = $plugin->translate_templatized($config_html)
-                  if $config_html =~ m/<(?:__trans|mt_trans) /i;
-            }
-            else {
-
-                # don't list non-configurable plugins for blog scope...
-                next if $scope ne 'system';
-            }
-
-            if ( $last_fld ne $fld ) {
-                $row = {
-                    plugin_sig    => $plugin_sig,
-                    plugin_folder => $folder,
-                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
-                    plugin_error  => $profile->{error},
-                };
-                push @$data, $row;
-                $last_fld      = $fld;
-                $next_is_first = 1;
-            }
+# Removed for Melody - obsolete
+#            if ( $last_fld ne $fld ) {
+#                $row = {
+#                    plugin_sig    => $plugin_sig,
+#                    plugin_folder => $folder,
+#                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
+#                    plugin_error  => $profile->{error},
+#                };
+#                push @$enabled_plugins, $row;
+#                $last_fld      = $fld;
+#                $next_is_first = 1;
+#            }
 
             my $registry = $plugin->registry;
+	    my $settings = $plugin->get_config_obj($scope);
             my $row      = {
                 first                => $next_is_first,
                 plugin_name          => $plugin_name,
@@ -275,10 +334,13 @@ sub build_plugin_table {
                 plugin_key           => $plugin->key(),
                 plugin_config_link   => $plugin->config_link(),
                 plugin_config_html   => $config_html,
+		plugin_has_config    => $config_html ne '',
                 plugin_settings_id   => $settings->id,
-                plugin_id            => $id,
+                plugin_id            => $plugin->id,
+                plugin_num           => $id,
                 plugin_compat_errors => $registry->{compat_errors},
             };
+
             my $block_tags = $plugin->registry('tags', 'block');
             my $function_tags = $plugin->registry('tags', 'function');
             my $modifiers = $plugin->registry('tags', 'modifier');
@@ -336,24 +398,25 @@ sub build_plugin_table {
             {
                 $row->{plugin_resources} = 1;
             }
-            push @$data, $row;
+            push @enabled_plugins, $row if $profile->{enabled};
         }
         else {
 
             # don't list non-configurable plugins for blog scope...
             next if $scope ne 'system';
 
-            if ( $last_fld ne $fld ) {
-                $row = {
-                    plugin_sig    => $plugin_sig,
-                    plugin_folder => $folder,
-                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
-                    plugin_error  => $profile->{error},
-                };
-                push @$data, $row;
-                $last_fld      = $fld;
-                $next_is_first = 1;
-            }
+# Removed for Melody - obsolete
+#            if ( $last_fld ne $fld ) {
+#                $row = {
+#                    plugin_sig    => $plugin_sig,
+#                    plugin_folder => $folder,
+#                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
+#                    plugin_error  => $profile->{error},
+#                };
+#                push @$enabled_plugins, $row;
+#                $last_fld      = $fld;
+#                $next_is_first = 1;
+#            }
 
             # no registered plugin objects--
             $row = {
@@ -366,11 +429,15 @@ sub build_plugin_table {
                 plugin_disabled      => $profile->{enabled} ? 0 : 1,
                 plugin_id            => $id,
             };
-            push @$data, $row;
+            push @enabled_plugins, $row if $profile->{enabled};
+            push @disabled_plugins, $row if !$profile->{enabled};
         }
         $next_is_first = 0;
     }
-    $param->{plugin_loop} = $data;
+    @enabled_plugins = sort { $a->{'plugin_name'} cmp $b->{'plugin_name'} } @enabled_plugins;
+    @disabled_plugins = sort { $a->{'plugin_name'} cmp $b->{'plugin_name'} } @disabled_plugins;
+    $param->{plugin_loop} = \@enabled_plugins;
+    $param->{disabled_loop} = \@disabled_plugins;
 }
 
 1;

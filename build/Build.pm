@@ -124,7 +124,7 @@ sub get_options {
     # Make the plugins an empty list unless defined.
     $self->{'plugin=s@'} ||= [];
     # Construct the list of languages to build.
-    $self->{'lang=s'} = 'de,en_US,es,fr,ja,nl'
+    $self->{'lang=s'} = 'de,en_US,es,fr,ja,nl,ru'
         if lc( $self->{'lang=s'} ) eq 'all';
     push @{ $self->{'language=s@'} }, split /,/, $self->{'lang=s'};
 }

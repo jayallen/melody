@@ -1,0 +1,45 @@
+name: Configuration Assistant
+id: ConfigAssistant
+key: ConfigAssistant
+author_link: http://www.endevver.com/
+author_name: "Byrne Reese, Endevver Consulting"
+description: This plugin provides a simple YAML based framework for creating plugin configuration forms.
+version: 1.5
+
+applications:
+  cms:
+    menus: 
+      design:theme_options:
+        label: 'Theme Options'
+        order: 1000
+        mode: theme_options
+        view: blog
+        permission: edit_templates
+        condition: $ConfigAssistant::ConfigAssistant::Init::uses_config_assistant
+    methods:
+      theme_options:   $ConfigAssistant::ConfigAssistant::Plugin::theme_options
+      ca_config_entry: $ConfigAssistant::ConfigAssistant::Plugin::list_entry_mini
+      ca_select_entry: $ConfigAssistant::ConfigAssistant::Plugin::select_entry
+      ca_save_config:  $ConfigAssistant::ConfigAssistant::Plugin::save_config
+
+init_app: $ConfigAssistant::ConfigAssistant::Init::init_app
+
+config_types:
+  text: 
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_text
+  textarea:
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_textarea
+  radio: 
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_radio
+  select: 
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_select
+  blogs: 
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_blogs
+  checkbox: 
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_checkbox
+  radio-image:
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_radio_image
+  entry:
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_entry
+  tagged-entry:
+    handler: $ConfigAssistant::ConfigAssistant::Plugin::type_tagged_entry

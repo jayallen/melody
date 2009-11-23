@@ -4368,7 +4368,7 @@ sub _hdlr_reg_allowed {
     if ($blog->allow_reg_comments && $blog->commenter_authenticators) {
         if (my $type = $args->{type}) {
             my %types = map { lc($_) => 1 }
-                split /,/, $blog->commenter_authenticators;
+                split /\s*,\s*/, $blog->commenter_authenticators;
             return $types{lc $type} ? 1 : 0;
         }
         return 1;
@@ -12514,7 +12514,7 @@ sub _hdlr_archive_set {
     my $blog = $ctx->stash('blog');
     my $at = $args->{type} || $args->{archive_type} || $blog->archive_type;
     return '' if !$at || $at eq 'None';
-    my @at = split /,/, $at;
+    my @at = split /\s*,\s*/, $at;
     my $res = '';
     my $tokens = $ctx->stash('tokens');
     my $builder = $ctx->stash('builder');
@@ -12632,7 +12632,7 @@ sub _hdlr_archives {
     } elsif ($blog->archive_type_preferred) {
         $at = $blog->archive_type_preferred;
     } else {
-        $at = (split /,/, $at)[0];
+        $at = (split /\s*,\s*/, $at)[0];
     }
 
     my $archiver = MT->publisher->archiver($at);
@@ -14950,7 +14950,7 @@ sub _hdlr_entry_if_allow_comments {
 
 =head2 EntryIfCommentsOpen
 
-Deprecated in favor of L<EntryIfCommentsActive>.
+Deprecated in favor of L<IfCommentsActive>.
 
 =for tags deprecated
 
@@ -16244,7 +16244,7 @@ sub _hdlr_assets {
 
     # Added a type filter to the filters list.
     if (my $type = $args->{type}) {
-        my @types = split(',', $args->{type});
+        my @types = split('\s*,\s*', $args->{type});
         if ($assets) {
             push @filters, sub { my $a = $_[0]->class; grep(m/$a/, @types) };
         } else {
@@ -16256,7 +16256,7 @@ sub _hdlr_assets {
 
     # Added a file_ext filter to the filters list.
     if (my $ext = $args->{file_ext}) {
-        my @exts = split(',', $args->{file_ext});
+        my @exts = split('\s*,\s*', $args->{file_ext});
         if ($assets) {
             push @filters, sub { my $a = $_[0]->file_ext; grep(m/$a/, @exts) };
         } else {

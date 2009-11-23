@@ -1,0 +1,11 @@
+BUILD_LANGUAGE = ru
+VERSION_SUFFIX = -ru
+PORTAL_URL = http://movable-type.ru/
+SUPPORT_URL = http://movable-type.ru/forums/
+NEWS_URL = http://movable-type.ru/
+NEWSBOX_URL = http://movable-type.ru/mtnewsbox.html
+LEARNINGNEWS_URL = http://learning.movabletype.org/newsbox.html
+DEFAULT_TIMEZONE = 3
+MAIL_ENCODING = utf-8
+LOG_EXPORT_ENCODING = utf-8
+EXPORT_ENCODING = utf-8

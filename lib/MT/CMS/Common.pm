@@ -72,9 +72,6 @@ sub save {
         if ( ( $type eq 'notification' ) || ( $type eq 'banlist' ) ) {
             return list( $app, \%param );
         }
-        elsif ( ( $q->param('cfg_screen') || '' ) eq 'cfg_archives' ) {
-            return edit( $app, \%param );
-        }
         else {
             if ($type) {
                 my $mode = 'view_' . $type;
@@ -86,11 +83,11 @@ sub save {
         }
     }
 
-    return $app->errtrans(
-        'The Template Name and Output File fields are required.')
-      if $type eq 'template' && !$q->param('name') && !$q->param('outfile');
-
     if ( $type eq 'template' ) {
+
+	return $app->errtrans(
+	    'The Template Name and Output File fields are required.')
+	    if !$q->param('name') && !$q->param('outfile');
 
         # check for autosave
         if ( $q->param('_autosave') ) {
@@ -112,27 +109,6 @@ sub save {
     my $original = $obj->clone();
     my $names    = $obj->column_names;
     my %values   = map { $_ => ( scalar $q->param($_) ) } @$names;
-
-    if ( $type eq 'blog' ) {
-        unless ( $author->is_superuser
-            || ( $perms && $perms->can_administer_blog ) )
-        {
-            if ( $id && !( $perms->can_set_publish_paths ) ) {
-                delete $values{site_url};
-                delete $values{site_path};
-                delete $values{archive_url};
-                delete $values{archive_path};
-            }
-            if ( $id && !( $perms->can_edit_config ) ) {
-                delete $values{$_} foreach grep {
-                         $_ ne 'site_path'
-                      && $_ ne 'site_url'
-                      && $_ ne 'archive_path'
-                      && $_ ne 'archive_url'
-                } @$names;
-            }
-        }
-    }
 
     if ( $type eq 'author' ) {
 
@@ -172,40 +148,6 @@ sub save {
         delete $values{'password'};
     }
 
-    if ( $type eq 'blog' ) {
-        # If this is a new blog, set the preferences, archive settings
-        # and template set to the defaults.
-        if ( !$obj->id ) {
-            $obj->language( $q->param('blog_language') || $app->user->preferred_language );
-            $obj->nofollow_urls(1);
-            $obj->follow_auth_links(1);
-            $obj->page_layout('layout-wtt');
-            my @authenticators = qw( MovableType );
-            foreach my $auth (qw( Vox LiveJournal )) {
-                my $a = MT->commenter_authenticator($auth);
-                if ( !defined $a
-                    || ( exists $a->{condition} && ( !$a->{condition}->() ) ) )
-                {
-                    next;
-                }
-                push @authenticators, $auth;
-            }
-            $obj->commenter_authenticators( join ',', @authenticators );
-            my $set = $q->param('template_set') || 'mt_blog';
-            $obj->template_set( $set );
-        }
-
-        if ( $values{file_extension} ) {
-            $values{file_extension} =~ s/^\.*//
-              if ( $q->param('file_extension') || '' ) ne '';
-        }
-
-        unless ( $values{site_url} =~ m!/$! ) {
-            my $url = $values{site_url};
-            $values{site_url} = $url;
-        }
-    }
-
     if ( $type eq 'entry' || $type eq 'page' ) {
 
         # This has to happen prior to callbacks since callbacks may
@@ -234,15 +176,7 @@ sub save {
     unless (
         $app->run_callbacks( 'cms_pre_save.' . $type, $app, $obj, $original ) )
     {
-        if ( 'blog' eq $type ) {
-            my $meth = $q->param('cfg_screen');
-            if ( $meth && $app->handlers_for_mode($meth) ) {
-                $app->error(
-                    $app->translate( "Save failed: [_1]", $app->errstr ) );
-                return $app->$meth;
-            }
-        }
-        $param->{return_args} = $q->param('return_args');
+        $param->{return_args} = $app->param('return_args');
         return edit( $app,
             {
                 %$param,
@@ -253,8 +187,6 @@ sub save {
 
     # Done pre-processing the record-to-be-saved; now save it.
 
-    $obj->touch() if ( $type eq 'blog' );
-
     $obj->save
       or return $app->error(
         $app->translate( "Saving object failed: [_1]", $obj->errstr ) );
@@ -263,27 +195,8 @@ sub save {
     $app->run_callbacks( 'cms_post_save.' . $type, $app, $obj, $original )
       or return $app->error( $app->errstr() );
 
-    # Save NWC settings
-    my $screen = $q->param('cfg_screen') || '';
-    if ( $type eq 'blog' && $screen eq 'cfg_entry' ) {
-        my @fields;
-        push( @fields, 'title' )     if $q->param('nwc_title');
-        push( @fields, 'text' )      if $q->param('nwc_text');
-        push( @fields, 'text_more' ) if $q->param('nwc_text_more');
-        push( @fields, 'keywords' )  if $q->param('nwc_keywords');
-        push( @fields, 'excerpt' )   if $q->param('nwc_excerpt');
-        push( @fields, 'tags' )      if $q->param('nwc_tags');
-        my $fields = @fields ? join( ',', @fields ) : 0;
-        $obj->smart_replace_fields( $fields );
-        $obj->smart_replace( $q->param('nwc_smart_replace') );
-        $obj->save;
-    }
-
-    # Finally, decide where to go next, depending on the object type.
     my $blog_id = $q->param('blog_id');
-    if ( $type eq 'blog' ) {
-        $blog_id = $obj->id;
-    }
+    my $screen = $q->param('cfg_screen') || '';
 
     # if we are saving/publishing a template, make sure to log on activity log
     if ( $type eq 'template' ) {
@@ -406,14 +319,6 @@ sub save {
                 }
             }
         }
-    }
-    elsif ( $type eq 'blog' ) {
-        return $app->redirect(
-            $app->uri(
-                'mode' => 'cfg_prefs',
-                args   => { blog_id => $blog_id, saved => 1 }
-            )
-        );
     }
     elsif ( $type eq 'author' ) {
         # Delete the author's userpic thumb (if any); it'll be regenerated.

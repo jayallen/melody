@@ -859,125 +859,6 @@ sub unapprove_item {
     set_item_visible($app);
 }
 
-sub cfg_comments {
-    my $app     = shift;
-    my $q       = $app->query;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    $app->forward( "view",
-        {
-            output         => 'cfg_comments.tmpl',
-            screen_class   => 'settings-screen',
-            screen_id      => 'comment-settings',
-        }
-    );
-}
-
-sub cfg_registration {
-    my $app     = shift;
-    my $q       = $app->query;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    eval { require Digest::SHA1; };
-    my $openid_available = $@ ? 0 : 1;
-    $app->forward( "view",
-        {
-            output       => 'cfg_registration.tmpl',
-            screen_class => 'settings-screen registration-screen',
-            openid_enabled => $openid_available
-        }
-    );
-}
-
-sub cfg_spam {
-    my $app = shift;
-    my $q   = $app->query;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-
-    my $plugin_config_html;
-    my $plugin_name;
-    my $plugin;
-    if ( my $p = $q->param('plugin') ) {
-        $plugin = $MT::Plugins{$p};
-        if ($plugin) {
-            $plugin = $plugin->{object};
-        }
-        else {
-            $plugin = MT->component($p);
-        }
-        return $app->errtrans("Invalid request.") unless $plugin;
-
-        my $scope;
-        if ( $q->param('blog_id') ) {
-            $scope = 'blog:' . $q->param('blog_id');
-        }
-        else {
-            $scope = 'system';
-        }
-        $plugin_name = $plugin->name;
-        my %plugin_param;
-        $plugin->load_config( \%plugin_param, $scope );
-        my $snip_tmpl = $plugin->config_template( \%plugin_param, $scope );
-        my $tmpl;
-        if ( ref $snip_tmpl ne 'MT::Template' ) {
-            require MT::Template;
-            $tmpl = MT::Template->new(
-                type   => 'scalarref',
-                source => ref $snip_tmpl
-                ? $snip_tmpl
-                : \$snip_tmpl
-            );
-        }
-        else {
-            $tmpl = $snip_tmpl;
-        }
-
-        # Process template independent of $app to avoid premature
-        # localization (give plugin a chance to do L10N first).
-        $tmpl->param( \%plugin_param );
-        $plugin_config_html = $tmpl->output();
-        $plugin_config_html =
-          $plugin->translate_templatized($plugin_config_html)
-          if $plugin_config_html =~ m/<(?:__trans|mt_trans) /i;
-    }
-    my $filters = MT::Component->registry('junk_filters') || [];
-    my %plugins;
-    foreach my $set (@$filters) {
-        foreach my $f ( values %$set ) {
-            $plugins{ $f->{plugin} } = $f->{plugin};
-        }
-    }
-    my @plugins = values %plugins;
-    my $loop    = [];
-    foreach my $p (@plugins) {
-        push @$loop,
-          {
-            name   => $p->name,
-            plugin => $p->id,
-            active => ( $plugin && ( $p->id eq $plugin->id ) ? 1 : 0 ),
-          },
-          ;
-    }
-    @$loop = sort { $a->{name} cmp $b->{name} } @$loop;
-
-    $app->forward( "view",
-        {
-            plugin_config_html => $plugin_config_html,
-            plugin_name        => $plugin_name,
-            junk_filter_loop   => $loop,
-            output             => 'cfg_spam.tmpl',
-            screen_class       => 'settings-screen spam-screen'
-        }
-    );
-}
-
 sub empty_junk {
     my $app     = shift;
 	my $q 		= $app->query;    
@@ -1154,112 +1035,6 @@ sub not_junk {
     $app->add_return_arg( 'unjunked' => 1 );
 
     $app->rebuild_these( \%rebuild_set, how => MT::App::CMS::NEW_PHASE() );
-}
-
-sub cfg_system_feedback {
-    my $app = shift;
-	my $q	  = $app->query;    
-    my %param;
-    return $app->redirect(
-        $app->uri(
-            mode => 'cfg_comments',
-            args => { blog_id => $q->param('blog_id') }
-        )
-    ) if $q->param('blog_id');
-
-    return $app->errtrans("Permission denied.")
-      unless $app->user->is_superuser();
-
-    my $cfg = $app->config;
-    $param{nav_config} = 1;
-    $app->add_breadcrumb( $app->translate('Feedback Settings') );
-    $param{nav_settings}         = 1;
-    $param{comment_disable}      = $cfg->AllowComments ? 0 : 1;
-    $param{ping_disable}         = $cfg->AllowPings ? 0 : 1;
-    $param{disabled_notify_ping} = $cfg->DisableNotificationPings ? 1 : 0;
-    $param{system_no_email}      = 1 unless $cfg->EmailAddressMain;
-    my $send = $cfg->OutboundTrackbackLimit || 'any';
-
-    if ( $send =~ m/^(any|off|selected|local)$/ ) {
-        $param{ "trackback_send_" . $cfg->OutboundTrackbackLimit } = 1;
-        if ( $send eq 'selected' ) {
-            my @domains = $cfg->OutboundTrackbackDomains;
-            my $domains = join "\n", @domains;
-            $param{trackback_send_domains} = $domains;
-        }
-    }
-    else {
-        $param{"trackback_send_any"} = 1;
-    }
-    $param{saved}        = $q->param('saved');
-    $param{screen_class} = "settings-screen system-feedback-settings";
-    $app->load_tmpl( 'cfg_system_feedback.tmpl', \%param );
-}
-
-sub save_cfg_system_feedback {
-    my $app = shift;
-	my $q	  = $app->query;    
-    return $app->errtrans("Permission denied.")
-      unless $app->user->is_superuser();
-
-    $app->validate_magic or return;
-    my $cfg = $app->config;
-    
-    # construct the message to the activity log
-    my @meta_messages = ();
-    if ($q->param('comment_disable')) {
-        push(@meta_messages, 'Allow comments is on');
-    } else {
-        push(@meta_messages, 'Allow comments is off');
-    } 
-    if ($q->param('ping_disable')) {
-        push(@meta_messages, 'Allow trackbacks is on');
-    } else {
-        push(@meta_messages, 'Allow trackbacks is off');
-    }
-    if ($q->param('disable_notify_ping')) {
-        push(@meta_messages, 'Allow outbound trackbacks is on');
-    } else {
-        push(@meta_messages, 'Allow outbound trackbacks is off');
-    }
-    push(@meta_messages, 'Outbound trackback limit is ' . $q->param('trackback_send')) 
-        if ($q->param('trackback_send') =~ /\w+/);
-    
-    # throw the messages in the activity log
-    if (scalar(@meta_messages) > 0) {
-        my $message = join(', ', @meta_messages);
-        $app->log({
-            message  => 'System Settings Changes Took Place',
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            metadata => $message,
-        });
-    }
-    
-    # actually assign the changes
-    $cfg->AllowComments( ( $q->param('comment_disable') ? 0 : 1 ), 1 );
-    $cfg->AllowPings(    ( $q->param('ping_disable')    ? 0 : 1 ), 1 );
-    $cfg->DisableNotificationPings(
-        ( $q->param('disable_notify_ping') ? 1 : 0 ), 1 );
-    my $send = $q->param('trackback_send') || 'any';
-    if ( $send =~ m/^(any|off|selected|local)$/ ) {
-        $cfg->OutboundTrackbackLimit( $send, 1 );
-        if ( $send eq 'selected' ) {
-            my $domains = $q->param('trackback_send_domains') || '';
-            $domains =~ s/[\r\n]+/ /gs;
-            $domains =~ s/\s{2,}/ /gs;
-            my @domains = split /\s/, $domains;
-            $cfg->OutboundTrackbackDomains( \@domains, 1 );
-        }
-    }
-
-    $cfg->save_config();
-    $app->redirect(
-        $app->uri(
-            'mode' => 'cfg_system_feedback',
-            args   => { saved => 1 }
-        )
-    );
 }
 
 sub reply {
@@ -2036,3 +1811,237 @@ sub build_comment_table {
 }
 
 1;
+
+__END__
+
+The following subroutines were removed by Byrne Reese for Melody.
+They are rendered obsolete by the new MT::CMS::Blog::cfg_blog_settings 
+handler.
+
+sub cfg_comments {
+    my $app     = shift;
+    my $q       = $app->param;
+    my $blog_id = scalar $q->param('blog_id');
+    return $app->return_to_dashboard( redirect => 1 )
+      unless $blog_id;
+    $q->param( '_type', 'blog' );
+    $q->param( 'id',    scalar $q->param('blog_id') );
+    $app->forward( "view",
+        {
+            output         => 'cfg_comments.tmpl',
+            screen_class   => 'settings-screen',
+            screen_id      => 'comment-settings',
+        }
+    );
+}
+
+sub cfg_registration {
+    my $app     = shift;
+    my $q       = $app->param;
+    my $blog_id = scalar $q->param('blog_id');
+    return $app->return_to_dashboard( redirect => 1 )
+      unless $blog_id;
+    $q->param( '_type', 'blog' );
+    $q->param( 'id',    scalar $q->param('blog_id') );
+    eval { require Digest::SHA1; };
+    my $openid_available = $@ ? 0 : 1;
+    $app->forward( "view",
+        {
+            output       => 'cfg_registration.tmpl',
+            screen_class => 'settings-screen registration-screen',
+            openid_enabled => $openid_available
+        }
+    );
+}
+
+# This subroutine especially seems to do a lot of work which is
+# no longer relevant or needed. I have contacted Brad Choate to learn
+# more. Removing completely just to see what happens...
+sub cfg_spam {
+    my $app = shift;
+    my $q   = $app->param;
+    $q->param( '_type', 'blog' );
+    $q->param( 'id',    scalar $q->param('blog_id') );
+
+    my $plugin_config_html;
+    my $plugin_name;
+    my $plugin;
+    if ( my $p = $q->param('plugin') ) {
+        $plugin = $MT::Plugins{$p};
+        if ($plugin) {
+            $plugin = $plugin->{object};
+        }
+        else {
+            $plugin = MT->component($p);
+        }
+        return $app->errtrans("Invalid request.") unless $plugin;
+
+        my $scope;
+        if ( $q->param('blog_id') ) {
+            $scope = 'blog:' . $q->param('blog_id');
+        }
+        else {
+            $scope = 'system';
+        }
+        $plugin_name = $plugin->name;
+        my %plugin_param;
+        $plugin->load_config( \%plugin_param, $scope );
+        my $snip_tmpl = $plugin->config_template( \%plugin_param, $scope );
+        my $tmpl;
+        if ( ref $snip_tmpl ne 'MT::Template' ) {
+            require MT::Template;
+            $tmpl = MT::Template->new(
+                type   => 'scalarref',
+                source => ref $snip_tmpl
+                ? $snip_tmpl
+                : \$snip_tmpl
+            );
+        }
+        else {
+            $tmpl = $snip_tmpl;
+        }
+
+        # Process template independent of $app to avoid premature
+        # localization (give plugin a chance to do L10N first).
+        $tmpl->param( \%plugin_param );
+        $plugin_config_html = $tmpl->output();
+        $plugin_config_html =
+          $plugin->translate_templatized($plugin_config_html)
+          if $plugin_config_html =~ m/<(?:__trans|mt_trans) /i;
+    }
+    my $filters = MT::Component->registry('junk_filters') || [];
+    my %plugins;
+    foreach my $set (@$filters) {
+        foreach my $f ( values %$set ) {
+            $plugins{ $f->{plugin} } = $f->{plugin};
+        }
+    }
+    my @plugins = values %plugins;
+    my $loop    = [];
+    foreach my $p (@plugins) {
+        push @$loop,
+          {
+            name   => $p->name,
+            plugin => $p->id,
+            active => ( $plugin && ( $p->id eq $plugin->id ) ? 1 : 0 ),
+          },
+          ;
+    }
+    @$loop = sort { $a->{name} cmp $b->{name} } @$loop;
+
+    $app->forward( "view",
+        {
+            plugin_config_html => $plugin_config_html,
+            plugin_name        => $plugin_name,
+            junk_filter_loop   => $loop,
+            output             => 'cfg_spam.tmpl',
+            screen_class       => 'settings-screen spam-screen'
+        }
+    );
+}
+
+This routine has been moved to MT::CMS::System
+
+sub save_cfg_system_feedback {
+    my $app = shift;
+    return $app->errtrans("Permission denied.")
+      unless $app->user->is_superuser();
+
+    $app->validate_magic or return;
+    my $cfg = $app->config;
+    
+    # construct the message to the activity log
+    my @meta_messages = ();
+    if ($app->param('comment_disable')) {
+        push(@meta_messages, 'Allow comments is on');
+    } else {
+        push(@meta_messages, 'Allow comments is off');
+    } 
+    if ($app->param('ping_disable')) {
+        push(@meta_messages, 'Allow trackbacks is on');
+    } else {
+        push(@meta_messages, 'Allow trackbacks is off');
+    }
+    if ($app->param('disable_notify_ping')) {
+        push(@meta_messages, 'Allow outbound trackbacks is on');
+    } else {
+        push(@meta_messages, 'Allow outbound trackbacks is off');
+    }
+    push(@meta_messages, 'Outbound trackback limit is ' . $app->param('trackback_send')) 
+        if ($app->param('trackback_send') =~ /\w+/);
+    
+    # throw the messages in the activity log
+    if (scalar(@meta_messages) > 0) {
+        my $message = join(', ', @meta_messages);
+        $app->log({
+            message  => 'System Settings Changes Took Place',
+            level    => MT::Log::INFO(),
+            class    => 'system',
+            metadata => $message,
+        });
+    }
+    
+    # actually assign the changes
+    $cfg->AllowComments( ( $app->param('comment_disable') ? 0 : 1 ), 1 );
+    $cfg->AllowPings(    ( $app->param('ping_disable')    ? 0 : 1 ), 1 );
+    $cfg->DisableNotificationPings(
+        ( $app->param('disable_notify_ping') ? 1 : 0 ), 1 );
+    my $send = $app->param('trackback_send') || 'any';
+    if ( $send =~ m/^(any|off|selected|local)$/ ) {
+        $cfg->OutboundTrackbackLimit( $send, 1 );
+        if ( $send eq 'selected' ) {
+            my $domains = $app->param('trackback_send_domains') || '';
+            $domains =~ s/[\r\n]+/ /gs;
+            $domains =~ s/\s{2,}/ /gs;
+            my @domains = split /\s/, $domains;
+            $cfg->OutboundTrackbackDomains( \@domains, 1 );
+        }
+    }
+
+    $cfg->save_config();
+    $app->redirect(
+        $app->uri(
+            'mode' => 'cfg_system_feedback',
+            args   => { saved => 1 }
+        )
+    );
+}
+
+sub cfg_system_feedback {
+    my $app = shift;
+    my %param;
+    return $app->redirect(
+        $app->uri(
+            mode => 'cfg_comments',
+            args => { blog_id => $app->param('blog_id') }
+        )
+    ) if $app->param('blog_id');
+
+    return $app->errtrans("Permission denied.")
+      unless $app->user->is_superuser();
+
+    my $cfg = $app->config;
+    $param{nav_config} = 1;
+    $app->add_breadcrumb( $app->translate('Feedback Settings') );
+    $param{nav_settings}         = 1;
+    $param{comment_disable}      = $cfg->AllowComments ? 0 : 1;
+    $param{ping_disable}         = $cfg->AllowPings ? 0 : 1;
+    $param{disabled_notify_ping} = $cfg->DisableNotificationPings ? 1 : 0;
+    $param{system_no_email}      = 1 unless $cfg->EmailAddressMain;
+    my $send = $cfg->OutboundTrackbackLimit || 'any';
+
+    if ( $send =~ m/^(any|off|selected|local)$/ ) {
+        $param{ "trackback_send_" . $cfg->OutboundTrackbackLimit } = 1;
+        if ( $send eq 'selected' ) {
+            my @domains = $cfg->OutboundTrackbackDomains;
+            my $domains = join "\n", @domains;
+            $param{trackback_send_domains} = $domains;
+        }
+    }
+    else {
+        $param{"trackback_send_any"} = 1;
+    }
+    $param{saved}        = $app->param('saved');
+    $param{screen_class} = "settings-screen system-feedback-settings";
+    $app->load_tmpl( 'cfg_system_feedback.tmpl', \%param );
+}

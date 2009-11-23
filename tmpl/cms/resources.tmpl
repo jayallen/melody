@@ -1,0 +1,46 @@
+<$mt:setvar name="resources" value="1"$>
+<$mt:setvar name="page_title" value="<__trans phrase="Resouces Provided by Plugins">"$>
+<$mt:setvar name="position_actions_top" value="1"$>
+<$mt:setvar name="system-plugin-settings" value="1"$>
+<mt:setvarblock name="content_nav">
+    <mt:include name="include/sysinfo_content_nav.tmpl">
+</mt:setvarblock>
+
+<mt:setvarblock name="html_head" append="1"></mt:setvarblock>
+
+<mt:include name="include/header.tmpl">
+
+<!-- START mt:loop name="plugin_groups" -->
+<mt:loop name="plugin_loop">
+  <mt:if name="plugin_resources">
+  <h3><$mt:var name="plugin_name" escape="html"$></h3>
+  <div id="resources-<mt:var name="plugin_id">" class="resources">
+    <ul>
+  <mt:if name="plugin_tags">
+      <li><strong><__trans phrase="Tags:"></strong>
+        <mt:loop name="plugin_tags"><mt:var name="name" escape="html"><mt:unless name="__last__">, </mt:unless></mt:loop>
+      </li>
+  </mt:if>
+  <mt:if name="plugin_attributes">
+      <li><strong><__trans phrase="Tag Attributes:"></strong>
+        <mt:loop name="plugin_attributes"><mt:var name="name" escape="html"><mt:unless name="__last__">, </mt:unless></mt:loop>
+      </li>
+  </mt:if>
+  <mt:if name="plugin_text_filters">
+      <li><strong><__trans phrase="Text Filters"></strong>:
+      <mt:loop name="plugin_text_filters"><mt:var name="name" escape="html"><mt:unless name="__last__">, </mt:unless></mt:loop>
+      </li>
+  </mt:if>
+  <mt:if name="plugin_junk_filters">
+      <li><strong><__trans phrase="Junk Filters:"></strong>
+        <mt:loop name="plugin_junk_filters"><mt:var name="name" escape="html"><mt:unless name="__last__">, </mt:unless></mt:loop>
+      </li>
+  </mt:if>
+    </ul>
+  </div>
+  </mt:if>
+
+  </mt:if>
+</mt:loop>
+
+<mt:include name="include/footer.tmpl">

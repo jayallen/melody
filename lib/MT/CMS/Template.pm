@@ -484,6 +484,7 @@ sub edit {
     # Populate structure for tag documentation
     my $all_tags = MT::Component->registry("tags");
     my $tag_docs = {};
+    my $dep_str = undef;
     foreach my $tag_set (@$all_tags) {
         my $url = $tag_set->{help_url};
         $url = $url->() if ref($url) eq 'CODE';
@@ -493,6 +494,11 @@ sub edit {
         foreach my $type (qw( block function )) {
             my $tags = $tag_set->{$type} or next;
             $tag_list .= ($tag_list eq '' ? '' : ',') . join(",", keys(%$tags));
+            my @deps = grep { ref $tags->{$_} eq 'HASH' && defined($tags->{$_}->{deprecated}) } keys(%$tags);
+            foreach (@deps) { 
+                if ($dep_str) { $dep_str .= "<br />\n"; }
+                $dep_str .= "&lt;mt:$_&gt; - " . $tags->{$_}->{deprecated};
+            }
         }
         $tag_list =~ s/(^|,)plugin(,|$)/,/;
         if (exists $tag_docs->{$url}) {
@@ -502,6 +508,7 @@ sub edit {
             $tag_docs->{$url} = $tag_list;
         }
     }
+    $param->{dep_str} = $dep_str;
     $param->{tag_docs} = $tag_docs;
     $param->{link_doc} = $app->help_url('appendices/tags/');
 

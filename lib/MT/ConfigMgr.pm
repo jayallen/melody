@@ -118,7 +118,7 @@ sub default {
             return wantarray ? ( $def ) : $def;
         } elsif ($type eq 'HASH') {
             if (ref $def ne 'HASH') {
-                (my($key), my($val)) = split /=/, $def;
+                (my($key), my($val)) = split(/=/, $def);
                 return { $key => $val };
             }
         }
@@ -153,7 +153,7 @@ sub set_internal {
                 $mgr->{$set}{$var} = $val;
             } else {
                 $hash ||= {};
-                (my($key), $val) = split /=/, $val;
+                (my($key), $val) = split(/=/, $val);
                 $mgr->{$set}{$var}{$key} = $val;
             }
         } else {

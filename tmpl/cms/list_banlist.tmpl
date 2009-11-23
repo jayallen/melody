@@ -73,59 +73,6 @@ TC.attachLoadEvent( init );
 </mt:setvarblock>
 <mt:include name="include/header.tmpl">
 
-<mtapp:listing
-    id="banlist-listing"
-    hide_pager="1">
-    <mt:if name="__first__">
-    <thead>
-        <tr>
-            <th class="cb"><input type="checkbox" value="all" class="select" /></th>
-            <th id="bt-ip"><__trans phrase="IP Address"></th>
-            <th id="bt-date"><__trans phrase="Date Banned"></th>
-        </tr>
-    </thead>
-    <tbody>
-    </mt:if>
-        <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if>">
-            <td class="cb"><input type="checkbox" name="id" class="select" value="<mt:var name="id" escape="html">" /></td>
-            <td><mt:var name="ip" escape="html"></td>
-            <td><mt:var name="created_on_formatted"></td>
-        </tr>
-    <mt:if name="__last__">
-    </tbody>
-    </mt:if>
-</mtapp:listing>
-
-<div id="create-inline-ipban" class="create-inline">
-    <form id="create-inline-ipban-form" method="post" action="<mt:var name="script_url">">
-        <input type="hidden" name="blog_id" value="<mt:var name="blog_id">" />
-        <input type="hidden" name="__mode" value="save" />
-        <input type="hidden" name="_type" value="banlist" />
-        <input type="hidden" name="return_args" value="<mt:var name="return_args" escape="html">" />
-        <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
-        <mtapp:setting
-            id="ip-address"
-            label="<__trans phrase="IP Address">"
-            label_class="inline"
-            hint=""
-            show_hint="0">
-            <input name="ip" id="ip-address" value="<mt:var name="ip" escape="html">" maxlength="15" />
-        </mtapp:setting>
-        <mtapp:setting
-            id="actions"
-            label="<__trans phrase="Actions">"
-            label_class="inline field-no-header"
-            hint=""
-            show_hint="0">
-            <span class="buttons">
-                <a href="javascript:void(0)" mt:command="submit"
-                    ><__trans phrase="Save"></a>
-                <a href="javascript:void(0)"
-                    onclick="cancelCreateMode(); return false"
-                    ><__trans phrase="Cancel"></a>
-            </span>
-        </mtapp:setting>
-    </form>
-</div>
+<mt:include name="prefs/ip-banning.tmpl">
 
 <mt:include name="include/footer.tmpl">

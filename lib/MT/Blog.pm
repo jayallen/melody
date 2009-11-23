@@ -116,6 +116,16 @@ __PACKAGE__->install_properties({
     primary_key => 'id',
 });
 
+sub POLICY_MOD_NOONE ()  { 0 }
+sub POLICY_MOD_ANYONE ()    { 1 }
+sub POLICY_MOD_AUTHONLY ()  { 2 }
+
+use Exporter;
+*import = \&Exporter::import;
+use vars qw( @EXPORT_OK %EXPORT_TAGS);
+@EXPORT_OK = qw( POLICY_MOD_NOONE POLICY_MOD_ANYONE POLICY_MOD_AUTHONLY ); 
+%EXPORT_TAGS = (constants => [ qw(POLICY_MOD_NOONE POLICY_MOD_ANYONE POLICY_MOD_AUTHONLY) ]);
+
 # Image upload defaults.
 sub ALIGN () { 'none' }
 sub UNITS () { 'pixels' }
@@ -253,6 +263,14 @@ sub create_default_templates {
           && ( exists $val->{widgets} ) ) {
             my $modulesets = delete $val->{widgets};
             $obj->modulesets( MT::Template->widgets_to_modulesets($modulesets, $blog->id) );
+        }
+        if ( 'module' eq $val->{set} || 'widget' eq $val->{set} ) {
+            foreach (qw( expire_type expire_interval expire_event )) {
+                my $col = 'cache_' . $_;
+                my $prop = $val->{cache}->{$_};
+                $prop = ($prop * 60) if ($_ eq 'expire_interval');
+                $obj->$col($prop);
+            }
         }
         $obj->save;
         if ($val->{mappings}) {
@@ -500,7 +518,18 @@ sub has_archive_type {
     my $blog = shift;
     my ($type) = @_;
     my %at = map { lc $_ => 1 } split(/,/, $blog->archive_type);
-    return exists $at{lc $type} ? 1 : 0;
+    return 0 unless exists $at{lc $type};
+
+    my $result = 0;
+    require MT::TemplateMap;
+    my @maps = MT::TemplateMap->load({blog_id => $blog->id,
+                                      archive_type => $type});
+    return 0 unless @maps;
+    require MT::PublishOption;
+    foreach my $map (@maps) {  
+        $result++ if $map->build_type != MT::PublishOption::DISABLED();
+    }
+    return $result;
 }
 
 sub accepts_registered_comments {
