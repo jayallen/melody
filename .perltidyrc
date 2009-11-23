@@ -1,6 +1,24 @@
-# Thanks to the Mojo team for an excellent .perltidyrc
-# From http://github.com/kraih/mojo/blob/685a370c882b1e7f22fde88f00eb222c14cbb2c2/.perltidyrc
-# Perl Best Practices (plus errata) .perltidyrc file
+##################### Official Melody perltidyrc file #####################
+#####   HOW TO USE: After installing perltidy, cd to your Melody root
+#####   directory. To run on a single file, creating a backup at FILE.bak:
+#####
+#####           perltidy PATH/TO/FILE
+#####
+#####   You can use shell glob characters to run on multiple files:
+#####
+#####       perltidy PATH/TO/DIR/*.p[lm]
+#####
+#####   You can also use the 'find' command to run recusively:
+#####
+#####       find plugins/MyPlugin -name '*\.pm' -exec perltidy {} \;
+#####
+#####   To ensure that you are always using this configuration file, you can
+#####   set the PERLTIDY environment variable or use the -pro command-line
+#####   option. Please see the perltidy man page for further details.
+#####
+#####   For full details about the rules in this perltidyrc please see
+#####    http://bit.ly/perltidystyles
+###########################################################################
 
 -l=98   # Max line width is 98 cols
 -i=4    # Indent level is 4 cols
@@ -13,10 +31,11 @@
 -bt=1   # Medium brace tightness
 -sbt=1  # Medium square bracket tightness
 -bbt=1  # Medium block brace tightness
--nsfs   # No space before semicolons
+-nsfs   # No space before semicolons in 3-part "for" loop
 -nolq   # Don't outdent long quoted strings
+
+# Break before all operators
 -wbb="% + - * / x != == >= <= =~ < > | & **= += *= &= <<= &&= -= /= |= >>= ||= .= %= ^= x="
-        # Break before all operators
 
 # extras/overrides/deviations from PBP
 
@@ -25,13 +44,23 @@
 --maximum-consecutive-blank-lines=2     # default is 1
 --nohanging-side-comments               # troublesome for commented out code
 
--isbc   # block comments may only be indented if they have some space characters before the #
--ci=2   # Continuation indent is 2 cols
+# Block comments may only be indented if they have some leading space
+# characters.  This allows you to comment out a section of code in the first
+# column without having those comments indented. (-isbc)
+--indent-spaced-block-comments
 
-# we use version control, so just rewrite the file
+# Continuation indent is 2 cols
+-ci=2
+
+# Compresses vertical space of opening tokens,
+# much like a regular code block with opening brace on the right
+-sot
+
+# We use version control, so just rewrite the file
+# this will create a '.bak' file which is ignored by git via .gitignore
 -b 
 
-# for the up-tight folk :)
--pt=2   # High parenthesis tightness
--bt=2   # High brace tightness
--sbt=2  # High square bracket tightness
+# Perl Best Practices (plus errata) .perltidyrc file
+# Thanks to the Mojo team (http://github.com/kraih/mojo/) for an excellent
+# start on this .perltidyrc
+
