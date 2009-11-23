@@ -480,13 +480,12 @@ sub build_junk_table {
 sub list {
     my $app = shift;
     my ($param) = @_;
-	my $q = $app->query;
+    my $q = $app->query;
     $param ||= {};
     require MT::Entry;
     my $type = $q->param('type') || MT::Entry->class_type;
     my $pkg = $app->model($type) or return "Invalid request.";
 
-    my $q     = $app->query;
     my $perms = $app->permissions;
     unless ($app->user->is_superuser) {
         if ( $type eq 'page' ) {

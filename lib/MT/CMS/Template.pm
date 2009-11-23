@@ -1370,7 +1370,6 @@ sub pre_save {
     my $interval = $q->param('cache_expire_interval');
     my $sec      = _get_interval( $period, $interval );
     $obj->cache_expire_interval($sec) if defined $sec;
-    my $q = $app->query;
     my @events;
 
     foreach my $name ( $q->param('cache_expire_event') ) {
