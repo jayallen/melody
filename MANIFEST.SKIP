@@ -1,3 +1,6 @@
+# This MANIFEST.SKIP is setup for creating a standard distribution like those MTOS has produced.
+# TODO use different MANIFEST.SKIP rules based on distribution being built. 
+
 # MT::App::Viewer
 lib/MT/App/Viewer.pm
 mt-view.cgi

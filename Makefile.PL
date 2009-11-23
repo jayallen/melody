@@ -1,6 +1,9 @@
 use ExtUtils::MakeMaker;
 use strict;
 
+use lib 'lib';
+use lib 'extlib';
+
 WriteMakefile(
     'NAME'             => 'Melody',
     'VERSION_FROM'     => 'lib/MT.pm',
@@ -11,14 +14,14 @@ WriteMakefile(
     'PREREQ_PM'        => {
 		# From Bundle::Melody::extlib (please keep in sync)
 		'Archive::Extract' => 0.08,
-		'Attribute::Params::Validate' => 1.7,
+		'Attribute::Params::Validate' => 1.07,
 		'bignum' => 0.23,
 		'Cache' => 0,
-		'CGI' => 3.45,
+		'CGI' => 3.43,
 		'Class::Accessor' => 0.22,
 		'Class::Data::Inheritable' => 0.06,
 		'Class::ErrorHandler' => 0.01,
-		'Class::Trigger' =>0.10_1,
+		'Class::Trigger' =>0.1001,
 		'Crypt::DH' => 0.06,
 		'Data::ObjectDriver' => 0.06,
 		'File::Copy::Recursive' => 0.23,
@@ -31,21 +34,23 @@ WriteMakefile(
 		'IPC::Cmd' => 0.24,
 		'Jcode' => 0.88,
 		'JSON' => 2.12,
-		'Locale::Maketest' => 1.13,
-		'Log4Perl' => 0,
+		'Locale::Maketext' => 1.13, 
+		'Log::Log4perl' => 0,
+		'Log::Dispatch' => 0,
 		'Lucene::QueryParser' => 1.04,
-		'LWP' => 5.831,
+		'LWP' => 5.829,
 		'Math::BigInt' => 1.63,
 		'MIME::Charset' => 0.044,
 		'MIME::EncWords' => 0.040,
 		'Module::Load' => 0.10,
 		'Module::Load::Conditional' => 0.08,
 		'Net::OAuth' => 0.11,
-		'Net::OpenID' => 1.03,
+		'Net::OpenID::Consumer' => 1.03,
 		'Params::Check' => 0.24,
 		'Params::Validate' => 0.73,
+		'Sub::Install' => 0,
 		'SOAP::Lite' => 0.710.08,
-		'TheSchwartz' => 1.07,
+		'TheSchwartz' => 1.07, # CPAN is having an issue with this one.
 		'UNIVERSAL' => 0.11,
 		'URI' => 1.36,
 		'URI::Fetch' => 0.08,
@@ -64,7 +69,7 @@ WriteMakefile(
     	'Test::More' => 0,
     	'Test::PerlTidy' => 0,
     	'Test::Pod' => 0,
-    	'Test::PodCoverage' => 0,
+    	'Test::Pod::Coverage' => 0,
     	'Test::Strict' => 0,
     },
     'META_MERGE'       => {
