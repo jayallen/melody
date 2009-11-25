@@ -1,0 +1,402 @@
+#!/usr/bin/env bash
+#
+# Melody run-periodic-tasks wrapper
+# AUTHOR: Jay Allen, Endevver Consulting (http://endevver.com)
+#
+#  Run "rptctl" for the basic usage
+#  or "rptctl --help" for the full manpage
+#
+VERSION=1.0
+
+PUBUSER="$USER"
+UMASK=000
+RPTARGS=${RPTARGS:-""}
+RPTLOAD=${RPTLOAD:-10}
+RPTNICE=${RPTNICE:-15}
+RPT=${RPT:-tools/run-periodic-tasks}
+RPTWORKERS=${RPTWORKERS:-1}
+
+version_info() {
+    cat <<EOU
+$(basename $0) version $VERSION: run-periodic-tasks wrapper for Melody and Movable type
+EOU
+    exit 0
+}
+
+usage() {
+
+    [[ -n "$1" ]] && local error=-1 && echo "Error: $1"
+    cat <<EOU
+Usage: $(basename $0) [-v] [-l LOG] [-w #] [-m DIR] COMMAND
+Commands:
+    start, stop, restart, status and help
+Options:
+    -m, --mthome DIR    The absolute path to your MT_HOME directory
+    -d, --daemon        Run the script in daemon mode to continuously
+                        process incoming requests
+    -l, --log LOGFILE   Specifies the logfile for run-periodic-tasks output
+    -w, --workers N     Number of run-periodic-tasks daemon workers to start
+    -v, --verbose       Displays more information
+    -t, --test          Displays verbose information about settings and what
+                        would happen without actually doing anything.
+    --help              Displays the full man page for the script
+    --version           Displays version number and quits
+EOU
+    exit $error
+}
+
+man() {
+    cat <<EOU | ${PAGER:-less}
+NAME
+    $(basename $0) - A wrapper script used to control run-periodic-tasks
+
+SYNOPSIS
+    Usage: $(basename $0) [-v] [-l LOG] [-w NUM] [-m MT_DIR] COMMAND
+
+DESCRIPTION
+
+    This script was developed to more easily start, stop and restart
+    the run-periodic-tasks script in Movable Type (http://movabletype.org)
+    and Melody (http://openmelody.org) in a similar manner to that of
+    apachectl for the Apache web server.
+
+COMMANDS
+
+    The following command controls the run-periodic-tasks processes for a
+    *single* installation as specified by options or environment variables
+    described later.  If you want to kill *all* run-periodic-tasks processes
+    running on a server, you should use the builtin process control utility
+    shipped with your operating system.
+
+    start
+        Starts run-periodic-tasks launching as many workers as needed to reach
+        the number specified by the -w flag. Once that number has been
+        reached, the command will exit without launching new processes. For
+        this reason, it's an ideal choice when you're running daemonized
+        run-periodic-tasks processes and want to ensure that the desired
+        number are always running.
+
+    stop
+        Terminates all running run-periodic-tasks processes for the specified
+        installation. (Equivlent to 'kill -INT')
+
+    restart
+        Kills all running run-periodic-tasks processes before starting new
+        processes.  This is equivalent to "mtpubctl stop; mtpubctl start".
+
+    status
+        Displays the currently active run-periodic-tasks processes.
+
+    test
+        Shows you the configuration that would be used by the script after
+        processing all environment variables (see below) and command-line
+        options and exits. If the -v flag is also specified the sequence of
+        commands will also be shown with those filled in values.
+
+    help
+        Displays this help documentation
+
+OPTIONS
+
+    For each option below, you can use the short version with a single dash
+    or the longer version with the double dash.  Single letter options must be
+    specified separately (i.e. -d -v -w 4 as opposed to -dvw 4).
+
+    -m, --mthome
+        Specifies the absolute path to the Movable Type directory containing
+        the run-periodic-tasks plugin.
+
+    -d, --daemon
+        Execute run-periodic-tasks workers in daemon mode.
+
+    -l, --log LOGFILE
+        Send output to the file LOGFILE. If LOGFILE is not an absolute path
+        (i.e. /PATH/TO/LOGFILE) it will be written relative to your MT/Melody
+        directory (e.g. --log logs/rebuild.log). If you do not speciy this
+        option, output will be discarded.
+
+    -w, --workers NN
+        Number of run-periodic-tasks workers to start. Default is 1. As a
+        general rule, 1-2 workers per CPU gives the best balance between
+        publishing throughput and server performance.
+
+    -v, --verbose
+        By default, the script outputs nothing except warnings and/or errors.
+        This option turns on updates for successful builds and a single
+        message each time dameonized run-periodic-tasks processes check the
+        queue for new jobs.  In general, you should enable this option until
+        you are absolutely sure that Publish Queue is working perfectly.
+
+ENVIRONMENT
+
+    If you prefer, the following environment variables can be set instead of
+    specifying them on the command-line or in your crontab.
+
+        MT_HOME         Equivalent to --mthome.
+        RPTLOG          Equivalent to --log.
+        RPTWORKERS      Equivalent to --workers
+        RPTDAEMONIZE    When set to 1, it is equivalent to --daemon
+        RPTVERBOSE      When set to 1, it is equivalent to --verbose.
+
+    NOTE: Options specified on the command-line take precedence over these
+    environment variables. This is useful if you run multiple installations
+    and want to set defaults yet override others on a per-installation basis
+    or if you want to display command-line execution while sending crontab
+    output to a log.
+
+COMMON USAGE
+    The minimal command line usage (shown below) will start a single
+    run-periodic-task process which run until the job queue is finished
+    outputting any warnings or errors it encounters:
+
+        /PATH/TO/mtpubctl -m /PATH/TO/MT_HOME start
+
+    UNIX USERS: If you are in your MT/Melody directory, you can use use the
+    "pwd" command to shorten the command:
+    
+        tools/mtpubctl -m `pwd` start
+            or
+        MT_HOME=`pwd` tools/mtpubctl start  # Inline env. variable
+
+    You can execute run-periodic-tasks from your system's crontab (see the
+    crontab man page if you are unfamiliar with cron).  The following cron
+    entry will launch four RPT processes for the MT/Melody installation at
+    /PATH/TO/MT_HOME in daemon mode.  Each process will verbosely output
+    their progress to a log at /PATH/TO/LOGFILE and quit once the queue is
+    empty.  This will be repeated every 5 minutes:
+    
+        */5 * * * *  /PATH/TO/mtpubctl                  \\
+                        -m /PATH/TO/MT_HOME             \\
+                        --workers 4                     \\
+                        --verbose                       \\
+                        --log /PATH/TO/LOGFILE          \\
+                    start
+    
+    The run-periodic-tasks script is best executed as a dameonized process
+    because it allows for immediate processing of jobs as they are entered
+    onto the queue. The following cron entry does the same as above except
+    that it will launch four daemonized processes upon the first execution
+    and then, in subsequent executions, relaunch any which may have died:
+    
+        */5 * * * *  /PATH/TO/mtpubctl                  \\
+                        -m /PATH/TO/MT_HOME             \\
+                        --workers 4                     \\
+                        --verbose                       \\
+                        --log /PATH/TO/LOGFILE          \\
+                        --daemon                        \\
+                    start
+
+    DAEMONIZED MEMORY LEAK BUG: If you are running an older version of MT and
+    find that the memory usage by your run-periodic-tasks processes are
+    constantly increasing, you are affected by a bug fixed in later versions
+    and all versions of Melody.  To deal with this using daemonized process,
+    you can use the "restart" command to re-boot the processes and keep your
+    memory usage low:
+    
+        */5 * * * *  /PATH/TO/mtpubctl                  \\
+                        -m /PATH/TO/MT_HOME             \\
+                        --workers 4                     \\
+                        --verbose                       \\
+                        --log /PATH/TO/LOGFILE          \\
+                        --daemon                        \\
+                    restart
+
+    For frequent command line use or execution via crontab on a server with
+    only a single MT/Melody installation, you should set up each option as
+    environment variables in your shell's startup script.  For example, under
+    Bash, you would put the following in your .bash_profile or .bashrc:
+
+        export MT_HOME=/var/www/cgi-bin/mt
+        export RPTLOG=/var/log/mtpub.log
+        export RPTWORKERS=4
+        export RPTDAEMONIZE=1
+        export RPTVERBOSE=1
+
+    Then, once those variables are set in your environment (will require
+    re-sourcing your startup script or logging back in), you can simply
+    execute this script as:
+    
+        mtpubctl start
+        mtpubctl stop
+        mtpubctl restart
+        etc...
+
+RETURN VALUES
+     The test utility exits with one of the following values:
+
+     0       expression evaluated to true.
+
+     1       expression evaluated to false or expression was missing.
+
+     >1      An error occurred.
+
+DISCLAIMER
+       The author of this utility will be held no responsibility for any
+       damages and losses of data and/or files that may be caused by the use
+       thereof.
+
+       Use me at your own risk!
+
+AUTHOR
+       Jay Allen, Endevver Consulting, http://endevver.com
+
+COPYRIGHT
+       Copyright 2008, Endevver Consulting
+
+       This script is free software licensed under the Perl Artistic License;
+       you can redistribute it and/or modify it under the same terms as Perl.
+
+EOU
+    exit 0
+}
+
+dispatch() {
+    while [ "$1" ]; do
+        [ $VERBOSE ] && { echo "$1"; echo; }
+        [ $TEST ]    || eval "$1";
+        shift;
+    done
+}
+
+progress() {
+    [ $VERBOSE ] || return
+    while [ "$1" ]; do echo ">>> $1"; shift; done
+}
+
+parse_options() {
+    [[ -z "$1" ]] && usage
+
+    while [[ "$1" =~ ^(-|start|stop|status|restart|help) ]]; do
+        case "${1//-/}" in
+            m | mthome   ) MT_HOME=$2; shift;;
+            l | log      ) RPTLOG=$2; shift;;
+            w | workers  ) RPTWORKERS=$2; shift;;
+            d | daemon   ) RPTDAEMONIZE=1;;
+            v | verbose  ) RPTVERBOSE=1;;
+            t | test     ) TEST=1;;
+            version      ) version_info;;
+            help         ) man;;
+            start        ) START=1;;
+            restart      ) START=1;STOP=1;;
+            stop         ) STOP=1;;
+            status       ) STATUS=1;;
+            *) usage "Unknown option: $1";;
+        esac 
+        shift
+    done
+
+    # Aliases
+    [ $TEST ] && RPTVERBOSE=1
+    VERBOSE=$RPTVERBOSE
+
+    [ "$MT_HOME" ]       || usage "MT home directory not specified"
+    [ -d "$MT_HOME" ]    || usage "$MT_HOME not found or is not a directory"
+    [ -e "$MT_HOME/$RPT" ] || usage "$MT_HOME/$RPT not found"
+    [[ "${RPTLOG:=/dev/null}" =~ ^/ ]] || RPTLOG="$MT_HOME/$RPTLOG"
+
+    if [ "$RPTDAEMONIZE" ]; then
+        RPTARGS="$RPTARGS --load $RPTLOAD --daemon"
+    fi
+
+    export MT_HOME=${MT_HOME%%/}
+}
+
+show_config() {
+    echo "Using the following values:"
+    for I in MT_HOME   RPTLOG   RPTWORKERS   RPTDAEMONIZE   RPTVERBOSE; do
+        printf "   %-10s %s\n" "$I:" "${!I}"
+    done
+}
+
+start_process() {
+    local args="$1";
+    local msg="Starting run-periodic-tasks process"
+    [ $TEST ] || echo "$msg"  >> $RPTLOG
+    progress "$msg"
+    dispatch "MT_HOME='$MT_HOME' nohup nice -n $RPTNICE perl -I$MT_HOME/lib -I$MT_HOME/extlib $MT_HOME/$RPT --verbose $args >> $RPTLOG 2>&1 &" 
+}
+
+stop() {
+
+    [[ -n "$psoptions" ]] || check_processes
+
+    if [ "$psout" ]; then
+        PIDS=$(echo "$psout" | awk {'print $2'} | xargs )
+        progress "run-periodic-tasks processes to kill:"
+        [[ $VERBOSE ]] && echo "$psout"
+        dispatch "kill -KILL $PIDS"
+    else
+        progress "No run-periodic-tasks processes exist"
+    fi
+}
+
+start() {
+
+    [[ -n "$psoptions" ]] || check_processes
+
+    #
+    # Ensure one RPT process running with --randomly flag
+    #
+    if [[ "$procsrandom" == 0 ]]; then
+        progress "Starting random process"
+        ARGS="$RPTARGS --randomly"
+        start_process "$ARGS"
+        procs=$(($procs+1))
+    fi
+    
+    #
+    # Start as many other normal (i.e. non-random) RPT processes as requested 
+    #
+    while [[ $procs < $RPTWORKERS ]]; do
+        ARGS="$RPTARGS"
+        start_process "$ARGS"
+        procs=$(($procs+1))
+    done
+}
+
+status() {
+
+    [[ -n "$psoptions" ]] || check_processes
+
+    # Explicitly turn on verbose for output
+    VERBOSE=1
+    # Report on processes
+    progress "$MT_HOME: $procs run-periodic-tasks processes running, $procsrandom with the --randomly flag"
+}
+
+check_processes() {
+
+    if [[ -n "$PSOPTIONS" && $(ps "$PSOPTIONS" 2>/dev/null) ]]; then
+        psoptions="$PSOPTIONS"
+
+    elif [[ $(ps aux  2>/dev/null) ]]; then
+        psoptions="aux"    # BSD systems
+
+    elif [[ $(ps ax  2>/dev/null) ]]; then
+        psoptions="ax"    # Deviant BSD-ish systems
+
+    elif [[ $(ps ax  2>/dev/null) ]]; then
+        psoptions="-ef"   # Other systems
+
+    else
+        usage "Could not get process list. Please set PSOPTIONS environment variable with the correct options for your system's ps utility"
+    fi
+
+    # Get a count of run-periodic-tasks --daemon processes
+    psout="$(ps $psoptions | grep "^$PUBUSER.*$MT_HOME/$RPT" | grep -v grep)"
+    procs=$(($(echo "$psout" | egrep '[A-Za-z0-9]' | wc -l)))
+
+    # Count how many of those are running with the --randomly flag
+    procsrandom=$((0+$(echo "$psout" | egrep "\--randomly" | wc -l)))    
+}
+
+parse_options "$@"
+[ $TEST ] && show_config
+
+cd $MT_HOME
+[[ -n "$UMASK" ]] && umask $UMASK
+
+[[ -n "$STATUS" ]] && status
+[[ -n "$STOP" ]] && stop
+[[ -n "$START" ]] && start
+exit 0
