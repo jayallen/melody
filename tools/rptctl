@@ -85,16 +85,7 @@ COMMANDS
         processes.  This is equivalent to "mtpubctl stop; mtpubctl start".
 
     status
-        Displays the currently active run-periodic-tasks processes.
-
-    test
-        Shows you the configuration that would be used by the script after
-        processing all environment variables (see below) and command-line
-        options and exits. If the -v flag is also specified the sequence of
-        commands will also be shown with those filled in values.
-
-    help
-        Displays this help documentation
+        Displays information about active run-periodic-tasks processes.
 
 OPTIONS
 
@@ -126,6 +117,18 @@ OPTIONS
         message each time dameonized run-periodic-tasks processes check the
         queue for new jobs.  In general, you should enable this option until
         you are absolutely sure that Publish Queue is working perfectly.
+
+    -t, --test
+        Shows you the configuration that would be used by the script after
+        processing all environment variables (see below) and command-line
+        options and exits. If the -v flag is also specified the sequence of
+        commands will also be shown with those filled in values.
+
+    --version
+        Displays version information
+
+    -h, --help
+        Displays this help documentation
 
 ENVIRONMENT
 
