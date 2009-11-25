@@ -868,7 +868,7 @@ sub seed {
     require URI;
     my $uri = URI->new( $app->cgipath );
     $param{cgi_path} = $uri->path;
-    $uri = URI->new( $q->param->param('set_static_uri_to') );
+    $uri = URI->new( $q->param('set_static_uri_to') );
     $param{static_web_path} = $uri->path;
     $param{static_uri}      = $uri->path;
     my $drivers = $app->object_drivers;
@@ -966,12 +966,12 @@ sub seed {
         }
         $param{config_created} = 1 if -f $cfg_file;
         $param{config_file} = $cfg_file;
-        if ( ( !-f $cfg_file ) && $q->param->param('manually') ) {
+        if ( ( !-f $cfg_file ) && $q->param('manually') ) {
             $param{file_not_found} = 1;
             $param{manually}       = 1;
         }
     }
-    elsif ( $q->param->param('manually') ) {
+    elsif ( $q->param('manually') ) {
         $param{config_created} = 1 if -f $cfg_file;
         $param{config_file} = $cfg_file;
     }
