@@ -37,11 +37,13 @@ sub init {
 
 sub init_request {
     my $app = shift;
-    my $q = $app->query;
     $app->{default_mode} = 'pre_start';
 
     # prevents init_request from trying to process the configuration file.
+    # Must call $app->SUPER::init_request before calling $app->query
+    # See https://openmelody.lighthouseapp.com/projects/26604/tickets/207
     $app->SUPER::init_request(@_);
+    my $q = $app->query;
     $app->set_no_cache;
     $app->{requires_login} = 0;
     
