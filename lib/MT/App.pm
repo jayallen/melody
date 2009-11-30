@@ -3588,35 +3588,10 @@ sub blog {
 ## Logging/tracing
 
 sub log {
+    $Log::Log4perl::caller_depth += 1;
     my $app = shift;
-    my ($msg)     = @_;
-    unless ($MT::plugins_installed) {
-        # finish init_schema here since we have to log something
-        # to the database.
-        $app->init_schema();
-    }
-    my $log_class = $app->model('log');
-    my $log       = $log_class->new();
-    if ( ref $msg eq 'HASH' ) {
-        $log->set_values($msg);
-        $msg = $msg->{'message'} || '';
-    }
-    elsif ( ( ref $msg ) && ( UNIVERSAL::isa( $msg, 'MT::Log' ) ) ) {
-        $log = $msg;
-    }
-    else {
-        $log->message($msg);
-    }
-    $log->ip( $app->remote_ip );
-    if ( my $blog = $app->blog ) {
-        $log->blog_id( $blog->id );
-    }
-    if ( my $user = $app->user ) {
-        $log->author_id( $user->id );
-    }
-    $log->level( MT::Log::INFO() ) unless defined $log->level;
-    $log->class('system') unless defined $log->class;
-    $log->save;
+    MT->log(@_);
+    $Log::Log4perl::caller_depth -= 1;
 }
 
 sub trace {
