@@ -592,7 +592,7 @@ BEGIN {
             'SchwartzFreeMemoryLimit' => undef,
             'SchwartzSwapMemoryLimit' => undef,
 
-            'LoggerModule'       => { default => 'MT::Logger::Log4perl' },
+            'LoggerModule'       => { default => 'Melody::Logger::Log4perl' },
             'LoggerConfigFile'   => { type => 'ARRAY' },
         },
         upgrade_functions => \&load_upgrade_fns,

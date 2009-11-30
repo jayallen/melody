@@ -462,6 +462,8 @@ sub request {
     }
 }
 
+*get_logger = \&Melody::Logger::get_logger;
+
 sub log {
     my $mt = shift;
     my $msg;
@@ -1201,6 +1203,7 @@ sub init {
 
     # Load MT::Log so constants are available
     require MT::Log;
+    require Melody::Logger;
 
     $mt->run_callbacks('post_init', $mt, \%param);
     return $mt;
