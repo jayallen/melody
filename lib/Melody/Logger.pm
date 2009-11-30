@@ -12,6 +12,7 @@ use Carp;
 use base qw( Class::Accessor::Fast );
 __PACKAGE__->mk_accessors(qw( DRIVERS ));
 
+use Data::Dumper;
 my @drivers = ();
 
 my $LOGGERMGR;
@@ -33,12 +34,30 @@ sub init {
 
 sub get_logger {
     my $self = shift;
-    $self = $self->instance unless ref $self;
+    my %args = __PACKAGE__->_parse_args( @_ );
+    # print STDERR "SELF: ".Dumper(\%args);
+    my $logger_module = $args{class}->new( %args );
+    # print STDERR __PACKAGE__."::get_logger(): $logger_module\n";
+    return $logger_module;
+}
+
+sub driver {
+    my $self = shift;
+    my %args = __PACKAGE__->_parse_args( @_ );
+    my $logger_driver = $args{class}->new();
+    return $logger_driver;
+}
+
+sub unplug { undef $LOGGERMGR }
+
+sub _parse_args {    
+    my $self = shift;
+    $self = __PACKAGE__->instance unless ref $self eq __PACKAGE__;
     my %args = (@_ > 1) ? @_
              :      @_  ? ( 'key' => shift )
                         : ();
     $args{class} ||= MT->config->LoggerModule;
-    $args{caller} = caller;
+    $args{caller} = caller(1);
 
     eval 'require ' . $args{class};
     if ($@) {
@@ -46,14 +65,8 @@ sub get_logger {
             "Bad LoggerModule config '[_1]': [_2]",
                 $args{class}, $@));
     }
-    my $logger_module
-        = $args{class}->new( %args );
-
-    return $logger_module;
+    %args;
 }
-
-sub unplug { undef $LOGGERMGR }
-
 1;
 
 __END__

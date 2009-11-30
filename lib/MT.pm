@@ -465,37 +465,46 @@ sub request {
 *get_logger = \&Melody::Logger::get_logger;
 
 sub log {
-    my $mt = shift;
-    my $msg;
+    my ($mt, $payload);
+    if ( @_ == 1 ) {    # single parameter to log, so it must be payload
+        $mt      = MT->instance;
+        $payload = shift;
+    }
+    else {
+        $mt      = shift;
+        $payload = shift;
+    }
     unless ($plugins_installed) {
         # finish init_schema here since we have to log something
         # to the database.
         $mt->init_schema();
     }
-    if ( !@_ ) {    # single parameter to log, so $mt must be message
-        $msg = $mt;
-        $mt  = MT->instance;
-    }
-    else {          # multiple parameters to log; second one is message
-        $msg = shift;
-    }
-    my $log_class = $mt->model('log');
-    my $log       = $log_class->new();
-    if ( ref $msg eq 'HASH' ) {
-        $log->set_values($msg);
-    }
-    elsif ( ( ref $msg ) && ( UNIVERSAL::isa( $msg, 'MT::Log' ) ) ) {
-        $log = $msg;
+
+    # use Data::Dumper;
+    # print STDERR '$payload: '.Dumper($payload);
+    my $logger_driver = Melody::Logger->driver('MTLog');
+    require MT::Log;
+    if ( ref $payload eq 'HASH' ) {
+        # print STDERR '$logger_driver: '.$logger_driver."\n";
+        $payload->{level}
+            = $logger_driver->log4perl_level(   $payload->{level}
+                                             || MT::Log::INFO());
     }
     else {
-        $log->message($msg);
+        $payload = { 
+            message => $payload,
+            level   => $logger_driver->log4perl_level(MT::Log::INFO())
+        };
     }
-    $log->level( MT::Log::INFO() ) unless defined $log->level;
-    $log->class('system') unless defined $log->class;
-    $log->save();
-    print STDERR MT->translate( "Message: [_1]", $log->message ) . "\n"
-      if $MT::DebugMode;
+    $Log::Log4perl::caller_depth += 1;
+    my $logger = MT->get_logger('MTLog');
+    # print STDERR '$payloadddd: '.Dumper($payload);
+    # print STDERR __PACKAGE__."::get_logger(): $logger\n";
+    my $level = delete $payload->{level};
+    $logger->log($level, %$payload);
+    $Log::Log4perl::caller_depth -= 1;
 }
+
 my $plugin_full_path;
 
 sub run_tasks {

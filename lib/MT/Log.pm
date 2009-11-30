@@ -15,10 +15,11 @@ sub WARNING ()  { 2 }
 sub ERROR ()    { 4 }
 sub SECURITY () { 8 }
 sub DEBUG ()    { 16 }
+sub FATAL ()    { 256 } # For Log4perl compatibility
 
 use Exporter;
 *import = \&Exporter::import;
-our @EXPORT_OK = qw( INFO WARNING ERROR SECURITY DEBUG );
+our @EXPORT_OK = qw( INFO WARNING ERROR SECURITY DEBUG FATAL );
 our %EXPORT_TAGS = (constants => [ @EXPORT_OK ]);
 
 use MT::Blog;
@@ -415,6 +416,8 @@ constants for each level followed by their numeric equivalent).
 =item * SECURITY / 8
 
 =item * DEBUG / 16
+
+=item * FATAL / 256
 
 =back
 
