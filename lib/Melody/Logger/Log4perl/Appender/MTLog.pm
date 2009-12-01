@@ -1,4 +1,4 @@
-# Melody (r) Open Source (C) 2001-2009 Six Apart, Ltd.
+# Melody - Open Source (C) 2009 Open Melody Software Group, Inc.
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
