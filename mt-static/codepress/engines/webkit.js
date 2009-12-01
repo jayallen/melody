@@ -21,13 +21,16 @@ CodePress = {
 
 	// set initial vars and start sh
 	initialize : function() {
+
 		if(typeof(editor)=='undefined' && !arguments[0]) return;
 		body = document.getElementsByTagName('body')[0];
 		body.innerHTML = body.innerHTML.replace(/\n/g,"");
 		chars = '|32|46|62|8|'; // charcodes that trigger syntax highlighting
 		cc = '\u2009'; // carret char
+		
 		editor = document.getElementsByTagName('pre')[0];
 		document.designMode = 'on';
+		
 		document.addEventListener('keypress', this.keyHandler, true);
 		window.addEventListener('scroll', function() { if(!CodePress.scrolling) CodePress.syntaxHighlight('scroll') }, false);
 		completeChars = this.getCompleteChars();
@@ -50,8 +53,7 @@ CodePress = {
 	    else if(chars.indexOf('|'+charCode+'|')!=-1||keyCode==13) { // syntax highlighting
 			top.setTimeout(function(){CodePress.syntaxHighlight('generic');},100);
 		}
-		else if(keyCode==9 || evt.tabKey) {         // snippets activation (tab)
-            // http://sourceforge.net/tracker/?func=detail&aid=1752602&group_id=186981&atid=919469
+		else if(keyCode==9 || evt.tabKey) {  // snippets activation (tab)
             if (!CodePress.snippets(evt)) {         //take return value
                 CodePress.insertCode("    ", false);   //insert spaces
                 evt.preventDefault();
@@ -257,6 +259,7 @@ CodePress = {
 		code = code.replace(/&/gi,'&amp;');
 		code = code.replace(/</g,'&lt;');
 		code = code.replace(/>/g,'&gt;');
+		
 		editor.innerHTML = code;
 		if (code == '')
 			document.getElementsByTagName('body')[0].innerHTML = '';

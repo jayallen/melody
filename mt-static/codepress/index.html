@@ -34,6 +34,8 @@
         var ua = navigator.userAgent;
         if ( ua.match( 'MSIE' ) )
             engine = 'msie';
+        else if ( ua.match('AppleWebKit') )
+            engine = 'webkit'; 
         else if( ua.match( 'Opera' ) )
             engine = 'opera'; 
         else if( ua.match( 'Gecko' ) )
@@ -53,6 +55,7 @@
     switch ( engine ) {
         case "msie":
         case "gecko":
+        case "webkit":
             document.write( '<body><pre> </pre></body>' );
             break;
         case "opera":
