@@ -12,7 +12,6 @@ WriteMakefile(
     'LICENSE'          => 'gpl',
     'AUTHOR'           => 'Open Melody Software Group <admin@openmelody.org>',
     'PREREQ_PM'        => {
-
         # From Bundle::Melody::extlib (please keep in sync)
         'Archive::Extract'            => 0.08,
         'Attribute::Params::Validate' => 1.07,
