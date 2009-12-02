@@ -96,6 +96,7 @@ sub uses_config_assistant {
     my $blog = MT->instance->blog;
     return 0 if !$blog;
     my $ts  = MT->instance->blog->template_set;
+    return 0 if !$ts;
     my $app = MT::App->instance;
     return 1 if $app->registry('template_sets')->{$ts}->{options};
     return 0;

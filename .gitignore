@@ -64,3 +64,5 @@ blib
 pm_to_blib
 t/db
 t/site
+t/mt.cfg
+null
