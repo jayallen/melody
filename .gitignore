@@ -55,3 +55,8 @@ mt-static/support/logs
 mt-static/support/themes
 mt-static/support/assets_c
 mt-static/support/uploads
+
+#####################################################
+##           Build related files                   ##
+#####################################################
+Makefile
