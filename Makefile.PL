@@ -5,14 +5,13 @@ use lib 'lib';
 use lib 'extlib';
 
 WriteMakefile(
-    'NAME'         => 'Melody',
-    'VERSION_FROM' => 'lib/MT.pm',
-    'ABSTRACT' =>
-      'Melody is an open source content management, blogging and publishing platform, derived from the popular blogging tool Movable Type.',
+    'NAME'             => 'Melody',
+    'VERSION_FROM'     => 'lib/MT.pm',
+    'ABSTRACT'         => 'Melody is an open source content management, blogging and publishing platform, derived from the popular blogging tool Movable Type.',
     'MIN_PERL_VERSION' => '5.8.1',
     'LICENSE'          => 'gpl',
-    'AUTHOR'    => 'The Open Melody Software Group <admin@openmelody.org>',
-    'PREREQ_PM' => {
+    'AUTHOR'           => 'Open Melody Software Group <admin@openmelody.org>',
+    'PREREQ_PM'        => {
 
         # From Bundle::Melody::extlib (please keep in sync)
         'Archive::Extract'            => 0.08,
@@ -52,29 +51,29 @@ WriteMakefile(
         'Params::Validate'            => 0.73,
         'Sub::Install'                => 0,
         'SOAP::Lite'                  => '0.710.08',
-        'TheSchwartz'    => 1.07,    # CPAN is having an issue with this one.
-        'UNIVERSAL'      => 0.11,
-        'URI'            => 1.36,
-        'URI::Fetch'     => 0.08,
-        'version'        => 0.76,
-        'XML::Elemental' => 2.1,
-        'XML::NameSpaceSupport' => 1.09,
-        'XML::SAX'              => 0.96,
-        'XML::Simple'           => 2.14,
-        'YAML::Tiny'            => 1.12,
+        'TheSchwartz'                 => 1.07, # CPAN no like
+        'UNIVERSAL'                   => 0.11,
+        'URI'                         => 1.36,
+        'URI::Fetch'                  => 0.08,
+        'version'                     => 0.76,
+        'XML::Elemental'              => 2.1,
+        'XML::NamespaceSupport'       => 1.09,
+        'XML::SAX'                    => 0.96,
+        'XML::Simple'                 => 2.14,
+        'YAML::Tiny'                  => 1.12,
 
         # For Testing
         # From Bundle::Melody::Test (please keep in sync)
-        'Devel::Cover'        => 0,
-        'Scalar::Util'        => 0,
-        'Test::Class'         => 0,
-        'Test::Deep'          => 0,
-        'Test::Manifest'      => 0,
-        'Test::More'          => 0,
-        'Test::PerlTidy'      => 0,
-        'Test::Pod'           => 0,
-        'Test::Pod::Coverage' => 0,
-        'Test::Strict'        => 0,
+        'Devel::Cover'                => 0,
+        'Scalar::Util'                => 0,
+        'Test::Class'                 => 0,
+        'Test::Deep'                  => 0,
+        'Test::Manifest'              => 0,
+        'Test::More'                  => 0,
+        'Test::PerlTidy'              => 0,
+        'Test::Pod'                   => 0,
+        'Test::Pod::Coverage'         => 0,
+        'Test::Strict'                => 0,
     },
     'META_MERGE' => {
         'resources' => {
