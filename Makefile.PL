@@ -56,7 +56,7 @@ WriteMakefile(
 		'URI::Fetch' => 0.08,
 		'version' => 0.76,
 		'XML::Elemental' => 2.1,
-		'XML::NameSpaceSupport' => 1.09,
+		'XML::NamespaceSupport' => 1.09,
 		'XML::SAX' => 0.96,
 		'XML::Simple' => 2.14,
 		'YAML::Tiny' => 1.12,
