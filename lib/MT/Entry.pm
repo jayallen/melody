@@ -387,11 +387,13 @@ MT::Comment->add_callback( 'post_save', 0, MT->component('core'),
                 visible  => 1,
             }
         );
-        # tim@appnel.com: It seems that $entry->comment_count will return undefined or  
-        # some non-numeric value causing a warning to be emitted. This method comes 
-        # from MT::Summarizable via MT::Summary. There is not one shred of docs on 
-        # these classes and I don't have the patience to figure out the root cause and
-        # have inserted the code to use 0 if undefined or blank.
+
+        # tim@appnel.com: It seems that $entry->comment_count will return
+        # undefined or some non-numeric value causing a warning to be emitted.
+        # This method comes from MT::Summarizable via MT::Summary. There is
+        # not one shred of docs on these classes and I don't have the patience
+        # to figure out the root cause and have inserted the code to use 0 if
+        # undefined or blank.
         # return unless ( $entry->comment_count != $count );
         my $entry_comment_count = $entry->comment_count() || 0;
         return unless $entry_comment_count != $count;
@@ -475,7 +477,7 @@ sub archive_file {
         $at = $blog->archive_type_preferred || $blog->archive_type;
         return '' if !$at || $at eq 'None';
         return '' if $at eq 'Page';
-        my %at = map { $_ => 1 } split /,/, $at;
+        my %at = map { $_ => 1 } split(/,/, $at);
         # FIXME: should draw from list of registered archive types
         for my $tat (qw( Individual Daily Weekly Author-Monthly Category-Monthly Monthly Category )) {
             $at = $tat if $at{$tat};
@@ -510,7 +512,7 @@ sub permalink {
 sub all_permalinks {
     my $entry = shift;
     my $blog = $entry->blog || return;
-    my @at = split /,/, $blog->archive_type;
+    my @at = split(/,/, $blog->archive_type);
     return unless @at;
     my @urls;
     for my $at (@at) {
