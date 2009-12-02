@@ -60,3 +60,6 @@ mt-static/support/uploads
 ##           Build related files                   ##
 #####################################################
 Makefile
+blib
+pm_to_blib
+t/db

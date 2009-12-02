@@ -89,203 +89,178 @@ sub edit {
 
         $param->{cmtauth_loop} = \@cmtauth_loop;
 
-#        if ( $output eq 'cfg_prefs.tmpl' ) {
+        $lang = $obj->language || 'en';
+        $lang = 'en' if lc($lang) eq 'en-us' || lc($lang) eq 'en_us';
+        $lang = 'ja' if lc($lang) eq 'jp';
+        $param->{ 'language_' . $lang } = 1;
+        
+        if ( $obj->cc_license ) {
+            $param->{cc_license_name} =
+                MT::Util::cc_name( $obj->cc_license );
+            $param->{cc_license_image_url} =
+                MT::Util::cc_image( $obj->cc_license );
+            $param->{cc_license_url} =
+                MT::Util::cc_url( $obj->cc_license );
+        }
 
-            my $lang = $obj->language || 'en';
-            $lang = 'en' if lc($lang) eq 'en-us' || lc($lang) eq 'en_us';
-            $lang = 'ja' if lc($lang) eq 'jp';
-            $param->{ 'language_' . $lang } = 1;
+        ## load entry preferences for new/edit entry page of the blog
+        my $pref_param = $app->load_entry_prefs;
+        %$param = ( %$param, %$pref_param );
+        $param->{ 'sort_order_posts_'
+                      . ( $obj->sort_order_posts || 0 ) } = 1;
+        $param->{ 'status_default_' . $obj->status_default } = 1
+            if $obj->status_default;
+        $param->{ 'allow_comments_default_'
+                      . ( $obj->allow_comments_default || 0 ) } = 1;
+        $param->{system_allow_pings} =
+            $cfg->AllowPings && $blog->allow_pings;
+        $param->{system_allow_comments} = $cfg->AllowComments
+            && ( $blog->allow_reg_comments
+                 || $blog->allow_unreg_comments );
+        my $replace_fields = $blog->smart_replace_fields || '';
+        my @replace_fields = split( /,/, $replace_fields );
+        foreach my $fld (@replace_fields) {
+            $param->{ 'nwc_' . $fld } = 1;
+        }
+        $param->{ 'nwc_smart_replace_' . ( $blog->smart_replace || 0 ) } = 1;
+        $param->{ 'nwc_replace_none' } = ( $blog->smart_replace || 0 ) == 2;
 
-            if ( $obj->cc_license ) {
-                $param->{cc_license_name} =
-                  MT::Util::cc_name( $obj->cc_license );
-                $param->{cc_license_image_url} =
-                  MT::Util::cc_image( $obj->cc_license );
-                $param->{cc_license_url} =
-                  MT::Util::cc_url( $obj->cc_license );
-            }
-#        }
-#        elsif ( $output eq 'cfg_entry.tmpl' ) {
-            ## load entry preferences for new/edit entry page of the blog
-            my $pref_param = $app->load_entry_prefs;
-            %$param = ( %$param, %$pref_param );
-            $param->{ 'sort_order_posts_'
-                  . ( $obj->sort_order_posts || 0 ) } = 1;
-            $param->{ 'status_default_' . $obj->status_default } = 1
-              if $obj->status_default;
-            $param->{ 'allow_comments_default_'
-                  . ( $obj->allow_comments_default || 0 ) } = 1;
-            $param->{system_allow_pings} =
-              $cfg->AllowPings && $blog->allow_pings;
-            $param->{system_allow_comments} = $cfg->AllowComments
-              && ( $blog->allow_reg_comments
-                || $blog->allow_unreg_comments );
-            my $replace_fields = $blog->smart_replace_fields || '';
-            my @replace_fields = split( /,/, $replace_fields );
-            foreach my $fld (@replace_fields) {
-                $param->{ 'nwc_' . $fld } = 1;
-            }
-            $param->{ 'nwc_smart_replace_' . ( $blog->smart_replace || 0 ) } = 1;
-            $param->{ 'nwc_replace_none' } = ( $blog->smart_replace || 0 ) == 2;
-#        }
-#        elsif ( $output eq 'cfg_web_services.tmpl' ) {
-            $param->{system_disabled_notify_pings} =
-              $cfg->DisableNotificationPings;
-            $param->{system_allow_outbound_pings} =
-              $cfg->OutboundTrackbackLimit eq 'any';
-            my %selected_pings = map { $_ => 1 }
-              split ',', ($obj->update_pings || '');
-            my $pings = $app->registry('ping_servers');
-            my @pings;
-            push @pings,
-              {
-                key   => $_,
-                label => $pings->{$_}->{label},
-                exists( $selected_pings{$_} ) ? ( selected => 1 ) : (),
-              } foreach keys %$pings;
-            $param->{pings_loop} = \@pings;
-#        }
-#        elsif ( $output eq 'cfg_comments.tmpl' ) {
-            $param->{email_new_comments_1} =
-              ( $obj->email_new_comments || 0 ) == 1;
-            $param->{email_new_comments_2} =
-              ( $obj->email_new_comments || 0 ) == 2;
-            $param->{nofollow_urls}     = $obj->nofollow_urls;
-            $param->{follow_auth_links} = $obj->follow_auth_links;
-            $param->{ 'sort_order_comments_'
-                  . ( $obj->sort_order_comments || 0 ) } = 1;
-            $param->{global_sanitize_spec} = $cfg->GlobalSanitizeSpec;
-            $param->{ 'sanitize_spec_' . ( $obj->sanitize_spec ? 1 : 0 ) } =
-              1;
-            $param->{sanitize_spec_manual} = $obj->sanitize_spec
-              if $obj->sanitize_spec;
-            $param->{allow_comments} = $blog->allow_reg_comments
-              || $blog->allow_unreg_comments;
-            $param->{use_comment_confirmation} =
-              defined $blog->use_comment_confirmation
-              ? $blog->use_comment_confirmation
-              : 0;
-            $param->{system_allow_comments} = $cfg->AllowComments
-              && ( $blog->allow_reg_comments
-                || $blog->allow_unreg_comments );
-            my @cps = MT->captcha_providers;
+        $param->{system_disabled_notify_pings} =
+            $cfg->DisableNotificationPings;
+        $param->{system_allow_outbound_pings} =
+            $cfg->OutboundTrackbackLimit eq 'any';
+        my %selected_pings = map { $_ => 1 }
+        split ',', ($obj->update_pings || '');
+        my $pings = $app->registry('ping_servers');
+        my @pings;
+        push @pings,
+        {
+            key   => $_,
+            label => $pings->{$_}->{label},
+            exists( $selected_pings{$_} ) ? ( selected => 1 ) : (),
+        } foreach keys %$pings;
+        $param->{pings_loop} = \@pings;
 
-            foreach my $cp (@cps) {
-                if ( ( $blog->captcha_provider || '' ) eq $cp->{key} ) {
-                    $cp->{selected} = 1;
-                }
+        $param->{email_new_comments_1} =
+            ( $obj->email_new_comments || 0 ) == 1;
+        $param->{email_new_comments_2} =
+            ( $obj->email_new_comments || 0 ) == 2;
+        $param->{nofollow_urls}     = $obj->nofollow_urls;
+        $param->{follow_auth_links} = $obj->follow_auth_links;
+        $param->{ 'sort_order_comments_'
+                      . ( $obj->sort_order_comments || 0 ) } = 1;
+        $param->{global_sanitize_spec} = $cfg->GlobalSanitizeSpec;
+        $param->{ 'sanitize_spec_' . ( $obj->sanitize_spec ? 1 : 0 ) } =
+            1;
+        $param->{sanitize_spec_manual} = $obj->sanitize_spec
+            if $obj->sanitize_spec;
+        $param->{allow_comments} = $blog->allow_reg_comments
+            || $blog->allow_unreg_comments;
+        $param->{use_comment_confirmation} =
+            defined $blog->use_comment_confirmation
+            ? $blog->use_comment_confirmation
+            : 0;
+        $param->{system_allow_comments} = $cfg->AllowComments
+            && ( $blog->allow_reg_comments
+                 || $blog->allow_unreg_comments );
+        my @cps = MT->captcha_providers;
+        
+        foreach my $cp (@cps) {
+            if ( ( $blog->captcha_provider || '' ) eq $cp->{key} ) {
+                $cp->{selected} = 1;
             }
-            $param->{captcha_loop} = \@cps;
-#       }
-#       elsif ( $output eq 'cfg_trackbacks.tmpl' ) {
-            $param->{email_new_pings_1} = ( $obj->email_new_pings || 0 ) == 1;
-            $param->{email_new_pings_2} = ( $obj->email_new_pings || 0 ) == 2;
-            $param->{nofollow_urls}     = $obj->nofollow_urls;
-            $param->{system_allow_selected_pings} =
-              $cfg->OutboundTrackbackLimit eq 'selected';
-            $param->{system_allow_outbound_pings} =
-              $cfg->OutboundTrackbackLimit eq 'any';
-            $param->{system_allow_local_pings} =
-                 ( $cfg->OutboundTrackbackLimit eq 'local' )
-              || ( $cfg->OutboundTrackbackLimit eq 'any' );
+        }
+        $param->{captcha_loop} = \@cps;
+
+        $param->{email_new_pings_1} = ( $obj->email_new_pings || 0 ) == 1;
+        $param->{email_new_pings_2} = ( $obj->email_new_pings || 0 ) == 2;
+        $param->{nofollow_urls}     = $obj->nofollow_urls;
+        $param->{system_allow_selected_pings} =
+            $cfg->OutboundTrackbackLimit eq 'selected';
+        $param->{system_allow_outbound_pings} =
+            $cfg->OutboundTrackbackLimit eq 'any';
+        $param->{system_allow_local_pings} =
+            ( $cfg->OutboundTrackbackLimit eq 'local' )
+            || ( $cfg->OutboundTrackbackLimit eq 'any' );
 #        }
 #        elsif ( $output eq 'cfg_registration.tmpl' ) {
-            $param->{commenter_authenticators} =
-              $obj->commenter_authenticators;
-            my $registration = $cfg->CommenterRegistration;
-            if ( $registration->{Allow} ) {
-                $param->{registration} =
-                  $blog->allow_commenter_regist ? 1 : 0;
+        $param->{commenter_authenticators} =
+            $obj->commenter_authenticators;
+        my $registration = $cfg->CommenterRegistration;
+        if ( $registration->{Allow} ) {
+            $param->{registration} =
+                $blog->allow_commenter_regist ? 1 : 0;
+        }
+        else {
+            $param->{system_disallow_registration} = 1;
+        }
+        $param->{allow_reg_comments} = $blog->allow_reg_comments;
+        $param->{allow_unreg_comments} = $blog->allow_unreg_comments;
+        $param->{require_typekey_emails} = $obj->require_typekey_emails;
+
+        my $threshold = $obj->junk_score_threshold || 0;
+        $threshold = '+' . $threshold if $threshold > 0;
+        $param->{junk_score_threshold} = $threshold;
+        $param->{junk_folder_expiry}   = $obj->junk_folder_expiry || 60;
+        $param->{auto_delete_junk}     = $obj->junk_folder_expiry;
+
+        if (   $obj->column('archive_path')
+               || $obj->column('archive_url') )
+        {
+            $param->{enable_archive_paths} = 1;
+            $param->{archive_path}         = $obj->column('archive_path');
+            $param->{archive_url}          = $obj->column('archive_url');
+        }
+        else {
+            $param->{archive_path} = '';
+            $param->{archive_url}  = '';
+        }
+        $param->{ 'archive_type_preferred_'
+                      . $blog->archive_type_preferred } = 1
+                      if $blog->archive_type_preferred;
+        my $at = $blog->archive_type;
+        if ( $at && $at ne 'None' ) {
+            my @at = split(/,/, $at);
+            for my $at (@at) {
+                $param->{ 'archive_type_' . $at } = 1;
             }
-            else {
-                $param->{system_disallow_registration} = 1;
-            }
-            $param->{allow_reg_comments} = $blog->allow_reg_comments;
-            $param->{allow_unreg_comments} = $blog->allow_unreg_comments;
-            $param->{require_typekey_emails} = $obj->require_typekey_emails;
-#        }
-#        elsif ( $output eq 'cfg_spam.tmpl' ) {
-            my $threshold = $obj->junk_score_threshold || 0;
-            $threshold = '+' . $threshold if $threshold > 0;
-            $param->{junk_score_threshold} = $threshold;
-            $param->{junk_folder_expiry}   = $obj->junk_folder_expiry || 60;
-            $param->{auto_delete_junk}     = $obj->junk_folder_expiry;
-#        }
-#        elsif ( $output eq 'cfg_archives.tmpl' ) {
-#            $app->add_breadcrumb( $app->translate('Publishing Settings') );
-            if (   $obj->column('archive_path')
-                || $obj->column('archive_url') )
-            {
-                $param->{enable_archive_paths} = 1;
-                $param->{archive_path}         = $obj->column('archive_path');
-                $param->{archive_url}          = $obj->column('archive_url');
-            }
-            else {
-                $param->{archive_path} = '';
-                $param->{archive_url}  = '';
-            }
-            $param->{ 'archive_type_preferred_'
-                  . $blog->archive_type_preferred } = 1
-              if $blog->archive_type_preferred;
-            my $at = $blog->archive_type;
-            if ( $at && $at ne 'None' ) {
-                my @at = split(/,/, $at);
-                for my $at (@at) {
-                    $param->{ 'archive_type_' . $at } = 1;
-                }
-            }
-            require MT::PublishOption;
-            if ( $app->model('template')->exist(
-                    { blog_id => $blog->id, build_type => MT::PublishOption::DYNAMIC() })
-              || $app->model('templatemap')->exist(
-                    { blog_id => $blog->id, build_type => MT::PublishOption::DYNAMIC() }) )
-            {
-                $param->{dynamic_enabled} = 1;
-                $param->{warning_include} = 1 unless $blog->include_system eq 'php' || $blog->include_system eq '' ;
-            }
-            eval "require List::Util; require Scalar::Util;";
-            unless ($@) {
-                $param->{can_use_publish_queue} = 1;
-            }
-            if ( $blog->publish_queue ) {
-                $param->{publish_queue} = 1;
-            }
-            if ( $blog->include_cache ) {
-                $param->{include_cache} = 1;
-            }
-#        }
-# Rendered obsolete long ago I believe. Commenting out to check - byrne
-#        elsif ( $output eq 'cfg_plugin.tmpl' ) {
-#            $param->{blog_view} = 1;
-#            require MT::CMS::Plugin;
-#            MT::CMS::Plugin::build_plugin_table( $app,
-#                param => $param,
-#                scope => 'blog:' . $blog_id
-#            );
-#            $param->{can_config} = 1;
-#        }
-#        else {
-#            $app->add_breadcrumb( $app->translate('Settings') );
-#        }
+        }
+        require MT::PublishOption;
+        if ( $app->model('template')->exist(
+                 { blog_id => $blog->id, build_type => MT::PublishOption::DYNAMIC() })
+             || $app->model('templatemap')->exist(
+                 { blog_id => $blog->id, build_type => MT::PublishOption::DYNAMIC() }) )
+        {
+            $param->{dynamic_enabled} = 1;
+            $param->{warning_include} = 1 unless $blog->include_system eq 'php' || $blog->include_system eq '' ;
+        }
+        eval "require List::Util; require Scalar::Util;";
+        unless ($@) {
+            $param->{can_use_publish_queue} = 1;
+        }
+        if ( $blog->publish_queue ) {
+            $param->{publish_queue} = 1;
+        }
+        if ( $blog->include_cache ) {
+            $param->{include_cache} = 1;
+        }
+
         ( my $offset = $obj->server_offset ) =~ s![-\.]!_!g;
         $offset =~ s!_0+$!!; # fix syntax highlight ->!
         $param->{ 'server_offset_' . $offset } = 1;
 
-#        if ( $output eq 'cfg_comments.tmpl' ) {
-            ## Load text filters.
-            $param->{text_filters_comments} =
-              $app->load_text_filters( $obj->convert_paras_comments,
-                'comment' );
-#        }
-#        elsif ( $output eq 'cfg_entry.tmpl' ) {
-            ## Load text filters.
-            $param->{text_filters} =
-              $app->load_text_filters( $obj->convert_paras, 'entry' );
-#        }
+        ## Load text filters.
+        $param->{text_filters_comments} =
+            $app->load_text_filters( $obj->convert_paras_comments,
+                                     'comment' );
+
+        ## Load text filters.
+        $param->{text_filters} =
+            $app->load_text_filters( $obj->convert_paras, 'entry' );
         $param->{nav_config} = 1;
         $param->{error} = $app->errstr if $app->errstr;
     } else {
-#        $app->add_breadcrumb( $app->translate('New Blog') );
+
         ( my $tz = $cfg->DefaultTimezone ) =~ s![-\.]!_!g;
         $tz =~ s!_00$!!; # fix syntax highlight ->!
         $param->{ 'server_offset_' . $tz } = 1;
@@ -1501,7 +1476,7 @@ sub pre_save {
         if $q->param('enabled_MovableType');
     my $c_old = $obj->commenter_authenticators;
     $obj->commenter_authenticators( join( ',', @authenticators ) );
-    my $rebuild = $obj->commenter_authenticators ne $c_old ? 1 : 0;
+    $rebuild = $obj->commenter_authenticators ne $c_old ? 1 : 0;
     if ( $q->param('enabled_TypeKey') ) {
         $rebuild = $obj->require_typekey_emails ? 0 : 1;
         $obj->require_typekey_emails(
@@ -1510,7 +1485,7 @@ sub pre_save {
     else {
         $obj->require_typekey_emails(0);
     }
-    my $tok = '';
+    $tok = '';
     ( $tok = $obj->remote_auth_token ) =~ s/\s//g;
     $obj->remote_auth_token($tok);
     $app->add_return_arg( need_full_rebuild => 1 ) if $rebuild;
@@ -1737,7 +1712,7 @@ sub post_save {
         }
 
     # Process Compose/Entry Preferences
-        my $blog_id = $obj->id;
+        $blog_id = $obj->id;
         # FIXME: Needs to exclude MT::Permission records for groups
         my $perms =
           $app->model('permission')

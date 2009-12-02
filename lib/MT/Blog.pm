@@ -268,7 +268,7 @@ sub create_default_templates {
             foreach (qw( expire_type expire_interval expire_event )) {
                 my $col = 'cache_' . $_;
                 my $prop = $val->{cache}->{$_};
-                $prop = ($prop * 60) if ($_ eq 'expire_interval');
+                $prop = (($prop ? $prop : 0) * 60) if ($_ eq 'expire_interval');
                 $obj->$col($prop);
             }
         }

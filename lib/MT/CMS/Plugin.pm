@@ -66,7 +66,6 @@ sub cfg_plugin_dialog {
     $param{plugin}       = $app->param('plugin');
     $param{plugin_name}  = $plugin->name;
     $param{plugin_sig}   = $plugin->{plugin_sig};
-    my $scope            = $app->param('scope');
     $param{scope}        = $scope;
 
     $param{config_html}  = build_plugin_config_html( $app, $plugin, $scope );
