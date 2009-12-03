@@ -1000,36 +1000,39 @@ my %DynamicURIs = (
     'Category'   => 'section/<$MTCategoryID$>',
 );
 
-
-# basename must be unique across the entire blog it starts as dirified
-# title and, if that already exists, an appended ctr is incremented
-# until we get a non-existent basename
-sub make_unique_basename {
+sub make_basename {
     my ($entry) = @_;
-    my $blog = MT::Blog->load($entry->blog_id);
-    my $title = $entry->title;
-    $title = '' if !defined $title;
-    $title =~ s/^\s+|\s+$//gs;
+    my $title   = $entry->title;
+    $title      = '' unless defined $title;
+    $title      =~ trim($title);
     if ($title eq '') {
         if (my $text = $entry->text) {
-            $title = MT::I18N::first_n_text($text, MT::I18N::const('LENGTH_ENTRY_TITLE_FROM_TEXT'));
+            $title = MT::I18N::first_n_text(
+                $text,
+                MT::I18N::const('LENGTH_ENTRY_TITLE_FROM_TEXT')
+            );
         }
         $title = 'Post' if $title eq '';
     }
-    my $limit = $blog->basename_limit || 30; # FIXME
-    $limit = 15 if $limit < 15; $limit = 250 if $limit > 250;
-    my $base = substr(dirify($title), 0, $limit);
-    $base =~ s/_+$//;
-    $base = 'post' if $base eq '';
-    my $i = 1;
-    my $base_copy = $base;
+    my $limit = $entry->blog->basename_limit || 30; # FIXME
+    $limit    = 15 if $limit < 15; $limit = 250 if $limit > 250;
+    my $base  = substr(dirify($title), 0, $limit);
+    $base     =~ s/_+$//;
+    $base     = 'post' if $base eq '';
+    return $base;
+}
 
-    my $class = ref $entry; 
+sub make_unique_basename {
+    my ($entry) = @_;
+    my $class   = ref $entry; 
+    my $blog    = $entry->blog;
+    my $i       = 1;
+    my $base    = (my $base_copy) = make_basename( $entry );
     while ($class->exist({ blog_id => $blog->id,
                            basename => $base })) {
         $base = $base_copy . '_' . $i++;
     }
-    $base;
+    return $base;
 }
 
 sub make_unique_category_basename {
@@ -1038,7 +1041,7 @@ sub make_unique_category_basename {
     my $blog = MT::Blog->load($cat->blog_id);
     my $label = $cat->label;
     $label = '' if !defined $label;
-    $label =~ s/^\s+|\s+$//gs;
+    $label = trim($label);
 
     my $name = MT::Util::dirify($label) || ($cat->basename_prefix(1) . $cat->id);
 
@@ -1952,20 +1955,22 @@ sub multi_iter {
 
 sub trim {
     my $string = shift;
-    $string = ltrim($string);
-    $string = rtrim($string);
+    return unless defined $string;
+    $string =~ s/^\s+|\s+$//gs;
     $string;
 }
 
 sub ltrim {
     my $string = shift;
-    $string =~ s/^\s+//;
+    return unless defined $string;
+    $string =~ s/^\s+//s;
     $string;
 }
 
 sub rtrim {
     my $string = shift;
-    $string =~ s/\s+$//;
+    return unless defined $string;
+    $string =~ s/\s+$//s;
     $string;
 }
 
@@ -2469,6 +2474,44 @@ Wrapper method to JSON::to_json which decodes any string value
 in I<reference> to UTF-8 strings as JSON::to_json requires.
 It then encodes back to the charset specified in PublishCharset
 for MT to render json strings properly.
+
+=head2 make_basename($entry)
+
+Method used to derive a basename from an entry's title and optionally its
+text content. If you want a basename that is guaranteed to be unique across
+all entries in the blog, use make_unique_basename().
+
+=head2 make_unique_basename($entry)
+
+The easiest (read: laziest and normally good enough) way to ensure that
+an entry does not get overwritten by another entry with the same title
+in an archive that uses the entry basename as the main differentiator is
+to make each basename unique across the entire blog.
+
+This method checks for the existence of another entry in the same blog with
+the same the basename produced by make_basename() and appends/increments
+a counter until a unique basename is derived. (e.g. title, title-1, title-2)
+
+=head2 trim($str)
+
+Trims all leading (ltrim) and trailing (rtrim) whitespace from the input.
+For further detail, see the documentation for ltrim and rtrim.
+                
+=head2 ltrim($str)
+
+Trims all leading whitespace from a string. This includes all space-like
+characters (tab, newline, etc) found at the very start of the string and
+continuing up to the first non-space character.  Does not remove spaces
+following newlines which appear after the first non-spaace character (i.e.
+inner-string spaces).
+
+=head2 rtrim($str)
+
+Trims all trailing whitespace from a string. This includes all space-like
+characters (tab, newline, etc) found after the very last non-string character
+and continuing to the end of the string. Does not remove spaces
+before newlines which appear before the last non-spaace character (i.e.
+inner-string spaces).
 
 =head1 AUTHOR & COPYRIGHTS
 
