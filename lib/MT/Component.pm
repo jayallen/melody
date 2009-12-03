@@ -174,7 +174,7 @@ sub load_registry {
 
 sub init_registry {
     my $c = shift;
-    my $r = $c->load_registry("config.yaml");
+    my $r = $c->load_registry( $c->{config} );
     if ( !$r ) {
         return 1;
     }
