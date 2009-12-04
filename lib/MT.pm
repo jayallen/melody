@@ -28,12 +28,18 @@ our $plugins_installed;
 
 BEGIN {
     $plugins_installed = 0;
-
+    use version;
     if('__MAKE_ME__' eq '__MAKE_' . 'ME__') { # If make is not run
         ( $VERSION, $SCHEMA_VERSION ) = ( '4.32', '4.0076');
         ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
             'Melody',    'OM',
-            '0.9.6', '0.9.6 (MT 4.32+)', 'http://openmelody.org'
+         qv('0.9.6'), '0.9.6 (MT 4.32+)', 'http://openmelody.org'
+         # qv() comes from version.pm, please see POD for details
+         # NOTE: We must always compare Melody's product version with
+         # two decimals because:
+         #      $PRODUCT_VERSION < '1.0.0'
+         # is not the same as
+         #      $PRODUCT_VERSION < '1.0' OR $PRODUCT_VERSION < 1.0
         );
     } else {      
         ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', 
