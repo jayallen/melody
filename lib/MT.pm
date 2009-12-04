@@ -28,28 +28,32 @@ our $plugins_installed;
 
 BEGIN {
     $plugins_installed = 0;
-    use version;
-    if('__MAKE_ME__' eq '__MAKE_' . 'ME__') { # If make is not run
-        ( $VERSION, $SCHEMA_VERSION ) = ( '4.32', '4.0076');
-        ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
-            'Melody',    'OM',
-         qv('0.9.6'), '0.9.6 (MT 4.32+)', 'http://openmelody.org'
-         # qv() comes from version.pm, please see POD for details
-         # NOTE: We must always compare Melody's product version with
-         # two decimals because:
-         #      $PRODUCT_VERSION < '1.0.0'
-         # is not the same as
-         #      $PRODUCT_VERSION < '1.0' OR $PRODUCT_VERSION < 1.0
-        );
-    } else {      
-        ( $VERSION, $SCHEMA_VERSION ) = ( '__API_VERSION__', 
-                                                        '__SCHEMA_VERSION__' );
-        ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID, $PORTAL_URL ) = (
-            '__PRODUCT_NAME__',    '__PRODUCT_CODE__',
-            '__PRODUCT_VERSION__', '__PRODUCT_VERSION_ID__', '__PORTAL_URL__'
-        );          
+    # This first section is run by the default distribution
+    # which does not require building by make
+    if('__MAKE_ME__' eq '__MAKE_' . 'ME__') { 
+        # The first three lines are a hack to allow MakeMaker to pick up
+        # the Melody version for the dist name and other variables while
+        # still maintaining the API version ($VERSION) for plugins to
+        # test against for compatibility (i.e. "use MT 4.32;")
+        use version; our $VERSION = qv('0.9.6'); # MakeMaker stops here
+        $PRODUCT_VERSION          = $VERSION;    # The rightful resting place
+        $VERSION                  = '4.32';      # The true API version
+        $SCHEMA_VERSION           = '4.0076'
+        $PRODUCT_NAME             = 'Melody';
+        $PRODUCT_CODE             = 'OM';
+        $VERSION_ID               = '0.9.6 (MT 4.32+)';
+        $PORTAL_URL               = 'http://openmelody.org';
     }
-
+    else { 
+        # This section is run if the distro was built by make
+        $VERSION                  = '__API_VERSION__';
+        $SCHEMA_VERSION           = '__SCHEMA_VERSION__' ;
+        $PRODUCT_NAME             = '__PRODUCT_NAME__';
+        $PRODUCT_CODE             = '__PRODUCT_CODE__';
+        $PRODUCT_VERSION          = '__PRODUCT_VERSION__';
+        $VERSION_ID               = '__PRODUCT_VERSION_ID__'
+        $PORTAL_URL               = '__PORTAL_URL__';
+    }
     $DebugMode = 0;
 
     # Alias lowercase to uppercase package; note: this is an equivalence
