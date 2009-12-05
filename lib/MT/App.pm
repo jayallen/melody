@@ -3553,6 +3553,7 @@ sub param {
 sub query {
     my $self = shift;
     my ($query) = @_;
+    tie $self->{'query'}, 'Melody::DeprecatedQueryUsage';
     $self->{'query'} = $query if defined $query;
     return $self->{'query'};
 }
@@ -3724,7 +3725,28 @@ sub set_no_cache {
     }
 }
 
+package Melody::DeprecatedQueryUsage;
+
+sub TIESCALAR { return bless {}, $_[0]; } 
+
+sub FETCH {
+    my $self = shift;
+    my ($package, $filename, $line) = caller;
+    warn "WARNING: Deprecated usage of MT::App->{query} in $package at line $line.\n";
+	return $self->{q};
+} 
+
+sub STORE {
+    my ($self, $q) = @_;
+    my ($package, $filename, $line) = caller;
+    warn "WARNING: Deprecated usage of MT::App->{query} in $package at line $line.\n"
+		if $self->{'q'}; # we ignore the initial set that Melody must do.
+	$self->{'q'} = $q;
+    return $self->{q};
+}
+
 1;
+
 __END__
 
 =head1 NAME
