@@ -7,7 +7,7 @@ use lib 'extlib';
 WriteMakefile(
     'NAME'             => 'Melody',
     'VERSION_FROM'     => 'lib/MT.pm',
-    'ABSTRACT_FROM'    => 'Melody is an open source content management, blogging and publishing platform, derived from the popular blogging tool Movable Type.',
+    'ABSTRACT'         => 'Melody is an open source content management, blogging and publishing platform, derived from the popular blogging tool Movable Type.',
     'MIN_PERL_VERSION' => '5.8.1',
     'LICENSE'          => 'gpl',
     'AUTHOR'           => 'The Open Melody Software Group <admin@openmelody.org>',
