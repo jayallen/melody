@@ -75,10 +75,8 @@ WriteMakefile(
     'META_MERGE'       => {
         'resources' => {
             'license'    => 'http://dev.perl.org/licenses/',
-            'repository' => 'http://github.com/tima/perl-amazon-ec2',
-
-            #'bugtracker' =>
-            #  'http://rt.cpan.org/Public/Dist/Display.html?Name=Module-Name',
+            'repository' => 'http://github.com/openmelody/melody',
+            'bugtracker' => 'https://openmelody.lighthouseapp.com/projects/26604-melody',
         },
     },
 );
