@@ -99,6 +99,9 @@ sub init_dbh {
     my($dbh) = @_;
     $dbd->SUPER::init_dbh($dbh);
     $dbh->{sqlite_handle_binary_nulls} = 1;
+    $dbh->do('PRAGMA cache_size=4000');
+    $dbh->do('PRAGMA journal_mode=TRUNCATE');
+    $dbh->do('PRAGMA synchronous=OFF');
     return $dbh;
 }
 
