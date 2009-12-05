@@ -49,7 +49,7 @@ WriteMakefile(
 		'Params::Check' => 0.24,
 		'Params::Validate' => 0.73,
 		'Sub::Install' => 0,
-		'SOAP::Lite' => 0.710.08,
+		'SOAP::Lite' => '0.710.08',
 		'TheSchwartz' => 1.07, # CPAN is having an issue with this one.
 		'UNIVERSAL' => 0.11,
 		'URI' => 1.36,
