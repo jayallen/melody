@@ -60,7 +60,8 @@ WriteMakefile(
 		'XML::SAX' => 0.96,
 		'XML::Simple' => 2.14,
 		'YAML::Tiny' => 1.12,
-		 # For Testing    
+		 # For Testing
+		 # From Bundle::Melody::Test (please keep in sync)
 		'Devel::Cover' => 0,
 		'Scalar::Util' => 0,
 		'Test::Class' => 0,
