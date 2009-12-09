@@ -15,7 +15,9 @@ configuration is not considered and will generate failures if all
 database drivers are not installed.
 REASON
 
-# use Test::More tests => 39;
+# use Test::More tests => 37;
+
+# This list of modules below is not in sync with what mt-check and Makefile requires.
 
 # required modules in MT check
 use_ok('CGI::Cookie');
@@ -25,12 +27,10 @@ use_ok('CGI', 2.80);
 
 # data storage modules
 use_ok('DBI', 1.21);
-use_ok('DBD::ODBC', 1.13);
 use_ok('DBD::mysql');
 use_ok('DBD::SQLite');
 use_ok('DBD::Pg', 1.32);
 use_ok('DBD::SQLite2');
-use_ok('DBD::Oracle', 1.15);
 
 # optional modules
 use_ok('Scalar::Util');
@@ -52,7 +52,7 @@ use_ok('IO::Socket::SSL');
 use_ok('IO::Uncompress::Gunzip');
 use_ok('Digest::SHA1');
 use_ok('IO::Compress::Gzip');
-use_ok('XML::Atom');
+# use_ok('XML::Atom');
 use_ok('Image::Magick');
 use_ok('LWP::UserAgent');
 use_ok('MIME::Base64');
@@ -60,4 +60,4 @@ use_ok('Mail::Sendmail');
 use_ok('HTML::Parser');
 use_ok('File::Temp');
 use_ok('Net::LDAP');
-use_ok('XML::Parser');
+# use_ok('XML::Parser');
