@@ -6,7 +6,16 @@ use warnings;
 use lib 't/lib', 'lib', 'extlib';
 use MT::Test;
 
-use Test::More tests => 39;
+use Test::More skip_all => <<REASON;
+These tests should be run before the rest of the testing suite since
+it will all fail badly without some of these tests passing. These unit
+tests does not check for required testing modules and will report 
+failures for optional modules not being present. Also, database 
+configuration is not considered and will generate failures if all
+database drivers are not installed.
+REASON
+
+# use Test::More tests => 39;
 
 # required modules in MT check
 use_ok('CGI::Cookie');
