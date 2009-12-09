@@ -1,0 +1,42 @@
+name: SpamLookup - Lookups
+id: SpamLookupLookups
+key: SpamLookupLookups
+version: 2.12
+description: <MT_TRANS phrase="SpamLookup module for using blacklist lookup services to filter feedback.">
+doc_link: http://www.spamlookup.com/wiki/LookupFilter
+author_name: Six Apart, Ltd.
+author_link: http://www.sixapart.com/
+config_template: lookup_config.tmpl
+l10n_class: Spamlookup::L10N
+settings:
+    ipbl_mode:
+        default: 1
+    ipbl_weight:
+        default: 1
+    ipbl_moderate:
+        default: 0
+    ipbl_service:
+        default: bsb.spamlookup.net
+    domainbl_mode:
+        default: 1
+    domainbl_weight:
+        default: 1
+    domainbl_service:
+        default: bsb.spamlookup.net, sc.surbl.org
+    tborigin_mode:
+        default: 1
+    tborigin_weight:
+        default: 1
+    whitelist:
+        default: 192.168., sixapart.com
+
+junk_filters:
+    spamlookup_ipbl:
+        label: SpamLookup IP Lookup
+        code: $SpamLookupLookups::Spamlookup::Lookups::ipbl
+    spamlookup_domainbl:
+        label: SpamLookup Domain Lookup
+        code: $SpamLookupLookups::Spamlookup::Lookups::domainbl 
+    spamlookup_tborigin:
+        label: SpamLookup TrackBack Origin
+        code: $SpamLookupLookups::Spamlookup::Lookups::tborigin
