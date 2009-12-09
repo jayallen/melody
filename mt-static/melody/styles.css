@@ -37,3 +37,20 @@
 #content-nav ul li.changed b { 
     font-style: italic;
 }
+
+/* Full Screen Editor */
+#edit-entry .fullscreen #content-inner,
+#edit-page .fullscreen #content-inner {
+  background-image: url('../images/content-inner.gif');
+}
+.edit-entry .fullscreen #title-field #title {
+  width: 890px;
+}
+#template-body-actions .fullscreen,
+#editor-content .editor-toolbar .fullscreen {
+  background-image: url('fullscreen-icon.gif');
+}
+.edit-template .fullscreen #title-field #title {
+  width: 890px;
+}
+/* End Full Screen Editor */

@@ -192,7 +192,8 @@
     <div id="autosave-notification-<$mt:var name="bar_position" escape="html" default="top"$>" class="autosave-notification"></div>
 </mt:setvartemplate>
 <mt:setvarblock name="html_head" append="1">
-<script type="text/javascript" src="<mt:var name="static_uri">js/tc/client.js"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/client.js"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>js/melody/fullscreen.js"></script>
 <script type="text/javascript">
 /* <![CDATA[ */
 var tag_inserts = {};
@@ -538,6 +539,7 @@ TC.attachLoadEvent( init );
     help_section="template_name">
     <div id="template-body-actions">
         <span class="codepress-toolbar" style="float:right">
+            <a href="javascript: void 0;" onclick="toggleFullscreen()" title="<__trans phrase="Toggle Fullscreen" escape="html">" class="toolbar button fullscreen"><b>Toggle Fullscreen</b><s></s></a>
             <a href="javascript: void 0;" title="<__trans phrase="Syntax Highlight On" escape="singlequotes">" mt:command="set-mode-codepress-on" class="command-toggle-codepress-on toolbar button"><b>Syntax Hightlight On</b><s></s></a>
 <!-- FIXME 
 This is where we might add an extra toolbar button to allow for wrapped and non- versions of CP, but there appears to be a little more than just dropping in this link.
