@@ -35,13 +35,13 @@ BEGIN {
         # the Melody version for the dist name and other variables while
         # still maintaining the API version ($VERSION) for plugins to
         # test against for compatibility (i.e. "use MT 4.32;")
-        use version; our $VERSION = qv('0.9.6'); # MakeMaker stops here
+        use version; our $VERSION = qv('0.9.7'); # MakeMaker stops here
         $PRODUCT_VERSION          = $VERSION;    # The rightful resting place
         $VERSION                  = '4.32';      # The true API version
         $SCHEMA_VERSION           = '4.0076'
         $PRODUCT_NAME             = 'Melody';
         $PRODUCT_CODE             = 'OM';
-        $VERSION_ID               = '0.9.6 (MT 4.32+)';
+        $VERSION_ID               = '0.9.7 (MT 4.32+)';
         $PORTAL_URL               = 'http://openmelody.org';
     }
     else { 
