@@ -3541,6 +3541,13 @@ sub param {
         $app->query->param(@_);
     }
     else {
+    	my ($package, $filename, $line) = caller;
+    	warn <<MSG;
+FUTURE BREAK WARNING: Deprecated usage of MT::App->param to fetch 
+the CGI query object in $package at line $line. 
+This will be changed in a backwards incompatable way in the near 
+future. Use MT::App->query instead.
+MSG
         wantarray ? ( $app->query->param ) : $app->query;
     }
 }
