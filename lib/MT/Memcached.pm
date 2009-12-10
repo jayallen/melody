@@ -99,6 +99,12 @@ available methods.
 
 In addition, this class defines the following:
 
+=head2 MT::Memcached->new
+
+A constructor that returns an I<MT::Memcached> object. Probably should 
+not be invoked directly, better to use the instance method to get a 
+handle of the singleton.
+
 =head2 MT::Memcached->instance
 
 Returns the singleton object (a I<MT::Memcached> object).
@@ -112,6 +118,12 @@ configuration and if the I<Cache::Memcached> module can be loaded.
 
 Removes the singleton instance of the class, and disconnects any open
 connections to I<memcached>.
+
+=head2 purge_stale
+
+This method simply returns 1 and is in place to fully support the
+L<MT::Cache> interface. This function has no purpose in memcache since
+memcache manages stale content on the user's behalf.
 
 =head1 AUTHOR & COPYRIGHT
 
