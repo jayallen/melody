@@ -398,5 +398,39 @@ sub context_script {
 }
 
 1;
+
 __END__
+
+=head1 NAME
+
+MT::Template::Context::Search - A container for all of the search application's
+template tag definitions.
+
+=head1 USAGE
+
+=head2 load_core_tags
+
+Loads all of the template tags associated with search. This is referenced
+by L<MT::Core> when it initializes the search application.
+
+=cut
+
+=head2 context_script
+
+This method will return a URL to the current set of search results preserving
+the current state as much as possible. If any of the following querystring
+parameters are specified they will be persisted in the URL generated:
+
+* mode
+* type
+* include_blogs
+* blog_id
+* format
+
+Example URL returned:
+
+   /cgi-bin/mt/mt-search.cgi?search=cats+and+dogs&blog_id=4
+
+=cut
+
 
