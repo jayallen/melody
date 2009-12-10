@@ -168,8 +168,8 @@ publishing requests, or in other words, the process by which no file is
 needlessly placed on the publish queue twice is handled by business logic 
 elsewhere.
 
-This worker is also responsible for rsyncing files to remote servers if they
-have been specified by the SyncTarget and RsyncOptions configuration 
-directives.
+This worker is also responsible for creating a L<MT::Worker::Sync> job on the
+job queueu if such an operation has been specified by the SyncTarget and 
+RsyncOptions configuration directives.
 
 =cut

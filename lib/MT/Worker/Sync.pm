@@ -122,3 +122,36 @@ sub max_retries { 10 }
 sub retry_delay { 60 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::Worker::Sync - The worker responsible for rsyncing files to remote hosts.
+
+=head1 DESCRIPTION
+
+This class is a subclass of L<TheSchwartz::Worker>. To learn more about how the
+periodic task system utilizes each of the subroutines below to control this 
+worker's state on the job queue, please consult its documentation.
+
+=head1 METHODS
+
+=head2 grab_for
+
+Returns 60, or 1 minute.
+
+=head2 max_retries
+
+Returns 10. 
+
+=head2 retry_delay
+
+Returns 60, or 1 minute.
+
+=head2 work
+
+Performs the work for this periodic task, which in this case is to rsync 
+files from the local host to one or more remote servers specified by the 
+SyncTarget and RsyncOptions configuration directives.
+
+=cut
