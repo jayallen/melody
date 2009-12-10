@@ -3336,6 +3336,15 @@ to, and configures Data::Dumper with these settings:
         $Data::Dumper::Sortkeys = 1;
         $Data::Dumper::Indent   = 1;
 
+=head2 $mt->init_lang_settings(%param)
+
+Sets the default language to english if none specified and initializes the 
+following config directives based upon the current language setting:
+
+    NewsboxURL, LearningNewsURL, SupportURL, NewsURL, DefaultTimezone,
+    TimeOffset, MailEncoding, ExportEncoding, LogExportEncoding,
+    CategoryNameNodash, PublishCharset
+
 =head2 $mt->init_callbacks()
 
 Installs any MT callbacks. This is called from the C<init> method very,
