@@ -2126,8 +2126,7 @@ sub load_global_tmpl {
        $args->{direction} = 'descend';
        $args->{limit} = 1;
     }
-    require MT::Template;
-    my $tmpl = MT::Template->load( $terms, $args);
+    my $tmpl = MT->model('template')->load( $terms, $args);
     $app->set_default_tmpl_params($tmpl) if $tmpl;
     $tmpl;
 }
@@ -3336,7 +3335,7 @@ to, and configures Data::Dumper with these settings:
         $Data::Dumper::Sortkeys = 1;
         $Data::Dumper::Indent   = 1;
 
-=head2 $mt->init_lang_settings(%param)
+=head2 $mt->init_lang_defaults(%param)
 
 Sets the default language to english if none specified and initializes the 
 following config directives based upon the current language setting:
@@ -3846,6 +3845,16 @@ Loads a L<MT::Template> template using the filename specified. See the
 documentation for the C<build_page> method to learn about how templates
 are located. The optional C<@params> are passed to the L<MT::Template>
 constructor.
+
+=head2 $app->load_global_tmpl($args, [, $blog_id])
+
+Loads a L<MT::Template> template using the arguments specified for the 
+specified blog, or the current blog (if an explicit blog has not been
+specified). This method will first check for the specified template among
+the templates belonging to the blog, and if one is not found will fall 
+back and search the global templates. In other words, "please give me this
+template, and if you can't find it, look for it in the global templates,
+thank you."
 
 =head2 $app->set_default_tmpl_params($tmpl)
 
