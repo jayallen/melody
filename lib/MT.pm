@@ -3791,6 +3791,15 @@ return C<2.5>.
 
 Returns the version of the MT database schema.
 
+=head2 MT->portal_url
+
+Returns the URL to the product's homepage. 
+
+I<Historical note: The term "portal" emerged from TypePad in an era in which 
+TypePad was whitelabeled for numerous sites. Each one of these whitelabeled
+sites was called a "portal" and each portal had a unique homepage which was
+NOT typepad.com. The term persists within Movable Type and Melody today.>
+
 =head2 $mt->id
 
 Provides an identifier for the application, one that relates to the
