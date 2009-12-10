@@ -124,3 +124,52 @@ sub max_retries { 0 }
 sub retry_delay { 60 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::Worker::Publish - The worker responsible for the publishing posts in the 
+background, or "asynchronously."
+
+=head1 DESCRIPTION
+
+This class is a subclass of L<TheSchwartz::Worker>. To learn more about how the
+periodic task system utilizes each of the subroutines below to control this 
+worker's state on the job queue, please consult its documentation.
+
+=head1 METHODS
+
+=head2 grab_for
+
+Returns 60, or 1 minute.
+
+=head2 max_retries
+
+Returns 0. 
+
+=head2 retry_delay
+
+Returns 60, or 1 minute.
+
+=head2 keep_exit_status_for
+
+Returns 1.
+
+=head2 work
+
+Performs the work for this periodic task, which in this case is to publish
+any files found on the "Pubish Queue." For files to be placed on the publish
+queue their corresponding template or archive mapping must have a publish type
+of "Via Publish Queue."
+
+This worker is dumb in that it just loads each file off the queue and
+publishes it without much regard to optimization. The process of deduping
+publishing requests, or in other words, the process by which no file is 
+needlessly placed on the publish queue twice is handled by business logic 
+elsewhere.
+
+This worker is also responsible for rsyncing files to remote servers if they
+have been specified by the SyncTarget and RsyncOptions configuration 
+directives.
+
+=cut
