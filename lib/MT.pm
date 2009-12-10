@@ -3325,6 +3325,17 @@ Loads any discoverable plugins that are available. This is called from
 the C<init> method, after the C<init_config> method has loaded the
 configuration settings.
 
+=head2 $mt->init_debug_mode(%param)
+
+This looks in the config file to see if DebugMode has been enabled. If
+it has then it loads the Data::Dumper module so that developers don't have
+to, and configures Data::Dumper with these settings:
+
+        $Data::Dumper::Terse    = 1;
+        $Data::Dumper::Maxdepth = 4;
+        $Data::Dumper::Sortkeys = 1;
+        $Data::Dumper::Indent   = 1;
+
 =head2 $mt->init_callbacks()
 
 Installs any MT callbacks. This is called from the C<init> method very,
