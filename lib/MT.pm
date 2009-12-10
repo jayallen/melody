@@ -517,6 +517,7 @@ sub run_tasks {
 sub add_plugin {
     my $class = shift;
     my ($plugin) = @_;
+
     if ( ref $plugin eq 'HASH' ) {
         require MT::Plugin;
         $plugin = new MT::Plugin($plugin);
@@ -1325,8 +1326,8 @@ sub _init_plugins_core {
         if ( opendir DH, $PluginPath ) {
             my @p = readdir DH;
           PLUGIN:
-            for my $plugin (@p) {
-                next if ( $plugin =~ /^\.\.?$/ || $plugin =~ /~$/ );
+            for my $plugin_dir (@p) {
+                next if ( $plugin_dir =~ /^\.\.?$/ || $plugin_dir =~ /~$/ );
 
                 my $load_plugin = sub {
                     my ( $plugin, $sig ) = @_;
@@ -1386,78 +1387,96 @@ sub _init_plugins_core {
                     }
                     $Plugins{$plugin_sig}{enabled} = 1;
                     return 1;
-                };
-                $plugin_full_path = File::Spec->catfile( $PluginPath, $plugin );
+                }; # end load_plugin sub
+
+                my @plugins;
+                # Legacy support when plugins were not 
+                # placed in their own directory
+                $plugin_full_path
+                    = File::Spec->catfile( $PluginPath, $plugin_dir );
                 if ( -f $plugin_full_path ) {
-                    $plugin_envelope = $plugin_lastdir;
-                    $load_plugin->( $plugin_full_path, $plugin )
-                      if $plugin_full_path =~ /\.pl$/;
+                    push @plugins, {
+                        dir  => $PluginPath,
+                        file => $plugin_dir,
+                        path => $plugin_full_path,
+                        envelope => $plugin_lastdir,
+                    } if $plugin_full_path =~ /\.pl$/;
                 }
                 else {
-                    my $plugin_dir = $plugin;
-                    $plugin_envelope = "$plugin_lastdir/" . $plugin;
-
-                    # handle config.yaml
-                    my $yaml =
-                      File::Spec->catdir( $plugin_full_path, 'config.yaml' );
-
-                    foreach my $lib (qw(lib extlib)) {
-                        my $plib = File::Spec->catdir( $plugin_full_path, $lib );
-                        unshift @INC, $plib if -d $plib;
-                    }
-
-                    if ( -f $yaml ) {
-                        my $pclass =
-                          $plugin_dir =~ m/\.pack$/
-                          ? 'MT::Component'
-                          : 'MT::Plugin';
-
-                        # Don't process disabled plugin config.yaml files.
-                        if (
-                            $pclass eq 'MT::Plugin'
-                            && (
-                                !$use_plugins
-                                || ( exists $PluginSwitch->{$plugin_dir}
-                                    && !$PluginSwitch->{$plugin_dir} )
-                            )
-                          )
-                        {
-                            $Plugins{$plugin_dir}{full_path} =
-                              $plugin_full_path;
-                            $Plugins{$plugin_dir}{enabled} = 0;
+                    # open and scan the directory for plugin files,
+                    # save them to load later
+                    opendir SUBDIR, $plugin_full_path;
+                    my @plugin_files = readdir SUBDIR;
+                    closedir SUBDIR;
+                    for my $file (@plugin_files) {
+                        if ($file eq 'lib' || $file eq 'extlib') {
+                            my $plib = File::Spec->catdir( $plugin_full_path, $file );
+                            unshift @INC, $plib if -d $plib;
                             next;
                         }
-                        # See http://bugs.movabletype.org/?79933
-                        next if exists $Plugins{$plugin_dir};
-                        my $id = lc $plugin_dir;
-                        $id =~ s/\.\w+$//;
-                        my $p = $pclass->new(
-                            {
-                                id       => $id,
-                                path     => $plugin_full_path,
-                                envelope => $plugin_envelope
-                            }
-                        );
-
-                        # rebless? based on config?
-                        local $plugin_sig = $plugin_dir;
-			$Plugins{$plugin_sig}{enabled} = 1;
-                        MT->add_plugin($p);
-                        $p->init_callbacks();
-                        next;
-                    }
-
-                    opendir SUBDIR, $plugin_full_path;
-                    my @plugins = readdir SUBDIR;
-                    closedir SUBDIR;
-                    for my $plugin (@plugins) {
-                        next if $plugin !~ /\.pl$/;
-                        my $plugin_file =
-                          File::Spec->catfile( $plugin_full_path, $plugin );
+                        next if $file !~ /\.pl$/ && $file !~ /config\.yaml$/;
+                        my $plugin_file =  File::Spec->catfile( $plugin_full_path, $file );
                         if ( -f $plugin_file ) {
+                            # Plugin is a file, add it to list for processing
+                            push @plugins, {
+                                base => $plugin_full_path,
+                                dir  => $plugin_dir,
+                                file => $file,
+                                path => $plugin_file,
+                                envelope => "$plugin_lastdir/" . $plugin_dir,
+                            };
+                        }
+                    }
+                    # All plugins have been found, now load them
+                    foreach my $plugin (@plugins) {
+                        if ($plugin->{file} =~ /\.pl$/) {
+                            $plugin_envelope = $plugin->{envelope};
                             $load_plugin->(
-                                $plugin_file, $plugin_dir . '/' . $plugin
-                            );
+                                $plugin->{path}, $plugin->{file}
+                                );
+                        } else {
+                            my $pclass =
+                                $plugin->{dir} =~ m/\.pack$/ ? 'MT::Component' : 'MT::Plugin';
+                                
+                            # Don't process disabled plugin config.yaml files.
+                            if (
+                                $pclass eq 'MT::Plugin'
+                                && (
+                                    !$use_plugins
+                                    || ( exists $PluginSwitch->{ $plugin->{dir} }
+                                         && !$PluginSwitch->{ $plugin->{dir} } )
+                                )
+                                )
+                            {
+                                $Plugins{ $plugin->{dir} }{full_path} = $plugin->{path};
+                                $Plugins{ $plugin->{dir} }{enabled}   = 0;
+                                next;
+                            }
+
+                            # See http://bugs.movabletype.org/?79933
+                            local $plugin_sig = $plugin->{dir} . '/' . $plugin->{file};
+                            next if exists $Plugins{ $plugin_sig };
+                            # TODO - the id needs to be yaml specific, not directory
+                            # TODO - the id needs to be reformulated from contents of yaml
+                            my $id = lc $plugin->{dir} . $plugin->{file};
+                            $id =~ s/\.\w+$//;
+
+                            my $p = $pclass->new(
+                                {
+                                    id       => $id,
+                                    path     => $plugin->{base},
+                                    config   => $plugin->{file},
+                                    envelope => $plugin->{envelope}
+                                }
+                                );
+                            
+                            # rebless? based on config?
+                            $Plugins{$plugin_sig}{enabled} = 1;
+                            $plugin_envelope = $plugin->{envelope};
+                            $plugin_full_path = $plugin->{path};
+                            MT->add_plugin($p);
+                            $p->init_callbacks();
+                            next;
                         }
                     }
                 }
