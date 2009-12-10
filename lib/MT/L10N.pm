@@ -51,6 +51,16 @@ Return the value of L<I18N::LangTags::List/name> for the given I<code>.
 
 Return 'iso-8859-1' (Latin-1).
 
+=head2 lc
+
+An encoding agnostic and safe lowercase method. Use in favor of Perl's
+default lc command.
+
+=head2 uc
+
+An encoding agnostic and safe uppercase method. Use in favor of Perl's
+default uc command.
+
 =head2 ascii_only
 
 Return zero.
