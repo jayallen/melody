@@ -9593,6 +9593,8 @@ Identifies the archive type to use when creating the link. Valid archive types a
 
 =back
 
+=back
+
 =head4 Examples
 
 Link to the main category archive of the entry in context:
@@ -9609,6 +9611,8 @@ Link to other entries by the current author (assuming Author archives are publis
     <a href="<$mt:EntryLink type="Author"$>"><$mt:EntryAuthorDisplayName$></a>
 
 =head4 Related Tags
+
+=over 4
 
 =item * L<EntryPermalink>
 

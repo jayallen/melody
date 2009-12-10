@@ -9,6 +9,7 @@ package MT::DefaultTemplates;
 use strict;
 
 =pod
+
 Registry storage format for default templates:
 
 default_templates:
