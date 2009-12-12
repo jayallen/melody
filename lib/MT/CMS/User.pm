@@ -237,6 +237,7 @@ sub list {
         $row->{has_edit_access}      = $this_author->is_superuser;
         $row->{status_enabled}       = $au->is_active;
         $row->{status_pending}       = $au->status == MT::Author::PENDING();
+        $row->{is_superuser}         = $au->is_superuser();
 
         if ( $row->{created_by} ) {
             my $parent_author = $authors{ $au->created_by } ||=

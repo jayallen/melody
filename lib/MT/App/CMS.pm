@@ -1104,6 +1104,22 @@ sub core_list_filters {
                     $terms->{status} = 3;
                 },
             },
+            sysadmins => {
+                label   => "System Administrators",
+                order   => 400,
+                handler => sub {
+                    my ($terms, $args) = @_;
+                    $terms->{type} = MT::Author::AUTHOR();
+                    $args->{join} = MT::Permission->join_on(
+                        'author_id',
+                        {
+                            permissions => "\%'administer'\%",
+                            blog_id     => '0',
+                        },
+                        { 'like' => { 'permissions' => 1 } }
+                    );
+                },
+            },
         },
         user => {
             author => {

@@ -54,3 +54,7 @@
   width: 890px;
 }
 /* End Full Screen Editor */
+
+.listing tr.superuser .user-status-enabled img {
+  background-image: url(../images/status_icons/user-enabled-sysadmin.png);
+}
