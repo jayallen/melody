@@ -711,11 +711,14 @@ sub set_defaults {
         $user ||= $app->user if $app->can('user');
     }
 
+    # Set correct class for objects that subclass Entry
+    my $class = $e->properties->{defaults}{class} || 'entry';
+
     my (%entry_defaults, %user_defaults, %blog_defaults);
     
     %entry_defaults = (
         ping_count => 0,
-        class      => 'entry',
+        class      => $class,
         status     => HOLD,
     );
 
