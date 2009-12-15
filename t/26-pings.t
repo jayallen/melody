@@ -9,8 +9,8 @@ use lib 'lib';
 
 use Test::More;
 
-plan tests => 14;
-#plan skip_all => "Needs rewrite to eliminate HTTP server requirement.";
+#plan tests => 14;
+plan skip_all => "Needs rewrite and/or mt-test-rpc.cgi script from 6A.";
 #exit;
 
 use HTTP::Response;
