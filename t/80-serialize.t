@@ -66,7 +66,7 @@ $Data::Dumper::Indent = 0;
 
 my $dj = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',[1],3,2],'d'=>1},undef]!;                           # to use with JSON
 my $dn = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},3,2],'d'=>1},undef]!;               # to use for non-recursive structure
-my $dd = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},\'3',2],'d'=>1,'z'=>$VAR1},undef]!; # to use for recursive structure
+my $dd = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},\3,2],'d'=>1,'z'=>$VAR1},undef]!; # to use for recursive structure
 
 # serialize and deserialize, check the results
 # compare structures with Data::Dumper
@@ -100,7 +100,7 @@ for my $label (keys %sers) {
 
   # fix stringified numbers for MT2
   if ($label eq 'MT2' || $label eq 'MT') {
-    $_ += 0 for $thawed->[0], $thawed->[1]{b}[0], $thawed->[1]{c}[3], $thawed->[1]{d};
+    $_ += 0 for $thawed->[0], $thawed->[1]{b}[0], ${$thawed->[1]{c}[2]}, $thawed->[1]{c}[3], $thawed->[1]{d};
   }
 
   (my $dump = Dumper($thawed)) =~ s/^\$VAR1\s*=\s*|\s|;$//g; # remove spaces, $VAR and ; if any
