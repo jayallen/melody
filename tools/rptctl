@@ -269,7 +269,7 @@ progress() {
 parse_options() {
     [[ -z "$1" ]] && usage
 
-    while [[ "$1" =~ ^(-|start|stop|status|restart|help) ]]; do
+    while [[ "$1" =~ ^(-|restart|start|stop|status|help) ]]; do
         case "${1//-/}" in
             m | mthome   ) MT_HOME=$2; shift;;
             l | log      ) RPTLOG=$2; shift;;
@@ -279,8 +279,8 @@ parse_options() {
             t | test     ) TEST=1;;
             version      ) version_info;;
             help         ) man;;
+            restart      ) RESTART=1;;
             start        ) START=1;;
-            restart      ) START=1;STOP=1;;
             stop         ) STOP=1;;
             status       ) STATUS=1;;
             *) usage "Unknown option: $1";;
@@ -306,7 +306,7 @@ parse_options() {
 
 show_config() {
     echo "Using the following values:"
-    for I in MT_HOME   RPTLOG   RPTWORKERS   RPTDAEMONIZE   RPTVERBOSE; do
+    for I in MT_HOME   RPTLOG   RPTWORKERS   RPTDAEMONIZE   RPTVERBOSE START STOP RESTART; do
         printf "   %-10s %s\n" "$I:" "${!I}"
     done
 }
@@ -331,6 +331,9 @@ stop() {
     else
         progress "No run-periodic-tasks processes exist"
     fi
+    psout=""
+    procs=0
+    procsrandom=0
 }
 
 start() {
@@ -400,6 +403,7 @@ cd $MT_HOME
 [[ -n "$UMASK" ]] && umask $UMASK
 
 [[ -n "$STATUS" ]] && status
+[[ -n "$RESTART" ]] && stop && sleep 3 && start && exit 0
 [[ -n "$STOP" ]] && stop
 [[ -n "$START" ]] && start
 exit 0
