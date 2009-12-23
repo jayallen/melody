@@ -82,7 +82,7 @@ COMMANDS
 
     restart
         Kills all running run-periodic-tasks processes before starting new
-        processes.  This is equivalent to "mtpubctl stop; mtpubctl start".
+        processes.  This is equivalent to "rptctl stop; rptctl start".
 
     status
         Displays information about active run-periodic-tasks processes.
@@ -152,14 +152,14 @@ COMMON USAGE
     run-periodic-task process which run until the job queue is finished
     outputting any warnings or errors it encounters:
 
-        /PATH/TO/mtpubctl -m /PATH/TO/MT_HOME start
+        /PATH/TO/rptctl -m /PATH/TO/MT_HOME start
 
     UNIX USERS: If you are in your MT/Melody directory, you can use use the
     "pwd" command to shorten the command:
     
-        tools/mtpubctl -m `pwd` start
+        tools/rptctl -m `pwd` start
             or
-        MT_HOME=`pwd` tools/mtpubctl start  # Inline env. variable
+        MT_HOME=`pwd` tools/rptctl start  # Inline env. variable
 
     You can execute run-periodic-tasks from your system's crontab (see the
     crontab man page if you are unfamiliar with cron).  The following cron
@@ -168,7 +168,7 @@ COMMON USAGE
     their progress to a log at /PATH/TO/LOGFILE and quit once the queue is
     empty.  This will be repeated every 5 minutes:
     
-        */5 * * * *  /PATH/TO/mtpubctl                  \\
+        */5 * * * *  /PATH/TO/rptctl                    \\
                         -m /PATH/TO/MT_HOME             \\
                         --workers 4                     \\
                         --verbose                       \\
@@ -181,7 +181,7 @@ COMMON USAGE
     that it will launch four daemonized processes upon the first execution
     and then, in subsequent executions, relaunch any which may have died:
     
-        */5 * * * *  /PATH/TO/mtpubctl                  \\
+        */5 * * * *  /PATH/TO/rptctl                    \\
                         -m /PATH/TO/MT_HOME             \\
                         --workers 4                     \\
                         --verbose                       \\
@@ -196,7 +196,7 @@ COMMON USAGE
     you can use the "restart" command to re-boot the processes and keep your
     memory usage low:
     
-        */5 * * * *  /PATH/TO/mtpubctl                  \\
+        */5 * * * *  /PATH/TO/rptctl                    \\
                         -m /PATH/TO/MT_HOME             \\
                         --workers 4                     \\
                         --verbose                       \\
@@ -219,9 +219,9 @@ COMMON USAGE
     re-sourcing your startup script or logging back in), you can simply
     execute this script as:
     
-        mtpubctl start
-        mtpubctl stop
-        mtpubctl restart
+        rptctl start
+        rptctl stop
+        rptctl restart
         etc...
 
 RETURN VALUES
