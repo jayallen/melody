@@ -290,14 +290,14 @@ parse_options() {
 
     # Aliases
     [ $TEST ] && RPTVERBOSE=1
-    VERBOSE=$RPTVERBOSE
+    [ $RPTVERBOSE == 1 ] && VERBOSE=1
 
     [ "$MT_HOME" ]       || usage "MT home directory not specified"
     [ -d "$MT_HOME" ]    || usage "$MT_HOME not found or is not a directory"
     [ -e "$MT_HOME/$RPT" ] || usage "$MT_HOME/$RPT not found"
     [[ "${RPTLOG:=/dev/null}" =~ ^/ ]] || RPTLOG="$MT_HOME/$RPTLOG"
 
-    if [ "$RPTDAEMONIZE" ]; then
+    if [ $RPTDAEMONIZE == 1 ]; then
         RPTARGS="$RPTARGS --load $RPTLOAD --daemon"
     fi
 
