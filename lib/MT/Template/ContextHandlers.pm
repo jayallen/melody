@@ -616,6 +616,39 @@ sub core_tags {
 
 ###########################################################################
 
+=head2 apply_tag_filters
+
+Takes as input the current state of the current template tag handler, 
+as well as the current list of result set filters, and then augments it
+with those defined from within the config.yaml file. 
+
+To learn more about "Template Tag Filters," go here:
+
+http://docs.openmelody.org/docs/developer/template-tag-filters
+
+=cut
+
+sub _apply_tag_filters {
+    my ($ctx, $args, $terms, $cond, $filters, $tag) = @_;
+    if ( my $f = MT::Component->registry("tags", "filters", $tag) ) {
+        foreach my $set ( @$f ) {
+            foreach my $fkey ( keys %$set ) {
+                if (exists $args->{$fkey}) {
+                    my $h = $set->{$fkey}{code} ||= MT->handler_to_coderef( $set->{$fkey}{handler} );
+                    next unless ref($h) eq 'CODE';
+
+                    local $ctx->{filters} = $filters;
+                    local $ctx->{terms} = $terms;
+                    local $ctx->{args} = $args;
+                    $h->($ctx, $args, $cond);
+                }
+            }
+        }
+    }
+}
+
+###########################################################################
+
 =head2 numify
 
 Adds commas to a number. Converting "12345" into "12,345" for instance.
@@ -761,7 +794,7 @@ If you want no formatting on L<EntryBody> or L<EntryMore> (extended) text, just 
 
 sub _fltr_filters {
     my ($str, $val, $ctx) = @_;
-    MT->apply_text_filters($str, [ split /\s*,\s*/, $val ], $ctx);
+    MT->apply_text_filters($str, [ split(/\s*,\s*/, $val) ], $ctx);
 }
 
 ###########################################################################
@@ -1224,7 +1257,7 @@ Outputs the number of paragraphs found in the input.
 
 sub _fltr_count_paragraphs {
     my ($str, $val, $ctx) = @_;
-    my @paras = split /[\r\n]+/, $str;
+    my @paras = split(/[\r\n]+/, $str);
     return scalar @paras;
 }
 
@@ -1238,7 +1271,7 @@ Outputs the number of words found in the input.
 
 sub _fltr_count_words {
     my ($str, $val, $ctx) = @_;
-    my @words = split /\s+/, $str;
+    my @words = split(/\s+/, $str);
     @words = grep /[A-Za-z0-9\x80-\xff]/, @words;
     return scalar @words;
 }
@@ -1399,7 +1432,7 @@ Changing an entry title of "Hi there!" to "H i   t h e r e !".
 
 sub _fltr_spacify {
     my ($str, $val, $ctx) = @_;
-    my @c = split //, $str;
+    my @c = split(//, $str);
     return join $val, @c;
 }
 
@@ -4368,7 +4401,7 @@ sub _hdlr_reg_allowed {
     if ($blog->allow_reg_comments && $blog->commenter_authenticators) {
         if (my $type = $args->{type}) {
             my %types = map { lc($_) => 1 }
-                split /\s*,\s*/, $blog->commenter_authenticators;
+                split(/\s*,\s*/, $blog->commenter_authenticators);
             return $types{lc $type} ? 1 : 0;
         }
         return 1;
@@ -4856,7 +4889,7 @@ sub _include_module {
                   :   60 * 60;    # default 60 min.
 
     if ( $cache_expire_type == 2 ) {
-        my @types = split /,/, ($tmpl->cache_expire_event || '');
+        my @types = split(/,/, ($tmpl->cache_expire_event || ''));
         if (@types) {
             require MT::Touch;
             if (my $latest = MT::Touch->latest_touch($blog_id, @types)) {
@@ -5608,10 +5641,10 @@ sub _hdlr_set_vars {
     my $tag = lc $ctx->stash('tag');
     my $val =_hdlr_pass_tokens(@_);
     $val =~ s/(^\s+|\s+$)//g;
-    my @pairs = split /\r?\n/, $val;
+    my @pairs = split(/\r?\n/, $val);
     foreach my $line (@pairs) {
         next if $line =~ m/^\s*$/;
-        my ($var, $value) = split /\s*=/, $line, 2;
+        my ($var, $value) = split(/\s*=/, $line, 2);
         unless (defined($var) && defined($value)) {
             return $ctx->error("Invalid variable assignment: $line");
         }
@@ -6513,6 +6546,9 @@ sub _hdlr_authors {
     if ($args->{'needs_userpic'}) {
         push @filters, sub { $_[0]->userpic_asset_id > 0; };
     }
+
+    _apply_tag_filters($ctx, $args, \%terms, $cond, \@filters, 'Authors');
+
     if ($args->{namespace}) {
         my $namespace = $args->{namespace};
         if ( my $scoring_to = $args->{scoring_to} ) {
@@ -6542,10 +6578,11 @@ sub _hdlr_authors {
                     }
                 }
             }
+            my $join_str = '=author_id';
             if ($need_join) {
                 $args{join} = MT->model('objectscore')->join_on(undef,
                     {
-                        object_id => \'=author_id',
+                        object_id => \$join_str,
                         object_ds => 'author',
                         namespace => $namespace,
                     }, {
@@ -8177,22 +8214,11 @@ sub _hdlr_entries {
         }
     }
 
-    if ( my $f = MT::Component->registry("tags", "filters", "Entries") ) {
-        foreach my $set ( @$f ) {
-            foreach my $fkey ( keys %$set ) {
-                if (exists $args->{$fkey}) {
-                    my $h = $set->{$fkey}{code} ||= MT->handler_to_coderef( $set->{$fkey}{handler} );
-                    next unless ref($h) eq 'CODE';
-
-                    local $ctx->{filters} = \@filters;
-                    local $ctx->{terms} = \%terms;
-                    local $ctx->{args} = \%args;
-                    $h->($ctx, $args, $cond);
-                }
-            }
-        }
-    }
-
+    my $tagname = $ctx->stash('tag');
+    my ($ltr,$rest) = ($tagname =~ /^(.)(.*)$/);
+    $tagname = uc($ltr).lc($rest);
+    _apply_tag_filters($ctx, $args, \%terms, $cond, \@filters, $tagname );
+    
     # Adds an ID filter to the filter list.
     if ((my $target_id = $args->{id}) && (ref($args->{id}) || ($args->{id} =~ m/^\d+$/))) {
         if ($entries) {
@@ -8227,9 +8253,10 @@ sub _hdlr_entries {
                 $scored_by = $author;
             }
 
+            my $join_str = '=entry_id';
             $args{join} = MT->model('objectscore')->join_on(undef,
                 {
-                    object_id => \'=entry_id',
+                    object_id => \$join_str,
                     object_ds => 'entry',
                     namespace => $namespace,
                     (!$entries && $scored_by ? (author_id => $scored_by->id) : ()),
@@ -8347,10 +8374,11 @@ sub _hdlr_entries {
             # for now, we support one join
             my ( $col, $val ) = %fields;
             my $type = MT::Meta->metadata_by_name($class, 'field.' . $col);
+            my $join_str = '= entry_id';
             $args{join} = [ $class->meta_pkg, undef,
                 { type => 'field.' . $col,
                   $type->{type} => $val,
-                  'entry_id' => \'= entry_id' } ];
+                  'entry_id' => \$join_str } ];
         }
 
         if (!@filters) {
@@ -10534,9 +10562,10 @@ sub _hdlr_comments {
                         "No such user '[_1]'", $scored_by ));
                 $scored_by = $author;
             }
+            my $join_str = '=comment_id';
             $args{join} = MT->model('objectscore')->join_on(undef,
-                {
-                    object_id => \'=comment_id',
+                                                            {
+                    object_id => \$join_str,
                     object_ds => 'comment',
                     namespace => $namespace,
                     (!$comments && $scored_by ? (author_id => $scored_by->id) : ()),
@@ -10568,6 +10597,8 @@ sub _hdlr_comments {
             push @filters, sub { $_[0]->vote_for($namespace) <= $args->{max_count}; };
         }
     }
+
+    _apply_tag_filters($ctx, $args, \%terms, $cond, \@filters, 'Comments');
 
     my $so = lc ($args->{sort_order} || ($blog ? $blog->sort_order_comments : undef) || 'ascend');
     my $no_resort;
@@ -10680,13 +10711,14 @@ sub _hdlr_comments {
             }
 
             require MT::Comment;
+            my $join_str = '=comment_entry_id';
             if (!@filters) {
                 $args{limit} = $n if $n;
                 $args{offset} = $args->{offset} if $args->{offset};
                 $args{join} = MT->model('entry')->join_on(
                     undef,
                     {
-                        id => \'=comment_entry_id',
+                        id => \$join_str,
                         status => MT::Entry::RELEASE(),
                     }, {unique => 1});
 
@@ -12518,7 +12550,7 @@ sub _hdlr_archive_set {
     my $blog = $ctx->stash('blog');
     my $at = $args->{type} || $args->{archive_type} || $blog->archive_type;
     return '' if !$at || $at eq 'None';
-    my @at = split /\s*,\s*/, $at;
+    my @at = split(/\s*,\s*/, $at);
     my $res = '';
     my $tokens = $ctx->stash('tokens');
     my $builder = $ctx->stash('builder');
@@ -12636,7 +12668,7 @@ sub _hdlr_archives {
     } elsif ($blog->archive_type_preferred) {
         $at = $blog->archive_type_preferred;
     } else {
-        $at = (split /\s*,\s*/, $at)[0];
+        $at = (split(/\s*,\s*/, $at))[0];
     }
 
     my $archiver = MT->publisher->archiver($at);
@@ -13628,6 +13660,7 @@ sub _hdlr_categories {
               'entry_count',
               sub{
                   # issue a single count_group_by for all categories
+                  my $join_str = '=placement_entry_id';
                   my $cnt_iter = MT::Placement->count_group_by(
                       {%terms},
                       {
@@ -13635,7 +13668,7 @@ sub _hdlr_categories {
                           join  => $entry_class->join_on(
                               undef,
                               {
-                                  id     => \'=placement_entry_id',
+                                  id     => \$join_str,
                                   status => MT::Entry::RELEASE(),
                               }
                           ),
@@ -13890,9 +13923,10 @@ sub _hdlr_category_comment_count {
     my $blog_id = $ctx->stash ('blog_id');
     my $class = MT->model(
         $ctx->stash('tag') =~ m/Category/ig ? 'entry' : 'page');
+    my $join_str = '= comment_entry_id';
     my @args = ({ blog_id => $blog_id, visible => 1 },
                 { 'join' => MT::Entry->join_on(undef,
-                              { id => \'= comment_entry_id',
+                              { id => \$join_str,
                               status => MT::Entry::RELEASE(),
                               blog_id => $blog_id, },
                               { 'join' => MT::Placement->join_on('entry_id', { category_id => $cat->id, blog_id => $blog_id } ) } ) } );
@@ -13926,7 +13960,7 @@ sub _hdlr_category_archive {
     if ( $curr_at ne 'Category' ) {
         # Check if "Category" archive is published
         my $at = $blog->archive_type;
-        my @at = split /,/, $at;
+        my @at = split(/,/, $at);
         my $cat_arc = 0;
         for (@at) {
             if ( 'Category' eq $_ ) {
@@ -16212,8 +16246,9 @@ sub _hdlr_assets {
         }
         else {
             require MT::ObjectAsset;
+            my $join_str = '= asset_id';
             @$assets = MT::Asset->load({ class => '*' }, { join => MT::ObjectAsset->join_on(undef, {
-                asset_id => \'= asset_id', object_ds => 'entry', object_id => $e->id })});
+                asset_id => \$join_str, object_ds => 'entry', object_id => $e->id })});
         }
         return '' unless @$assets;
     } else {
@@ -16231,7 +16266,8 @@ sub _hdlr_assets {
 
     # Adds parent filter (skips any generated files such as thumbnails)
     $args{null}{parent} = 1;
-    $terms{parent} = \'is null';
+    my $join_str = 'is null';
+    $terms{parent} = \$join_str;
 
     # Adds an author filter to the filters list.
     if (my $author_name = $args->{author}) {
@@ -16310,6 +16346,8 @@ sub _hdlr_assets {
         }
     }
 
+    _apply_tag_filters($ctx, $args, \%terms, $cond, \@filters, 'Assets');
+
     if ($args->{namespace}) {
         my $namespace = $args->{namespace};
 
@@ -16330,10 +16368,10 @@ sub _hdlr_assets {
                         "No such user '[_1]'", $scored_by ));
                 $scored_by = $author;
             }
-
+            my $join_str = '=asset_id';
             $args{join} = MT->model('objectscore')->join_on(undef,
                 {
-                    object_id => \'=asset_id',
+                    object_id => \$join_str,
                     object_ds => 'asset',
                     namespace => $namespace,
                     (!$assets && $scored_by ? (author_id => $scored_by->id) : ()),
@@ -19502,13 +19540,14 @@ B<Example:>
 =cut
 
 sub _hdlr_entry_rank {
+    my $join_str = '= objectscore_object_id';
     return _object_rank(
         'entry',
         {
             'join' => MT->model('entry')->join_on(
                 undef,
                 {
-                    id     => \'= objectscore_object_id',
+                    id     => \$join_str,
                     status => MT::Entry::RELEASE()
                 }
             )
@@ -19548,11 +19587,12 @@ B<Example:>
 =cut
 
 sub _hdlr_comment_rank {
+    my $join_str = '= objectscore_object_id';
     return _object_rank(
         'comment',
         {
             'join' => MT->model('comment')->join_on(
-                undef, { id => \'= objectscore_object_id', visible => 1, }
+                undef, { id => \$join_str, visible => 1, }
             )
         },
         @_
@@ -19590,11 +19630,12 @@ B<Example:>
 =cut
 
 sub _hdlr_ping_rank {
+    my $join_str = '= objectscore_object_id';
     return _object_rank(
         'ping',
         {
             'join' => MT->model('ping')->join_on(
-                undef, { id => \'= objectscore_object_id', visible => 1, }
+                undef, { id => \$join_str, visible => 1, }
             )
         },
         @_
@@ -20237,7 +20278,7 @@ sub _hdlr_widget_manager {
     return ''; # empty widgetset is not an error
 
     my $string_tmpl = '<mt:include widget="%s">';
-    my @selected = split ','. $modulesets;
+    my @selected = split(','. $modulesets);
     foreach my $mid (@selected) {
         my $wtmpl = MT::Template->load($mid)
             or return $ctx->error(MT->translate(
