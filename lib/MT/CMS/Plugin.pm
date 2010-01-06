@@ -4,42 +4,46 @@ use strict;
 use MT::Util qw( remove_html );
 
 sub list_plugins {
-    my $app = shift;
-    my $q   = $app->param;
-    my %param;
-
-    my $cfg = $app->config;
-    $param{can_config}  = $app->user->can_manage_plugins;
-    $param{use_plugins} = $cfg->UsePlugins;
-    $param{nav_config}   = 1;
-    $param{nav_settings} = 1;
-    $param{nav_plugins}  = 1;
-    $param{switched}     = 1 if $app->param('switched');
-    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
-    $param{screen_id}    = "list-plugins";
-    $param{screen_class} = "plugin-settings";
+    my $app   = shift;
+    my $q     = $app->param;
+    my $cfg   = $app->config;
+    my %param = (
+        can_config   => _can_config_plugins($app),
+        use_plugins  => $cfg->UsePlugins,
+        nav_config   => 1,
+        nav_settings => 1,
+        nav_plugins  => 1,
+        switched     => $app->param('switched'),
+        mod_perl     => $ENV{MOD_PERL},
+        screen_id    => 'list-plugins',
+        screen_class => 'plugin-settings',
+    );
     build_plugin_table( $app, param => \%param, scope => 'system' );
     $app->load_tmpl( 'list_plugin.tmpl', \%param );
 }
 
 sub cfg_plugins {
-    my $app = shift;
-    my $q   = $app->param;
-    my %param;
-    $param{screen_class} = 'settings-screen';
- 
-    my $cfg = $app->config;
-    $param{can_config}  = $app->user->can_manage_plugins;
-    $param{use_plugins} = $cfg->UsePlugins;
-    $param{switched}     = 1 if $app->param('switched');
-    $param{reset}        = 1 if $app->param('reset');
-    $param{saved}        = 1 if $app->param('saved');
-    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
-    $param{plugin}       = $app->param('plugin');
-    $param{screen_id}    = "list-plugins";
-    $param{screen_class} = "plugin-settings";
-    build_plugin_table( $app, param => \%param, scope => $q->param('blog_id') ? 'blog:'.$q->param('blog_id') : 'system' );
- 
+    my $app   = shift;
+    my $q     = $app->param;
+    my $cfg   = $app->config;
+    my %param =(
+        can_config      => _can_config_plugins($app),
+        screen_class    => 'settings-screen',
+        use_plugins     => $cfg->UsePlugins,
+        switched        => $app->param('switched'),
+        reset           => $app->param('reset'),
+        saved           => $app->param('saved'),
+        mod_perl        => $ENV{MOD_PERL},
+        plugin          => $app->param('plugin'),
+        screen_id       => 'list-plugins',
+        screen_class    => 'plugin-settings',
+    );
+    build_plugin_table(
+        $app, 
+        param => \%param, 
+        scope => ( $q->param('blog_id') ? 'blog:'.$q->param('blog_id') 
+                                        : 'system' )
+    );
     $app->load_tmpl( 'cfg_plugin.tmpl', \%param );
 }
 
@@ -60,7 +64,7 @@ sub cfg_plugin_dialog {
     my $scope   = $app->param('scope') eq 'system' ? 'system' : 'blog:' . $app->blog->id;
 
     my $cfg = $app->config;
-    $param{can_config}  = $app->user->can_manage_plugins;
+    $param{can_config}  = _can_config_plugins($app),
     $param{use_plugins} = $cfg->UsePlugins;
     $param{mod_perl}     = 1 if $ENV{MOD_PERL};
     $param{plugin}       = $app->param('plugin');
@@ -83,9 +87,7 @@ sub save_config {
 
     $app->validate_magic or return;
     return $app->errtrans("Permission denied.")
-        unless $app->user->can_manage_plugins
-            or ($blog_id
-            and $app->user->permissions($blog_id)->can_administer_blog);
+        unless _can_config_plugins($app);
 
     my %param;
     my @params = $q->param;
@@ -108,10 +110,10 @@ sub save_config {
         }
     }
     if ($app->param('dialog')) {
-	my $tmpl = $app->load_tmpl('dialog/cfg_plugin.tmpl');
-	$tmpl->param( finish => 1 );
-	$tmpl->param( plugin_config_saved => 1 );
-	return $app->build_page($tmpl);
+    my $tmpl = $app->load_tmpl('dialog/cfg_plugin.tmpl');
+    $tmpl->param( finish => 1 );
+    $tmpl->param( plugin_config_saved => 1 );
+    return $app->build_page($tmpl);
     }
     $app->add_return_arg( saved => 1 );
     $app->add_return_arg( plugin => $profile->{object}->id );
@@ -128,9 +130,7 @@ sub reset_config {
 
     $app->validate_magic or return;
     return $app->errtrans("Permission denied.")
-        unless $app->user->can_manage_plugins
-            or ($blog_id
-            and $app->user->permissions($blog_id)->can_administer_blog);
+        unless _can_config_plugins($app);
 
     my %param;
     if ( $profile && $profile->{object} ) {
@@ -145,7 +145,7 @@ sub plugin_control {
     my $app = shift;
     my $q   = $app->query;
     $app->validate_magic or return;
-    return unless $app->user->can_manage_plugins;
+    return unless _can_config_plugins($app);
 
     my $plugin_sig = $q->param('plugin_sig') || '';
     my $state      = $q->param('state')      || '';
@@ -175,39 +175,39 @@ sub build_plugin_config_html {
     my $settings = $plugin->get_config_obj($scope);
     $plugin->load_config( \%plugin_param, $scope );
     if ( my $snip_tmpl =
-	 $plugin->config_template( \%plugin_param, $scope ) )
+     $plugin->config_template( \%plugin_param, $scope ) )
     {
-	my $tmpl;
-	if ( ref $snip_tmpl ne 'MT::Template' ) {
-	    $tmpl = MT->model('template')->new(
-		type   => 'scalarref',
-		source => ref $snip_tmpl
-		? $snip_tmpl
-		: \$snip_tmpl
-		# TBD: add path for plugin template directory
-		);
-	}
-	else {
-	    $tmpl = $snip_tmpl;
-	}
+    my $tmpl;
+    if ( ref $snip_tmpl ne 'MT::Template' ) {
+        $tmpl = MT->model('template')->new(
+        type   => 'scalarref',
+        source => ref $snip_tmpl
+        ? $snip_tmpl
+        : \$snip_tmpl
+        # TBD: add path for plugin template directory
+        );
+    }
+    else {
+        $tmpl = $snip_tmpl;
+    }
 
-	# Process template independent of $app to avoid premature
-	# localization (give plugin a chance to do L10N first).
-	$tmpl->param( blog_id => $app->blog->id ) if $app->blog;
-	$tmpl->param( \%plugin_param );
-	
-	$app->run_callbacks('plugin_template_param' . $plugin->id, 
-			    $app, $scope, $tmpl->param, $tmpl);
-	
-	$config_html = $tmpl->output()
-	    or $config_html = "Error in configuration template: " . $tmpl->errstr;
-	$config_html = $plugin->translate_templatized($config_html)
-	    if $config_html =~ m/<(?:__trans|mt_trans) /i;
+    # Process template independent of $app to avoid premature
+    # localization (give plugin a chance to do L10N first).
+    $tmpl->param( blog_id => $app->blog->id ) if $app->blog;
+    $tmpl->param( \%plugin_param );
+    
+    $app->run_callbacks('plugin_template_param' . $plugin->id, 
+                $app, $scope, $tmpl->param, $tmpl);
+    
+    $config_html = $tmpl->output()
+        or $config_html = "Error in configuration template: " . $tmpl->errstr;
+    $config_html = $plugin->translate_templatized($config_html)
+        if $config_html =~ m/<(?:__trans|mt_trans) /i;
             }
     else {
-	
-	# don't list non-configurable plugins for blog scope...
-	next if $scope ne 'system';
+    
+    # don't list non-configurable plugins for blog scope...
+    next if $scope ne 'system';
     }
     return $config_html;
 }
@@ -304,7 +304,7 @@ sub build_plugin_table {
                   $app->static_path . $plugin->envelope . '/' . $doc_link;
             }
 
-	    my $config_html = build_plugin_config_html($app, $plugin,$scope);
+        my $config_html = build_plugin_config_html($app, $plugin,$scope);
 
 # Removed for Melody - obsolete
 #            if ( $last_fld ne $fld ) {
@@ -320,7 +320,7 @@ sub build_plugin_table {
 #            }
 
             my $registry = $plugin->registry;
-	    my $settings = $plugin->get_config_obj($scope);
+        my $settings = $plugin->get_config_obj($scope);
             my $row      = {
                 first                => $next_is_first,
                 plugin_name          => $plugin_name,
@@ -338,7 +338,7 @@ sub build_plugin_table {
                 plugin_key           => $plugin->key(),
                 plugin_config_link   => $plugin->config_link(),
                 plugin_config_html   => $config_html,
-		plugin_has_config    => $config_html ne '',
+        plugin_has_config    => $config_html ne '',
                 plugin_settings_id   => $settings->id,
                 plugin_id            => $plugin->id,
                 plugin_num           => $id,
@@ -442,6 +442,19 @@ sub build_plugin_table {
     @disabled_plugins = sort { $a->{'plugin_name'} cmp $b->{'plugin_name'} } @disabled_plugins;
     $param->{plugin_loop} = \@enabled_plugins;
     $param->{disabled_loop} = \@disabled_plugins;
+}
+
+# NOTE: This should be made into a proper CMS app method so it's callable as
+#       $app->can_config_plugins or something...
+# Permission to edit plugin configuration must be validated.
+#   - At the blog level, the user must have can_manage_plugins for this blog.
+#   - At the global level, the user must have can_manage_plugins which is
+#     a system permission of either Manage Plugins or System Administrator
+sub _can_config_plugins {
+    my $app = shift;
+    my $perms = $app->permissions;
+    return $app->blog ? ($perms && $perms->can_manage_plugins)
+                      : $app->user->can_manage_plugins;
 }
 
 1;
