@@ -3859,6 +3859,11 @@ Example:
         $app->{requires_login} = 1 unless $app->mode eq 'unprotected';
     }
 
+=head2 $app->COMMENTER_COOKIE_NAME
+
+This is a static constant representing the name of the cookie used for 
+commenters.
+
 =head2 $app->run
 
 Runs the application. This gathers the input, chooses the method to execute,
