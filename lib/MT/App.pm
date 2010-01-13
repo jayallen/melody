@@ -3861,8 +3861,13 @@ Example:
 
 =head2 $app->COMMENTER_COOKIE_NAME
 
-This is a static constant representing the name of the cookie used for 
-commenters.
+This is a static constant/method representing the name of the cookie used for 
+commenters. It is analogous to C<commenter_cookie>.
+
+=head2 $app->commenter_cookie
+
+This is a static constant/method representing the name of the cookie used for
+commenters. It is analogous to C<COMMENTER_COOKIE_NAME>.
 
 =head2 $app->run
 
