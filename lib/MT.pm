@@ -1458,7 +1458,7 @@ sub _init_plugins_core {
                             next if exists $Plugins{ $plugin_sig };
                             # TODO - the id needs to be yaml specific, not directory
                             # TODO - the id needs to be reformulated from contents of yaml
-                            my $id = lc $plugin->{dir} . $plugin->{file};
+                            my $id = lc $plugin->{dir};
                             $id =~ s/\.\w+$//;
 
                             my $p = $pclass->new(
