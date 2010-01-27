@@ -58,7 +58,7 @@
 
 # We use version control, so just rewrite the file
 # this will create a '.bak' file which is ignored by git via .gitignore
--b 
+--backup-and-modify-in-place
 
 # Perl Best Practices (plus errata) .perltidyrc file
 # Thanks to the Mojo team (http://github.com/kraih/mojo/) for an excellent
