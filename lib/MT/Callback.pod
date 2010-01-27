@@ -76,15 +76,20 @@ MT callbacks are typically in one of these forms:
 
 =over 4
 
-=item * CallbackName
-
-This is a simple high-level callback. Typically an application (C<TakeDown>)
-or process-oriented callback (such as C<BuildFileFilter>).
-
 =item * callback_name
 
-Lower-cased callbacks signify a lower-level callback. These are common in
-the I<MT::Object> callbacks (such as C<pre_save>, C<post_save>, etc.)
+This is the most common form of callback name and is generally recommended for new
+callbacks in order to provide consistency.  Examples of these include most of the
+L<MT::Object> callbacks (such as C<pre_save>, C<post_save>, etc.) and the
+L<MT::WeblogPublisher> callbacks (e.g. build_file_filter, build_page, build_file).
+
+=item * CallbackName
+
+In the past, this form was heavily used for simple high-level callbacks, 
+typically an application callback (C<TakeDown>) or process-oriented ones 
+(such as C<PeriodicTask> and C<DefaultTemplateFilter>). However, most of 
+the core callbacks using this format were converted to the C<callback_name>
+format for the sake of consistency leaving this form mainly to plugins.
 
 =item * Package::CallbackName
 
@@ -103,9 +108,9 @@ So the namespace is there when you need your callback to be for a specific
 package, or can be registered without one when you want the callback to
 run regardless of the package.
 
-=item * Package::CallbackName.type
+=item * Package::CallbackName.type and Package::callback_name.type
 
-=item * CallbackName.type
+=item * CallbackName.type and callback_name.type
 
 This is a syntax for running callbacks with a parameter or identifier to
 distinguish it. This is also used to the hooks to be more selective. Some
@@ -116,16 +121,16 @@ of the CMS application callbacks use this syntax:
 The transformer callbacks use this syntax to let you target a specific
 application template:
 
-    MT->add_callback('AppTemplateSource.list_blog', ...)
+    MT->add_callback('template_source.list_blog', ...)
 
 Some of these also allow you to register without the suffix:
 
-    MT->add_callback('AppTemplateSource', ...)
+    MT->add_callback('template_source', ...)
 
 And some also provide the package name syntax for scoping to a particular
 application/object type:
 
-    MT->add_callback('MT::App::CMS::AppTemplateSource.header', ...)
+    MT->add_callback('MT::App::CMS::template_source.header', ...)
 
 This last example targets use of the header application template specifically
 for the CMS application (and only the CMS application).
@@ -134,8 +139,8 @@ for the CMS application (and only the CMS application).
 
 =head1 Object Callbacks
 
-The Object callbacks are those that are tied to I<MT::Object> and its
-descendants.  This includes classes such as I<MT::Entry>, I<MT::Blog>, etc.
+The Object callbacks are those that are tied to L<MT::Object> and its
+descendants.  This includes classes such as L<MT::Entry>, L<MT::Blog>, etc.
 
 =over 4
 
@@ -388,37 +393,21 @@ The following callbacks are unique to the I<MT::App::CMS> package. Many of
 these callbacks have a C<E<lt>typeE<gt>> suffix which is one of the
 registered datatypes for the CMS. The available types are:
 
-=over 4
-
-=item author           => MT::Author
-
-=item comment          => MT::Comment
-
-=item entry            => MT::Entry
-
-=item template         => MT::Template
-
-=item blog             => MT::Blog
-
-=item notification     => MT::Notification
-
-=item templatemap      => MT::TemplateMap
-
-=item category         => MT::Category
-
-=item banlist          => MT::IPBanList
-
-=item ping             => MT::TBPing
-
-=item ping_cat         => MT::TBPing
-
-=item group            => MT::Group
-
-=item role             => MT::Role
-
-=item association      => MT::Association
-
-=back
+    Suffix          Object Package
+    author       => MT::Author
+    comment      => MT::Comment
+    entry        => MT::Entry
+    template     => MT::Template
+    blog         => MT::Blog
+    notification => MT::Notification
+    templatemap  => MT::TemplateMap
+    category     => MT::Category
+    banlist      => MT::IPBanList
+    ping         => MT::TBPing
+    ping_cat     => MT::TBPing
+    group        => MT::Group
+    role         => MT::Role
+    association  => MT::Association
 
 =over 4
 
@@ -462,7 +451,8 @@ method is not called if the acting user is a superuser.
 
 =item * CMSSaveFilter.<type>
 
-This callback gives you the chance to "decline" for reasons other than lack of permissions.
+This callback gives you the chance to "decline" for reasons other
+than lack of permissions.
 
 The routine is called as follows:
 
@@ -757,6 +747,8 @@ callbacks that are used include:
 
 =item * ActivityFeed.blog
 
+=back
+
 All ActivityFeed callbacks have the same callback signature:
 
     callback($cb, $app, $view, $feed)
@@ -781,13 +773,13 @@ of the publishing process.
 
 =over 4
 
-=item * BuildFileFilter
+=item * C<build_file_filter>
 
 This filter is called when Movable Type wants to rebuild a file, but
 before doing so. This gives plugins the chance to determine whether a
 file should actually be rebuild in particular situations.
 
-A BuildFileFilter callback routine is called as follows:
+A C<build_file_filter> callback routine is called as follows:
 
     sub build_file_filter {
         my ($cb, %args) = @_;
@@ -795,12 +787,12 @@ A BuildFileFilter callback routine is called as follows:
         return $boolean;
     }
 
-As with other callback funcions, the first parameter is an
-I<MT::Callback> object. This can be used by the callback to
+As with other callback functions, the first parameter is an
+L<MT::Callback> object. This can be used by the callback to
 propagate an error message to the surrounding context.
 
 The C<%args> parameters identify the page to be built. See
-I<MT::FileInfo> for more information on how a page is determined by
+L<MT::FileInfo> for more information on how a page is determined by
 these parameters. Elements in C<%args> are as follows:
 
 =over 4
@@ -818,18 +810,18 @@ C<'Weekly'>.
 
 =item * C<TemplateMap>
 
-An I<MT::TemplateMap> object; this singles out which template is being
+An L<MT::TemplateMap> object; this singles out which template is being
 built, and the filesystem path of the file to be written.
 
 =item * C<Blog>
 
-The I<MT::Blog> object representing the blog whose pages are being
+The L<MT::Blog> object representing the blog whose pages are being
 rebuilt.
 
 =item * C<Entry>
 
 In the case of an individual archive page, this points to the
-I<MT::Entry> object whose page is being rebuilt. In the case of an
+L<MT::Entry> object whose page is being rebuilt. In the case of an
 archive page other than an individual page, this parameter is not
 necessarily undefined. It is best to rely on the C<$at> parameter to
 determine whether a single entry is on deck to be built.
@@ -852,29 +844,30 @@ category which will be built on the page.
 =item * C<FileInfo>
 
 If defined, an L<MT::FileInfo> object which contains information about the
-file. See L<MT::FileInfo> for more information about what a I<MT::FileInfo>
-contains. Chief amongst all the members of I<MT::FileInfo>, for these
+file. Chief amongst all the members of C<MT::FileInfo>, for these
 purposes, will be the C<virtual> member. This is a boolean value which will be
 false if a page was actually created on disk for this "page," and false if no
 page was created (because the corresponding template is set to be
 built dynamically).
 
-It is possible for the FileInfo parameter to be undefined, namely if the blog has not been configured to publish anything dynamically, or if the
+It is possible for the C<FileInfo> parameter to be undefined, namely if the blog
+has not been configured to publish anything dynamically, or if the
 installation is using a data driver that does not support dynamic publishing.
 
 =back
 
-=item * BuildPage
+=item * C<build_page>
 
-BuildPage callbacks are invoked just after a page has been built, but
+This callback is invoked just after a page has been built, but
 before the content has been written to the file system.
 
     sub build_page {
         my ($cb, %args) = @_;
+        ...
     }
 
-The parameters given are include those sent to the BuildFileFilter callback.
-In addition, the following parameters are also given:
+The parameters given are include those sent to the C<build_file_filter> callback.
+In addition, the following parameters are also provided:
 
 =over 4
 
@@ -891,15 +884,20 @@ will be ignored.
 
 =back
 
-=item * BuildFile
+=item * C<build_file>
 
-BuildFile callbacks are invoked just after a file has been built.
+This callback is invoked just after a file has been built and written to
+the filesystem.  Unlike the callbacks above, this callback will only be
+triggered if the content compiled for the page differs from that in the
+target file.
 
     sub build_file {
         my ($cb, %args) = @_;
+        ...
     }
 
-Parameters in %args are as with BuildPage.
+Parameters in %args are the same as those provided by the C<build_page>
+callback.
 
 =back
 
@@ -950,7 +948,8 @@ data that will eventually be passed to the template to produce the page.
 This callback is invoked in conjunction with the MT::App-E<gt>build_page
 method. The C<$tmpl_str> parameter is a string reference for the page that
 was built by the MT::App-E<gt>build_page method. Since it is a reference,
-it can be modified by the callback. The C<$param> parameter is a hash reference to the parameter data that was given to build the page. The C<$tmpl>
+it can be modified by the callback. The C<$param> parameter is a hash
+reference to the parameter data that was given to build the page. The C<$tmpl>
 parameter is the I<HTML::Template> object used to generate the page.
 
 =back

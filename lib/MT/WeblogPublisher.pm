@@ -2366,22 +2366,22 @@ that is less than the current time.
 
 =over 4
 
-=item BuildFileFilter
+=item * C<build_file_filter>
 
 This filter is called when Movable Type wants to rebuild a file, but
 before doing so. This gives plugins the chance to determine whether a
 file should actually be rebuild in particular situations.
 
-A BuildFileFilter callback routine is called as follows:
+A C<build_file_filter> callback routine is called as follows:
 
-    sub build_file_filter($eh, %args)
-    {
+    sub build_file_filter {
+        my ($cb, %args) = @_;
         ...
         return $boolean;
     }
 
-As with other callback funcions, the first parameter is an
-C<MT::ErrorHandler> object. This can be used by the callback to
+As with other callback functions, the first parameter is an
+L<MT::Callback> object. This can be used by the callback to
 propagate an error message to the surrounding context.
 
 The C<%args> parameters identify the page to be built. See
@@ -2390,36 +2390,36 @@ these parameters. Elements in C<%args> are as follows:
 
 =over 4
 
-=item C<Context>
+=item * C<Context>
 
 Holds the template context that has been constructed for building (see
-C<MT::Template::Context>).
+L<MT::Template::Context>).
 
-=item C<ArchiveType> 
+=item * C<ArchiveType> 
 
 The archive type of the file, usually one of C<'Index'>,
 C<'Individual'>, C<'Category'>, C<'Daily'>, C<'Monthly'>, or
 C<'Weekly'>.
 
-=item C<Templatemap>
+=item * C<Templatemap>
 
-An C<MT::TemplateMap> object; this singles out which template is being
+An L<MT::TemplateMap> object; this singles out which template is being
 built, and the filesystem path of the file to be written.
 
-=item C<Blog>
+=item * C<Blog>
 
-The C<MT::Blog> object representing the blog whose pages are being
+The L<MT::Blog> object representing the blog whose pages are being
 rebuilt.
 
-=item C<Entry>
+=item * C<Entry>
 
 In the case of an individual archive page, this points to the
-C<MT::Entry> object whose page is being rebuilt. In the case of an
+L<MT::Entry> object whose page is being rebuilt. In the case of an
 archive page other than an individual page, this parameter is not
 necessarily undefined. It is best to rely on the C<$at> parameter to
 determine whether a single entry is on deck to be built.
 
-=item C<PeriodStart> 
+=item * C<PeriodStart> 
 
 In the case of a date-based archive page, this is a timestamp at the
 beginning of the period from which entries will be included on this
@@ -2429,46 +2429,47 @@ would be 17960417000000. If the page were a Monthly archive for March,
 2003, C<$start> would be 20030301000000. Again, this parameter may be
 defined even when the page on deck is not a date-based archive page.
 
-=item C<Category>
+=item * C<Category>
 
 In the case of a Category archive, this parameter identifies the
 category which will be built on the page.
 
-=item C<FileInfo>
+=item * C<FileInfo>
 
 If defined, an L<MT::FileInfo> object which contains information about the
-file. See L<MT::FileInfo> for more information about what a C<MT::FileInfo>
-contains. Chief amongst all the members of C<MT::FileInfo>, for these
+file. Chief amongst all the members of C<MT::FileInfo>, for these
 purposes, will be the C<virtual> member. This is a boolean value which will be
 false if a page was actually created on disk for this "page," and false if no
 page was created (because the corresponding template is set to be
 built dynamically).
 
-It is possible for the FileInfo parameter to be undefined, namely if the blog has not been configured to publish anything dynamically, or if the
+It is possible for the C<FileInfo> parameter to be undefined, namely if the blog
+has not been configured to publish anything dynamically, or if the
 installation is using a data driver that does not support dynamic publishing.
 
 =back
 
-=item BuildPage
+=item * C<build_page>
 
-BuildPage callbacks are invoked just after a page has been built, but
+This callback is invoked just after a page has been built, but
 before the content has been written to the file system.
 
-    sub build_page($eh, %args)
-    {
+    sub build_page {
+        my ($cb, %args) = @_;
+        ...
     }
 
-The parameters given are include those sent to the BuildFileFilter callback.
-In addition, the following parameters are also given:
+The parameters given are include those sent to the C<build_file_filter> callback.
+In addition, the following parameters are also provided:
 
 =over 4
 
-=item C<Content>
+=item * C<Content>
 
 This is a scalar reference to the content that will eventually be
 published.
 
-=item C<BuildResult> / (or C<RawContent>, deprecated)
+=item * C<BuildResult> / (or C<RawContent>, deprecated)
 
 This is a scalar reference to the content originally produced by building
 the page. This value is provided mainly for reference; modifications to it
@@ -2476,15 +2477,20 @@ will be ignored.
 
 =back
 
-=item BuildFile
+=item * C<build_file>
 
-BuildFile callbacks are invoked just after a file has been built.
+This callback is invoked just after a file has been built and written to
+the filesystem.  Unlike the callbacks above, this callback will only be
+triggered if the content compiled for the page differs from that in the
+target file.
 
-    sub build_file($eh, %args)
-    {
+    sub build_file {
+        my ($cb, %args) = @_;
+        ...
     }
 
-Parameters in %args are as with BuildPage.
+Parameters in %args are the same as those provided by the C<build_page>
+callback.
 
 =back
 
