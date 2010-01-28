@@ -46,3 +46,19 @@ sub class_label {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::TheSchwartz::Job
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

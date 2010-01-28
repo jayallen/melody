@@ -283,6 +283,14 @@ TypePad, or Vox tag.
 "TypePad OR Vox AND "Movable Type"" matches objects which has
 either TypePad or Vox tag *and* "Movable Type" tag.
 
+=head1 METHODS
+
+=head2 add_join
+
+=head2 process
+
+=head2 search_terms
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

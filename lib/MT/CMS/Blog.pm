@@ -2544,3 +2544,74 @@ sub cfg_prefs {
     );
 }
 
+=head1 NAME
+
+MT::CMS::Blog
+
+=head1 METHODS
+
+=head2 RegistrationAffectsArchives
+
+=head2 build_blog_table
+
+=head2 can_delete
+
+=head2 can_save
+
+=head2 can_view
+
+=head2 cc_return
+
+=head2 cfg_archives_save
+
+=head2 cfg_blog
+
+=head2 cfg_blog_settings
+
+=head2 cfg_publish_profile_save
+
+=head2 dialog_select_weblog
+
+=head2 edit
+
+=head2 handshake
+
+=head2 list
+
+=head2 make_blog_list
+
+=head2 post_delete
+
+=head2 post_save
+
+=head2 pre_save
+
+=head2 prepare_dynamic_publishing
+
+=head2 rebuild_confirm
+
+=head2 rebuild_new_phase
+
+=head2 rebuild_pages
+
+=head2 rebuild_phase
+
+=head2 save
+
+=head2 save_favorite_blogs
+
+=head2 save_filter
+
+=head2 start_rebuild_pages
+
+=head2 update_dynamicity
+
+=head2 update_publishing_profile
+
+=head2 update_welcome_message
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

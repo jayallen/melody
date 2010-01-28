@@ -635,14 +635,22 @@ MT::App::Trackback
 
 =head1 METHODS
 
+=head2 id
+
 =head2 init
 
 Call L<MT::App/init>, register the C<ping>, C<view> and C<rss>
 callbacks and set the application default_mode to C<ping>.
 
+=head2 validate_request_params
+
 =head2 view
 
 Build the trackback page for viewing.
+
+=head2 ping
+
+The default method that creates the actual trackback.
 
 =head2 rss
 

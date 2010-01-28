@@ -2045,3 +2045,87 @@ sub cfg_system_feedback {
     $param{screen_class} = "settings-screen system-feedback-settings";
     $app->load_tmpl( 'cfg_system_feedback.tmpl', \%param );
 }
+
+=head1 NAME
+
+MT::CMS::Comment
+
+=head1 METHODS
+
+=head2 approve_item
+
+=head2 ban_commenter
+
+=head2 ban_commenter_by_comment
+
+=head2 build_comment_table
+
+=head2 build_commenter_table
+
+=head2 build_junk_table
+
+=head2 can_delete
+
+=head2 can_delete_commenter
+
+=head2 can_save
+
+=head2 can_view
+
+=head2 can_view_commenter
+
+=head2 dialog_post_comment
+
+=head2 do_reply
+
+=head2 edit
+
+=head2 edit_commenter
+
+=head2 empty_junk
+
+=head2 handle_junk
+
+=head2 list
+
+=head2 list_commenter
+
+=head2 list_member
+
+=head2 map_comment_to_commenter
+
+=head2 not_junk
+
+=head2 post_delete
+
+=head2 post_save
+
+=head2 pre_save
+
+=head2 reply
+
+=head2 reply_preview
+
+=head2 save_commenter_perm
+
+=head2 set_item_visible
+
+=head2 trust_commenter
+
+=head2 trust_commenter_by_comment
+
+=head2 unapprove_item
+
+=head2 unban_commenter
+
+=head2 unban_commenter_by_comment
+
+=head2 untrust_commenter
+
+=head2 untrust_commenter_by_comment
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

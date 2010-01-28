@@ -81,6 +81,28 @@ nothing.
 
 See POD of I<MT::Cache::Session> for details.
 
+=head1 METHODS
+
+=head2 add
+
+=head2 delete
+
+=head2 flush_all
+
+=head2 get
+
+=head2 get_multi
+
+=head2 new
+
+=head2 purge_stale
+
+=head2 remove
+
+=head2 replace
+
+=head2 set
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

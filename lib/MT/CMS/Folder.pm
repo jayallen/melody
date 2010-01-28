@@ -95,3 +95,33 @@ sub post_delete {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Folder
+
+=head1 METHODS
+
+=head2 can_delete
+
+=head2 can_save
+
+=head2 can_view
+
+=head2 edit
+
+=head2 post_delete
+
+=head2 post_save
+
+=head2 pre_save
+
+=head2 save_filter
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

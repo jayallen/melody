@@ -598,3 +598,50 @@ sub generate_dashboard_stats_comment_tab {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Dashboard
+
+=head1 METHODS
+
+=head2 create_dashboard_stats_file
+
+=head2 create_stats_directory
+
+=head2 dashboard
+
+=head2 generate_dashboard_stats
+
+=head2 generate_dashboard_stats_comment_tab
+
+=head2 generate_dashboard_stats_entry_tab
+
+=head2 get_lmt_content
+
+=head2 get_newsbox_content
+
+=head2 mt_blog_stats_tag_cloud_tab
+
+=head2 mt_blog_stats_widget
+
+=head2 mt_blog_stats_widget_comment_tab
+
+=head2 mt_blog_stats_widget_entry_tab
+
+=head2 mt_news_widget
+
+=head2 new_version_widget
+
+=head2 stats_generation_handler
+
+=head2 this_is_you_widget
+
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

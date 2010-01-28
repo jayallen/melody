@@ -164,3 +164,19 @@ sub DESTROY {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::FileMgr::SFTP
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

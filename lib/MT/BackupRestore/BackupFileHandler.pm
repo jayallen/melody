@@ -387,3 +387,19 @@ sub end_document {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::BackupRestore::BackupFileHandler
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -107,6 +107,8 @@ I<$object> to the message I<$message>. Returns C<undef>.
 Accesses the last error message set in the class I<Class> or the
 object I<$object>, respectively, and returns that error message.
 
+=head2 trans_error
+
 =head1 AUTHOR & COPYRIGHTS
 
 Please see the I<MT> manpage for author, copyright, and license information.

@@ -1207,6 +1207,54 @@ whose priority is higher than itself.
 
 =back
 
+=head1 METHODS
+
+=head2 check_cache
+
+=head2 core_methods
+
+=head2 core_parameters
+
+=head2 count
+
+=head2 create_blog_list
+
+=head2 execute
+
+=head2 first_blog_id
+
+=head2 generate_cache_keys
+
+=head2 id
+
+=head2 init
+
+=head2 init_cache_driver
+
+=head2 init_request
+
+=head2 load_search_tmpl
+
+=head2 prepare_context
+
+=head2 process
+
+=head2 query_parse
+
+=head2 render
+
+=head2 renderfeed
+
+=head2 renderjs
+
+=head2 search_terms
+
+=head2 template_paths
+
+=head2 throttle_control
+
+=head2 throttle_response
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

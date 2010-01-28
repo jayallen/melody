@@ -180,6 +180,36 @@ whether or not the method actually saved the new user to the database or not.
 A method used in the login attempt to give chance to each authentication
 layer to process the existing user logging in.
 
+=head2 DELETED
+
+=head2 INACTIVE
+
+=head2 INVALID_PASSWORD
+
+=head2 NEW_LOGIN
+
+=head2 NEW_USER
+
+=head2 PENDING
+
+=head2 REDIRECT_NEEDED
+
+=head2 SUCCESS
+
+=head2 UNKNOWN
+
+=head2 errstr
+
+=head2 release
+
+=head2 synchronize
+
+=head2 synchronize_author
+
+=head2 synchronize_group
+
+=head2 task_synchronize
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

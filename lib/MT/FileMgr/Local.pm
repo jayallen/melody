@@ -184,6 +184,28 @@ __END__
 
 MT::FileMgr::Local
 
+=head1 METHODS
+
+=head2 can_write
+
+=head2 content_is_updated
+
+=head2 delete
+
+=head2 exists
+
+=head2 file_mod_time
+
+=head2 get_data
+
+=head2 mkpath
+
+=head2 put
+
+=head2 put_data
+
+=head2 rename
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

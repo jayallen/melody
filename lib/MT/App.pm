@@ -4523,6 +4523,92 @@ The IP address of the client.
 In a L<mod_perl> context, this calls L<Apache::Connection::remote_ip>; in a
 CGI context, this uses C<$ENV{REMOTE_ADDR}>.
 
+=head2 assert
+
+=head2 build_widgets
+
+=head2 commenter_loggedin
+
+=head2 core_blog_stats_tabs
+
+=head2 core_list_actions
+
+=head2 core_list_filters
+
+=head2 core_menus
+
+=head2 core_methods
+
+=head2 core_page_actions
+
+=head2 core_search_apis
+
+=head2 core_widgets
+
+=head2 create_user_pending
+
+=head2 document_root
+
+=head2 external_authenticators
+
+=head2 filter_conditional_list
+
+=head2 forward
+
+=head2 get_commenter_session
+
+=head2 handlers_for_mode
+
+=head2 init_callbacks
+
+=head2 init_query
+
+=head2 json_error
+
+=head2 json_result
+
+=head2 list_actions
+
+=head2 list_filters
+
+=head2 listing
+
+=head2 load_list_actions
+
+=head2 load_widget_list
+
+=head2 load_widgets
+
+=head2 login_pending
+
+=head2 make_commenter
+
+=head2 make_commenter_session
+
+=head2 page_actions
+
+=head2 permissions
+
+=head2 post_run_debug
+
+=head2 pre_run_debug
+
+=head2 registry
+
+=head2 response_content
+
+=head2 run_callbacks
+
+=head2 search_apis
+
+=head2 session_state
+
+=head2 set_no_cache
+
+=head2 update_widget_prefs
+
+=head2 validate_request_params
+
 =head1 STANDARD APPLICATION TEMPLATE PARAMETERS
 
 When loading an application template, a number of parameters are preset for

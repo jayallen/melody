@@ -86,3 +86,23 @@ sub post_trigger {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Summary::Triggers
+
+=head1 METHODS
+
+=head2 post_init_add_triggers
+
+=head2 post_trigger
+
+=head2 pre_save_trigger
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

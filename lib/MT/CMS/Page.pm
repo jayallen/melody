@@ -49,3 +49,31 @@ sub CMSPostSave_page {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Page
+
+=head1 METHODS
+
+=head2 CMSPostSave_page
+
+=head2 can_delete
+
+=head2 can_view
+
+=head2 edit
+
+=head2 list
+
+=head2 pre_save
+
+=head2 save_pages
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

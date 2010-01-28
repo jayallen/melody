@@ -170,3 +170,61 @@ sub previous_archive_entry {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::ArchiveType
+
+=head1 METHODS
+
+=head2 archive_entries_count
+
+=head2 archive_file
+
+=head2 archive_group_entries
+
+=head2 archive_group_iter
+
+=head2 archive_label
+
+=head2 archive_title
+
+=head2 author_based
+
+=head2 category_based
+
+=head2 category_class
+
+=head2 date_based
+
+=head2 date_range
+
+=head2 default_archive_templates
+
+=head2 dynamic_support
+
+=head2 dynamic_template
+
+=head2 entry_based
+
+=head2 entry_class
+
+=head2 group_based
+
+=head2 name
+
+=head2 new
+
+=head2 next_archive_entry
+
+=head2 previous_archive_entry
+
+=head2 template_params
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

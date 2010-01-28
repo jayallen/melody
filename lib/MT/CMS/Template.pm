@@ -2583,3 +2583,71 @@ sub restore_widgetmanagers {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Template
+
+=head1 METHODS
+
+=head2 add_map
+
+=head2 build_template_table
+
+=head2 can_delete
+
+=head2 can_save
+
+=head2 can_view
+
+=head2 clone_templates
+
+=head2 create_preview_content
+
+=head2 delete_map
+
+=head2 delete_widget
+
+=head2 dialog_publishing_profile
+
+=head2 dialog_refresh_templates
+
+=head2 edit
+
+=head2 edit_widget
+
+=head2 list
+
+=head2 list_widget
+
+=head2 post_delete
+
+=head2 post_save
+
+=head2 pre_save
+
+=head2 preview
+
+=head2 publish_archive_templates
+
+=head2 publish_index_templates
+
+=head2 publish_templates_from_search
+
+=head2 refresh_all_templates
+
+=head2 refresh_individual_templates
+
+=head2 reset_blog_templates
+
+=head2 restore_widgetmanagers
+
+=head2 save_widget
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

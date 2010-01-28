@@ -138,3 +138,29 @@ MT::Util::Archive::Zip
 
 Zip compression and extraction package, based on MT::Util::Archive.
 See I<MT::Util::Archive> for more details.
+
+=head1 METHODS
+
+=head2 add_file
+
+=head2 add_string
+
+=head2 close
+
+=head2 extract
+
+=head2 files
+
+=head2 flush
+
+=head2 is
+
+=head2 new
+
+=head2 type
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

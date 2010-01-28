@@ -625,6 +625,10 @@ TODO
 
 =head2 $ddl->index_column()
 
+=head2 upgrade_begin
+
+=head2 upgrade_end
+
 B<Deprecated.> These methods return the results of the corresponding C<_sql>
 methods.
 

@@ -280,3 +280,29 @@ sub post_delete {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::AddressBook
+
+=head1 METHODS
+
+=head2 can_save
+
+=head2 entry_notify
+
+=head2 export
+
+=head2 post_delete
+
+=head2 save_filter
+
+=head2 send_notify
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

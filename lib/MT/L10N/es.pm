@@ -6104,3 +6104,19 @@ Búsqueda base: [_2]",
 ## New words: 379
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::L10N::es
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

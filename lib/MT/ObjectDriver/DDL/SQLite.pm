@@ -231,3 +231,31 @@ sub drop_index_sql {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::DDL::SQLite
+
+=head1 METHODS
+
+=head2 can_add_constraint
+
+=head2 column_defs
+
+=head2 db2type
+
+=head2 drop_index_sql
+
+=head2 index_defs
+
+=head2 type2db
+
+=head2 unique_constraint_sql
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

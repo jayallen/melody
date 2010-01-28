@@ -152,3 +152,19 @@ sub bind_param_attributes {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::Driver::DBD::Pg
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

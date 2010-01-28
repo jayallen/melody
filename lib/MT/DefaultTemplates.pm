@@ -445,6 +445,10 @@ MT::DefaultTemplates
 
 Return the list of the templates in the WeblogTemplatesPath.
 
+=head2 core_default_templates
+
+=head2 load
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

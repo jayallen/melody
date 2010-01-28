@@ -25,3 +25,19 @@ sub get_nickname {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Auth::Yahoo
+
+=head1 METHODS
+
+=head2 get_nickname
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

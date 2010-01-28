@@ -2513,6 +2513,140 @@ and continuing to the end of the string. Does not remove spaces
 before newlines which appear before the last non-spaace character (i.e.
 inner-string spaces).
 
+=head2 L
+
+=head2 M
+
+=head2 addbin
+
+=head2 archive_file_for
+
+=head2 asset_cleanup
+
+=head2 bin2dec
+
+=head2 browser_language
+
+=head2 caturl
+
+=head2 cc_image
+
+=head2 cc_name
+
+=head2 cc_rdf
+
+=head2 cc_url
+
+=head2 convert_high_ascii
+
+=head2 convert_word_chars
+
+=head2 dec2bin
+
+=head2 decode_url
+
+=head2 decode_xml
+
+=head2 discover_tb
+
+=head2 divbindec
+
+=head2 encode_phphere
+
+=head2 encode_url
+
+=head2 encode_xml
+
+=head2 epoch2ts
+
+=head2 escape_unicode
+
+=head2 extract_domain
+
+=head2 extract_domains
+
+=head2 extract_urls
+
+=head2 get_entry
+
+=head2 html_text_transform
+
+=head2 init_sax
+
+=head2 is_leap_year
+
+=head2 is_url
+
+=head2 is_valid_date
+
+=head2 is_valid_url
+
+=head2 iso2ts
+
+=head2 iso_dirify
+
+=head2 launch_background_tasks
+
+=head2 leap_day
+
+=head2 leap_year
+
+=head2 make_string_csv
+
+=head2 make_unique_author_basename
+
+=head2 make_unique_category_basename
+
+=head2 mark_odd_rows
+
+=head2 multbindec
+
+=head2 multi_iter
+
+=head2 munge_comment
+
+=head2 offset_time
+
+=head2 perl_sha1_digest_base64
+
+=head2 relative_date
+
+=head2 rich_text_transform
+
+=head2 sanitize_embed
+
+=head2 sanitize_input
+
+=head2 sax_parser
+
+=head2 start_background_task
+
+=head2 start_end_period
+
+=head2 start_end_year
+
+=head2 strip_index
+
+=head2 substr_wref
+
+=head2 translate_naughty_words
+
+=head2 ts2epoch
+
+=head2 ts2iso
+
+=head2 unescape_unicode
+
+=head2 utf8_dirify
+
+=head2 weaken
+
+=head2 week2ymd
+
+=head2 xliterate_utf8
+
+=head2 yday_from_ts
+
 =head1 AUTHOR & COPYRIGHTS
 
 Please see the I<MT> manpage for author, copyright, and license information.

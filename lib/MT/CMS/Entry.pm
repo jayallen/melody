@@ -2409,3 +2409,60 @@ sub cfg_entry {
     );
 }
 
+__END__
+
+=head1 NAME
+
+MT::CMS::Entry
+
+=head1 METHODS
+
+=head2 build_entry_table
+
+=head2 build_junk_table
+
+=head2 can_delete
+
+=head2 can_view
+
+=head2 delete
+
+=head2 draft_entries
+
+=head2 edit
+
+=head2 list
+
+=head2 open_batch_editor
+
+=head2 ping_continuation
+
+=head2 pinged_urls
+
+=head2 post_delete
+
+=head2 post_save
+
+=head2 pre_save
+
+=head2 preview
+
+=head2 publish_entries
+
+=head2 quickpost_js
+
+=head2 save
+
+=head2 save_entries
+
+=head2 save_entry_prefs
+
+=head2 send_pings
+
+=head2 update_entry_status
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

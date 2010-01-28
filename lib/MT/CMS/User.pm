@@ -1917,3 +1917,75 @@ sub _delete_pseudo_association {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::User
+
+=head1 METHODS
+
+=head2 build_author_table
+
+=head2 can_delete
+
+=head2 can_delete_association
+
+=head2 can_save
+
+=head2 can_view
+
+=head2 cfg_system_users
+
+=head2 dialog_grant_role
+
+=head2 dialog_select_author
+
+=head2 dialog_select_sysadmin
+
+=head2 disable
+
+=head2 edit
+
+=head2 edit_role
+
+=head2 enable
+
+=head2 grant_role
+
+=head2 list
+
+=head2 list_association
+
+=head2 list_member
+
+=head2 list_role
+
+=head2 post_delete
+
+=head2 post_save
+
+=head2 pre_save
+
+=head2 remove_user_assoc
+
+=head2 remove_userpic
+
+=head2 revoke_role
+
+=head2 save_cfg_system_users
+
+=head2 save_filter
+
+=head2 save_role
+
+=head2 set_object_status
+
+=head2 upload_userpic
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

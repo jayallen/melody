@@ -1238,3 +1238,31 @@ sub not_junk_test {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Common
+
+=head1 METHODS
+
+=head2 clone_blog
+
+=head2 delete
+
+=head2 edit
+
+=head2 list
+
+=head2 not_junk_test
+
+=head2 print_status_page
+
+=head2 save
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -904,7 +904,33 @@ __END__
 
 =head1 NAME
 
-MT::App::Search
+MT::App::Search::Legacy
+
+=head1 METHODS
+
+=head2 execute
+
+=head2 find_phrase
+
+=head2 id
+
+=head2 init
+
+=head2 init_request
+
+=head2 is_a_match
+
+=head2 load_core_tags
+
+=head2 query_optimize
+
+=head2 query_parse
+
+=head2 takedown
+
+=head2 throttle_control
+
+=head2 throttle_response
 
 =head1 AUTHOR & COPYRIGHT
 

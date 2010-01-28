@@ -169,3 +169,33 @@ sub adjacent_archive_entry {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::ArchiveType::Date
+
+=head1 METHODS
+
+=head2 adjacent_archive_entry
+
+=head2 dated_author_entries
+
+=head2 dated_category_entries
+
+=head2 dated_group_entries
+
+=head2 get_entry
+
+=head2 group_based
+
+=head2 next_archive_entry
+
+=head2 previous_archive_entry
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

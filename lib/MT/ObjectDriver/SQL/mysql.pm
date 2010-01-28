@@ -57,3 +57,20 @@ sub add_freetext_where {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::Driver::SQL::mysql
+
+=head1 METHODS
+
+=head2 add_freetext_where
+
+=head2 new
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

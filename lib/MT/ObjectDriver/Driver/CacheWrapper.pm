@@ -70,3 +70,18 @@ sub wrap {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::Driver::CacheWrapper
+
+=head1 METHODS
+
+=head2 wrap
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

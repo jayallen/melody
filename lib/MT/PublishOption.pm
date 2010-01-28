@@ -44,3 +44,33 @@ sub archive_build_type {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::PublishOption
+
+=head1 METHODS
+
+=head2 ASYNC
+
+=head2 DISABLED
+
+=head2 DYNAMIC
+
+=head2 MANUALLY
+
+=head2 ONDEMAND
+
+=head2 SCHEDULED
+
+=head2 archive_build_type
+
+=head2 get_throttle
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

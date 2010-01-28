@@ -59,3 +59,21 @@ sub export {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Export
+
+=head1 METHODS
+
+=head2 export
+
+=head2 start_export
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

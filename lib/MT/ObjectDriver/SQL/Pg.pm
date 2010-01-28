@@ -45,3 +45,20 @@ sub _mk_term {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::SQL::Pg
+
+=head1 METHODS
+
+=head2 as_limit
+
+=head2 distinct_stmt
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

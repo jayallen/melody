@@ -17,3 +17,19 @@ sub url_for_userid {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Auth::Vox
+
+=head1 METHODS
+
+=head2 url_for_userid
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -941,6 +941,50 @@ use
 
 to ensure this.
 
+=head1 METHODS
+
+=head2 build
+
+=head2 clone
+
+=head2 compile_category_filter
+
+=head2 compile_role_filter
+
+=head2 compile_status_filter
+
+=head2 compile_tag_filter
+
+=head2 count_format
+
+=head2 else
+
+=head2 handler_for
+
+=head2 init
+
+=head2 init_handlers
+
+=head2 new
+
+=head2 post_process_handler
+
+=head2 set_blog_load_context
+
+=head2 slurp
+
+=head2 stock_post_process_handler
+
+=head2 super_handler
+
+=head2 tag
+
+=head2 this_tag
+
+=head2 var
+
+=head2 register_handler
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see the I<MT> manpage for author, copyright, and license information.

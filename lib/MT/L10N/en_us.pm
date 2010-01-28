@@ -163,3 +163,19 @@ the address you provided is correct and belongs to you.',
 );
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::L10N::en_us
+
+=head1 METHODS
+
+=head2 ascii_only
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

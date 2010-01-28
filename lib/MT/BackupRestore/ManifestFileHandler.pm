@@ -78,3 +78,19 @@ sub end_element {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::BackupRestore::ManifestFileHandler
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

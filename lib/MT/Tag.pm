@@ -648,6 +648,8 @@ Save the literal as well as a normalized copy if one does not exist.
 Remove the tag and all its children unless it is referenced by another
 entry.
 
+=head2 $tag->backup_terms_args()
+
 =head1 NOTES
 
 =over 4

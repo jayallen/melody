@@ -29,3 +29,19 @@ sub query_parse {
 
 1;
 __END__
+
+=head1 NAME
+
+MT::App::Search::FreeText
+
+=head1 METHODS
+
+=head2 id
+
+=head2 query_parse
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

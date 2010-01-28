@@ -126,3 +126,19 @@ sub rename {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::FileMgr::DAV
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

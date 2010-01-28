@@ -227,3 +227,25 @@ sub _generate_captcha {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Util::Captcha
+
+=head1 METHODS
+
+=head2 check_availability
+
+=head2 form_fields
+
+=head2 generate_captcha
+
+=head2 validate_captcha
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

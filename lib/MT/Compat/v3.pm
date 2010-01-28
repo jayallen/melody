@@ -634,3 +634,19 @@ sub legacy_init {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Compat::v3
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

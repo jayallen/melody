@@ -1143,7 +1143,56 @@ MT::App::Wizard
 
 =head1 METHODS
 
-TODO
+=head2 build_page
+
+=head2 cfg_dir
+
+=head2 cfg_dir_conditions
+
+=head2 cgipath
+
+=head2 config_keys
+
+=head2 configure
+
+=head2 id
+
+=head2 init
+
+=head2 init_config
+
+=head2 init_core_registry
+
+=head2 init_request
+
+=head2 is_config_exists
+
+=head2 is_valid_static_path
+
+=head2 module_check
+
+=head2 mt_static_exists
+
+=head2 object_drivers
+
+=head2 optional
+
+=head2 pre_start
+
+=head2 run_step
+
+=head2 seed
+
+=head2 serialize_config
+
+=head2 start
+
+=head2 static_path
+
+=head2 unserialize_config
+
+=head2 wizard_steps
+
 
 =head1 AUTHOR & COPYRIGHT
 

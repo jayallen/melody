@@ -1374,3 +1374,57 @@ sub _write_upload {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Asset
+
+=head1 METHODS
+
+=head2 asset_insert_text
+
+=head2 asset_list_filters
+
+=head2 asset_userpic
+
+=head2 build_asset_hasher
+
+=head2 build_asset_table
+
+=head2 can_delete
+
+=head2 can_view
+
+=head2 complete_insert
+
+=head2 complete_upload
+
+=head2 edit
+
+=head2 insert
+
+=head2 list
+
+=head2 post_delete
+
+=head2 post_save
+
+=head2 pre_save
+
+=head2 save
+
+=head2 start_upload
+
+=head2 start_upload_entry
+
+=head2 template_param_edit
+
+=head2 upload_file
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

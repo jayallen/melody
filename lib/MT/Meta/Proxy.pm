@@ -538,6 +538,31 @@ found in the flat hash reference I<$hash>. Note the proxy will assume that the
 hash contains the saved values of the meta data. That is, the fields named in
 I<$hash> will I<not> be marked as changed by I<inflate_meta()>.
 
+=head1 METHODS
+
+=head2 META_CLASS
+
+=head2 META_WHICH
+
+=head2 do_unserialization
+
+=head2 exists_meta
+
+=head2 get_collection
+
+=head2 get_hash
+
+=head2 is_changed
+
+=head2 lazier_load_objects
+
+=head2 refresh
+
+=head2 serialize_blob
+
+=head2 set_hash
+
+=head2 unserialize_blob
 
 =head1 SEE ALSO
 

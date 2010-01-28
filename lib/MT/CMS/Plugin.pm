@@ -440,3 +440,35 @@ sub build_plugin_table {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Plugin
+
+=head1 METHODS
+
+=head2 build_plugin_config_html
+
+=head2 build_plugin_table
+
+=head2 cfg_plugin_dialog
+
+=head2 cfg_plugins
+
+=head2 find_plugin_by_id
+
+=head2 list_plugins
+
+=head2 plugin_control
+
+=head2 reset_config
+
+=head2 save_config
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

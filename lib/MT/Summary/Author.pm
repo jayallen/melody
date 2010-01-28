@@ -181,3 +181,27 @@ sub _hdlr_author_entries_count {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Summary::Author
+
+=head1 METHODS
+
+=head2 expire_comment_count
+
+=head2 expire_comment_count_entry
+
+=head2 expire_entry_count
+
+=head2 summarize_comment_count
+
+=head2 summarize_entry_count
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut
