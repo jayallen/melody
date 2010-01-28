@@ -555,6 +555,12 @@ and you wish to exclude this conditional, you could call I<build> like this:
 Internal debugging routine to dump a set of template tokens. Returns a
 readable string of contents of the C<$tokens> parameter.
 
+=head2 NODE
+
+=head2 args_to_string
+
+=head2 translate_html_tmpl
+
 =head1 ERROR HANDLING
 
 On an error, the above methods return C<undef>, and the error message can

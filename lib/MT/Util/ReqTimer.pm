@@ -161,3 +161,37 @@ sub total_elapsed {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Util::ReqTimer
+
+=head1 METHODS
+
+=head2 dump
+
+=head2 dump_line
+
+=head2 instance
+
+=head2 log
+
+=head2 mark
+
+=head2 new
+
+=head2 pause_partial
+
+=head2 start
+
+=head2 total_elapsed
+
+=head2 unpause
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

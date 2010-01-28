@@ -2534,6 +2534,8 @@ audited classes, this is 'created_on'.
 
 =back
 
+=item * parents
+
 =back
 
 =head1 NOTES

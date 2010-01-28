@@ -62,7 +62,25 @@ MT::ObjectDriver::Driver::DBD::Legacy
 
 =head1 METHODS
 
-TODO
+=head2 configure
+
+=head2 date_cols
+
+=head2 db2ts
+
+=head2 db_column_name
+
+=head2 ddl_class
+
+=head2 dsn_from_config
+
+=head2 is_date_col
+
+=head2 new
+
+=head2 sql_class
+
+=head2 ts2db
 
 =head1 AUTHOR & COPYRIGHT
 

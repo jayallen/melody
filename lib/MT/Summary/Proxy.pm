@@ -167,3 +167,31 @@ sub load_objects {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Summary::Proxy
+
+=head1 METHODS
+
+=head2 META_CLASS
+
+=head2 META_WHICH
+
+=head2 create_meta_object
+
+=head2 get
+
+=head2 load_objects
+
+=head2 save_one
+
+=head2 set
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

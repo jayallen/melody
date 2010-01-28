@@ -631,6 +631,10 @@ the application begins handling a new task.
 Returns the path to the plugin, relative to the MT directory. This is
 determined automatically when the plugin is loaded.
 
+=head2 $plugin->id
+
+Returns the id of the plugin, as set in the in the plugin.
+
 =head2 $plugin->set_config_value($key, $value[, $scope])
 
 See the I<get_config_value> description below.

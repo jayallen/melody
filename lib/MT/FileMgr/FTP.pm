@@ -131,3 +131,35 @@ sub _min { $_[0] < $_[1] ? $_[0] : $_[1] }
 sub buffer { $_[0]->{buf} }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::FileMgr::FTP
+
+=head1 METHODS
+
+=head2 can_write
+
+=head2 delete
+
+=head2 exists
+
+=head2 get_data
+
+=head2 init
+
+=head2 mkpath
+
+=head2 put
+
+=head2 put_data
+
+=head2 rename
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

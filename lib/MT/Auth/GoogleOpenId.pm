@@ -48,4 +48,26 @@ sub set_commenter_properties {
 }
 
 1;
+
 __END__
+
+=head1 NAME
+
+MT::Auth::GoogleOpenId
+
+=head1 METHODS
+
+=head2 check_url_params
+
+=head2 get_csr
+
+=head2 set_commenter_properties
+
+=head2 set_extension_args
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut
+

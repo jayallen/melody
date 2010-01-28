@@ -136,3 +136,10 @@ Adds the specified file into the archive file.
 
 Adds the specified string as a file.
 
+=head2 available_formats
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

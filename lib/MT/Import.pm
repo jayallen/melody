@@ -271,6 +271,18 @@ The subroutine referenced by the "options_param" key takes the following paramet
 The subroutine should return a reference to a hash which contains paramters passed to
 template upon building html.
 
+=head2 core_import_formats
+
+=head2 get_options_html
+
+=head2 importer
+
+=head2 importer_keys
+
+=head2 init
+
+=head2 new
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

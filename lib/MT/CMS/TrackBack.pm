@@ -722,3 +722,33 @@ sub cfg_trackbacks {
         }
     );
 }
+
+=head1 NAME
+
+MT::CMS::TrackBack
+
+=head1 METHODS
+
+=head2 build_ping_table
+
+=head2 can_delete
+
+=head2 can_save
+
+=head2 can_view
+
+=head2 edit
+
+=head2 list
+
+=head2 post_delete
+
+=head2 post_save
+
+=head2 pre_save
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -149,6 +149,8 @@ Gets or sets the name registered for the task.
 
 Gets or sets the execution frequency for the task (in seconds). The default frequency is 86400 which is daily.
 
+=head2 $task->label
+
 =head1 AUTHOR & COPYRIGHTS
 
 Please see the I<MT> manpage for author, copyright, and license information.

@@ -179,3 +179,41 @@ sub group_based {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::ArchiveType::Category
+
+=head1 METHODS
+
+=head2 archive_entries_count
+
+=head2 archive_file
+
+=head2 archive_group_entries
+
+=head2 archive_group_iter
+
+=head2 archive_label
+
+=head2 archive_title
+
+=head2 default_archive_templates
+
+=head2 display_name
+
+=head2 dynamic_template
+
+=head2 group_based
+
+=head2 name
+
+=head2 template_params
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

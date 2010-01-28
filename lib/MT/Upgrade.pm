@@ -3430,6 +3430,107 @@ Upgrade function that enables the C<EnableArchivePaths> configuration
 setting, if the existing schema version is 3.2 or earlier (preserves
 'archive path', 'archive url' blog settings fields).
 
+=head1 METHODS
+
+=head2 core_set_superuser
+
+=head2 core_update_entry_counts
+
+=head2 core_update_password_recover_template
+
+=head2 core_update_records
+
+=head2 core_upgrade_begin
+
+=head2 core_upgrade_category_meta
+
+=head2 core_upgrade_end
+
+=head2 core_upgrade_functions
+
+=head2 core_upgrade_meta
+
+=head2 core_upgrade_meta_for_table
+
+=head2 core_upgrade_plugindata_meta_for_table
+
+=head2 create_default_roles
+
+=head2 deprecate_bitmask_permissions
+
+=head2 detect_schema_version
+
+=head2 init
+
+=head2 install_database
+
+=head2 migrate_commenter_auth
+
+=head2 migrate_nofollow_settings
+
+=head2 migrate_system_privileges
+
+=head2 mt32_convert_high_ascii
+
+=head2 mt32_dirify
+
+=head2 mt32_iso_dirify
+
+=head2 mt32_utf8_dirify
+
+=head2 mt32_xliterate_utf8
+
+=head2 post_add_column
+
+=head2 post_alter_column
+
+=head2 post_create_table
+
+=head2 post_drop_column
+
+=head2 post_index_column
+
+=head2 post_schema_upgrade
+
+=head2 post_upgrade_class
+
+=head2 pre_add_column
+
+=head2 pre_alter_column
+
+=head2 pre_create_table
+
+=head2 pre_drop_column
+
+=head2 pre_index_column
+
+=head2 pre_schema_upgrade
+
+=head2 pre_upgrade_class
+
+=head2 remove_indexes
+
+=head2 remove_mtviewphp
+
+=head2 rename_php_plugin_filenames
+
+=head2 run_callbacks
+
+=head2 run_statements
+
+=head2 run_step
+
+=head2 seed_database
+
+=head2 type_diff
+
+=head2 update_3x_system_search_templates
+
+=head2 upgrade_database
+
+=head2 upgrade_templates
+
+
 =head1 CALLBACKS
 
 The upgrade module defines the following MT callbacks:

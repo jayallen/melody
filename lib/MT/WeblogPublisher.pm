@@ -2362,6 +2362,34 @@ Rebuild category archives based on the following parameters:
 Build and publish all scheduled entries with a I<authored_on> timestamp
 that is less than the current time.
 
+=head2 ArchiveFileTemplate
+
+=head2 archive_file_for
+
+=head2 archive_types
+
+=head2 archiver
+
+=head2 core_archive_types
+
+=head2 init
+
+=head2 init_archive_types
+
+=head2 queue_build_file_filter
+
+=head2 rebuild_archives
+
+=head2 rebuild_authors
+
+=head2 rebuild_deleted_entry
+
+=head2 rebuild_from_fileinfo
+
+=head2 remove_fileinfo
+
+=head2 start_time
+
 =head1 CALLBACKS
 
 =over 4

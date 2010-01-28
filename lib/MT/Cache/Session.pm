@@ -165,6 +165,16 @@ Empty all the caches.
 Deletes all the cached objects that are already too old.
 Takes one argument: $ttl specifies the duration that is considered stale.
 
+=head1 METHODS
+
+=head2 add
+
+=head2 new
+
+=head2 remove
+
+=head2 replace
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

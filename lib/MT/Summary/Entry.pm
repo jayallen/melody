@@ -26,3 +26,19 @@ sub summarize_all_assets {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Summary::Entry
+
+=head1 METHODS
+
+=head2 summarize_all_assets
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

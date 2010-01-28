@@ -1110,4 +1110,14 @@ tasks to run.
 
 =back
 
+=head1 METHODS
+
+=head2 invoke
+
+=head2 method
+
+=head2 new
+
+=head2 plugin
+
 =cut

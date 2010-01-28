@@ -99,3 +99,25 @@ sub _sort_data {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Util::PerformanceData
+
+=head1 METHODS
+
+=head2 init
+
+=head2 new
+
+=head2 readfile
+
+=head2 report
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -71,3 +71,19 @@ sub max_retries {3}
 sub retry_delay {120}
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Worker::Summarize
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

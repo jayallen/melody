@@ -293,6 +293,20 @@ Apply the defined filters and return the junk score.
 
 Perform junk expiration for each blog.
 
+=head2 ABSTAIN
+
+=head2 APPROVE
+
+=head2 HAM
+
+=head2 JUNK
+
+=head2 SPAM
+
+=head2 all_filters
+
+=head2 core_filters
+
 =head1 The API: Sample Code
 
 To get familiar with the API, let's look at some example code.

@@ -49,3 +49,13 @@ in memcached or in MT::Session table.
     my $data = $cache->get($key);
     $cache->set($key => $value);
     my $hash = $cache->get_multi($key1, $key2);
+
+=head1 METHODS
+
+=head2 new
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -426,6 +426,31 @@ I<metadata_by_class>. Otherwise, returns false.
 Returns true if the given class has any metadata fields defined. Otherwise,
 returns false.
 
+=head1 METHODS
+
+=head2 DEBUG
+
+=head2 TYPE_VBLOB
+
+=head2 TYPE_VCHAR
+
+=head2 TYPE_VCHAR_INDEXED
+
+=head2 TYPE_VCLOB
+
+=head2 TYPE_VDATETIME
+
+=head2 TYPE_VDATETIME_INDEXED
+
+=head2 TYPE_VFLOAT
+
+=head2 TYPE_VFLOAT_INDEXED
+
+=head2 TYPE_VINTEGER
+
+=head2 TYPE_VINTEGER_INDEXED
+
+=head2 normalize_type
 
 =head1 SEE ALSO
 

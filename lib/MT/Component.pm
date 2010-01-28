@@ -625,6 +625,48 @@ table for future reference.
 
 =head1 METHODS
 
+=head2 callbacks
+
+=head2 description
+
+=head2 init
+
+=head2 init_app
+
+=head2 init_callbacks
+
+=head2 init_registry
+
+=head2 init_request
+
+=head2 l10n_class
+
+=head2 l10n_filter
+
+=head2 load_registry
+
+=head2 load_tmpl
+
+=head2 name
+
+=head2 needs_upgrade
+
+=head2 new
+
+=head2 on_init_app
+
+=head2 on_init_request
+
+=head2 registry
+
+=head2 select
+
+=head2 template_paths
+
+=head2 translate
+
+=head2 translate_templatized
+
 =head1 LOCALIZATION
 
 =head1 AUTHOR & COPYRIGHT

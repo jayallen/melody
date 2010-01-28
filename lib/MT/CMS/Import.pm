@@ -194,3 +194,21 @@ sub do_import {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Import
+
+=head1 METHODS
+
+=head2 do_import
+
+=head2 start_import
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

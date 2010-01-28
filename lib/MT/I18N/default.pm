@@ -492,3 +492,155 @@ sub _load_module {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::I18N::default
+
+=head1 METHODS
+
+=head2 CATEGORY_NAME_NODASH
+
+=head2  DEFAULT_LENGTH_ENTRY_EXCERPT
+
+=head2  DEFAULT_TIMEZONE
+
+=head2  DISPLAY_LENGTH_EDIT_COMMENT_AUTHOR
+
+=head2  DISPLAY_LENGTH_EDIT_COMMENT_TEXT_BREAK_UP_LONG
+
+=head2  DISPLAY_LENGTH_EDIT_COMMENT_TEXT_BREAK_UP_SHORT
+
+=head2  DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG
+
+=head2  DISPLAY_LENGTH_EDIT_COMMENT_TEXT_SHORT
+
+=head2  DISPLAY_LENGTH_EDIT_COMMENT_TITLE
+
+=head2  DISPLAY_LENGTH_EDIT_ENTRY_TEXT_BREAK_UP
+
+=head2  DISPLAY_LENGTH_EDIT_ENTRY_TEXT_FROM_EXCERPT
+
+=head2  DISPLAY_LENGTH_EDIT_ENTRY_TITLE
+
+=head2  DISPLAY_LENGTH_EDIT_PING_BREAK_UP
+
+=head2  DISPLAY_LENGTH_EDIT_PING_TITLE_FROM_EXCERPT
+
+=head2  DISPLAY_LENGTH_MENU_TITLE
+
+=head2  ENCODING_NAMES
+
+=head2  EXPORT_ENCODING
+
+=head2  LEARNINGNEWS_URL
+
+=head2  LENGTH_ENTRY_PING_EXCERPT
+
+=head2  LENGTH_ENTRY_PING_TITLE_FROM_TEXT
+
+=head2  LENGTH_ENTRY_TITLE_FROM_TEXT
+
+=head2  LOG_EXPORT_ENCODING
+
+=head2  MAIL_ENCODING
+
+=head2  NEWSBOX_URL
+
+=head2  NEWS_URL
+
+=head2  PORTAL_URL
+
+=head2  PUBLISH_CHARSET
+
+=head2  SUPPORT_URL
+
+=head2  break_up_text
+
+=head2  break_up_text_encode
+
+=head2  break_up_text_perl
+
+=head2  convert_high_ascii
+
+=head2  convert_high_ascii_encode
+
+=head2  convert_high_ascii_perl
+
+=head2  decode
+
+=head2  decode_perl
+
+=head2  decode_utf8
+
+=head2  decode_utf8_encode
+
+=head2  decode_utf8_perl
+
+=head2  encode
+
+=head2  encode_perl
+
+=head2  encode_text
+
+=head2  encode_text_encode
+
+=head2  encode_text_perl
+
+=head2  first_n
+
+=head2  first_n_encode
+
+=head2  first_n_perl
+
+=head2  first_n_text
+
+=head2  guess_encoding
+
+=head2  guess_encoding_encode
+
+=head2  guess_encoding_perl
+
+=head2  length_text
+
+=head2  length_text_encode
+
+=head2  length_text_perl
+
+=head2  lowercase
+
+=head2  lowercase_encode
+
+=head2  lowercase_perl
+
+=head2  substr_text
+
+=head2  substr_text_encode
+
+=head2  substr_text_perl
+
+=head2  uppercase
+
+=head2  uppercase_encode
+
+=head2  uppercase_perl
+
+=head2  utf8_off
+
+=head2  utf8_off_encode
+
+=head2  utf8_off_perl
+
+=head2  wrap_text
+
+=head2  wrap_text_encode
+
+=head2  wrap_text_perl
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -366,3 +366,21 @@ sub save_cfg_system_general {
         )
     );
 }
+
+__END__
+
+=head1 NAME
+
+MT::CMS::System
+
+=head1 METHODS
+
+=head2 cfg_system_settings
+
+=head2 save_cfg_system
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

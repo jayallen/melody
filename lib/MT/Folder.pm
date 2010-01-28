@@ -70,3 +70,19 @@ sub remove {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Folder
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

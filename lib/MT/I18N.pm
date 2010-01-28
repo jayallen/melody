@@ -170,6 +170,10 @@ to UTF-8 string.
 Encode the given I<text> that is a UTF-8 string to the charset
 specified in I<enc>.
 
+=head2 lowercase
+
+=head2 uppercase
+
 =head1 LICENSE
 
 The license that applies is the one you agreed to when downloading

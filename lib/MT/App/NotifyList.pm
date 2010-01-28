@@ -290,6 +290,8 @@ blog notification list and then redirects to that blog.
 
 This method removes an email address from the notification.
 
+=head2 id
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

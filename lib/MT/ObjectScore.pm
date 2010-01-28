@@ -123,6 +123,18 @@ Return the average score of the object.
 Return the rank of the object based on its score among other objects
 of the same type.  The smaller the number is, the higher the object's rank is.
 
+=head2 backup_terms_args
+
+=head2 class_label
+
+=head2 class_label_plural
+
+=head2 parents
+
+=head2 score
+
+=head2 scored_by
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

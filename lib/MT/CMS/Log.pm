@@ -396,3 +396,27 @@ sub apply_log_filter {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Log
+
+=head1 METHODS
+
+=head2 apply_log_filter
+
+=head2 build_log_table
+
+=head2 export
+
+=head2 reset
+
+=head2 view
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

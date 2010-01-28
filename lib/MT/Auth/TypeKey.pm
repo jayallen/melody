@@ -201,3 +201,21 @@ sub _validate_signature {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Auth::TypeKey
+
+=head1 METHODS
+
+=head2 handle_sign_in
+
+=head2 password_exists
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

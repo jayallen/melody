@@ -188,6 +188,7 @@ sub decode_entities {
 }
 
 1;
+
 __END__
 
 =head1 NAME
@@ -196,7 +197,27 @@ MT::Plugin::JunkFilter
 
 =head1 METHODS
 
-TODO
+=head2 add_rule
+
+=head2 add_test
+
+=head2 all_text
+
+=head2 decode_entities
+
+=head2 new
+
+=head2 parse_domains
+
+=head2 rule_body
+
+=head2 rules
+
+=head2 score
+
+=head2 score_rules
+
+=head2 tests
 
 =head1 AUTHOR & COPYRIGHT
 

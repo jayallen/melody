@@ -3168,4 +3168,94 @@ The I<MT::App::CMS> module is the primary application module for
 Movable Type. It is the administrative interface that is used to
 manage blogs, entries, comments, trackbacks, templates, etc.
 
+=head1 METHODS
+
+=head2 LISTING_DATETIME_FORMAT
+
+=head2 LISTING_DATE_FORMAT
+
+=head2 LISTING_TIMESTAMP_FORMAT
+
+=head2 NEW_PHASE
+
+=head2 add_to_favorite_blogs
+
+=head2 archive_type_sorter
+
+=head2 autosave_object
+
+=head2 autosave_session_obj
+
+=head2 build_blog_selector
+
+=head2 build_menus
+
+=head2 build_page
+
+=head2 core_blog_stats_tabs
+
+=head2 core_list_actions
+
+=head2 core_list_filters
+
+=head2 core_menus
+
+=head2 core_methods
+
+=head2 core_page_actions
+
+=head2 core_widgets
+
+=head2 id
+
+=head2 init
+
+=head2 init_core_callbacks
+
+=head2 init_plugins
+
+=head2 init_request
+
+=head2 is_authorized
+
+=head2 languages_list
+
+=head2 list_pref
+
+=head2 listify
+
+=head2 load_default_entry_prefs
+
+=head2 load_entry_prefs
+
+=head2 load_template_prefs
+
+=head2 load_text_filters
+
+=head2 make_feed_link
+
+=head2 model
+
+=head2 object_edit_uri
+
+=head2 preview_object_basename
+
+=head2 publish_error
+
+=head2 rebuild_these
+
+=head2 remove_preview_file
+
+=head2 return_to_dashboard
+
+=head2 set_default_tmpl_params
+
+=head2 show_error
+
+=head2 user_blog_prefs
+
+=head2 user_can_admin_commenters
+
+=head2 validate_magic
+
 =cut

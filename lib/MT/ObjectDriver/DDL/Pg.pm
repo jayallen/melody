@@ -313,3 +313,42 @@ sub drop_index_sql {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+MT::ObjectDriver::DDL::Pg
+
+=head1 METHODS
+
+=head2 add_column_sql
+
+=head2 alter_column_sql
+
+=head2 can_add_column
+
+=head2 can_alter_column
+
+=head2 can_drop_column
+
+=head2 cast_column_sql
+
+=head2 column_defs
+
+=head2 column_sql
+
+=head2 create_sequence
+
+=head2 drop_index_sql
+
+=head2 drop_sequence
+
+=head2 index_defs
+
+=head2 type2db
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

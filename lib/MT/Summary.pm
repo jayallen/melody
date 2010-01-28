@@ -322,3 +322,29 @@ sub expire_summary {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Summary
+
+=head1 METHODS
+
+=head2 DEBUG
+
+=head2 expire_all
+
+=head2 expire_none
+
+=head2 metadata_by_id
+
+=head2 metadata_by_name
+
+=head2 register
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

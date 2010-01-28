@@ -1305,4 +1305,66 @@ The C<MT::Blog> object associated with the newly uploaded file.
 
 =back
 
+=head1 METHODS
+
+=head2 deletePage
+
+=head2  deletePost
+
+=head2  editPage
+
+=head2  editPost
+
+=head2  getCategories
+
+=head2  getCategoryList
+
+=head2  getNextScheduled
+
+=head2  getPage
+
+=head2  getPages
+
+=head2  getPost
+
+=head2  getPostCategories
+
+=head2  getRecentPostTitles
+
+=head2  getRecentPosts
+
+=head2  getTagList
+
+=head2  getTemplate
+
+=head2  getTrackbackPings
+
+=head2  getUserInfo
+
+=head2  getUsersBlogs
+
+=head2  newMediaObject
+
+=head2  newPage
+
+=head2  newPost
+
+=head2  no_utf8
+
+=head2  publishPost
+
+=head2  publishScheduledFuturePosts
+
+=head2  runPeriodicTasks
+
+=head2  setPostCategories
+
+=head2  setRemoteAuthToken
+
+=head2  setTemplate
+
+=head2  supportedMethods
+
+=head2  supportedTextFilters
+
 =cut

@@ -4454,3 +4454,21 @@ sub numerate {
 ## New words: 9
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::L10N::ru
+
+=head1 METHODS
+
+=head2 numerate
+
+=head2 quant
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

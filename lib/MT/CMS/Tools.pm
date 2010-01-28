@@ -2314,3 +2314,73 @@ sub save_cfg_system_general {
         )
     );
 }
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Tools
+
+=head1 METHODS
+
+=head2 adjust_sitepath
+
+=head2 backup
+
+=head2 backup_download
+
+=head2 build_resources_table
+
+=head2 convert_to_html
+
+=head2 dialog_adjust_sitepath
+
+=head2 dialog_restore_upload
+
+=head2 do_list_action
+
+=head2 do_page_action
+
+=head2 get_syscheck_content
+
+=head2 new_password
+
+=head2 recover_password
+
+=head2 recover_passwords
+
+=head2 recover_profile_password
+
+=head2 reset_password
+
+=head2 resources
+
+=head2 restore
+
+=head2 restore_directory
+
+=head2 restore_file
+
+=head2 restore_premature_cancel
+
+=head2 restore_upload_manifest
+
+=head2 sanity_check
+
+=head2 start_backup
+
+=head2 start_recover
+
+=head2 start_restore
+
+=head2 system_info
+
+=head2 update_list_prefs
+
+=head2 upgrade
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

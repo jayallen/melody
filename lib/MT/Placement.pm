@@ -113,6 +113,12 @@ I<MT::Object> for more information.
 
 =back
 
+=head1 METHODS
+
+=head2 class_label
+
+=head2 parents
+
 =head1 AUTHOR & COPYRIGHTS
 
 Please see the I<MT> manpage for author, copyright, and license information.

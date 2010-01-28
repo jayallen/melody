@@ -582,6 +582,14 @@ is not enough for some authentication provider.  For example you
 may want to remove max_size parameter from the user agent object
 it uses, to avoid "range" request.
 
+=head2 NS_OPENID_AX
+
+=head2 NS_OPENID_SREG
+
+=head2 get_userpicasset
+
+=head2 password_exists
+
 =head1 AUTHOR & COPYRIGHT
 
 Please see L<MT/AUTHOR & COPYRIGHT>.

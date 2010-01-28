@@ -814,3 +814,23 @@ sub _load_template {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Search
+
+=head1 METHODS
+
+=head2 core_search_apis
+
+=head2 do_search_replace
+
+=head2 search_replace
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

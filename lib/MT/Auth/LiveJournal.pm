@@ -30,3 +30,21 @@ sub get_nickname {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::Auth::LiveJournal
+
+=head1 METHODS
+
+=head2 get_nickname
+
+=head2 url_for_userid
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

@@ -11,3 +11,19 @@ use vars qw(@ISA);
 @ISA = qw( MT::I18N::default );
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::I18N::en_us
+
+=head1 METHODS
+
+TODO
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

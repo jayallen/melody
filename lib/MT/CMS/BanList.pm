@@ -34,3 +34,21 @@ sub save_filter {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::BanList
+
+=head1 METHODS
+
+=head2 can_save
+
+=head2 save_filter
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut

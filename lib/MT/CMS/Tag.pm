@@ -538,3 +538,43 @@ sub build_tag_table {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+MT::CMS::Tag
+
+=head1 METHODS
+
+=head2 add_tags_to_assets
+
+=head2 add_tags_to_entries
+
+=head2 build_tag_table
+
+=head2 can_delete
+
+=head2 js_recent_entries_for_tag
+
+=head2 js_tag_check
+
+=head2 js_tag_list
+
+=head2 list
+
+=head2 list_tag_for
+
+=head2 post_delete
+
+=head2 remove_tags_from_assets
+
+=head2 remove_tags_from_entries
+
+=head2 rename_tag
+
+=head1 AUTHOR & COPYRIGHT
+
+Please see L<MT/AUTHOR & COPYRIGHT>.
+
+=cut
