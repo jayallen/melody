@@ -1933,13 +1933,37 @@ Like the 'range' attribute, but defines an inclusive range.
 
 =item * join
 
-Can be used to select a set of objects based on criteria, or sorted by
-criteria, from another set of objects. An example is selecting the C<N>
-entries most recently commented-upon; the sorting is based on I<MT::Comment>
-objects, but the objects returned are actually I<MT::Entry> objects. Using
-I<join> in this situation is faster than loading the most recent
-I<MT::Comment> objects, then loading each of the I<MT::Entry> objects
-individually.
+Can be used to select a set of objects based on and/or sorted by
+criteria from another set of objects.  For example, if you wanted to 
+load the 10 most recently commented-upon entries you would need to 
+load the last ten comments on unique entries and then load those entries.
+A join is faster and easier method of achieving this result:
+
+    my @entries = MT::Entry->load(
+        undef, 
+        {
+            'join' => MT::Comment->join_on( 
+                          'entry_id',
+                          { blog_id => $blog_id },
+                          {
+                              'sort'    => 'created_on',
+                              direction => 'descend',
+                              unique    => 1,
+                              limit     => 10 
+                          } 
+                      )
+        }
+    );
+
+The outer class, MT::Entry, is what you're using for the load and the 
+objects returned will be MT::Entry objects.  However, using the C<join>
+argument and no C<\%terms> you're loading those entries completely based
+on the inner class, MT::Comment.
+
+In this statement, the I<unique> setting ensures that the I<MT::Entry>
+objects returned are unique; if this flag were not given, two copies of the
+same I<MT::Entry> could be returned, if two comments were made on the same
+entry.
 
 Note that I<join> is not a normal SQL join, in that the objects returned are
 always of only one type--in the above example, the objects returned are only
@@ -1949,28 +1973,31 @@ I<join> has the following general syntax:
 
     join => MT::Foo->join_on( JOIN_COLUMN, I<\%terms>, I<\%arguments> )
 
-Use the actual MT::Object-descended package name and the join_on static method
-providing these parameters: I<JOIN_COLUMN> is the column joining the two
-object tables, I<\%terms> and I<\%arguments> have the same meaning as they do
-in the outer I<load> or I<load_iter> argument lists: they are used to select
-the objects with which the join is performed.
+The value is the result of the C<join_on> static method of the MT::Object
+subclass (MT::Foo in the above example, MT::Comment in the previous example)
+you are using for the join. That method takes the following parameters:
 
-For example, to select the last 10 most recently commmented-upon entries, you
-could use the following statement:
+=over 4
 
-    my @entries = MT::Entry->load(undef, {
-        'join' => MT::Comment->join_on( 'entry_id',
-                    { blog_id => $blog_id },
-                    { 'sort' => 'created_on',
-                      direction => 'descend',
-                      unique => 1,
-                      limit => 10 } )
-    });
+=item * I<JOIN_COLUMN>
 
-In this statement, the I<unique> setting ensures that the I<MT::Entry>
-objects returned are unique; if this flag were not given, two copies of the
-same I<MT::Entry> could be returned, if two comments were made on the same
-entry.
+The column in the inner class that corresponds to the column which is the
+primary key in the outer class.
+
+=item * C<\%terms>
+
+This argument has the same purpose as it does in the C<load> and C<load_iter>
+methods but is pre-applied to the inner class used in the join. It has the
+effect of reducing the set of possible objects in the inner class to join
+against and hence constraining the set of object returned by the C<load> or
+C<load_iter>.
+
+=item * C<\%args>
+
+Like the C<\%terms> argument, this is pre-applied to the inner class and has
+the same effect on that class as it does when used on the outer class.
+
+=back
 
 =item * unique
 
@@ -2646,7 +2673,29 @@ Deletes all related metadata for the given object.
 
 Returns objects that have a C<$key> metadata value of C<$value>. Further
 restrictions on the class may be applied through the optional C<%terms>
-and C<%args> parameters.
+and C<%args> parameters.  For example, the following would return all
+entries with the entry metadata C<field.review_critic_rating> equal to C<4.5>:
+
+    my @entries = MT->model('entry')->search_by_meta(
+        'field.review_critic_rating', 
+        '4.5', 
+    );
+
+Note that to restrict the returned entries to only those matching some entry
+data you have to do a join on the mt_entry table since the mt_entry_meta table
+does not know about any entry data other than the entry ID. So, for example,
+to restrict the above query to a single blog, you would do the following:
+
+    my @entries = MT->model('entry')->search_by_meta(
+        'field.review_critic_rating', 
+        '4.5', 
+        {}, 
+        'join' => MT::Entry->join_on(
+            'id',
+            { blog_id => 13 },
+            { unique => 1 }
+        )
+    );
 
 =item * $obj->meta_obj()
 
