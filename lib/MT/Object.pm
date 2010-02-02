@@ -2690,11 +2690,13 @@ to restrict the above query to a single blog, you would do the following:
         'field.review_critic_rating', 
         '4.5', 
         {}, 
-        'join' => MT::Entry->join_on(
-            'id',
-            { blog_id => 13 },
-            { unique => 1 }
-        )
+        {
+            'join' => MT::Entry->join_on(
+                          'id',
+                          { blog_id => 13 },
+                          { unique => 1 }
+                      ),
+        }
     );
 
 =item * $obj->meta_obj()
