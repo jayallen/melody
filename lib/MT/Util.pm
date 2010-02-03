@@ -26,7 +26,7 @@ our @EXPORT_OK = qw( start_end_day start_end_week start_end_month start_end_year
                  epoch2ts ts2epoch escape_unicode unescape_unicode
                  sax_parser trim ltrim rtrim asset_cleanup caturl multi_iter
                  weaken log_time make_string_csv sanitize_embed
-                 browser_language );
+                 browser_language encode_json );
 
 {
 my $Has_Weaken;
@@ -521,6 +521,20 @@ sub encode_js {
     $str =~ s!\f!\\f!g;
     $str =~ s!\r!\\r!g;
     $str =~ s!\t!\\t!g;
+    $str;
+}
+
+sub encode_json {
+    my($str) = @_;
+    return '' unless defined $str;
+    $str =~ s!\\!\\\\!g;    # \
+    $str =~ s!\/!\\\/!g;    # /                                                                                                         
+    $str =~ s!"!\\"!g;      # "                                                                                                         
+    $str =~ s!\f!\\f!g;     # \f                                                                                                        
+    $str =~ s!\n!\\n!g;     # \n                                                                                                        
+    $str =~ s!\r!\\r!g;     # \r                                                                                                        
+    $str =~ s!\t!\\t!g;     # \t                                                                                                        
+    $str =~ s!\0!\\0!g;
     $str;
 }
 
@@ -2419,6 +2433,15 @@ Removes any HTML tags from I<$str> and returns the result.
 
 Escapes/encodes any special characters in I<$str> so that the string can be
 used safely as the value in Javascript; returns the transformed string.
+
+=head2 encode_json($str)
+
+Escapes/encodes any special characters in I<$str> so that the string can be
+used safely as the value in JSON, or Javascript Object Notation. User should
+note that the requirements for encoding javascript and json are different, 
+and thus must be handled differently and separately. This is especially
+important when using more modern javascript toolkits like jQuery 1.4; returns 
+the transformed string.
 
 =head2 encode_php($str [, $type ])
 

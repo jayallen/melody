@@ -584,6 +584,7 @@ sub core_tags {
             'encode_html' => \&_fltr_encode_html,
             'encode_xml' => \&_fltr_encode_xml,
             'encode_js' => \&_fltr_encode_js,
+            'encode_json' => \&_fltr_encode_json,
             'encode_php' => \&_fltr_encode_php,
             'encode_url' => \&_fltr_encode_url,
             'upper_case' => \&_fltr_upper_case,
@@ -1007,6 +1008,31 @@ B<Example:>
 sub _fltr_encode_js {
     my ($str, $val, $ctx) = @_;
     MT::Util::encode_js($str);
+}
+
+###########################################################################
+
+=head2 encode_json
+
+Encodes any special characters so that the string can be used safely as
+the value in JSON (Javascript Object Notation).
+
+Warning - encoding javascript and json are NOT the same thing. Users of 
+jQuery 1.4.1 will find that the JSON parser is super strict requiring the
+use of this modifier in particular.
+
+B<Example:>
+
+    <script type="text/javascript">
+    <!-- /* <![CDATA[ */
+    var the_title = '<$MTEntryTitle encode_json="1"$>';
+    /* ]]> */ -->
+
+=cut
+
+sub _fltr_encode_json {
+    my ($str, $val, $ctx) = @_;
+    MT::Util::encode_json($str);
 }
 
 ###########################################################################
