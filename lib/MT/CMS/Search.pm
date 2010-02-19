@@ -160,7 +160,7 @@ sub core_search_apis {
             'setup_terms_args'   => sub {
                 my ($terms, $args, $blog_id) = @_;
                 $terms->{class}
-                    = ( $q->param('filter') 
+                    = ( $q->param('filter')
                         && $q->param('filter_val')
                         && $q->param('filter') eq 'class'
                         && $q->param('filter_val') eq 'image' ) ? 'image' : '*';
@@ -188,7 +188,7 @@ sub core_search_apis {
             'setup_terms_args'   => sub {
                 my ($terms, $args, $blog_id) = @_;
                 $terms->{class}
-                    = ( $q->param('filter') 
+                    = ( $q->param('filter')
                         && $q->param('filter_val')
                         && $q->param('filter') eq 'class'
                         && $q->param('filter_val') eq 'image' ) ? 'image' : '*';
@@ -276,7 +276,7 @@ sub search_replace {
     $param->{screen_id}    = "search-replace";
     $param->{search_tabs}  = $app->search_apis($blog_id ? 'blog' : 'system');
     $param->{entry_type}  = $q->param('entry_type');
-    
+
     if ($q->param('_type') =~ /entry|page|comment|template/) {
         if ($q->param('blog_id')) {
             my $perms = $app->permissions;
@@ -291,7 +291,7 @@ sub search_replace {
             $param->{publish_from_search} = 1;
             }
     }
-    
+
     my $tmpl = $app->load_tmpl( 'search_replace.tmpl', $param );
     my $placeholder = $tmpl->getElementById('search_results');
     $placeholder->innerHTML(delete $param->{results_template});
@@ -417,15 +417,17 @@ sub do_search_replace {
     my $api   = $search_api->{$type};
     my $class = $app->model($api->{object_type} || $type);
     my %param = %$list_pref;
-    my $limit;
-    # type-specific directives override global CMSSearchLimit
-    my $directive = 'CMSSearchLimit' . ucfirst($type);
-    $limit = MT->config->$directive || MT->config->CMSSearchLimit || 125;
-    # don't allow passed limit to be higher than config limit
-    if ($q->param('limit') && ($q->param('limit') < $limit)) {
-        $limit = $q->param('limit');
+    my $limit = $q->param('limit');
+    if ($limit ne 'all') {
+        # type-specific directives override global CMSSearchLimit
+        my $directive = 'CMSSearchLimit' . ucfirst($type);
+        $limit = MT->config->$directive || MT->config->CMSSearchLimit || 125;
+        # don't allow passed limit to be higher than config limit
+        if ($q->param('limit') && ($q->param('limit') < $limit)) {
+            $limit = $q->param('limit');
+        }
+        $limit =~ s/\D//g;
     }
-    $limit =~ s/\D//g unless $limit eq 'all';
     my $matches;
     $date_col = $api->{date_column} || 'created_on';
     if ( ( $do_search && $search ne '' ) || $show_all || $do_replace ) {
@@ -472,21 +474,23 @@ sub do_search_replace {
             }
         }
         my @terms;
-        # MT::Object doesn't like multi-term hashes within arrays
-        if (%terms) {
-            for my $key (keys %terms) {
-                push(@terms, { $key => $terms{$key} });
+        if ( ! $is_regex ) {
+            # MT::Object doesn't like multi-term hashes within arrays
+            if (%terms) {
+                for my $key (keys %terms) {
+                    push(@terms, { $key => $terms{$key} });
+                }
+                push(@terms, '-and');
             }
-            push(@terms, '-and');
+            my @col_terms;
+            my $query_string = "%$plain_search%";
+            for my $col (@cols) {
+                push(@col_terms, { $col => { like => $query_string } }, '-or' );
+            }
+            delete $col_terms[$#col_terms];
+            push(@terms, \@col_terms);
         }
-        my @col_terms;
-        my $query_string = "%$plain_search%";
-        for my $col (@cols) {
-            push(@col_terms, { $col => { like => $query_string } }, '-or' );
-        }
-        delete $col_terms[$#col_terms];
-        push(@terms, \@col_terms);
-        $args{limit} = $limit + 1;
+        $args{limit} = $limit + 1 if $limit ne 'all';
         my $iter;
         if ($do_replace) {
             $iter = sub {
@@ -499,14 +503,14 @@ sub do_search_replace {
               || ( $type eq 'blog' )
               || ( $app->mode eq 'dialog_grant_role' ) )
             {
-                $iter = $class->load_iter( \@terms, \%args ) or die $class->errstr;
+                $iter = $class->load_iter( @terms ? \@terms : \%terms, \%args ) or die $class->errstr;
             }
             else {
 
                 my @streams;
                 if ( $author->is_superuser ) {
-                    @streams = ( { iter => $class->load_iter( \@terms, \%args ) } );
-                } 
+                    @streams = ( { iter => $class->load_iter( @terms ? \@terms : \%terms, \%args ) } );
+                }
                 else {
                     # Get an iter for each accessible blog
                     my @perms = $app->model('permission')->load(
@@ -745,7 +749,7 @@ sub do_search_replace {
         %param
     );
     $res{'tab_junk'} = 1 if $is_junk;
-    
+
     my $search_cols = $search_api->{$type}{search_cols};
     my %cols = map { $_ => 1 } @cols;
     my @search_cols;
@@ -771,7 +775,7 @@ sub _default_results_table_template {
         return "<mt:include name=\"include/${type}_table.tmpl\">";
     }
     else {
-        return <<TMPL;    
+        return <<TMPL;
         <mtapp:statusmsg
                 id="no-$plural"
                 class="info">

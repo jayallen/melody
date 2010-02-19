@@ -259,11 +259,10 @@ sub thumbnail_filename {
 sub as_html {
     my $asset   = shift;
     my ($param) = @_;
+    my $app     = MT->instance if $app->isa('MT::App');
+    my $is_cf_edit
+        = $app && $app->query->param('edit_field') =~ /^customfield/;
     my $text    = '';
-
-    my $app = MT->instance;
-    $param->{enclose} = 0 unless ($app->query->param('edit_field') =~ /^customfield/);
-    $param->{enclose} = 1 unless exists $param->{enclose};
 
     if ( $param->{include} ) {
 
@@ -360,7 +359,8 @@ q|<a href="%s" onclick="window.open('%s','popup','width=%d,height=%d,scrollbars=
         );
     }
 
-    return $param->{enclose} ? $asset->enclose($text) : $text;
+    return ( $param->{enclose} || $is_cf_edit ) ? $asset->enclose($text)
+                                                : $text;
 }
 
 # Return a HTML snippet of form options for inserting this asset

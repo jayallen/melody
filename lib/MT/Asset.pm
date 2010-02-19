@@ -378,15 +378,18 @@ sub thumbnail_url {
 }
 
 sub as_html {
-    my $asset = shift;
+    my $asset   = shift;
     my ($param) = @_;
-    my $fname = $asset->file_name;
+    my $fname   = $asset->file_name;
+    my $app     = MT->instance if $app->isa('MT::App');
+    my $is_cf_edit
+        = $app && $app->query->param('edit_field') =~ /^customfield/;
     require MT::Util;
     my $text = sprintf '<a href="%s">%s</a>',
         MT::Util::encode_html($asset->url),
         MT::Util::encode_html($fname);
-    my $app = MT->instance;
-    return $app->query->param('edit_field') =~ /^customfield/ ? $asset->enclose($text) : $text;
+    return ( $param->{enclose} || $is_cf_edit ) ? $asset->enclose($text)
+                                                : $text;
 }
 
 sub enclose {
