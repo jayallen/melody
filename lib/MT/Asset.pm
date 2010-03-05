@@ -168,6 +168,25 @@ sub save {
     }
 }
 
+sub associate {
+    my $asset = shift;
+    my ($obj) = @_;
+    my $object_asset = MT->model('objectasset')->new;    
+    $object_asset->object_ds( $obj->class_type );
+    $object_asset->object_id( $obj->id );
+    $object_asset->asset_id( $asset->id );
+    $object_asset->save;
+}
+
+sub unassociate {
+    my $asset = shift;
+    my ($obj) = @_;
+    MT->model('objectasset')->remove({ 
+        object_id => $obj->id, 
+        object_ds => $obj->class_type 
+    });
+}
+
 sub remove_cached_files {
     my $asset = shift;
  
@@ -495,6 +514,16 @@ which represents a generic file.
 
 Returns a I<MT::Asset> package suitable for the filename given. This
 determination is typically made based on the file's extension.
+
+=head2 associate( $obj )
+
+Associates an asset with an MT::Object. This association allows the CMS to 
+track and display a list of entries into which a given asset is associated
+or inserted into.
+
+=head2 unassociate( $obj )
+
+Removes an association between an MT::Object and an asset.
 
 =head1 AUTHORS & COPYRIGHT
 
