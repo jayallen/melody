@@ -168,14 +168,34 @@ sub save {
     }
 }
 
-sub associate {
+sub is_associated {
     my $asset = shift;
     my ($obj) = @_;
+    return MT->model('objectasset')->exist({
+        asset_id => $asset->id, 
+        object_ds => $obj->class_type,
+        object_id => $obj->id
+                                           });    
+}
+
+sub associate {
+    my $asset = shift;
+    my ($obj, $embedded) = @_;
     my $object_asset = MT->model('objectasset')->new;    
     $object_asset->object_ds( $obj->class_type );
     $object_asset->object_id( $obj->id );
     $object_asset->asset_id( $asset->id );
+    $object_asset->embedded( $embedded ) if $embedded;
+    $object_asset->blog_id( $obj->blog_id ) if $obj->has_column( 'blog_id' );
     $object_asset->save;
+}
+
+sub clear_associations {
+    my ($obj) = @_;
+    MT->model('objectasset')->remove({ 
+        object_id => $obj->id, 
+        object_ds => $obj->class_type
+    });
 }
 
 sub unassociate {
@@ -183,7 +203,8 @@ sub unassociate {
     my ($obj) = @_;
     MT->model('objectasset')->remove({ 
         object_id => $obj->id, 
-        object_ds => $obj->class_type 
+        object_ds => $obj->class_type,
+        asset_id  => $asset->id
     });
 }
 
@@ -515,15 +536,27 @@ which represents a generic file.
 Returns a I<MT::Asset> package suitable for the filename given. This
 determination is typically made based on the file's extension.
 
-=head2 associate( $obj )
+=head2 is_associated( $obj )
+
+Return true if the current asset is associated with the given object and
+false otherwise.
+
+=head2 associate( $obj, $embedded )
 
 Associates an asset with an MT::Object. This association allows the CMS to 
 track and display a list of entries into which a given asset is associated
 or inserted into.
 
+The C<$embedded> parameter is a boolean flag indicating whether the asset
+is embedded in the associate entry/object.
+
 =head2 unassociate( $obj )
 
 Removes an association between an MT::Object and an asset.
+
+=head2 MT::Asset->clear_associations( $obj )
+
+Clear all associations between all assets and the provided object.
 
 =head1 AUTHORS & COPYRIGHT
 
