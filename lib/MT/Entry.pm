@@ -660,8 +660,7 @@ sub sync_assets {
     my $entry = shift;
     my $text = ($entry->text || '') . "\n" . ($entry->text_more || '');
 
-    require MT::ObjectAsset;
-    my @assets = MT::ObjectAsset->load({
+    my @assets = MT->model('objectasset')->load({
         object_id => $entry->id,
         blog_id => $entry->blog_id,
         object_ds => $entry->datasource,
@@ -678,20 +677,13 @@ sub sync_assets {
         } else {
             # is asset exists?
             my $asset = MT->model('asset')->load({ id => $id }) or next;
-
-            my $map = new MT::ObjectAsset;
-            $map->blog_id($entry->blog_id);
-            $map->asset_id($id);
-            $map->object_ds($entry->datasource);
-            $map->object_id($entry->id);
-            $map->embedded(1);
-            $map->save;
+            $asset->associate( $entry, 1 );
             $assets{$id} = 0;
         }
     }
     if (my @old_maps = grep { $assets{$_->asset_id} } @assets) {
         my @old_ids = map { $_->id } grep { $_->embedded } @old_maps;
-        MT::ObjectAsset->remove( { id => \@old_ids })
+        MT->model('objectasset')->remove( { id => \@old_ids })
             if @old_ids;
     }
     return 1;
@@ -809,10 +801,7 @@ sub remove {
     my $entry = shift;
     if (ref $entry) {
         $entry->remove_children({ key => 'entry_id' }) or return;
-
-        # Remove MT::ObjectAsset records
-        my $class = MT->model('objectasset');
-        $class->remove({ object_id => $entry->id, object_ds => $entry->class_type });
+        MT->model('asset')->clear_associations( $entry );
     }
 
     $entry->SUPER::remove(@_);
