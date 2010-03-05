@@ -1434,21 +1434,16 @@ $ao
     }
     my $seen = ();
     foreach my $asset_id (@asset_ids) {
-        my $obj_asset = MT::ObjectAsset->load({ asset_id => $asset_id, object_ds => 'entry', object_id => $obj->id });
-        unless ($obj_asset) {
-            my $obj_asset = new MT::ObjectAsset;
-            $obj_asset->blog_id($blog_id);
-            $obj_asset->asset_id($asset_id);
-            $obj_asset->object_ds('entry');
-            $obj_asset->object_id($obj->id);
-            $obj_asset->save;
+        my $asset = MT->model('asset')->load( $asset_id );
+        unless ($asset->is_associated( $obj )) {
+            $asset->associate( $obj, 0 );
         }
         $seen->{$asset_id} = 1;
     }
     foreach my $asset_id (keys %{$obj_assets}) {
+        my $asset = MT->model('asset')->load( $asset_id );
         unless ($seen->{$asset_id}) {
-            my $obj_asset = MT::ObjectAsset->load({ asset_id => $asset_id, object_ds => 'entry', object_id => $obj->id });
-            $obj_asset->remove;
+            $asset->unassociate( $obj );
         }
     }
 
