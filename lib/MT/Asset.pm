@@ -543,16 +543,18 @@ false otherwise.
 
 =head2 associate( $obj, $embedded )
 
-Associates an asset with an MT::Object. This association allows the CMS to 
-track and display a list of entries into which a given asset is associated
-or inserted into.
+Associates an asset with an instance of an MT::Object subclass (e.g. an
+MT::Entry instance). This association is what allows the CMS to track
+and display a list of objects (usually entries) with which a given asset
+is associated or inserted into.
 
 The C<$embedded> parameter is a boolean flag indicating whether the asset
 is embedded in the associate entry/object.
 
 =head2 unassociate( $obj )
 
-Removes an association between an MT::Object and an asset.
+Removes an association between an instance of an MT::Object subclass (e.g. 
+an MT::Entry instance) and an asset.
 
 =head2 MT::Asset->clear_associations( $obj )
 
