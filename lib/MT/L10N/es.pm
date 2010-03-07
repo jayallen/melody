@@ -2624,7 +2624,7 @@ que la dirección provista es correcta y le pertenece.',
 	'Your blog is currently licensed under:' => 'Su blog actualmente tiene la licencia:',
 	'Change license' => 'Cambiar licencia',
 	'Remove license' => 'Borrar licencia',
-	'Your blog does not have an explicit Creative Commons license.' => 'Su blog no tiene una licencia explícica de Creative Commons.',
+	'Your blog does not have an explicit Creative Commons license.' => 'Su blog no tiene una licencia explícita de Creative Commons.',
 	'Select a license' => 'Seleccionar una licencia',
     'The Basics' => 'Básica',
 
