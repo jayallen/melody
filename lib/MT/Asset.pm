@@ -163,6 +163,7 @@ sub save {
     }
 
     unless ($asset->SUPER::save(@_)) {
+        # TODO - note to committers: should this be here? Seems odd.
         print STDERR "error during save: " . $asset->errstr . "\n";
         die $asset->errstr;
     }
@@ -187,7 +188,9 @@ sub associate {
     $object_asset->asset_id( $asset->id );
     $object_asset->embedded( $embedded ) if $embedded;
     $object_asset->blog_id( $obj->blog_id ) if $obj->has_column( 'blog_id' );
-    $object_asset->save;
+    $object_asset->save
+        or return $asset->error("Failed to associate object with asset");
+
 }
 
 sub clear_associations {
@@ -195,17 +198,20 @@ sub clear_associations {
     MT->model('objectasset')->remove({ 
         object_id => $obj->id, 
         object_ds => $obj->class_type
-    });
+    })
+        or return $asset->error("Failed to clear associations with asset");
+
 }
 
 sub unassociate {
     my $asset = shift;
     my ($obj) = @_;
-    MT->model('objectasset')->remove({ 
+    return MT->model('objectasset')->remove({ 
         object_id => $obj->id, 
         object_ds => $obj->class_type,
         asset_id  => $asset->id
-    });
+    })
+        or return $asset->error("Failed to unassociate object with asset");
 }
 
 sub remove_cached_files {
