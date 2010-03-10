@@ -1,0 +1,30 @@
+name: Markdown and SmartyPants
+id: MarkdownSmartyPants
+key: MarkdownSmartyPants
+description: <MT_TRANS phrase="Easily translates plain punctuation characters into 'smart' typographic punctuation.">
+version: $VERSION
+author_name: John Gruber
+author_link: http://daringfireball.net/
+plugin_link: http://daringfireball.net/projects/smartypants/
+
+
+tags:
+    modifier:
+        smarty_pants: $MarkdownSmartyPants::MT::Plugin::SmartyPants::SmartyPants
+        smart_quotes: $MarkdownSmartyPants::MT::Plugin::SmartyPants::SmartQuotes
+        smart_dashes: $MarkdownSmartyPants::MT::Plugin::SmartyPants::SmartDashes
+        smart_ellipses: $MarkdownSmartyPants::MT::Plugin::SmartyPants::SmartEllipses
+    function:
+        SmartyPantsVersion: $MarkdownSmartyPants::MT::Plugin::SmartyPants::SmartyPantsVersion
+    block:
+        MarkdownOptions: $MarkdownSmartyPants::MT::Plugin::Markdown::MarkdownOptions
+
+text_filters:
+    markdown:
+        label: Markdown
+        docs: http://daringfireball.net/projects/markdown/
+        handler: $MarkdownSmartyPants::MT::Plugin::Markdown::MarkdownTextFilter
+    markdown_with_smartypants:
+        label: Markdown With SmartyPants
+        docs: http://daringfireball.net/projects/markdown/
+        handler: $MarkdownSmartyPants::MT::Plugin::Markdown::MarkdownWithSmartyPants

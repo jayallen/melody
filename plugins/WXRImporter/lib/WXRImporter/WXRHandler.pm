@@ -2,7 +2,7 @@
 # Author: Six Apart (http://www.sixapart.com)
 # Released under the Artistic License
 #
-# $Id$
+# $Id: WXRHandler.pm 3218 2008-12-03 06:44:31Z fumiakiy $
 
 package WXRImporter::WXRHandler;
 
