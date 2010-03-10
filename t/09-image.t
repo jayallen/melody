@@ -23,7 +23,7 @@ BEGIN {
         [ 'test.gif', 233, 68 ],
         [ 'test.jpg', 640, 480 ],
     );
-    @drivers = qw( ImageMagick NetPBM GD );
+    @drivers = qw( ImageMagick NetPBM GD Imager );
     plan tests => scalar @Img                           # file exists
                 + (scalar @Img * scalar @drivers * 19)  # 19 tests each for every image and driver
                 ;
