@@ -12,9 +12,9 @@ use strict;
 use warnings;
 
 sub MultiBlog {
-    my $plugin = MT::Plugin::MultiBlog->instance;
+    my $plugin = MT->component('MultiBlog');
     my ( $ctx, $args, $cond ) = @_;
-
+	MT->log({message => $plugin});
     return $ctx->error($plugin->translate('MTMultiBlog tags cannot be nested.'))
         if $ctx->stash('multiblog_context');
 
@@ -71,7 +71,8 @@ sub MultiBlog {
 }
 
 sub MultiBlogLocalBlog {
-    my $plugin = MT::Plugin::MultiBlog->instance;
+    my $plugin = MT->component('MultiBlog');
+    MT->log({message => $plugin});
     my ( $ctx, $args, $cond ) = @_;
 
     require MT::Blog;
@@ -98,7 +99,8 @@ sub MultiBlogLocalBlog {
 }
 
 sub MultiBlogIfLocalBlog {
-    my $plugin = MT::Plugin::MultiBlog->instance;
+    my $plugin = MT->component('MultiBlog');
+    MT->log({message => $plugin});
     my $ctx = shift;
     my $local = $ctx->stash('local_blog_id');
     my $blog_id = $ctx->stash('blog_id');

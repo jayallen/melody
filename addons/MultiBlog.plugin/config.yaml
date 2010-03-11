@@ -1,0 +1,79 @@
+id: MultiBlog
+key: MultiBlog
+name: MultiBlog
+description: <MT_TRANS phrase="MultiBlog allows you to publish content from other blogs and define publishing rules and access controls between them.">
+version: 2.11
+author_name: Six Apart, Ltd.
+author_link: http://www.sixapart.com/
+system_config_template: system_config.tmpl
+blog_config_template: blog_config.tmpl
+
+settings:
+    default_access_allowed:
+        default: 1
+        scope: system
+    rebuild_triggers:
+        default: ''
+        scope: blog
+    blog_content_accessible:
+        default: ''
+        scope: blog
+    other_triggers:
+        scope  : blog
+    all_triggers:
+        scope  : system
+    default_mtmultiblog_action:
+        default: 1
+        scope: blog
+    default_mtmulitblog_blogs:
+        default: ''
+        scope: blog
+
+l10n_class: MultiBlog::L10N
+
+callbacks:
+    cms_post_save.entry: $MultiBlog::MultiBlog::post_entry_save
+    scheduled_post_published: $MultiBlog::MultiBlog::post_entry_pub
+    MT::Comment::post_save: $MultiBlog::MultiBlog::post_feedback_save
+    MT::TBPing::post_save: $MultiBlog::MultiBlog::post_feedback_save
+
+applications:
+    cms:
+        methods:
+            multiblog_add_trigger: $MultiBlog::MultiBlog::CMSMethods::add_trigger
+                
+tags:
+    help_url: sub MT->translate(http://www.movabletype.org/documentation/appendices/tags/%t.html) 
+    block:
+        Entries: MultiBlog::preprocess_native_tags
+        Categories: MultiBlog::preprocess_native_tags
+        Comments: MultiBlog::preprocess_native_tags
+        Pages: MultiBlog::preprocess_native_tags
+        Folders: MultiBlog::preprocess_native_tags
+        Blogs: MultiBlog::preprocess_native_tags
+        Assets: MultiBlog::preprocess_native_tags
+        Comments: MultiBlog::preprocess_native_tags
+        Pings: MultiBlog::preprocess_native_tags
+        Authors: MultiBlog::preprocess_native_tags
+        Tags: MultiBlog::preprocess_native_tags
+        MultiBlog: MultiBlog::Tags::MultiBlog
+        OtherBlog: MultiBlog::Tags::MultiBlog
+        MultiBlogLocalBlog: MultiBlog::Tags::MultiBlogLocalBlog
+        MultiBlogIfLocalBlog?: MultiBlog::Tags::MultiBlogIfLocalBlog
+            
+    function:
+        Include: MultiBlog::preprocess_native_tags
+        BlogCategoryCount: MultiBlog::preprocess_native_tags
+        BlogEntryCount: MultiBlog::preprocess_native_tags
+        BlogPingCount: MultiBlog::preprocess_native_tags
+        TagSearchLink: MultiBlog::preprocess_native_tags
+            
+
+init: >
+    sub {
+        my $plugin = shift;
+        require MultiBlog::Plugin;
+        bless $plugin, 'MultiBlog::Plugin';
+    }
+
+

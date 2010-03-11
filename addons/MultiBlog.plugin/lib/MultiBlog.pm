@@ -17,7 +17,7 @@ sub ALLOWED () { 2 }
 
 sub preprocess_native_tags {
     my ( $ctx, $args, $cond ) = @_;
-    my $plugin = MT::Plugin::MultiBlog->instance;
+    my $plugin = MT->component('MultiBlog');
 
     my $tag = lc $ctx->stash('tag');
 
@@ -73,7 +73,7 @@ sub preprocess_native_tags {
 
 
 sub post_feedback_save {
-    my $plugin = shift;
+    my $plugin = MT->component('MultiBlog');
     my ( $trigger, $eh, $feedback ) = @_;
     if ( $feedback->visible ) {
         my $blog_id = $feedback->blog_id;
@@ -89,7 +89,7 @@ sub post_feedback_save {
 }
 
 sub post_entry_save {
-    my $plugin = shift;
+    my $plugin = MT->component('MultiBlog');
     my ( $eh, $app, $entry ) = @_;
     my $blog_id = $entry->blog_id;
 
@@ -111,7 +111,7 @@ sub post_entry_save {
 }
 
 sub post_entry_pub {
-    my $plugin = shift;
+    my $plugin = MT->component('MultiBlog');
     my ( $eh, $app, $entry ) = @_;
     my $blog_id = $entry->blog_id;
 
@@ -152,7 +152,9 @@ sub perform_mb_action {
 }
 
 sub filter_blogs_from_args { 
-    my ($plugin, $ctx, $args) = @_;
+    my ($ctx, $args) = @_;
+ 
+    my $plugin = MT->component('MultiBlog');
 
     # SANITY CHECK ON ARGUMENTS
     my $err;
@@ -233,7 +235,7 @@ sub filter_blogs_from_args {
 ## any blog-level overrides.
 ## Returns empty list if no blogs can be used
 sub filter_blogs {
-    my $plugin = shift;
+    my $plugin = MT->component('MultiBlog');
     my ( $ctx, $is_include, @blogs ) = @_;
 
     # Set flag to indicate whether @blogs are to be included or excluded
