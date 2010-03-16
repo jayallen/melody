@@ -199,7 +199,7 @@ sub clear_associations {
         object_id => $obj->id, 
         object_ds => $obj->class_type
     })
-        or return $asset->error("Failed to clear associations with asset");
+        or return $obj->error("Failed to clear associations with asset");
 
 }
 
