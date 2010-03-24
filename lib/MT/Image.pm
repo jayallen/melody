@@ -435,6 +435,90 @@ sub convert {
     $image->blob;
 }
 
+package MT::Image::Imager;
+@MT::Image::Imager::ISA = qw(MT::Image);
+
+sub load_driver {
+    my $image = shift;
+
+    eval { require Imager };
+    if (my $err = $@) {
+        return $image->error(MT->translate("Can't load Imager: [_1]", $err));
+    }
+    1;
+}
+
+sub init {
+    my $image = shift;
+    my %param = @_;
+
+    if ((!defined $param{Type}) && (my $file = $param{Filename})) {
+        (my $ext = $file) =~ s/.*\.//;
+        $param{Type} = lc $ext;
+    }
+
+    my %Types = map { $_ => $_ } Imager->read_types;
+    $Types{jpg} = 'jpeg' if $Types{jpeg};
+
+    $image->{type} = $Types{ lc $param{Type} }
+        or return $image->error(MT->translate("Unsupported image file type: [_1]", $param{Type}));
+
+    my $imager = Imager->new;
+    if (my $file = $param{Filename}) {
+        $imager->read( file => $file, type => $image->{type} )
+            or return $image->error(MT->translate("Reading file '[_1]' failed: [_2]", $file, $imager->errstr));
+    }
+    elsif (my $blob = $param{Data}) {
+        $imager->read( data => $blob, type => $image->{type} )
+            or return $image->error(MT->translate("Reading image failed: [_1]", $imager->errstr));
+    }
+
+    $image->{imager} = $imager;
+    $image->{width}  = $image->{imager}->getwidth;
+    $image->{height} = $image->{imager}->getheight;
+
+    $image;
+}
+
+sub blob {
+    my $image = shift;
+
+    my $blob;
+    $image->{imager}->write( data => \$blob, type => $image->{type} );
+
+    $blob;
+}
+
+sub scale {
+    my $image = shift;
+    my ($w, $h) = $image->get_dimensions(@_);
+
+    $image->{imager} =
+        $image->{imager}->scale( xpixels => $w, ypixels => $h, type => 'nonprop' );
+    @$image{qw/width height/} = ($w, $h);
+
+    wantarray ? ($image->blob, $w, $h) : $image->blob;
+}
+
+sub crop {
+    my $image = shift;
+    my %param = @_;
+    my ($size, $x, $y) = @param{qw( Size X Y )};
+
+    $image->{imager} =
+       $image->{imager}->crop( left => $x, top => $y, width => $size, height => $size );
+    $image->{width} = $image->{height} = $size;
+
+    wantarray ? ($image->blob, $size, $size) : $image->blob;
+}
+
+sub convert {
+    my $image = shift;
+    my %param = @_;
+    $image->{type} = lc $param{Type};
+    $image->blob;
+}
+
 1;
 __END__
 
@@ -458,11 +542,48 @@ MT::Image - Movable Type image manipulation routines
 I<MT::Image> contains image manipulation routines using either the
 I<NetPBM> tools, the I<ImageMagick> and I<Image::Magick> Perl module,
 or the I<GD> and I<GD> Perl module.
+
 The backend framework used (NetPBM, ImageMagick, GD) depends on the value of
-the I<ImageDriver> setting in the F<mt.cfg> file (or, correspondingly, set
+the I<ImageDriver> setting in the F<mt-config.cgi> file (or, correspondingly, set
 on an instance of the I<MT::ConfigMgr> class).
 
 Currently all this is used for is to create thumbnails from uploaded images.
+
+=head1 CONFIGURATION
+
+To change the image manipulation library used for generating thumbnails in
+your system, edit your C<mt-config.cgi> file and edit or edit the 
+C<ImageDriver> configuration directive. The system supports the following
+values for this directive:
+
+=over 4
+
+=item * B<GD>
+
+A driver that provides specific support for Thomas Boutell's gd graphics 
+library, commonly found on *nix systems. Advantages of using the GD libary
+is performance. It has been shown to out-perform ImageMagick by 50-150%.
+The disadvantages of this library have to do with underlying capabilities. 
+Plugins for example the provide more advanced image manipulation capabilities
+may not work with GD.
+
+=item * B<NetBPM>
+
+Advantages of using this driver includes ease of installation as it does
+not require any additional software. Disadvantage however lies in poor image
+quality.
+
+=item * B<ImageMagick>
+
+This is the default value of C<ImageDriver>. It produces excellent quality images
+but does require the ImageMagick and ImageMagick libraries for Perl to be installed,
+also known as PerlMagick. This can be difficult to install depending upon your system.
+
+=item * B<Imager>
+
+This driver is specially designed for generating 24-bit images.
+
+=back
 
 =head1 USAGE
 
