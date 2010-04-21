@@ -366,8 +366,7 @@ sub load_tmpl {
     my $type = { 'SCALAR' => 'scalarref', 'ARRAY' => 'arrayref' }->{ ref $file }
       || 'filename';
 
-    require MT::Template;
-    my $tmpl = MT::Template->new(
+    my $tmpl = MT->model('template')->new(
         type   => $type,
         source => $file,
         path   => [ $c->template_paths ],
@@ -384,7 +383,7 @@ sub load_tmpl {
         }) : ()),
     );
     return $c->error(
-        $mt->translate( "Loading template '[_1]' failed: [_2]", $file, MT::Template->errstr ) )
+        $mt->translate( "Loading template '[_1]' failed: [_2]", $file, MT->model('template')->errstr ) )
       unless defined $tmpl;
     my $text = $tmpl->text;
     if (($text =~ m/<(mt|_)_trans/i) && ($c->id)) {
