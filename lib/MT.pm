@@ -1422,7 +1422,9 @@ sub _init_plugins_core {
                                 base => $plugin_full_path,
                                 dir  => $plugin_dir,
                                 file => $file,
-                                path => $plugin_file,
+                                # TODO: remove following comment if app is stable
+                                # Changed from $plugin_file because load_tmpl was failing
+                                path => $plugin_full_path,
                                 envelope => "$plugin_lastdir/" . $plugin_dir,
                             };
                         }
@@ -2145,7 +2147,6 @@ sub load_tmpl {
         $param = pop @p;
     }
     my $cfg = $mt->config;
-    require MT::Template;
     my $tmpl;
     my @paths = $mt->template_paths;
 
