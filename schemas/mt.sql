@@ -50,7 +50,6 @@ CREATE TABLE mt_blog (
     blog_require_comment_emails TINYINT,
     blog_manual_approve_commenters TINYINT,
     blog_words_in_excerpt SMALLINT,
-    blog_ping_technorati TINYINT,
     blog_ping_weblogs TINYINT,
     blog_ping_blogs TINYINT,
     blog_ping_others TEXT,

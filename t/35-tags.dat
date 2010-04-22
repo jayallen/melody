@@ -140,7 +140,7 @@
 { "r" : "1", "t" : "<MTEntriesWithSubCategories category=\"foo\"><MTEntryTitle>;</MTEntriesWithSubCategories>", "e" : "Verse 4;Verse 3;"}, #138
 { "r" : "1", "t" : "<MTEntriesWithSubCategories category=\"foo/subfoo\"><MTEntryTitle>;</MTEntriesWithSubCategories>", "e" : "Verse 4;"}, #139
 { "r" : "1", "t" : "<MTPings lastn=\"1\"><MTPingDate></MTPings>", "e" : "April  5, 2005 12:00 AM"}, #140
-{ "r" : "1", "t" : "<MTEntries lastn=\"1\"><MTPingsSent><MTPingsSentURL>; </MTPingsSent></MTEntries>", "e" : "http://technorati.com/; "}, #141
+#{ "r" : "1", "t" : "<MTEntries lastn=\"1\"><MTPingsSent><MTPingsSentURL>; </MTPingsSent></MTEntries>", "e" : "http://technorati.com/; "}, #141
 #{ "r" : "1", "t" : "<MTGoogleSearch query="six apart" results="1"><MTGoogleSearchResult property="URL"></MTGoogleSearch>", "e" : "http://www.sixapart.com/"}, #142
 { "r" : "1", "t" : "disabled", "e" : "disabled"}, #142
 { "r" : "1", "t" : "<MTCategories show_empty=\"1\"><MTIfIsAncestor child=\"subfoo\"><MTCategoryLabel> is an ancestor to subfoo</MTIfIsAncestor></MTCategories>", "e" : "foo is an ancestor to subfoosubfoo is an ancestor to subfoo"}, #143

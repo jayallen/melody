@@ -122,7 +122,6 @@ my %defs = (
             field('old_style_archive_links', RAND_BOOL, 3.0),
             field('moderate_unreg_comments', RAND_BOOL, 3.0),
             field('remote_auth_token', [ '', 'some_remote_token' ], 3.0),
-            field('ping_technorati', RAND_BOOL, 3.1),
             field('children_modified_on', undef, 3.1),
             field('custom_dynamic_templates',
                 [ 'none', 'archives', 'custom' ], 3.1),
