@@ -29,7 +29,7 @@ our $plugins_installed;
 BEGIN {
     $plugins_installed = 0;
     # This first section is run by the default distribution
-    # which does not require building by make
+    # which  does not require building by make
     if('__MAKE_ME__' eq '__MAKE_' . 'ME__') { 
         # The first three lines are a hack to allow MakeMaker to pick up
         # the Melody version for the dist name and other variables while
@@ -1404,8 +1404,21 @@ sub _init_plugins_core {
                 }
                 else {
                     # open and scan the directory for plugin files,
-                    # save them to load later
-                    opendir SUBDIR, $plugin_full_path;
+                    # save them to load later. Report errors in
+                    # the activity log
+                    unless (opendir SUBDIR, $plugin_full_path) {
+                        my $msg = $mt->translate(
+                            "Bad directory found in plugin initialization: [_1]",
+                            $plugin_full_path
+                        );
+                        $mt->log({
+                            message => $msg,
+                            class => 'system',
+                            level => MT::Log::ERROR()
+                        });
+                        next;
+                    }
+
                     my @plugin_files = readdir SUBDIR;
                     closedir SUBDIR;
                     for my $file (@plugin_files) {
