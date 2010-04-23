@@ -72,20 +72,20 @@ ok(ref($tokens->[0][1]) eq 'HASH');
 is($tokens->[0][1]{yes}, 'foo\'s bar');
 
 $tokens = $builder->compile($ctx, <<'TEXT');
-time to kick out the jams, motherfuckers
+time to kick out the jams
 <$MTFoo$>
 TEXT
 ok($tokens && ref($tokens) eq 'ARRAY');
 ok(@$tokens == 3);
 ok($tokens->[0][0] eq 'TEXT');
-ok($tokens->[0][1] eq "time to kick out the jams, motherfuckers\n");
+ok($tokens->[0][1] eq "time to kick out the jams\n");
 ok($tokens->[1][0] eq 'Foo');
 ok($tokens->[2][0] eq 'TEXT');
 ok($tokens->[2][1] eq "\n");
 is($builder->build($ctx, $tokens),
-    "time to kick out the jams, motherfuckers\nfoo\n");
+    "time to kick out the jams\nfoo\n");
 is($builder->build($ctx, $tokens, { Foo => 0 }),
-    "time to kick out the jams, motherfuckers\n\n");
+    "time to kick out the jams\n\n");
 
 # $tokens = $builder->compile($ctx, '<MTBars>');
 # ok(!$tokens);
