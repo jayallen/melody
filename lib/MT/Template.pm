@@ -1106,9 +1106,9 @@ The following methods are unique to the I<MT::Template> interface:
 =head2 $tmpl->build($ctx [, \%cond ])
 
 Given a context I<$ctx> (an I<MT::Template::Context> object) and an optional
-set of conditions \%cond, builds a template into its output form. The
-template is first parsed into a list of tokens, then is interpreted/executed
-to generate the final output.
+set of conditions \%cond, builds a template into its output form. The template
+is first parsed into a list of tokens (see the I<NOTES> section for details on
+tokens and nodes), then is interpreted/executed to generate the final output.
 
 If specified, I<\%cond> should be a reference to a hash with MT tag names
 (without the leading C<MT>) as the keys, and boolean flags as the values--the
@@ -1250,6 +1250,48 @@ associated with this template will be removed.
 If a template is linked to an external file, I<MT::Template::save> will sync
 the template body to disk, and I<MT::Template::text> (the data access method
 to retrieve the body of the template) will sync the template body from disk.
+
+=item *
+
+There are two other packages contained in C<lib/MT/Template.pm> which define
+methods for searching/manipulating the tokens (I<MT::Template::Tokens>)
+created by C<MT::Builder::compile()> as well as their representative nodes
+(I<MT::Template::Node>). A token is an array reference made up of the
+following nodes listed alongside each node's position in the array.
+
+=over 4
+
+=item [0] Node name 
+
+If the token represents an MT template tag this node contains the tag name. If
+the node represents a text node, then it contains the word 'TEXT'.
+
+=item [1] Tag attributes or TEXT contents
+
+For tag tokens, this contains a hash reference of the attributes used with the
+tag and their values. For TEXT nodes, this contains the body of text it
+represents.
+
+=item [2] Compiled node contents
+
+This node holds the current token's child tokens as returned from
+C<MT::Builder::compile()>. Hence, if this node has a value, it indicates that
+the current token represents a container (or C<BLOCK>) tag. The uncompiled
+version is stored in the following node.
+
+=item [3] Uncompiled node contents
+
+This node contains the uncompiled (i.e. non-tokenized) version of contents of
+the container tag (or entire template) represented by the current token (if
+that's the case).
+
+=item [4] An array reference representing the order of attributes used
+
+=item [5] A reference to this token's parent
+
+=item [6] The C<MT::Template> object of the template containing this node
+
+=back
 
 =back
 
