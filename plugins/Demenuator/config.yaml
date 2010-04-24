@@ -1,0 +1,17 @@
+name: Demenuator
+description: Removes unwanted menu items from MT
+version: 0.6
+
+config_settings:
+    RemovedMenus:
+        default: ''
+    RemovedMenuItems:
+        default: ''
+    PreserveSuperuserMenus:
+        default: 0
+
+applications:
+    cms:
+        callbacks:
+            init_app: $Demenuator::Demenuator::CMS::init_app
+
