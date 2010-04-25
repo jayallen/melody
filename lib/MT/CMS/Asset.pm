@@ -115,6 +115,9 @@ sub list {
 
     my $asset_class = $app->model('asset') or return;
     my %terms;
+    
+    $terms{parent} = [ \'IS NULL', 0 ];
+
     my %args = ( sort => 'created_on', direction => 'descend' );
 
     my $class_filter;
