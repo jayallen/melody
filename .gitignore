@@ -67,7 +67,3 @@ t/db
 t/site
 t/mt.cfg
 null
-
-mt-static/plugins/Revolution
-plugins/CustomCSS
-plugins/Revolution
