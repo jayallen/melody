@@ -19,6 +19,7 @@ pod2htm*
 *.swp
 *.tmp
 ._*
+MANIFEST
 
 #####################################################
 ##           Perltidy-generated files              ##

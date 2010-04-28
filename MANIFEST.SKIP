@@ -37,6 +37,12 @@ Makefile.PL
 ^MT.*\.gz
 ^mt-config.cgi$
 
+# Plugins that aren't to be in the general release
+plugins/mixiComment
+plugins/Revolution
+plugins/CustomCSS
+mt-static/plugins/CustomCSS
+
 # Themes that aren't to be in the general release
 mt-static/themes/cityscape-austin
 mt-static/themes/cityscape-boston
