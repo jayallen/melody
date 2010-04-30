@@ -81,14 +81,6 @@ sub user {
     });
 }
 
-sub blog {
-    my $assoc = shift;
-    $assoc->cache_property('blog', sub {
-        require MT::Blog;
-        $assoc->blog_id ? MT::Blog->load($assoc->blog_id) : undef;
-    });
-}
-
 sub group {
     my $assoc = shift;
     $assoc->cache_property('group', sub {

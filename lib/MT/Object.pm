@@ -1338,6 +1338,19 @@ sub clear_cache {
     1;
 }
 
+sub blog {
+    my $obj = shift;
+    return undef unless $obj->has_column('blog_id') and $obj->blog_id;
+    my $blog_class = MT->model('blog');
+    $obj->cache_property('blog', sub {
+        $blog_class->load( $obj->blog_id )
+            or $obj->error(MT->translate(
+                "Load of blog '[_1]' failed: [_2]", $obj->blog_id, 
+                $blog_class->errstr
+                    || MT->translate("record does not exist.")));
+    });
+}
+
 sub to_hash {
     my $obj = shift;
     my $hash = {};
@@ -2527,6 +2540,10 @@ $obj-E<gt>deflate()> by returning a new object equivalent to C<$obj>.
 
 This static method is used to install any class properties that were
 registered prior to the bootstrapping of MT plugins.
+
+=item * $obj->blog
+
+For objects which have a blog_id property, this method loads the object's parent blog and caches it for future calls. For objects without a blog_id property the method returns undef.
 
 =item * $obj->modified_by
 

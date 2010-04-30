@@ -807,18 +807,6 @@ sub remove {
     $entry->SUPER::remove(@_);
 }
 
-sub blog {
-    my ($entry) = @_;
-    $entry->cache_property('blog', sub {
-        my $blog_id = $entry->blog_id;
-        require MT::Blog;
-        MT::Blog->load($blog_id) or
-            $entry->error(MT->translate(
-            "Load of blog '[_1]' failed: [_2]", $blog_id, MT::Blog->errstr
-                || MT->translate("record does not exist.")));
-    });
-}
-
 sub to_hash {
     my $entry = shift;
     my $hash = $entry->SUPER::to_hash(@_);

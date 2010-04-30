@@ -85,20 +85,6 @@ sub is_moderated {
     return !$_[0]->visible() && !$_[0]->is_junk();
 }
 
-sub blog {
-    my ($ping) = @_;
-    my $blog = $ping->{__blog};
-    unless ($blog) {
-        my $blog_id = $ping->blog_id;
-        my $blog_class = MT->model('blog');
-        $blog = $blog_class->load($blog_id) or
-            return $ping->error(MT->translate(
-                "Load of blog '[_1]' failed: [_2]", $blog_id, $blog_class->errstr));   
-        $ping->{__blog} = $blog;
-    }
-    return $blog;
-}
-
 sub parent {
     my ($ping) = @_;
     if (my $tb = MT->model('trackback')->load($ping->tb_id)) {

@@ -253,15 +253,6 @@ sub remove_cached_files {
     1;
 }
 
-sub blog {
-    my $asset = shift;
-    my $blog_id = $asset->blog_id or return undef;
-    return $asset->{__blog} if $blog_id && $asset->{__blog} && ($asset->{__blog}->id == $blog_id);
-    require MT::Blog;
-    return $asset->{__blog} = MT::Blog->load($blog_id)
-        or return $asset->error("Failed to load blog for file");
-}
-
 # Returns a true/false response based on whether the active package
 # has extensions registered that match the requested filename.
 sub can_handle {
