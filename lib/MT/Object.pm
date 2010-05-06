@@ -1339,7 +1339,7 @@ sub clear_cache {
 }
 
 sub blog {
-    my $obj = shift;
+    my $obj = shift or return;
     return undef unless $obj->has_column('blog_id') and $obj->blog_id;
     my $blog_class = MT->model('blog');
     $obj->cache_property('blog', sub {
@@ -2543,7 +2543,9 @@ registered prior to the bootstrapping of MT plugins.
 
 =item * $obj->blog
 
-For objects which have a blog_id property, this method loads the object's parent blog and caches it for future calls. For objects without a blog_id property the method returns undef.
+For objects which have a blog_id property, this method loads the object's
+parent blog and caches it for future calls. For objects without a blog_id
+property the method returns undef.
 
 =item * $obj->modified_by
 
