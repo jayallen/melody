@@ -35,7 +35,9 @@ if (AssetList) {
     else {
         // add the asset's id to the include_asset_ids hidden input
         var asset_ids = window.parent.document.getElementById("include_asset_ids").value;
-        window.parent.document.getElementById("include_asset_ids").value = asset_ids + ",<mt:AssetID>";
+        var separator = (asset_ids != '')?',':'';
+                
+        window.parent.document.getElementById("include_asset_ids").value = asset_ids + separator + "<mt:AssetID>";
 
         // create the link to the asset page with asset name as label
         var myAssetLink = window.document.createElement('a');

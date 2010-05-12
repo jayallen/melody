@@ -3015,12 +3015,14 @@ function removeAssetFromList(assetId) {
 
     // get include_asset_ids and split it
     var AssetList = document.getElementById("include_asset_ids").value;
-    var Assets = AssetList.split(",");
-    var NewAssetList = "";
+    var Assets = AssetList.split(',');
+    
+    var NewAssetList = new Array();
+    
     for (var i = 0; i < Assets.length; i++) {
         if (Assets[i] != assetId) {
-            NewAssetList = NewAssetList + Assets[i] + ",";
+            NewAssetList.push( Assets[i]);
         }
     }
-    document.getElementById("include_asset_ids").value = NewAssetList;
+    document.getElementById("include_asset_ids").value = NewAssetList.join(',');
 }
