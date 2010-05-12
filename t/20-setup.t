@@ -107,12 +107,12 @@ SKIP: {
     
     is($entry->ping_count, 0, '$entry->ping_count default');
     is($entry->class, 'entry', '$entry->class default');
-    is($entry->status, 0, '$entry->status default -- no blog');
-    ok(! defined $entry->allow_comments,
+    is($entry->status, MT::Entry::RELEASE(), '$entry->status default -- no blog');
+    ok( $entry->allow_comments == 1,
         '$entry->allow_comments default -- no blog');
-    ok(! defined $entry->allow_pings,
+    ok( $entry->allow_pings == 1,
         '$entry->allow_pings default -- no blog');
-    ok(! defined $entry->convert_breaks,
+    ok( $entry->convert_breaks eq 'richtext', #Appears to be the new default value in 4.3X
         '$entry->convert_breaks default -- no blog');
     ok(! defined $entry->author_id, '$entry->author_id default - no app');
 

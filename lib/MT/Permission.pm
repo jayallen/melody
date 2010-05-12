@@ -72,18 +72,6 @@ sub user {
 }
 *author = *user;
 
-sub blog {
-    my $perm = shift;
-    return undef unless $perm->blog_id;
-    $perm->cache_property(
-        'blog',
-        sub {
-            require MT::Blog;
-            MT::Blog->load( $perm->blog_id );
-        }
-    );
-}
-
 sub global_perms {
     my $perm = shift;
 

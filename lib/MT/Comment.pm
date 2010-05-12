@@ -158,20 +158,6 @@ sub entry {
     return $entry;
 }
 
-sub blog {
-    my ($comment) = @_;
-    my $blog = $comment->{__blog};
-    unless ($blog) {
-        my $blog_id = $comment->blog_id;
-        require MT::Blog;
-        $blog = MT::Blog->load($blog_id) or
-            return $comment->error(MT->translate(
-            "Load of blog '[_1]' failed: [_2]", $blog_id, MT::Blog->errstr));
-        $comment->{__blog} = $blog;
-    }
-    return $blog;
-}
-
 sub junk {
     my ($comment) = @_;
     if (($comment->junk_status || 0) != JUNK) {

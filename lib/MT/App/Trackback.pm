@@ -618,10 +618,8 @@ sub blog {
     my $app = shift;
     return $app->{_blog} if $app->{_blog};
     if ( my ($tb_id) = $app->_get_params() ) {
-        require MT::Trackback;
-        my $tb = MT::Trackback->load($tb_id);
-        return undef unless $tb;
-        $app->{_blog} = MT::Blog->load( $tb->blog_id ) if $tb;
+        my $tb = MT->model('trackback')->load( $tb_id )
+        $app->{_blog} = $tb->blog() if $tb;
     }
     return $app->{_blog};
 }
