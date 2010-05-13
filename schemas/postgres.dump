@@ -54,7 +54,6 @@ create table mt_blog (
     blog_manual_approve_commenters smallint,
     blog_moderate_pings smallint,
     blog_words_in_excerpt smallint,
-    blog_ping_technorati smallint,
     blog_ping_weblogs smallint,
     blog_ping_blogs smallint,
     blog_ping_others text,

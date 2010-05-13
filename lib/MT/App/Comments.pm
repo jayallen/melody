@@ -1900,13 +1900,12 @@ sub blog {
     return $app->{_blog} if $app->{_blog};
     return undef unless $q;
     if ( my $entry_id = $q->param('entry_id') ) {
-        require MT::Entry;
-        my $entry = MT::Entry->load($entry_id);
+        my $entry = MT->model('entry')->load( $entry_id );
         return undef unless $entry;
-        $app->{_blog} = $entry->blog if $entry;
+        $app->{_blog} = $entry->blog();
     }
     elsif ( my $blog_id = $q->param('blog_id') ) {
-        $app->{_blog} = MT::Blog->load( int($blog_id) );
+        $app->{_blog} = MT->model('blog')->load( int($blog_id) );
     }
     return $app->{_blog};
 }

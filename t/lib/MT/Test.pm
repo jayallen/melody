@@ -601,7 +601,7 @@ sub init_data {
             modified_on    => '19780131074600',
             authored_on    => '19780131074500',
             author_id      => $chuckd->id,
-            pinged_urls    => 'http://technorati.com/',
+            pinged_urls    => 'http://blogsearch.google.com/ping/RPC2',
             allow_comments => 1,
             allow_pings    => 1,
             status         => MT::Entry::RELEASE(),

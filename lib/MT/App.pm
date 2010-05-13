@@ -3574,7 +3574,7 @@ sub blog {
     return undef unless $app->query;
     my $blog_id = $app->query->param('blog_id');
     if ($blog_id) {
-        $app->{_blog} = MT::Blog->load($blog_id);
+        $app->{_blog} = MT->model('blog')->load( $blog_id );
     }
     return $app->{_blog};
 }

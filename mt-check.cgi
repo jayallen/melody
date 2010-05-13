@@ -158,7 +158,7 @@ if (!$view) {
             }
             
             body.has-static #header {
-                background: url('$mt_static_path/images/chromeless/movable-type-logo.gif') no-repeat 25px 15px;
+                background: url('$mt_static_path/melody/melody-logo-black.jpg') no-repeat 25px 15px;
                 height: 55px;
             }
             
