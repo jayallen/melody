@@ -1349,7 +1349,8 @@ sub _init_plugins_core {
                     return 0 if exists $Plugins{$plugin_sig};
                     $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
                     $timer->pause_partial if $timer;
-                    eval "# line " . __LINE__ . " " . __FILE__ . "\nrequire '$plugin';";
+                    eval "# line " . __LINE__ . " " . __FILE__ . "\nrequire '".
+                        File::Spec->catdir( $plugin_full_path, $sig ) . "';";
                     $timer->mark("Loaded plugin " . $sig) if $timer;
                     if ($@) {
                         $Plugins{$plugin_sig}{error} = $@;
@@ -1445,6 +1446,8 @@ sub _init_plugins_core {
                     # All plugins have been found, now load them
                     foreach my $plugin (@plugins) {
                         if ($plugin->{file} =~ /\.pl$/) {
+                            # TODO - do NOT load plugin, .pl is incompatible with Melody
+                            # TODO - issue warning
                             $plugin_envelope = $plugin->{envelope};
                             $load_plugin->(
                                 $plugin->{path}, $plugin->{file}
@@ -1468,6 +1471,12 @@ sub _init_plugins_core {
                                 next;
                             }
 
+                            # TODO - the plugin signature cannot simply be the base directory
+                            #        in the event that there are multiple yaml files. Therefore
+                            #        the signature must become a conjunction of the directory and
+                            #        config.yaml file.
+                            #        To address this, the ultimate normalizer should be the
+                            #        id declared in the yaml.
                             # See http://bugs.movabletype.org/?79933
                             local $plugin_sig = $plugin->{dir} . '/' . $plugin->{file};
                             next if exists $Plugins{ $plugin_sig };

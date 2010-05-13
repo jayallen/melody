@@ -38,7 +38,7 @@ sub upgrade {
                 $self->progress('Copying static files for <strong>'.$plugin->name.'</strong> to mt-static/support/plugins/...');
 
                 # Create the plugin's directory.
-                $self->progress( _make_dir($plugin->key, $self) );
+                $self->progress( _make_dir($plugin->id, $self) );
 
                 # Build a hash of the directory structure within the static folder.
                 my $static_dir = {};
@@ -99,7 +99,7 @@ sub _traverse_hash {
         if ($subfolders ne '') {
             # Create the specified directory
             my $dir = File::Spec->catfile($dir, $cur_item);
-            my $dir_w_plugin = File::Spec->catfile($plugin->key, $dir);
+            my $dir_w_plugin = File::Spec->catfile($plugin->id, $dir);
             $message = _make_dir($dir_w_plugin);
             push @messages, $message;
             # Now investigate the next level of the registry, to see if 
@@ -120,7 +120,7 @@ sub _traverse_hash {
             if ($process_file) {
                 my $src = File::Spec->catfile($plugin->path, 'static', $dir, $cur_item);
                 my $dest = File::Spec->catfile($app->config('StaticFilePath'), 
-                            'support', 'plugins', $plugin->key, $dir, $cur_item);
+                            'support', 'plugins', $plugin->id, $dir, $cur_item);
                 $message = _write_file($src, $dest, $self);
                 push @messages, $message;
             }
@@ -159,11 +159,11 @@ sub _write_file {
         or return MT::FileMgr->errstr;
 
     # Grab the file specified.
-    my $src_data = $fmgr->get_data($src)
+    my $src_data = $fmgr->get_data($src, 'upload')
         or return '<span style="color: #990000;">'.$fmgr->errstr.'</span>';
     # Write the file to its new home, but only if some data was read.
     if ($src_data) {
-        my $bytes = $fmgr->put_data($src_data, $dest)
+        my $bytes = $fmgr->put_data($src_data, $dest, 'upload')
             or return $self->error($fmgr->errstr);
         # Only provide a "copied" message if the file was successfully written.
         if ($bytes) {

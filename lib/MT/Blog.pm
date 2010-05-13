@@ -240,12 +240,11 @@ sub create_default_templates {
         return $blog->error(MT->translate("No default templates were found."));
     }
 
-    require MT::Template;
     my @arch_tmpl;
     for my $val (@$tmpl_list) {
         next if $val->{global};
 
-        my $obj = MT::Template->new;
+        my $obj = MT->model('template')->new;
         my $p = $val->{plugin} || 'MT'; # component and/or MT package for translate
         local $val->{name} = $val->{name}; # name field is translated in "templates" call
         local $val->{text} = $p->translate_templatized($val->{text});
@@ -260,7 +259,7 @@ sub create_default_templates {
         if ( ( 'widgetset' eq $val->{type} )
           && ( exists $val->{widgets} ) ) {
             my $modulesets = delete $val->{widgets};
-            $obj->modulesets( MT::Template->widgets_to_modulesets($modulesets, $blog->id) );
+            $obj->modulesets( MT->model('template')->widgets_to_modulesets($modulesets, $blog->id) );
         }
         if ( 'module' eq $val->{set} || 'widget' eq $val->{set} ) {
             foreach (qw( expire_type expire_interval expire_event )) {
@@ -282,7 +281,6 @@ sub create_default_templates {
 
     my %archive_types;
     if (@arch_tmpl) {
-        require MT::TemplateMap;
         for my $map_set (@arch_tmpl) {
             my $tmpl = $map_set->{template};
             my $mappings = $map_set->{mappings};
@@ -291,7 +289,7 @@ sub create_default_templates {
                 my $at = $m->{archive_type};
                 $archive_types{$at} = 1;
                 # my $preferred = $mappings->{$map_key}{preferred};
-                my $map = MT::TemplateMap->new;
+                my $map = MT->model('templatemap')->new;
                 $map->archive_type($at);
                 if ( exists $m->{preferred} ) {
                     $map->is_preferred($m->{preferred});
