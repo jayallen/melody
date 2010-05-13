@@ -330,6 +330,9 @@ sub templates {
         if ($def_tmpl->{templates} && ($def_tmpl->{templates} eq '*')) {
             $tmpl_hash = MT->registry("default_templates");
         }
+        elsif ($def_tmpl->{templates} && ($def_tmpl->{templates} =~ m/^[-\w]+\.yaml$/)) {
+            $tmpl_hash = MT->registry('template_sets',$set,'templates');
+        }
         else {
             $tmpl_hash = $set ? $def_tmpl->{templates} : $def_tmpl;
         }
@@ -340,7 +343,7 @@ sub templates {
             foreach my $tmpl_id (keys %{ $tmpl_hash->{$tmpl_set} }) {
                 next if $tmpl_id eq 'plugin';
                 my $p = $tmpl_hash->{plugin} || $tmpl_hash->{$tmpl_set}{plugin};
-                my $base_path = $def_tmpl->{base_path} || $tmpl_hash->{$tmpl_set}{base_path};
+                my $base_path = $def_tmpl->{base_path} || $tmpl_hash->{base_path};
                 if ($p && $base_path) {
                     $base_path = File::Spec->catdir($p->path, $base_path);
                 }

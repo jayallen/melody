@@ -269,28 +269,34 @@ sub load_tags {
         if ( $r->{'static_version'} ) {
             # Create the plugin-specific static file path tag, such as "ConfigAssistantStaticFilePath."
             my $tag;
-            $tag = $obj->key . 'StaticFilePath';
+            $tag = $obj->id . 'StaticFilePath';
             my $dir = $obj->path;
             $tags->{function}->{$tag} = sub {
-                $_[0]->stash( 'field',     $tag      );
-                $_[0]->stash( 'plugin_ns', $obj->key );
-                $_[0]->stash( 'scope',     'system'  );
-                $_[0]->stash( 'default',   $dir      );
+                MT->log("The usage of the tag '$tag' has been deprecated. Please use mt:PluginStaticFilePath instead");
+                $_[0]->stash( 'field',     $tag     );
+                $_[0]->stash( 'plugin_ns', $obj->id );
+                $_[0]->stash( 'scope',     'system' );
+                $_[0]->stash( 'default',   $dir     );
             };
             # Create the plugin-specific static web path tag, such as "ConfigAssistantStaticWebPath."
-            $tag = $obj->key . 'StaticWebPath';
-            my $url = $app->config('StaticWebPath').'/support/plugins/'.$obj->key.'/';
+            $tag = $obj->id . 'StaticWebPath';
+            my $url = $app->config('StaticWebPath').'support/plugins/'.$obj->id.'/';
             $tags->{function}->{$tag} = sub {
-                $_[0]->stash( 'field',     $tag      );
-                $_[0]->stash( 'plugin_ns', $obj->key );
-                $_[0]->stash( 'scope',     'system'  );
-                $_[0]->stash( 'default',   $url      );
+                MT->log("The usage of the tag '$tag' has been deprecated. Please use mt:PluginStaticWebPath instead");
+                $_[0]->stash( 'field',     $tag     );
+                $_[0]->stash( 'plugin_ns', $obj->id );
+                $_[0]->stash( 'scope',     'system' );
+                $_[0]->stash( 'default',   $url     );
             };
         }
     }
 
     $tags->{function}{'PluginConfigForm'} =
       '$ConfigAssistant::ConfigAssistant::Plugin::tag_config_form';
+    $tags->{function}{'PluginStaticWebPath'} =
+      '$ConfigAssistant::ConfigAssistant::Plugin::tag_plugin_static_web_path';
+    $tags->{function}{'PluginStaticFilePath'} =
+      '$ConfigAssistant::ConfigAssistant::Plugin::tag_plugin_static_file_path';
 
     return $tags;
 }
