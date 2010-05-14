@@ -140,7 +140,7 @@ if (!$view) {
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta http-equiv="content-language" content="$lang" />
     
-    <title><MT_TRANS phrase="Movable Type System Check"> [mt-check.cgi]</title>
+    <title><MT_TRANS phrase="Melody System Check"> [mt-check.cgi]</title>
     
     <style type=\"text/css\">
         <!--
@@ -274,10 +274,10 @@ HTML
         print "<body>\n";
     }
     print trans_templ(<<HTML);
-<div id="header"><h1><MT_TRANS phrase="Movable Type System Check"> [mt-check.cgi]</h1></div>
+<div id="header"><h1><MT_TRANS phrase="Melody System Check"> [mt-check.cgi]</h1></div>
 
 <div id="content">
-<p class="msg msg-info"><MT_TRANS phrase="The mt-check.cgi script provides you with information on your system's configuration and determines whether you have all of the components you need to run Movable Type."></p>
+<p class="msg msg-info"><MT_TRANS phrase="The mt-check.cgi script provides you with information on your system's configuration and determines whether you have all of the components you need to run Melody."></p>
 HTML
 }
 
@@ -285,7 +285,7 @@ my $is_good = 1;
 my (@REQ, @DATA, @OPT);
 
 my @CORE_REQ = (
-    [ 'CGI', 0, 1, translate('CGI is required for all Movable Type application functionality.') ],
+    [ 'CGI', 0, 1, translate('CGI is required for all Melody application functionality.') ],
 
     [ 'Image::Size', 0, 1, translate('Image::Size is required for file uploads (to determine the size of uploaded images in many different formats).') ],
 
@@ -314,7 +314,7 @@ my @CORE_OPT = (
 
     [ 'HTML::Parser', 0, 0, translate('HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.') ],
 
-    [ 'SOAP::Lite', 0.50, 0, translate('SOAP::Lite is optional; It is needed if you wish to use the MT XML-RPC server implementation.') ],
+    [ 'SOAP::Lite', 0.50, 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.') ],
 
     [ 'File::Temp', 0, 0, translate('File::Temp is optional; It is needed if you would like to be able to overwrite existing files when you upload.') ],
 
@@ -325,9 +325,9 @@ my @CORE_OPT = (
     [ 'Image::Magick', 0, 0, translate('Image::Magick is optional; It is needed if you would like to be able to create thumbnails of uploaded images.') ],
 
     [ 'GD', 0, 0, translate('This module is needed if you would like to be able to create thumbnails of uploaded images.')],
-    [ 'IPC::Run', 0, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for MT.')],
+    [ 'IPC::Run', 0, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for Melody.')],
 
-    [ 'Storable', 0, 0, translate('Storable is optional; it is required by certain MT plugins available from third parties.')],
+    [ 'Storable', 0, 0, translate('Storable is optional; it is required by certain Melody plugins available from third parties.')],
 
     [ 'Crypt::DSA', 0, 0, translate('Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.')],
 
@@ -337,7 +337,7 @@ my @CORE_OPT = (
 
     [ 'XML::Atom', 0, 0, translate('XML::Atom is required in order to use the Atom API.')],
 
-    [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is required in order to use memcached as caching mechanism used by Movable Type.')],
+    [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is required in order to use memcached as caching mechanism used by Melody.')],
 
     [ 'Archive::Tar', 0, 0, translate('Archive::Tar is required in order to archive files in backup/restore operation.')],
 
@@ -353,7 +353,7 @@ my @CORE_OPT = (
     [ 'Mail::Sendmail', 0, 0, translate('Mail::Sendmail is required for sending mail via SMTP Server.')],
     [ 'Safe', 0, 0, translate('This module is used in test attribute of MTIf conditional tag.')],
     [ 'Digest::MD5', 0, 0, translate('This module is used by the Markdown text filter.')],
-    [ 'Text::Balanced', 0, 0, translate('This module is required in mt-search.cgi if you are running Movable Type on Perl older than Perl 5.8.') ],
+    [ 'Text::Balanced', 0, 0, translate('This module is required in mt-search.cgi if you are running Melody on Perl older than Perl 5.8.') ],
     [ 'XML::Parser', 0, 0, translate('This module required for action streams.')],
 );
 
@@ -381,7 +381,7 @@ EOT
 my $config_check = '';
 if (!$cfg_exist) {
     $config_check = <<CONFIG;
-<p class="warning"><MT_TRANS phrase="Movable Type configuration file was not found."></p>
+<p class="warning"><MT_TRANS phrase="Melody configuration file was not found."></p>
 CONFIG
 }
 my $server = $ENV{SERVER_SOFTWARE};
@@ -396,14 +396,14 @@ if ($version) {
     $version =~ s/[^a-zA-Z0-9\-\.]//g;
 print trans_templ(<<INFO);
 <ul class="version">
-    <li><strong><MT_TRANS phrase="Movable Type version:"></strong> <code>$version</code></li>
+    <li><strong><MT_TRANS phrase="Melody version:"></strong> <code>$version</code></li>
 </ul>
 INFO
 }
 print trans_templ(<<INFO);
 <ul>
 	<li><strong><MT_TRANS phrase="Current working directory:"></strong> <code>$cwd</code></li>
-	<li><strong><MT_TRANS phrase="MT home directory:"></strong> <code>$ENV{MT_HOME}</code></li>
+	<li><strong><MT_TRANS phrase="Melody home directory:"></strong> <code>$ENV{MT_HOME}</code></li>
 	<li><strong><MT_TRANS phrase="Operating system:"></strong> $^O</li>
 	<li><strong><MT_TRANS phrase="Perl version:"></strong> <code>$ver</code></li>
 	<li><strong><MT_TRANS phrase="Perl include path:"></strong><br /> <code>$inc_path</code></li>
@@ -480,7 +480,7 @@ MSG
     }
     if ($data) {
         print trans_templ(<<MSG);
-        <p class="msg msg-info"><MT_TRANS phrase="Some of the following modules are required by the various data storage options in Movable Type. In order run the system, your server needs to have DBI and at least one of the other modules installed."></p>
+        <p class="msg msg-info"><MT_TRANS phrase="Some of the following modules are required by the various data storage options in Melody. In order run the system, your server needs to have DBI and at least one of the other modules installed."></p>
 
 MSG
     }
@@ -509,7 +509,7 @@ MSG
                 $dbi_is_okay = 1 if $mod eq 'DBI';
                 if ($mod eq 'DBD::mysql') {
                     if ($DBD::mysql::VERSION == 3.0000) {
-                        print trans_templ(qq{<p class="warning"><MT_TRANS phrase="The DBD::mysql version you have installed is known to be incompatible with Movable Type. Please install the current release available from CPAN."></p>});
+                        print trans_templ(qq{<p class="warning"><MT_TRANS phrase="The DBD::mysql version you have installed is known to be incompatible with Melody. Please install the current release available from CPAN."></p>});
                     }
                 }
                 if (!$dbi_is_okay) {
@@ -531,7 +531,7 @@ if ($is_good && $cfg_exist) {
     print trans_templ(<<HTML);
     
     <div class="msg msg-success">
-        <h2><MT_TRANS phrase="Movable Type System Check Successful"></h2>
+        <h2><MT_TRANS phrase="Melody System Check Successful"></h2>
         <p><strong><MT_TRANS phrase="You're ready to go!"></strong> <MT_TRANS phrase="Your server has all of the required modules installed; you do not need to perform any additional module installations. Continue with the installation instructions."></p>
     </div>
 
