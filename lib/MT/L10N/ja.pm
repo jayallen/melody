@@ -1,4 +1,4 @@
-# Movable Type (r) Open Source (C) 2005-2009 Six Apart, Ltd.
+# Melody, based on Movable Type (r) Open Source (C) 2005-2009 Six Apart, Ltd.
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
@@ -113,12 +113,12 @@ use vars qw( @ISA %Lexicon );
 ## php/mt.php.pre
 
 ## mt-check.cgi
-	'Movable Type System Check' => 'Movable Type システムチェック',
-	'The mt-check.cgi script provides you with information on your system\'s configuration and determines whether you have all of the components you need to run Movable Type.' => 'mt-check.cgiはシステムの構成を確認し、Movable Typeを実行するために必要なコンポーネントがそろっていることを確認するためのスクリプトです。',
-	'The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]). Please upgrade to at least Perl [_2].' => 'お使いのシステムにインストールされている Perl [_1] は、Movable Type でサポートされている最低限のバージョン[_2]を満たしていません。Perlをアップグレードしてください。',
-	'Movable Type configuration file was not found.' => 'Movable Typeの構成ファイルが見つかりませんでした。',
+	'Melody System Check' => 'Melody システムチェック',
+	'The mt-check.cgi script provides you with information on your system\'s configuration and determines whether you have all of the components you need to run Melody.' => 'mt-check.cgiはシステムの構成を確認し、Melodyを実行するために必要なコンポーネントがそろっていることを確認するためのスクリプトです。',
+	'The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]). Please upgrade to at least Perl [_2].' => 'お使いのシステムにインストールされている Perl [_1] は、Melody でサポートされている最低限のバージョン[_2]を満たしていません。Perlをアップグレードしてください。',
+	'Melody configuration file was not found.' => 'Melodyの構成ファイルが見つかりませんでした。',
 	'System Information' => 'システム情報',
-	'Movable Type version:' => 'Movable Type バージョン',
+	'Melody version:' => 'Melody バージョン',
 	'Current working directory:' => '現在のディレクトリ',
 	'MT home directory:' => 'MTディレクトリ',
 	'Operating system:' => 'オペレーティングシステム',
@@ -127,18 +127,18 @@ use vars qw( @ISA %Lexicon );
 	'Web server:' => 'ウェブサーバー',
 	'(Probably) Running under cgiwrap or suexec' => 'cgiwrapまたはsuexec環境下で動作していると思われます。',
 	'[_1] [_2] Modules' => '[_1]: [_2]モジュール',
-	'The following modules are <strong>optional</strong>. If your server does not have these modules installed, you only need to install them if you require the functionality that the module provides.' => 'これらのモジュールのインストールは<strong>任意</strong>です。お使いのサーバーにこれらのモジュールがインストールされていない場合でも、Movable Type の基本機能は動作します。これらのモジュールの機能が必要となった場合にはインストールを行ってください。',
-	'Some of the following modules are required by the various data storage options in Movable Type. In order run the system, your server needs to have DBI and at least one of the other modules installed.' => 'これらのモジュールは、Movable Type がデータを保存するために必要なモジュールです。DBIと、1つ以上のデータベース用のモジュールをインストールする必要があります。',
+	'The following modules are <strong>optional</strong>. If your server does not have these modules installed, you only need to install them if you require the functionality that the module provides.' => 'これらのモジュールのインストールは<strong>任意</strong>です。お使いのサーバーにこれらのモジュールがインストールされていない場合でも、Melody の基本機能は動作します。これらのモジュールの機能が必要となった場合にはインストールを行ってください。',
+	'Some of the following modules are required by the various data storage options in Melody. In order run the system, your server needs to have DBI and at least one of the other modules installed.' => 'これらのモジュールは、Melody がデータを保存するために必要なモジュールです。DBIと、1つ以上のデータベース用のモジュールをインストールする必要があります。',
 	'Either your server does not have [_1] installed, the version that is installed is too old, or [_1] requires another module that is not installed.' => '[_1]がインストールされていないか、インストールされているバージョンが古い、または [_1]の動作に必要な他のモジュールが見つかりません。',
 	'Your server does not have [_1] installed, or [_1] requires another module that is not installed.' => 'サーバーに [_1]か、[_1]の動作に必要な他のモジュールがインストールされていません。',
 	'Please consult the installation instructions for help in installing [_1].' => '[_1]のインストールはインストールマニュアルに沿って行ってください。',
-	'The DBD::mysql version you have installed is known to be incompatible with Movable Type. Please install the current release available from CPAN.' => 'お使いのサーバーにインストールされている DBD::mysqlのバージョンは、Movable Type と互換性がありません。CPAN に公開されている最新バージョンをインストールしてください。',
+	'The DBD::mysql version you have installed is known to be incompatible with Melody. Please install the current release available from CPAN.' => 'お使いのサーバーにインストールされている DBD::mysqlのバージョンは、Melody と互換性がありません。CPAN に公開されている最新バージョンをインストールしてください。',
 	'The $mod is installed properly, but requires an updated DBI module. Please see note above regarding the DBI module requirements.' => '$modはインストールされていますが、新しいDBIが必要です。上記を参考に必要なDBIを確認してください。',
 	'Your server has [_1] installed (version [_2]).' => 'サーバーに [_1] がインストールされています(バージョン [_2])。',
-	'Movable Type System Check Successful' => 'システムのチェックを完了しました。',
-	'You\'re ready to go!' => 'Movable Typeを利用できます。',
-	'Your server has all of the required modules installed; you do not need to perform any additional module installations. Continue with the installation instructions.' => 'お使いのサーバーには、Movable Type の動作に必要なすべてのモジュールがインストールされています。モジュールを追加インストール作業は必要はありません。マニュアルに従い、インストールを続けてください。',
-	'CGI is required for all Movable Type application functionality.' => 'CGIは、Movable Type のすべてのアプリケーションの動作に必須です。',
+	'Melody System Check Successful' => 'システムのチェックを完了しました。',
+	'You\'re ready to go!' => 'Melodyを利用できます。',
+	'Your server has all of the required modules installed; you do not need to perform any additional module installations. Continue with the installation instructions.' => 'お使いのサーバーには、Melody の動作に必要なすべてのモジュールがインストールされています。モジュールを追加インストール作業は必要はありません。マニュアルに従い、インストールを続けてください。',
+	'CGI is required for all Melody application functionality.' => 'CGIは、Melody のすべてのアプリケーションの動作に必須です。',
 	'Image::Size is required for file uploads (to determine the size of uploaded images in many different formats).' => 'Image::Sizeはファイルのアップロードを行うために必要です。各種のファイル形式に対応して画像のサイズを取得します。',
 	'File::Spec is required for path manipulation across operating systems.' => 'File::Specはオペレーティングシステムでパスの操作を行うために必要です。',
 	'CGI::Cookie is required for cookie authentication.' => 'CGI::Cookieはcookie 認証のために必要です。',
@@ -162,7 +162,7 @@ use vars qw( @ISA %Lexicon );
 	'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers such as AOL and Yahoo! which require SSL support.' => 'Crypt::SSLeayはAOLやYahoo!などのSSLを利用するOpenIDのコメント投稿者を認証するために必要となります。',
 	'MIME::Base64 is required in order to enable comment registration.' => 'MIME::Base64のインストールは必須ではありません。コメントの認証機能を利用する場合に必要となります。',
 	'XML::Atom is required in order to use the Atom API.' => 'XML::Atomのインストールは必須ではありません。Atom APIを利用する場合に必要となります。',
-	'Cache::Memcached and memcached server/daemon is required in order to use memcached as caching mechanism used by Movable Type.' => 'Cache::Memcachedのインストールは必須ではありません。Movable Type のキャッシング機能として memcached サーバーを利用する場合に必要となります。',
+	'Cache::Memcached and memcached server/daemon is required in order to use memcached as caching mechanism used by Melody.' => 'Cache::Memcachedのインストールは必須ではありません。Melody のキャッシング機能として memcached サーバーを利用する場合に必要となります。',
 	'Archive::Tar is required in order to archive files in backup/restore operation.' => 'Archive::Tarのインストールは必須ではありません。バックアップと復元で圧縮の機能を利用する場合に必要となります。',
 	'IO::Compress::Gzip is required in order to compress files in backup/restore operation.' => 'IO::Compress::Gzipのインストールは必須ではありません。バックアップと復元で圧縮の機能を利用する場合に必要となります。',
 	'IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.' => 'IO::Uncompress::Gunzipのインストールは必須ではありません。バックアップと復元で圧縮の機能を利用する場合に必要となります。',
@@ -172,7 +172,7 @@ use vars qw( @ISA %Lexicon );
 	'Mail::Sendmail is required for sending mail via SMTP Server.' => 'Mail::SendmailはSMTPサーバーを経由してメールを送信する場合に必要となります。',
 	'This module is used in test attribute of MTIf conditional tag.' => 'MTIfタグの機能で使われます。',
 	'This module is used by the Markdown text filter.' => 'Markdown形式を利用するために必要です。',
-	'This module is required in mt-search.cgi if you are running Movable Type on Perl older than Perl 5.8.' => 'Perl 5.6.1以下の環境で、mt-search.cgiを利用するときに必要です。',
+	'This module is required in mt-search.cgi if you are running Melody on Perl older than Perl 5.8.' => 'Perl 5.6.1以下の環境で、mt-search.cgiを利用するときに必要です。',
 	'This module required for action streams.' => 'ActionStreamsを利用するにはこのモジュールが必要です。',
 	'The [_1] database driver is required to use [_2].' => '[_2]を使うには[_1]のデータベースドライバが必要です。',
 	'Checking for' => '確認中',
@@ -280,7 +280,7 @@ use vars qw( @ISA %Lexicon );
 	'Return to the <a href="[_1]">original entry</a>.' => '<a href="[_1]">元の記事</a>に戻る',
 
 ## default_templates/comment_throttle.mtml
-	'If this was a mistake, you can unblock the IP address and allow the visitor to add it again by logging in to your Movable Type installation, going to Blog Config - IP Banning, and deleting the IP address [_1] from the list of banned addresses.' => 'これが間違いである場合は、Movable Typeにログインして、ブログの設定画面に進み、IP禁止リストからIPアドレスを削除してください。',
+	'If this was a mistake, you can unblock the IP address and allow the visitor to add it again by logging in to your Melody installation, going to Blog Config - IP Banning, and deleting the IP address [_1] from the list of banned addresses.' => 'これが間違いである場合は、Melodyにログインして、ブログの設定画面に進み、IP禁止リストからIPアドレスを削除してください。',
 	'A visitor to your blog [_1] has automatically been banned by adding more than the allowed number of comments in the last [_2] seconds.' => '[_1]を禁止しました。[_2]秒の間に許可された以上のコメントを送信してきました。',
 	'This has been done to prevent a malicious script from overwhelming your weblog with comments. The banned IP address is' => 'これは悪意のスクリプトがブログをコメントで飽和させるのを阻止するための措置です。以下のIPアドレスを禁止しました。',
 
@@ -342,7 +342,7 @@ use vars qw( @ISA %Lexicon );
 	'Continue reading <a href="[_1]" rel="bookmark">[_2]</a>.' => '続きを読む: <a href="[_1]" rel="bookmark">[_2]</a>',
 
 ## default_templates/footer-email.mtml
-	'Powered by Movable Type [_1]' => 'Powered by Movable Type [_1]',
+	'Powered by Melody [_1]' => 'Powered by Melody [_1]',
 
 ## default_templates/javascript.mtml
 	'moments ago' => '直前',
@@ -431,7 +431,7 @@ use vars qw( @ISA %Lexicon );
 ## default_templates/recent_entries.mtml
 
 ## default_templates/recover-password.mtml
-	'A request has been made to change your password in Movable Type. To complete this process click on the link below to select a new password.' => 'パスワードをリセットしようとしています。以下のリンクをクリックして、新しいパスワードを設定してください。',
+	'A request has been made to change your password in Melody. To complete this process click on the link below to select a new password.' => 'パスワードをリセットしようとしています。以下のリンクをクリックして、新しいパスワードを設定してください。',
 	'If you did not request this change, you can safely ignore this email.' => 'このメールに心当たりがないときは、何もせずに無視してください。',
 
 ## default_templates/search.mtml
@@ -502,8 +502,8 @@ use vars qw( @ISA %Lexicon );
 	'All Weblog Entries' => 'すべてのブログのブログ記事',
 	'[_1] Weblog Activity' => '[_1]ブログのログ',
 	'All Weblog Activity' => 'すべてのブログのログ',
-	'Movable Type System Activity' => 'Movable Typeのシステムログ',
-	'Movable Type Debug Activity' => 'Movable Typeのデバッグログ',
+	'Melody System Activity' => 'Melodyのシステムログ',
+	'Melody Debug Activity' => 'Melodyのデバッグログ',
 	'[_1] Weblog Pages' => '[_1]ブログのウェブページ',
 	'All Weblog Pages' => 'すべてのブログのウェブページ',
 
@@ -539,7 +539,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Error during publishing: [_1]' => '公開中にエラーが発生しました: [_1]',
 	'This is You' => 'This is You',
 	'Handy Shortcuts' => 'ショートカット',
-	'Movable Type News' => 'Movable Typeニュース',
+	'Melody News' => 'Melodyニュース',
 	'Blog Stats' => 'Blog Stats',
 	'Entries' => 'ブログ記事',
 	'Refresh Blog Templates' => 'ブログのテンプレートを初期化',
@@ -626,7 +626,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 ## lib/MT/App/Comments.pm
 	'Error assigning commenting rights to user \'[_1] (ID: [_2])\' for weblog \'[_3] (ID: [_4])\'. No suitable commenting role was found.' => '\'[_1]\' (ID:[_2])にブログ\'[_3]\'(ID:[_2])へのコメント権限を与えられませんでした。コメント権限を与えるためのロールが見つかりません。',
 	'Can\'t load blog #[_1].' => 'ブログ(ID:[_1])をロードできません。',
-	'Invalid commenter login attempt from [_1] to blog [_2](ID: [_3]) which does not allow Movable Type native authentication.' => '[_1]がブログ[_2](ID:[_3])にログインしようとしましたが、このブログではMovable Type認証が有効になっていません。',
+	'Invalid commenter login attempt from [_1] to blog [_2](ID: [_3]) which does not allow Melody native authentication.' => '[_1]がブログ[_2](ID:[_3])にログインしようとしましたが、このブログではMelody認証が有効になっていません。',
 	'Invalid login.' => 'ログインできませんでした。',
 	'Invalid login' => 'ログインできませんでした。',
 	'Successfully authenticated but signing up is not allowed.  Please contact system administrator.' => '認証されましたが、登録は許可されていません。システム管理者に連絡してください。',
@@ -637,7 +637,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Failed login attempt by disabled user \'[_1]\'' => '無効なユーザー [_1] がログインしようとしました。',
 	'Failed login attempt by unknown user \'[_1]\'' => '未登録のユーザー [_1] がログインしようとしました。',
 	'Signing up is not allowed.' => '登録はできません。',
-	'Movable Type Account Confirmation' => 'Movable Type アカウント登録確認',
+	'Melody Account Confirmation' => 'Melody アカウント登録確認',
 	'System Email Address is not configured.' => 'システムで利用するメールアドレスが設定されていません。',
 	'Commenter \'[_1]\' (ID:[_2]) has been successfully registered.' => 'コメント投稿者\'[_1]\'(ID:[_2])が登録されました。',
 	'Thanks for the confirmation.  Please sign in to comment.' => '登録ありがとうございます。サインインしてコメントしてください。',
@@ -744,8 +744,8 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'The e-mail address is required.' => 'メールアドレスは必須です。',
 	'The path provided below is not writable.' => '指定されたパスに書き込みできません。',
 	'Invalid session.' => 'セッションが不正です。',
-	'No permissions. Please contact your administrator for upgrading Movable Type.' => '権限がありません。Movable Typeのアップグレードを管理者に依頼してください。',
-	'Movable Type has been upgraded to version [_1].' => 'Movable Typeをバージョン[_1]にアップグレードしました。',
+	'No permissions. Please contact your administrator for upgrading Melody.' => '権限がありません。Melodyのアップグレードを管理者に依頼してください。',
+	'Melody has been upgraded to version [_1].' => 'Melodyをバージョン[_1]にアップグレードしました。',
 
 ## lib/MT/App/Viewer.pm
 	'Loading blog with ID [_1] failed' => 'Loading blog with ID [_1] failed',
@@ -763,8 +763,8 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'An error occurred while attempting to connect to the database.  Check the settings and try again.' => 'データベースに接続できませんでした。設定を見直してもう一度接続してください。',
 	'SMTP Server' => 'SMTPサーバー',
 	'Sendmail' => 'Sendmail',
-	'Test email from Movable Type Configuration Wizard' => 'Movable Type構成ウィザードからのテスト送信',
-	'This is the test email sent by your new installation of Movable Type.' => 'Movable Typeのインストール中に送信されたテストメールです。',
+	'Test email from Melody Configuration Wizard' => 'Melody構成ウィザードからのテスト送信',
+	'This is the test email sent by your new installation of Melody.' => 'Melodyのインストール中に送信されたテストメールです。',
 	'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in mt-config.cgi.' => '特殊な文字をエンコードするときに必要になりますが、構成ファイルにNoHTMLEntitiesを設定すればこの機能を無効化できます。',
 	'This module is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.' => 'トラックバック機能や更新通知機能を利用する場合に必要となります。',
 	'This module is needed if you wish to use the MT XML-RPC server implementation.' => 'XML-RPC による作業を行う場合に必要となります。',
@@ -792,7 +792,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Blog \'[_1] (ID: [_2])\' for user \'[_3] (ID: [_4])\' has been created.' => '\'[_3]\'(ID:[_4])のブログ\'[_1]\'(ID:[_2])を作成しました。',
 	'Error assigning blog administration rights to user \'[_1] (ID: [_2])\' for blog \'[_3] (ID: [_4])\'. No suitable blog administrator role was found.' => '\'[_1]\'(ID:[_2])をブログ\'[_3]\'(ID:[_4])の管理者にできませんでした。ブログの管理権限を持つロールが見つかりませんでした。',
 	'The login could not be confirmed because of a database error ([_1])' => 'データベースのエラーでログインを確認できませんでした: [_1]',
-	'Our apologies, but you do not have permission to access any blogs within this installation. If you feel you have reached this message in error, please contact your Movable Type system administrator.' => '大変申し訳ありません。このシステム内のブログに対して権限を与えられていないようです。Movable Typeのシステム管理者に連絡してください。',
+	'Our apologies, but you do not have permission to access any blogs within this installation. If you feel you have reached this message in error, please contact your Melody system administrator.' => '大変申し訳ありません。このシステム内のブログに対して権限を与えられていないようです。Melodyのシステム管理者に連絡してください。',
 	'This account has been disabled. Please see your system administrator for access.' => 'このアカウントは無効にされています。システム管理者に問い合わせてください。',
 	'Failed login attempt by pending user \'[_1]\'' => '保留中のユーザー「[_1]」がログインしようとしました。',
 	'This account has been deleted. Please see your system administrator for access.' => 'このアカウントは削除されました。システム管理者に問い合わせてください。',
@@ -972,9 +972,9 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'The approval could not be committed: [_1]' => '公開できませんでした: [_1]',
 
 ## lib/MT/BackupRestore/BackupFileHandler.pm
-	'Uploaded file was not a valid Movable Type backup manifest file.' => 'アップロードされたファイルはMovable Typeバックアップで作成されたマニフェストファイルではありません。',
-	'Uploaded file was backed up from Movable Type but the different schema version ([_1]) from the one in this system ([_2]).  It is not safe to restore the file to this version of Movable Type.' => 'アップロードされたファイルはこのシステムのバージョン([_2])とは異なるバージョン([_1])でバックアップされています。このファイルを使って復元することはできません。',
-	'[_1] is not a subject to be restored by Movable Type.' => '[_1]はMovable Typeで復元する対象には含まれていません。',
+	'Uploaded file was not a valid Melody backup manifest file.' => 'アップロードされたファイルはMelodyバックアップで作成されたマニフェストファイルではありません。',
+	'Uploaded file was backed up from Melody but the different schema version ([_1]) from the one in this system ([_2]).  It is not safe to restore the file to this version of Melody.' => 'アップロードされたファイルはこのシステムのバージョン([_2])とは異なるバージョン([_1])でバックアップされています。このファイルを使って復元することはできません。',
+	'[_1] is not a subject to be restored by Melody.' => '[_1]はMelodyで復元する対象には含まれていません。',
 	'[_1] records restored.' => '[_1]件復元されました。',
 	'Restoring [_1] records:' => '[_1]を復元しています:',
 	'User with the same name as the name of the currently logged in ([_1]) found.  Skipped the record.' => '現在ログインしているユーザー([_1])が見つかりました。このレコードはスキップします。',
@@ -993,7 +993,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Can\'t open directory \'[_1]\': [_2]' => 'ディレクトリ\'[_1]\'を開けませんでした] [_2]',
 	'No manifest file could be found in your import directory [_1].' => 'importディレクトリにマニフェストファイルがありません。',
 	'Can\'t open [_1].' => '[_1]を開けません。',
-	'Manifest file [_1] was not a valid Movable Type backup manifest file.' => '[_1]はMovable Typeバックアップで作成された正しいマニフェストファイルではありません。',
+	'Manifest file [_1] was not a valid Melody backup manifest file.' => '[_1]はMelodyバックアップで作成された正しいマニフェストファイルではありません。',
 	'Manifest file: [_1]' => 'マニフェストファイル: [_1]',
 	'Path was not found for the file ([_1]).' => 'ファイル([_1])のパスが見つかりませんでした。',
 	'[_1] is not writable.' => '[_1]には書き込めません。',
@@ -1128,8 +1128,8 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'You did not specify an Archive Root.' => 'アーカイブパスを指定していません。',
 	'Blog \'[_1]\' (ID:[_2]) deleted by \'[_3]\'' => '\'[_3]\'がブログ\'[_1]\'(ID:[_2])を削除しました。',
 	'Saving blog failed: [_1]' => 'ブログを保存できませんでした: [_1]',
-	'Error: Movable Type cannot write to the template cache directory. Please check the permissions for the directory called <code>[_1]</code> underneath your blog directory.' => 'テンプレートをキャッシュするディレクトリに書き込めません。サイトパスの下にある<code>[_1]</code>ディレクトリのパーミッションを確認してください。',
-	'Error: Movable Type was not able to create a directory to cache your dynamic templates. You should create a directory called <code>[_1]</code> underneath your blog directory.' => 'テンプレートをキャッシュするディレクトリを作成できません。サイトパスの下に<code>[_1]</code>ディレクトリを作成してください。',
+	'Error: Melody cannot write to the template cache directory. Please check the permissions for the directory called <code>[_1]</code> underneath your blog directory.' => 'テンプレートをキャッシュするディレクトリに書き込めません。サイトパスの下にある<code>[_1]</code>ディレクトリのパーミッションを確認してください。',
+	'Error: Melody was not able to create a directory to cache your dynamic templates. You should create a directory called <code>[_1]</code> underneath your blog directory.' => 'テンプレートをキャッシュするディレクトリを作成できません。サイトパスの下に<code>[_1]</code>ディレクトリを作成してください。',
 
 ## lib/MT/CMS/Category.pm
 	'Subfolder' => 'サブフォルダ',
@@ -1201,7 +1201,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## lib/MT/CMS/Dashboard.pm
 	'Better, Stronger, Faster' => 'よりよく、よりたくましく、より速く',
-	'Movable Type has undergone a significant overhaul in all aspects of performance. Memory utilization has been reduced, publishing times have been increased significantly and search is now 100x faster!' => 'あらゆる側面においてパフォーマンスを向上させるためのオーバーホールを施しました。メモリ利用量を減らし、再構築にかかる時間を大きく削減しました。検索は100倍も速くなっています！',
+	'Melody has undergone a significant overhaul in all aspects of performance. Memory utilization has been reduced, publishing times have been increased significantly and search is now 100x faster!' => 'あらゆる側面においてパフォーマンスを向上させるためのオーバーホールを施しました。メモリ利用量を減らし、再構築にかかる時間を大きく削減しました。検索は100倍も速くなっています！',
 	'Module Caching' => 'モジュールのキャッシュ',
 	'Template module and widget content can now be cached in the database to dramatically speed up publishing.' => 'モジュールテンプレートとウィジェットのコンテンツをデータベースにキャッシュすることで、再構築の速度を劇的に改善できます。',
 	'Improved Template and Design Management' => 'テンプレートとデザイン管理機能の向上',
@@ -1357,8 +1357,8 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'That action ([_1]) is apparently not implemented!' => 'アクション([_1])が実装されていません。',
 	'You don\'t have a system email address configured.  Please set this first, save it, then try the test email again.' => 'システムメールアドレスを設定していません。テストメールを送信する前にシステムメールアドレスを設定してください。',
 	'Please enter a valid email address' => '正しいメールアドレスを入力してください。',
-	'Test email from Movable Type' => 'Movable Type からのテストメールです',
-	'This is the test email sent by your installation of Movable Type.' => 'Movable Type から送信されたテストメールです。',
+	'Test email from Melody' => 'Melody からのテストメールです',
+	'This is the test email sent by your installation of Melody.' => 'Melody から送信されたテストメールです。',
 	'Mail was not properly sent' => 'メールを送信できませんでした',
 	'Test e-mail was successfully sent to [_1]' => 'テストメールを [_1] に送信しました。', # Translate - New
 	'These setting(s) are overridden by a value in the MT configuration file: [_1]. Remove the value from the configuration file in order to control the value on this page.' => 'この設定よりも[_1]に指定されている値の方が優先されます。このページで設定を行う場合はファイルから値を削除してください。', # Translate - New
@@ -1394,7 +1394,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'File was not uploaded.' => 'ファイルがアップロードされませんでした。',
 	'Restoring a file failed: ' => 'ファイルから復元できませんでした。',
 	'Some of the files were not restored correctly.' => '復元できなかったファイルがあります。',
-	'Successfully restored objects to Movable Type system by user \'[_1]\'' => '\'[_1]\'がMovable Typeシステムを復元しました。',
+	'Successfully restored objects to Melody system by user \'[_1]\'' => '\'[_1]\'がMelodyシステムを復元しました。',
 	'Can\'t recover password in this configuration' => 'この構成ではパスワードの再設定はできません。',
 	'Invalid user name \'[_1]\' in password recovery attempt' => 'パスワードの再設定でエラーが発生しました。\'[_1]\'は不正なユーザー名です。',
 	'User name or password hint is incorrect.' => 'ユーザー名またはパスワード再設定用のフレーズが不正です。',
@@ -1407,7 +1407,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Error occured during restore process.' => '復元中にエラーがありました。',
 	'Some of files could not be restored.' => '復元できなかったファイルがあります。',
 	'Blog(s) (ID:[_1]) was/were successfully backed up by user \'[_2]\'' => '\'[_2]\'がブログ(ID:[_1])をバックアップしました。',
-	'Movable Type system was successfully backed up by user \'[_1]\'' => '\'[_1]\'がMovable Typeのシステムをバックアップしました。',
+	'Melody system was successfully backed up by user \'[_1]\'' => '\'[_1]\'がMelodyのシステムをバックアップしました。',
 	'Some [_1] were not restored because their parent objects were not restored.' => '親となるオブジェクトがないため[_1]を復元できませんでした。',
 
 ## lib/MT/CMS/TrackBack.pm
@@ -1520,7 +1520,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'SQLite Database (v2)' => 'SQLite (v2) データベース',
 	'Convert Line Breaks' => '改行を変換',
 	'Rich Text' => 'リッチテキスト',
-	'Movable Type Default' => 'Movable Type 既定',
+	'Melody Default' => 'Melody 既定',
 	'weblogs.com' => 'weblogs.com',
 	'technorati.com' => 'technorati.com',
 	'google.com' => 'google.com',
@@ -1643,8 +1643,8 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'No readable files could be found in your import directory [_1].' => '読み取れないファイルがありました: [_1]',
 	'Importing entries from file \'[_1]\'' => 'ファイル\'[_1]\'からインポートしています。',
 	'Couldn\'t resolve import format [_1]' => 'インポート形式[_1]を処理できませんでした。',
-	'Movable Type' => 'Movable Type',
-	'Another system (Movable Type format)' => '他のシステム(Movable Type形式)',
+	'Melody' => 'Melody',
+	'Another system (Melody format)' => '他のシステム(Melody形式)',
 
 ## lib/MT/ImportExport.pm
 	'No Blog' => 'ブログがありません。',
@@ -1865,7 +1865,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Migrating Nofollow plugin settings...' => 'NoFollowプラグインの設定を移行しています...',
 	'Updating system search template records...' => 'システムテンプレート「検索結果」を更新しています...',
 	'Custom ([_1])' => 'カスタム ([_1])',
-	'This role was generated by Movable Type upon upgrade.' => 'このロールはアップグレード時にMovable Typeが作成しました。',
+	'This role was generated by Melody upon upgrade.' => 'このロールはアップグレード時にMelodyが作成しました。',
 	'Migrating permission records to new structure...' => '権限のデータを移行しています...',
 	'Migrating role records to new structure...' => 'ロールのデータを移行しています...',
 	'Migrating system level permissions to new structure...' => 'システム権限を移行しています...',
@@ -1873,9 +1873,9 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Error loading class [_1].' => '[_1]をロードできません。',
 	'Creating initial blog and user records...' => '初期ユーザーとブログを作成しています...',
 	'Error saving record: [_1].' => 'レコードを保存できません: [_1]',
-	'I just finished installing Movable Type [_1]!' => 'Movable Type [_1] へようこそ！',
-	'Welcome to my new blog powered by Movable Type. This is the first post on my blog and was created for me automatically when I finished the installation process. But that is ok, because I will soon be creating posts of my own!' => 'このブログ記事は、Movable Type 4のインストール完了時に、システムによって自動的に作成されたブログ記事です。 新しくなったMT4の管理画面で、早速ブログを更新してみましょう。',
-	'Movable Type also created a comment for me as well so that I could see what a comment will look like on my blog once people start submitting comments on all the posts I will write.' => 'このコメントは、Movable Type のインストール完了時に、システムによって自動的に投稿されたコメントです。MT のブログに投稿されたコメントが、どのように表示されるのかを、ご確認いただけます。',
+	'I just finished installing Melody [_1]!' => 'Melody [_1] へようこそ！',
+	'Welcome to my new blog powered by Melody. This is the first post on my blog and was created for me automatically when I finished the installation process. But that is ok, because I will soon be creating posts of my own!' => 'このブログ記事は、Melody 4のインストール完了時に、システムによって自動的に作成されたブログ記事です。 新しくなったMT4の管理画面で、早速ブログを更新してみましょう。',
+	'Melody also created a comment for me as well so that I could see what a comment will look like on my blog once people start submitting comments on all the posts I will write.' => 'このコメントは、Melody のインストール完了時に、システムによって自動的に投稿されたコメントです。MT のブログに投稿されたコメントが、どのように表示されるのかを、ご確認いただけます。',
 	'Can administer the blog.' => 'ブログの管理者です。',
 	'Editor' => '編集者',
 	'Can upload files, edit all entries/categories/tags on a blog and publish the blog.' => 'すべてのブログ記事とカテゴリ、タグの編集、ファイルのアップロード、再構築ができます。',
@@ -1975,7 +1975,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Registry could not be loaded' => 'レジストリをロードできませんでした。',
 
 ## lib/MT/Util/Captcha.pm
-	'Movable Type default CAPTCHA provider requires Image::Magick.' => 'Movable Type 既定のCAPTCHAプロバイダはImage::Magickをインストールしないと使えません。',
+	'Melody default CAPTCHA provider requires Image::Magick.' => 'Melody 既定のCAPTCHAプロバイダはImage::Magickをインストールしないと使えません。',
 	'You need to configure CaptchaSourceImageBase.' => '構成ファイルでCaptchaSourceImageBaseを設定してください。',
 	'Image creation failed.' => '画像を作成できませんでした。',
 	'Image error: [_1]' => '画像でエラーが発生しました: [_1]',
@@ -2042,7 +2042,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Not privileged to upload files' => 'ファイルをアップロードする権限がありません。',
 	'No filename provided' => 'ファイル名がありません。',
 	'Error writing uploaded file: [_1]' => 'アップロードされたファイルを書き込めませんでした: [_1]',
-	'Template methods are not implemented, due to differences between the Blogger API and the Movable Type API.' => 'Templateメソッドは実装されていません。',
+	'Template methods are not implemented, due to differences between the Blogger API and the Melody API.' => 'Templateメソッドは実装されていません。',
 
 ## lib/MT.pm
 	'Powered by [_1]' => 'Powered by [_1]',
@@ -2058,7 +2058,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Your Vox Blog URL' => 'Vox',
 	'Learn more about Vox.' => 'Voxについて詳しくはこちら',
 	'Sign in using your Gmail account' => 'Gmailのアカウントでログインする',
-	'Sign in to Movable Type with your[_1] Account[_2]' => '[_1] アカウント[_2]',
+	'Sign in to Melody with your[_1] Account[_2]' => '[_1] アカウント[_2]',
 	'Turn on OpenID for your Yahoo! account now' => 'Yahoo!のアカウントをOpenIDにする',
 	'Your AIM or AOL Screen Name' => 'AIMまたはAOLのスクリーンネーム',
 	'Sign in using your AIM or AOL screen name. Your screen name will be displayed publicly.' => 'AIMまたはAOLのスクリーンネームでサインインします。スクリーンネームは公開されます。',
@@ -2095,7 +2095,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Yahoo! JAPAN' => 'Yahoo! JAPAN',
 	'livedoor' => 'ライブドア',
 	'Hatena' => 'はてな',
-	'Movable Type default' => 'Movable Type 既定',
+	'Melody default' => 'Melody 既定',
 
 ## lib/MT.pm.pre
 	'__PORTAL_URL__' => '__PORTAL_URL__',
@@ -2202,7 +2202,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Make Backup' => 'バックアップを作成',
 
 ## tmpl/cms/cfg_archives.tmpl
-	'Error: Movable Type was not able to create a directory for publishing your blog. If you create this directory yourself, assign sufficient permissions that allow Movable Type to create files within it.' => 'エラー: ブログを公開するディレクトリを作成できませんでした。ご自身でこのディレクトリを作成し、Movable Type がそのディレクトリ内にファイルを作成できるようパーミッションを設定してください。',
+	'Error: Melody was not able to create a directory for publishing your blog. If you create this directory yourself, assign sufficient permissions that allow Melody to create files within it.' => 'エラー: ブログを公開するディレクトリを作成できませんでした。ご自身でこのディレクトリを作成し、Melody がそのディレクトリ内にファイルを作成できるようパーミッションを設定してください。',
 	'Your blog\'s archive configuration has been saved.' => 'ブログのアーカイブ設定を保存しました。',
 	'You have successfully added a new archive-template association.' => '新しいアーカイブテンプレートが有効になりました。',
 	'You may need to update your \'Master Archive Index\' template to account for your new archive configuration.' => 'アーカイブの設定を反映するためにアーカイブインデックステンプレートを更新する必要があるかもしれません。',
@@ -2218,7 +2218,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'The URL of your website. Do not include a filename (i.e. exclude index.html). Example: http://www.example.com/blog/' => '公開するURLを入力してください。ファイル名（index.html など）は含めないでください。例: http://www.example.com/blog/',
 	'Unlock this blog&rsquo;s site URL for editing' => 'ロックを解除すればブログのサイトURLを編集できます。',
 	'Warning: Changing the site URL can result in breaking all the links in your blog.' => '警告: サイトURLを変更するとブログ内の全てのリンクがリンク切れとなることがあります。',
-	'The path where your index files will be published. An absolute path (starting with \'/\') is preferred, but you can also use a path relative to the Movable Type directory. Example: /home/melody/public_html/blog' => 'インデックスファイルが公開されるパスです。絶対パス(/で始まる)を推奨しますが、Movable Typeディレクトリからの相対パスも指定できます。例: /home/melody/public_html/blog',
+	'The path where your index files will be published. An absolute path (starting with \'/\') is preferred, but you can also use a path relative to the Melody directory. Example: /home/melody/public_html/blog' => 'インデックスファイルが公開されるパスです。絶対パス(/で始まる)を推奨しますが、Melodyディレクトリからの相対パスも指定できます。例: /home/melody/public_html/blog',
 	'Unlock this blog&rsquo;s site path for editing' => 'ロックを解除すればブログのサイトパスを編集できます。',
 	'Note: Changing your site root requires a complete publish of your site.' => '注: サイトパスを変更した場合にはブログの再構築が必要です。',
 	'Advanced Archive Publishing' => '高度な公開の設定',
@@ -2282,7 +2282,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Disable \'nofollow\' for trusted commenters' => 'nofollow除外',
 	'If enabled, the \'nofollow\' link relation will not be applied to any comments left by trusted commenters.' => '承認されたコメント投稿者のコメントにはnofollowを適用しない',
 	'E-mail Notification' => 'メール通知',
-	'Specify when Movable Type should notify you of new comments if at all.' => '新しいコメントを受信したときにメールで通知するかどうかを指定します。',
+	'Specify when Melody should notify you of new comments if at all.' => '新しいコメントを受信したときにメールで通知するかどうかを指定します。',
 	'On' => '有効にする',
 	'Only when attention is required' => '注意が必要な場合のみ',
 	'Off' => '行わない',
@@ -2389,7 +2389,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Disabled' => '利用不可',
 	'(Enable)' => '(有効化)',
 	'Settings for [_1]' => '[_1]の設定',
-	'This plugin has not been upgraded to support Movable Type [_1]. As such, it may not be 100% functional. Furthermore, it will require an upgrade once you have upgraded to the next Movable Type major release (when available).' => 'このプラグインはMovable Type[_1]がサポートするバージョンではないため、機能しないかもしれません。メジャーバージョンアップされたMovable Typeにアップグレードした場合に、このプラグインもアップグレードが必要となります。',
+	'This plugin has not been upgraded to support Melody [_1]. As such, it may not be 100% functional. Furthermore, it will require an upgrade once you have upgraded to the next Melody major release (when available).' => 'このプラグインはMelody[_1]がサポートするバージョンではないため、機能しないかもしれません。メジャーバージョンアップされたMelodyにアップグレードした場合に、このプラグインもアップグレードが必要となります。',
 	'Plugin error:' => 'プラグインエラー:',
 	'Info' => '詳細',
 	'Resources' => 'リソース',
@@ -2457,7 +2457,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Registration Settings' => '登録 / 認証設定',
 	'Your blog preferences have been saved.' => 'ブログの設定を保存しました。',
 	'User Registration' => 'ユーザー登録',
-	'Allow registration for Movable Type.' => 'Movable Typeへのサインアップを許可する',
+	'Allow registration for Melody.' => 'Melodyへのサインアップを許可する',
 	'Registration Not Enabled' => 'ユーザー登録は無効です。',
 	'Note: Registration is currently disabled at the system level.' => '注:ユーザー登録は現在システムレベルで無効となっています。',
 	'Allow Registration' => '登録',
@@ -2530,7 +2530,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'You must set a valid Default Site Root.' => 'サイトパスを設定してください。',
 	'(None selected)' => '(選択されていません)',
 	'Select a system administrator you wish to notify when commenters successfully registered themselves.' => 'コメント投稿者が登録したことを知らせたいシステム管理者を選択してください。',
-	'Allow commenters to register to Movable Type' => 'コメント投稿者がMovable Typeに登録することを許可する',
+	'Allow commenters to register to Melody' => 'コメント投稿者がMelodyに登録することを許可する',
 	'Notify the following administrators upon registration:' => '以下のシステム管理者に登録を通知する:',
 	'Select Administrators' => 'システム管理者を選択',
 	'Clear' => 'クリア',
@@ -2562,7 +2562,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'TrackBack Policy' => 'トラックバックポリシー',
 	'Moderation' => '事前確認',
 	'Hold all TrackBacks for approval before they\'re published.' => 'すべてのトラックバックを承認するまで公開しない',
-	'Specify when Movable Type should notify you of new TrackBacks if at all.' => '新しいトラックバックを受信したときにメールで通知するかどうかを指定します。',
+	'Specify when Melody should notify you of new TrackBacks if at all.' => '新しいトラックバックを受信したときにメールで通知するかどうかを指定します。',
 	'TrackBack Options' => 'トラックバックオプション',
 	'TrackBack Auto-Discovery' => '自動検知',
 	'If you turn on auto-discovery, when you write a new entry, any external links will be extracted and the appropriate sites automatically sent TrackBacks.' => '自動検出を有効にすると、新しいブログ記事を書いたときに、外部へのリンクが抽出されて、自動的にトラックバックを送信します。',
@@ -2586,7 +2586,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Please click the Save Changes button below to enable TypePad.' => '保存ボタンをクリックしてTypePadを有効にしてください。',
 	'External Notifications' => '更新通知',
 	'Notify of blog updates' => '更新通知先',
-	'When this blog is updated, Movable Type will automatically notify the selected sites.' => 'このブログが更新されたときに、選択したサイトに自動的に通知します。',
+	'When this blog is updated, Melody will automatically notify the selected sites.' => 'このブログが更新されたときに、選択したサイトに自動的に通知します。',
 	'Note: This option is currently ignored since outbound notification pings are disabled system-wide.' => '注意: システム全体で更新通知が無効になっているため、この設定は有効になりません。',
 	'Others:' => 'その他:',
 	'(Separate URLs with a carriage return.)' => '(URLは改行で区切ってください)',
@@ -2600,7 +2600,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Your Dashboard has been updated.' => 'ダッシュボードを更新しました。',
 	'You have attempted to use a feature that you do not have permission to access. If you believe you are seeing this message in error contact your system administrator.' => 'アクセス権がありません。システム管理者に連絡してください。',
 	'The directory you have configured for uploading userpics is not writable. In order to enable users to upload userpics, please make the following directory writable by your web server: [_1]' => 'ユーザー画像をアップロードするディレクトリに書き込めないようです。ユーザー画像をアップロードするために、[_1]にWebサーバーから書き込めるようにしてください。',
-	'Image::Magick is either not present on your server or incorrectly configured. Due to that, you will not be able to use Movable Type\'s userpics feature. If you wish to use that feature, please install Image::Magick or use an alternative image driver.' => 'Image::Magickがインストールされていないかまたは正しく設定されていないため、Movable Typeのユーザー画像機能を利用できません。この機能を利用するには、Image::Magickをインストールするか、他のイメージドライバを使用する設定を行う必要があります。',
+	'Image::Magick is either not present on your server or incorrectly configured. Due to that, you will not be able to use Melody\'s userpics feature. If you wish to use that feature, please install Image::Magick or use an alternative image driver.' => 'Image::Magickがインストールされていないかまたは正しく設定されていないため、Melodyのユーザー画像機能を利用できません。この機能を利用するには、Image::Magickをインストールするか、他のイメージドライバを使用する設定を行う必要があります。',
 	'Your dashboard is empty!' => 'ダッシュボードが空です。',
 
 ## tmpl/cms/dialog/adjust_sitepath.tmpl
@@ -2738,8 +2738,8 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'The email address provided is not unique.  Please enter your username.' => '同じメールアドレスを持っているユーザーがいます。ユーザー名を入力してください。',
 	'An email with a link to reset your password has been sent to your email address ([_1]).' => '「[_1]」にパスワードをリセットするためのリンクを含むメールを送信しました。',
 	'Go Back (x)' => '戻る (x)',
-	'Sign in to Movable Type (s)' => 'Movable Type にサインイン (s)',
-	'Sign in to Movable Type' => 'Movable Type にサインイン',
+	'Sign in to Melody (s)' => 'Melody にサインイン (s)',
+	'Sign in to Melody' => 'Melody にサインイン',
 	'Recover (s)' => '再設定 (s)',
 	'Recover' => '再設定',
 
@@ -2861,7 +2861,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Template Set' => 'テンプレートセット',
 	'Select the templates you wish to use for this new blog.' => '作成されるブログに適用するテンプレートセットを選択します。',
 	'Enter the URL of your public website. Do not include a filename (i.e. exclude index.html). Example: http://www.example.com/weblog/' => '公開するURLを入力してください。ファイル名（index.html など）は含めないでください。例: http://www.example.com/weblog/ ',
-	'Enter the path where your main index file will be located. An absolute path (starting with \'/\') is preferred, but you can also use a path relative to the Movable Type directory. Example: /home/melody/public_html/weblog' => 'インデックスページ（index.html）を配置するパスを入力してください。絶対パス (/で始まる) を推奨しますが、Movable Typeがインストールされた場所からの相対パスも使えます。例: /home/melody/public_html/weblog',
+	'Enter the path where your main index file will be located. An absolute path (starting with \'/\') is preferred, but you can also use a path relative to the Melody directory. Example: /home/melody/public_html/weblog' => 'インデックスページ（index.html）を配置するパスを入力してください。絶対パス (/で始まる) を推奨しますが、Melodyがインストールされた場所からの相対パスも使えます。例: /home/melody/public_html/weblog',
 	'Blog language.' => 'ブログの言語',
 	'Create Blog (s)' => 'ブログを作成 (s)',
 
@@ -3052,7 +3052,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'(comma-delimited list)' => '（カンマ区切りリスト）',
 	'(space-delimited list)' => '（スペース区切りリスト）',
 	'(delimited by \'[_1]\')' => '（[_1]で区切る）',
-	'Use <a href="http://blogit.typepad.com/">Blog It</a> to post to Movable Type from social networks like Facebook.' => '<a href="http://blogit.typepad.com/">Blog It</a>を使えば、FacebookなどのソーシャルネットワーキングサイトからMovable Typeに投稿できます。',
+	'Use <a href="http://blogit.typepad.com/">Blog It</a> to post to Melody from social networks like Facebook.' => '<a href="http://blogit.typepad.com/">Blog It</a>を使えば、FacebookなどのソーシャルネットワーキングサイトからMelodyに投稿できます。',
 	'None selected' => '選択されていません',
 	'Auto-saving...' => '自動保存中...',
 	'Last auto-save at [_1]:[_2]:[_3]' => '[_1]:[_2]:[_3]に自動保存済み',
@@ -3185,7 +3185,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## tmpl/cms/export.tmpl
 	'You must select a blog to export.' => 'エクスポートするブログを選択してください。',
-	'_USAGE_EXPORT_1' => 'Movable Typeからブログ記事をエクスポートして、基本的なデータ(記事、コメント、トラックバック)を保存できます。',
+	'_USAGE_EXPORT_1' => 'Melodyからブログ記事をエクスポートして、基本的なデータ(記事、コメント、トラックバック)を保存できます。',
 	'Blog to Export' => 'エクスポートするブログ',
 	'Select a blog for exporting.' => 'エクスポートするブログを選択してください。',
 	'Export Blog (s)' => 'ブログをエクスポート (s)',
@@ -3193,7 +3193,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## tmpl/cms/import.tmpl
 	'You must select a blog to import.' => 'インポート先のブログを選択してください。',
-	'Transfer weblog entries into Movable Type from other Movable Type installations or even other blogging tools or export your entries to create a backup or copy.' => '他のMovable Typeやブログツールからブログ記事を移行したり、ブログ記事のコピーを作成します。',
+	'Transfer weblog entries into Melody from other Melody installations or even other blogging tools or export your entries to create a backup or copy.' => '他のMelodyやブログツールからブログ記事を移行したり、ブログ記事のコピーを作成します。',
 	'Import data into' => 'インポート先',
 	'Select a blog to import.' => 'インポート先のブログを選択してください。',
 	'Importing from' => 'インポート元',
@@ -3204,10 +3204,10 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Default password for new users:' => '新しいユーザーの初期パスワード',
 	'You will be assigned the user of all imported entries.  If you wish the original user to keep ownership, you must contact your MT system administrator to perform the import so that new users can be created if necessary.' => 'あなたがインポートしたブログ記事を作成したことになります。元の著者を変更せずにインポートしたい場合には、システム管理者がインポート作業を行ってください。その場合には必要に応じて新しいユーザーを作成できます。',
 	'Upload import file (optional)' => 'インポートファイルをアップロード（オプション）',
-	'If your import file is located on your computer, you can upload it here.  Otherwise, Movable Type will automatically look in the \'import\' folder of your Movable Type directory.' => 'インポートするファイルがローカルのコンピュータ内にある場合にはここにアップロードしてください。アップロードしない場合には、Movable Typeは自動的にアプリケーションディレクトリのimportフォルダ内から探します。',
+	'If your import file is located on your computer, you can upload it here.  Otherwise, Melody will automatically look in the \'import\' folder of your Melody directory.' => 'インポートするファイルがローカルのコンピュータ内にある場合にはここにアップロードしてください。アップロードしない場合には、Melodyは自動的にアプリケーションディレクトリのimportフォルダ内から探します。',
 	'More options' => 'その他のオプション',
 	'Import File Encoding' => 'インポートするファイルの文字コード',
-	'By default, Movable Type will attempt to automatically detect the character encoding of your import file.  However, if you experience difficulties, you can set it explicitly.' => 'Movable Typeはインポートするファイルの文字コードを自動的に検出します。問題が起きたときには、明示的に文字コードを指定することもできます。',
+	'By default, Melody will attempt to automatically detect the character encoding of your import file.  However, if you experience difficulties, you can set it explicitly.' => 'Melodyはインポートするファイルの文字コードを自動的に検出します。問題が起きたときには、明示的に文字コードを指定することもできます。',
 	'<mt:var name="display_name" escape="html">' => '<mt:var name="display_name" escape="html">',
 	'Default category for entries (optional)' => 'ブログ記事の既定カテゴリ（オプション）',
 	'You can specify a default category for imported entries which have none assigned.' => 'カテゴリが設定されていないブログ記事に既定のカテゴリを設定できます。',
@@ -3282,7 +3282,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'An error occurred during the backup process: [_1]' => 'バックアップの途中でエラーが発生しました: [_1]',
 
 ## tmpl/cms/include/backup_start.tmpl
-	'Backing up Movable Type' => 'バックアップを開始',
+	'Backing up Melody' => 'バックアップを開始',
 
 ## tmpl/cms/include/blog-left-nav.tmpl
 	'Creating' => '新規作成',
@@ -3424,7 +3424,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Set Web Services Password' => 'ウェブサービスのパスワードを設定',
 
 ## tmpl/cms/include/footer.tmpl
-	'This is a beta version of Movable Type and is not recommended for production use.' => 'このMovable Typeはベータ版です。',
+	'This is a beta version of Melody and is not recommended for production use.' => 'このMelodyはベータ版です。',
 	'http://www.movabletype.org' => 'http://www.movabletype.jp',
 	'MovableType.org' => 'MovableType.jp',
 	'http://wiki.movabletype.org/' => 'http://wiki.movabletype.org/',
@@ -3547,16 +3547,16 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Details' => '詳細',
 
 ## tmpl/cms/install.tmpl
-	'Welcome to Movable Type' => 'Movable Typeへようこそ',
+	'Welcome to Melody' => 'Melodyへようこそ',
 	'Create Your Account' => 'アカウントの作成',
 	'The initial account name is required.' => '名前は必須です。',
 	'The display name is required.' => '表示名は必須です。',
 	'Password recovery word/phrase is required.' => 'パスワード再設定用のフレーズは必須です。',
-	'The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]).' => 'サーバーにインストールされているPerlのバージョン([_1])が、Movable Type がサポートしているバージョン([_2])より低いため正常に動作しない可能性があります。',
-	'While Movable Type may run, it is an <strong>untested and unsupported environment</strong>.  We strongly recommend upgrading to at least Perl [_1].' => 'Movable Type が動作する場合でも、<strong>動作確認を行っていない、サポート対象外の環境となります</strong>。少なくともPerl[_1]以上へアップグレードすることを強くお勧めします。',
+	'The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]).' => 'サーバーにインストールされているPerlのバージョン([_1])が、Melody がサポートしているバージョン([_2])より低いため正常に動作しない可能性があります。',
+	'While Melody may run, it is an <strong>untested and unsupported environment</strong>.  We strongly recommend upgrading to at least Perl [_1].' => 'Melody が動作する場合でも、<strong>動作確認を行っていない、サポート対象外の環境となります</strong>。少なくともPerl[_1]以上へアップグレードすることを強くお勧めします。',
 	'Do you want to proceed with the installation anyway?' => 'インストールを続けますか?',
 	'View MT-Check (x)' => 'システムチェック (x)',
-	'Before you can begin blogging, you must create an administrator account for your system. When you are done, Movable Type will then initialize your database.' => 'ブログの運用を始める前にシステム管理者のアカウントを作成してください。作成後に Movable Type はデータベースを初期化します。',
+	'Before you can begin blogging, you must create an administrator account for your system. When you are done, Melody will then initialize your database.' => 'ブログの運用を始める前にシステム管理者のアカウントを作成してください。作成後に Melody はデータベースを初期化します。',
 	'To proceed, you must authenticate properly with your LDAP server.' => 'LDAPサーバーで認証を受けないと先に進めません。',
 	'The name used by this user to login.' => 'ログイン時に使用するユーザー名です。',
 	'The user&rsquo;s email address.' => 'ユーザーのメールアドレスです。',
@@ -3603,14 +3603,14 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Users: System-wide' => 'ユーザー: システム全体',
 	'You have successfully disabled the selected user(s).' => '選択したユーザーを無効にしました。',
 	'You have successfully enabled the selected user(s).' => '選択したユーザーを有効にしました。',
-	'You have successfully deleted the user(s) from the Movable Type system.' => 'システムからユーザーを削除しました。',
-	'The deleted user(s) still exist in the external directory. As such, they will still be able to login to Movable Type Enterprise.' => '削除されたユーザーが外部ディレクトリ上にまだ存在するので、このままではユーザーは再度ログインできてしまいます。',
+	'You have successfully deleted the user(s) from the Melody system.' => 'システムからユーザーを削除しました。',
+	'The deleted user(s) still exist in the external directory. As such, they will still be able to login to Melody Enterprise.' => '削除されたユーザーが外部ディレクトリ上にまだ存在するので、このままではユーザーは再度ログインできてしまいます。',
 	'You have successfully synchronized users\' information with the external directory.' => '外部のディレクトリとユーザーの情報を同期しました。',
 	'Some ([_1]) of the selected user(s) could not be re-enabled because they were no longer found in the external directory.' => '選択されたユーザーのうち[_1]人は外部ディレクトリ上に存在しないので有効にできませんでした。',
 	'An error occured during synchronization.  See the <a href=\'[_1]\'>activity log</a> for detailed information.' => '同期中にエラーが発生しました。エラーの詳細を<a href=\'[_1]\'>ログ</a>で確認して>ください。',
 	'Enable selected users (e)' => '選択したユーザーを有効化 (e)',
 	'_USER_ENABLE' => '有効',
-	'_NO_SUPERUSER_DISABLE' => 'Movable Typeのシステム管理者は自分自身を無効にはできません。',
+	'_NO_SUPERUSER_DISABLE' => 'Melodyのシステム管理者は自分自身を無効にはできません。',
 	'Disable selected users (d)' => '選択したユーザーを無効化 (d)',
 	'_USER_DISABLE' => '無効',
 	'Showing All Users' => 'すべてのユーザーを表示',
@@ -3625,7 +3625,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Date Banned' => '禁止した日付',
 
 ## tmpl/cms/list_blog.tmpl
-	'You have successfully deleted the blogs from the Movable Type system.' => 'システムからブログを削除しました。',
+	'You have successfully deleted the blogs from the Melody system.' => 'システムからブログを削除しました。',
 	'You have successfully refreshed your templates.' => 'テンプレートの初期化を完了しました。',
 	'You can not refresh templates: [_1]' => 'テンプレートを初期化できません: [_1]',
 
@@ -3763,9 +3763,9 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'widget templates' => 'ウィジェットテンプレート',
 
 ## tmpl/cms/login.tmpl
-	'Your Movable Type session has ended.' => 'Movable Typeからログアウトしました。',
-	'Your Movable Type session has ended. If you wish to sign in again, you can do so below.' => 'Movable Typeからログアウトしました。以下から再度ログインできます。',
-	'Your Movable Type session has ended. Please sign in again to continue this action.' => 'Movable Typeからログアウトしました。続けるには再度サインインして下さい。',
+	'Your Melody session has ended.' => 'Melodyからログアウトしました。',
+	'Your Melody session has ended. If you wish to sign in again, you can do so below.' => 'Melodyからログアウトしました。以下から再度ログインできます。',
+	'Your Melody session has ended. Please sign in again to continue this action.' => 'Melodyからログアウトしました。続けるには再度サインインして下さい。',
 	'Forgot your password?' => 'パスワードをお忘れですか?',
 	'Sign In (s)' => 'サインイン (s)',
 
@@ -3845,10 +3845,10 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## tmpl/cms/restore.tmpl
 	'Restore from a Backup' => 'バックアップから復元',
-	'Perl module XML::SAX and/or its dependencies are missing - Movable Type can not restore the system without it.' => 'PerlモジュールXML::SAXがないか、またはその依存関係に問題があるため復元できません。',
+	'Perl module XML::SAX and/or its dependencies are missing - Melody can not restore the system without it.' => 'PerlモジュールXML::SAXがないか、またはその依存関係に問題があるため復元できません。',
 	'Backup file' => 'バックアップファイル',
-	'If your backup file is located on your computer, you can upload it here.  Otherwise, Movable Type will automatically look in the \'import\' folder of your Movable Type directory.' => 'もしバックアップファイルがローカルのコンピュータ内にある場合にはここにアップロードしてください。アップロードしない場合には、Movable Typeは自動的にアプリケーションディレクトリのimportフォルダ内から探します。',
-	'Check this and files backed up from newer versions can be restored to this system.  NOTE: Ignoring Schema Version can damage Movable Type permanently.' => 'チェックすると現在のシステムより新しいシステムからバックアップされたデータをこのシステムに復元できます。注意: バージョンの衝突を無視すると、Movable Typeのシステムに回復不可能なダメージを与える可能性があります。',
+	'If your backup file is located on your computer, you can upload it here.  Otherwise, Melody will automatically look in the \'import\' folder of your Melody directory.' => 'もしバックアップファイルがローカルのコンピュータ内にある場合にはここにアップロードしてください。アップロードしない場合には、Melodyは自動的にアプリケーションディレクトリのimportフォルダ内から探します。',
+	'Check this and files backed up from newer versions can be restored to this system.  NOTE: Ignoring Schema Version can damage Melody permanently.' => 'チェックすると現在のシステムより新しいシステムからバックアップされたデータをこのシステムに復元できます。注意: バージョンの衝突を無視すると、Melodyのシステムに回復不可能なダメージを与える可能性があります。',
 	'Ignore schema version conflicts' => 'バージョンの衝突を無視する',
 	'Check this and existing global templates will be overwritten from the backup file.' => 'チェックすると既存のグローバルテンプレートはバックアップに含まれているもので上書きされます。',
 	'Overwrite global templates.' => 'グローバルテンプレートを上書きする',
@@ -3859,7 +3859,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'An error occurred during the restore process: [_1] Please check activity log for more details.' => '復元の過程でエラーが発生しました。[_1] 詳細についてはログを確認してください。',
 
 ## tmpl/cms/restore_start.tmpl
-	'Restoring Movable Type' => '復元を開始',
+	'Restoring Melody' => '復元を開始',
 
 ## tmpl/cms/search_replace.tmpl
 	'You must select one or more item to replace.' => '置き換えるアイテムを1つ以上選択してください。',
@@ -3886,10 +3886,10 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'The blog URL is required.' => 'ブログのサイトURLは必須です。',
 	'The publishing path is required.' => 'ブログのサイトパスは必須です。',
 	'The timezone is required.' => 'タイムゾーンは必須です。',
-	'In order to properly publish your blog, you must provide Movable Type with your blog\'s URL and the path on the filesystem where its files should be published.' => 'ブログを公開するためのURLと、公開されるファイルのパスを設定する必要があります。',
+	'In order to properly publish your blog, you must provide Melody with your blog\'s URL and the path on the filesystem where its files should be published.' => 'ブログを公開するためのURLと、公開されるファイルのパスを設定する必要があります。',
 	'My First Blog' => 'My First Blog',
 	'Publishing Path' => '公開パス',
-	'Your \'Publishing Path\' is the path on your web server\'s file system where Movable Type will publish all the files for your blog. Your web server must have write access to this directory.' => 'Movable Typeは、出力するすべてのファイルを「公開パス」以下に配置します。このディレクトリにはWebサーバーから書き込みできなければなりません。',
+	'Your \'Publishing Path\' is the path on your web server\'s file system where Melody will publish all the files for your blog. Your web server must have write access to this directory.' => 'Melodyは、出力するすべてのファイルを「公開パス」以下に配置します。このディレクトリにはWebサーバーから書き込みできなければなりません。',
 	'Finish install (s)' => 'インストール (s)',
 	'Finish install' => 'インストール',
 	'Back (x)' => '戻る (x)',
@@ -3899,23 +3899,23 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Number of users in this system.' => 'システムの全ユーザー数です。',
 	'Total Users' => '全ユーザー数',
 	'Active Users' => 'アクティブユーザー数',
-	'Users who have logged in within 90 days are considered <strong>active</strong> in Movable Type license agreement.' => '90日以内にログインしたユーザーがMovable Typeの使用許諾に基づいてアクティブとみなされます。',
+	'Users who have logged in within 90 days are considered <strong>active</strong> in Melody license agreement.' => '90日以内にログインしたユーザーがMelodyの使用許諾に基づいてアクティブとみなされます。',
 	'Memcache Status' => 'Memcacheの状態',
 	'Server Model' => 'サーバーモデル',
-	'Movable Type could not find the script named \'mt-check.cgi\'. To resolve this issue, please ensure that the mt-check.cgi script exists and/or the CheckScript configuration parameter references it properly.' => 'mt-check.cgiが見つかりませんでした。mt-check.cgiが存在すること、名前を変えた場合は構成ファイルのCheckScriptディレクティブに名前を指定してください。',
+	'Melody could not find the script named \'mt-check.cgi\'. To resolve this issue, please ensure that the mt-check.cgi script exists and/or the CheckScript configuration parameter references it properly.' => 'mt-check.cgiが見つかりませんでした。mt-check.cgiが存在すること、名前を変えた場合は構成ファイルのCheckScriptディレクティブに名前を指定してください。',
 
 ## tmpl/cms/upgrade.tmpl
 	'Time to Upgrade!' => 'アップグレード開始',
 	'Upgrade Check' => 'アップグレードのチェック',
 	'Do you want to proceed with the upgrade anyway?' => 'アップグレードを実行しますか?',
-	'A new version of Movable Type has been installed.  We\'ll need to complete a few tasks to update your database.' => '新しいバージョンの Movable Type をインストールしました。データベースのアップグレードを実行してください。',
+	'A new version of Melody has been installed.  We\'ll need to complete a few tasks to update your database.' => '新しいバージョンの Melody をインストールしました。データベースのアップグレードを実行してください。',
 	'Information about this upgrade can be found <a href=\'[_1]\' target=\'_blank\'>here</a>.' => 'アップグレードに関する情報は<a href=\'[_1]\' target=\'blank\'>ここ</a>で見ることができます。',
-	'In addition, the following Movable Type components require upgrading or installation:' => '加えて、以下のコンポーネントのアップグレード、またはインストールが必要です。',
-	'The following Movable Type components require upgrading or installation:' => '以下のコンポーネントのアップグレード、またはインストールが必要です。',
+	'In addition, the following Melody components require upgrading or installation:' => '加えて、以下のコンポーネントのアップグレード、またはインストールが必要です。',
+	'The following Melody components require upgrading or installation:' => '以下のコンポーネントのアップグレード、またはインストールが必要です。',
 	'Begin Upgrade' => 'アップグレード開始',
-	'Congratulations, you have successfully upgraded to Movable Type [_1].' => 'Movable Type [_1]へのアップグレードを完了しました。',
-	'Return to Movable Type' => 'Movable Type に戻る',
-	'Your Movable Type installation is already up to date.' => 'Movable Type は最新版です。',
+	'Congratulations, you have successfully upgraded to Melody [_1].' => 'Melody [_1]へのアップグレードを完了しました。',
+	'Return to Melody' => 'Melody に戻る',
+	'Your Melody installation is already up to date.' => 'Melody は最新版です。',
 
 ## tmpl/cms/upgrade_runner.tmpl
 	'Initializing database...' => 'データベースの初期化中･･･',
@@ -3926,7 +3926,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Starting upgrade...' => 'アップグレードを開始しています･･･',
 	'Error during installation:' => 'インストール中にエラーが発生しました',
 	'Error during upgrade:' => 'アップグレード中にエラーが発生しました',
-	'Return to Movable Type (s)' => 'Movable Typeに戻る (s)',
+	'Return to Melody (s)' => 'Melodyに戻る (s)',
 	'Your database is already current.' => 'データベースは最新の状態です。',
 
 ## tmpl/cms/view_log.tmpl
@@ -3969,8 +3969,8 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Oct.' => '10/',
 	'Nov.' => '11/',
 	'Dec.' => '12/',
-	'Movable Type was unable to locate your \'mt-static\' directory. Please configure the \'StaticFilePath\' configuration setting in your mt-config.cgi file, and create a writable \'support\' directory underneath your \'mt-static\' directory.' => 'mt-staticディレクトリが見つかりません。構成ファイルでStaticFilePathの設定を記述し、mt-staticディレクトリ以下にsupportディレクトリを作成して書き込みできるようにしてください。',
-	'Movable Type was unable to write to its \'support\' directory. Please create a directory at this location: [_1], and assign permissions that will allow the web server write access to it.' => 'supportディレクトリに書き込みできません。[_1]にディレクトリを作成して、ウェブサーバーから書き込みできるパーミッションを与えてください。',
+	'Melody was unable to locate your \'mt-static\' directory. Please configure the \'StaticFilePath\' configuration setting in your mt-config.cgi file, and create a writable \'support\' directory underneath your \'mt-static\' directory.' => 'mt-staticディレクトリが見つかりません。構成ファイルでStaticFilePathの設定を記述し、mt-staticディレクトリ以下にsupportディレクトリを作成して書き込みできるようにしてください。',
+	'Melody was unable to write to its \'support\' directory. Please create a directory at this location: [_1], and assign permissions that will allow the web server write access to it.' => 'supportディレクトリに書き込みできません。[_1]にディレクトリを作成して、ウェブサーバーから書き込みできるパーミッションを与えてください。',
 	'[_1] [_2] - [_3] [_4]' => '[_1][_2] - [_3][_4]',
 	'You have <a href=\'[_3]\'>[quant,_1,comment,comments] from [_2]</a>' => '[_2]に<a href=\'[_3]\'>[quant,_1,件,件]のコメント</a>があります。',
 	'You have <a href=\'[_3]\'>[quant,_1,entry,entries] from [_2]</a>' => '[_2]に<a href=\'[_3]\'>[quant,_1,件,件]のブログ記事</a>を作成しています。',
@@ -4001,10 +4001,10 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Welcome to [_1].' => '[_1]へようこそ',
 	'You can manage your blog by selecting an option from the menu located to the left of this message.' => 'このメッセージの左側のメニューでオプションを選択することでブログの管理ができます。',
 	'If you need assistance, try:' => 'サポートが必要な場合は以下を参照してください。',
-	'Movable Type User Manual' => 'Movable Type ユーザーマニュアル',
+	'Melody User Manual' => 'Melody ユーザーマニュアル',
 	'http://www.sixapart.com/movabletype/support' => 'http://www.sixapart.jp/movabletype/support',
-	'Movable Type Technical Support' => 'Movable Type テクニカルサポート',
-	'Movable Type Community Forums' => 'Movable Type コミュニティフォーラム',
+	'Melody Technical Support' => 'Melody テクニカルサポート',
+	'Melody Community Forums' => 'Melody コミュニティフォーラム',
 	'Save Changes (s)' => '変更を保存 (s)',
 	'Change this message.' => 'このメッセージを変更',
 	'Edit this message.' => 'このメッセージを編集',
@@ -4015,31 +4015,31 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Learning MT' => 'Learning MT',
 	'Hacking MT' => 'Hacking MT',
 	'Pronet' => 'ProNet',
-	'No Movable Type news available.' => 'Movable Typeニュースはありません。',
-	'No Learning Movable Type news available.' => 'Learning Movable Typeに新着ブログ記事はありません。',
+	'No Melody news available.' => 'Melodyニュースはありません。',
+	'No Learning Melody news available.' => 'Learning Melodyに新着ブログ記事はありません。',
 
 ## tmpl/cms/widget/mt_shortcuts.tmpl
 	'Import Content' => 'インポート',
 	'Blog Preferences' => 'ブログの設定',
 
 ## tmpl/cms/widget/new_install.tmpl
-	'Thank you for installing Movable Type' => 'Movable Type をご利用いただき、ありがとうございます。',
-	'Congratulations on installing Movable Type, the world\'s most powerful blogging, publishing and social media platform. To help you get started we have provided you with links to some of the more common tasks new users like to perform:' => '表現力豊かなブログを公開するために、Movable Type には沢山の機能が用意されています。',
+	'Thank you for installing Melody' => 'Melody をご利用いただき、ありがとうございます。',
+	'Congratulations on installing Melody, the world\'s most powerful blogging, publishing and social media platform. To help you get started we have provided you with links to some of the more common tasks new users like to perform:' => '表現力豊かなブログを公開するために、Melody には沢山の機能が用意されています。',
 	'Write your first post' => 'ブログ記事を書く',
-	'What would a blog be without content? Start your Movable Type experience by creating your very first post.' => 'まずはブログ記事を書くことからMovable Type体験を始めましょう。',
+	'What would a blog be without content? Start your Melody experience by creating your very first post.' => 'まずはブログ記事を書くことからMelody体験を始めましょう。',
 	'Design your blog' => 'ブログをデザインする',
 	'Customize the look and feel of your blog quickly by selecting a design from one of our professionally designed themes.' => 'プロがデザインしたテーマを選択するだけで簡単にブログの見栄えをカスタマイズできます。',
 	'Add more users to your blog' => 'ブログにユーザーを追加する',
 	'Start building your network of blogs and your community now. Invite users to join your blog and promote them to authors.' => 'ブログのネットワークやコミュニティを作りましょう。ユーザーをブログに招待して、ブログ記事を書いてもらうことができます。',
-	'Explore what\'s new in Movable Type 4' => 'Movable Type 4の新機能に触れる',
-	'Whether you\'re new to Movable Type or using it for the first time, learn more about what this tool can do for you.' => 'Movable Type で何ができるか、詳しくはこちら。',
+	'Explore what\'s new in Melody 4' => 'Melody 4の新機能に触れる',
+	'Whether you\'re new to Melody or using it for the first time, learn more about what this tool can do for you.' => 'Melody で何ができるか、詳しくはこちら。',
 
 ## tmpl/cms/widget/new_user.tmpl
-	'Welcome to Movable Type, the world\'s most powerful blogging, publishing and social media platform. To help you get started we have provided you with links to some of the more common tasks new users like to perform:' => 'Movable Type へようこそ。表現力豊かなブログを公開するために、Movable Type には沢山の機能が用意されています。',
+	'Welcome to Melody, the world\'s most powerful blogging, publishing and social media platform. To help you get started we have provided you with links to some of the more common tasks new users like to perform:' => 'Melody へようこそ。表現力豊かなブログを公開するために、Melody には沢山の機能が用意されています。',
 
 ## tmpl/cms/widget/new_version.tmpl
-	'What\'s new in Movable Type [_1]' => 'Movable Type [_1] の新機能',
-	'Congratulations, you have successfully installed Movable Type [_1]. Listed below is an overview of the new features found in this release.' => 'Movable Type [_1] がインストールされました。このバージョンで追加された新機能は以下の通りです。',
+	'What\'s new in Melody [_1]' => 'Melody [_1] の新機能',
+	'Congratulations, you have successfully installed Melody [_1]. Listed below is an overview of the new features found in this release.' => 'Melody [_1] がインストールされました。このバージョンで追加された新機能は以下の通りです。',
 
 ## tmpl/cms/widget/this_is_you.tmpl
 	'Your <a href="[_1]">last entry</a> was [_2] in <a href="[_3]">[_4]</a>.' => '最後にブログ記事を書いたのは[_2]です(ブログ: <a href="[_3]">[_4]</a> - <a href="[_1]">編集</a>)。',
@@ -4087,14 +4087,14 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## tmpl/error.tmpl
 	'Missing Configuration File' => '環境設定ファイルが見つかりません。',
-	'_ERROR_CONFIG_FILE' => 'Movable Type の環境設定ファイルが存在しないか、または読み込みに失敗しました。詳細については、Movable Type マニュアルの<a href="javascript:void(0)">インストールと設定</a>の章を確認してください。',
+	'_ERROR_CONFIG_FILE' => 'Melody の環境設定ファイルが存在しないか、または読み込みに失敗しました。詳細については、Melody マニュアルの<a href="javascript:void(0)">インストールと設定</a>の章を確認してください。',
 	'Database Connection Error' => 'データベースへの接続でエラーが発生しました。',
-	'_ERROR_DATABASE_CONNECTION' => '環境設定ファイルのデータベース設定に問題があるか、または設定がありません。詳細については、Movable Type マニュアルの<a href="javascript:void(0)">インストールと設定</a>の章を確認してください。',
+	'_ERROR_DATABASE_CONNECTION' => '環境設定ファイルのデータベース設定に問題があるか、または設定がありません。詳細については、Melody マニュアルの<a href="javascript:void(0)">インストールと設定</a>の章を確認してください。',
 	'CGI Path Configuration Required' => 'CGIPath の設定が必要です。',
-	'_ERROR_CGI_PATH' => '環境設定ファイルの CGIPath の項目の設定に問題があるか、または設定がありません。詳細については、Movable Type マニュアルの<a href="javascript:void(0)">インストールと設定</a>の章を確認してください。',
+	'_ERROR_CGI_PATH' => '環境設定ファイルの CGIPath の項目の設定に問題があるか、または設定がありません。詳細については、Melody マニュアルの<a href="javascript:void(0)">インストールと設定</a>の章を確認してください。',
 
 ## tmpl/feeds/error.tmpl
-	'Movable Type Activity Log' => 'Movable Type システムログ',
+	'Melody Activity Log' => 'Melody システムログ',
 
 ## tmpl/feeds/feed_comment.tmpl
 	'Unpublish' => '公開を取りやめる',
@@ -4122,7 +4122,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'This link is invalid. Please resubscribe to your activity feed.' => 'このリンクは無効です。フィードの購読をやり直してください。',
 
 ## tmpl/include/chromeless_footer.tmpl
-	'<a href="[_1]">Movable Type</a> version [_2]' => '<a href="[_1]">Movable Type</a> version [_2]',
+	'<a href="[_1]">Melody</a> version [_2]' => '<a href="[_1]">Melody</a> version [_2]',
 
 ## tmpl/wizard/blog.tmpl
 	'Setup Your First Blog' => 'First Blogのセットアップ',
@@ -4162,12 +4162,12 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Database Type' => 'データベースの種類',
 	'Select One...' => '選択してください',
 	'http://www.movabletype.org/documentation/[_1]' => 'http://www.movabletype.jp/documentation/[_1]',
-	'Is your preferred database not listed? View the <a href="[_1]" target="_blank">Movable Type System Check</a> see if additional modules are necessary.' => '<a href="[_1]" target="_blank">Movable Type システムチェック</a>を実行して、必要なモジュールを確認してください。',
+	'Is your preferred database not listed? View the <a href="[_1]" target="_blank">Melody System Check</a> see if additional modules are necessary.' => '<a href="[_1]" target="_blank">Melody システムチェック</a>を実行して、必要なモジュールを確認してください。',
 	'Once installed, <a href="javascript:void(0)" onclick="[_1]">click here to refresh this screen</a>.' => 'モジュールをインストールしたら<a href="javascript:void(0)" onclick="[_1]">ここをクリック</a>して表示を更新してください。',
 	'Read more: <a href="[_1]" target="_blank">Setting Up Your Database</a>' => '詳しくは<a href="[_1]" target="_blank">こちら</a>を参照してください。',
 	'Database Path' => 'データベースのパス',
 	'The physical file path for your SQLite database. ' => 'SQLiteのデータベースファイルのパス',
-	'A default location of \'./db/mt.db\' will store the database file underneath your Movable Type directory.' => '既定のデータベースファイルへのパスは「./db/mt.db」です。',
+	'A default location of \'./db/mt.db\' will store the database file underneath your Melody directory.' => '既定のデータベースファイルへのパスは「./db/mt.db」です。',
 	'Database Server' => 'データベースサーバ',
 	'This is usually \'localhost\'.' => '通常「localhost」のままで構いません。',
 	'Database Name' => 'データベース名',
@@ -4185,9 +4185,9 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 ## tmpl/wizard/optional.tmpl
 	'Mail Configuration' => 'メール設定',
 	'Your mail configuration is complete.' => 'メール設定を完了しました。',
-	'Check your email to confirm receipt of a test email from Movable Type and then proceed to the next step.' => 'Movable Typeからのテストメールを受信したことを確認して、次のステップへ進んでください。',
+	'Check your email to confirm receipt of a test email from Melody and then proceed to the next step.' => 'Melodyからのテストメールを受信したことを確認して、次のステップへ進んでください。',
 	'Show current mail settings' => '現在のメール設定を表示',
-	'Periodically Movable Type will send email to inform users of new comments as well as other other events. For these emails to be sent properly, you must instruct Movable Type how to send email.' => 'Movable Typeは新しいコメントの投稿などを定期的にメールでお知らせします。これらのメールが正しく送信されるよう設定してください。',
+	'Periodically Melody will send email to inform users of new comments as well as other other events. For these emails to be sent properly, you must instruct Melody how to send email.' => 'Melodyは新しいコメントの投稿などを定期的にメールでお知らせします。これらのメールが正しく送信されるよう設定してください。',
 	'An error occurred while attempting to send mail: ' => 'メール送信の過程でエラーが発生しました。',
 	'Send email via:' => 'メール送信プログラム',
 	'sendmail Path' => 'sendmailのパス',
@@ -4198,12 +4198,12 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## tmpl/wizard/packages.tmpl
 	'Requirements Check' => 'システムチェック',
-	'The following Perl modules are required in order to make a database connection.  Movable Type requires a database in order to store your blog\'s data.  Please install one of the packages listed here in order to proceed.  When you are ready, click the \'Retry\' button.' => 'データベース接続のための以下のPerlモジュールが必要です。Movable Typeはブログのデータを保存するためにデータベースを使用します。この一覧のパッケージのいずれかをインストールしてください。準備ができたら「再試行」のボタンをクリックしてください。',
+	'The following Perl modules are required in order to make a database connection.  Melody requires a database in order to store your blog\'s data.  Please install one of the packages listed here in order to proceed.  When you are ready, click the \'Retry\' button.' => 'データベース接続のための以下のPerlモジュールが必要です。Melodyはブログのデータを保存するためにデータベースを使用します。この一覧のパッケージのいずれかをインストールしてください。準備ができたら「再試行」のボタンをクリックしてください。',
 	'All required Perl modules were found.' => '必要なPerlモジュールは揃っています。',
-	'You are ready to proceed with the installation of Movable Type.' => 'Movable Typeのインストールを続行する準備が整いました。',
+	'You are ready to proceed with the installation of Melody.' => 'Melodyのインストールを続行する準備が整いました。',
 	'Some optional Perl modules could not be found. <a href="javascript:void(0)" onclick="[_1]">Display list of optional modules</a>' => 'オプションのPerlモジュールのうちいくつかが見つかりませんでした。<a href="javascript:void(0)" onclick="[_1]">オプションモジュールを表示</a>',
-	'One or more Perl modules required by Movable Type could not be found.' => 'ひとつ以上の必須Perlモジュールが見つかりませんでした。',
-	'The following Perl modules are required for Movable Type to run properly. Once you have met these requirements, click the \'Retry\' button to re-test for these packages.' => '以下のPerlモジュールはMovable Typeの正常な動作に必要です。必要なモジュールは「再試行」ボタンをクリックすることで確認できます。',
+	'One or more Perl modules required by Melody could not be found.' => 'ひとつ以上の必須Perlモジュールが見つかりませんでした。',
+	'The following Perl modules are required for Melody to run properly. Once you have met these requirements, click the \'Retry\' button to re-test for these packages.' => '以下のPerlモジュールはMelodyの正常な動作に必要です。必要なモジュールは「再試行」ボタンをクリックすることで確認できます。',
 	'Some optional Perl modules could not be found. You may continue without installing these optional Perl modules. They may be installed at any time if they are needed. Click \'Retry\' to test for the modules again.' => 'オプションのPerlモジュールのうちいくつかが見つかりませんでしたが、インストールはこのまま続行できます。オプションのPerlモジュールは、必要な場合にいつでもインストールできます。',
 	'Missing Database Modules' => 'データベースモジュールが見つかりません',
 	'Missing Optional Modules' => 'オプションのモジュールが見つかりません',
@@ -4214,15 +4214,15 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## tmpl/wizard/start.tmpl
 	'Configuration File Exists' => '構成ファイルが見つかりました',
-	'A configuration (mt-config.cgi) file already exists, <a href="[_1]">sign in</a> to Movable Type.' => '構成ファイル(mt-config.cgi)はすでに存在します。Movable Typeに<a href="[_1]">サインイン</a>してください。',
+	'A configuration (mt-config.cgi) file already exists, <a href="[_1]">sign in</a> to Melody.' => '構成ファイル(mt-config.cgi)はすでに存在します。Melodyに<a href="[_1]">サインイン</a>してください。',
 	'To create a new configuration file using the Wizard, remove the current configuration file and then refresh this page' => 'ウィザードで新しく構成ファイルを作るときは、現在の構成ファイルを別の場所に移動してこのページを更新してください。',
-	'Movable Type requires that you enable JavaScript in your browser. Please enable it and refresh this page to proceed.' => 'ブラウザのJavaScriptを有効にする必要があります。続けるにはブラウザのJavaScriptを有効にし、このページの表示を更新してください。',
-	'This wizard will help you configure the basic settings needed to run Movable Type.' => 'このウィザードでは、Movable Typeを利用するために必要となる基本的な環境設定を行います。',
+	'Melody requires that you enable JavaScript in your browser. Please enable it and refresh this page to proceed.' => 'ブラウザのJavaScriptを有効にする必要があります。続けるにはブラウザのJavaScriptを有効にし、このページの表示を更新してください。',
+	'This wizard will help you configure the basic settings needed to run Melody.' => 'このウィザードでは、Melodyを利用するために必要となる基本的な環境設定を行います。',
 	'<strong>Error: \'[_1]\' could not be found.</strong>  Please move your static files to the directory first or correct the setting if it is incorrect.' => 'エラー: \'[_1]\'が見つかりませんでした。ファイルをmt-staticディレクトリに移動するか、設定を修正してください。',
 	'Configure Static Web Path' => 'Static Web Pathの設定',
-	'Movable Type ships with directory named [_1] which contains a number of important files such as images, javascript files and stylesheets.' => 'Movable Typeには、[_1]ディレクトリが標準で含まれています。この中には画像ファイルやJavaScript、スタイルシートなどの重要なファイルが含まれています。',
-	'The [_1] directory is in the main Movable Type directory which this wizard script resides, but due to your web server\'s configuration, the [_1] directory is not accessible in this location and must be moved to a web-accessible location (e.g., your web document root directory).' => '[_1]ディレクトリは、Movable Typeのメインディレクトリ（このウィザード自身も含まれている）以下で見つかりました。しかし現在のサーバーの構成上、その場所にはWebブラウザからアクセスできません。Webサイトのルートディレクトリの下など、Webブラウザからアクセスできる場所に移動してください。',
-	'This directory has either been renamed or moved to a location outside of the Movable Type directory.' => 'mt-static ディレクトリはMovable Typeのインストールディレクトリの外部に移動されたかまたは名前が変更されているようです。',
+	'Melody ships with directory named [_1] which contains a number of important files such as images, javascript files and stylesheets.' => 'Melodyには、[_1]ディレクトリが標準で含まれています。この中には画像ファイルやJavaScript、スタイルシートなどの重要なファイルが含まれています。',
+	'The [_1] directory is in the main Melody directory which this wizard script resides, but due to your web server\'s configuration, the [_1] directory is not accessible in this location and must be moved to a web-accessible location (e.g., your web document root directory).' => '[_1]ディレクトリは、Melodyのメインディレクトリ（このウィザード自身も含まれている）以下で見つかりました。しかし現在のサーバーの構成上、その場所にはWebブラウザからアクセスできません。Webサイトのルートディレクトリの下など、Webブラウザからアクセスできる場所に移動してください。',
+	'This directory has either been renamed or moved to a location outside of the Melody directory.' => 'mt-static ディレクトリはMelodyのインストールディレクトリの外部に移動されたかまたは名前が変更されているようです。',
 	'Once the [_1] directory is in a web-accessible location, specify the location below.' => '[_1]ディレクトリをウェブアクセス可能な場所に置く場合には、以下にその場所を指定してください。',
 	'This URL path can be in the form of [_1] or simply [_2]' => 'このURLは[_1]のように記述するか、または簡略化して[_2]のように記述できます。',
 	'This path must be in the form of [_1]' => 'このパスは[_1]のように記述してください。',
