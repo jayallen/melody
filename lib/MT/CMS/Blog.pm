@@ -1826,7 +1826,7 @@ sub save_filter {
         $name =~ s/(^\s+|\s+$)//g;
         $q->param( 'name', $name );
     }
-    my $perms = $app->permissions;
+    my $perms = $app->user->permissions;
 
     return $eh->error( MT->translate("You did not specify a blog name.") )
       if ( !( $perms->can_edit_config )
