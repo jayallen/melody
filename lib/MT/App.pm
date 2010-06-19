@@ -679,7 +679,7 @@ sub pre_run_debug {
         print STDERR "Package: " . ref($app) . "\n";
         print STDERR "Session: " . $app->session->id . "\n"
             if $app->session;
-        print STDERR "Request: " . $q->param->request_method . "\n";
+        print STDERR "Request: " . $q->request_method . "\n";
         my @param = $app->query;
         if (@param) {
             foreach my $key (@param) {
