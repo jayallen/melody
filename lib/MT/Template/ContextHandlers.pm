@@ -9918,12 +9918,23 @@ sub _hdlr_entry_categories {
     my $res = '';
     my $glue = $args->{glue};
     local $ctx->{inside_mt_categories} = 1;
+
+    my $cnt = 1;
+    my $vars = $ctx->{__stash}{vars} ||= {};
+
     for my $cat (@$cats) {
         local $ctx->{__stash}->{category} = $cat;
+        local $vars->{__first__} = ($cat == $cats->[0]);
+        local $vars->{__last__} = ($cat == $cats->[scalar(@$cats)-1]);
+        local $vars->{__odd__} = ($cnt % 2 ) == 1;
+        local $vars->{__even__} = ($cnt % 2 ) == 0;
+        local $vars->{__counter__} = $cnt;
+
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error( $builder->errstr );
         $res .= $glue if defined $glue && length($res) && length($out);
         $res .= $out;
+        $cnt++;
     }
     $res;
 }
