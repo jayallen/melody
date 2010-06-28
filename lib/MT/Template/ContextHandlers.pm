@@ -6162,9 +6162,26 @@ for this setting if unassigned is "mt.cgi".
 
 =cut
 
+sub _get_script_location
+{
+    my ($ctx, $args, $cond, $method) = @_;
+    my $additional_location = '';
+    if ($args->{url})
+    {
+        $additional_location = _hdlr_cgi_path($ctx);
+    }
+    elsif ($args->{filepath})
+    {
+        $additional_location = _hdlr_cgi_server_path($ctx);
+        $additional_location .= '/' if ($additional_location !~ /$\//);
+    }
+    no strict 'refs';
+    my $script = $ctx->{config}->$method();
+    return "$additional_location$script";
+}
+
 sub _hdlr_admin_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->AdminScript;
+    return _get_script_location(@_,'AdminScript');
 }
 
 ###########################################################################
@@ -6179,8 +6196,7 @@ default for this setting if unassigned is "mt-comments.cgi".
 =cut
 
 sub _hdlr_comment_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->CommentScript;
+    return _get_script_location(@_,'CommentScript');
 }
 
 ###########################################################################
@@ -6195,8 +6211,7 @@ default for this setting if unassigned is "mt-tb.cgi".
 =cut
 
 sub _hdlr_trackback_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->TrackbackScript;
+    return _get_script_location(@_,'TrackbackScript');
 }
 
 ###########################################################################
@@ -6211,8 +6226,7 @@ default for this setting if unassigned is "mt-search.cgi".
 =cut
 
 sub _hdlr_search_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->SearchScript;
+    return _get_script_location(@_,'SearchScript');
 }
 
 ###########################################################################
@@ -6243,8 +6257,7 @@ default for this setting if unassigned is "mt-xmlrpc.cgi".
 =cut
 
 sub _hdlr_xmlrpc_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->XMLRPCScript;
+    return _get_script_location(@_,'XMLRPCScript');
 }
 
 ###########################################################################
@@ -6259,7 +6272,8 @@ default for this setting if unassigned is "mt-atom.cgi".
 =cut
 
 sub _hdlr_atom_script {
-    my ($ctx) = @_;
+return _get_script_location(@_,'AtomScript');
+my ($ctx) = @_;
     return $ctx->{config}->AtomScript;
 }
 
@@ -6275,8 +6289,7 @@ default for this setting if unassigned is "mt-add-notify.cgi".
 =cut
 
 sub _hdlr_notify_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->NotifyScript;
+    return _get_script_location(@_,'NotifyScript');
 }
 
 ###########################################################################
@@ -13719,25 +13732,6 @@ sub _hdlr_categories {
               }
         );
     };
-
-    # Adds a tag filter to the filters list.
-    if (my $tag_arg = $args->{tags} || $args->{tag}) {
-        require MT::Tag;
-        require MT::ObjectTag;
-
-        my $terms;
-        if ($tag_arg !~ m/\b(AND|OR|NOT)\b|\(|\)/i) {
-            my @tags = MT::Tag->split(',', $tag_arg);
-            $terms = { name => \@tags };
-            $tag_arg = join " or ", @tags;
-        }
-        my $blog = $ctx->stash('blog');
-        my @tags = MT::Tag->load($terms);
-        my @tag_ids = map { $_->id } @tags;
-        $args{join} = MT::ObjectTag->join_on('object_id',
-                                { blog_id => $blog->id,
-                                tag_id => \@tag_ids });
-    }
 
     my $iter = $class->load_iter(\%terms, \%args);
     my $res = '';

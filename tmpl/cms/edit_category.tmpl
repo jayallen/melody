@@ -1,50 +1,3 @@
-<mt:SetVarBlock name="html_head" append="1">
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/focus.js"></script>
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/tagcomplete.js"></script>
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/client.js"></script>
-<script type="text/javascript">
-var tag_delim = '<$mt:var name="auth_pref_tag_delim"$>';
-function tagSplit(str) {
-    var delim = RegExp.escape(tag_delim);
-    var delim_scan = new RegExp('^((([\'"])(.*?)\\3[^' + delim + ']*?|.*?)(' + delim + '\\s*|$))', '');
-    str = str.replace(/(^\s+|\s+$)/g, '');
-    var tags = [];
-    while (str.length && str.match(delim_scan)) {
-        str = str.substr(RegExp.$1.length);
-        var tag = RegExp.$4 ? RegExp.$4 : RegExp.$2;
-        tag = tag.replace(/(^\s+|\s+$)/g, '');
-        tag = tag.replace(/\s+/g, ' ');
-        if (tag != '') tags.push(tag);
-    }
-    return tags;
-}
-
-var autoTag;
-<mt:if name="tags_js">
-tagList = <$mt:var name="tags_js"$>;
-</mt:if>
-
-var tagPos = 0;
-function initTags() {
-    /* browsers don't want to cache the tags field, so we use a hidden input field to cache them */
-    var t = getByID('tags-cache');
-    if ( t ) {
-        log('tag cache:'+t.value);
-        var v = getByID('tags');
-        if ( t.value )
-            v.value = t.value;
-        DOM.addEventListener( v, "change", function() { log('caching tags'); t.value = v.value; } );
-    }
-    if (!tagList || tagList.length == 0) return;
-
-    autoTag = new TC.TagComplete("tags", tagList);
-    autoTag.delimiter = tag_delim;
-}
-
-
-</script>
-</mt:SetVarBlock>
-
 <mt:setvar name="page_title" value="<__trans phrase="Edit Category">">
 <$mt:setvar name="position_actions_bottom" value="1"$>
 <MTSetVarBlock name="system_msg">
@@ -212,51 +165,6 @@ TC.attachLoadEvent( init );
     help_section="categories_urls_to_ping">
     <textarea name="ping_urls" id="ping_urls" cols="" rows="" class="full-width short"><mt:var name="ping_urls" escape="html"></textarea>
 </mtapp:setting>
-    </fieldset>
-
-
-    <fieldset>
-        <h3><__trans phrase="Category Tags"></h3>
-<mt:Ignore>
-<mtapp:setting
-    id="cat_tags"
-    label="<__trans phrase="Tags">"
-    hint="<__trans phrase="Assign tags to this category">"
-    >
-    <input name="cat_tags" id="cat_tags" class="full-width" value="<$mt:var name="cat_tags" escape="html"$>" size="30" />
-</mtapp:setting>
-
-</mt:Ignore>
-
-	<mt:if name="auth_pref_tag_delim_comma">
-                    <$mt:setvar name="tags_hint" value="<__trans phrase="(comma-delimited list)">"$>
-                <mt:else>
-                    <mt:if name="auth_pref_tag_delim_space">
-                        <$mt:setvar name="tags_hint" value="<__trans phrase="(space-delimited list)">"$>
-                    <mt:else>
-                        <mt:setvarblock name="tags_hint">
-                            <__trans phrase="(delimited by '[_1]')" params="<$mt:var name="auth_pref_tag_delim"$>">
-                        </mt:setvarblock>
-                    </mt:if>
-                </mt:if>
-
-                <mtapp:setting
-                    id="tags"
-                    
-                    label="<__trans phrase="Tags">"
-                    label_class="top-label"
-                    hint="$tags_hint"
-                    help_page="entries"
-                    help_section="entry_tags">
-                    <div class="textarea-wrapper">
-                        <input name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" mt:watch-change="1" autocomplete="off" />
-                        <input type="hidden" name="_ignore_tags" id="tags-cache" value="<$mt:var name="tags" escape="html"$>" />
-                    </div>
-                    <!-- FIXME - move this styling to the ie hacks css file -->
-                    <!--[if lte IE 6.5]><div style="position:relative;"><![endif]-->
-                    <div id="tags_completion"></div>
-                    <!--[if lte IE 6.5]></div><![endif]-->
-                </mtapp:setting>
     </fieldset>
 
 <mt:setvarblock name="action_buttons">

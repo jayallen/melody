@@ -27,28 +27,6 @@ sub edit {
         require MT::Trackback;
         my $tb = MT::Trackback->load( { category_id => $obj->id } );
 
-        my $tags_js = MT::Util::to_json(
-            MT::Tag->cache(
-                blog_id => $blog_id,
-                class   => 'MT::Category',
-                private => 1
-            )
-        );
-        $tags_js =~ s!/!\\/!g;
-        $param->{tags_js} = $tags_js;
-
-    if ( $app->query->param('tags') ) {
-        $param->{tags} = $app->query->param('tags');
-    }
-    else {
-        if ($obj) {
-            my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
-            require MT::Tag;
-            my $tags = MT::Tag->join( $tag_delim, $obj->tags );
-            $param->{tags} = $tags;
-        }
-    }
-
         if ($tb) {
             my $list_pref = $app->list_pref('ping');
             %$param = ( %$param, %$list_pref );
@@ -402,26 +380,6 @@ sub pre_save {
                 $_->label
             )
         ) if $_->basename eq $obj->basename;
-    }
-
-    my $tags = $app->query->param('tags');
-    if ( defined $tags )
-    {
-        my $blog = $app->blog;
-        my $fields = $blog->smart_replace_fields;
-        if ( $fields =~ m/tags/ig ) {
-            $tags = MT::App::CMS::_convert_word_chars( $app, $tags );
-        }
-
-        require MT::Tag;
-        my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
-        my @tags = MT::Tag->split( $tag_delim, $tags );
-        if (@tags) {
-            $obj->set_tags(@tags);
-        }
-        else {
-            $obj->remove_tags();
-        }
     }
 
     1;

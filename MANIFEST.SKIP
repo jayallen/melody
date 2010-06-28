@@ -35,6 +35,9 @@ Makefile.PL
 ^MT-
 ^MT.*\.zip
 ^MT.*\.gz
+^Melody-
+^Melody.*\.zip
+^Melody.*\.gz
 ^mt-config.cgi$
 
 # Plugins that aren't to be in the general release
