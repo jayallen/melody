@@ -111,6 +111,7 @@ sub core_tags {
             EntryPrevious => \&_hdlr_entry_previous,
             EntryNext => \&_hdlr_entry_next,
             EntryTags => \&_hdlr_entry_tags,
+            CategoryTags => \&_hdlr_category_tags,
 
             DateHeader => \&_hdlr_pass_tokens,
             DateFooter => \&_hdlr_pass_tokens,
@@ -4234,11 +4235,14 @@ glued together by a comma and a space.
 =cut
 
 sub _hdlr_entry_tags {
-    my ($ctx, $args, $cond) = @_;
-    
-    require MT::Entry;
-    my $entry = $ctx->stash('entry');
-    return '' unless $entry;
+    return _hdlr_object_tags('entry', @_);
+}
+
+sub _hdlr_object_tags {
+    my ($obj_type, $ctx, $args, $cond) = @_;
+
+    my $obj = $ctx->stash($obj_type);
+    return '' unless $obj;
     my $glue = $args->{glue};
 
     local $ctx->{__stash}{tag_max_count} = undef;
@@ -4248,12 +4252,13 @@ sub _hdlr_entry_tags {
     my $builder = $ctx->stash('builder');
     my $tokens = $ctx->stash('tokens');
     my $res = '';
-    my $tags = $entry->get_tag_objects;
+    my $tags = $obj->get_tag_objects;
     for my $tag (@$tags) {
         next if $tag->is_private && !$args->{include_private};
         local $ctx->{__stash}{Tag} = $tag;
         local $ctx->{__stash}{tag_count} = undef;
-        local $ctx->{__stash}{tag_entry_count} = undef;
+        local $ctx->{__stash}{tag_entry_count} = undef if ($obj_type eq 'entry' or $obj_type eq 'page');
+        local $ctx->{__stash}{class_type} = $obj_type if !$ctx->{__stash}{class_type};
         defined(my $out = $builder->build($ctx, $tokens, $cond))
             or return $ctx->error( $builder->errstr );
         $res .= $glue if defined $glue && length($res) && length($out);
@@ -4261,6 +4266,11 @@ sub _hdlr_entry_tags {
     }
     $res;
 }
+
+sub _hdlr_category_tags {
+    return _hdlr_object_tags ('category', @_);
+}
+
 
 ###########################################################################
 
@@ -13709,23 +13719,74 @@ sub _hdlr_categories {
         );
     };
 
-    # Adds a tag filter to the filters list.
+    my $tag_filter = undef;
     if (my $tag_arg = $args->{tags} || $args->{tag}) {
+    #    require MT::Tag;
+    #    require MT::ObjectTag;
+
+    #    my $terms;
+    #    if ($tag_arg !~ m/\b(AND|OR|NOT)\b|\(|\)/i) {
+    #        my @tags = MT::Tag->split(',', $tag_arg);
+    #        $terms = { name => \@tags };
+    #        $tag_arg = join " or ", @tags;
+    #    }
+    #    my $blog = $ctx->stash('blog');
+    #    my @tags = MT::Tag->load($terms);
+    #    my @tag_ids = map { $_->id } @tags;
+    #    $args{join} = MT::ObjectTag->join_on('object_id',
+    #                            { blog_id => $blog->id,
+    #                            tag_id => \@tag_ids }, {unique => 1});
+
+
+####Copy and paste
+
         require MT::Tag;
         require MT::ObjectTag;
 
         my $terms;
-        if ($tag_arg !~ m/\b(AND|OR|NOT)\b|\(|\)/i) {
-            my @tags = MT::Tag->split(',', $tag_arg);
+        if ( $tag_arg !~ m/\b(AND|OR|NOT)\b|\(|\)/i ) {
+            my @tags = MT::Tag->split( ',', $tag_arg );
             $terms = { name => \@tags };
             $tag_arg = join " or ", @tags;
         }
-        my $blog = $ctx->stash('blog');
-        my @tags = MT::Tag->load($terms);
-        my @tag_ids = map { $_->id } @tags;
-        $args{join} = MT::ObjectTag->join_on('object_id',
-                                { blog_id => $blog->id,
-                                tag_id => \@tag_ids });
+        my $tags = [
+            MT::Tag->load(
+                $terms,
+                {
+                    binary => { name => 1 },
+                    join   => [
+                        'MT::ObjectTag', 'tag_id',
+                        { %terms, object_datasource => $class->datasource }
+                    ]
+                }
+            )
+        ];
+        require MT::Template::Context;
+        my $ctx = MT::Template::Context->new;
+
+        my $cexpr = $ctx->compile_tag_filter( $tag_arg, $tags );
+        if ($cexpr) {
+            my @tag_ids =
+              map { $_->id, ( $_->n8d_id ? ( $_->n8d_id ) : () ) } @$tags;
+            my $preloader = sub {
+                my ($entry_id) = @_;
+                my $cterms = {
+                    tag_id            => \@tag_ids,
+                    object_id         => $entry_id,
+                    object_datasource => $class->datasource,
+                    %terms,
+                };
+                my $cargs = {
+                    fetchonly   => ['tag_id'],
+                    no_triggers => 1,
+                };
+                my @ot_ids = MT::ObjectTag->load( $cterms, $cargs ) if @tag_ids;
+                my %map;
+                $map{ $_->tag_id } = 1 for @ot_ids;
+                \%map;
+            };
+            $tag_filter = sub {$cexpr->( $preloader->( $_[0]->id ) ) };
+        }
     }
 
     my $iter = $class->load_iter(\%terms, \%args);
@@ -13739,6 +13800,7 @@ sub _hdlr_categories {
     local $ctx->{inside_mt_categories} = 1;
     my $i = 0;
     my $cat = $iter->();
+    $cat = $iter->() if ($tag_filter and !$tag_filter->($cat));
     if ( !$args->{show_empty} ) {
         while ( defined $cat && !$entry_count_of->($cat) ) {
             $cat = $iter->();
@@ -13750,6 +13812,7 @@ sub _hdlr_categories {
     while (defined($cat)) {
         $i++;
         my $next_cat = $iter->();
+        $next_cat = $iter->() if (!$next_cat or ($tag_filter and !$tag_filter->($next_cat)));
         if ( !$args->{show_empty} ) {
             while ( defined $next_cat && !$entry_count_of->($next_cat) ) {
                 $next_cat = $iter->();

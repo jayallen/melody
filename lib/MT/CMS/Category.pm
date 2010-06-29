@@ -48,6 +48,7 @@ sub edit {
             $param->{tags} = $tags;
         }
     }
+    $param->{auth_pref_tag_delim} = chr( $app->user->entry_prefs->{tag_delim} );
 
         if ($tb) {
             my $list_pref = $app->list_pref('ping');
