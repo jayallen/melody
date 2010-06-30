@@ -3534,21 +3534,27 @@ sub redirect {
     return;
 }
 
+# FUTURE BREAK & DEPRECATED. Emit warning unless it's the new query 
+# method calling.
 sub param {
     my $app = shift;
-    return unless $app->query;
-    if (@_) {
-        $app->query->param(@_);
-    }
-    else {
-    	my ($package, $filename, $line) = caller;
-    	warn <<MSG;
+    my ($package,   $filename, $line,       $subroutine, $hasargs,
+        $wantarray, $evaltext, $is_require, $hints,      $bitmask
+    ) = caller(1);
+    unless ($subroutine && $subroutine eq 'MT::App::query') {
+        warn <<MSG;
 FUTURE BREAK WARNING: Deprecated usage of MT::App->param to fetch 
 the CGI query object in $package at line $line. 
 This will be changed in a backwards incompatable way in the near 
 future. Use MT::App->query instead.
 MSG
-        wantarray ? ( $app->query->param ) : $app->query;
+    }
+    return unless $app->query;
+    if (@_) {
+        $app->query->param(@_);
+    }
+    else {
+        wantarray ? ($app->query->param) : $app->query;
     }
 }
 
