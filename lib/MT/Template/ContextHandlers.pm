@@ -6153,6 +6153,48 @@ sub _hdlr_static_path {
 
 ###########################################################################
 
+=head2 _get_script_location
+
+An internal wrapper method around all of the "FooScript" config directives which supports two optional arguments:
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:AdminScript url="1"$>>
+might give you http://example.com/mt/mt.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:AdminScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt.cgi>
+
+=back
+
+=for internal
+
+=cut
+
+sub _get_script_location {
+    my ($ctx, $args, $cond, $method) = @_;
+    my $additional_location = '';
+
+    if ($args->{url}) {
+        $additional_location = $ctx->_hdlr_cgi_path();
+    }
+    elsif ( $args->{filepath} ) {
+        $additional_location  = $ctx->_hdlr_cgi_server_path();
+        $additional_location .= '/' if ($additional_location !~ /$\//);
+    }
+
+    no strict 'refs';
+    my $script = $ctx->{config}->$method();
+    return $additional_location . $script;
+}
+
+###########################################################################
+
 =head2 AdminScript
 
 Returns the value of the C<AdminScript> configuration setting. The default
@@ -6163,8 +6205,8 @@ for this setting if unassigned is "mt.cgi".
 =cut
 
 sub _hdlr_admin_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->AdminScript;
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'AdminScript');
 }
 
 ###########################################################################
@@ -6179,8 +6221,8 @@ default for this setting if unassigned is "mt-comments.cgi".
 =cut
 
 sub _hdlr_comment_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->CommentScript;
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'CommentScript');
 }
 
 ###########################################################################
@@ -6195,8 +6237,8 @@ default for this setting if unassigned is "mt-tb.cgi".
 =cut
 
 sub _hdlr_trackback_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->TrackbackScript;
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'TrackbackScript');
 }
 
 ###########################################################################
@@ -6211,8 +6253,8 @@ default for this setting if unassigned is "mt-search.cgi".
 =cut
 
 sub _hdlr_search_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->SearchScript;
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'SearchScript');
 }
 
 ###########################################################################
@@ -6243,8 +6285,8 @@ default for this setting if unassigned is "mt-xmlrpc.cgi".
 =cut
 
 sub _hdlr_xmlrpc_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->XMLRPCScript;
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'XMLRPCScript');
 }
 
 ###########################################################################
@@ -6259,8 +6301,8 @@ default for this setting if unassigned is "mt-atom.cgi".
 =cut
 
 sub _hdlr_atom_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->AtomScript;
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'AtomScript');
 }
 
 ###########################################################################
@@ -6275,8 +6317,8 @@ default for this setting if unassigned is "mt-add-notify.cgi".
 =cut
 
 sub _hdlr_notify_script {
-    my ($ctx) = @_;
-    return $ctx->{config}->NotifyScript;
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'NotifyScript');
 }
 
 ###########################################################################
