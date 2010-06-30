@@ -6200,6 +6200,21 @@ sub _get_script_location {
 Returns the value of the C<AdminScript> configuration setting. The default
 for this setting if unassigned is "mt.cgi".
 
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:AdminScript url="1"$>>
+might give you http://example.com/mt/mt.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:AdminScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt.cgi>
+
+=back
+
 =for tags configuration
 
 =cut
@@ -6215,6 +6230,22 @@ sub _hdlr_admin_script {
 
 Returns the value of the C<CommentScript> configuration setting. The
 default for this setting if unassigned is "mt-comments.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example
+C<<$mt:CommentScript url="1"$>> might give you
+http://example.com/mt/mt-comments.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:CommentScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-comments.cgi>
+
+=back
 
 =for tags configuration
 
@@ -6232,6 +6263,22 @@ sub _hdlr_comment_script {
 Returns the value of the C<TrackbackScript> configuration setting. The
 default for this setting if unassigned is "mt-tb.cgi".
 
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example 
+C<<$mt:TrackbackScript url="1"$>> might give you
+http://example.com/mt/mt-tb.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:TrackbackScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-tb.cgi>
+
+=back
+
 =for tags configuration
 
 =cut
@@ -6247,6 +6294,21 @@ sub _hdlr_trackback_script {
 
 Returns the value of the C<SearchScript> configuration setting. The
 default for this setting if unassigned is "mt-search.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:SearchScript url="1"$>>
+might give you http://example.com/mt/mt-search.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:SearchScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-search.cgi>
+
+=back
 
 =for tags configuration
 
@@ -6280,6 +6342,21 @@ sub _hdlr_search_max_results {
 Returns the value of the C<XMLRPCScript> configuration setting. The
 default for this setting if unassigned is "mt-xmlrpc.cgi".
 
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:XMLRPCScript url="1"$>>
+might give you http://example.com/mt/mt-xmlrpc.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:XMLRPCScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-xmlrpc.cgi>
+
+=back
+
 =for tags configuration
 
 =cut
@@ -6296,6 +6373,21 @@ sub _hdlr_xmlrpc_script {
 Returns the value of the C<AtomScript> configuration setting. The
 default for this setting if unassigned is "mt-atom.cgi".
 
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:AtomScript url="1"$>>
+might give you http://example.com/mt/mt-atom.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:AtomScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-atom.cgi>
+
+=back
+
 =for tags configuration
 
 =cut
@@ -6311,6 +6403,21 @@ sub _hdlr_atom_script {
 
 Returns the value of the C<NotifyScript> configuration setting. The
 default for this setting if unassigned is "mt-add-notify.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:NotifyScript url="1"$>>
+might give you http://example.com/mt/mt-add-notify.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:NotifyScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-add-notify.cgi>
+
+=back
 
 =for tags configuration
 
