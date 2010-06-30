@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Movable Type (r) Open Source (C) 2001-2009 Six Apart, Ltd.
+# Melody, based on Movable Type (r) Open Source (C) 2001-2009 Six Apart, Ltd.
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
@@ -310,9 +310,9 @@ my @CORE_DATA = (
 my @CORE_OPT = (
     [ 'HTML::Entities', 0, 0, translate('HTML::Entities is needed to encode some characters, but this feature can be turned off using the NoHTMLEntities option in the configuration file.') ],
 
-    [ 'LWP::UserAgent', 0, 0, translate('LWP::UserAgent is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.') ],
+    [ 'LWP::UserAgent', 0, 0, translate('LWP::UserAgent is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the Melody Recently Updated ping.') ],
 
-    [ 'HTML::Parser', 0, 0, translate('HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.') ],
+    [ 'HTML::Parser', 0, 0, translate('HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the Melody Recently Updated ping.') ],
 
     [ 'SOAP::Lite', 0.50, 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.') ],
 
