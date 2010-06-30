@@ -194,8 +194,8 @@ sub rebuild {
 
                 # Skip this archive type if the archive type doesn't
                 # match the kind of entry we've loaded
-                next unless ($archiver and $entry and $archiver->entry_class);
-                next if $entry->class ne $archiver->entry_class;
+                next unless $archiver and $entry and $archiver->entry_class;
+                next if ($entry->class||'') ne $archiver->entry_class;
 
                 if ( $archiver->category_based ) {
                     my $cats = $entry->categories;
