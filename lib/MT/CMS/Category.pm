@@ -20,7 +20,7 @@ sub edit {
         # $app->add_breadcrumb($obj->label);
         my $parent   = $obj->parent_category;
         my $site_url = $blog->site_url;
-        $site_url .= '/' unless $site_url =~ m!/$!;
+        $site_url   .= '/' unless $site_url =~ m!/$!;
         $param->{path_prefix} =
           $site_url . ( $parent ? $parent->publish_path : '' );
         $param->{path_prefix} .= '/' unless $param->{path_prefix} =~ m!/$!;
@@ -37,17 +37,19 @@ sub edit {
         $tags_js =~ s!/!\\/!g;
         $param->{tags_js} = $tags_js;
 
-    if ( $app->query->param('tags') ) {
-        $param->{tags} = $app->query->param('tags');
-    }
-    else {
-        if ($obj) {
-            my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
-            require MT::Tag;
-            my $tags = MT::Tag->join( $tag_delim, $obj->tags );
-            $param->{tags} = $tags;
+        if ( $app->query->param('tags') ) {
+            $param->{tags} = $app->query->param('tags');
         }
-    }
+        else {
+            if ($obj) {
+                my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
+                require MT::Tag;
+                my $tags = MT::Tag->join( $tag_delim, $obj->tags );
+                $param->{tags} = $tags;
+            }
+        }
+        $param->{auth_pref_tag_delim}
+            = chr( $app->user->entry_prefs->{tag_delim} );
 
         if ($tb) {
             my $list_pref = $app->list_pref('ping');
@@ -63,10 +65,13 @@ sub edit {
             $param->{tb}     = 1;
             $param->{tb_url} = $path . $script . '/' . $tb->id;
             if ( $param->{tb_passphrase} = $tb->passphrase ) {
-                $param->{tb_url} .= '/' . encode_url( $param->{tb_passphrase} );
+                $param->{tb_url} .= '/'.encode_url( $param->{tb_passphrase} );
             }
-            $app->load_list_actions( 'ping', $param->{ping_table}[0],
-                'pings' );
+            $app->load_list_actions(    
+                'ping', 
+                $param->{ping_table}[0], 
+                'pings'
+            );
         }
     }
     1;
