@@ -187,7 +187,8 @@ sub _create_commenter_assign_role {
     $commenter->type( MT::Author::AUTHOR() );
     $commenter->status( MT::Author::ACTIVE() );
     $commenter->auth_type( $app->config->AuthenticationModule );
-    return undef unless ( $commenter->save );
+
+    return unless MT::Auth->new_user( $app, $commenter ) || $commenter->save;
 
     require MT::Role;
     require MT::Association;
