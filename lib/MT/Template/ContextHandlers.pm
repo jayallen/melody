@@ -13879,24 +13879,10 @@ sub _hdlr_categories {
         );
     };
 
-    # Adds a tag filter to the filters list.
+    #This blog looks for the tag or tags attribute
+    #and then attempts to build a tag filter subroutine for the specified value
     my $tag_filter = undef;
     if (my $tag_arg = $args->{tags} || $args->{tag}) {
-        ### FIXME: Mikert: Did you mean to leave this commented code here?
-        #    require MT::Tag;
-        #    require MT::ObjectTag;
-        #    my $terms;
-        #    if ($tag_arg !~ m/\b(AND|OR|NOT)\b|\(|\)/i) {
-        #        my @tags = MT::Tag->split(',', $tag_arg);
-        #        $terms = { name => \@tags };
-        #        $tag_arg = join " or ", @tags;
-        #    }
-        #    my $blog = $ctx->stash('blog');
-        #    my @tags = MT::Tag->load($terms);
-        #    my @tag_ids = map { $_->id } @tags;
-        #    $args{join} = MT::ObjectTag->join_on('object_id',
-        #                            { blog_id => $blog->id,
-        #                            tag_id => \@tag_ids }, {unique => 1});
 
         require MT::Tag;
         require MT::ObjectTag;
@@ -13926,6 +13912,8 @@ sub _hdlr_categories {
         if ($cexpr) {
             my @tag_ids =
               map { $_->id, ( $_->n8d_id ? ( $_->n8d_id ) : () ) } @$tags;
+            #This attempts to load MT::ObjectTags based on a scalar value, entry_id, that is passed in
+            #and it effectively serves as the filter for the tag filter.
             my $preloader = sub {
                 my ($entry_id) = @_;
                 my $cterms = {
@@ -13938,6 +13926,8 @@ sub _hdlr_categories {
                     fetchonly   => ['tag_id'],
                     no_triggers => 1,
                 };
+                #Here we attempt to load some MT::ObjectTag objects, but pull back only the tag_id attribute
+                #to reduce the memory footprint
                 my @ot_ids = MT::ObjectTag->load( $cterms, $cargs ) if @tag_ids;
                 my %map;
                 $map{ $_->tag_id } = 1 for @ot_ids;
@@ -13958,6 +13948,7 @@ sub _hdlr_categories {
     local $ctx->{inside_mt_categories} = 1;
     my $i = 0;
     my $cat = $iter->();
+    #If there is a tag filter, we need to test $cat, otherwise a bad category could go through.
     $cat = $iter->() if ($tag_filter and !$tag_filter->($cat));
     if ( !$args->{show_empty} ) {
         while ( defined $cat && !$entry_count_of->($cat) ) {
