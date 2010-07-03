@@ -13879,7 +13879,7 @@ sub _hdlr_categories {
         );
     };
 
-    #This blog looks for the tag or tags attribute
+    #This block looks for the tag or tags attribute
     #and then attempts to build a tag filter subroutine for the specified value
     my $tag_filter = undef;
     if (my $tag_arg = $args->{tags} || $args->{tag}) {
