@@ -147,12 +147,13 @@ sub load_registry {
     my ($file) = @_;
     my $path   = $c->path or return;
     $path = File::Spec->catfile( $c->path, $file );
+
     return unless -f $path;
     require YAML::Tiny;
     # Change related MT case: http://bugs.movabletype.org/?82426
     my $y = eval { YAML::Tiny->read($path) };
     if (!$y) {
-        if ($c->isa('MT::Plugin')) {
+        if ($c->isa('MT::Plugin') or $c->isa('MT::Component')) {
             my $msg = sprintf  "PLUGIN Error reading %s: %s", $path, (YAML::Tiny->errstr||$@||$!);
             print STDERR $msg."\n";
             $c->error($msg);
