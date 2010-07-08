@@ -188,6 +188,7 @@ sub _create_commenter_assign_role {
     $commenter->status( MT::Author::ACTIVE() );
     $commenter->auth_type( $app->config->AuthenticationModule );
     my $saved = MT::Auth->new_user( $app, $commenter );
+    $saved = $commenter->save unless $saved;
 
     return undef unless ( $saved );
 
