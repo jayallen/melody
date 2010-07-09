@@ -1415,7 +1415,7 @@ sub _init_plugins_core {
                         $mt->log({
                             message => $msg,
                             class => 'system',
-                            level => MT::Log::ERROR()
+                            level => MT->model('log')->ERROR()
                         });
                         next;
                     }
