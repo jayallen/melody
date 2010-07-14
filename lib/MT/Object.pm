@@ -688,12 +688,15 @@ sub column_func {
             $obj->{__meta}->set($col, @_);
         }
         else {
-            # Repopulate meta fields if they are missing; this fixes an issue with memcached caching an incomplete object
-            if (! exists $obj->{__meta}->{__objects}->{$col}) {
-              my $proxy = $obj->{__meta};
-              $proxy->set_primary_keys($obj) if $obj->has_primary_key;
-              $proxy->load_objects($col);
-            }
+            # NOTE: Commented out as patch for FogBugz case 103714
+            #       http://bugs.movabletype.org/?103714
+            #       This bug existed in Melody 0.9.15 and MT 4.34
+            # # Repopulate meta fields if they are missing; this fixes an issue with memcached caching an incomplete object
+            # if (! exists $obj->{__meta}->{__objects}->{$col}) {
+            #   my $proxy = $obj->{__meta};
+            #   $proxy->set_primary_keys($obj) if $obj->has_primary_key;
+            #   $proxy->load_objects($col);
+            # }
             $obj->{__meta}->get($col);
         }
     };
