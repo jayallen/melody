@@ -1289,10 +1289,12 @@ sub _upload_file {
     $ext = $1;                  ## Those characters are the file extension
 
     my ($w, $h, $id, $write_file) = MT::Image->check_upload(
-        Fh => $fh, Fmgr => $fmgr, Local => $local_file,
-        Max => $upload_param{max_size},
-        MaxDim => $upload_param{max_image_dimension},
-        ext => $ext,
+        Fh        => $fh,
+        Fmgr      => $fmgr,
+        Local     => $local_file,
+        Max       => $upload_param{max_size},
+        MaxDim    => $upload_param{max_image_dimension},
+        ext       => $ext,
         LocalBase => $local_base
     );
 
@@ -1346,7 +1348,7 @@ sub _upload_file {
 
     require File::Basename;
     my $local_basename = File::Basename::basename($local_file);
-    my $ext =
+    $ext =
       ( File::Basename::fileparse( $local_file, qr/[A-Za-z0-9]+$/ ) )[2];
 
     require MT::Asset;
