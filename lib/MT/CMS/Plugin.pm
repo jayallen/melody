@@ -14,7 +14,7 @@ sub list_plugins {
         nav_settings => 1,
         nav_plugins  => 1,
         switched     => $app->param('switched') || 0,
-        mod_perl     => $ENV{MOD_PERL},
+        needs_restart     => ( $ENV{MOD_PERL} || $ENV{FAST_CGI} ),
         screen_id    => 'list-plugins',
         screen_class => 'plugin-settings',
     );
@@ -33,7 +33,7 @@ sub cfg_plugins {
         switched        => $app->param('switched') || 0,
         reset           => $app->param('reset')    || 0,
         saved           => $app->param('saved')    || 0,
-        mod_perl        => $ENV{MOD_PERL},
+        needs_restart        => ( $ENV{MOD_PERL} || $ENV{FAST_CGI} ),
         plugin          => $app->param('plugin'),
         screen_id       => 'list-plugins',
         screen_class    => 'plugin-settings',
@@ -66,7 +66,7 @@ sub cfg_plugin_dialog {
     my $cfg = $app->config;
     $param{can_config}  = _can_config_plugins($app),
     $param{use_plugins} = $cfg->UsePlugins;
-    $param{mod_perl}     = 1 if $ENV{MOD_PERL};
+    $param{needs_restart}     = ( $ENV{MOD_PERL} || $ENV{FAST_CGI} );
     $param{plugin}       = $app->param('plugin');
     $param{plugin_name}  = $plugin->name;
     $param{plugin_sig}   = $plugin->{plugin_sig};
