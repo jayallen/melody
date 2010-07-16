@@ -259,9 +259,9 @@ sub thumbnail_filename {
 sub as_html {
     my $asset   = shift;
     my ($param) = @_;
-    my $app     = MT->instance if $app->isa('MT::App');
-    my $is_cf_edit
-        = $app && $app->query->param('edit_field') =~ /^customfield/;
+    my $app     = MT->instance;
+    my $is_cf_edit = (   $app->isa('MT::App')
+                      && $app->query->param('edit_field') =~ /^customfield/);
     my $text    = '';
 
     if ( $param->{include} ) {
