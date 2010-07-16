@@ -618,7 +618,7 @@ sub blog {
     my $app = shift;
     return $app->{_blog} if $app->{_blog};
     if ( my ($tb_id) = $app->_get_params() ) {
-        my $tb = MT->model('trackback')->load( $tb_id )
+        my $tb = MT->model('trackback')->load( $tb_id );
         $app->{_blog} = $tb->blog() if $tb;
     }
     return $app->{_blog};
