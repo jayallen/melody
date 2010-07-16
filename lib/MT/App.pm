@@ -660,6 +660,11 @@ sub init {
     $app->{template_dir}         = 'cms';          #$app->id;
     $app->{user_class}           = 'MT::Author';
     $app->{plugin_template_path} = 'tmpl';
+
+    # Temporary deprecation warning on access/retrieval
+    # See POD documentation for $app->{query} for details
+    tie $app->{query}, 'Melody::DeprecatedQueryUsage';
+
     $app->run_callbacks( 'init_app', $app, @_ );
 
     if ( $MT::DebugMode & 128 ) {
@@ -3558,19 +3563,20 @@ MSG
     }
 }
 
-# Eventually upon switching to CGI::Application the query
-# method would call cgiapp_get_query() and NOT set the query
-# object as it does now in MT::App::init_request. Besides
-# compatability, this would enable developers to do any
-# special request handling.
+########### MT COMPATIBILITY NOTE #############
+# Please see this method's POD documentation  #
+# about cross-compatibility with Movable Type #
+###############################################
+# TODO: Under CGI::Application, forward call to cgiapp_get_query()
+# Eventually upon switching to CGI::Application the query method would call
+# cgiapp_get_query() and NOT set the query object as it does now in
+# MT::App::init_request. Besides compatability, this would enable developers
+# to do any special request handling.
 sub query {
-    my $self = shift;
+    my $app = shift;
     my ($query) = @_;
-    if (defined $query) {
-    	tie $self->{'query'}, 'Melody::DeprecatedQueryUsage';
-    	$self->{'query'} = $query;
-    }
-    return $self->{'query'};
+    return defined $query ? $app->{__query} = $query
+                          : $app->{__query};
 }
 
 sub blog {
@@ -3742,22 +3748,32 @@ sub set_no_cache {
 
 package Melody::DeprecatedQueryUsage;
 
-sub TIESCALAR { return bless {}, $_[0]; } 
+# FIXME Move Melody::DeprecatedQueryUsage to a Melody compatibility layer
+
+sub TIESCALAR { return bless {}, $_[0]; }
 
 sub FETCH {
     my $self = shift;
-    my ($package, $filename, $line) = caller;
-    warn "WARNING: Deprecated usage of MT::App->{query} in $package at line $line.\n";
-	return $self->{q};
-} 
+    my ($package, $filename, $line) = caller(1);
+    my $msg = 'DEPRECATION WARNING: Direct access to $app->{query} '
+            . "in $package at line $line will break in the near future. "
+            . "Use \$app->query instead. See MT::App POD for details.\n";
+    print STDERR $msg;
+    warn $msg;
+    my $app = MT->instance;
+    return $app->query();
+}
 
 sub STORE {
-    my ($self, $q) = @_;
-    my ($package, $filename, $line) = caller;
-    warn "WARNING: Deprecated usage of MT::App->{query} in $package at line $line.\n"
-		if $self->{'q'}; # we ignore the initial set that Melody must do.
-    $self->{'q'} = $q;
-    return $self->{'q'};
+    my $self = shift;
+    my ($package, $filename, $line) = caller(1);
+    my $msg = 'DEPRECATION WARNING: Direct assignment to $app->{query} in '
+            . "$package at line $line will break in the near future. Use "
+            . "\$app->query( OBJ ) instead. See MT::App POD for details.\n";
+    print STDERR $msg;
+    warn $msg;
+    my $app = MT->instance;
+    return $app->query( @_ );
 }
 
 1;
