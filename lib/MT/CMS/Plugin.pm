@@ -286,7 +286,7 @@ sub build_plugin_table {
 
         if ( my $plugin = $profile->{object} ) {
             my $plugin_icon;
-            if ( $plugin->icon ) {
+            if ( $plugin->can('icon') && $plugin->icon ) {
                 $plugin_icon =
                   $app->static_path . $plugin->envelope . '/' . $plugin->icon;
             }
