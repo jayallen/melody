@@ -3297,6 +3297,9 @@ sub delete_param {
     }
 }
 
+######## DEPRECATED AND FUTURE BREAK ##########
+# Please see this method's POD documentation  #
+###############################################
 sub param_hash {
     my $app = shift;
     my $q   = $app->query;
@@ -3539,27 +3542,25 @@ sub redirect {
     return;
 }
 
-# FUTURE BREAK & DEPRECATED. Emit warning unless it's the new query 
-# method calling.
+######## DEPRECATED AND FUTURE BREAK ##########
+# Please see this method's POD documentation  #
+###############################################
 sub param {
     my $app = shift;
-    my ($package,   $filename, $line,       $subroutine, $hasargs,
-        $wantarray, $evaltext, $is_require, $hints,      $bitmask
-    ) = caller(1);
-    unless ($subroutine && $subroutine eq 'MT::App::query') {
-        warn <<MSG;
-FUTURE BREAK WARNING: Deprecated usage of MT::App->param to fetch 
-the CGI query object in $package at line $line. 
-This will be changed in a backwards incompatable way in the near 
-future. Use MT::App->query instead.
-MSG
-    }
-    return unless $app->query;
+    my $q   = $app->query or return;     # Hapless if not harmless...
     if (@_) {
-        $app->query->param(@_);
+        Melody::DeprecatedParamUsage->warn( $app, 'get_set' );
+        return $q->param(@_);
     }
     else {
-        wantarray ? ($app->query->param) : $app->query;
+        if ( wantarray ) {
+            Melody::DeprecatedParamUsage->warn( $app, 'param_hash' );
+            return ( map { $_ => $q->param($_) } $q->param );
+        }
+        else {
+            Melody::DeprecatedParamUsage->warn( $app, 'query_object' );
+            return $q;
+        }
     }
 }
 
@@ -3744,6 +3745,44 @@ sub set_no_cache {
     else {
         $app->query->cache('no');
     }
+}
+
+
+
+
+package Melody::DeprecatedParamUsage;
+
+# FIXME Move Melody::DeprecatedParamUsage to a Melody compatibility layer
+
+sub warn {
+    my $self = shift;
+    my ( $app, $type ) = @_;
+    my ( $package, $filename, $line ) = caller(1);
+    my $msg = 'DEPRECATION WARNING: Use of $app->param to [_1] in [_2] '
+            . 'at line [_3] will break in the future. Use [_4] instead.';
+
+    # Mapping of each type of deprecated $app->param usage
+    # to an expanded description and replacement method
+    my %usage = (
+        get_set         => {
+            description => 'get/set query object properties',
+            replacement => '$app->query->param()',
+        },
+        param_hash      => {
+            description => 'fetch a hash of query parameters',
+            replacement => '$app->query->param',
+        },
+        query_object    => {
+            description => 'fetch the CGI query object',
+            replacement => '$app->query',
+        },
+    );
+    my $transmsg = $app->translate(
+        $msg,  $usage{$type}{description}, $package,
+        $line, $usage{$type}{replacement}
+    );
+    print STDERR $transmsg."\n";
+    warn $transmsg."\n";
 }
 
 package Melody::DeprecatedQueryUsage;
