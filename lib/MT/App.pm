@@ -4359,9 +4359,9 @@ is_authorized returns false, but MT::App subclasses may wish to
 perform additional checks which produce more specific error messages.
 
 Subclass authors can assume that $app->user is populated with the
-authenticated user when this routine is invoked, and that CGI query
-object is available through $app->query. Note that the use of 
-$app->{'query'} and $app->query->param() to fetch the query object is deprecated.
+authenticated user when this routine is invoked, and that CGI query object is
+available through C<< $app->query >>. Note that the use of $app->{query} and
+C<< $app->query->param >> to fetch the query object is deprecated.
 
 =head2 $app->is_secure
 
@@ -4372,60 +4372,136 @@ happening over a secure (HTTPS) connection.
 
 Alias for C<MT-E<gt>translate_templatized>.
 
-=head2 $app->query([$cgi_or_apache_request])
+=head2 $app->param (DEPRECATED, FUTURE BREAK)
 
-Returns the CGI or or Apache::Request object for the current
-request being handled. Optionaly this method can set the
-request object though that is best left to MT to handle when
-initializing a request.
+B<This method will soon change and break existing code. Please update your
+calls to it with acceptable forward-compatible alternatives listed below.>
 
-This method is a roughly the functional equivalent of the
-CGI::Application method of the same name. It is being
-introduced now for future compatability purposes as work
-continues towards using CGI::Application for the underlying
-application framework.
+Historically, this method has served as a proxy for storing and accessing the
+CGI request query object and its properties. Melody will be migrating to
+CGI::Application which also provides a param() method but it's used for
+storing and accessing I<application data>.
 
-Eventually upon switching to CGI::Application the query method would 
-call cgiapp_get_query() and NOT set the query object as it does now
-in MT::App::init_request. Besides compatability, this would enable 
-developers to do any pecial request handling.
+CGI::Application provides access to the query object and its data through the
+C<query()> method and most of the C<param()> method's historical uses are
+satisfied through C<< $app->query->param() >>.
 
-B<WARNING>:The previous technique of accessing the $app object hash key
-'query' is considered deprecated and is not recommended for use
-any longer.
+This version of Melody maintains backwards compatibility but will issue a
+deprecation warning (via C<Melody::DeprecatedParamUsage::warn()>) to allow
+admins to upgrade their plugins. There is no guarantee that the next version
+of Melody will do the same.
 
-=head2 $app->query->param($name[, $value])
+=head3 Forward-compatible alternatives
 
-Interface for getting and setting CGI query parameters. Example:
+B<Developers:> Below is a list of historical calling signatures with their
+forward-compatible replacements:
 
-    my $title = $app->query->param('entry_title');
+          OLD USAGE            |          NEW USAGE
+    ---------------------------|---------------------------------------
+    %param = $app->param;      |   @param_keys = $app->param;  # Array!
+    $query = $app->param;      |   $query = $app->query;
+    $app->param( KEY );        |   $app->query->param( KEY );
+    $app->param( KEY, VALUE ); |   $app->query->param( KEY, VALUE )
 
-Versions of MT before 3.16 did not support the
-MT::App::param() method. In that environment, $app->query is
-a CGI object whose C<param> method works identically with
-this one. Note that the previous means of accessing the
-query object using $app->{'query'} is deprecated.
+B<Performance note:> If you need to store or access a number of parameters,
+it's best to retrieve the query object once instead of repeatedly
+calling C<< $app->query->param() >>:
 
-B<WARNING>: The previous use without the query method called
-is deprecated and whose backward compatability will break in
-a future release.
+    my $q    = $app->query;
+    my $name = $q->param('name');
+    my $rank = $q->param('rank');
+    my $snum = $q->param('serial_number');
 
-=head2 $app->param_hash
+B<Further Reading>
 
-B<WARNING>: This method is deprecated and whose backward
-compatability will break in a future release. Use
-$app->query->param; instead.
+=over 4
 
-=head2 $app->query->param
+=item * CGI::Application's query() method
 
-Returns a hash reference containing all of the query
-parameter names and their values. Example:
+http://search.cpan.org/perldoc?CGI::Application#query()
 
-    my $data = $app->query->param;
+=item * CGI::Application's param() method
+
+http://search.cpan.org/perldoc?CGI::Application#param()
+
+=item * The CGI module, C<< $app->query >>'s frequent base class
+
+http://search.cpan.org/perldoc?CGI
+
+=back
+
+=head2 $app->param_hash (DEPRECATED, FUTURE BREAK)
+
+B<This method will soon change and break existing code. See L</"C<< $app->query->param >>"> for a forward-compatible replacement.>
+
+=head2 $app->query([ $QUERY_OBJECT ])
+
+Provides storage and retrieval access to the current request's query object
+which is instantiated in C<MT::App::init_request()> as either a L<CGI> or
+L<Apache::Request> (for C<mod_perl>) object.
+
+You can access the query object at any time by calling $app->query with no
+arguments. Modifying the query object is best done through its C<param()>
+method described next.
+
+=head3 $app->query->param([ $name[, $value ] ])
+
+A method provided by the query object as an interface for storing and
+retrieving CGI query parameters. Example:
+
+    my $title = $app->query->param( 'entry_title' );    # Get
+    $title    =~ s{Moveable}{Movable}g;                 # Thx a lot, Papa...
+    $app->query->param( 'entry_title', $title )         # Set
+
+Called with no arguments, returns a hash (or hash reference in a SCALAR
+context) of all of the query parameter names and their values. Example:
+
+    my %data = $app->query->param;
+    my $title = $data{entry_title};
+  OR
+    my $data  = $app->query->param;
     my $title = $data->{entry_title};
 
-Called in an ARRAY context this method form will return a
-plain hash instead of a reference.
+=head3 Compatiblity with Movable Type
+
+This method was introduced in Melody to provide forward compatibility with
+CGI::Application's C<query()> method. If you are interested in writing plugins
+which are cross-compatible with Movable Type, you should add the following in
+an C<init_app> callback:
+
+    sub init_app {
+        my $app = shift;
+        return unless $app->isa('MT::App');
+        unless ( $app->can('query') ) {
+            *MT::App::query = sub {
+                my $self    = shift;
+                my ($query) = @_;
+                return defined $query ? $self->{query} = $query
+                                      : $self->{query};
+            }
+        }
+    }
+
+This will provide safe cross-compatible use of the C<MT::App::query()> in both
+Melody and Movable Type until such time as a new version of Movable Type
+includes the method natively.
+
+=head2 $app->{query} (DEPRECATED, FUTURE BREAK)
+
+Versions of Movable Type prior to v3.16 provided only hash-based access to the
+query object (i.e. C<< $app->{query} >>) and some developers continue this
+practice even today. Please note that this method of accessing the query
+object is deprecated and I<will break in the future>. Please always use
+B<only> C<< $app->query() >>.
+
+    my $q = $app->{query};  # BAD! WARNING! WILL BREAK!
+    my $q = $app->query();  # Good! Better! Excellent!
+
+In this version of Melody, we will continue to maintain backwards compatiblity
+with direct storage/retrieval access to C<< $app->{query} >> but the system
+will issue a loud deprecation and future break warning (via a tie of the hash
+value to C<Melody::DeprecatedQueryUsage>) informing the user of the strongly
+recommended alterative.
 
 =head2 $app->post_run
 
