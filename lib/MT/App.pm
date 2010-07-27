@@ -3753,12 +3753,25 @@ sub warn {
     my $self = shift;
     my ( $app, $type ) = @_;
     my ( $package, $filename, $line ) = caller(1);
-    my $msg = 'DEPRECATION WARNING: Use of $app->param to [_1] in [_2] '
-            . 'at line [_3] will break in the future. Use [_4] instead.';
 
-    # Mapping of each type of deprecated $app->param usage
-    # to an expanded description and replacement method
-    my %usage = (
+    my %usage = $self->usage();
+    my $msg   = 'DEPRECATION WARNING: Use of $app->param to [_1] in [_2] '
+              . 'at line [_3] will break in the future. Use [_4] instead.';
+    
+    my $transmsg = $app->translate(
+        $msg,  $usage{$type}{description}, $package,
+        $line, $usage{$type}{replacement}
+    );
+    print STDERR $transmsg."\n";
+    warn $transmsg."\n";
+}
+
+# Mapping of each type of deprecated $app->param usage
+# to an expanded description and replacement method.
+# This is a separate method so that the warnings can be 
+# programmatically tested for.
+sub usage {
+    return (
         get_set         => {
             description => 'get/set query object properties',
             replacement => '$app->query->param()',
@@ -3772,12 +3785,6 @@ sub warn {
             replacement => '$app->query',
         },
     );
-    my $transmsg = $app->translate(
-        $msg,  $usage{$type}{description}, $package,
-        $line, $usage{$type}{replacement}
-    );
-    print STDERR $transmsg."\n";
-    warn $transmsg."\n";
 }
 
 package Melody::DeprecatedQueryUsage;
