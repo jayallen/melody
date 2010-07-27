@@ -1999,8 +1999,9 @@ sub supported_languages {
 # For your convenience
 sub trans_error {
     my $app = shift;
-    $app->error( $app->translate(@_) );
+    return $app->error( $app->translate(@_) );
 }
+*errtrans = \&trans_error;
 
 sub all_text_filters {
     unless (%Text_filters) {

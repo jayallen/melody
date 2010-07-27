@@ -3720,11 +3720,6 @@ sub document_root {
     return $cwd;
 }
 
-sub errtrans {
-    my $app = shift;
-    return $app->error( $app->translate(@_) );
-}
-
 sub DESTROY {
     ## Destroy the Request object, which is used for caching
     ## per-request data. We have to do this manually, because in
