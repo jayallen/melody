@@ -194,6 +194,7 @@ sub associate {
 }
 
 sub clear_associations {
+    my $asset = shift;
     my ($obj) = @_;
     MT->model('objectasset')->remove({ 
         object_id => $obj->id, 
