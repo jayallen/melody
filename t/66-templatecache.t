@@ -35,6 +35,7 @@ $include->save;
 
 my $tmpl = MT::Template->new;
 $tmpl->blog_id($blog->id);
+$tmpl->type('archive');
 $tmpl->text('<mt:include module="Included Template">');
 my $ctx = MT::Template::Context->new;
 my $out1 = $tmpl->build($ctx, {});
