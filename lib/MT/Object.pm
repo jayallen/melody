@@ -445,6 +445,7 @@ sub install_meta {
     if (!$pkg->SUPER::properties->{$installed}) {
         $pkg->add_trigger( post_save => \&_post_save_save_metadata );
         $pkg->add_trigger( post_load => \&_post_load_initialize_metadata );
+        $pkg->add_trigger( post_inflate => \&_post_load_initialize_metadata );
     }
 
     my $props = $class->properties;
@@ -688,15 +689,6 @@ sub column_func {
             $obj->{__meta}->set($col, @_);
         }
         else {
-            # NOTE: Commented out as patch for FogBugz case 103714
-            #       http://bugs.movabletype.org/?103714
-            #       This bug existed in Melody 0.9.15 and MT 4.34
-            # # Repopulate meta fields if they are missing; this fixes an issue with memcached caching an incomplete object
-            # if (! exists $obj->{__meta}->{__objects}->{$col}) {
-            #   my $proxy = $obj->{__meta};
-            #   $proxy->set_primary_keys($obj) if $obj->has_primary_key;
-            #   $proxy->load_objects($col);
-            # }
             $obj->{__meta}->get($col);
         }
     };
@@ -1193,33 +1185,6 @@ sub set_by_key {
     }
     $obj->set_values($value) if $value;
     $obj->save or return $class->error($obj->errstr);
-    return $obj;
-}
-
-sub deflate {
-    my $obj = shift;
-    my $data = $obj->SUPER::deflate();
-    for my $which (qw( meta summary )) {
-        my $meth = "has_$which";
-        if ($obj->$meth()) {
-            $data->{$which} = $obj->{"__$which"}->deflate_meta();
-        }
-    }
-    return $data;
-}
-
-sub inflate {
-    my $class = shift;
-    my ($data) = @_;
-    my $obj = $class->SUPER::inflate(@_);
-    for my $which (qw( meta )) {
-        # only inflate meta; don't inflate summary as this create zombie objects in the cache
-        # that prevent real MT::*::Summary objects from being used
-        my $meth = "has_$which";
-        if ($class->$meth()) {
-            $obj->{"__$which"}->inflate_meta($data->{$which});
-        }
-    }
     return $obj;
 }
 
@@ -2535,17 +2500,6 @@ Issues a call to any Class::Trigger triggers installed for the given object.
 Also invokes any MT callbacks that are registered using MT's callback
 system. "pre" callbacks are invoked prior to triggers; "post" callbacks
 are invoked after triggers are called.
-
-=item * $obj->deflate
-
-Returns a minimal representation of the object, including any metadata.
-See also L<Data::ObjectDriver::BaseObject>.
-
-=item * Class->inflate( $deflated )
-
-Inflates the deflated representation of the object I<$deflated> into a proper
-object in the class I<Class>. That is, undoes the operation C<$deflated =
-$obj-E<gt>deflate()> by returning a new object equivalent to C<$obj>.
 
 =item * Class->install_pre_init_properties
 
