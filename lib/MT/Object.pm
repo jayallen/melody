@@ -239,7 +239,7 @@ sub install_properties {
             $class->add_trigger( post_save => \&_translate_audited_fields );
         }
 
-        $class->add_trigger( pre_save  => _get_date_translator(\&_ts2db, 1) );
+        $class->add_trigger( pre_save  => _get_date_translator(\&_ts2db, 0) );
         $class->add_trigger( post_load => _get_date_translator(\&_db2ts, 0) );
     }
 

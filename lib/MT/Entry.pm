@@ -752,7 +752,7 @@ sub save {
     }
     if (my $dt = $entry->authored_on_obj) {
         my ($yr, $w) = $dt->week;
-        $entry->week_number($yr * 100 + $w);
+        $entry->week_number($yr * 100 + $w) if $yr * 100 + $w != ($entry->week_number || 0);
     }
     unless ($entry->SUPER::save(@_)) {
         print STDERR "error during save: " . $entry->errstr . "\n";
