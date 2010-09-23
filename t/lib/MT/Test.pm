@@ -130,12 +130,12 @@ sub init_app {
         };
         *MT::App::login = sub {
             my $app = shift;
-            if ( my $user = $app->param('__test_user') ) {
+            if ( my $user = $app->query->param('__test_user') ) {
 
                 # attempting to fake user session
                 if (  !$session_id
                     || $user->name ne $session_username
-                    || $app->param('__test_new_session') )
+                    || $app->query->param('__test_new_session') )
                 {
                     $app->start_session( $user, 1 );
                     $session_id       = $app->{session}->id;
@@ -144,7 +144,7 @@ sub init_app {
                 else {
                     $app->session_user( $user, $session_id );
                 }
-                $app->param( 'magic_token', $session_id );
+                $app->query->param( 'magic_token', $session_id );
                 $app->user($user);
                 return ( $user, 0 );
             }

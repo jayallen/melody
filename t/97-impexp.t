@@ -67,7 +67,7 @@ $param{'Blog'} = $blog;
 $param{'Callback'} = 1;
 $param{'ParentAuthor'} = $user;
 $param{'NewAuthorPassword'} = 'PASSWORD';
-$param{'ConvertBreaks'} = '';
+$param{'ConvertBreaks'} = $blog->convert_paras;
 $param{'Callback'} = sub { my ($string) = @_; print " $string\n"; 1};
 my $result = $ie->import_contents(%param);
 
