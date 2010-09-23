@@ -24,17 +24,17 @@ sub list_plugins {
 
 sub cfg_plugins {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $cfg   = $app->config;
     my %param =(
         can_config      => _can_config_plugins($app),
         screen_class    => 'settings-screen',
         use_plugins     => $cfg->UsePlugins,
-        switched        => $app->param('switched') || 0,
-        reset           => $app->param('reset')    || 0,
-        saved           => $app->param('saved')    || 0,
+        switched        => $q->param('switched') || 0,
+        reset           => $q->param('reset')    || 0,
+        saved           => $q->param('saved')    || 0,
         needs_restart        => ( $ENV{MOD_PERL} || $ENV{FAST_CGI} ),
-        plugin          => $app->param('plugin'),
+        plugin          => ( $q->param('plugin') || '' ),
         screen_id       => 'list-plugins',
         screen_class    => 'plugin-settings',
     );
