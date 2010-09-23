@@ -24,7 +24,7 @@ sub list_plugins {
 
 sub cfg_plugins {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $cfg   = $app->config;
     my %param =(
         can_config      => _can_config_plugins($app),
@@ -34,7 +34,7 @@ sub cfg_plugins {
         reset           => $app->param('reset')    || 0,
         saved           => $app->param('saved')    || 0,
         needs_restart        => ( $ENV{MOD_PERL} || $ENV{FAST_CGI} ),
-        plugin          => $app->param('plugin') ? $app->param('plugin') : '',
+        plugin          => $app->query->param('plugin') ? $app->query->param('plugin') : '',
         screen_id       => 'list-plugins',
         screen_class    => 'plugin-settings',
     );
