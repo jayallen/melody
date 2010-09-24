@@ -81,6 +81,12 @@ foreach my $test_item (@$test_suite) {
     $ctx->{__stash}{entry} = undef if $test_item->{t} =~ m/MTComments|MTPings/;
     $ctx->{__stash}{entries} = undef if $test_item->{t} =~ m/MTEntries|MTPages/;
     $ctx->stash('comment', undef);
+    # Special handling for the JQueryURL tag which takes
+    # multiple forms of JQueryURL config directives, set prior to
+    # tag interpolation using the "c" key of the JSON object
+    if ( $test_item->{t} =~ m{JQueryURL}i ) {
+        $mt->config->JQueryURL( $test_item->{c} || '' );
+    }
     my $result = build($ctx, $test_item->{t});
     is($result, $test_item->{e}, "perl test " . $num++);
 }

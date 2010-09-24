@@ -429,5 +429,9 @@
 { "r" : "1", "t" : "<mt:entries lastn='1' tags='verse'><mt:EntryTitle></mt:Entries>", "e" : "Verse 5" }, #426
 { "r" : "1", "t" : "<mt:authors username='Chuck D'><MTAuthorName>;<MTAuthorDisplayName>;<MTAuthorEmail>;<MTAuthorURL>;</mt:authors>", "e" : "Chuck D;Chucky Dee;chuckd@example.com;http://chuckd.com/;"}, #427
 { "r" : "1", "t" : "<mt:authors id='2' username='Bob D'><MTAuthorName>;<MTAuthorDisplayName>;<MTAuthorEmail>;<MTAuthorURL>;</mt:authors>", "e" : "Chuck D;Chucky Dee;chuckd@example.com;http://chuckd.com/;"}, #428
-{ "r" : "1", "t" : "<mt:authors id='2'><MTAuthorName>;<MTAuthorDisplayName>;<MTAuthorEmail>;<MTAuthorURL>;</mt:authors>", "e" : "Chuck D;Chucky Dee;chuckd@example.com;http://chuckd.com/;"} #429
+{ "r" : "1", "t" : "<mt:authors id='2'><MTAuthorName>;<MTAuthorDisplayName>;<MTAuthorEmail>;<MTAuthorURL>;</mt:authors>", "e" : "Chuck D;Chucky Dee;chuckd@example.com;http://chuckd.com/;"}, #429
+{ "r" : "1", "t" : "<mt:jQueryURL>", "e" : "/cgi-bin/mt-static/jquery/jquery.js"                                                                                                      }, #430
+{ "r" : "1", "t" : "<mt:jQueryURL>", "e" : "/cgi-bin/mt-static/jquery/jquery.min.js",                         "c": "jquery/jquery.min.js"                                             }, #431
+{ "r" : "1", "t" : "<mt:jQueryURL>", "e" : "http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js", "c": "http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"  }, #432
+{ "r" : "1", "t" : "<mt:jQueryURL>", "e" : "/scripts/jquery/jquery.min.js",                                   "c": "/scripts/jquery/jquery.min.js"                                    }  #433
 ]
