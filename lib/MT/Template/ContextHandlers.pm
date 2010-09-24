@@ -274,7 +274,7 @@ sub core_tags {
             DefaultLanguage => \&_hdlr_default_language,
             CGIServerPath => \&_hdlr_cgi_server_path,
             ConfigFile => \&_hdlr_config_file,
-
+            JQueryURL => \&_hdlr_jquery_url,
             UserSessionCookieTimeout => \&_hdlr_user_session_cookie_timeout,
             UserSessionCookieName => \&_hdlr_user_session_cookie_name,
             UserSessionCookiePath => \&_hdlr_user_session_cookie_path,
@@ -6057,6 +6057,29 @@ Returns the full file path for the Movable Type configuration file
 sub _hdlr_config_file {
     return MT->instance->{cfg_file};
 }
+
+###########################################################################
+
+=head2 JQueryURL
+
+Returns the full url for the jQuery library. By default this is under
+mt-static/jquery/jquery.js. By setting the JQueryURL directive in the config
+file (mt-config.cgi), this can be pointed to another copy of jQuery.
+
+For example
+
+JQueryURL http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js
+
+will set the value to be the URL for the google hosted version of jQuery.
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_jquery_url {
+    return MT->instance->config->JQueryURL
+}
+
 
 ###########################################################################
 

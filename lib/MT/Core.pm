@@ -533,6 +533,7 @@ BEGIN {
                 handler => \&DefaultUserTagDelimiter,
                 default => 'comma',
             },
+             'JQueryURL' => { handler => \&JQueryURL },
             'AuthenticationModule' => { default => 'MT', },
             'AuthLoginURL'         => undef,
             'AuthLogoutURL'        => undef,
@@ -1050,6 +1051,15 @@ sub DefaultUserTagDelimiter {
     else {
         return ord(',');
     }
+}
+
+sub JQueryURL {
+    my $mgr = shift;
+    return $mgr->set_internal( 'JQueryURL', @_ ) if @_;
+    my $url = $mgr->get_internal('JQueryURL');
+    $url = $mgr->StaticWebPath . ($mgr->StaticWebPath =~ /\/$/  ?'' : '/') . 'jquery/jquery.js' if !$url;
+
+    return $url;
 }
 
 sub NewUserAutoProvisioning {
