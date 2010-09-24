@@ -1497,6 +1497,12 @@ sub core_menus {
             order             => 250,
             system_permission => 'edit_templates',
         },
+        'system:template' => {
+             label             => 'Widgets',
+             mode              => 'list_widget',
+             order             => 251,
+             system_permission => 'edit_templates'
+        },
         'system:settings' => {
             label             => "Settings",
             mode              => 'cfg_system_settings',
