@@ -1,0 +1,96 @@
+<mt:setvar name="page_title" value="Publish Queue Jobs">
+
+<mt:setvarblock name="html_head" append="1">
+  <link rel="stylesheet" href="<$mt:PluginStaticWebPath component="PQManager"$>app.css" type="text/css" />
+  <script type="text/javascript">
+    /* <![CDATA[ */
+    var tableSelect;
+    function init() {
+        tableSelect = new TC.TableSelect("ts_job-listing-table");
+    }
+    TC.attachLoadEvent(init);
+    function deleteJobs() {
+      var params = Array();
+      params['mode'] = 'PQManager.delete';
+      params['type'] = 'ts_job';
+      doRemoveItems(getByID('ts_job-listing-form'), 'job', 'jobs', 'id', new Array(), params );
+    }
+    /* ]]> */
+  </script>
+</mt:setvarblock>
+
+<mt:setvarblock name="action_buttons">
+                <a href="javascript:void(0)"
+                    onclick="deleteJobs(); return false;" name="delete_job" value="Delete"
+                    accesskey="x"
+                    title="Delete Jobs"
+                    ><__trans phrase="Delete"></a>
+</mt:setvarblock>
+
+<mt:setvarblock name="system_msg">
+    <mt:if name="is_deleted">
+        <mtapp:statusmsg
+            id="saved_deleted"
+            class="success">The selected jobs were deleted.
+        </mtapp:statusmsg>
+    </mt:if>
+    <mt:if name="is_priority">
+        <mtapp:statusmsg
+            id="saved_priority"
+            class="success">The selected jobs had their priority set to <mt:var name="priority">.
+        </mtapp:statusmsg>
+    </mt:if>
+</mt:setvarblock>
+
+<mt:setvarblock name="related_content"></mt:setvarblock>
+<mt:setvarblock name="html_body_footer">
+   <mt:include name="include/display_options.tmpl">
+</mt:setvarblock>
+<mt:include name="include/header.tmpl">
+<div class="listing-filter">
+   <div class="listing-filter-inner inner pkg"></div>
+</div>
+
+<mtapp:listing type="ts_job" 
+    default="No jobs could be found." 
+    empty_message="No jobs could be found.">
+
+    <mt:if name="__first__">
+      <thead>
+        <tr>
+          <th class="cb"><input type="checkbox" id="select-all-checkbox"  
+            name="id-head" value="all" class="select" /></th>
+          <th>Job</th>
+          <th>Pri.</th>
+          <th>Blog</th>
+          <th>Template</th>
+          <th>File Path</th>
+          <th>Inserted</th>
+        </tr>
+      </thead>
+      <tbody>
+    </mt:if>
+    <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if>">
+      <td class="cb">
+        <input type="checkbox" name="id" 
+           value="<mt:var name="id">" class="select" />
+      </td>
+      <td class="job-id">
+	<mt:if name="claimed">
+          <img src="<mt:StaticWebPath>images/ani-rebuild.gif" />
+        <mt:else>
+          <mt:var name="id" remove_html="1">
+        </mt:if>
+      </td>
+      <td class="job-pri"><mt:var name="priority" remove_html="1"></td>
+      <td class="pq-blog"><mt:var name="blog" remove_html="1"></td>
+      <td class="pq-tmpl"><mt:var name="template" remove_html="1"></td>
+      <td class="pq-path"><mt:var name="path" remove_html="1"></td>
+      <td class="job-insert"><mt:var name="insert_time"></td>
+    </tr>
+
+
+
+</mtapp:listing>
+
+<mt:include name="include/footer.tmpl">
