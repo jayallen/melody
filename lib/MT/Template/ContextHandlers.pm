@@ -8610,6 +8610,7 @@ sub _hdlr_entries {
                     \%terms, \%args, \%blog_terms, \%blog_args);
                 $no_resort = $args->{sort_order} || $args->{sort_by} ? 0 : 1;
             } else {
+		delete $args{limit};
                 $iter = $class->load_iter(\%terms, \%args);
             }
             my $i = 0; my $j = 0;
