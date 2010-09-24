@@ -1466,6 +1466,11 @@ sub core_menus {
             mode  => "tools",
             view  => "system",
         },
+        'tools:search' => {
+            label => 'Search',
+            order => 1000,
+            mode  => 'search_replace'
+        },
 
         # System menu which is actually separate
         # in the CMS navigation
