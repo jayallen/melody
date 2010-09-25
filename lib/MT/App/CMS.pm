@@ -647,7 +647,36 @@ sub core_list_actions {
                 permission => 'edit_templates',
                 order      => 100,
             },
-
+            publish_manual => {
+                label => 'Publish Manually',
+                order =>  105,
+                code  =>  'MT::CMS::Template::itemset_man',
+                condition => sub { defined $app->blog; }
+            },
+            publish_static => {
+                label =>  'Publish Statically',
+                order =>  106,
+                code  =>  'MT::CMS::Template::itemset_stc',
+                condition => sub { defined $app->blog; }
+            },
+            publish_pubqueue => {
+                label =>  'Publish via Publish Queue',
+                order =>  107,
+                code  =>  'MT::CMS::Template::itemset_vpq',
+                condition => sub { defined $app->blog; }
+            },
+            publish_dynamic => {
+                label =>  'Publish Dynamically',
+                order =>  108,
+                code  =>  'MT::CMS::Template::itemset_dyn',
+                condition => sub { defined $app->blog; }
+            },
+            publish_disable => {
+                label =>  'Disable Publishing',
+                order =>  109,
+                code  =>  'MT::CMS::Template::itemset_dis',
+                condition => sub { defined $app->blog; }
+            },
             # Now a button!
             # publish_index_templates => {
             #     label => "Publish Template(s)",
