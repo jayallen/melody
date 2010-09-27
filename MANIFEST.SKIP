@@ -5,6 +5,11 @@
 lib/MT/App/Viewer.pm
 mt-view.cgi
 
+# Experimental FileMgr Drivers from MTOS code
+lib/MT/FileMgr/FTP.pm
+lib/MT/FileMgr/SFTP.pm
+lib/MT/FileMgr/DAV.pm
+
 ^schemas
 ^t/
 .*/t/
