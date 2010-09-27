@@ -57,8 +57,15 @@ sub import_contents {
     my $t_end = $param{title_end};
     my $allow_comments = $blog->allow_comments_default;
     my $allow_pings = $blog->allow_pings_default ? 1 : 0;
-    my $convert_breaks = $param{ConvertBreaks};
-    $convert_breaks = $blog->convert_paras unless $convert_breaks; #if $convert_breaks eq -1;
+    # convert_breaks can be any one of the following
+    #         FOO = The text formatter identified by the key FOO
+    # __default__ = The formatting option specified in blog entry settings
+    #          -1 = Same as above (for Wordpress compatibility since MT 4.0)
+    #           0 = No text formatting/conversion. A blank string and
+    #               undefined value are also considered 0.
+    #           1 = (DEPRECATED) The original "Convert breaks" option
+    my $convert_breaks = $param{ConvertBreaks} || 0;
+    $convert_breaks    = $blog->convert_paras if $convert_breaks eq -1;
     my $def_status = $param{default_status} || $blog->status_default;
     my(%authors, %categories);
 
