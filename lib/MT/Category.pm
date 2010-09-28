@@ -7,7 +7,8 @@
 package MT::Category;
 
 use strict;
-use base qw( MT::Object MT::Taggable);
+use MT::Tag; # Must pre-load for MT::Taggable
+use base qw( MT::Object MT::Taggable );
 use MT::Util qw( weaken );
 
 use MT::Blog;

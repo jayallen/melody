@@ -1018,7 +1018,7 @@ sub make_basename {
     my ($entry) = @_;
     my $title   = $entry->title;
     $title      = '' unless defined $title;
-    $title      =~ trim($title);
+    $title      = trim($title);
     if ($title eq '') {
         if (my $text = $entry->text) {
             $title = MT::I18N::first_n_text(
@@ -1041,7 +1041,7 @@ sub make_unique_basename {
     my $class   = ref $entry; 
     my $blog    = $entry->blog;
     my $i       = 1;
-    my $base    = (my $base_copy) = make_basename( $entry );
+    my $base    = my $base_copy = make_basename( $entry );
     while ($class->exist({ blog_id => $blog->id,
                            basename => $base })) {
         $base = $base_copy . '_' . $i++;
