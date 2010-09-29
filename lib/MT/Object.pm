@@ -2241,7 +2241,7 @@ names to their values in this object. For example:
 
 =over 4
 
-=item * $obj->set_values()
+=item * $obj->get_values()
 
 =back
 

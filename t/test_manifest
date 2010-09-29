@@ -1,3 +1,12 @@
+# USAGE: prove -lvw - < t/test_manifest
+#
+# The following were not previously included in this file.  Should the be?
+#   02-meta-new.t
+#   03-meta-new-author.t
+#   24-meta-entry-save.t
+#   70-app-query.t
+#   89-pod.t
+#
 00-compile.t
 01-serialize.t
 04-config.t
