@@ -106,7 +106,7 @@ sub init_app {
     my ($cfg) = @_;
 
     my $app = $ENV{MT_APP} || 'MT::App';
-    eval "require $app; 1;" or die "Can't load $app";
+    eval "require $app; 1;" or die "Can't load $app: $@";
 
     $app->instance( $cfg ? ( Config => $cfg ) : () );
 
