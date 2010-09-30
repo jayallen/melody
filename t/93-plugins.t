@@ -19,7 +19,7 @@ $cfg->PluginPath('plugins');
 $app->init_plugins();
 
 for my $sig ( keys %MT::Plugins ) {
-    print STDERR "Plugin: $sig\n";
+#    print STDERR "Plugin: $sig\n";
 	my $profile = $MT::Plugins{$sig};
 	if ( my $plugin = $profile->{object} ) {
 		$plugins->{ $plugin->name }++;
@@ -48,4 +48,4 @@ ok (exists $plugins->{"SpamLookup - Lookups"}, "SpamLookup - Lookups exists");
 
 # test plugins created by MT::Test
 ok (exists $plugins->{"Awesome"}, "Awesome exists");
-ok (exists $plugins->{"testplug.pl"}, "testplug.pl exists");
+# ok (exists $plugins->{"testplug.pl"}, "testplug.pl exists");
