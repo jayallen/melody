@@ -2,9 +2,15 @@
 
 use strict;
 use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
+
+eval 'use DateTime';
+if ($@) {
+    plan skip_all => 'DateTime is required to run these tests';
+}
+
 use Test::More;
 use MT::DateTime;
-use DateTime;
+# use DateTime;
 use DateTime::TimeZone;
 use Time::Local qw(timegm);
 use MT::Util qw(week2ymd);
