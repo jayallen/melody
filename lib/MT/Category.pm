@@ -7,6 +7,7 @@
 package MT::Category;
 
 use strict;
+use MT::Tag;
 use base qw( MT::Object MT::Taggable);
 use MT::Util qw( weaken );
 
