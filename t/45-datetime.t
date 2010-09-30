@@ -3,16 +3,26 @@
 use strict;
 use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 
+use Test::More;
+
+my @missing;
 eval 'use DateTime';
-if ($@) {
-    plan skip_all => 'DateTime is required to run these tests';
+push @missing, 'DateTime' if $@;
+eval 'use DateTime::TimeZone';
+push @missing, 'DateTime::TimeZone' if $@;
+eval 'use Time::Local';
+push @missing, 'Time::Local' if $@;
+
+if (@missing) {
+    my $mods = join ', ', @missing;
+    plan skip_all => 'Missing required module(s) to run these tests: '.$mods;
 }
 
-use Test::More;
 use MT::DateTime;
 # use DateTime;
-use DateTime::TimeZone;
-use Time::Local qw(timegm);
+# use DateTime::TimeZone;
+# use Time::Local qw(timegm);
+Time::Local->import('timegm');
 use MT::Util qw(week2ymd);
 
 my @dates;
