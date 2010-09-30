@@ -32,10 +32,7 @@
 46-i18n-en.t
 47-i18n-ja.t
 48-cache.t
-49-tagsplit.dat
 49-tagsplit.t
-51-objectsync.dat
-51-objectsync.t
 54-usersgroupsroles.t
 61-to_from_xml.t
 62-asset.t
