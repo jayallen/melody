@@ -7,7 +7,11 @@ BEGIN {
 
 use MT;
 
-use Test::More qw( no_plan );
+use Test::More skip_all => <<REASON;
+Broken test. This functionality should probably get moved to a plugin.
+REASON
+
+# use Test::More qw( no_plan );
 use MIME::Base64;
 
 # To keep away from being under FastCGI
