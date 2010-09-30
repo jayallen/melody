@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 BEGIN {
         $ENV{MT_APP} = 'MT::App::CMS';
