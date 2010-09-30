@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 15;
+use Test::More tests => 14;
 
 use MT;
 use MT::Test qw( :app :db );
