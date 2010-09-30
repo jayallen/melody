@@ -3,15 +3,18 @@
 use strict;
 use Test::More;
 
-BEGIN {
-    $ENV{MT_CONFIG} = 'mysql-test.cfg';
-}
+# BEGIN {
+#     $ENV{MT_CONFIG} = 'mysql-test.cfg';
+# }
+
+use vars qw( $DB_DIR $T_CFG );
 use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 use MT::Test;
 use MT;
 my $mt;
+
 BEGIN {
-    $mt = new MT;
+    $mt = MT->instance( Config => $T_CFG ) or die MT->errstr;
     my $grp_class = MT->model('group');
     if (! $grp_class ) {
         plan skip_all => "Groups are unavailable for testing.";
