@@ -23,7 +23,6 @@
 29-cleanup.t
 32-ddl.t
 33-driver.t
-35-tags.dat
 35-tags.t
 41-atom.t
 43-localua.t
