@@ -94,53 +94,12 @@ $perms->set_full_permissions;
 $test = $perms->save or die $perms->errstr;
 ok($test, "saved $perms");
 
-my($entry);
-$entry = MT::Entry->new;
-isa_ok($entry, 'MT::Entry');
-$entry->set_defaults();
 
-can_ok('MT::Entry', 'set_defaults');
-SKIP: {
+my $entry = MT->model('entry')->new();
+isa_ok( $entry, 'MT::Entry' );
+can_ok( 'MT::Entry', 'set_defaults' );
 
-    eval { $entry->set_defaults(); };
-    $@ and skip 'Could not find $entry->set_defaults';
-    
-    is($entry->ping_count, 0, '$entry->ping_count default');
-    is($entry->class, 'entry', '$entry->class default');
-    is($entry->status, MT::Entry::RELEASE(), '$entry->status default -- no blog');
-    ok( $entry->allow_comments == 1,
-        '$entry->allow_comments default -- no blog');
-    ok( $entry->allow_pings == 1,
-        '$entry->allow_pings default -- no blog');
-    ok( $entry->convert_breaks eq 'richtext', #Appears to be the new default value in 4.3X
-        '$entry->convert_breaks default -- no blog');
-    ok(! defined $entry->author_id, '$entry->author_id default - no app');
-
-    $entry->blog_id($blog->id);
-    $entry->set_defaults();
-
-    is($entry->status, $blog->status_default, '$entry->status default');
-    cmp_ok($entry->allow_comments, '==', $blog->allow_comments_default,
-        '$entry->allow_comments default');
-    cmp_ok($entry->allow_pings, '==', $blog->allow_pings_default,
-        '$entry->allow_pings default');
-    is($entry->convert_breaks, ($blog->convert_paras || '__default__'),
-        '$entry->convert_breaks default');
-
-    TODO: {
-        local $TODO = 'Need to test $app->user-based defaults for '
-                    . ' $entry->set_defaults';
-        eval {
-            my $app = MT->instance;
-            ok($entry->author_id == $app->user->id,
-                '$entry->author_id default - with app');
-            ok($entry->convert_breaks eq ($app->user->text_format || ''),
-                '$entry->author_id default - with app');            
-        }
-    }
-
-}
-
+$entry = MT->model('entry')->new();
 $entry->blog_id($blog->id);
 $entry->status(2);
 $entry->author_id($author->id);

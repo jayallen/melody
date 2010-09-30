@@ -100,8 +100,8 @@ __PACKAGE__->install_properties({
         },
     },
     defaults => {
-        comment_count => 0,
-        ping_count => 0,
+        comment_count   => 0,
+        ping_count      => 0,
     },
     child_of => 'MT::Blog',
     child_classes => ['MT::Comment','MT::Placement','MT::Trackback','MT::FileInfo'],
@@ -270,19 +270,14 @@ sub trackback {
 
 sub author {
     my $entry = shift;
+    return undef unless $entry->author_id;
+    my $author_class = MT->model('author');
     $entry->cache_property('author', sub {
-        return undef unless $entry->author_id;
-        my $req = MT::Request->instance();
-        my $author_cache = $req->stash('author_cache');
-        my $author = $author_cache->{$entry->author_id};
-        unless ($author) {
-            require MT::Author;
-            $author = MT::Author->load($entry->author_id)
-                or return undef;
-            $author_cache->{$entry->author_id} = $author;
-            $req->stash('author_cache', $author_cache);
-        }
-        $author;
+        $author_class->load( $entry->author_id )
+            or $entry->error(MT->translate(
+                "Load of author '[_1]' failed: [_2]", $entry->author_id, 
+                $author_class->errstr
+                    || MT->translate("record does not exist.")));
     });
 }
 
@@ -689,50 +684,39 @@ sub sync_assets {
     return 1;
 }
 
-# See http://bugs.movabletype.org/?82628
 sub set_defaults {
     my $e    = shift or return;
-    my $app  = MT->instance;
-    my $blog = $e->blog;
-    my $user = $e->author;
+    my ( %entry_defaults, %user_defaults, %blog_defaults );
 
-    # If we have an $app fill in missing values from it if possible.
-    # $app can be a non-MT::App object so we have to check for methods
-    if ( $app ) {
-        $blog ||= $app->blog if $app->can('blog');
-        $user ||= $app->user if $app->can('user');
-    }
-
-    # Set correct class for objects that subclass Entry
-    my $class = $e->properties->{defaults}{class} || 'entry';
-
-    my (%entry_defaults, %user_defaults, %blog_defaults);
-    
+    # We don't call $e->SUPER::set_defaults because
+    # it will overwrite pre-existing values.
     %entry_defaults = (
-        ping_count => 0,
-        class      => $class,
-        status     => HOLD,
+        class    => $e->properties->{class_type},
+        map { $_ => $e->properties->{defaults}{$_} }
+            keys %{ $e->properties->{defaults} }
     );
 
-    if ( $user ) { 
-        %user_defaults = (
-            author_id      => $user->id,
-            convert_breaks => ($user->text_format || ''),
-        );
-    }
-
-    if ( $blog ) {
+    if ( my $blog = $e->blog ) {
         %blog_defaults = (
             status         => $blog->status_default,
             allow_comments => $blog->allow_comments_default,
             allow_pings    => $blog->allow_pings_default,
             convert_breaks => ($blog->convert_paras || '__default__'),
         );
-        delete $blog_defaults{convert_breaks}
-            if $user_defaults{convert_breaks};
     }
-    
-    $e->set_values({ %entry_defaults, %user_defaults, %blog_defaults });
+
+    if ( my $user = $e->author ) { 
+        $user_defaults{author_id}      = $user->id;
+        $user_defaults{convert_breaks} = $user->text_format
+            if $user->text_format;
+    }
+
+    $e->set_values_internal({
+        %entry_defaults,    # Least important     - Generic class defaults
+        %blog_defaults,     # More important      - Blog-specific policies
+        %user_defaults,     # Even more important - User preferences
+        %{ $e->get_values } # Most important      - Pre-existing values
+    });
 }
 
 sub save {
@@ -845,8 +829,9 @@ MT::Entry - Movable Type entry record
     use MT::Entry;
     my $entry = MT::Entry->new;
     $entry->blog_id($blog->id);
-    $entry->status(MT::Entry::RELEASE());
     $entry->author_id($author->id);
+    $entry->set_defaults();
+    $entry->status(MT::Entry::RELEASE());
     $entry->title('My title');
     $entry->text('Some text');
     $entry->save
@@ -855,8 +840,8 @@ MT::Entry - Movable Type entry record
 =head1 DESCRIPTION
 
 An I<MT::Entry> object represents an entry in the Movable Type system. It
-contains all of the metadata about the entry (author, status, category, etc.),
-as well as the actual body (and extended body) of the entry.
+contains all of the metadata about the entry (author, status, category,
+etc.), as well as the actual body (and extended body) of the entry.
 
 =head1 USAGE
 
@@ -869,11 +854,30 @@ The following methods are unique to the I<MT::Entry> interface:
 
 =head2 $entry->set_defaults
 
-A convenience method which discovers and, if present, sets default values for
-author_id, convert_breaks, status, allow_comments and allow_pings.  You would
-call this method directly after MT::Entry->new() to populate the defaults
-before populating the object with other data including that which overrides
-the defaults.
+A convenience method used for deriving and filling in smart default values
+for undefined properties of entry objects such as C<status>,
+C<allow_comments>, C<allow_pings> and C<convert_breaks>. It derives these
+values using cascading precedence of defaults from the entry class's
+properties, the containing blog and the entry author.
+
+This method is called by C<MT::Object::init()> when an entry object is first
+initialized during which it assigns only those defaults defined in the class
+properties. However, if the entry's' C<blog_id> or C<author_id> properties
+are set, it gathers the relevant default values from the blog and/or author,
+combining them to derive the expected set of default values for the entry.
+
+Since this method only populates undefined values, it can be called even
+after assignment of property values has begun without fear of clobbering.
+
+The following demonstrates the preferred order of operations for calling the
+method:
+
+    my $e = MT->model('entry')->new();
+    $e->blog_id( $blog->id );
+    $e->author_id( $author->id );
+    $e->set_defaults();
+
+See also: http://bugs.movabletype.org/?82628
 
 =head2 $entry->next
 
@@ -998,9 +1002,13 @@ The status of the entry, either Publish (C<2>) or Draft (C<1>).
 =item * allow_comments
 
 An integer flag specifying whether comments are allowed on this entry. This
-setting determines whether C<E<lt>MTEntryIfAllowCommentsE<gt>> containers are
-displayed for this entry. Possible values are 0 for not allowing any additional 
-comments and 1 for allowing new comments to be made on the entry.
+setting determines whether C<E<lt>MTEntryIfAllowCommentsE<gt>> containers
+are displayed for this entry. Possible values are 0 for not allowing any
+additional comments and 1 for allowing new comments to be made on the entry.
+
+=item * allow_pings
+
+Same as above, except for pings and the C<E<lt>MTEntryIfAllowPingsE<gt>> containers.
 
 =item * convert_breaks
 

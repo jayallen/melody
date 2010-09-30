@@ -586,9 +586,8 @@ sub init_data {
     # TODO: this test entry is never created; upgrading already adds entry #1.
     if ( !$entry ) {
         $entry = MT::Entry->new();
-        # This is specifically different than MTOS because
-        # we have the set_defaults() method.
         $entry->blog_id(1);
+        $entry->author_id( $chuckd->id );
         $entry->set_defaults();
         $entry->set_values({
             title          => 'A Rainy Day',
@@ -600,7 +599,6 @@ sub init_data {
             authored_on    => '19780131074500',
             modified_on    => '19780131074600',
             authored_on    => '19780131074500',
-            author_id      => $chuckd->id,
             pinged_urls    => 'http://blogsearch.google.com/ping/RPC2',
             allow_comments => 1,
             allow_pings    => 1,
@@ -615,11 +613,9 @@ sub init_data {
     $entry = MT::Entry->load(2);
     if ( !$entry ) {
         $entry = MT::Entry->new();
-        # This is specifically different than MTOS because
-        # we have the set_defaults() method.
         $entry->blog_id(1);
+        $entry->author_id( $bobd->id );
         $entry->set_defaults();
-
         $entry->set_values({
             title          => 'A preponderance of evidence',
             text           => 'It is sufficient to say...',
@@ -628,7 +624,6 @@ sub init_data {
             authored_on    => '19790131074500',
             modified_on    => '19790131074600',
             authored_on    => '19780131074500',
-            author_id      => $bobd->id,
             allow_comments => 1,
             status         => MT::Entry::FUTURE(),
         });
@@ -640,9 +635,8 @@ sub init_data {
     $entry = MT::Entry->load(3);
     if ( !$entry ) {
         $entry = MT::Entry->new();
-        # This is specifically different than MTOS because
-        # we have the set_defaults() method.
         $entry->blog_id(1);
+        $entry->author_id( $chuckd->id );
         $entry->set_defaults();
         $entry->set_values({
             title          => 'Spurious anemones',
@@ -652,7 +646,6 @@ sub init_data {
             authored_on    => '19790131074500',
             modified_on    => '19770131074600',
             authored_on    => '19780131074500',
-            author_id      => $chuckd->id,
             allow_comments => 1,
             allow_pings    => 0,
             status         => MT::Entry::HOLD(),
@@ -762,14 +755,12 @@ It\'s a hard rain\'s a-gonna fall',
         $entry = MT::Entry->load( $i + 3 );
         if ( !$entry ) {
             $entry = MT::Entry->new();
-            # This is specifically different than MTOS because
-            # we have the set_defaults() method.
             $entry->blog_id(1);
+            $entry->author_id( $i == 3 ? $bobd->id : $chuckd->id );
             $entry->set_defaults();
             $entry->set_values({
                 title          => "Verse $i",
                 text           => $verses[$i],
-                author_id      => ($i == 3 ? $bobd->id : $chuckd->id),
                 created_on     => sprintf("%04d0131074501", $i + 1960),
                 authored_on    => sprintf("%04d0131074501", $i + 1960),
                 modified_on    => sprintf("%04d0131074601", $i + 1960),
@@ -1055,9 +1046,11 @@ It\'s a hard rain\'s a-gonna fall',
     ## Page
     require MT::Page;
     my $page = MT::Page->new();
+    $page->blog_id(1);
+    $page->author_id( $chuckd->id );
+    $page->set_defaults();
     $page->set_values(
         {
-            blog_id     => 1,
             title       => 'Watching the River Flow',
             text        => 'What the matter with me,',
             text_more   => 'I don\'t have much to say,',
@@ -1066,7 +1059,6 @@ It\'s a hard rain\'s a-gonna fall',
             created_on  => '19780131074500',
             authored_on => '19780131074500',
             modified_on => '19780131074600',
-            author_id   => $chuckd->id,
             status      => MT::Entry::RELEASE(),
         }
     );
@@ -1103,9 +1095,11 @@ It\'s a hard rain\'s a-gonna fall',
     $folder->save or die "Could'n sae folder record 22:" . $folder->errstr;
 
     $page = MT::Page->new();
+    $page->blog_id( 1 ),
+    $page->author_id( $chuckd->id );
+    $page->set_defaults();
     $page->set_values(
         {
-            blog_id     => 1,
             title       => 'Page #1',
             text        => 'Wish I was back in the city',
             text_more   => 'Instead of this old bank of sand,',
@@ -1113,7 +1107,6 @@ It\'s a hard rain\'s a-gonna fall',
             created_on  => '19790131074500',
             authored_on => '19790131074500',
             modified_on => '19790131074600',
-            author_id   => $chuckd->id,
             status      => MT::Entry::RELEASE(),
         }
     );
@@ -1130,9 +1123,11 @@ It\'s a hard rain\'s a-gonna fall',
       or die "Couldn't save placement record: " . $folder_place->errstr;
 
     $page = MT::Page->new();
+    $page->blog_id(1);
+    $page->author_id( $chuckd->id );
+    $page->set_defaults();
     $page->set_values(
         {
-            blog_id     => 1,
             title       => 'Page #2',
             text        => 'With the sub beating down over the chimney tops',
             text_more   => 'And the one I love so close at hand',
@@ -1140,7 +1135,6 @@ It\'s a hard rain\'s a-gonna fall',
             created_on  => '19800131074500',
             authored_on => '19800131074500',
             modified_on => '19800131074600',
-            author_id   => $chuckd->id,
             status      => MT::Entry::RELEASE(),
         }
     );
@@ -1157,9 +1151,11 @@ It\'s a hard rain\'s a-gonna fall',
       or die "Couldn't save placement record: " . $folder_place->errstr;
 
     $page = MT::Page->new();
+    $page->blog_id(1);
+    $page->author_id( $bobd->id );
+    $page->set_defaults();
     $page->set_values(
         {
-            blog_id     => 1,
             title       => 'Page #3',
             text        => 'If I had wings and I could fly,',
             text_more   => 'I know where I would go.',
@@ -1167,7 +1163,6 @@ It\'s a hard rain\'s a-gonna fall',
             created_on  => '19810131074500',
             authored_on => '19810131074500',
             modified_on => '19810131074600',
-            author_id   => $bobd->id,
             status      => MT::Entry::RELEASE(),
         }
     );

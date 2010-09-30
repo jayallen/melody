@@ -3,14 +3,13 @@
 use strict;
 use warnings;
 
-use lib 't/lib';
-use lib 'lib';
-use lib 'extlib';
+use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 
-use Test::More tests => 41;
+use Test::More tests => 48;
 
 use MT;
 use MT::Blog;
+use MT::Tag;
 use MT::Category;
 use MT::Comment;
 use MT::Entry;
@@ -18,7 +17,6 @@ use MT::Placement;
 
 use vars qw( $DB_DIR $T_CFG );
 
-use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 use MT::Test qw(:db :data);
 
 my $mt = MT->instance( Config => $T_CFG ) or die MT->errstr;
@@ -123,3 +121,129 @@ $entry->allow_pings(0);
 ok($entry->save, 'save');
 $tb = MT::Trackback->load({ entry_id => $entry->id });
 is($tb->is_disabled, 1, 'is_disabled');
+
+
+#
+#  MT::Entry::set_defaults() testing
+#
+
+SKIP: {
+    MT->model('entry')->can('set_defaults')
+        or skip 'Could not find $entry->set_defaults';
+
+    my $init_entry = sub {
+        my $param = shift || {};
+        my $e     = shift || MT->model('entry')->new;
+        if ( $param and keys %$param ) {
+            $e->set_values($param);
+        }
+        $e->set_defaults();
+        return $e;
+    };
+
+    my $run_entry_tests = sub {
+        my ($e, %tests) = @_;
+        foreach ( sort keys %tests ) {
+            my $msg = '$entry->'.$_;
+            defined $tests{$_}
+                ? cmp_ok( $e->$_, 'eq', $tests{$_}, $msg )
+                : ok( ! defined $e->$_, $msg );
+        }
+        return 1;
+    };
+
+    my $user = $author;
+    $user->text_format('richtext');
+    $user->save() or die "Could not save user: ".$user->errstr;
+
+    $entry = MT->model('entry')->new();
+    isa_ok( $entry, 'MT::Entry' );
+    can_ok( 'MT::Entry', 'set_defaults' );
+
+    my %e_expected;
+
+    #
+    # TEST: NEWLY CREATED ENTRY - Only class defaults
+    #
+    subtest 'set_defaults() - New entry' => sub {
+        plan tests => 9;
+        %e_expected = (
+            allow_comments => undef,
+            allow_pings    => undef,
+            author_id      => undef,
+            blog_id        => undef,
+            class          => 'entry',
+            comment_count  => 0,
+            convert_breaks => undef,
+            ping_count     => 0,
+            status         => undef,
+        );
+        $entry = $init_entry->();
+        $run_entry_tests->( $entry, %e_expected );
+    };
+
+    #
+    # TEST: TESTING BLOG AND AUTHOR PROVISIONED ENTRY - Precedence tests
+    #
+    subtest 'set_defaults(): Blog and User provisioned entry' => sub {
+        plan tests => 9;
+        %e_expected = (
+            allow_comments => $blog->allow_comments_default,
+            allow_pings    => $blog->allow_pings_default,
+            author_id      => $user->id,
+            blog_id        => $blog->id,
+            class          => 'entry',
+            comment_count  => 0,
+            convert_breaks => (   $user->text_format
+                              || $blog->convert_paras
+                              || '__default__'       ),
+            ping_count     => 0,
+            status         => $blog->status_default,
+        );
+        $entry = $init_entry->({ author_id  => $user->id,
+                                 blog_id    => $blog->id });
+        $run_entry_tests->( $entry, %e_expected );
+    };
+
+    #
+    # TEST: ATTACHING BLOG THEN USER: Precedence flip on convert_breaks
+    #
+    subtest 'set_defaults(): Blog followed by User' => sub {
+        plan tests => 9;
+        $e_expected{convert_breaks} = $blog->convert_paras || '__default__';
+        $entry = $init_entry->({ blog_id    => $blog->id });
+        $entry = $init_entry->({ author_id  => $user->id }, $entry );
+        $run_entry_tests->( $entry, %e_expected );
+    };
+
+    #
+    # TEST: ATTACHING ONLY BLOG
+    #
+    subtest 'set_defaults(): Only Blog' => sub {
+        plan tests => 9;
+        $e_expected{convert_breaks} = $blog->convert_paras || '__default__';
+        $e_expected{author_id}      = undef;
+        $entry = $init_entry->({ blog_id    => $blog->id });
+        $run_entry_tests->( $entry, %e_expected );
+    };
+
+    #
+    # TEST: ATTACHING ONLY USER
+    #
+    subtest 'set_defaults(): Only User' => sub {
+        plan tests => 9;
+        %e_expected = (
+            allow_comments => undef,
+            allow_pings    => undef,
+            author_id      => $user->id,
+            blog_id        => undef,
+            class          => 'entry',
+            comment_count  => 0,
+            convert_breaks => $user->text_format,
+            ping_count     => 0,
+            status         => undef,
+        );
+        $entry = $init_entry->({ author_id  => $user->id });
+        $run_entry_tests->( $entry, %e_expected );
+    };
+}
