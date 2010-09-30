@@ -4,7 +4,11 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 20;
+# use Test::More tests => 20;
+
+use Test::More skip_all => <<REASON;
+REASON
+
 
 BEGIN {
         $ENV{MT_APP} = 'MT::App::Comments';
