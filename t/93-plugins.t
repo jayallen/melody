@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 13;
+use Test::More tests => 16;
 
 use MT;
 use MT::Test qw( :app :db );
@@ -22,6 +22,7 @@ for my $sig ( keys %MT::Plugins ) {
 #    print STDERR "Plugin: $sig\n";
 	my $profile = $MT::Plugins{$sig};
 	if ( my $plugin = $profile->{object} ) {
+        print STDERR "  name: " . $plugin->name . "\n";
 		$plugins->{ $plugin->name }++;
 	}
 }
@@ -37,6 +38,8 @@ ok (exists $plugins->{"Markdown"}, "Markdown exists");
 ok (exists $plugins->{"SmartyPants"}, "SmartyPants exists");
 ok (exists $plugins->{"Widget Manager Upgrade Assistant"}, "Widget Manager Upgrade Assistant exists");
 ok (exists $plugins->{"Configuration Assistant"}, "Config Assistant exists");
+ok (exists $plugins->{"Theme Exporter"}, "Theme Exporter exists");
+ok (exists $plugins->{"Theme Manager"}, "Theme Manager exists");
 ok (exists $plugins->{"PubSubHubbub"}, "PubSubHubbub exists");
 
 # These are not loading for some reason

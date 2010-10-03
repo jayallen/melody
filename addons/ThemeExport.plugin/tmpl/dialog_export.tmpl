@@ -1,0 +1,143 @@
+<mt:setvarblock name="page_title"><__trans phrase="Export Theme"></mt:setvarblock>
+<mt:setvarblock name="screen_id">theme-export</mt:setvarblock>
+<mt:setvarblock name="html_head" append="1">
+  <link rel="stylesheet" href="<$mt:PluginStaticWebPath component="themeexport"$>app.css" type="text/css" />
+  <script type="text/javascript" src="<mt:var name="static_uri">jquery/jquery.js"></script>
+  <script type="text/javascript" src="<$mt:PluginStaticWebPath component="themeexport"$>app.js"></script>
+  <script type="text/javascript" src="<mt:var name="static_uri">js/dialog.js"></script>
+  <script type="text/javascript" src="<$mt:PluginStaticWebPath component="themeexport"$>jquery.scrollTo-1.4.2-min.js"></script>
+
+  <script type="text/javascript">
+  $(document).ready( function() {
+    $('#continue').click( function() {
+        $('.page').hide();
+        $('#steps').hide();
+        $('#export-pane').show();
+        var xhr = $.ajax({
+            url: '<$mt:var name="script_url"$>',
+            type: 'post',
+            dataType: 'text',
+            data: {
+                '__mode'            : 'theme_export',
+                'blog_id'           : <mt:var name="blog_id">,
+                'theme_name'        : $('#name-field input').val(),
+                'theme_description' : $('#description-field textarea').val(),
+                'theme_version'     : $('#version-field input').val(),
+                'designer_name'     : $('#designer-field input').val(),
+                'designer_link'     : $('#designer-url-field input').val()
+            },
+            success: function(text, textStatus, XMLHttpRequest) {
+              var matches = text.match(/JSON:(.*)$/);
+              if (matches && matches.length) {
+                var json = matches[1];
+                var data = eval( '(' + json + ')' );
+                $('#export-pane .progress').fadeOut( function() { $(this).html('<a href="'+data.download_url+'" title="Download Theme">Download '+data.zipfilename+'</a>').fadeIn() });;
+              }
+            }
+        });
+        xhr.onreadystatechange = function() {
+          if ( xhr.readyState == 3 ) {
+            interactive_export( xhr );            
+          }
+        };
+
+    });
+  });
+  </script>
+</mt:setvarblock>
+
+<mt:include name="dialog/header.tmpl">
+
+<div id="export_theme_content">
+  <form id="export-form" method="post" 
+        action="<$mt:var name="script_url"$>">
+
+    <input type="hidden" name="blog_id" value="<$mt:var name="blog_id"$>" />
+
+    <ol id="steps" class="pkg">
+      <li class="page-1 general active" pageid="1"><label>General Information</label></li>
+      <li class="page-2 pricing" pageid="2"><label>Designer Details</label></li>
+    </ol>
+
+    <fieldset id="page-1" class="page first details">
+
+      <mtapp:setting
+          id="name"
+          label_class="top-label"
+          label="<__trans phrase="Theme Name">"
+          hint="The name of your theme."
+          show_hint="0">
+        <input class="full-width" name="theme_name" type="text" size="60" value="<$mt:var name="theme_name"$>" />
+      </mtapp:setting>
+
+      <mtapp:setting
+          id="description"
+          label_class="top-label"
+          label="<__trans phrase="Description">">
+        <textarea class="full-width" rows="3" name="description"><$mt:var name="theme_description"$></textarea>
+      </mtapp:setting>
+
+      <mtapp:setting
+          id="version"
+          label_class="top-label"
+          label="<__trans phrase="Version">"
+          show_hint="0">
+        <input name="theme_version" type="text" size="20" value="<$mt:var name="theme_version"$>" />
+      </mtapp:setting>
+
+    </fieldset>
+
+    <fieldset id="page-2" class="page last designer">
+
+      <mtapp:setting
+          id="designer"
+          label_class="top-label"
+          label="<__trans phrase="Designer Name">"
+          show_hint="0">
+        <input class="full-width" name="designer_name" type="text" size="20" value="<$mt:var name="designer_name"$>" />
+      </mtapp:setting>
+
+      <mtapp:setting
+          id="designer-url"
+          label_class="top-label"
+          label="<__trans phrase="Designer URL">"
+          show_hint="0">
+        <input class="full-width" name="designer_link" type="text" size="20" value="<$mt:var name="designer_url"$>" />
+      </mtapp:setting>
+
+    </fieldset>
+
+    <div id="export-pane">
+      <div id="export-log">
+        <ul>
+        </ul>
+      </div>
+      <div class="progress">
+        <p class="working">Exporting...</p>
+      </div>
+    </div>
+
+    <div class="actions-bar">
+      <div class="actions-bar-inner pkg actions">
+        <button
+             id="continue"
+             type="button"
+             on_click="javascript: void(0)"
+             accesskey="s"
+             title="<__trans phrase="Export (c)">"
+             class="primary-button disabled-button">
+          <__trans phrase="Export"></button>
+        <button
+             id="close"
+             onclick="closeDialog(); return false"
+             type="button"
+             accesskey="x"
+             class="cancel close"
+             title="<__trans phrase="Close (x)">">
+          <__trans phrase="Cancel"></button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<mt:include name="dialog/footer.tmpl">

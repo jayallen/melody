@@ -1,0 +1,25 @@
+id: ThemeExport
+name: 'Theme Exporter'
+description: "A plugin that provides a simple user interface for exporting a blog's templates into an easily distributable theme."
+plugin_author: 'Endevver, LLC.'
+plugin_link: 'http://endevver.com/plugins/theme-export/'
+version: 1.0
+static_version: 1
+
+applications:
+  cms:
+    methods:
+      theme_export_start: $ThemeExport::ThemeExport::Plugin::export_start
+      theme_export: $ThemeExport::ThemeExport::Plugin::export
+
+page_actions:
+  list_templates:
+    export:
+      label: Export Theme
+      order: 101
+      dialog:  'theme_export_start'
+  theme_dashboard:
+    export:
+      label: Export Theme
+      order: 101
+      dialog:  'theme_export_start'

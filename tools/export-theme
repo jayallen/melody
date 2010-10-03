@@ -1,0 +1,251 @@
+#!/usr/bin/perl -w
+#
+# Movable Type (r) (C) 2001-2008 Six Apart, Ltd. All Rights Reserved.
+# (C) 2009-2010 Endevver, LLC. All Rights Reserved.
+#
+# This software is licensed under the GPLv2.
+#
+# Author:       Byrne Reese <byrne at majordojo dot com>
+# Changes by:   Jay Allen <jay at endevver dot com>
+#
+package MT::Tool::ExportTemplateSet;
+use strict;
+use warnings;
+use Carp;
+
+use lib qw( lib extlib plugins/ThemeExport/lib );
+use base qw( MT::Tool );
+use MT::Theme::Util qw( find_theme_plugin );
+
+sub usage {
+    return qq{--blog=<blog_ids> --name=<TS name> [--version=<TS version>]
+        [--id=<TS ID>] [--key=<TS key>] [--static] --i};
+}
+
+sub help {
+    return qq{
+        export-theme - A tool to export a blog's templates as a template set
+
+        --blog      A list of blog IDs (separated by a comma) to export templates
+                    from. (optional)
+
+        --name      The name to be used for the creation of the resulting
+                    theme. This is also used to determine the output
+                    directory for related files.
+
+        --version   The version string to be used for the creation of
+                    the resulting theme. (optional)
+
+        --static    Turns on the copying of static files. 
+                    This option is especially useful in "interactive" mode where
+                    the script will prompt you for the static file directory.
+
+        --id        The ID of the resulting template set. (optional)
+
+        --key       The key of the resulting template set. (optional)
+
+        --verbose   Show verbose messages.
+
+        --dryrun    Show what the system would do, but don't actually do 
+                    anything.
+
+        --i         Interactive mode. (default: off)
+
+        --zip       Produce a zip file of the resulting theme. (default: off)
+                    
+};
+}
+
+my ( $BLOG_IDS,   $TS_NAME, $TS_ID,    $TS_KEY, $DRYRUN, $INTERACTIVE, $ZIP,
+     $TS_VERSION, $VERBOSE, $BASE_DIR, $STATIC, %seen,   %static_map );
+
+$TS_NAME     = 'My Template Set';
+$TS_VERSION  = '1.0';
+$INTERACTIVE = 0;
+
+sub options {
+    return (
+        'blog=s'    => \$BLOG_IDS,
+        'name=s'    => \$TS_NAME,
+        'static'    => \$STATIC,
+        'id=s'      => \$TS_ID,
+        'key=s'     => \$TS_KEY,
+        'version=s' => \$TS_VERSION,
+        'dryrun'    => \$DRYRUN,
+        'i'         => \$INTERACTIVE,
+        'zip'       => \$ZIP,
+    );
+}
+
+use lib './lib';
+use MT::Theme::Exporter;
+
+sub main {
+    my $class = shift;
+    $VERBOSE = $class->SUPER::main(@_);
+
+    # No use doing a dry run if we can't see what's happening
+    $VERBOSE = $DRYRUN if $DRYRUN;
+    
+    $class->show_usage() && exit if (! defined $BLOG_IDS) || !$TS_NAME;
+
+    my $blog;
+    my (%pack_opts, %export_opts);
+    $pack_opts{'pack_name'} = 'My Theme Pack';
+
+    my $id     = $TS_ID;
+    my $key    = $TS_KEY;
+    my $name   = $TS_NAME;
+    
+    $id     ||= MT::Util::dirify($TS_NAME);
+    $key    ||= MT::Util::dirify($TS_NAME);
+
+    my $pack_opts = {
+        logger       => sub { print STDERR $_[0] },
+        key          => $TS_KEY, 
+        pack_version => $TS_VERSION,
+        verbose      => $VERBOSE,
+        dryrun       => $DRYRUN,
+        zip          => $ZIP,
+    };
+
+    my @blog_ids = split(',',$BLOG_IDS);
+    if ($#blog_ids == 0 && !$name) {
+        $blog = MT->model('blog')->load( $blog_ids[0] );
+        $pack_opts->{'pack_name'} = $blog->name . ' Theme Pack';
+    }
+
+    my $exporter = MT::Theme::Exporter->new( $pack_opts );
+    my $static_base = MT::Theme::Exporter::_static_file_path( MT->instance );
+    foreach my $blog_id (@blog_ids) {
+        $blog = MT->model('blog')->load( MT::Util::trim($blog_id) );
+        my $static;
+        $export_opts{'static'} = undef;
+        if ( $blog->template_set ) {
+            my $plugin = find_theme_plugin( $blog->template_set );
+            my $static;
+            if (defined( $static_map{ $blog->template_set }) ) {
+                $export_opts{'static'} = $static_map{ $blog->template_set };
+            } else {
+                $static = File::Spec->catdir( $static_base, 'plugins', $plugin->key );
+                if (-e $static) {
+                    $export_opts{'static'} = File::Spec->catdir( 'plugins', $plugin->key );
+                }
+            }
+        }
+        if (!defined($export_opts{'static'}) && $INTERACTIVE) {
+PROMPT:
+            my $path = _prompt("Path to static files for " . $blog->name ." (press <ENTER> to skip)\n".
+                               "Relative to '".$static_base."'",'');
+            my $fullpath = File::Spec->catdir( $static_base, $path );
+            if (! -e $fullpath ) {
+                print "The path you entered '$fullpath' does not exist.\n";
+                goto PROMPT;
+            }
+            if ($path ne "") {
+                $export_opts{'static'} = $path;
+                $static_map{ $blog->template_set } = $path;
+            }
+        }
+        my $id = _generate_unique_id( $blog->name );
+        $exporter->export({
+            blog_id => $blog_id,
+            name    => $blog->name . " Theme",
+            id      => $id,
+            key     => $id,
+            %export_opts
+        });
+    }
+    $exporter->write();
+}
+
+sub _generate_unique_id {
+    my ($str) = @_;
+    my $name = MT::Util::dirify( $str );
+    if ( defined $seen{ $name } ) {
+        if ($name =~ s/_(\d+)$//) {
+            $name = $name . ($1 + 1);
+            return _generate_unique_id( $name );
+        } else {
+            return _generate_unique_id( $name . "_1" );
+        }
+    } else {
+        $seen{ $name } = 1;
+        return $name;
+    }
+}
+
+sub _prompt {
+    my ($promptString,$defaultValue) = @_;
+    if ($defaultValue) {
+        print $promptString, "[", $defaultValue, "]: ";
+    } else {
+        print $promptString, ": ";
+    }
+    $| = 1;               # force a flush after our print
+    $_ = <STDIN>;         # get the input from STDIN (presumably the keyboard)
+    chomp;
+    if ("$defaultValue") {
+        return $_ ? $_ : $defaultValue;    # return $_ if it has a value
+    } else {
+        return $_;
+    }
+}
+
+__PACKAGE__->main() unless caller;
+
+1;
+__END__
+
+=head1 NAME
+
+export-theme - A tool to export a blog's templates as a template set
+
+=head1 SYNOPSIS
+
+    cd /path/to/cgi-bin/mt
+    perl ./tools/export_ts -blog=1 -key="MyTemplateSet"
+
+=head1 INSTALLATION
+
+Place this script inside your Movable Type "tools" directory.
+
+=head1 DESCRIPTION
+
+I<export-theme> is a tool to export a blog's templates to a
+template set that can easily be install elsewhere.
+
+=head1 OPTIONS
+
+The following options are available:
+
+  --blog      The Blog ID to export templates from
+  
+  --key       The key to be used for the creation of the
+              resulting plugin. This is also used to determine
+              the output directory for related files.
+
+=head1 USAGE
+
+From the command line, one would type:
+
+    prompt> chmod a+x export-theme
+    prompt> MT_HOME=/path/to/mt export-theme --blog=<id> \
+            --key=MySet --name="My Template Set"
+
+This would result in the following directories being created:
+
+=over 4
+
+=item * MySet/plugins/MySet/config.yaml
+
+=item * MySet/plugins/MySet/templates/*
+
+=item * MySet/mt-static/plugins/MySet/*
+
+=back
+
+You should then be able to zip up the MySet directory or simply install its
+contents into MT_HOME as you would any other plugin.
+
+=cut
