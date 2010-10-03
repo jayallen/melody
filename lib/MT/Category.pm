@@ -10,8 +10,10 @@ use strict;
 use MT::Tag; # Must pre-load for MT::Taggable
 use base qw( MT::Object MT::Taggable );
 use MT::Util qw( weaken );
-
 use MT::Blog;
+use MT::Tag;
+
+use base qw( MT::Object MT::Taggable);
 
 __PACKAGE__->install_properties({
     column_defs => {

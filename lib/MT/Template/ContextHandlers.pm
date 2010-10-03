@@ -8,20 +8,23 @@ package MT::Template::Context;
 
 use strict;
 
-use MT;
-use MT::Util qw( start_end_day start_end_week 
-                 start_end_month week2ymd archive_file_for
-                 format_ts offset_time_list first_n_words dirify get_entry
-                 encode_html encode_js remove_html wday_from_ts days_in
-                 spam_protect encode_php encode_url decode_html encode_xml
-                 decode_xml relative_date asset_cleanup );
-use MT::Request;
-use Time::Local qw( timegm timelocal );
-use MT::Promise qw( delay );
-use MT::Category;
-use MT::Entry;
-use MT::I18N qw( first_n_text const uppercase lowercase substr_text length_text wrap_text );
-use MT::Asset;
+use MT::Util qw( format_ts relative_date );
+use Time::Local qw( timelocal );
+
+#use MT::Util qw( start_end_day start_end_week 
+#                 start_end_month week2ymd archive_file_for
+#                 format_ts offset_time_list first_n_words dirify get_entry
+#                 encode_html encode_js remove_html wday_from_ts days_in
+#                 spam_protect encode_php encode_url decode_html encode_xml
+#                 decode_xml relative_date asset_cleanup );
+
+#use MT::Request;
+#use Time::Local qw( timegm timelocal );
+#use MT::Promise qw( delay );
+#use MT::Category;
+#use MT::Entry;
+#use MT::I18N qw( first_n_text const uppercase lowercase substr_text length_text wrap_text );
+#use MT::Asset;
 
 sub init_default_handlers {}
 sub init_default_filters {}
@@ -30,19 +33,42 @@ sub core_tags {
     return {
         help_url => sub { MT->translate('http://www.movabletype.org/documentation/appendices/tags/%t.html') },
         block => {
-            'App:Setting' => \&_hdlr_app_setting,
-            'App:Widget' => \&_hdlr_app_widget,
-            'App:StatusMsg' => \&_hdlr_app_statusmsg,
-            'App:Listing' => \&_hdlr_app_listing,
-            'App:SettingGroup' => \&_hdlr_app_setting_group,
-            'App:Form' => \&_hdlr_app_form,
 
-            # Core tags
-            'If?' => \&_hdlr_if,
-            'Unless?' => sub { defined(my $r = &_hdlr_if) or return; !$r },
-            'For' => \&_hdlr_for,
-            'Else' => \&_hdlr_else,
-            'ElseIf' => \&_hdlr_elseif,
+            ## Core
+            'Ignore'         => sub { '' },
+            'If?'            => \&MT::Template::Tags::Core::_hdlr_if,
+            'Unless?'        => \&MT::Template::Tags::Core::_hdlr_unless,
+            'Else'           => \&MT::Template::Tags::Core::_hdlr_else,
+            'ElseIf'         => \&MT::Template::Tags::Core::_hdlr_elseif,
+            'IfNonEmpty?'    => \&MT::Template::Tags::Core::_hdlr_if_nonempty,
+            'IfNonZero?'     => \&MT::Template::Tags::Core::_hdlr_if_nonzero,
+            'Loop'           => \&MT::Template::Tags::Core::_hdlr_loop,
+            'For'            => \&MT::Template::Tags::Core::_hdlr_for,
+            'SetVarBlock'    => \&MT::Template::Tags::Core::_hdlr_set_var,
+            'SetVarTemplate' => \&MT::Template::Tags::Core::_hdlr_set_var,
+            'SetVars'        => \&MT::Template::Tags::Core::_hdlr_set_vars,
+            'SetHashVar'     => \&MT::Template::Tags::Core::_hdlr_set_hashvar,
+
+            ## System
+            'IncludeBlock' => \&MT::Template::Tags::System::_hdlr_include_block,
+            'IfStatic'     => \&slurp,
+            'IfDynamic'    => \&else,
+            'Section'      => \&MT::Template::Tags::System::_hdlr_section,
+
+            ## App
+            'App:Setting'      => \&MT::Template::Tags::App::_hdlr_app_setting,
+            'App:Widget'       => \&MT::Template::Tags::App::_hdlr_app_widget,
+            'App:StatusMsg'    => \&MT::Template::Tags::App::_hdlr_app_statusmsg,
+            'App:Listing'      => \&MT::Template::Tags::App::_hdlr_app_listing,
+            'App:SettingGroup' => \&MT::Template::Tags::App::_hdlr_app_setting_group,
+            'App:Form'         => \&MT::Template::Tags::App::_hdlr_app_form,
+
+            ## Blog
+            'Blogs'            => '$Core::MT::Template::Tags::Blog::_hdlr_blogs',
+            'IfBlog?'          => '$Core::MT::Template::Tags::Blog::_hdlr_blog_id',
+            'BlogIfCCLicense?' => '$Core::MT::Template::Tags::Blog::_hdlr_blog_if_cc_license',
+
+### TODO
 
             'IfImageSupport?' => \&_hdlr_if_image_support,
 
@@ -67,9 +93,6 @@ sub core_tags {
             'IfIsAncestor?' => \&_hdlr_is_ancestor,
             'IfIsDescendant?' => \&_hdlr_is_descendant,
 
-            IfStatic => \&_hdlr_pass_tokens,
-            IfDynamic => \&_hdlr_pass_tokens_else,
-
             'AssetIfTagged?' => \&_hdlr_asset_if_tagged,
 
             'PageIfTagged?' => \&_hdlr_page_if_tagged,
@@ -80,19 +103,11 @@ sub core_tags {
             'HasSubFolders?' => \&_hdlr_has_sub_folders,
             'HasParentFolder?' => \&_hdlr_has_parent_folder,
 
-            IncludeBlock => \&_hdlr_include_block,
-
-            Loop => \&_hdlr_loop,
-            Section => \&_hdlr_section,
-            'IfNonEmpty?' => \&_hdlr_if_nonempty,
-            'IfNonZero?' => \&_hdlr_if_nonzero,
-
             'IfCommenterTrusted?' => \&_hdlr_commenter_trusted,
             'CommenterIfTrusted?' => \&_hdlr_commenter_trusted,
             'IfCommenterIsAuthor?' => \&_hdlr_commenter_isauthor,
             'IfCommenterIsEntryAuthor?' => \&_hdlr_commenter_isauthor,
 
-            'IfBlog?' => \&_hdlr_blog_id,
             'IfAuthor?' => \&_hdlr_if_author,
             'AuthorHasEntry?' => \&_hdlr_author_has_entry,
             'AuthorHasPage?' => \&_hdlr_author_has_page,
@@ -100,7 +115,6 @@ sub core_tags {
             AuthorNext => \&_hdlr_author_next_prev,
             AuthorPrevious => \&_hdlr_author_next_prev,
 
-            Blogs => \&_hdlr_blogs,
             'BlogIfCCLicense?' => \&_hdlr_blog_if_cc_license,
             Entries => \&_hdlr_entries,
             EntriesHeader => \&_hdlr_pass_tokens,
@@ -249,32 +263,71 @@ sub core_tags {
             IfMaxResultsCutoff => sub { '' },
         },
         function => {
-            'App:PageActions' => \&_hdlr_app_page_actions,
-            'App:ListFilters' => \&_hdlr_app_list_filters,
-            'App:ActionBar' => \&_hdlr_app_action_bar,
-            'App:Link' => \&_hdlr_app_link,
-            Var => \&_hdlr_get_var,
-            CGIPath => \&_hdlr_cgi_path,
-            AdminCGIPath => \&_hdlr_admin_cgi_path,
-            CGIRelativeURL => \&_hdlr_cgi_relative_url,
-            CGIHost => \&_hdlr_cgi_host,
-            StaticWebPath => \&_hdlr_static_path,
-            StaticFilePath => \&_hdlr_static_file_path,
-            AdminScript => \&_hdlr_admin_script,
-            CommentScript => \&_hdlr_comment_script,
-            TrackbackScript => \&_hdlr_trackback_script,
-            SearchScript => \&_hdlr_search_script,
-            XMLRPCScript => \&_hdlr_xmlrpc_script,
-            AtomScript => \&_hdlr_atom_script,
-            NotifyScript => \&_hdlr_notify_script,
-            Date => \&_hdlr_sys_date,
-            Version => \&_hdlr_mt_version,
-            ProductName => \&_hdlr_product_name,
-            PublishCharset => \&_hdlr_publish_charset,
-            DefaultLanguage => \&_hdlr_default_language,
-            CGIServerPath => \&_hdlr_cgi_server_path,
-            ConfigFile => \&_hdlr_config_file,
-            JQueryURL => \&_hdlr_jquery_url,
+
+            ## Core
+            SetVar       => \&MT::Template::Tags::Core::_hdlr_set_var,
+            GetVar       => \&MT::Template::Tags::Core::_hdlr_get_var,
+            Var          => \&MT::Template::Tags::Core::_hdlr_get_var,
+            TemplateNote => sub { '' },
+
+            ## System
+            Include             => \&MT::Template::Tags::System::_hdlr_include,
+            Link                => \&MT::Template::Tags::System::_hdlr_link,
+            Date                => \&MT::Template::Tags::System::_hdlr_sys_date,
+            AdminScript         => \&MT::Template::Tags::System::_hdlr_admin_script,
+            CommentScript       => \&MT::Template::Tags::System::_hdlr_comment_script,
+            TrackbackScript     => \&MT::Template::Tags::System::_hdlr_trackback_script,
+            SearchScript        => \&MT::Template::Tags::System::_hdlr_search_script,
+            XMLRPCScript        => \&MT::Template::Tags::System::_hdlr_xmlrpc_script,
+            AtomScript          => \&MT::Template::Tags::System::_hdlr_atom_script,
+            NotifyScript        => \&MT::Template::Tags::System::_hdlr_notify_script,
+            CGIHost             => \&MT::Template::Tags::System::_hdlr_cgi_host,
+            CGIPath             => \&MT::Template::Tags::System::_hdlr_cgi_path,
+            AdminCGIPath        => \&MT::Template::Tags::System::_hdlr_admin_cgi_path,
+            CGIRelativeURL      => \&MT::Template::Tags::System::_hdlr_cgi_relative_url,
+            CGIServerPath       => \&MT::Template::Tags::System::_hdlr_cgi_server_path,
+            StaticWebPath       => \&MT::Template::Tags::System::_hdlr_static_path,
+            StaticFilePath      => \&MT::Template::Tags::System::_hdlr_static_file_path,
+#            SupportDirectoryURL => \&MT::Template::Tags::System::_hdlr_support_directory_url,
+            Version             => \&MT::Template::Tags::System::_hdlr_mt_version,
+            ProductName         => \&MT::Template::Tags::System::_hdlr_product_name,
+            PublishCharset      => \&MT::Template::Tags::System::_hdlr_publish_charset,
+            DefaultLanguage     => \&MT::Template::Tags::System::_hdlr_default_language,
+            ConfigFile          => \&MT::Template::Tags::System::_hdlr_config_file,
+            IndexBasename       => \&MT::Template::Tags::System::_hdlr_index_basename,
+            HTTPContentType     => \&MT::Template::Tags::System::_hdlr_http_content_type,
+            FileTemplate        => \&MT::Template::Tags::System::_hdlr_file_template,
+            TemplateCreatedOn   => \&MT::Template::Tags::System::_hdlr_template_created_on,
+            BuildTemplateID     => \&MT::Template::Tags::System::_hdlr_build_template_id,
+            ErrorMessage        => \&MT::Template::Tags::System::_hdlr_error_message,
+            JQueryURL           => \&MT::Template::Tags::System::_hdlr_jquery_url,
+
+            ## App
+
+            'App:PageActions' => \&MT::Template::Tags::App::_hdlr_app_page_actions,
+            'App:ListFilters' => \&MT::Template::Tags::App::_hdlr_app_list_filters,
+            'App:ActionBar'   => \&MT::Template::Tags::App::_hdlr_app_action_bar,
+            'App:Link'        => \&MT::Template::Tags::App::_hdlr_app_link,
+
+            ## Blog
+            BlogID             => '$Core::MT::Template::Tags::Blog::_hdlr_blog_id',
+            BlogName           => '$Core::MT::Template::Tags::Blog::_hdlr_blog_name',
+            BlogDescription    => '$Core::MT::Template::Tags::Blog::_hdlr_blog_description',
+            BlogLanguage       => '$Core::MT::Template::Tags::Blog::_hdlr_blog_language',
+            BlogURL            => '$Core::MT::Template::Tags::Blog::_hdlr_blog_url',
+            BlogArchiveURL     => '$Core::MT::Template::Tags::Blog::_hdlr_blog_archive_url',
+            BlogRelativeURL    => '$Core::MT::Template::Tags::Blog::_hdlr_blog_relative_url',
+            BlogSitePath       => '$Core::MT::Template::Tags::Blog::_hdlr_blog_site_path',
+            BlogHost           => '$Core::MT::Template::Tags::Blog::_hdlr_blog_host',
+            BlogTimezone       => '$Core::MT::Template::Tags::Blog::_hdlr_blog_timezone',
+            BlogCCLicenseURL   => '$Core::MT::Template::Tags::Blog::_hdlr_blog_cc_license_url',
+            BlogCCLicenseImage => '$Core::MT::Template::Tags::Blog::_hdlr_blog_cc_license_image',
+            CCLicenseRDF       => '$Core::MT::Template::Tags::Blog::_hdlr_cc_license_rdf',
+            BlogFileExtension  => '$Core::MT::Template::Tags::Blog::_hdlr_blog_file_extension',
+            BlogTemplateSetID  => '$Core::MT::Template::Tags::Blog::_hdlr_blog_template_set_id',
+
+# TODO
+
             UserSessionCookieTimeout => \&_hdlr_user_session_cookie_timeout,
             UserSessionCookieName => \&_hdlr_user_session_cookie_name,
             UserSessionCookiePath => \&_hdlr_user_session_cookie_path,
@@ -304,25 +357,6 @@ sub core_tags {
             AuthorCommentCount => '$Core::MT::Summary::Author::_hdlr_author_comment_count',
             AuthorEntriesCount => '$Core::MT::Summary::Author::_hdlr_author_entries_count',
 
-            BlogID => \&_hdlr_blog_id,
-            BlogName => \&_hdlr_blog_name,
-            BlogDescription => \&_hdlr_blog_description,
-            BlogLanguage => \&_hdlr_blog_language,
-            BlogURL => \&_hdlr_blog_url,
-            BlogArchiveURL => \&_hdlr_blog_archive_url,
-            BlogRelativeURL => \&_hdlr_blog_relative_url,
-            BlogSitePath => \&_hdlr_blog_site_path,
-            BlogHost => \&_hdlr_blog_host,
-            BlogTimezone => \&_hdlr_blog_timezone,
-            BlogCategoryCount => \&_hdlr_blog_category_count,
-            BlogEntryCount => \&_hdlr_blog_entry_count,
-            BlogCommentCount => \&_hdlr_blog_comment_count,
-            BlogPingCount => \&_hdlr_blog_ping_count,
-            BlogCCLicenseURL => \&_hdlr_blog_cc_license_url,
-            BlogCCLicenseImage => \&_hdlr_blog_cc_license_image,
-            CCLicenseRDF => \&_hdlr_cc_license_rdf,
-            BlogFileExtension => \&_hdlr_blog_file_extension,
-            BlogTemplateSetID => \&_hdlr_blog_template_set_id,
             EntriesCount => \&_hdlr_entries_count,
             EntryID => \&_hdlr_entry_id,
             EntryTitle => \&_hdlr_entry_title,
@@ -364,15 +398,10 @@ sub core_tags {
             EntryBlogURL => \&_hdlr_entry_blog_url,
             EntryEditLink => \&_hdlr_entry_edit_link,
 
-            Include => \&_hdlr_include,
-            Link => \&_hdlr_link,
             WidgetManager => \&_hdlr_widget_manager,
             WidgetSet => \&_hdlr_widget_manager,
 
             ErrorMessage => \&_hdlr_error_message,
-
-            GetVar => \&_hdlr_get_var,
-            SetVar => \&_hdlr_set_var,
 
             TypeKeyToken => \&_hdlr_typekey_token,
             CommentFields => \&_hdlr_comment_fields,
@@ -410,7 +439,6 @@ sub core_tags {
 
             IndexLink => \&_hdlr_index_link,
             IndexName => \&_hdlr_index_name,
-            IndexBasename => \&_hdlr_index_basename,
 
             ArchiveLink => \&_hdlr_archive_link,
             ArchiveTitle => \&_hdlr_archive_title,
@@ -450,8 +478,6 @@ sub core_tags {
             PingIP => \&_hdlr_ping_ip,
             PingDate => \&_hdlr_ping_date,
 
-            FileTemplate => \&_hdlr_file_template,
-
             SignOnURL => \&_hdlr_signon_url,
 
             SubCatsRecurse => \&_hdlr_sub_cats_recurse,
@@ -462,12 +488,7 @@ sub core_tags {
             TagID => \&_hdlr_tag_id,
             TagCount => \&_hdlr_tag_count,
             TagRank => \&_hdlr_tag_rank,
-            TagSearchLink => \&_hdlr_tag_search_link,
-
-            TemplateNote => sub { '' },
-            TemplateCreatedOn => \&_hdlr_template_created_on,
-
-            HTTPContentType => \&_hdlr_http_content_type,
+            TagSearchLink => \&_hdlr_tag_search_vlink,
 
             AssetID => \&_hdlr_asset_id,
             AssetFileName => \&_hdlr_asset_file_name,
@@ -520,8 +541,6 @@ sub core_tags {
 
             UserSessionState => \&_hdlr_user_session_state,
 
-            BuildTemplateID => \&_hdlr_build_template_id,
-
             CaptchaFields => \&_hdlr_captcha_fields,
 
             # Rating related handlers
@@ -569,52 +588,284 @@ sub core_tags {
             TotalPages => \&_hdlr_total_pages,
         },
         modifier => {
-            'numify' => \&_fltr_numify,
-            'mteval' => \&_fltr_mteval,
-            'filters' => \&_fltr_filters,
-            'trim_to' => \&_fltr_trim_to,
-            'trim' => \&_fltr_trim,
-            'ltrim' => \&_fltr_ltrim,
-            'rtrim' => \&_fltr_rtrim,
-            'decode_html' => \&_fltr_decode_html,
-            'decode_xml' => \&_fltr_decode_xml,
-            'remove_html' => \&_fltr_remove_html,
-            'dirify' => \&_fltr_dirify,
-            'sanitize' => \&_fltr_sanitize,
-            'encode_sha1' => \&_fltr_sha1,
-            'encode_html' => \&_fltr_encode_html,
-            'encode_xml' => \&_fltr_encode_xml,
-            'encode_js' => \&_fltr_encode_js,
-            'encode_json' => \&_fltr_encode_json,
-            'encode_php' => \&_fltr_encode_php,
-            'encode_url' => \&_fltr_encode_url,
-            'upper_case' => \&_fltr_upper_case,
-            'lower_case' => \&_fltr_lower_case,
-            'strip_linefeeds' => \&_fltr_strip_linefeeds,
-            'space_pad' => \&_fltr_space_pad,
-            'zero_pad' => \&_fltr_zero_pad,
-            'sprintf' => \&_fltr_sprintf,
-            'regex_replace' => \&_fltr_regex_replace,
-            'capitalize' => \&_fltr_capitalize,
-            'count_characters' => \&_fltr_count_characters,
-            'cat' => \&_fltr_cat,
-            'count_paragraphs' => \&_fltr_count_paragraphs,
-            'count_words' => \&_fltr_count_words,
-            'escape' => \&_fltr_escape,
-            'indent' => \&_fltr_indent,
-            'nl2br' => \&_fltr_nl2br,
-            'replace' => \&_fltr_replace,
-            'spacify' => \&_fltr_spacify,
-            'string_format' => \&_fltr_sprintf,
-            'strip' => \&_fltr_strip,
-            'strip_tags' => \&_fltr_strip_tags,
-            '_default' => \&_fltr_default,
-            'nofollowfy' => \&_fltr_nofollowfy,
-            'wrap_text' => \&_fltr_wrap_text,
-            'setvar' => \&_fltr_setvar,
+            'numify'           => '$Core::MT::Template::Tags::Filters::_fltr_numify',
+            'mteval'           => '$Core::MT::Template::Tags::Filters::_fltr_mteval',
+            'filters'          => '$Core::MT::Template::Tags::Filters::_fltr_filters',
+            'trim_to'          => '$Core::MT::Template::Tags::Filters::_fltr_trim_to',
+            'trim'             => '$Core::MT::Template::Tags::Filters::_fltr_trim',
+            'ltrim'            => '$Core::MT::Template::Tags::Filters::_fltr_ltrim',
+            'rtrim'            => '$Core::MT::Template::Tags::Filters::_fltr_rtrim',
+            'decode_html'      => '$Core::MT::Template::Tags::Filters::_fltr_decode_html',
+            'decode_xml'       => '$Core::MT::Template::Tags::Filters::_fltr_decode_xml',
+            'remove_html'      => '$Core::MT::Template::Tags::Filters::_fltr_remove_html',
+            'dirify'           => '$Core::MT::Template::Tags::Filters::_fltr_dirify',
+            'sanitize'         => '$Core::MT::Template::Tags::Filters::_fltr_sanitize',
+            'encode_sha1'      => '$Core::MT::Template::Tags::Filters::_fltr_sha1',
+            'encode_html'      => '$Core::MT::Template::Tags::Filters::_fltr_encode_html',
+            'encode_xml'       => '$Core::MT::Template::Tags::Filters::_fltr_encode_xml',
+            'encode_js'        => '$Core::MT::Template::Tags::Filters::_fltr_encode_js',
+            'encode_json'      => '$Core::MT::Template::Tags::Filters::_fltr_encode_json',
+            'encode_php'       => '$Core::MT::Template::Tags::Filters::_fltr_encode_php',
+            'encode_url'       => '$Core::MT::Template::Tags::Filters::_fltr_encode_url',
+            'upper_case'       => '$Core::MT::Template::Tags::Filters::_fltr_upper_case',
+            'lower_case'       => '$Core::MT::Template::Tags::Filters::_fltr_lower_case',
+            'strip_linefeeds'  => '$Core::MT::Template::Tags::Filters::_fltr_strip_linefeeds',
+            'space_pad'        => '$Core::MT::Template::Tags::Filters::_fltr_space_pad',
+            'zero_pad'         => '$Core::MT::Template::Tags::Filters::_fltr_zero_pad',
+            'sprintf'          => '$Core::MT::Template::Tags::Filters::_fltr_sprintf',
+            'regex_replace'    => '$Core::MT::Template::Tags::Filters::_fltr_regex_replace',
+            'capitalize'       => '$Core::MT::Template::Tags::Filters::_fltr_capitalize',
+            'count_characters' => '$Core::MT::Template::Tags::Filters::_fltr_count_characters',
+            'cat'              => '$Core::MT::Template::Tags::Filters::_fltr_cat',
+            'count_paragraphs' => '$Core::MT::Template::Tags::Filters::_fltr_count_paragraphs',
+            'count_words'      => '$Core::MT::Template::Tags::Filters::_fltr_count_words',
+            'escape'           => '$Core::MT::Template::Tags::Filters::_fltr_escape',
+            'indent'           => '$Core::MT::Template::Tags::Filters::_fltr_indent',
+            'nl2br'            => '$Core::MT::Template::Tags::Filters::_fltr_nl2br',
+            'replace'          => '$Core::MT::Template::Tags::Filters::_fltr_replace',
+            'spacify'          => '$Core::MT::Template::Tags::Filters::_fltr_spacify',
+            'string_format'    => '$Core::MT::Template::Tags::Filters::_fltr_sprintf',
+            'strip'            => '$Core::MT::Template::Tags::Filters::_fltr_strip',
+            'strip_tags'       => '$Core::MT::Template::Tags::Filters::_fltr_strip_tags',
+            '_default'         => '$Core::MT::Template::Tags::Filters::_fltr_default',
+            'nofollowfy'       => '$Core::MT::Template::Tags::Filters::_fltr_nofollowfy',
+            'wrap_text'        => '$Core::MT::Template::Tags::Filters::_fltr_wrap_text',
+            'setvar'           => '$Core::MT::Template::Tags::Filters::_fltr_setvar',
         },
     };
 }
+
+## used in both Comment.pm and Ping.pm
+sub sanitize_on {
+    my ($ctx, $args) = @_;
+    ## backward compatibility. in MT4, this didn't take $ctx.
+    if (!UNIVERSAL::isa( $ctx, 'MT::Template::Context' ) ) {
+        $args = $ctx;
+    }
+    unless ( exists $args->{'sanitize'} ) {
+        # Important to come before other manipulation attributes
+        # like encode_xml
+        unshift @{$args->{'@'} ||= []}, ['sanitize' => 1];
+        $args->{'sanitize'} = 1;
+    }
+}
+
+## used in Ping.pm
+sub nofollowfy_on {
+    my ($ctx, $args) = @_;
+    unless ( exists$args->{'nofollowfy'} ) {
+        $args->{'nofollowfy'} = 1;
+    }
+}
+
+## used in both Category.pm and Entry.pm.
+sub cat_path_to_category {
+    ## for backward compatibility.
+    shift if UNIVERSAL::isa($_[0], 'MT::Template::Context');
+    my ($path, $blog_id, $class_type) = @_;
+
+    my $class = MT->model($class_type);
+    
+    # The argument version always takes precedence
+    # followed by the current category (i.e. MTCategories/MTSubCategories style)
+    # then the current category for the archive
+    # then undef
+    my @cat_path = $path =~ m@(\[[^]]+?\]|[^]/]+)@g;   # split on slashes, fields quoted by []
+    @cat_path = map { $_ =~ s/^\[(.*)\]$/$1/; $_ } @cat_path;       # remove any []
+    my $last_cat_id = 0;
+    my $cat;
+    my (%blog_terms, %blog_args);
+    if (ref $blog_id eq 'ARRAY') {
+        %blog_terms = %{$blog_id->[0]};
+        %blog_args = %{$blog_id->[1]};
+    } elsif ($blog_id) {
+        $blog_terms{blog_id} = $blog_id;
+    }
+
+    my $top = shift @cat_path;
+    my @cats = $class->load({ label => $top,
+                                    parent => 0,
+                                    %blog_terms }, \%blog_args);
+    if (@cats) {
+        for my $label (@cat_path) {
+            my @parents = map { $_->id } @cats;
+            @cats = $class->load({ label => $label,
+                                         parent => \@parents,
+                                         %blog_terms }, \%blog_args)
+                    or last;
+        }
+    }
+    if (!@cats && $path) {
+        @cats = ($class->load({
+            label => $path,
+            %blog_terms,
+        }, \%blog_args));
+    }
+    @cats;
+}
+
+## for backward compatibility
+sub _hdlr_pass_tokens { shift->slurp(@_) }
+sub _hdlr_pass_tokens_else { shift->else(@_) }
+
+###########################################################################
+
+=head2 _get_script_location
+
+An internal wrapper method around all of the "FooScript" config directives which supports two optional arguments:
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:AdminScript url="1"$>>
+might give you http://example.com/mt/mt.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:AdminScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt.cgi>
+
+=back
+
+=for internal
+
+=cut
+
+sub _get_script_location {
+    my ($ctx, $args, $cond, $method) = @_;
+    my $additional_location = '';
+
+    if ($args->{url}) {
+        $additional_location = $ctx->_hdlr_cgi_path();
+    }
+    elsif ( $args->{filepath} ) {
+        $additional_location  = $ctx->_hdlr_cgi_server_path();
+        $additional_location .= '/' if ($additional_location !~ /$\//);
+    }
+
+    no strict 'refs';
+    my $script = $ctx->{config}->$method();
+    return $additional_location . $script;
+}
+
+sub build_date {
+    my ($ctx, $args) = @_;
+    my $ts = $args->{ts} || $ctx->{current_timestamp};
+    my $tag = $ctx->stash('tag');
+    return $ctx->error(MT->translate(
+        "You used an [_1] tag without a date context set up.", "MT$tag" ))
+        unless defined $ts;
+    my $blog = $ctx->stash('blog');
+    unless (ref $blog) {
+        my $blog_id = $blog || $args->{offset_blog_id};
+        if ($blog_id) {
+            $blog = MT->model('blog')->load($blog_id);
+            return $ctx->error( MT->translate( 'Can\'t load blog #[_1].', $blog_id ) )
+              unless $blog;
+        }
+    }
+    my $lang = $args->{language} || $ctx->var('local_lang_id')
+        || ($blog && $blog->language);
+    if ($args->{utc}) {
+        my($y, $mo, $d, $h, $m, $s) = $ts =~ /(\d\d\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)/;
+        $mo--;
+        my $server_offset = ($blog && $blog->server_offset) || MT->config->TimeOffset;
+        if ((localtime (timelocal ($s, $m, $h, $d, $mo, $y )))[8]) {
+            $server_offset += 1;
+        }
+        my $four_digit_offset = sprintf('%.02d%.02d', int($server_offset),
+                                        60 * abs($server_offset
+                                                 - int($server_offset)));
+        require MT::DateTime;
+        my $tz_secs = MT::DateTime->tz_offset_as_seconds($four_digit_offset);
+        my $ts_utc = Time::Local::timegm_nocheck($s, $m, $h, $d, $mo, $y);
+        $ts_utc -= $tz_secs;
+        ($s, $m, $h, $d, $mo, $y) = gmtime( $ts_utc );
+        $y += 1900; $mo++;
+        $ts = sprintf("%04d%02d%02d%02d%02d%02d", $y, $mo, $d, $h, $m, $s);
+    }
+    if (my $format = lc ($args->{format_name} || '')) {
+        my $tz = 'Z';
+        unless ($args->{utc}) {
+            my $so = ($blog && $blog->server_offset) || MT->config->TimeOffset;
+            my $partial_hour_offset = 60 * abs($so - int($so));
+            if ($format eq 'rfc822') {
+                $tz = sprintf("%s%02d%02d", $so < 0 ? '-' : '+',
+                    abs($so), $partial_hour_offset);
+            }
+            elsif ($format eq 'iso8601') {
+                $tz = sprintf("%s%02d:%02d", $so < 0 ? '-' : '+',
+                    abs($so), $partial_hour_offset);
+            }
+        }
+        if ($format eq 'rfc822') {
+            ## RFC-822 dates must be in English.
+            $args->{'format'} = '%a, %d %b %Y %H:%M:%S ' . $tz;
+            $lang = 'en';
+        }
+        elsif ($format eq 'iso8601') {
+            $args->{format} = '%Y-%m-%dT%H:%M:%S' . $tz;
+        }
+    }
+    if (my $r = $args->{relative}) {
+        if ($r eq 'js') {
+            # output javascript here to render relative date
+            my($y, $mo, $d, $h, $m, $s) = $ts =~ /(\d\d\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)/;
+            $mo--;
+            my $fds = format_ts($args->{'format'}, $ts, $blog, $lang);
+            my $js = <<EOT;
+<script type="text/javascript">
+/* <![CDATA[ */
+document.write(mtRelativeDate(new Date($y,$mo,$d,$h,$m,$s), '$fds'));
+/* ]]> */
+</script><noscript>$fds</noscript>
+EOT
+            return $js;
+        } else {
+            my $old_lang = MT->current_language;
+            MT->set_language($lang) if $lang && ($lang ne $old_lang);
+            my $date = relative_date($ts, time, $blog, $args->{format}, $r);
+            MT->set_language($old_lang) if $lang && ($lang ne $old_lang);
+            if ($date) {
+                return $date;
+            } else {
+                if (!$args->{format}) {
+                    return '';
+                }
+            }
+        }
+    }
+    my $mail_flag = $args->{mail} || 0;
+    return format_ts($args->{'format'}, $ts, $blog, $lang, $mail_flag);
+}
+
+*_hdlr_date = *build_date;
+
+sub cgi_path {
+    my ($ctx) = @_;
+    my $path = $ctx->{config}->CGIPath;
+    if ($path =~ m!^/!) {
+        # relative path, prepend blog domain
+        if (my $blog = $ctx->stash('blog')) {
+            my ($blog_domain) = $blog->archive_url =~ m|(.+://[^/]+)|;
+            $path = $blog_domain . $path;
+        }
+    }
+    $path .= '/' unless $path =~ m{/$};
+    return $path;
+}
+
+sub check_page {
+    my ($ctx) = @_;
+    my $e = $ctx->stash('entry')
+        or return $ctx->_no_page_error();
+    return $ctx->_no_page_error()
+        if ref $e ne 'MT::Page';
+    1;
+}
+*_check_page = *check_page;
 
 ###########################################################################
 
@@ -649,2965 +900,7 @@ sub _apply_tag_filters {
     }
 }
 
-###########################################################################
-
-=head2 numify
-
-Adds commas to a number. Converting "12345" into "12,345" for instance.
-The argument for the numify attribute is the separator character to use
-(ie, "," or "."); "," is the default.
-
-=cut
-
-sub _fltr_numify {
-    my ($str, $arg, $ctx) = @_;
-    $arg = ',' if (!defined $arg) || ($arg eq '1');
-    $str =~ s/(^[−+]?\d+?(?=(?>(?:\d{3})+)(?!\d))|\G\d{3}(?=\d))/$1$arg/g;
-    return $str;
-}
-
-###########################################################################
-
-=head2 mteval
-
-Processes the input string for any MT template tags and returns the output.
-
-=cut
-
-sub _fltr_mteval {
-    my ($str, $arg, $ctx) = @_;
-    my $builder = $ctx->stash('builder');
-    my $tokens = $builder->compile($ctx, $str);
-    return $ctx->error($builder->errstr) unless defined $tokens;
-    my $out = $builder->build($ctx, $tokens);
-    return $ctx->error($builder->errstr) unless defined $out;
-    return $out;
-}
-
-###########################################################################
-
-=head2 encode_sha1
-
-Outputs a SHA1-hex digest of the content from the tag it is applied to.
-
-B<Example:>
-
-    <$mt:EntryTitle encode_sha1="1"$>
-
-outputs:
-
-    0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33
-
-=cut
-
-sub _fltr_sha1 {
-    my ($str) = @_;
-    require MT::Util;
-    return MT::Util::perl_sha1_digest_hex($str);
-}
-
-###########################################################################
-
-=head2 setvar
-
-Takes the content from the tag it is applied to and assigns it
-to the given variable name.
-
-Example, assigning a HTML link of the last published entry with a
-'@featured' tag to a template variable named 'featured_entry_link':
-
-    <mt:Entries lastn="1" tags="@featured" setvar="featured_entry_link">
-        <a href="<$mt:EntryPermalink$>"><$mt:EntryTitle$></a>
-    </mt:Entries>
-
-The output from the L<Entries> tag is suppressed, and placed into
-the template variable 'featured_entry_link' instead. To retrieve it,
-just use the L<Var> tag.
-
-=cut
-
-sub _fltr_setvar {
-    my ($str, $arg, $ctx) = @_;
-    if ( my $hash = $ctx->{__inside_set_hashvar} ) {
-        $hash->{$arg} = $str;
-    }
-    else {
-        $ctx->var($arg, $str);
-    }
-    return '';
-}
-
-###########################################################################
-
-=head2 nofollowfy
-
-Processes the 'a' tags from the tag it is applied to and adds a 'rel'
-attribute of 'nofollow' to it (or appends to an existing rel attribute).
-
-B<Example:>
-
-    <$mt:CommentBody nofollowfy="1"$>
-
-=cut
-
-sub _fltr_nofollowfy {
-    my ($str, $arg, $ctx) = @_;
-    return $str unless $arg;
-    $str =~ s#<\s*a\s([^>]*\s*href\s*=[^>]*)>#
-        my @attr = $1 =~ /[^=\s]*\s*=\s*"[^"]*"|[^=\s]*\s*=\s*'[^']*'|[^=\s]*\s*=[^\s]*/g;
-        my @rel = grep { /^rel\s*=/i } @attr;
-        my $rel;
-        $rel = pop @rel if @rel;
-        if ($rel) {
-            $rel =~ s/^(rel\s*=\s*['"]?)/$1nofollow /i
-                unless $rel =~ m/\bnofollow\b/;
-        } else {
-            $rel = 'rel="nofollow"';
-        }
-        @attr = grep { !/^rel\s*=/i } @attr;
-        '<a ' . (join ' ', @attr) . ' ' . $rel . '>';
-    #xieg;
-    $str;
-}
-
-###########################################################################
-
-=head2 filters
-
-Applies one or more text format filters.
-
-=head4 Values
-
-See the list of acceptable values in the L<AllowedTextFilters|/documentation/appendices/config-directives/allowedtextfilters.html> config directive docs
-
-=head4 Examples
-
-Remove the default text filter specified in the Edit Entry screen (Rich Text, Markdown, etc) by setting convert_breaks="0" and then use the filter attribute to specify the desired filter.
-
-    <$mt:EntryBody convert_breaks="0" filters="__default__"$>
-
-If you want to use Markdown for the body, but Markdown with SmartyPants for the extended entry, do this:
-
-    <$mt:EntryMore convert_breaks="0" filters="markdown_with_smartypants"$>
-
-If you want no formatting on L<EntryBody> or L<EntryMore> (extended) text, just use convert_breaks="0".
-
-=cut
-
-sub _fltr_filters {
-    my ($str, $val, $ctx) = @_;
-    MT->apply_text_filters($str, [ split(/\s*,\s*/, $val) ], $ctx);
-}
-
-###########################################################################
-
-=head2 trim_to
-
-Trims the input content to the requested length.
-
-B<Example:>
-
-    <$mt:EntryTitle trim_to="4"$>
-
-=cut
-
-sub _fltr_trim_to {
-    my ($str, $val, $ctx) = @_;
-    return '' if $val <= 0;
-    $str = substr_text($str, 0, $val) if $val < length_text($str);
-    $str;
-}
-
-###########################################################################
-
-=head2 trim
-
-Trims all leading and trailing whitespace from the input.
-
-B<Example:>
-
-    <$mt:EntryTitle trim="1"$>
-
-=cut
-
-sub _fltr_trim {
-    my ($str, $val, $ctx) = @_;
-    $str =~ s/^\s+|\s+$//gs;
-    $str;
-}
-
-###########################################################################
-
-=head2 ltrim
-
-Trims all leading whitespace from the input.
-
-B<Example:>
-
-    <$mt:EntryTitle ltrim="1"$>
-
-=cut
-
-sub _fltr_ltrim {
-    my ($str, $val, $ctx) = @_;
-    $str =~ s/^\s+//s;
-    $str;
-}
-
-###########################################################################
-
-=head2 rtrim
-
-Trims all trailing (right-side) whitespace from the input.
-
-B<Example:>
-
-    <$mt:EntryTitle rtrim="1"$>
-
-=cut
-
-sub _fltr_rtrim {
-    my ($str, $val, $ctx) = @_;
-    $str =~ s/\s+$//s;
-    $str;
-}
-
-###########################################################################
-
-=head2 decode_html
-
-Decodes any HTML entities from the input.
-
-=cut
-
-sub _fltr_decode_html {
-    my ($str, $val, $ctx) = @_;
-    MT::Util::decode_html($str);
-}
-
-###########################################################################
-
-=head2 decode_xml
-
-Removes XML encoding from the input. Strips a 'CDATA' wrapper as well.
-
-=cut
-
-sub _fltr_decode_xml {
-    my ($str, $val, $ctx) = @_;
-    decode_xml($str);
-}
-
-###########################################################################
-
-=head2 remove_html
-
-Removes any HTML markup from the input.
-
-=cut
-
-sub _fltr_remove_html {
-    my ($str, $val, $ctx) = @_;
-    MT::Util::remove_html($str);
-}
-
-###########################################################################
-
-=head2 dirify
-
-Converts the input into a filename-friendly format. This strips accents
-from accented characters and changes spaces into underscores (or
-dashes, depending on parameter).
-
-The dirify parameter can be either "1", "-" or "_". "1" is equivalent
-to "_".
-
-B<Example:>
-
-    <$mt:EntryTitle dirify="-"$>
-
-which would translate an entry titled "Cafe" into "cafe".
-
-=cut
-
-sub _fltr_dirify {
-    my ($str, $val, $ctx) = @_;
-    return $str if (defined $val) && ($val eq '0');
-    MT::Util::dirify($str, $val);
-}
-
-###########################################################################
-
-=head2 sanitize
-
-Filters input of particular HTML tags and other markup that may be unsafe
-content. If the sanitize parameter is "1", it will use the MT configured
-"GlobalSanitizeSpec" setting to control how it processes the input. But
-the parameter may also specify this directly. For example:
-
-    <$mt:CommentBody sanitize="b,strong,em,i,ul,li,ol,p,br/"$>
-
-This would strip any HTML tags from the comment that are not specified
-in this list.
-
-=cut
-
-sub _fltr_sanitize {
-    my ($str, $val, $ctx) = @_;
-    my $blog = $ctx->stash('blog');
-    require MT::Sanitize;
-    if ($val eq '1') {
-        $val = ($blog && $blog->sanitize_spec) ||
-                $ctx->{config}->GlobalSanitizeSpec;
-    }
-    MT::Sanitize->sanitize($str, $val);
-}
-
-###########################################################################
-
-=head2 encode_html
-
-Encodes any special characters into HTML entities (ie, '<' becomes '&lt;').
-
-=cut
-
-sub _fltr_encode_html {
-    my ($str, $val, $ctx) = @_;
-    MT::Util::encode_html($str, 1);
-}
-
-###########################################################################
-
-=head2 encode_xml
-
-Encodes input into an XML-friendly format. May wrap in a CDATA block
-if the input contains tags or HTML entities.
-
-=cut
-
-sub _fltr_encode_xml {
-    my ($str, $val, $ctx) = @_;
-    MT::Util::encode_xml($str);
-}
-
-###########################################################################
-
-=head2 encode_js
-
-Encodes any special characters so that the string can be used safely as
-the value in Javascript.
-
-B<Example:>
-
-    <script type="text/javascript">
-    <!-- /* <![CDATA[ */
-    var the_title = '<$MTEntryTitle encode_js="1"$>';
-    /* ]]> */ -->
-
-=cut
-
-sub _fltr_encode_js {
-    my ($str, $val, $ctx) = @_;
-    MT::Util::encode_js($str);
-}
-
-###########################################################################
-
-=head2 encode_json
-
-Encodes any special characters so that the string can be used safely as
-the value in JSON (Javascript Object Notation).
-
-Warning - encoding javascript and json are NOT the same thing. Users of 
-jQuery 1.4.1 will find that the JSON parser is super strict requiring the
-use of this modifier in particular.
-
-B<Example:>
-
-    <script type="text/javascript">
-    <!-- /* <![CDATA[ */
-    var the_title = '<$MTEntryTitle encode_json="1"$>';
-    /* ]]> */ -->
-
-=cut
-
-sub _fltr_encode_json {
-    my ($str, $val, $ctx) = @_;
-    MT::Util::encode_json($str);
-}
-
-###########################################################################
-
-=head2 encode_php
-
-Encodes any special characters so that the string can be used safely as
-the value in PHP code.
-
-The value of the attribute can be either C<qq> (double-quote interpolation),
-C<here> (heredoc interpolation), or C<q> (single-quote interpolation). C<q>
-is the default.
-
-B<Example:>
-
-    <?php
-    $the_title = '<$MTEntryTitle encode_php="q"$>';
-    $the_author = "<$MTEntryAuthorDisplayName encode_php="qq"$>";
-    $the_text = <<<EOT
-    <$MTEntryText encode_php="here"$>
-    EOT
-    ?>
-
-=cut
-
-sub _fltr_encode_php {
-    my ($str, $val, $ctx) = @_;
-    MT::Util::encode_php($str, $val);
-}
-
-###########################################################################
-
-=head2 encode_url
-
-URL encodes any special characters.
-
-=cut
-
-sub _fltr_encode_url {
-    my ($str, $val, $ctx) = @_;
-    MT::Util::encode_url($str);
-}
-
-###########################################################################
-
-=head2 upper_case
-
-Uppercases all alphabetic characters.
-
-=cut
-
-sub _fltr_upper_case {
-    my ($str, $val, $ctx) = @_;
-    return uppercase($str);
-}
-
-###########################################################################
-
-=head2 lower_case
-
-Lowercases all alphabetic characters.
-
-=cut
-
-sub _fltr_lower_case {
-    my ($str, $val, $ctx) = @_;
-    return lowercase($str);
-}
-
-###########################################################################
-
-=head2 strip_linefeeds
-
-Removes any linefeed characters from the input.
-
-=cut
-
-sub _fltr_strip_linefeeds {
-    my ($str, $val, $ctx) = @_;
-    $str =~ tr(\r\n)()d;
-    $str;
-}
-
-###########################################################################
-
-=head2 space_pad
-
-Adds whitespace to the left of the input to the length specified.
-
-B<Example:>
-
-    <$mt:EntryBasename space_pad="10">
-
-For a basename of "example", this would output: "   example".
-
-=cut
-
-sub _fltr_space_pad {
-    my ($str, $val, $ctx) = @_;
-    sprintf "%${val}s", $str;
-}
-
-###########################################################################
-
-=head2 zero_pad
-
-Adds '0' to the left of the input to the length specified.
-
-B<Example:>
-
-    <$mt:EntryID zero_pad="10"$>
-
-For an entry id of 1023, this would output: "0000001023".
-
-=cut
-
-sub _fltr_zero_pad {
-    my ($str, $val, $ctx) = @_;
-    sprintf "%0${val}s", $str;
-}
-
-###########################################################################
-
-=head2 string_format
-
-An alias for the 'sprintf' modifier.
-
-=cut
-
-###########################################################################
-
-=head2 sprintf
-
-Formats the input text using the Perl 'sprintf' function. The value of
-the 'sprintf' attribute is used as the sprintf pattern.
-
-B<Example:>
-
-    <$mt:EntryCommentCount sprintf="<%.6d>"$>
-
-Outputs (for an entry with 1 comment):
-
-    <000001>
-
-Refer to Perl's documentation for sprintf for more examples.
-
-=cut
-
-sub _fltr_sprintf {
-    my ($str, $val, $ctx) = @_;
-    sprintf $val, $str;
-}
-
-###########################################################################
-
-=head2 regex_replace
-
-Applies a regular expression operation on the input. This filter accepts
-B<two> input values: one is the pattern, the second is the replacement.
-
-B<Example:>
-
-    <$mt:EntryTitle regex_replace="/\s*\[.+?\]\s*$/",""$>
-
-This would strip any bracketed phrase from the end of the entry
-title field.
-
-=cut
-
-sub _fltr_regex_replace {
-    my ($str, $val, $ctx) = @_;
-    # This one requires an array
-    return $str unless ref($val) eq 'ARRAY';
-    my $patt = $val->[0];
-    my $replace = $val->[1];
-    if ($patt =~ m!^(/)(.+)\1([A-Za-z]+)?$!) {
-        $patt = $2;
-        my $global;
-        if (my $opt = $3) {
-            $global = 1 if $opt =~ m/g/;
-            $opt =~ s/[ge]+//g;
-            $patt = "(?$opt)" . $patt;
-        }
-        my $re = eval { qr/$patt/ };
-        if (defined $re) {
-            $replace =~ s!\\\\(\d+)!\$1!g; # for php, \\1 is how you write $1
-            $replace =~ s!/!\\/!g;
-            eval '$str =~ s/$re/' . $replace . '/' . ($global ? 'g' : '');
-            if ($@) {
-                return $ctx->error("Invalid regular expression: $@");
-            }
-        }
-    }
-    return $str;
-}
-
-###########################################################################
-
-=head2 capitalize
-
-Uppercases the first letter of each word in the input.
-
-=cut
-
-sub _fltr_capitalize {
-    my ($str, $val, $ctx) = @_;
-    $str =~ s/\b(\w+)\b/\u\L$1/g;
-    return $str;
-}
-
-###########################################################################
-
-=head2 count_characters
-
-Outputs the number of characters found in the input.
-
-=cut
-
-sub _fltr_count_characters {
-    my ($str, $val, $ctx) = @_;
-    return length_text($str);
-}
-
-###########################################################################
-
-=head2 cat
-
-Append the input value with the value of the 'cat' attribute.
-
-B<Example:>
-
-    <$mt:EntryTitle cat="!!!1!"$>
-
-=cut
-
-sub _fltr_cat {
-    my ($str, $val, $ctx) = @_;
-    return $str . $val;
-}
-
-###########################################################################
-
-=head2 count_paragraphs
-
-Outputs the number of paragraphs found in the input.
-
-=cut
-
-sub _fltr_count_paragraphs {
-    my ($str, $val, $ctx) = @_;
-    my @paras = split(/[\r\n]+/, $str);
-    return scalar @paras;
-}
-
-###########################################################################
-
-=head2 count_words
-
-Outputs the number of words found in the input.
-
-=cut
-
-sub _fltr_count_words {
-    my ($str, $val, $ctx) = @_;
-    my @words = split(/\s+/, $str);
-    @words = grep /[A-Za-z0-9\x80-\xff]/, @words;
-    return scalar @words;
-}
-
-# sub _fltr_date_format {
-#     my ($str, $val, $ctx) = @_;
-#     
-# }
-
-###########################################################################
-
-=head2 escape
-
-Similar to the 'encode_*' modifiers. The input is reformatted so that
-certain special characters are translated depending on the value of
-the 'escape' attribute. The following modes are recognized:
-
-=over 4
-
-=item * html
-
-Similar to the 'encode_html' modifier. Escapes special characters as
-HTML entities.
-
-=item * url
-
-Similar to the 'encode_url' modifier. Escapes special characters using
-a URL-encoded format (ie, " " becomes "%20").
-
-=item * javascript or js
-
-Similar to the 'encode_js' modifier. Escapes special characters such
-as quotes, newline characters, etc., so that the input can be placed
-in a JavaScript string.
-
-=item * mail
-
-A very simple email obfuscation technique.
-
-=back
-
-=cut
-
-sub _fltr_escape {
-    my ($str, $val, $ctx) = @_;
-    # val can be one of: html, htmlall, url, urlpathinfo, quotes,
-    # hex, hexentity, decentity, javascript, mail, nonstd
-    $val = lc($val);
-    if ($val eq 'html') {
-        $str = MT::Util::encode_html($str, 1);
-    } elsif ($val eq 'htmlall') {
-        # FIXME: implementation
-    } elsif ($val eq 'url') {
-        $str = MT::Util::encode_url($str);
-    } elsif ($val eq 'urlpathinfo') {
-        # FIXME: implementation
-    } elsif ($val eq 'quotes') {
-        # FIXME: implementation
-    } elsif ($val eq 'hex') {
-        # FIXME: implementation
-    } elsif ($val eq 'hexentity') {
-        # FIXME: implementation
-    } elsif ($val eq 'decentity') {
-        # FIXME: implementation
-    } elsif ($val eq 'javascript' || $val eq 'js') {
-        $str = MT::Util::encode_js($str);
-    } elsif ($val eq 'mail') {
-        $str =~ s/\./ [DOT] /g;
-        $str =~ s/\@/ [AT] /g;
-    } elsif ($val eq 'nonstd') {
-        # FIXME: implementation
-    }
-    return $str;
-}
-
-###########################################################################
-
-=head2 indent
-
-Adds the specified amount of whitespace to the left of each line of
-the input.
-
-B<Example:>
-
-    <$mt:EntryBody indent="4"$>
-
-This adds 4 spaces to the left of each line of the L<EntryBody>
-value.
-
-=cut
-
-sub _fltr_indent {
-    my ($str, $val, $ctx) = @_;
-    if ((my $len = int($val)) > 0) {
-        my $space = ' ' x $len;
-        $str =~ s/^/$space/mg;
-    }
-    return $str;
-}
-
-###########################################################################
-
-=head2 nl2br
-
-Converts any newline characters into HTML C<br> tags. If the value of
-the 'nl2br' attribute is "xhtml", it will use the "C<<br />>" form
-of the C<br> tag.
-
-=cut
-
-sub _fltr_nl2br {
-    my ($str, $val, $ctx) = @_;
-    if ($val eq 'xhtml') {
-        $str =~ s/\r?\n/<br \/>/g;
-    } else {
-        $str =~ s/\r?\n/<br>/g;
-    }
-    return $str;
-}
-
-###########################################################################
-
-=head2 replace
-
-Issues a simple text search/replace on the input. This modifier requires
-B<two> parameters.
-
-B<Example:>
-
-    <$mt:EntryBody replace="teh","the"$>
-
-=cut
-
-sub _fltr_replace {
-    my ($str, $val, $ctx) = @_;
-    # This one requires an array
-    return $str unless ref($val) eq 'ARRAY';
-    my $search = $val->[0];
-    my $replace = $val->[1];
-    $str =~ s/\Q$search\E/$replace/g;
-    return $str;
-}
-
-###########################################################################
-
-=head2 spacify
-
-Interleaves the value of the C<spacify> attribute between each character
-of the input.
-
-B<Example:>
-
-    <$mt:EntryTitle spacify=" "$>
-
-Changing an entry title of "Hi there!" to "H i   t h e r e !".
-
-=cut
-
-sub _fltr_spacify {
-    my ($str, $val, $ctx) = @_;
-    my @c = split(//, $str);
-    return join $val, @c;
-}
-
-###########################################################################
-
-=head2 strip
-
-Replaces all whitespace with the value of the C<strip> attribute.
-
-B<Example:>
-
-    <$mt:EntryTitle strip="&nbsp;"$>
-
-=cut
-
-sub _fltr_strip {
-    my ($str, $val, $ctx) = @_;
-    $val = ' ' unless defined $val;
-    $str =~ s/\s+/$val/g;
-    return $str;
-}
-
-###########################################################################
-
-=head2 strip_tags
-
-An alias for L<remove_html>. Removes all HTML markup from the input.
-
-=cut
-
-sub _fltr_strip_tags {
-    my ($str, $val, $ctx) = @_;
-    return MT::Util::remove_html($str);
-}
-
-###########################################################################
-
-=head2 _default
-
-Outputs the value of the C<_default> attribute if the input string
-is empty.
-
-B<Example:>
-
-    <$mt:BlogDescription _default="Not 'just another' Movable Type blog."$>
-
-=cut
-
-sub _fltr_default {
-    my ($str, $val, $ctx) = @_;
-    if ($str eq '') { return $val }
-    return $str;
-}
-
-# sub _fltr_truncate {
-#     my ($str, $val, $ctx) = @_;
-# }
-
-# sub _fltr_wordwrap {
-#     my ($str, $val, $ctx) = @_;
-# }
-
-###########################################################################
-
-=head2 wrap_text
-
-Reformats the input, adding newline characters so the text "wraps"
-at the length specified as the value for the C<wrap_text> attribute.
-Example (this would format the entry text so it is suitable for
-a text e-mail message):
-
-    <$mt:EntryBody remove_html="1" wrap_text="72"$>
-
-=cut
-
-sub _fltr_wrap_text {
-    my ($str, $val, $ctx) = @_;
-    my $ret = wrap_text($str, $val);
-    return $ret;
-}
-
 ##  Core template tags
-
-###########################################################################
-
-=head2 TemplateNote
-
-A function tag that always returns an empty string. This tag is useful
-for placing simple notes in your templates, since it produces nothing.
-
-B<Example:>
-
-    <$mt:TemplateNote note="Hi, mom!"$>
-
-=for tags templating
-
-=cut
-
-###########################################################################
-
-=head2 Ignore
-
-A block tag that always produces an empty string. This tag is useful
-for wrapping template code you wish to disable, or perhaps annotating
-sections of your template.
-
-B<Example:>
-
-    <mt:Ignore>
-        The API key for the following tag is D3ADB33F.
-    </mt:Ignore>
-
-=for tags templating
-
-=cut
-
-###########################################################################
-
-=head2 IfStatic
-
-Returns true if the current publishing context is static publishing,
-and false otherwise.
-
-=for tags templating, utility
-
-=cut
-
-###########################################################################
-
-=head2 IfDynamic
-
-Returns true if the current publishing context is dynamic publishing,
-and false otherwise.
-
-=for tags templating, utility
-
-=cut
-
-###########################################################################
-
-=head2 App:Listing
-
-This application tag is used in MT application templates to produce
-a table listing. It expects an C<object_loop> variable to be available,
-or you can use the C<loop> attribute to have it use a different source.
-
-It will output it's contents once for each row of the input array. It
-produces markup that is compatible with the MT application templates
-and CSS structure, so it is not meant for general blog publishing use.
-
-The C<return_args> variable is recognized and will populate a hidden
-field in the produced C<form> tag if available.
-
-The C<blog_id> variable is recognized and will populate a hidden
-field in the produced C<form> tag if available.
-
-The C<screen_class> variable is recognized and will force the
-C<hide_pager> attribute to 1 if it is set to 'search-replace'.
-
-The C<magic_token> variable is recognized and will populate a hidden
-field in the produced C<form> tag if available (or will retrieve
-a token from the current application if unset).
-
-The C<view_expanded> variable is recognized and will affect the
-class name applied to the table. If assigned, the table tag will
-receive a 'expanded' class; otherwise, it is given a 'compact'
-class.
-
-The C<listing_header> variable is recognized and will be output
-in a C<div> tag (classed with 'listing-header') that appears
-at the top of the listing. This is only output when 'actions'
-are shown (see 'show_actions' attribute).
-
-The structure of the output from a typical use like this:
-
-    <MTApp:Listing type="entry">
-        (contents of one row for table)
-    </MTApp:Listing>
-
-produces something like this:
-
-    <div id="entry-listing" class="listing">
-        <div class="listing-header">
-        </div>
-        <form id="entry-listing-form" class="listing-form"
-            action="..../mt.cgi" method="post"
-            onsubmit="return this['__mode'] ? true : false">
-            <input type="hidden" name="__mode" value="" />
-            <input type="hidden" name="_type" value="entry" />
-            <input type="hidden" name="action_name" value="" />
-            <input type="hidden" name="itemset_action_input" value="" />
-            <input type="hidden" name="return_args" value="..." />
-            <input type="hidden" name="blog_id" value="1" />
-            <input type="hidden" name="magic_token" value="abcd" />
-            <$MTApp:ActionBar bar_position="top"
-                form_id="entry-listing-form"$>
-            <table id="entry-listing-table"
-                class="entry-listing-table compact" cellspacing="0">
-
-                (contents of tag are placed here)
-
-            </table>
-            <$MTApp:ActionBar bar_position="bottom"
-                form_id="entry-listing-form"$>
-        </form>
-    </div>
-
-B<Attributes:>
-
-=over 4
-
-=item * type (optional)
-
-The C<MT::Object> object type the listing is processing. If unset,
-will use the contents of the C<object_type> variable.
-
-=item * loop (optional)
-
-The source of data to process. This is an array of hashes, similar
-to the kind used with the L<Loop> tag. If unset, the C<object_loop>
-variable is used instead.
-
-=item * empty_message (optional)
-
-Used when there are no rows to output for the listing. If not set,
-it will process any 'else' block that is available instead, or, failing
-that, will output an L<App:StatusMsg> tag saying that no data could be
-found.
-
-=item * id (optional)
-
-Used to construct the DOM id for the listing. The outer C<div> tag
-will use this value. If unset, it will be assigned C<type-listing> (where
-'type' is the object type determined for the listing; see 'type'
-attribute).
-
-=item * listing_class (optional)
-
-Provides a custom class name that can be applied to the main
-C<div> tag produced (this is in addition to the 'listing' class
-that is always applied).
-
-=item * action (optional; default 'script_url' variable)
-
-Supplies the 'action' attribute of the C<form> tag produced.
-
-=item * hide_pager (optional; default '0')
-
-Controls whether the pagination controls are shown or not.
-If unspecified, pagination is shown.
-
-=item * show_actions (optional; default '1')
-
-Controls whether the actions associated with the object type
-processed are shown or not. If unspecified, actions are shown.
-
-=back
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_listing {
-    my ($ctx, $args, $cond) = @_;
-
-    my $type = $args->{type} || $ctx->var('object_type');
-    my $class = MT->model($type) if $type;
-    my $loop = $args->{loop} || 'object_loop';
-    my $loop_obj = $ctx->var($loop);
-
-    unless ((ref($loop_obj) eq 'ARRAY') && (@$loop_obj)) {
-        my @else = @{ $ctx->stash('tokens_else') || [] };
-        return &_hdlr_pass_tokens_else if @else;
-        my $msg = $args->{empty_message} || MT->translate("No [_1] could be found.", $class ? lowercase($class->class_label_plural) : ($type ? $type : MT->translate("records")));
-        return $ctx->build(qq{<mtapp:statusmsg
-            id="zero-state"
-            class="info zero-state">
-            $msg
-            </mtapp:statusmsg>});
-    }
-
-    my $id = $args->{id} || ($type ? $type . '-listing' : 'listing');
-    my $listing_class = $args->{listing_class} || "";
-    my $hide_pager = $args->{hide_pager} || 0;
-    $hide_pager = 1 if ($ctx->var('screen_class') || '') eq 'search-replace';
-    my $show_actions = exists $args->{show_actions} ? $args->{show_actions} : 1;
-    my $return_args = $ctx->var('return_args') || '';
-    $return_args = encode_html( $return_args );
-    $return_args = qq{\n        <input type="hidden" name="return_args" value="$return_args" />} if $return_args;
-    my $blog_id = $ctx->var('blog_id') || '';
-    $blog_id = qq{\n        <input type="hidden" name="blog_id" value="$blog_id" />} if $blog_id;
-    my $token = $ctx->var('magic_token') || MT->app->current_magic;
-    my $action = $args->{action} || '<mt:var name="script_url">';
-
-    my $actions_top = "";
-    my $actions_bottom = "";
-    my $form_id = "$id-form";
-    if ($show_actions) {
-        $actions_top = qq{<\$MTApp:ActionBar bar_position="top" hide_pager="$hide_pager" form_id="$form_id"\$>};
-        $actions_bottom = qq{<\$MTApp:ActionBar bar_position="bottom" hide_pager="$hide_pager" form_id="$form_id"\$>};
-    } else {
-        $listing_class .= " hide_actions";
-    }
-
-    my $insides;
-    {
-        local $args->{name} = $loop;
-        defined($insides = _hdlr_loop($ctx, $args, $cond))
-            or return;
-    }
-    my $listing_header = $ctx->var('listing_header') || '';
-    my $view = $ctx->var('view_expanded') ? ' expanded' : ' compact';
-
-    my $table = <<TABLE;
-        <table id="$id-table" class="$id-table$view" cellspacing="0">
-$insides
-        </table>
-TABLE
-
-    if ($show_actions) {
-        local $ctx->{__stash}{vars}{__contents__} = $table;
-        return $ctx->build(<<EOT);
-<div id="$id" class="listing $listing_class">
-    <div class="listing-header">
-        $listing_header
-    </div>
-    <form id="$form_id" class="listing-form"
-        action="$action" method="post"
-        onsubmit="return this['__mode'] ? true : false">
-        <input type="hidden" name="__mode" value="" />
-        <input type="hidden" name="_type" value="$type" />
-        <input type="hidden" name="action_name" value="" />
-        <input type="hidden" name="itemset_action_input" value="" />
-$return_args
-$blog_id
-        <input type="hidden" name="magic_token" value="$token" />
-        $actions_top
-        <mt:var name="__contents__">
-        $actions_bottom
-    </form>
-</div>
-EOT
-    }
-    else {
-        return <<EOT;
-<div id="$id" class="listing $listing_class">
-        $table
-</div>
-EOT
-    }
-}
-
-###########################################################################
-
-=head2 App:Link
-
-Produces a application link to the current script with the mode and
-attributes specified.
-
-B<Attributes:>
-
-=over 4
-
-=item * mode
-
-Maps to a '__mode' argument.
-
-=item * type
-
-Maps to a '_type' argument.
-
-=back
-
-B<Example:>
-
-    <$MTApp:Link mode="foo" type="entry" bar="1"$>
-
-produces:
-
-    /cgi-bin/mt/mt.cgi?__mode=foo&_type=entry&bar=1
-
-This tag produces unescaped '&' characters. If you use this tag
-in an HTML tag attribute, be sure to add a C<escape="html"> attribute
-which will encode these to HTML entities.
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_link {
-    my ($ctx, $args, $cond) = @_;
-    my $app = MT->instance;
-
-    my %args = %$args;
-
-    # eliminate special '@' argument (and anything other refs that may exist)
-    ref($args{$_}) && delete $args{$_} for keys %args;
-
-    # strip off any arguments that are actually global filters
-    my $filters = MT->registry('tags', 'modifier');
-    exists($filters->{$_}) && delete $args{$_} for keys %args;
-
-    # remap 'type' attribute since we always express this as
-    # a '_type' query parameter.
-    my $mode = delete $args{mode} or return $ctx->error("mode attribute is required");
-    $args{_type} = delete $args{type} if exists $args{type};
-    if (exists $args{blog_id} && !($args{blog_id})) {
-        delete $args{blog_id};
-    } else {
-        if (my $blog_id = $ctx->var('blog_id')) {
-            $args{blog_id} = $blog_id;
-        }
-    }
-    return $app->uri(mode => $mode, args => \%args);
-}
-
-###########################################################################
-
-=head2 App:ActionBar
-
-Produces markup for application templates for the strip of actions
-for a application listing or edit screen.
-
-B<Attributes:>
-
-=over 4
-
-=item * bar_position (optional; default "top")
-
-Assigns a CSS class name indicating whether the control is above or
-below the listing or edit form it is associated with.
-
-=item * hide_pager
-
-Assign either 1 or 0 to control whether the pagination controls are
-displayed or not.
-
-=item * form_id
-
-Associates the pagition controls and item action widget with the
-given form element.
-
-=back
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_action_bar {
-    my ($ctx, $args, $cond) = @_;
-    my $pos = $args->{bar_position} || 'top';
-    my $form_id = $args->{form_id} ? qq{ form_id="$args->{form_id}"} : "";
-    my $pager = $args->{hide_pager} ? ''
-        : qq{\n        <mt:include name="include/pagination.tmpl" bar_position="$pos">};
-    my $buttons = $ctx->var('action_buttons') || '';
-    return $ctx->build(<<EOT);
-<div id="actions-bar-$pos" class="actions-bar actions-bar-$pos">
-    <div class="actions-bar-inner pkg">$pager
-        <span class="button-actions actions">$buttons</span>
-        <span class="plugin-actions actions">
-    <mt:include name="include/itemset_action_widget.tmpl"$form_id>
-        </span>
-    </div>
-</div>
-EOT
-}
-
-###########################################################################
-
-=head2 App:Widget
-
-An application template tag that produces HTML for displaying a MT CMS
-dashboard widget. Custom widget templates should utilize this tag to wrap
-their widget content.
-
-B<Attributes:>
-
-=over 4
-
-=item * id (optional)
-
-If specified, will be used as the 'id' attribute for the outermost C<div>
-tag for the widget. If unspecified, will use the 'widget_id' template
-variable instead.
-
-=item * label (required)
-
-The label to display above the widget.
-
-=item * label_link (optional)
-
-If specified, this link will wrap the label for the widget.
-
-=item * label_onclick
-
-If specified, this JavaScript code will be assigned to the 'onclick'
-attribute of a link tag wrapping the widget label.
-
-=item * class (optional)
-
-If unspecified, will use the id of the widget. This class is included in the
-'class' attribute of the outermost C<div> tag for the widget.
-
-=item * header_action
-
-=item * can_close (optional; default "0")
-
-Identifies whether widget may be closed or not.
-
-=item * tabbed (optional; default "0")
-
-If specified, the widget will be assigned an attribute that gives it
-a tabbed interface.
-
-=back
-
-B<Example:>
-
-    <mtapp:Widget class="widget my-widget"
-        label="<__trans phrase="All About Me">" can_close="1">
-        (contents of widget go here)
-    </mtapp:Widget>
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_widget {
-    my ($ctx, $args, $cond) = @_;
-    my $hosted_widget = $ctx->var('widget_id') ? 1 : 0;
-    my $id = $args->{id} || $ctx->var('widget_id') || '';
-    my $label = $args->{label};
-    my $class = $args->{class} || $id;
-    my $label_link = $args->{label_link} || "";
-    my $label_onclick = $args->{label_onclick} || "";
-    my $header_action = $args->{header_action} || "";
-    my $closable = $args->{can_close} ? 1 : 0;
-    if ($closable) {
-        $header_action = qq{<a title="<__trans phrase="Remove this widget">" onclick="javascript:removeWidget('$id'); return false;" href="javascript:void(0);" class="widget-close-link"><span>close</span></a>};
-    }
-    my $widget_header = "";
-    if ($label_link && $label_onclick) {
-        $widget_header = "\n<h3 class=\"widget-label\"><a href=\"$label_link\" onclick=\"$label_onclick\"><span>$label</span></a></h3>";
-    } elsif ($label_link) {
-        $widget_header = "\n<h3 class=\"widget-label\"><a href=\"$label_link\"><span>$label</span></a></h3>";
-    } else {
-        $widget_header = "\n<h3 class=\"widget-label\"><span>$label</span></h3>";
-    }
-    my $token = $ctx->var('magic_token') || '';
-    my $scope = $ctx->var('widget_scope') || 'system';
-    my $singular = $ctx->var('widget_singular') || '';
-    # Make certain widget_id is set
-    my $vars = $ctx->{__stash}{vars};
-    local $vars->{widget_id} = $id;
-    local $vars->{widget_header} = '';
-    local $vars->{widget_footer} = '';
-    my $app = MT->instance;
-    my $blog = $app->can('blog') ? $app->blog : $ctx->stash('blog');
-    my $blog_field = $blog ? qq{<input type="hidden" name="blog_id" value="} . $blog->id . q{" />} : "";
-    local $vars->{blog_id} = $blog->id if $blog;
-    my $insides = $ctx->slurp($args, $cond);
-    my $widget_footer = ($ctx->var('widget_footer') || '');
-    my $var_header = ($ctx->var('widget_header') || '');
-    if ($var_header =~ m/<h3[ >]/i) {
-        $widget_header = $var_header;
-    } else {
-        $widget_header .= $var_header;
-    }
-    my $corners = $args->{corners} ? '<div class="corners"><b></b><u></u><s></s><i></i></div>' : "";
-    my $tabbed = $args->{tabbed} ? ' mt:delegate="tab-container"' : "";
-    my $header_class = $tabbed ? 'widget-header-tabs' : '';
-    my $return_args = $app->make_return_args;
-    $return_args = encode_html( $return_args );
-    my $cgi = $app->uri;
-    if ($hosted_widget && (!$insides !~ m/<form\s/i)) {
-        $insides = <<"EOT";
-        <form id="$id-form" method="post" action="$cgi" onsubmit="updateWidget('$id'); return false">
-        <input type="hidden" name="__mode" value="update_widget_prefs" />
-        <input type="hidden" name="widget_id" value="$id" />
-        $blog_field
-        <input type="hidden" name="widget_action" value="save" />
-        <input type="hidden" name="widget_scope" value="$scope" />
-        <input type="hidden" name="widget_singular" value="$singular" />
-        <input type="hidden" name="magic_token" value="$token" />
-        <input type="hidden" name="return_args" value="$return_args" />
-$insides
-        </form>
-EOT
-    }
-    return <<"EOT";
-<div id="$id" class="widget pkg $class"$tabbed>
-    <div class="widget-inner inner">
-        <div class="widget-header $header_class">
-            <div class="widget-header-inner pkg">
-                $header_action
-                $widget_header
-            </div>
-        </div>
-        <div class="widget-content">
-            <div class="widget-content-inner">
-$insides
-            </div>
-        </div>
-        <div class="widget-footer">$widget_footer</div>$corners
-    </div>
-</div>
-EOT
-}
-
-###########################################################################
-
-=head2 App:StatusMsg
-
-An application template tag that outputs a MT status message.
-
-B<Attributes:>
-
-=over 4
-
-=item * id (optional)
-
-=item * class (optional; default "info")
-
-=item * rebuild (optional)
-
-Accepted values: "all", "index".
-
-=item * can_close (optional; default "1")
-
-=back
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_statusmsg {
-    my ($ctx, $args, $cond) = @_;
-    my $id = $args->{id};
-    my $class = $args->{class} || 'info';
-    my $msg = $ctx->slurp;
-    my $rebuild = $args->{rebuild} || '';
-    my $blog_id = $ctx->var('blog_id');
-    my $blog = $ctx->stash('blog');
-    if (!$blog && $blog_id) {
-        $blog = MT->model('blog')->load($blog_id);
-    }
-    $rebuild = '' if $blog && $blog->custom_dynamic_templates eq 'all';
-    $rebuild = qq{<__trans phrase="[_1]Publish[_2] your site to see these changes take effect." params="<a href="javascript:void(0);" class="rebuild-link" onclick="doRebuild('$blog_id');">%%</a>">} if $rebuild eq 'all';
-    $rebuild = qq{<__trans phrase="[_1]Publish[_2] your site to see these changes take effect." params="<a href="javascript:void(0);" class="rebuild-link" onclick="doRebuild('$blog_id', 'prompt=index');">%%</a>">} if $rebuild eq 'index';
-    my $close = '';
-    if ($id && ($args->{can_close} || (!exists $args->{can_close}))) {
-        $close = qq{<a href="javascript:void(0)" onclick="javascript:hide('$id');return false;" class="close-me"><span>close</span></a>};
-    }
-    $id = defined $id ? qq{ id="$id"} : "";
-    $class = defined $class ? qq{msg msg-$class} : "msg";
-    return <<"EOT";
-    <div$id class="$class">$close$msg $rebuild</div>
-EOT
-}
-
-###########################################################################
-
-=head2 App:ListFilters
-
-An application template tag used to produce an unordered list of quickfilters
-for a given listing screen. The filters are drawn from a C<list_filters>
-template variable which is an array of hashes.
-
-B<Example:>
-
-    <$mtapp:ListFilters$>
-
-=cut
-
-sub _hdlr_app_list_filters {
-    my ($ctx, $args, $cond) = @_;
-    my $app = MT->app;
-    my $filters = $ctx->var("list_filters");
-    return '' if (ref($filters) ne 'ARRAY') || (! @$filters );
-    my $mode = $app->mode;
-    my $type = $app->query->param('_type');
-    my $type_param = "";
-    $type_param = "&amp;_type=" . encode_url($type) if defined $type;
-    return $ctx->build(<<EOT, $cond);
-    <mt:loop name="list_filters">
-        <mt:if name="__first__">
-    <ul>
-        </mt:if>
-        <mt:if name="key" eq="\$filter_key"><li class="current-filter"><strong><mt:else><li></mt:if><a href="<mt:var name="script_url">?__mode=$mode$type_param<mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id"></mt:if>&amp;filter_key=<mt:var name="key" escape="url">"><mt:var name="label"></a><mt:if name="key" eq="\$filter_key"></strong></mt:if></li>
-    <mt:if name="__last__">
-    </ul>
-    </mt:if>
-    </mt:loop>
-EOT
-}
-
-###########################################################################
-
-=head2 App:PageActions
-
-An application template tag used to produce an unordered list of actions
-for a given listing screen. The actions are drawn from a C<page_actions>
-template variable which is an array of hashes.
-
-B<Example:>
-
-    <$mtapp:PageActions$>
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_page_actions {
-    my ($ctx, $args, $cond) = @_;
-    my $app = MT->instance;
-    my $from = $args->{from} || $app->mode;
-    my $loop = $ctx->var('page_actions');
-    return '' if (ref($loop) ne 'ARRAY') || (! @$loop);
-    my $mt = '&amp;magic_token=' . $app->current_magic;
-    return $ctx->build(<<EOT, $cond);
-    <mtapp:widget
-        id="page_actions"
-        label="<__trans phrase="Actions">">
-                <ul>
-        <mt:loop name="page_actions">
-            <mt:if name="page">
-                    <li class="icon-left icon<mt:unless name="core">-plugin</mt:unless>-action"><a href="<mt:var name="page" escape="html"><mt:if name="page_has_params">&amp;</mt:if>from=$from<mt:if name="id">&amp;id=<mt:var name="id"></mt:if><mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id"></mt:if>$mt&amp;return_args=<mt:var name="return_args" escape="url">"<mt:if name="continue_prompt"> onclick="return confirm('<mt:var name="continue_prompt" escape="js">');"</mt:if>><mt:var name="label"></a></li>
-            <mt:else><mt:if name="link">
-                    <li class="icon-left icon<mt:unless name="core">-plugin</mt:unless>-action"><a href="<mt:var name="link" escape="html">&amp;from=$from<mt:if name="id">&amp;id=<mt:var name="id"></mt:if><mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id"></mt:if>$mt&amp;return_args=<mt:var name="return_args" escape="url">"<mt:if name="continue_prompt"> onclick="return confirm('<mt:var name="continue_prompt" escape="js">');"</mt:if>><mt:var name="label"></a></li>
-            </mt:if><mt:if name="dialog">
-                    <li class="icon-left icon<mt:unless name="core">-plugin</mt:unless>-action"><a href="javascript:void(0)" onclick="<mt:if name="continue_prompt">if(!confirm('<mt:var name="continue_prompt" escape="js">'))return false;</mt:if>return openDialog(false, '<mt:var name="dialog">', '<mt:if name="dialog_args"><mt:var name="dialog_args" escape="url">&amp;</mt:if>from=$from<mt:if name="id">&amp;id=<mt:var name="id"></mt:if><mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id"></mt:if>$mt&amp;return_args=<mt:var name="return_args" escape="url">')"><mt:var name="label"></a></li>
-            </mt:if></mt:if>
-        </mt:loop>
-                </ul>
-    </mtapp:widget>
-EOT
-}
-
-###########################################################################
-
-=head2 App:Form
-
-Used for application templates that need to express a standard MT
-application form. This produces certain hidden fields that are typically
-required by MT application forms.
-
-B<Attributes:>
-
-=over 4
-
-=item * action (optional)
-
-Identifies the URL to submit the form to. If not given, will use
-the current application URI.
-
-=item * method (optional; default "POST")
-
-Supplies the C<form> method. "GET" or "POST" are the typical values
-for this, but will accept any HTTP-compatible method (ie: "PUT", "DELETE").
-
-=item * object_id (optional)
-
-Populates a hidden 'id' field in the form. If not given, will also use any
-'id' template variable defined.
-
-=item * blog_id (optional)
-
-Populates a hidden 'blog_id' field in the form. If not given, will also use
-any 'blog_id' template variable defined.
-
-=item * object_type (optional)
-
-Populates a hidden '_type' field in the form. If not given, will also use
-any 'type' template variable defined.
-
-=item * id (optional)
-
-Used to form the 'id' element of the HTML C<form> tag. If not specified,
-the C<form> tag 'id' element will be assigned TYPE-form, where TYPE is the
-determined object_type.
-
-=item * name (optional)
-
-Supplies the C<form> name attribute. If unspecified, will use the C<id>
-attribute, if available.
-
-=item * enctype (optional)
-
-If assigned, sets an 'enctype' attribute on the C<form> tag using the value
-supplied. This is typically used to create a form that is capable of
-uploading files.
-
-=back
-
-B<Example:>
-
-    <mtapp:Form id="update" mode="update_blog_name">
-        Blog Name: <input type="text" name="blog_name" />
-        <input type="submit" />
-    </mtapp:Form>
-
-Producing:
-
-    <form id="update" name="update" action="/cgi-bin/mt.cgi" method="POST">
-    <input type="hidden" name="__mode" value="update_blog_name" />
-        Blog Name: <input type="text" name="blog_name" />
-        <input type="submit" />
-    </form>
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_form {
-    my ($ctx, $args, $cond) = @_;
-    my $app = MT->instance;
-    my $action = $args->{action} || $app->uri;
-    my $method = $args->{method} || 'POST';
-    my @fields;
-    my $token = $ctx->var('magic_token');
-    my $return = $ctx->var('return_args');
-    my $id = $args->{object_id} || $ctx->var('id');
-    my $blog_id = $args->{blog_id} || $ctx->var('blog_id');
-    my $type = $args->{object_type} || $ctx->var('type');
-    my $form_id = $args->{id} || $type . '-form';
-    my $form_name = $args->{name} || $args->{id};
-    my $enctype = $args->{enctype} ? " enctype=\"" . $args->{enctype} . "\"" : "";
-    my $mode = $args->{mode};
-    push @fields, qq{<input type="hidden" name="__mode" value="$mode" />}
-        if defined $mode;
-    push @fields, qq{<input type="hidden" name="_type" value="$type" />}
-        if defined $type;
-    push @fields, qq{<input type="hidden" name="id" value="$id" />}
-        if defined $id;
-    push @fields, qq{<input type="hidden" name="blog_id" value="$blog_id" />}
-        if defined $blog_id;
-    push @fields, qq{<input type="hidden" name="magic_token" value="$token" />}
-        if defined $token;
-    $return = encode_html($return) if $return;
-    push @fields, qq{<input type="hidden" name="return_args" value="$return" />}
-        if defined $return;
-    my $fields = '';
-    $fields = join("\n", @fields) if @fields;
-    my $insides = $ctx->slurp($args, $cond);
-    return <<"EOT";
-<form id="$form_id" name="$form_name" action="$action" method="$method"$enctype>
-$fields
-    $insides
-</form>
-EOT
-}
-
-###########################################################################
-
-=head2 App:SettingGroup
-
-An application template tag used to wrap a number of L<App:Setting> tags.
-
-B<Attributes:>
-
-=over 4
-
-=item * id (required)
-
-A unique identifier for this group of settings.
-
-=item * class (optional)
-
-If specified, applies this CSS class to the C<fieldset> tag produced.
-
-=item * shown (optional; default "1")
-
-Controls whether the C<fieldset> is initially shown or not. If hidden,
-a CSS "hidden" class is applied to the C<fieldset> tag.
-
-=back
-
-B<Example:>
-
-    <MTApp:SettingGroup id="foo">
-        <MTApp:Setting ...>
-        <MTApp:Setting ...>
-        <MTApp:Setting ...>
-    </MTApp:SettingGroup>
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_setting_group {
-    my ($ctx, $args, $cond) = @_;
-    my $id = $args->{id};
-    return $ctx->error("'id' attribute missing") unless $id;
-
-    my $class = $args->{class} || "";
-    my $shown = exists $args->{shown} ? ($args->{shown} ? 1 : 0) : 1;
-    $class .= ($class ne '' ? " " : "") . "hidden" unless $shown;
-    $class = qq{ class="$class"} if $class ne '';
-
-    my $insides = $ctx->slurp($args, $cond);
-    return <<"EOT";
-<fieldset id="$id"$class>
-    $insides
-</fieldset>
-EOT
-}
-
-###########################################################################
-
-=head2 App:Setting
-
-An application template tag used to display an application form field.
-
-B<Attributes:>
-
-=over 4
-
-=item * id (required)
-
-Each application setting tag requires a unique 'id' attribute. This id
-should not be re-used within the template.
-
-=item * required (optional; default "0")
-
-Controls whether the field is displayed with visual cues that the
-field is a required field or not.
-
-=item * label
-
-Supplies the label phrase for the setting.
-
-=item * show_label (optional; default "1")
-
-Controls whether the label portion of the setting is shown or not.
-
-=item * shown (optional; default "1")
-
-Controls whether the setting is visible or not. If specified, adds
-a "hidden" class to the outermost C<div> tag produced for the
-setting.
-
-=item * label_class (optional)
-
-Allows an additional CSS class to be applied to the label of the
-setting.
-
-=item * content_class (optional)
-
-Allows an addtional CSS class to be applied to the contents of the
-setting.
-
-=item * hint (optional)
-
-Supplies a "hint" phrase that provides inline instruction to the user.
-By default, this hint is hidden, unless the 'show_hint' attribute
-forces it to display.
-
-=item * show_hint (optional; default "0")
-
-Controls whether the inline help 'hint' label is shown or not.
-
-=item * warning
-
-Supplies a warning message to the user regarding the use of this setting.
-
-=item * show_warning
-
-Controls whether the warning message is shown or not.
-
-=item * help_page
-
-Identifies a specific page of the MT help documentation for this setting.
-
-=item * help_section
-
-Identifies a section name of the MT help documentation for this setting.
-
-=back
-
-B<Example:>
-
-    <mtapp:Setting
-        id="name"
-        required="1"
-        label="Username"
-        hint="The username used to login">
-            <input type="text" name="name" id="name" value="<$mt:Var name="name" escape="html"$>" />
-    </mtapp:setting>
-
-The basic structural output of a setting tag looks like this:
-
-    <div id="ID-field" class="field pkg">
-        <div class="field-inner">
-            <div class="field-header">
-                <label id="ID-label" for="ID">LABEL</label>
-            </div>
-            <div class="field-content">
-                (content of App:Setting tag)
-            </div>
-        </div>
-    </div>
-
-=for tags application
-
-=cut
-
-sub _hdlr_app_setting {
-    my ($ctx, $args, $cond) = @_;
-    my $id = $args->{id};
-    return $ctx->error("'id' attribute missing") unless $id;
-
-    my $label = $args->{label};
-    my $show_label = exists $args->{show_label} ? $args->{show_label} : 1;
-    my $shown = exists $args->{shown} ? ($args->{shown} ? 1 : 0) : 1;
-    my $label_class = $args->{label_class} || "";
-    my $content_class = $args->{content_class} || "";
-    my $hint = $args->{hint} || "";
-    my $show_hint = $args->{show_hint} || 0;
-    my $warning = $args->{warning} || "";
-    my $show_warning = $args->{show_warning} || 0;
-    my $indent = $args->{indent};
-    my $help;
-    # Formatting for help link, placed at the end of the hint.
-    if ($help = $args->{help_page} || "") {
-        my $section = $args->{help_section} || '';
-        $section = qq{, '$section'} if $section;
-        $help = qq{ <a href="javascript:void(0)" onclick="return openManual('$help'$section)" class="help-link">?</a><br />};
-    }
-    my $label_help = "";
-    if ($label && $show_label) {
-        # do nothing;
-    } else {
-        $label = ''; # zero it out, because the user turned it off
-    }
-    if ($hint && $show_hint) {
-        $hint = "\n<div class=\"hint\">$hint$help</div>";
-    } else {
-        $hint = ''; # hiding hint because it is either empty or should not be shown
-    }
-    if ($warning && $show_warning) {
-        $warning = qq{\n<p><img src="<mt:var name="static_uri">images/status_icons/warning.gif" alt="<__trans phrase="Warning">" width="9" height="9" />
-<span class="alert-warning-inline">$warning</span></p>\n};
-    } else {
-        $warning = ''; # hiding hint because it is either empty or should not be shown
-    }
-    unless ($label_class) {
-        $label_class = 'field-left-label';
-    } else {
-        $label_class = 'field-' . $label_class;
-    }
-    my $indent_css = "";
-    if ($indent) {
-        $indent_css = " style=\"padding-left: ".$indent."px;\""
-    }
-    # 'Required' indicator plus CSS class
-    my $req = $args->{required} ? " *" : "";
-    my $req_class = $args->{required} ? " required" : "";
-
-    my $insides = $ctx->slurp($args, $cond);
-    $insides =~ s/^\s*(<textarea)\b/<div class="textarea-wrapper">$1/g;
-    $insides =~ s/(<\/textarea>)\s*$/$1<\/div>/g;
-
-    my $class = $args->{class} || "";
-    $class = ($class eq '') ? 'hidden' : $class . ' hidden' unless $shown;
-
-    return $ctx->build(<<"EOT");
-<div id="$id-field" class="field$req_class $label_class pkg $class"$indent_css>
-    <div class="field-inner">
-        <div class="field-header">
-            <label id="$id-label" for="$id">$label$req</label>
-        </div>
-        <div class="field-content $content_class">
-            $insides$hint$warning
-        </div>
-    </div>
-</div>
-EOT
-}
-
-###########################################################################
-
-=head2 For
-
-Many programming languages support the notion of a "for" loop. In the most
-simple use case one could give, a for loop is a way to repeatedly execute a
-piece of code n times.
-
-Technically a for loop advances through a sequence (e.g. all odd numbers, all
-even numbers, every nth number, etc), giving the programmer greater control
-over the seed value (or "index") of each iteration through the loop.
-
-B<Attributes:>
-
-=over 4
-
-=item * var (optional)
-
-If assigned, the current 'index' of the loop is assigned to this template
-variable.
-
-=item * from (optional; default "0")
-
-=item * start
-
-Identifies the starting number for the loop.
-
-=item * to
-
-=item * end
-
-Identifies the ending number for the loop. Either 'to' or 'end' must
-be specified.
-
-=item * step (optional; default "1")
-
-=item * increment
-
-Provides the amount to increment the loop counter.
-
-=item * glue (optional)
-
-If specified, this string is added inbetween each block of the loop.
-
-=back
-
-Within the tag, the following variables are assigned:
-
-=over 4
-
-=item * __first__
-
-Assigned 1 when the loop is in the first iteration.
-
-=item * __last__
-
-Assigned 1 when the loop is in the last iteration.
-
-=item * __odd__
-
-Assigned 1 when the loop index is odd, 0 when it is even.
-
-=item * __even__
-
-Assigned 1 when the loop index is even, 0 when it is odd.
-
-=item * __index__
-
-Holds the current loop index value, even if the 'var' attribute has
-been given.
-
-=item * __counter__
-
-Tracks the number of times the loop has run (starts at 1).
-
-=back
-
-B<Example:>
-
-    <mt:For from="2" to="10" step="2" glue=","><$mt:Var name="__index__"$></mt:For>
-
-Produces:
-
-    2,4,6,8,10
-
-=for tags loop, templating
-
-=cut
-
-sub _hdlr_for {
-    my ($ctx, $args, $cond) = @_;
-
-    my $start = (exists $args->{from} ? $args->{from} : $args->{start}) || 0;
-    $start = 0 unless $start =~ /^-?\d+$/;
-    my $end = (exists $args->{to} ? $args->{to} : $args->{end}) || 0;
-    return q() unless $end =~ /^-?\d+$/;
-    my $incr = $args->{increment} || $args->{step} || 1;
-    # FIXME: support negative "step" values
-    $incr = 1 unless $incr =~ /^\d+$/;
-    $incr = 1 unless $incr;
-
-    my $builder = $ctx->stash('builder');
-    my $tokens = $ctx->stash('tokens');
-    my $cnt = 1;
-    my $out = '';
-    my $vars = $ctx->{__stash}{vars} ||= {};
-    my $glue = $args->{glue};
-    my $var = $args->{var};
-    for (my $i = $start; $i <= $end; $i += $incr) {
-        local $vars->{__first__} = $i == $start;
-        local $vars->{__last__} = $i == $end;
-        local $vars->{__odd__} = ($cnt % 2 ) == 1;
-        local $vars->{__even__} = ($cnt % 2 ) == 0;
-        local $vars->{__index__} = $i;
-        local $vars->{__counter__} = $cnt;
-        local $vars->{$var} = $i if defined $var;
-        my $res = $builder->build($ctx, $tokens, $cond);
-        return $ctx->error($builder->errstr) unless defined $res;
-        $out .= $glue
-            if defined $glue && $cnt > 1 && length($out) && length($res);
-        $out .= $res;
-        $cnt++;
-    }
-    return $out;
-}
-
-###########################################################################
-
-=head2 Else
-
-A container tag used within If and Unless blocks to output the alternate
-case.
-
-This tag supports all of the attributes and logical operators available in
-the L<If> tag and can be used multiple times to test for different
-scenarios.
-
-B<Example:>
-
-    <mt:If name="some_variable">
-        'some_variable' is assigned
-    <mt:Else name="some_other_variable">
-        'some_other_variable' is assigned
-    <mt:Else>
-        'some_variable' nor 'some_other_variable' is assigned
-    </mt:If>
-
-=for tags templating
-
-=cut
-
-sub _hdlr_else {
-    my ($ctx, $args, $cond) = @_;
-    local $args->{'@'};
-    delete $args->{'@'};
-    if  ((keys %$args) >= 1) {
-        unless ($args->{name} || $args->{var} || $args->{tag}) {
-            if ( my $t = $ctx->var('__cond_tag__') ) {
-                $args->{tag} = $t;
-            }
-            elsif ( my $n = $ctx->var('__cond_name__') ) {
-                $args->{name} = $n;
-            }
-        }
-    }
-    if (%$args) {
-        defined(my $res = _hdlr_if(@_)) or return;
-        return $res ? $ctx->slurp(@_) : $ctx->else();
-    }
-    return $ctx->slurp(@_);
-}
-
-###########################################################################
-
-=head2 ElseIf
-
-An alias for the 'Else' tag.
-
-=for tags templating
-
-=cut
-
-sub _hdlr_elseif {
-    my ($ctx, $args, $cond) = @_;
-    unless ($args->{name} || $args->{var} || $args->{tag}) {
-        if ( my $t = $ctx->var('__cond_tag__') ) {
-            $args->{tag} = $t;
-        }
-        elsif ( my $n = $ctx->var('__cond_name__') ) {
-            $args->{name} = $n;
-        }
-    }
-    return _hdlr_else($ctx, $args, $cond);
-}
-
-###########################################################################
-
-=head2 If
-
-A conditional block that is evaluated if the attributes/modifiers evaluate
-true. This tag can be used in combination with the L<ElseIf> and L<Else>
-tags to test for a variety of cases.
-
-B<Attributes:>
-
-=over 4
-
-=item * name
-
-=item * var
-
-Declares a variable to test. When none of the comparison attributes are
-present ("eq", "ne", "lt", etc.) the If tag tests if the variable has
-a "true" value, meaning if it is assigned a non-empty, non-zero value.
-
-=item * tag
-
-Declares a MT tag to execute; the value of which is used for testing.
-When none of the comparison attributes are present ("eq", "ne", "lt", etc.)
-the If tag tests if the specified tag produces a "true" value, meaning if
-it produces a non-empty, non-zero value. For MT conditional tags, the
-If tag passes through the logical result of that conditional tag.
-
-=item * op
-
-If specified, applies the specified mathematical operator to the value
-being tested. 'op' may be one of the following (those that require a
-second value use the 'value' attribute):
-
-=over 4
-
-=item * + or add
-
-Addition.
-
-=item * - or sub
-
-Subtraction.
-
-=item * ++ or inc
-
-Adds 1 to the given value.
-
-=item * -- or dec
-
-Subtracts 1 from the given value.
-
-=item * * or mul
-
-Multiplication.
-
-=item * / or div
-
-Division.
-
-=item * % or mod
-
-Issues a modulus operator.
-
-=back
-
-=item * value
-
-Used in conjunction with the 'op' attribute.
-
-=item * eq
-
-Tests whether the given value is equal to the value of the 'eq' attribute.
-
-=item * ne
-
-Tests whether the given value is not equal to the value of the 'ne' attribute.
-
-=item * gt
-
-Tests whether the given value is greater than the value of the 'gt' attribute.
-
-=item * lt
-
-Tests whether the given value is less than the value of the 'lt' attribute.
-
-=item * ge
-
-Tests whether the given value is greater than or equal to the value of the
-'ge' attribute.
-
-=item * le
-
-Tests whether the given value is less than or equal to the value of the
-'le' attribute.
-
-=item * like
-
-Tests whether the given value matches the regex pattern in the 'like'
-attribute.
-
-=item * test
-
-Uses a Perl (or PHP under Dynamic Publishing) expression. For Perl, this
-requires the "Safe" Perl module to be installed.
-
-=back
-
-B<Examples:>
-
-If variable "foo" has a non-zero value:
-
-    <mt:SetVar name="foo" value="bar">
-    <mt:If name="foo">
-        <!-- do something -->
-    </mt:If>
-
-If variable "foo" has a value equal to "bar":
-
-    <mt:SetVar name="foo" value="bar">
-    <mt:If name="foo" eq="bar">
-        <!-- do something -->
-    </mt:If>
-
-If variable "foo" has a value that starts with "bar" or "baz":
-
-    <mt:SetVar name="foo" value="barcamp" />
-    <mt:If name="foo" like="^(bar|baz)">
-        <!-- do something -->
-    </mt:If>
-
-If tag <$mt:EntryTitle$> has a value of "hello world":
-
-    <mt:If tag="EntryTitle" eq="hello world">
-        <!-- do something -->
-    </mt:If>
-
-If tag <$mt:CategoryCount$> is greater than 10 add "(Popular)" after
-Category Label:
-
-    <mt:Categories>
-        <$mt:CategoryLabel$>
-        <mt:If tag="CategoryCount" gt="10">(Popular)</mt:If>
-    </mt:Categories>
-
-
-If tag <$mt:EntryAuthor$> is "Melody" or "melody" and last name is "Nelson"
-or "nelson" then do something:
-
-    <mt:Authors>
-        <mt:If tag="EntryAuthor" like="/(M|m)elody (N|n)elson/"
-            <!-- do something -->
-        </mt:If>
-    </mt:Authors>
-
-If the <$mt:CommenterEmail$> matches foo@domain.com or bar@domain.com:
-
-    <mt:If tag="CommenterEmail" like="(foo@domain.com|bar@domain.com)">
-        <!-- do something -->
-    </mt:If>
-
-If the <$mt:CommenterUsername$> matches the username of someone on the
-Movable Type team:
-
-    <mt:If tag="CommenterUsername" like="(beau|byrne|brad|jim|mark|fumiaki|yuji|djchall)">
-        <!-- do something -->
-    </mt:If>
-
-If <$mt:EntryCategory$> is "Comic" then use the Comic template module
-otherwise use the default:
-
-    <mt:If tag="EntryCategory" eq="Comic">
-        <$mt:Include module="Comic Entry Detail"$>
-    <mt:Else>
-        <$mt:Include module="Entry Detail"$>
-    </mt:If>
-
-If <$mt:EntryCategory$> is "Comic", "Sports", or "News" then link to the
-category archive:
-
-    <mt:If tag="EntryCategory" like="(Comic|Sports|News)">
-        <a href="<$mt:CategoryArchiveLink$>"><$mt:CategoryLabel$></a>
-    <mt:Else>
-        <$mt:CategoryLabel$>
-    </mt:If>
-
-List all categories and link to categories it the category has one or more
-entries:
-
-    <mt:Categories show_empty="1">
-        <mt:If name="__first__">
-    <ul>
-        </mt:If>
-        <mt:If tag="CategoryCount" gte="1">
-        <li><a href="<$MTCategoryArchiveLink$>"><$MTCategoryLabel$></a></li>
-        <mt:Else>
-        <li><$MTCategoryLabel$></li>
-        </mt:If>
-        <mt:If name="__last__">
-    </ul>
-        </mt:If>
-    </mt:Categories>
-
-Test a variable using Perl:
-
-    <mt:If test="length($some_variable) > 10">
-        '<$mt:Var name="some_variable"$>' is 11 characters or longer
-    </mt:If>
-
-=for tags templating
-
-=cut
-
-sub _hdlr_if {
-    my ($ctx, $args, $cond) = @_;
-    my $var = $args->{name} || $args->{var};
-    my $value;
-    if (defined $var) {
-        # pick off any {...} or [...] from the name.
-        my ($index, $key);
-        if ($var =~ m/^(.+)([\[\{])(.+)[\]\}]$/) {
-            $var = $1;
-            my $br = $2;
-            my $ref = $3;
-            if ($ref =~ m/^\$(.+)/) {
-                $ref = $ctx->var($1);
-            }
-            $br eq '[' ? $index = $ref : $key = $ref;
-        } else {
-            $index = $args->{index} if exists $args->{index};
-            $key = $args->{key} if exists $args->{key};
-        }
-
-        $value = $ctx->var($var);
-        if (ref($value)) {
-            if (UNIVERSAL::isa($value, 'MT::Template')) {
-                local $value->{context} = $ctx;
-                $value = $value->output();
-            } elsif (UNIVERSAL::isa($value, 'MT::Template::Tokens')) {
-                local $ctx->{__stash}{tokens} = $value;
-                $value = _hdlr_pass_tokens(@_) or return;
-            } elsif (ref($value) eq 'ARRAY') {
-                $value = $value->[$index] if defined $index;
-            } elsif (ref($value) eq 'HASH') {
-                $value = $value->{$key} if defined $key;
-            }
-        }
-    }
-    elsif (defined(my $tag = $args->{tag})) {
-        $tag =~ s/^MT:?//i;
-        my ($handler, $type) = $ctx->handler_for($tag);
-        if (defined($handler)) {
-            local $ctx->{__stash}{tag} = $args->{tag};
-            $value = $handler->($ctx, { %$args });
-            if ($type == 2) { # conditional tag; just use boolean
-                $value = $value ? 1 : 0;
-            } else {
-                if (my $ph = $ctx->post_process_handler) {
-                    $value = $ph->($ctx, $args, $value);
-                }
-            }
-            $ctx->{__stash}{vars}{__cond_tag__} = $args->{tag};
-        }
-        else {
-            return $ctx->error(MT->translate("Invalid tag [_1] specified.", $tag));
-        }
-    }
-
-    $ctx->{__stash}{vars}{__cond_value__} = $value;
-    $ctx->{__stash}{vars}{__cond_name__} = $var;
-
-    if ( my $op = $args->{op} ) {
-        my $rvalue = $args->{'value'};
-        if ( $op && (defined $value) && !ref($value) ) {
-            $value = _math_operation($ctx, $op, $value, $rvalue);
-        }
-    }
-
-    my $numeric = qr/^[-]?\d+(\.\d+)?$/;
-    no warnings;
-    if (exists $args->{eq}) {
-        return 0 unless defined($value);
-        my $eq = $args->{eq};
-        if ($value =~ m/$numeric/ && $eq =~ m/$numeric/) {
-            return $value == $eq;
-        } else {
-            return $value eq $eq;
-        }
-    }
-    elsif (exists $args->{ne}) {
-        return 0 unless defined($value);
-        my $ne = $args->{ne};
-        if ($value =~ m/$numeric/ && $ne =~ m/$numeric/) {
-            return $value != $ne;
-        } else {
-            return $value ne $ne;
-        }
-    }
-    elsif (exists $args->{gt}) {
-        return 0 unless defined($value);
-        my $gt = $args->{gt};
-        if ($value =~ m/$numeric/ && $gt =~ m/$numeric/) {
-            return $value > $gt;
-        } else {
-            return $value gt $gt;
-        }
-    }
-    elsif (exists $args->{lt}) {
-        return 0 unless defined($value);
-        my $lt = $args->{lt};
-        if ($value =~ m/$numeric/ && $lt =~ m/$numeric/) {
-            return $value < $lt;
-        } else {
-            return $value lt $lt;
-        }
-    }
-    elsif (exists $args->{ge}) {
-        return 0 unless defined($value);
-        my $ge = $args->{ge};
-        if ($value =~ m/$numeric/ && $ge =~ m/$numeric/) {
-            return $value >= $ge;
-        } else {
-            return $value ge $ge;
-        }
-    }
-    elsif (exists $args->{le}) {
-        return 0 unless defined($value);
-        my $le = $args->{le};
-        if ($value =~ m/$numeric/ && $le =~ m/$numeric/) {
-            return $value <= $le;
-        } else {
-            return $value le $le;
-        }
-    }
-    elsif (exists $args->{like}) {
-        my $like = $args->{like};
-        if (!ref $like) {
-            if ($like =~ m!^/.+/([si]+)?$!s) {
-                my $opt = $1;
-                $like =~ s!^/|/([si]+)?$!!g; # /abc/ => abc
-                $like = "(?$opt)" . $like if defined $opt;
-            }
-            my $re = eval { qr/$like/ };
-            return 0 unless $re;
-            $args->{like} = $like = $re;
-        }
-        return defined($value) && ($value =~ m/$like/) ? 1 : 0;
-    }
-    elsif (exists $args->{test}) {
-        my $expr = $args->{'test'};
-        my $safe = $ctx->{__safe_compartment};
-        if (!$safe) {
-            $safe = eval { require Safe; new Safe; }
-                or return $ctx->error("Cannot evaluate expression [$expr]: Perl 'Safe' module is required.");
-            $ctx->{__safe_compartment} = $safe;
-        }
-        my $vars = $ctx->{__stash}{vars};
-        my $ns = $safe->root;
-        {
-            no strict 'refs';
-            foreach my $v (keys %$vars) {
-                # or should we be using $ctx->var here ?
-                # can we limit this step to just the variables
-                # mentioned in $expr ??
-                ${ $ns . '::' . $v } = $vars->{$v};
-            }
-        }
-        my $res = $safe->reval($expr);
-        if ($@) {
-            return $ctx->error("Error in expression [$expr]: $@");
-        }
-        return $res;
-    }
-    if ((defined $value) && $value) {
-        if (ref($value) eq 'ARRAY') {
-            return @$value ? 1 : 0;
-        }
-        return 1;
-    }
-    return 0;
-}
-
-###########################################################################
-
-=head2 Unless
-
-A conditional tag that is the logical opposite of the L<If> tag. All
-attributes supported by the L<If> tag are also supported for this tag.
-
-=for tags templating
-
-=cut
-
-###########################################################################
-
-=head2 Loop
-
-This tag is primarily used for MT application templates, for processing
-a Perl array of hashref data. This tag's heritage comes from the
-CPAN HTML::Template module and it's C<TMPL_LOOP> tag and offers similar
-capabilities. This tag can also handle a hashref variable, which
-causes it to loop over all keys in the hash.
-
-B<Attributes:>
-
-=over 4
-
-=item * name
-
-=item * var
-
-The template variable that contains the array of hashref data to
-process.
-
-=item * sort_by (optional)
-
-Causes the data in the given array to be resorted in the manner
-specified. The 'sort_by' attribute may specify "key" or "value"
-and may additionally include the keywords "numeric" (to imply
-a numeric sort instead of the default alphabetic sort) and/or
-"reverse" to force the sort to be done in reverse order.
-
-B<Example:>
-
-    sort_by="key reverse"; sort_by="value numeric"
-
-=item * glue (optional)
-
-If specified, this string will be placed inbetween each "row"
-of data produced by the loop tag.
-
-=back
-
-Within the tag, the following variables are assigned and may
-be used:
-
-=over 4
-
-=item * __first__
-
-Assigned when the loop is in the first iteration.
-
-=item * __last__
-
-Assigned when the loop is in the last iteration.
-
-=item * __odd__
-
-Assigned 1 when the loop is on odd numbered rows, 0 when even.
-
-=item * __even__
-
-Assigned 1 when the loop is on even numbered rows, 0 when odd.
-
-=item * __key__
-
-When looping over a hashref template variable, this variable is
-assigned the key currently in context.
-
-=item * __value__
-
-This variable holds the value of the array or hashref element
-currently in context.
-
-=back
-
-=for tags loop, templating
-
-=cut
-
-sub _hdlr_loop {
-    my ($ctx, $args, $cond) = @_;
-    my $name = $args->{name} || $args->{var};
-    my $var = $ctx->var($name);
-    return '' unless $var
-      && ( (ref($var) eq 'ARRAY') && (scalar @$var) )
-        || ( (ref($var) eq 'HASH') && (scalar(keys %$var)) );
-
-    my $hash_var;
-    if ( 'HASH' eq ref($var) ) {
-        $hash_var = $var;
-        my @keys = keys %$var;
-        $var = \@keys;
-    }
-    if (my $sort = $args->{sort_by}) {
-        $sort = lc $sort;
-        if ($sort =~ m/\bkey\b/) {
-            @$var = sort {$a cmp $b} @$var;
-        } elsif ($sort =~ m/\bvalue\b/) {
-            no warnings;
-            if ($sort =~ m/\bnumeric\b/) {
-                no warnings;
-                if (defined $hash_var) {
-                    @$var = sort {$hash_var->{$a} <=> $hash_var->{$b}} @$var;
-                } else {
-                    @$var = sort {$a <=> $b} @$var;
-                }
-            } else {
-                if (defined $hash_var) {
-                    @$var = sort {$hash_var->{$a} cmp $hash_var->{$b}} @$var;
-                } else {
-                    @$var = sort {$a cmp $b} @$var;
-                }
-            }
-        }
-        if ($sort =~ m/\breverse\b/) {
-            @$var = reverse @$var;
-        }
-    }
-
-    my $builder = $ctx->stash('builder');
-    my $tokens = $ctx->stash('tokens');
-    my $out = '';
-    my $i = 1;
-    my $vars = $ctx->{__stash}{vars} ||= {};
-    my $glue = $args->{glue};
-    foreach my $item (@$var) {
-        local $vars->{__first__} = $i == 1;
-        local $vars->{__last__} = $i == scalar @$var;
-        local $vars->{__odd__} = ($i % 2 ) == 1;
-        local $vars->{__even__} = ($i % 2 ) == 0;
-        local $vars->{__counter__} = $i;
-        my @names;
-        if (UNIVERSAL::isa($item, 'MT::Object')) {
-            @names = @{ $item->column_names };
-        } else {
-            if (ref($item) eq 'HASH') {
-                @names = keys %$item;
-            } elsif ( $hash_var ) {
-                @names = ( '__key__', '__value__' );
-            } else {
-                @names = '__value__';
-            }
-        }
-        my @var_names;
-        push @var_names, lc $_ for @names;
-        local @{$vars}{@var_names};
-        if (UNIVERSAL::isa($item, 'MT::Object')) {
-            $vars->{lc($_)} = $item->column($_) for @names;
-        } elsif (ref($item) eq 'HASH') {
-            $vars->{lc($_)} = $item->{$_} for @names;
-        } elsif ( $hash_var ) {
-            $vars->{'__key__'} = $item;
-            $vars->{'__value__'} = $hash_var->{$item};
-        } else {
-            $vars->{'__value__'} = $item;
-        }
-        my $res = $builder->build($ctx, $tokens, $cond);
-        return $ctx->error($builder->errstr) unless defined $res;
-        if ($res ne '') {
-            $out .= $glue if defined $glue && $i > 1 && length($out) && length($res);
-            $out .= $res;
-            $i++;
-        }
-    }
-    return $out;
-}
-
-###########################################################################
-
-=head2 GetVar
-
-An alias for the 'Var' tag, and considered deprecated in favor of 'Var'.
-
-=for tags deprecated
-
-=cut
-
-###########################################################################
-
-=head2 Var
-
-A B<function tag> used to store and later output data in a template.
-
-B<Attributes:>
-
-=over 4
-
-=item * name (or var)
-
-Identifies the template variable. The 'name' attribute supports a variety
-of expressions. The typical case is a simple variable name:
-
-    <$mt:Var name="foo"$>
-
-Template variables may be arrays, or hash variables, in which case you
-may want to reference a specific element instead of the array or hash
-itself.
-
-This selects the second element from the 'foo' array template variable:
-
-    <$mt:Var name="foo[1]"$>
-
-This selects the 'bar' element from the 'foo' hash template variable:
-
-    <$mt:Var name="foo{bar}"$>
-
-Sometimes you want to obtain the value of a function that is applied
-to a variable (see the 'function' attribute). This will obtain the
-number of elements in the 'foo' array:
-
-    <$mt:Var name="count(foo)"$>
-
-Excluding the punctuation required in the examples above, the 'name'
-attribute value should contain only alphanumeric characters and,
-optionally, underscores.
-
-=item * value
-
-In the simplest case, this attribute triggers I<assignment> of the
-specified value to the variable.
-
-    <$mt:Var name="little_pig_count" value="3"$>          # Stores 3
-
-However, if provided with the 'op' attribute (see below), the value becomes
-the operand for the specified mathematical operation and no assignment takes
-place.
-
-The 'value' attribute can contain anything other than a double quote. If you
-need to use a double quote or the value is very long, you may want to use
-the L<SetVarBlock> tag or the L<setvar> global modifier instead.
-
-=item * op
-
-Used along with the 'value' attribute to perform a number of mathematical
-operations on the value of the variable.  When used in this way, the stored
-value of the variable doesn't change but instead gets transformed in the
-process of being output.
-
-    <$mt:Var name="little_pig_count">                     # Displays 3
-    <$mt:Var name="little_pig_count" value="1" op="sub"$> # Displays 2
-    <$mt:Var name="little_pig_count" value="2" op="sub"$> # Displays 1
-    <$mt:Var name="little_pig_count" value="3" op="sub"$> # Displays 0
-
-See the L<If> tag for the list of supported operators.
-
-=item * prepend
-
-When used in conjuction with the 'value' attribute to store a value, this
-attribute acts as a flag (i.e. 'prepend="1"') to indicate that the new value
-should be added to the front of any existing value instead of replacing it.
-
-    <$mt:Var name="greeting" value="World"$>
-    <$mt:Var name="greeting" value="Hello " prepend="1"$>
-    <$mt:Var name="greeting"$>  # Displays: Hello World
-
-=item * append
-
-When used in conjuction with the 'value' attribute to store a value, this
-attribute acts as a flag (i.e. 'append="1"') to indicate that the new value
-should be added to the back of any existing value instead of replacing it.
-
-    <$mt:Var name="greeting" value="Hello"$>
-    <$mt:Var name="greeting" value=" World" append="1"$>
-    <$mt:Var name="greeting"$>  # Displays: Hello World
-
-=item * function
-
-For array template variables, this attribute supports:
-
-=over 4
-
-=item * push
-
-Adds the element to the end of the array (becomes the last element).
-
-=item * pop
-
-Removes an element from the end of the array (last element) and
-outputs it.
-
-=item * unshift
-
-Adds the element to the front of the array (index 0).
-
-=item * shift
-
-Takes an element from the front of the array (index 0).
-
-=item * count
-
-Returns the number of elements in the array template variable.
-
-=back
-
-For hash template variables, this attribute supports:
-
-=over 4
-
-=item * delete
-
-Only valid when used with the 'key' attribute, or if a key is present
-in the variable name.
-
-=item * count
-
-Returns the number of keys present in the hash template variable.
-
-=back
-
-=item * index
-
-Identifies an element of an array template variable.
-
-=item * key
-
-Identifies a value stored for the key of a hash template variable.
-
-=item * default
-
-If the variable is undefined or empty, this value will be output
-instead. Use of the 'default' and 'setvar' attributes together make
-for an excellent way to conditionally initialize variables. The
-following sets the "max_pages" variable to 10 if and only if it does
-not yet have a value.
-
-    <mt:var name="max_pages" default="10" setvar="max_pages"> 
-
-=item * to_json
-
-Formats the variable in JSON notation.
-
-=item * glue
-
-For array template variables, this attribute is used in joining the
-values of the array together.
-
-=back
-
-=for tags templating
-
-=cut
-
-sub _hdlr_get_var {
-    my ($ctx, $args, $cond) = @_;
-    if ( exists( $args->{value} )
-      && !exists( $args->{op} ) ) {
-        return &_hdlr_set_var(@_);
-    }
-    my $name = $args->{name} || $args->{var};
-    return $ctx->error(MT->translate(
-        "You used a [_1] tag without a valid name attribute.", "<MT" . $ctx->stash('tag') . ">" ))
-        unless defined $name;
-
-    my ($func, $key, $index, $value);
-    if ($name =~ m/^(\w+)\((.+)\)$/) {
-        $func = $1;
-        $name = $2;
-    } else {
-        $func = $args->{function} if exists $args->{function};
-    }
-
-    # pick off any {...} or [...] from the name.
-    if ($name =~ m/^(.+)([\[\{])(.+)[\]\}]$/) {
-        $name = $1;
-        my $br = $2;
-        my $ref = $3;
-        if ($ref =~ m/^\$(.+)/) {
-            $ref = $ctx->var($1);
-            $ref = chr(0) unless defined $ref;
-        }
-        $br eq '[' ? $index = $ref : $key = $ref;
-    } else {
-        $index = $args->{index} if exists $args->{index};
-        $key = $args->{key} if exists $args->{key};
-    }
-
-    if ($name =~ m/^\$/) {
-        $name = $ctx->var($name);
-    }
-
-    if (defined $name) {
-        $value = $ctx->var($name);
-        if (ref($value) eq 'CODE') { # handle coderefs
-            $value = $value->(@_);
-        }
-        if (ref($value)) {
-            if (UNIVERSAL::isa($value, 'MT::Template')) {
-                local $args->{name} = undef;
-                local $args->{var} = undef;
-                local $value->{context} = $ctx;
-                $value = $value->output($args);
-            } elsif (UNIVERSAL::isa($value, 'MT::Template::Tokens')) {
-                local $ctx->{__stash}{tokens} = $value;
-                local $args->{name} = undef;
-                local $args->{var} = undef;
-                # Pass through SetVarTemplate arguments as variables
-                # so that they do not affect the global stash
-                my $vars = $ctx->{__stash}{vars} ||= {};
-                my @names = keys %$args;
-                my @var_names;
-                push @var_names, lc $_ for @names;
-                local @{$vars}{@var_names};
-                $vars->{lc($_)} = $args->{$_} for @names;
-                $value = _hdlr_pass_tokens(@_) or return;
-            } elsif (ref($value) eq 'ARRAY') {
-                if ( defined $index ) {
-                    if ($index =~ /^-?\d+$/) {
-                        $value = $value->[ $index ];
-                    } else {
-                        $value = undef; # fall through to any 'default'
-                    }
-                }
-                elsif ( defined $func ) {
-                    $func = lc $func;
-                    if ( 'pop' eq $func ) {
-                        $value = @$value ? pop @$value : undef;
-                    }
-                    elsif ( 'shift' eq $func ) {
-                        $value = @$value ? shift @$value : undef;
-                    }
-                    elsif ( 'count' eq $func ) {
-                        $value = scalar @$value;
-                    }
-                    else {
-                        return $ctx->error(
-                            MT->translate("'[_1]' is not a valid function for an array.", $func)
-                        );
-                    }
-                }
-                else {
-                    unless ($args->{to_json}) {
-                        my $glue = exists $args->{glue} ? $args->{glue} : "";
-                        $value = join $glue, @$value;
-                    }
-                }
-            } elsif ( ref($value) eq 'HASH' ) {
-                if ( defined $key ) {
-                    if ( defined $func ) {
-                        if ( 'delete' eq lc($func) ) {
-                            $value = delete $value->{$key};
-                        } else {
-                            return $ctx->error(
-                                MT->translate("'[_1]' is not a valid function for a hash.", $func)
-                            );
-                        }
-                    } else {
-                        if ($key ne chr(0)) {
-                            $value = $value->{$key};
-                        } else {
-                            $value = undef;
-                        }
-                    }
-                }
-                elsif ( defined $func ) {
-                    if ( 'count' eq lc($func) ) {
-                        $value = scalar( keys %$value );
-                    }
-                    else {
-                        return $ctx->error(
-                            MT->translate("'[_1]' is not a valid function for a hash.", $func)
-                        );
-                    }
-                }
-            }
-        }
-        if ( my $op = $args->{op} ) {
-            my $rvalue = $args->{'value'};
-            if ( $op && (defined $value) && !ref($value) ) {
-                $value = _math_operation($ctx, $op, $value, $rvalue);
-            }
-        }
-    }
-    if ((!defined $value) || ($value eq '')) {
-        if (exists $args->{default}) {
-            $value = $args->{default};
-        }
-    }
-
-    if (ref($value) && $args->{to_json}) {
-        return MT::Util::to_json($value);
-    }
-    return defined $value ? $value : "";
-}
 
 ###########################################################################
 
@@ -3627,24 +920,6 @@ sub _hdlr_if_image_support {
         MT->request('if_image_support', $if_image_support);
     }
     return $if_image_support;
-}
-
-###########################################################################
-
-=head2 BuildTemplateID
-
-Returns the ID of the template (index, archive or system template) currently
-being built.
-
-=cut
-
-sub _hdlr_build_template_id {
-    my ($ctx, $args, $cond) = @_;
-    my $tmpl = $ctx->stash('template');
-    if ($tmpl && $tmpl->id) {
-        return $tmpl->id;
-    }
-    return 0;
 }
 
 ###########################################################################
@@ -4623,899 +1898,6 @@ sub nofollowfy_on {
     }
 }
 
-{
-    my %include_stack;
-    my %restricted_include_filenames = (
-        'mt-config.cgi' => 1,
-        'passwd' => 1
-    );
-
-    ###########################################################################
-
-=head2 IncludeBlock
-
-This tag provides MT with the ability to 'wrap' content with an included
-module. This behaves much like the MTInclude tag, but it is a container tag.
-The contents of the tag are taken and assigned to a variable (either one
-explicitly named with a 'var' attribute, or will default to 'contents').
-i.e.:
-
-    <mt:IncludeBlock module="Some Module">
-        (do something here)
-    </mt:IncludeBlock>
-
-In the "Some Module" template module, you would then have the following
-template tag allowing you to reference the contents of the L<IncludeBlock>
-tag used to include this "Some Module" template module, like so:
-
-    (header stuff)
-    <$mt:Var name="contents"$>
-    (footer stuff)
-
-B<Important:> Modules used as IncludeBlocks should never be processed as a Server Side Include or be cached.
-
-B<Attributes:>
-
-=over 4
-
-=item * var (optional)
-
-Supplies a variable name to use for assigning the contents of the
-L<IncludeBlock> tag. If unassigned, the "contents" variable is used.
-
-=back
-
-=for tags templating
-
-=cut
-
-sub _hdlr_include_block {
-    my($ctx, $args, $cond) = @_;
-    my $name = delete $args->{var} || 'contents';
-    # defer the evaluation of the child tokens until used inside
-    # the block (so any variables/context changes made in that template
-    # affect the contained template code)
-    my $tokens = $ctx->stash('tokens');
-    local $ctx->{__stash}{vars}{$name} = sub {
-        my $builder = $ctx->stash('builder');
-        my $html = $builder->build($ctx, $tokens, $cond);
-        return $ctx->error($builder->errstr) unless defined $html;
-        return $html;
-    };
-    return $ctx->tag('include', $args, $cond);
-}
-
-###########################################################################
-
-=head2 Include
-
-Includes a template module or external file and outputs the result.
-
-B<NOTE:> One and only one of the 'module', 'widget', 'file' and
-'identifier' attributes can be specified.
-
-B<Attributes:>
-
-=over 4
-
-=item * module
-
-The name of a template module in the current blog.
-
-=item * widget
-
-The name of the widget in the current blog to include.
-
-=item * file
-
-The path to an external file on the system. The path can be absolute or
-relative to the Local Site Path. This file is included at the time your
-page is built. It should not be confused with dynamic server side
-includes like that found in PHP.
-
-=item * identifier
-
-For selecting Index templates by their unique identifier.
-
-=item * name
-
-For application template use: identifies an application template by
-filename to load.
-
-=item * blog_id (optional)
-
-Used to include a template from another blog in the system. Use in
-conjunction with the module, widget or identifier attributes.
-
-=item * local (optional)
-
-Forces an Include of a template that exists in the blog that is being
-published.
-
-=item * global (optional; default "0")
-
-Forces an Include of a globally defined template even if the
-template is also available in the blog currently in context.
-(For module, widget and identifier includes.)
-
-=item * ssi (optional; default "0")
-
-If specified, causes the include to be handled as a server-side
-include. The value of the 'ssi' attribute determines the type of
-include that is produced. Acceptable values are: C<php>, C<asp>,
-C<jsp>, C<shtml>. This causes the contents of the include to be
-processed and written to a file (stored to the blog's publishing
-path, under the 'includes_c' subdirectory). The include tag itself
-then returns the include directive appropriate to the 'ssi' type
-specified. So, for example:
-
-    <$mt:Include module="Tag Cloud" ssi="php"$>
-
-This would generate the contents for the "Tag Cloud" template module
-and write it to a "tag_cloud.php" file. The output of the include
-tag would look like this:
-
-    <?php include("/path/to/blog/includes_c/tag_cloud.php") ?>
-
-Suitable for module, widget or identifier includes.
-
-=item * cache (optional; default "0")
-
-Enables caching of the contents of the include. Suitable for module,
-widget or identifier includes.
-
-=item * key or cache_key (optional)
-
-Used to cache the template module. Used in conjunction with the 'cache'
-attribute. Suitable for module, widget or identifier includes.
-
-=item * ttl (optional)
-
-Specifies the lifetime in seconds of a cached template module. Suitable
-for module, widget or identifier includes.
-
-=back
-
-Also, other attributes given to this tag are locally assigned as
-variables when invoking the include template.
-
-The contents of the file or module are further evaluated for more Movable
-Type template tags.
-
-B<Example:> Including a Widget
-
-    <$mt:Include widget="Search Box"$>
-
-B<Example:> Including a File
-
-    <$mt:Include file="/var/www/html/some-fragment.html"$>
-
-B<Example:> Including a Template Module
-
-    <$mt:Include module="Sidebar - Left Column"$>
-
-B<Example:> Passing Parameters to a Template Module
-
-    <$mt:Include module="Section Header" title="Elsewhere"$>
-
-(from the "Section Header" template module)
-
-    <h2><$mt:Var name="title"$></h2>
-
-=for tags templating
-
-=cut
-
-sub _hdlr_include {
-    my ($ctx, $arg, $cond) = @_;
-
-    # Pass through include arguments as variables to included template
-    my $vars = $ctx->{__stash}{vars} ||= {};
-    my @names = keys %$arg;
-    my @var_names;
-    push @var_names, lc $_ for @names;
-    local @{$vars}{@var_names};
-    $vars->{lc($_)} = $arg->{$_} for @names;
-
-    # Run include process
-    my $out = $arg->{module}     ? _include_module(@_)
-            : $arg->{widget}     ? _include_module(@_)
-            : $arg->{identifier} ? _include_module(@_)
-            : $arg->{file}       ? _include_file(@_)
-            : $arg->{name}       ? _include_name(@_)
-            :                      $ctx->error(MT->translate(
-                                       'No template to include specified'))
-            ;
-
-    return $out;
-}
-
-sub _include_module {
-    my ($ctx, $arg, $cond) = @_;
-    my $tmpl_name = $arg->{module} || $arg->{widget} || $arg->{identifier}
-        or return;
-    my $name = $arg->{widget} ? 'widget' : $arg->{identifier} ? 'identifier' : 'module';
-    my $type = $arg->{widget} ? 'widget' : 'custom';
-    if (($type eq 'custom') && ($tmpl_name =~ m/^Widget:/)) {
-        # handle old-style widget include references
-        $type = 'widget';
-        $tmpl_name =~ s/^Widget: ?//;
-    }
-    my $blog_id = defined($arg->{blog_id})
-      ? $arg->{blog_id}
-      : ( $arg->{global} )
-        ? 0 
-        : defined($ctx->{__stash}{blog_id})
-          ? $ctx->{__stash}{blog_id}
-          : 0;
-    $blog_id = $ctx->stash('local_blog_id') if $arg->{local};
-    my $stash_id = 'template_' . $type . '::' . $blog_id . '::' . $tmpl_name;
-    return $ctx->error(MT->translate("Recursion attempt on [_1]: [_2]", MT->translate($name), $tmpl_name))
-        if $include_stack{$stash_id};
-    local $include_stack{$stash_id} = 1;
-
-    my $req = MT::Request->instance;
-    my ($tmpl, $tokens);
-    if (my $tmpl_data = $req->stash($stash_id)) {
-        ($tmpl, $tokens) = @$tmpl_data;
-    }
-    else {
-        my %terms = $arg->{identifier} ? ( identifier => $tmpl_name )
-                  :                      ( name => $tmpl_name,
-                                           type => $type )
-                  ;
-        $terms{blog_id} = !exists $arg->{global} ? [ $blog_id, 0 ]
-                        : $arg->{global}         ? 0
-                        :                          $blog_id
-                        ;
-        ($tmpl) = MT->model('template')->load(\%terms, {
-            sort      => 'blog_id',
-            direction => 'descend',
-        }) or return $ctx->error(MT->translate(
-            "Can't find included template [_1] '[_2]'", MT->translate($name), $tmpl_name ));
-
-        my $cur_tmpl = $ctx->stash('template');
-        return $ctx->error(MT->translate("Recursion attempt on [_1]: [_2]", MT->translate($name), $tmpl_name))
-            if $cur_tmpl && $cur_tmpl->id && ($cur_tmpl->id == $tmpl->id);
-
-        $req->stash($stash_id, [ $tmpl, undef ]);
-    }
-
-    my $blog = $ctx->stash('blog') || MT->model('blog')->load($blog_id);
-
-    my %include_recipe;
-    my $use_ssi = $blog && $blog->include_system
-        && ($arg->{ssi} || $tmpl->include_with_ssi) ? 1 : 0;
-    if ($use_ssi) {
-        # disable SSI for templates that are system templates;
-        # easiest way to determine this is from the variable
-        # space setting.
-        if ($ctx->var('system_template')) {
-            $use_ssi = 0;
-        } else {
-            my $extra_path = ($arg->{cache_key} || $arg->{key}) ? $arg->{cache_key} || $arg->{key}
-                : $tmpl->cache_path ? $tmpl->cache_path
-                    : '';
-           %include_recipe = (
-                name => $tmpl_name,
-                id   => $tmpl->id,
-                path => $extra_path,
-            );
-        }
-    }
-
-    # Try to read from cache
-    my $cache_expire_type = $tmpl->cache_expire_type || 0;
-    my $cache_enabled =
-         $blog
-      && $blog->include_cache
-      && ( ( $arg->{cache} && $arg->{cache} > 0 )
-        || $arg->{cache_key}
-        || $arg->{key}
-        || ( exists $arg->{ttl} )
-        || ( $cache_expire_type != 0 ) ) ? 1 : 0;
-    my $cache_key =
-        ($arg->{cache_key} || $arg->{key})
-      ? $arg->{cache_key} || $arg->{key}
-      : 'blog::' . $blog_id . '::template_' . $type . '::' . $tmpl_name;
-    my $ttl =
-      exists $arg->{ttl} ? $arg->{ttl}
-          : ( $cache_expire_type == 1 ) ? $tmpl->cache_expire_interval
-              : ( $cache_expire_type == 2 ) ? 0
-                  :   60 * 60;    # default 60 min.
-
-    if ( $cache_expire_type == 2 ) {
-        my @types = split(/,/, ($tmpl->cache_expire_event || ''));
-        if (@types) {
-            require MT::Touch;
-            if (my $latest = MT::Touch->latest_touch($blog_id, @types)) {
-                if ($use_ssi) {
-                    # base cache expiration on physical file timestamp
-                    my $include_file = $blog->include_path(\%include_recipe);
-                    my $mtime = (stat($include_file))[9];
-                    if ($mtime && (MT::Util::ts2epoch(undef, $latest) > $mtime ) ) {
-                        $ttl = 1; # bound to force an update
-                    }
-                } else {
-                    $ttl = time - MT::Util::ts2epoch(undef, $latest);
-                }
-            }
-        }
-    }
-
-    my $cache_driver;
-    if ($cache_enabled) {
-        my $tmpl_mod = $tmpl->modified_on;
-        my $tmpl_ts = MT::Util::ts2epoch($tmpl->blog_id ? $tmpl->blog : undef, $tmpl_mod);
-        if (($ttl == 0) || (time - $tmpl_ts < $ttl)) {
-            $ttl = time - $tmpl_ts;
-        }
-        require MT::Cache::Negotiate;
-        $cache_driver = MT::Cache::Negotiate->new( ttl => $ttl );
-        my $cache_value = $cache_driver->get($cache_key);
-
-        if ($cache_value) {
-            return $cache_value if !$use_ssi;
-
-            # The template may still be cached from before we were using SSI
-            # for this template, so check that it's also on disk.
-            my $include_file = $blog->include_path(\%include_recipe);
-            if ($blog->file_mgr->exists($include_file)) {
-                return $blog->include_statement(\%include_recipe);
-            }
-        }
-    }
-
-    my $builder = $ctx->{__stash}{builder};
-    if (!$tokens) {
-        # Compile the included template against the includ*ing* template's
-        # context.
-        $tokens = $builder->compile($ctx, $tmpl->text);
-        unless (defined $tokens) {
-            $req->cache('build_template', $tmpl);
-            return $ctx->error($builder->errstr);
-        }
-        $tmpl->tokens( $tokens );
-
-        $req->stash($stash_id, [ $tmpl, $tokens ]);
-    }
-
-    # Build the included template against the includ*ing* template's context.
-    my $ret = $tmpl->build( $ctx, $cond );
-    if (!defined $ret) {
-        $req->cache('build_template', $tmpl) if $tmpl;
-        return $ctx->error("error in $name $tmpl_name: " . $tmpl->errstr);
-    }
-
-    if ($cache_enabled) {
-        $cache_driver->replace($cache_key, $ret, $ttl);
-    }
-
-    if ($use_ssi) {
-        my ($include_file, $path, $filename) =
-            $blog->include_path(\%include_recipe);
-        my $fmgr = $blog->file_mgr;
-        if (!$fmgr->exists($path)) {
-            if (!$fmgr->mkpath($path)) {
-                return $ctx->error(MT->translate("Error making path '[_1]': [_2]",
-                    $path, $fmgr->errstr));
-            }
-        }
-        defined($fmgr->put_data($ret, $include_file))
-            or return $ctx->error(MT->translate("Writing to '[_1]' failed: [_2]",
-                $include_file, $fmgr->errstr));
-
-        MT->upload_file_to_sync(
-            url  => $blog->include_url(\%include_recipe),
-            file => $include_file,
-            blog => $blog,
-        );
-
-        my $stat = $blog->include_statement(\%include_recipe);
-        return $stat;
-    }
-
-    return $ret;
-}
-
-sub _include_file {
-    my ($ctx, $arg, $cond) = @_;
-    my $file = $arg->{file} or return;
-    require File::Basename;
-    my $base_filename = File::Basename::basename($file);
-    if (exists $restricted_include_filenames{lc $base_filename}) {
-        return $ctx->error("You cannot include a file with this name: $base_filename");
-    }
-
-    my $blog_id = $arg->{blog_id} || $ctx->{__stash}{blog_id} || 0;
-    my $stash_id = 'template_file::' . $blog_id . '::' . $file;
-    return $ctx->error("Recursion attempt on file: [_1]", $file)
-        if $include_stack{$stash_id};
-    local $include_stack{$stash_id} = 1;
-    my $req = MT::Request->instance;
-    my $cref = $req->stash($stash_id);
-    my $tokens;
-    my $builder = $ctx->{__stash}{builder};
-    if ($cref) {
-        $tokens = $cref;
-    } else {
-        my $blog = $ctx->stash('blog');
-        if ($blog && $blog->id != $blog_id) {
-            $blog = MT::Blog->load($blog_id)
-                or return $ctx->error(MT->translate(
-                    "Can't find blog for id '[_1]", $blog_id));
-        }
-        my @paths = ($file);
-        push @paths, map { File::Spec->catfile($_, $file) }
-            ($blog->site_path, $blog->archive_path)
-            if $blog;
-        my $path;
-        for my $p (@paths) {
-            $path = $p, last if -e $p && -r _;
-        }
-        return $ctx->error(MT->translate(
-            "Can't find included file '[_1]'", $file )) unless $path;
-        local *FH;
-        open FH, $path
-            or return $ctx->error(MT->translate(
-                "Error opening included file '[_1]': [_2]", $path, $! ));
-        my $c;
-        local $/; $c = <FH>;
-        close FH;
-        $tokens = $builder->compile($ctx, $c);
-        return $ctx->error($builder->errstr) unless defined $tokens;
-        $req->stash($stash_id, $tokens);
-    }
-    my $ret = $builder->build($ctx, $tokens, $cond);
-    return defined($ret) ? $ret : $ctx->error("error in file $file: " . $builder->errstr);
-}
-
-sub _include_name {
-    my ($ctx, $arg, $cond) = @_;
-    my $app_file = $arg->{name};
-
-    # app template include mode
-    my $mt = MT->instance;
-    local $mt->{component} = $arg->{component} if exists $arg->{component};
-    my $stash_id = 'template_file::' . $app_file;
-    return $ctx->error(MT->translate("Recursion attempt on file: [_1]", $app_file))
-        if $include_stack{$stash_id};
-    local $include_stack{$stash_id} = 1;
-    my $tmpl = $mt->load_tmpl($app_file);
-    if ($tmpl) {
-        $tmpl->name($app_file);
-
-        my $tmpl_file = $app_file;
-        if ($tmpl_file) {
-            $tmpl_file = File::Basename::basename($tmpl_file);
-            $tmpl_file =~ s/\.tmpl$//;
-            $tmpl_file = '.' . $tmpl_file;
-        }
-        $mt->run_callbacks('template_param' . $tmpl_file, $mt, $tmpl->param, $tmpl);
-
-        # propagate our context
-        local $tmpl->{context} = $ctx;
-        my $out = $tmpl->output();
-        return $ctx->error($tmpl->errstr) unless defined $out;
-
-        $mt->run_callbacks('template_output' . $tmpl_file, $mt, \$out, $tmpl->param, $tmpl);
-        return $out;
-    } else {
-        return defined $arg->{default} ? $arg->{default} : '';
-    }
-}
-}
-
-###########################################################################
-
-=head2 FileTemplate
-
-Produces a file name and path using the archive file naming specifiers.
-
-B<Attributes:>
-
-=over 4
-
-=item * format
-
-A required attribute that defines the template with a string of specifiers.
-The supported specifiers are (B<NOTE:> do not confuse the following
-table with the specifiers used for MT date tags. There is no relationship
-between these -- any similarities are coincidental. These specifiers are
-tuned for publishing filenames and paths for various contexts.)
-
-=over 4
-
-=item * %a
-
-The entry's author's display name passed through the dirify global filter. Example: melody_nelson
-
-=item * %-a
-
-The same as above except using dashes. Example: melody-nelson
-
-=item * %b
-
-For individual archive mappings, this returns the basename of the entry. By
-default, this is the first thirty characters of an entry dirified with
-underscores. It can be specified by using the basename field on the edit
-entry screen. Example: my_summer_vacation
-
-=item * %-b
-
-Same as above but using dashes. Example: my-summer-vacation
-
-=item * %c
-
-The entry's primary category/subcategory path, built using the category
-basename field. Example: arts_and_entertainment/tv_and_movies
-
-=item * %-c
-
-Same as above but using dashes. Example: arts-and-entertainment/tv-and-movies
-
-=item * %C
-
-The entry's primary category label passed through the dirify global filter. Example: arts_and_entertainment
-
-=item * %-C
-
-Same as above but using dashes. Example: arts-and-entertainment
-
-=item * %d
-
-2-digit day of the month. Example: 09
-
-=item * %D
-
-3-letter language-dependent abbreviation of the week day. Example: Tue
-
-=item * %e
-
-A numeric entry ID padded with leading zeroes to six digits. Example: 000040
-
-=item * %E
-
-The entry's numeric ID. Example: 40
-
-=item * %f
-
-Archive filename with the specified extension. This can be used instead of
-%b or %i and will do the right thing based on the context.
-Example: entry_basename.html or index.html
-
-=item * %F
-
-Same as above but without the file extension. Example: filename
-
-=item * %h
-
-2-digit hour on a 24-hour clock with a leading zero if applicable.
-Example: 09 for 9am, 16 for 4pm
-
-=item * %H
-
-2-digit hour on a 24-hour clock without a leading zero if applicable.
-Example: 9 for 9am, 16 for 4pm
-
-=item * %i
-
-The setting of the IndexBasename configuration directive with the default
-file extension appended. Example: index.html
-
-=item * %I
-
-Same as above but without the file extension. Example: index
-
-=item * %j
-
-3-digit day of year, zero-padded. Example: 040
-
-=item * %m
-
-2-digit month, zero-padded. Example: 07
-
-=item * %M
-
-3-letter language-dependent abbreviation of the month. Example: Sep
-
-=item * %n
-
-2-digit minute, zero-padded. Example: 04
-
-=item * %s
-
-2-digit second, zero-padded. Example: 01
-
-=item * %x
-
-File extension with a leading dot (.). If a file extension has not
-been specified a blank string is returned. Example: .html
-
-=item * %y
-
-4-digit year. Example: 2005
-
-=item * %Y
-
-2-digit year with zero-padding. Example: 05
-
-=back
-
-=back
-
-B<Example:>
-
-    <$mt:FileTemplate format="%y/%m/%f"$>
-
-=for tags archives
-
-=cut
-
-sub _hdlr_file_template {
-    my ($ctx, $args, $cond) = @_;
-
-    my $at = $ctx->{current_archive_type} || $ctx->{archive_type};
-    $at = 'Category' if $ctx->{inside_mt_categories};
-    my $format = $args->{format};
-    unless ($format) {
-        my $archiver = MT->publisher->archiver($at);
-        $format = $archiver->default_archive_templates if $archiver;
-    }
-    return $ctx->error(MT->translate("Unspecified archive template")) unless $format;
-
-    my ($dir, $sep);
-    if ($args->{separator}) {
-        $dir = "dirify='$args->{separator}'";
-        $sep = "separator='$args->{separator}'";
-    } else {
-        $dir = "dirify='1'";
-        $sep = "";
-    }
-    my %f = (
-        'a' => "<MTAuthorBasename $dir>",
-        '-a' => "<MTAuthorBasename separator='-'>",
-        '_a' => "<MTAuthorBasename separator='_'>",
-        'b' => "<MTEntryBasename $sep>",
-        '-b' => "<MTEntryBasename separator='-'>",
-        '_b' => "<MTEntryBasename separator='_'>",
-        'c' => "<MTSubCategoryPath $sep>",
-        '-c' => "<MTSubCategoryPath separator='-'>",
-        '_c' => "<MTSubCategoryPath separator='_'>",
-        'C' => "<MTCategoryBasename $sep>",
-        '-C' => "<MTCategoryBasename separator='-'>",
-        'd' => "<MTArchiveDate format='%d'>",
-        'D' => "<MTArchiveDate format='%e' trim='1'>",
-        'e' => "<MTEntryID pad='1'>",
-        'E' => "<MTEntryID pad='0'>",
-        'f' => "<MTArchiveFile $sep>",
-        '-f' => "<MTArchiveFile separator='-'>",
-        'F' => "<MTArchiveFile extension='0' $sep>",
-        '-F' => "<MTArchiveFile extension='0' separator='-'>",
-        'h' => "<MTArchiveDate format='%H'>",
-        'H' => "<MTArchiveDate format='%k' trim='1'>",
-        'i' => '<MTIndexBasename extension="1">',
-        'I' => "<MTIndexBasename>",
-        'j' => "<MTArchiveDate format='%j'>",  # 3-digit day of year
-        'm' => "<MTArchiveDate format='%m'>",  # 2-digit month
-        'M' => "<MTArchiveDate format='%b'>",  # 3-letter month
-        'n' => "<MTArchiveDate format='%M'>",  # 2-digit minute
-        's' => "<MTArchiveDate format='%S'>",  # 2-digit second
-        'x' => "<MTBlogFileExtension>",
-        'y' => "<MTArchiveDate format='%Y'>",  # year
-        'Y' => "<MTArchiveDate format='%y'>",  # 2-digit year
-        'p' => "<mt:PagerBlock><mt:IfCurrentPage><mt:Var name='__value__'></mt:IfCurrentPage></mt:PagerBlock>", # current page number
-    );
-    $format =~ s!%([_-]?[A-Za-z])!$f{$1}!g if defined $format;
-    # now build this template and return result
-    my $builder = $ctx->stash('builder');
-    my $tok = $builder->compile($ctx, $format);
-    return $ctx->error(MT->translate("Error in file template: [_1]", $args->{format}))
-        unless defined $tok;
-    defined(my $file = $builder->build($ctx, $tok, $cond))
-        or return $ctx->error($builder->errstr);
-    $file =~ s!/{2,}!/!g;
-    $file =~ s!(^/|/$)!!g;
-    $file;
-}
-
-###########################################################################
-
-=head2 TemplateCreatedOn
-
-Returns the creation date for the template publishing the current file.
-
-B<Example:>
-
-    <$mt:TemplateCreatedOn$>
-
-=for tags date
-
-=for tags templates
-
-=cut
-
-sub _hdlr_template_created_on {
-    my($ctx, $args, $cond) = @_;
-    my $template = $ctx->stash('template')
-        or return $ctx->error(MT->translate("Can't load template"));
-    $args->{ts} = $template->created_on;
-    _hdlr_date($ctx, $args);
-}
-
-###########################################################################
-
-=head2 Link
-
-Generates the absolute URL to an index template or specific entry in the system.
-
-B<NOTE:> Only one of the 'template', 'identifier' and 'entry_id'
-attributes can be specified at a time.
-
-B<Attributes:>
-
-=over 4
-
-=item * template
-
-The name of the index template.
-
-=item * identifier
-
-A template identifier.
-
-=item * entry_id
-
-The numeric system ID of the entry.
-
-=item * with_index (optional; default "0")
-
-If not set to 1, remove index filenames (by default, index.html)
-from resulting links.
-
-=back
-
-B<Examples:>
-
-    <a href="<mt:Link template="About Page">">My About Page</a>
-
-    <a href="<mt:Link entry_id="221">">the entry about my vacation</a>
-
-    <a href="<mt:Link identifier="main_index">">Home</a>
-
-=for tags archives
-=cut
-
-sub _hdlr_link {
-    my($ctx, $arg, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    my $blog_id = $blog->id;
-    if (my $tmpl_name = $arg->{template}) {
-        require MT::Template;
-        my $tmpl = MT::Template->load({ identifier => $tmpl_name,
-                type => 'index', blog_id => $blog_id })
-            || MT::Template->load({ name => $tmpl_name,
-                                        type => 'index',
-                                        blog_id => $blog_id })
-                || MT::Template->load({ outfile => $tmpl_name,
-                                        type => 'index',
-                                        blog_id => $blog_id })
-            or return $ctx->error(MT->translate(
-                "Can't find template '[_1]'", $tmpl_name ));
-        my $site_url = $blog->site_url;
-        $site_url .= '/' unless $site_url =~ m!/$!;
-        my $link = $site_url . $tmpl->outfile;
-        $link = MT::Util::strip_index($link, $blog) unless $arg->{with_index};
-        $link;
-    } elsif (my $entry_id = $arg->{entry_id}) {
-        my $entry = MT::Entry->load($entry_id)
-            or return $ctx->error(MT->translate(
-                "Can't find entry '[_1]'", $entry_id ));
-        my $link = $entry->permalink;
-        $link = MT::Util::strip_index($link, $blog) unless $arg->{with_index};
-        $link;
-    }
-}
-
-###########################################################################
-
-=head2 Version
-
-The version number of the Movable Type system.
-
-B<Example:>
-
-    <mt:Version />
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_mt_version {
-    require MT;
-    MT->version_id;
-}
-
-###########################################################################
-
-=head2 ProductName
-
-The Movable Type edition in use.
-
-B<Attributes:>
-
-=over 4
-
-=item * version (optional; default "0")
-
-If specified, also outputs the version (same as L<Version>).
-
-=back
-
-B<Example:>
-
-    <$mt:ProductName$>
-
-for the MTOS edition, this would output:
-
-    Movable Type Open Source
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_product_name {
-    my ($ctx, $args, $cond) = @_;
-    require MT;
-    my $short_name = MT->translate(MT->product_name);
-    if ($args->{version}) {
-        return MT->translate("[_1] [_2]", $short_name, MT->version_id);
-    } else {
-        return $short_name;
-    }
-}
-
-###########################################################################
-
-=head2 PublishCharset
-
-The value of the C<PublishCharset> directive in the system configuration.
-
-B<Example:>
-
-    <$mt:PublishCharset$>
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_publish_charset {
-    my ($ctx) = @_;
-    return $ctx->{config}->PublishCharset || 'utf-8';
-}
-
-###########################################################################
-
-=head2 DefaultLanguage
-
-The value of the C<DefaultLanguage> configuration setting.
-
-B<Example:>
-
-    <$mt:DefaultLanguage$>
-
-This outputs a language code, ie: "en_US", "ja", "de", "es", "fr", "nl" or
-other installed language.
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_default_language {
-    my ($ctx) = @_;
-    return $ctx->{config}->DefaultLanguage || 'en_US';
-}
-
 ###########################################################################
 
 =head2 SignOnURL
@@ -5533,852 +1915,6 @@ sub _hdlr_signon_url {
 
 ###########################################################################
 
-=head2 IfNonEmpty
-
-A conditional tag used to test whether a template variable or tag are
-non-empty. This tag is considered deprecated, in favor of the L<If> tag.
-
-B<Attributes:>
-
-=over 4
-
-=item * tag
-
-A tag which is evaluated and tested for non-emptiness.
-
-=item * name or var
-
-A variable whose contents are tested for non-emptiness.
-
-=back
-
-=for tags deprecated
-
-=cut
-
-sub _hdlr_if_nonempty {
-    my ($ctx, $args, $cond) = @_;
-    my $value;
-    if (exists $args->{tag}) {
-        $args->{tag} =~ s/^MT:?//i;
-        my ($handler) = $ctx->handler_for($args->{tag});
-        if (defined($handler)) {
-            local $ctx->{__stash}{tag} = $args->{tag};
-            $value = $handler->($ctx, { %$args });
-            if (my $ph = $ctx->post_process_handler) {
-                $value = $ph->($ctx, $args, $value);
-            }
-        }
-    } elsif (exists $args->{name}) {
-        $value = $ctx->var($args->{name});
-    } elsif (exists $args->{var}) {
-        $value = $ctx->var($args->{var});
-    }
-    if (defined($value) && $value ne '') { # want to include "0" here
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-###########################################################################
-
-=head2 IfNonZero
-
-A conditional tag used to test whether a template variable or tag are
-non-zero. This tag is considered deprecated, in favor of the L<If> tag.
-
-B<Attributes:>
-
-=over 4
-
-=item * tag
-
-A tag which is evaluated and tested for non-zeroness.
-
-=item * name or var
-
-A variable whose contents are tested for non-zeroness.
-
-=back
-
-=for tags deprecated
-
-=cut
-
-sub _hdlr_if_nonzero {
-    my ($ctx, $args, $cond) = @_;
-    my $value;
-    if (exists $args->{tag}) {
-        $args->{tag} =~ s/^MT:?//i;
-        my ($handler) = $ctx->handler_for($args->{tag});
-        if (defined($handler)) {
-            local $ctx->{__stash}{tag} = $args->{tag};
-            $value = $handler->($ctx, { %$args });
-            if (my $ph = $ctx->post_process_handler) {
-                $value = $ph->($ctx, $args, $value);
-            }
-        }
-    } elsif (exists $args->{name}) {
-        $value = $ctx->var($args->{name});
-    } elsif (exists $args->{var}) {
-        $value = $ctx->var($args->{var});
-    }
-    if (defined($value) && $value) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-###########################################################################
-
-=head2 ErrorMessage
-
-This tag is used by the system to display the text of any user error
-message. Used in system templates, such as the 'Comment Response' template.
-
-=for tags templating
-
-=cut
-
-sub _hdlr_error_message {
-    my ($ctx) = @_;
-    my $err = $ctx->stash('error_message');
-    defined $err ? $err : '';
-}
-
-###########################################################################
-
-=head2 SetVars
-
-A block tag that is useful for assigning multiple template variables at
-once.
-
-B<Example:>
-
-    <mt:SetVars>
-    title=My Favorite Color
-    color=Blue
-    </mt:SetVars>
-
-Then later:
-
-    <h1><$mt:Var name="title"$></h1>
-
-    <ul><li><$mt:Var name="color"$></li></ul>
-
-=for tags templating
-
-=cut
-
-sub _hdlr_set_vars {
-    my($ctx, $args) = @_;
-    my $tag = lc $ctx->stash('tag');
-    my $val =_hdlr_pass_tokens(@_);
-    $val =~ s/(^\s+|\s+$)//g;
-    my @pairs = split(/\r?\n/, $val);
-    foreach my $line (@pairs) {
-        next if $line =~ m/^\s*$/;
-        my ($var, $value) = split(/\s*=/, $line, 2);
-        unless (defined($var) && defined($value)) {
-            return $ctx->error("Invalid variable assignment: $line");
-        }
-        $var =~ s/^\s+//;
-        $ctx->var($var, $value);
-    }
-    return '';
-}
-
-###########################################################################
-
-=head2 SetHashVar
-
-A block tag that is used for creating a hash template variable. A hash
-is a variable that stores many values. You can even nest L<SetHashVar>
-tags so you can store hashes inside hashes for more complex structures.
-
-B<Example:>
-
-    <mt:SetHashVar name="my_hash">
-        <$mt:Var name="foo" value="bar"$>
-        <$mt:Var name="fizzle" value="fozzle"$>
-    </mt:SetHashVar>
-
-Then later:
-
-    foo is assigned: <$mt:Var name="my_hash{foo}"$>
-
-=for tags templating
-
-=cut
-
-sub _hdlr_set_hashvar {
-    my($ctx, $args) = @_;
-    my $tag = lc $ctx->stash('tag');
-    my $name = $args->{name} || $args->{var};
-    if ($name =~ m/^\$/) {
-        $name = $ctx->var($name);
-    }
-    return $ctx->error(MT->translate(
-        "You used a [_1] tag without a valid name attribute.", "<MT$tag>" ))
-        unless defined $name;
-
-    my $hash = $ctx->var($name) || {};
-    return $ctx->error(MT->translate( "[_1] is not a hash.", $name ))
-        unless 'HASH' eq ref($hash);
-
-    {
-        local $ctx->{__inside_set_hashvar} = $hash;
-        _hdlr_pass_tokens(@_);
-    }
-    if ( my $parent_hash = $ctx->{__inside_set_hashvar} ) {
-        $parent_hash->{$name} = $hash;
-    }
-    else {
-        $ctx->var($name, $hash);
-    }
-    return q();
-}
-
-###########################################################################
-
-=head2 SetVar
-
-A function tag used to set the value of a template variable.
-
-For simply setting variables you can use the L<Var> tag with a value attribute to assign template variables.
-
-B<Attributes:>
-
-=over 4
-
-=item * var or name
-
-Identifies the name of the template variable. See L<Var> for more
-information on the format of this attribute.
-
-=item * value
-
-The value to assign to the variable.
-
-=item * op (optional)
-
-See the L<Var> tag for more information about this attribute.
-
-=item * prepend (optional)
-
-If specified, places the contents at the front of any existing value
-for the template variable.
-
-=item * append (optional)
-
-If specified, places the contents at the end of any existing value
-for the template variable.
-
-=back
-
-=for tags
-
-=cut
-
-###########################################################################
-
-=head2 SetVarBlock
-
-A block tag used to set the value of a template variable. Note that
-you can also use the global 'setvar' modifier to achieve the same result
-as it can be applied to any MT tag.
-
-B<Attributes:>
-
-=over 4
-
-=item * var or name (required)
-
-Identifies the name of the template variable. See L<Var> for more
-information on the format of this attribute.
-
-=item * op (optional)
-
-See the L<Var> tag for more information about this attribute.
-
-=item * prepend (optional)
-
-If specified, places the contents at the front of any existing value
-for the template variable.
-
-=item * append (optional)
-
-If specified, places the contents at the end of any existing value
-for the template variable.
-
-=back
-
-=for tags templating
-
-=cut
-
-###########################################################################
-
-=head2 SetVarTemplate
-
-Similar to the L<SetVarBlock> tag, but does not evaluate the contents
-of the tag, but saves it for later evaluation, when the variable is
-requested. This allows you to create inline template modules that you
-can use over and over again.
-
-B<Attributes:>
-
-=over 4
-
-=item * var or name (required)
-
-Identifies the name of the template variable. See L<Var> for more
-information on the format of this attribute.
-
-=back
-
-B<Example:>
-
-    <mt:SetVarTemplate name="entry_title">
-        <h1><$MTEntryTitle$></h1>
-    </mt:SetVarTemplate>
-    
-    <mt:Entries>
-        <$mt:Var name="entry_title"$>
-    </mt:Entries>
-
-=for tags templating
-
-=cut
-
-sub _hdlr_set_var {
-    my($ctx, $args) = @_;
-    my $tag = lc $ctx->stash('tag');
-    my $name = $args->{name} || $args->{var};
-
-    return $ctx->error(MT->translate(
-        "You used a [_1] tag without a valid name attribute.", "<MT$tag>" ))
-        unless defined $name;
-
-    my ($func, $key, $index, $value);
-    if ($name =~ m/^(\w+)\((.+)\)$/) {
-        $func = $1;
-        $name = $2;
-    } else {
-        $func = $args->{function} if exists $args->{function};
-    }
-
-    # pick off any {...} or [...] from the name.
-    if ($name =~ m/^(.+)([\[\{])(.+)[\]\}]$/) {
-        $name = $1;
-        my $br = $2;
-        my $ref = $3;
-        if ($ref =~ m/^\$(.+)/) {
-            $ref = $ctx->var($1);
-            $ref = chr(0) unless defined $ref;
-        }
-        $br eq '[' ? $index = $ref : $key = $ref;
-    } else {
-        $index = $args->{index} if exists $args->{index};
-        $key = $args->{key} if exists $args->{key};
-    }
-
-    if ($name =~ m/^\$/) {
-        $name = $ctx->var($name);
-        return $ctx->error(MT->translate(
-            "You used a [_1] tag without a valid name attribute.", "<MT$tag>" ))
-            unless defined $name;
-    }
-
-    my $val = '';
-    my $data = $ctx->var($name);
-    if (($tag eq 'setvar') || ($tag eq 'var')) {
-        $val = defined $args->{value} ? $args->{value} : '';
-    } elsif ($tag eq 'setvarblock') {
-        $val = _hdlr_pass_tokens(@_);
-        return unless defined($val);
-    } elsif ($tag eq 'setvartemplate') {
-        $val = $ctx->stash('tokens');
-        return unless defined($val);
-        $val = bless $val, 'MT::Template::Tokens';
-    }
-
-    my $existing = $ctx->var($name);
-    $existing = '' unless defined $existing;
-    if ( 'HASH' eq ref($existing) ) {
-        $existing = $existing->{ $key };
-    }
-    elsif ( 'ARRAY' eq ref($existing) ) {
-        $existing = ( defined $index && ( $index =~ /^-?\d+$/ ) )
-          ? $existing->[ $index ] 
-          : undef;
-    }
-    $existing = '' unless defined $existing;
-
-    if ($args->{prepend}) {
-        $val = $val . $existing;
-    }
-    elsif ($args->{append}) {
-        $val = $existing . $val;
-    }
-    elsif ( $existing ne '' && ( my $op = $args->{op} ) ) {
-        $val = _math_operation($ctx, $op, $existing, $val);
-    }
-
-    if ( defined $key ) {
-        $data ||= {};
-        return $ctx->error( MT->translate("'[_1]' is not a hash.", $name) )
-            unless 'HASH' eq ref($data);
-
-        if ( ( defined $func )
-          && ( 'delete' eq lc( $func ) ) ) {
-            delete $data->{ $key };
-        }
-        else {
-            $data->{ $key } = $val;
-        }
-    }
-    elsif ( defined $index ) {
-        $data ||= [];
-        return $ctx->error( MT->translate("'[_1]' is not an array.", $name) )
-            unless 'ARRAY' eq ref($data);
-        return $ctx->error( MT->translate("Invalid index.") )
-            unless $index =~ /^-?\d+$/;
-        $data->[ $index ] = $val;
-    }
-    elsif ( defined $func ) {
-        if ( 'undef' eq lc( $func ) ) {
-            $data = undef;
-        }
-        else {
-            $data ||= [];
-            return $ctx->error( MT->translate("'[_1]' is not an array.", $name) )
-                unless 'ARRAY' eq ref($data);
-            if ( 'push' eq lc( $func ) ) {
-                push @$data, $val;
-            }
-            elsif ( 'unshift' eq lc( $func ) ) {
-                $data ||= [];
-                unshift @$data, $val;
-            }
-            else {
-                return $ctx->error(
-                    MT->translate("'[_1]' is not a valid function.", $func)
-                );
-            }
-        }
-    }
-    else {
-        $data = $val;
-    }
-
-    if ( my $hash = $ctx->{__inside_set_hashvar} ) {
-        $hash->{$name} = $data;
-    }
-    else {
-        $ctx->var($name, $data);
-    }
-    return '';
-}
-
-###########################################################################
-
-=head2 CGIPath
-
-The value of the C<CGIPath> configuration setting. Example (the output
-is guaranteed to end with "/", so appending one prior to a script
-name is unnecessary):
-
-    <a href="<$mt:CGIPath$>some-cgi-script.cgi">
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_cgi_path {
-    my ($ctx) = @_;
-    my $path = $ctx->{config}->CGIPath;
-    if ($path =~ m!^/!) {
-        # relative path, prepend blog domain
-        if (my $blog = $ctx->stash('blog')) {
-            my ($blog_domain) = $blog->archive_url =~ m|(.+://[^/]+)|;
-            $path = $blog_domain . $path;
-        }
-    }
-    $path .= '/' unless $path =~ m!/$!;
-    return $path;
-}
-
-###########################################################################
-
-=head2 AdminCGIPath
-
-Returns the value of the C<AdminCGIPath> configuration setting if set. Otherwise, the value of the C<CGIPath> setting is returned.
-
-In the event that the configured path has no domain (ie, "/cgi-bin/"), the active blog's domain will be used.
-
-The path produced by this tag will always have an ending '/', even if one does not exist as configured.
-
-B<Example:>
-
-    <$mt:AdminCGIPath$>
-
-=for tags path, configuration
-
-=cut
-
-sub _hdlr_admin_cgi_path {
-    my ($ctx) = @_;
-    my $cfg = $ctx->{config};
-    my $path = $cfg->AdminCGIPath || $cfg->CGIPath;
-    if ($path =~ m!^/!) {
-        # relative path, prepend blog domain
-        my $blog = $ctx->stash('blog');
-        my ($blog_domain) = $blog->archive_url =~ m|(.+://[^/]+)|;
-        $path = $blog_domain . $path;
-    }
-    $path .= '/' unless $path =~ m!/$!;
-    return $path;
-}
-
-###########################################################################
-
-=head2 ConfigFile
-
-Returns the full file path for the Movable Type configuration file
-(mt-config.cgi).
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_config_file {
-    return MT->instance->{cfg_file};
-}
-
-###########################################################################
-
-=head2 JQueryURL
-
-Returns the URL for the installation's jQuery library set by the
-C<JQueryURL> configuration directive (in mt-config.cgi) which defaults
-to C<STATIC_WEB_PATH/jquery/jquery.js> if unset.  
-
-It can be set to any relative, absolute or external FQDN (fully-qualified
-domain name) jQuery source URL which is useful in enhancing page
-load performance.
-
-B<CAVEAT:> This tag is used internally by Melody to load jQuery for its
-admin UI screens so use caution if setting the directive to different
-version than that which the application uses.  If you really must use a
-different version of jQuery for your site's pages, you're better off
-hardcoding it in your templates.
-
-B<Example template tag usage:>
-
-    <script src="<$mt:jqueryurl$>"
-            type="text/javascript" charset="utf-8"></script>
-
-B<Examples of mt-config.cgi directive use (remember: CASE SENSITIVE!):>
-
-    # Use a CDN for better caching and geographical distribution
-    JQueryURL  http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js
-
-    # Use a subdomain to parallelize loading of static helper files 
-    JQueryURL  http://static.mydomain.com/jquery/jquery.min.js
-
-    # Non-FQDN, absolute URLs to internal resources work fine and are
-    # preferred when you're publishing to multiple domains. In this case,
-    # the tag will return the exact, non-FQDN value shown below.
-    JQueryURL  /scripts/jquery/jquery.min.js
-
-    # Relative URLs to internal resources are OK and will have
-    # StaticWebPath prepended to it,
-    # e.g. http://example.com/mt/mt-static/jquery/jquery.min.js
-    JQueryURL  jquery/jquery.min.js
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_jquery_url { MT->instance->config->JQueryURL }
-
-
-###########################################################################
-
-=head2 CGIServerPath
-
-Returns the file path to the directory where Movable Type has been
-installed. Any trailing "/" character is removed.
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_cgi_server_path {
-    my $path = MT->instance->server_path() || "";
-    $path =~ s!/*$!!;
-    return $path;
-}
-
-###########################################################################
-
-=head2 CGIRelativeURL
-
-The relative URL (path) extracted from the CGIPath setting in
-mt-config.cgi. This is the same as L<CGIPath>, but without any
-domain name. This value is guaranteed to end with a "/" character.
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_cgi_relative_url {
-    my ($ctx) = @_;
-    my $url = $ctx->{config}->CGIPath;
-    $url .= '/' unless $url =~ m!/$!;
-    if ($url =~ m!^https?://[^/]+(/.*)$!) {
-        return $1;
-    }
-    return $url;
-}
-
-###########################################################################
-
-=head2 StaticFilePath
-
-The file path to the directory where Movable Type's static files are
-stored (as configured by the C<StaticFilePath> setting, or based on
-the location of the MT application files alone). This value is
-guaranteed to end with a "/" character.
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_static_file_path {
-    my ($ctx) = @_;
-    my $cfg = $ctx->{config};
-    my $path = $cfg->StaticFilePath;
-    if (!$path) {
-        $path = MT->instance->{mt_dir};
-        $path .= '/' unless $path =~ m!/$!;
-        $path .= 'mt-static/';
-    }
-    $path .= '/' unless $path =~ m!/$!;
-    return $path;
-}
-
-###########################################################################
-
-=head2 StaticWebPath
-
-The value of the C<StaticWebPath> configuration setting. If this setting
-has no domain, the blog domain is added to it. This value is
-guaranteed to end with a "/" character.
-
-B<Example:>
-
-    <img src="<$mt:StaticWebPath$>images/powered.gif"
-        alt="Powered by MT" />
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_static_path {
-    my ($ctx) = @_;
-    my $cfg = $ctx->{config};
-    my $path = $cfg->StaticWebPath;
-    if (!$path) {
-        $path = $cfg->CGIPath;
-        $path .= '/' unless $path =~ m!/$!;
-        $path .= 'mt-static/';
-    }
-    if ($path =~ m!^/!) {
-        # relative path, prepend blog domain
-        my $blog = $ctx->stash('blog');
-        if ($blog) {
-            my ($blog_domain) = $blog->archive_url =~ m|(.+://[^/]+)|;
-            $path = $blog_domain . $path;
-        }
-    }
-    $path .= '/' unless $path =~ m!/$!;
-    return $path;
-}
-
-###########################################################################
-
-=head2 _get_script_location
-
-An internal wrapper method around all of the "FooScript" config directives which supports two optional arguments:
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example C<<$mt:AdminScript url="1"$>>
-might give you http://example.com/mt/mt.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:AdminScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt.cgi>
-
-=back
-
-=for internal
-
-=cut
-
-sub _get_script_location {
-    my ($ctx, $args, $cond, $method) = @_;
-    my $additional_location = '';
-
-    if ($args->{url}) {
-        $additional_location = $ctx->_hdlr_cgi_path();
-    }
-    elsif ( $args->{filepath} ) {
-        $additional_location  = $ctx->_hdlr_cgi_server_path();
-        $additional_location .= '/' if ($additional_location !~ /$\//);
-    }
-
-    no strict 'refs';
-    my $script = $ctx->{config}->$method();
-    return $additional_location . $script;
-}
-
-###########################################################################
-
-=head2 AdminScript
-
-Returns the value of the C<AdminScript> configuration setting. The default
-for this setting if unassigned is "mt.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example C<<$mt:AdminScript url="1"$>>
-might give you http://example.com/mt/mt.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:AdminScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_admin_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location(@_,'AdminScript');
-}
-
-###########################################################################
-
-=head2 CommentScript
-
-Returns the value of the C<CommentScript> configuration setting. The
-default for this setting if unassigned is "mt-comments.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example
-C<<$mt:CommentScript url="1"$>> might give you
-http://example.com/mt/mt-comments.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:CommentScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-comments.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_comment_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location(@_,'CommentScript');
-}
-
-###########################################################################
-
-=head2 TrackbackScript
-
-Returns the value of the C<TrackbackScript> configuration setting. The
-default for this setting if unassigned is "mt-tb.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example 
-C<<$mt:TrackbackScript url="1"$>> might give you
-http://example.com/mt/mt-tb.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:TrackbackScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-tb.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_trackback_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location(@_,'TrackbackScript');
-}
-
-###########################################################################
-
-=head2 SearchScript
-
-Returns the value of the C<SearchScript> configuration setting. The
-default for this setting if unassigned is "mt-search.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example C<<$mt:SearchScript url="1"$>>
-might give you http://example.com/mt/mt-search.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:SearchScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-search.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_search_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location(@_,'SearchScript');
-}
-
-###########################################################################
-
 =head2 SearchMaxResults
 
 Returns the value of the C<SearchMaxResults> or C<MaxResults> configuration
@@ -6391,99 +1927,6 @@ setting. Use C<SearchMaxResults> because MaxResults is considered deprecated.
 sub _hdlr_search_max_results {
     my ($ctx) = @_;
     return $ctx->{config}->MaxResults;
-}
-
-###########################################################################
-
-=head2 XMLRPCScript
-
-Returns the value of the C<XMLRPCScript> configuration setting. The
-default for this setting if unassigned is "mt-xmlrpc.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example C<<$mt:XMLRPCScript url="1"$>>
-might give you http://example.com/mt/mt-xmlrpc.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:XMLRPCScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-xmlrpc.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_xmlrpc_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location(@_,'XMLRPCScript');
-}
-
-###########################################################################
-
-=head2 AtomScript
-
-Returns the value of the C<AtomScript> configuration setting. The
-default for this setting if unassigned is "mt-atom.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example C<<$mt:AtomScript url="1"$>>
-might give you http://example.com/mt/mt-atom.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:AtomScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-atom.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_atom_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location(@_,'AtomScript');
-}
-
-###########################################################################
-
-=head2 NotifyScript
-
-Returns the value of the C<NotifyScript> configuration setting. The
-default for this setting if unassigned is "mt-add-notify.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example C<<$mt:NotifyScript url="1"$>>
-might give you http://example.com/mt/mt-add-notify.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:NotifyScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-add-notify.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_notify_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location(@_,'NotifyScript');
 }
 
 ###########################################################################
@@ -7277,412 +2720,6 @@ sub _hdlr_author_basename {
 
 ###########################################################################
 
-=head2 Blogs
-
-A container tag which iterates over a list of all of the blogs in the
-system. You can use any of the blog tags (L<BlogName>, L<BlogURL>, etc -
-anything starting with MTBlog) inside of this tag set.
-
-B<Attributes:>
-
-=over 4
-
-=item * blog_ids
-
-This attribute allows you to limit the set of blogs iterated over by
-L<Blogs>. Multiple blogs are specified in a comma-delimited fashion.
-For example:
-
-    <mt:Blogs blog_ids="1,12,19,37,112">
-
-would iterate over only the blogs with IDs 1, 12, 19, 37 and 112.
-
-=item * glue (optional)
-
-Specifies a string that is output in between output produce within the
-L<Blogs> container tags. For example:
-
-    <mt:Blogs glue=","><$mt:BlogID$></mt:Blogs>
-
-might output something like this:
-
-    1,2,5,10,28,32,33,34
-
-=back
-
-=for tags multiblog, loop, blogs
-
-=cut
-
-sub _hdlr_blogs {
-    my($ctx, $args, $cond) = @_;
-    my (%terms, %args);
-
-    $ctx->set_blog_load_context($args, \%terms, \%args, 'id')
-        or return $ctx->error($ctx->errstr);
-
-    my $builder = $ctx->stash('builder');
-    my $tokens = $ctx->stash('tokens');
-
-    local $ctx->{__stash}{entries} = undef
-        if $args->{ignore_archive_context};
-    local $ctx->{current_timestamp} = undef
-        if $args->{ignore_archive_context};
-    local $ctx->{current_timestamp_end} = undef
-        if $args->{ignore_archive_context};
-    local $ctx->{__stash}{category} = undef
-        if $args->{ignore_archive_context};
-    local $ctx->{__stash}{archive_category} = undef
-        if $args->{ignore_archive_context};
-
-    require MT::Blog;
-    $args{'sort'} = 'name';
-    $args{direction} = 'ascend';
-    my $iter = MT::Blog->load_iter(\%terms, \%args);
-    my $res = '';
-    my $count = 0;
-    my $next = $iter->();
-    my $glue = $args->{glue};
-    my $vars = $ctx->{__stash}{vars} ||= {};
-    while ($next) {
-        my $blog = $next;
-        $next = $iter->();
-        $count++;
-        local $ctx->{__stash}{blog} = $blog;
-        local $ctx->{__stash}{blog_id} = $blog->id;
-        local $vars->{__first__} = $count == 1;
-        local $vars->{__last__} = !$next;
-        local $vars->{__odd__} = ($count % 2) == 1;
-        local $vars->{__even__} = ($count % 2) == 0;
-        local $vars->{__counter__} = $count;
-        defined(my $out = $builder->build($ctx, $tokens, $cond))
-            or return $ctx->error($builder->errstr);
-        # See http://bugs.movabletype.org/?79873
-        $res .= $glue
-            if defined $glue && ($count > 1) && length($res) && length($out);
-        $res .= $out;
-    }
-    $res;
-}
-
-###########################################################################
-
-=head2 IfBlog
-
-A conditional tag that produces its contents when there is a blog in
-context. This tag is useful for situations where a blog may or may not
-be in context, such as the search template, when a search is conducted
-across all blogs.
-
-B<Example:>
-
-    <mt:IfBlog>
-        <h1>Search results for <$mt:BlogName$>:</h1>
-    <mt:Else>
-        <h1>Search results from all blogs:</h1>
-    </mt:IfBlog>
-
-=for tags blogs
-
-=cut
-
-###########################################################################
-
-=head2 BlogID
-
-Outputs the numeric ID of the blog currently in context.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_id {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    $blog ? $blog->id : 0;
-}
-
-###########################################################################
-
-=head2 BlogName
-
-Outputs the name of the blog currently in context.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_name {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $name = $blog->name;
-    defined $name ? $name : '';
-}
-
-###########################################################################
-
-=head2 BlogDescription
-
-Outputs the description field of the blog currently in context.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_description {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $d = $blog->description;
-    defined $d ? $d : '';
-}
-
-###########################################################################
-
-=head2 BlogURL
-
-Outputs the Site URL field of the blog currently in context. An ending
-'/' character is guaranteed.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_url {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $url = $blog->site_url;
-    return '' unless defined $url;
-    $url .= '/' unless $url =~ m!/$!;
-    $url;
-}
-
-###########################################################################
-
-=head2 BlogSitePath
-
-Outputs the Site Root field of the blog currently in context. An ending
-'/' character is guaranteed.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_site_path {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $path = $blog->site_path;
-    return '' unless defined $path;
-    $path .= '/' unless $path =~ m!/$!;
-    $path;
-}
-
-###########################################################################
-
-=head2 BlogArchiveURL
-
-Outputs the Archive URL of the blog currently in context. An ending
-'/' character is guaranteed.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_archive_url {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $url = $blog->archive_url;
-    return '' unless defined $url;
-    $url .= '/' unless $url =~ m!/$!;
-    $url;
-}
-
-###########################################################################
-
-=head2 BlogRelativeURL
-
-Similar to the L<BlogURL> tag, but removes any domain name from the URL.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_relative_url {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $host = $blog->site_url;
-    return '' unless defined $host;
-    if ($host =~ m!^https?://[^/]+(/.*)$!) {
-        return $1;
-    } else {
-        return '';
-    }
-}
-
-###########################################################################
-
-=head2 BlogTimezone
-
-The timezone that has been specified for the blog displayed as an offset
-from UTC in +|-hh:mm format. This setting can be changed on the blog's
-General settings screen.
-
-B<Attributes:>
-
-=over 4
-
-=item * no_colon (optional; default "0")
-
-If specified, will produce the timezone without the ":" character
-("+|-hhmm" only).
-
-=back
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_timezone {
-    my ($ctx, $args) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $so = $blog->server_offset;
-    my $no_colon = $args->{no_colon};
-    my $partial_hour_offset = 60 * abs($so - int($so));
-    sprintf("%s%02d%s%02d", $so < 0 ? '-' : '+',
-            abs($so), $no_colon ? '' : ':',
-            $partial_hour_offset);
-}
-
-{
-    my %real_lang = (cz => 'cs', dk => 'da', jp => 'ja', si => 'sl');
-    ###########################################################################
-
-=head2 BlogLanguage
-
-The blog's specified language for date display. This setting can be changed
-on the blog's Entry settings screen.
-
-B<Attributes:>
-
-=over 4
-
-=item * locale (optional; default "0")
-
-If assigned, will format the language in the style "language_LOCALE" (ie: "en_US", "de_DE", etc).
-
-=item * ietf (optional; default "0")
-
-If assigned, will change any '_' in the language code to a '-', conforming
-it to the IETF RFC # 3066.
-
-=back
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_language {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    my $lang_tag = ($blog ? $blog->language : $ctx->{config}->DefaultLanguage) || '';
-    $lang_tag = ($real_lang{$lang_tag} || $lang_tag);
-    if ($args->{'locale'}) {
-        $lang_tag =~ s/^(..)([-_](..))?$/$1 . '_' . uc($3||$1)/e;
-    } elsif ($args->{"ietf"}) {
-        # http://www.ietf.org/rfc/rfc3066.txt
-        $lang_tag =~ s/_/-/;
-    }
-    $lang_tag;
-}
-}
-
-###########################################################################
-
-=head2 BlogHost
-
-The host name part of the absolute URL of your blog.
-
-B<Attributes:>
-
-=over 4
-
-=item * exclude_port (optional; default "0")
-
-Removes any specified port number if this attribute is set to true (1),
-otherwise it will return the hostname and port number (e.g.
-www.somedomain.com:8080).
-
-=item * signature (optional; default "0")
-
-If set to 1, then this template tag will instead return a unique signature
-for the hostname, by replacing all occurrences of decimals (".") with
-underscores ("_").
-
-=back
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_host {
-    my ($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $host = $blog->site_url;
-    if ($host =~ m!^https?://([^/:]+)(:\d+)?/?!) {
-        if ($args->{signature}) {
-            # using '_' to replace '.' since '-' is a valid
-            # letter for domains
-            my $sig = $1;
-            $sig =~ s/\./_/g;
-            return $sig;
-        }
-        return $args->{exclude_port} ? $1 : $1 . ($2 || '');
-    } else {
-        return '';
-    }
-}
-
-###########################################################################
-
-=head2 CGIHost
-
-Returns the domain host from the configuration directive CGIPath. If CGIPath
-is defined as a relative path, then the domain is derived from the Site URL
-in the blog's "Publishing Settings".
-
-B<Attributes:>
-
-=over 4
-
-=item * exclude_port (optional; default "0")
-
-If set, exclude the port number from the CGIHost.
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_cgi_host {
-    my ($ctx, $args, $cond) = @_;
-    my $path = _hdlr_cgi_path(@_);
-    if ($path =~ m!^https?://([^/:]+)(:\d+)?/!) {
-        return $args->{exclude_port} ? $1 : $1 . ($2 || '');
-    } else {
-        return '';
-    }
-}
-
-###########################################################################
-
 =head2 BlogCategoryCount
 
 Returns the number of categories associated with a blog. This
@@ -7776,182 +2813,6 @@ sub _hdlr_blog_ping_count {
     my $count = MT::Trackback->count(undef,
         { 'join' => MT::TBPing->join_on('tb_id', \%terms, \%args) });
     return $ctx->count_format($count, $args);
-}
-
-###########################################################################
-
-=head2 BlogCCLicenseURL
-
-Publishes the license URL of the Creative Commons logo appropriate
-to the license assigned to the blog inc ontex.t If the blog doesn't
-have a Creative Commons license, this tag returns an empty string.
-
-=for tags blogs, creativecommons
-
-=cut
-
-sub _hdlr_blog_cc_license_url {
-    my ($ctx) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    return $blog->cc_license_url;
-}
-
-###########################################################################
-
-=head2 BlogCCLicenseImage
-
-Publishes the URL of the Creative Commons logo appropriate to the
-license assigned to the blog in context. If the blog doesn't have
-a Creative Commons license, this tag returns an empty string.
-
-B<Example:>
-
-    <MTIf tag="BlogCCLicenseImage">
-    <img src="<$MTBlogCCLicenseImage$>" alt="Creative Commons" />
-    </MTIf>
-
-=for tags blogs, creativecommons
-
-=cut
-
-sub _hdlr_blog_cc_license_image {
-    my ($ctx) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $cc = $blog->cc_license or return '';
-    my ($code, $license, $image_url) = $cc =~ /(\S+) (\S+) (\S+)/;
-    return $image_url if $image_url;
-    "http://creativecommons.org/images/public/" .
-        ($cc eq 'pd' ? 'norights' : 'somerights');
-}
-
-###########################################################################
-
-=head2 CCLicenseRDF
-
-Returns the RDF markup for a Creative Commons License. If the blog
-has not been assigned a license, this returns an empty string.
-
-B<Attributes:>
-
-=over 4
-
-=item * with_index (optional; default "0")
-
-If specified, forces the trailing "index" filename to be left on any
-entry permalink published in the RDF block.
-
-=back
-
-=for tags blogs, creativecommons
-
-=cut
-
-sub _hdlr_cc_license_rdf {
-    my ($ctx, $arg) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $cc = $blog->cc_license or return '';
-    my $cc_url = $blog->cc_license_url;
-    my $rdf = <<RDF;
-<!--
-<rdf:RDF xmlns="http://web.resource.org/cc/"
-         xmlns:dc="http://purl.org/dc/elements/1.1/"
-         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-RDF
-    ## SGML comments cannot contain double hyphens, so we convert
-    ## any double hyphens to single hyphens.
-    my $strip_hyphen = sub {
-        (my $s = $_[0]) =~ tr/\-//s;
-        $s;
-    };
-    if (my $entry = $ctx->stash('entry')) {
-        my $link = $entry->permalink;
-        my $author_name = $entry->author ? $entry->author->nickname || '' : '';
-        $link = MT::Util::strip_index($entry->permalink, $blog) unless $arg->{with_index};
-        $rdf .= <<RDF;
-<Work rdf:about="$link">
-<dc:title>@{[ encode_xml($strip_hyphen->($entry->title)) ]}</dc:title>
-<dc:description>@{[ encode_xml($strip_hyphen->(_hdlr_entry_excerpt(@_))) ]}</dc:description>
-<dc:creator>@{[ encode_xml($strip_hyphen->($author_name)) ]}</dc:creator>
-<dc:date>@{[ _hdlr_entry_date($ctx, { 'format' => "%Y-%m-%dT%H:%M:%S" }) .
-             _hdlr_blog_timezone($ctx) ]}</dc:date>
-<license rdf:resource="$cc_url" />
-</Work>
-RDF
-    } else {
-        $rdf .= <<RDF;
-<Work rdf:about="@{[ $blog->site_url ]}">
-<dc:title>@{[ encode_xml($strip_hyphen->($blog->name)) ]}</dc:title>
-<dc:description>@{[ encode_xml($strip_hyphen->($blog->description)) ]}</dc:description>
-<license rdf:resource="$cc_url" />
-</Work>
-RDF
-    }
-    $rdf .= MT::Util::cc_rdf($cc) . "</rdf:RDF>\n-->\n";
-    $rdf;
-}
-
-###########################################################################
-
-=head2 BlogIfCCLicense
-
-A conditional tag that is true when the current blog in context has
-been assigned a Creative Commons License.
-
-=for tags blogs, creativecommons
-
-=cut
-
-sub _hdlr_blog_if_cc_license {
-    my ($ctx) = @_;
-    my $blog = $ctx->stash('blog');
-    return 0 unless $blog;
-    return $blog->cc_license ? 1 : 0;
-}
-
-###########################################################################
-
-=head2 BlogFileExtension
-
-Returns the configured blog filename extension, including a leading
-'.' character. If no extension is assigned, this returns an empty
-string.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_file_extension {
-    my($ctx, $args, $cond) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $ext = $blog->file_extension || '';
-    $ext = '.' . $ext if $ext ne '';
-    $ext;
-}
-
-###########################################################################
-
-=head2 BlogTemplateSetID
-
-Returns an identifier for the currently assigned template set for the
-blog in context. The identifier is modified such that underscores are
-changed to dashes. In the MT template sets, this identifier is assigned
-to the "id" attribute of the C<body> HTML tag.
-
-=for tags blogs
-
-=cut
-
-sub _hdlr_blog_template_set_id {
-    my ($ctx) = @_;
-    my $blog = $ctx->stash('blog');
-    return '' unless $blog;
-    my $set = $blog->template_set || 'classic_blog';
-    $set =~ s/_/-/g;
-    return $set;
 }
 
 ###########################################################################
@@ -8880,7 +3741,7 @@ sub _hdlr_entries {
         $i++;
     }
     if (!@entries) {
-        return _hdlr_pass_tokens_else(@_);
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_);
     }
 
     $res;
@@ -9244,7 +4105,7 @@ sub _hdlr_entry_date {
     my $e = $ctx->stash('entry')
         or return $ctx->_no_entry_error();
     $args->{ts} = $e->authored_on;
-    return _hdlr_date($ctx, $args);
+    return $ctx->build_date($ctx, $args);
 }
 
 ###########################################################################
@@ -9263,7 +4124,7 @@ sub _hdlr_entry_create_date {
     my $e = $ctx->stash('entry')
         or return $ctx->_no_entry_error();
     $args->{ts} = $e->created_on;
-    return _hdlr_date($ctx, $args);
+    return $ctx->build_date($ctx, $args);
 }
 
 ###########################################################################
@@ -9282,7 +4143,7 @@ sub _hdlr_entry_mod_date {
     my $e = $ctx->stash('entry')
         or return $ctx->_no_entry_error();
     $args->{ts} = $e->modified_on || $e->created_on;
-    return _hdlr_date($ctx, $args);
+    return $ctx->build_date($ctx, $args);
 }
 
 ###########################################################################
@@ -10375,22 +5236,6 @@ sub _hdlr_entry_nextprev {
     $res;
 }
 
-sub _hdlr_pass_tokens {
-    my($ctx, $args, $cond) = @_;
-    my $b = $ctx->stash('builder');
-    defined(my $out = $b->build($ctx, $ctx->stash('tokens'), $cond))
-        or return $ctx->error($b->errstr);
-    return $out;
-}
-
-sub _hdlr_pass_tokens_else {
-    my($ctx, $args, $cond) = @_;
-    my $b = $ctx->stash('builder');
-    defined(my $out = $b->build($ctx, $ctx->stash('tokens_else'), $cond))
-        or return $ctx->error($b->errstr);
-    return $out;
-}
-
 ###########################################################################
 
 =head2 ArchiveDate
@@ -10403,277 +5248,6 @@ that are supported.
 =for tags date, archives
 
 =cut
-
-###########################################################################
-
-=head2 Date
-
-Outputs the current date.
-
-B<Attributes:>
-
-=over 4
-
-=item * ts (optional)
-
-If specified, will use the given date as the date to publish. Must be
-in the format of "YYYYMMDDhhmmss".
-
-=item * relative (optional)
-
-If specified, will publish the date using a phrase, if the date is
-less than a week from the current date. Accepted values are "1", "2", "3"
-and "js". The options for "1", "2" and "3" affect the style of the phrase.
-
-=over 4
-
-=item * relative="1"
-
-Supports display of one duration: moments ago; N minutes ago; N hours ago; N days ago. For older dates in the same year, the date is shown as the abbreviated month and day of the month ("Jan 3"). For older dates, the year is added to that ("Jan 3 2005").
-
-=item * relative="2"
-
-Supports display of two durations: less than 1 minute ago; N seconds, N minutes ago; N minutes ago; N hours, N minutes ago; N hours ago; N days, N hours ago; N days ago.
-
-=item * relative="3"
-
-Supports display of two durations: N seconds ago; N seconds, N minutes ago;
-N minutes ago; N hours, N minutes ago; N hours ago; N days, N hours ago; N days ago.
-
-=item * relative="js"
-
-When specified, publishes the date using JavaScript, which relies on a
-MT JavaScript function 'mtRelativeDate' to format the date.
-
-=back
-
-=item * format (optional)
-
-A string that provides the format in which to publish the date. If
-unspecified, the default that is appropriate for the language of the blog
-is used (for English, this is "%B %e, %Y %l:%M %p"). The format specifiers
-supported are:
-
-=over 4
-
-=item * %Y
-
-The 4-digit year. Example: "1999".
-
-=item * %m
-
-The 2-digit month (zero-padded). Example: for a date in September, this would output "09".
-
-=item * %d
-
-The 2-digit day of the month (zero-padded). Example: "05".
-
-=item * %H
-
-The 2-digit hour of the day (24-hour clock, zero-padded). Example: "18".
-
-=item * %M
-
-The 2-digit minute of the hour (zero-padded). Example: "09".
-
-=item * %S
-
-The 2-digit second of the minute (zero-padded). Example: "04".
-
-=item * %w
-
-The numeric day of the week, in the range C<0>-C<6>, where C<0> is
-C<Sunday>. Example: "3".
-
-=item * %j
-
-The numeric day of the year, in the range C<0>-C<365>. Zero-padded to
-three digits. Example: "040".
-
-=item * %y
-
-The two-digit year, zero-padded. Example: %y for a date in 2008 would
-output "08".
-
-=item * %b
-
-The abbreviated month name. Example: %b for a date in January would
-output "Jan".
-
-=item * %B
-
-The full month name. Example: "January".
-
-=item * %a
-
-The abbreviated day of the week. Example: %a for a date on a Monday would
-output "Mon".
-
-=item * %A
-
-The full day of the week. Example: "Friday".
-
-=item * %e
-
-The numeric day of the month (space-padded). Example: " 8".
-
-=item * %I
-
-The two-digit hour on a 12-hour clock padded with a zero if applicable.
-Example: "04".
-
-=item * %k
-
-The two-digit military time hour padded with a space if applicable.
-Example: " 9".
-
-=item * %l
-
-The hour on a 12-hour clock padded with a space if applicable.
-Example: " 4".
-
-=back
-
-=item * format_name (optional)
-
-Supports date formatting for particular standards.
-
-=over 4
-
-=item * rfc822
-
-Outputs the date in the format: "%a, %d %b %Y %H:%M:%S Z".
-
-=item * iso8601
-
-Outputs the date in the format: "%Y-%m-%dT%H:%M:%SZ".
-
-=back
-
-=item * utc (optional)
-
-Converts the date into UTC time.
-
-=item * offset_blog_id (optional)
-
-Identifies the ID of the blog to use for adjusting the time to
-blog time. Will default to the current blog in context if unset.
-
-=item * language (optional)
-
-Used to force localization of the date to a specific language.
-Accepted values: "cz" (Czechoslovakian), "dk" (Scandinavian),
-"nl" (Dutch), "en" (English), "fr" (French), "de" (German),
-"is" (Icelandic), "ja" (Japanese), "it" (Italian), "no" (Norwegian),
-"pl" (Polish), "pt" (Portuguese), "si" (Slovenian), "es" (Spanish),
-"fi" (Finnish), "se" (Swedish). Will use the blog's date language
-setting as a default.
-
-=back
-
-=cut
-
-sub _hdlr_sys_date {
-    my ($ctx, $args) = @_;
-    unless ($args->{ts}) {
-        my $t = time;
-        my @ts = offset_time_list($t, $ctx->stash('blog_id'));
-        $args->{ts} = sprintf "%04d%02d%02d%02d%02d%02d",
-            $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
-    }
-    return _hdlr_date($ctx, $args);
-}
-
-sub _hdlr_date {
-    my ($ctx, $args) = @_;
-    my $ts = $args->{ts} || $ctx->{current_timestamp};
-    my $tag = $ctx->stash('tag');
-    return $ctx->error(MT->translate(
-        "You used an [_1] tag without a date context set up.", "MT$tag" ))
-        unless defined $ts;
-    my $blog = $ctx->stash('blog');
-    unless (ref $blog) {
-        my $blog_id = $blog || $args->{offset_blog_id};
-        if ($blog_id) {
-            $blog = MT->model('blog')->load($blog_id);
-            return $ctx->error( MT->translate( 'Can\'t load blog #[_1].', $blog_id ) )
-              unless $blog;
-        }
-    }
-    my $lang = $args->{language} || $ctx->var('local_lang_id')
-        || ($blog && $blog->language);
-    if ($args->{utc}) {
-        my($y, $mo, $d, $h, $m, $s) = $ts =~ /(\d\d\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)/;
-        $mo--;
-        my $server_offset = ($blog && $blog->server_offset) || MT->config->TimeOffset;
-        if ((localtime (timelocal ($s, $m, $h, $d, $mo, $y )))[8]) {
-            $server_offset += 1;
-        }
-        my $four_digit_offset = sprintf('%.02d%.02d', int($server_offset),
-                                        60 * abs($server_offset
-                                                 - int($server_offset)));
-        require MT::DateTime;
-        my $tz_secs = MT::DateTime->tz_offset_as_seconds($four_digit_offset);
-        my $ts_utc = Time::Local::timegm_nocheck($s, $m, $h, $d, $mo, $y);
-        $ts_utc -= $tz_secs;
-        ($s, $m, $h, $d, $mo, $y) = gmtime( $ts_utc );
-        $y += 1900; $mo++;
-        $ts = sprintf("%04d%02d%02d%02d%02d%02d", $y, $mo, $d, $h, $m, $s);
-    }
-    if (my $format = lc ($args->{format_name} || '')) {
-        my $tz = 'Z';
-        unless ($args->{utc}) {
-            my $so = ($blog && $blog->server_offset) || MT->config->TimeOffset;
-            my $partial_hour_offset = 60 * abs($so - int($so));
-            if ($format eq 'rfc822') {
-                $tz = sprintf("%s%02d%02d", $so < 0 ? '-' : '+',
-                    abs($so), $partial_hour_offset);
-            }
-            elsif ($format eq 'iso8601') {
-                $tz = sprintf("%s%02d:%02d", $so < 0 ? '-' : '+',
-                    abs($so), $partial_hour_offset);
-            }
-        }
-        if ($format eq 'rfc822') {
-            ## RFC-822 dates must be in English.
-            $args->{'format'} = '%a, %d %b %Y %H:%M:%S ' . $tz;
-            $lang = 'en';
-        }
-        elsif ($format eq 'iso8601') {
-            $args->{format} = '%Y-%m-%dT%H:%M:%S' . $tz;
-        }
-    }
-    if (my $r = $args->{relative}) {
-        if ($r eq 'js') {
-            # output javascript here to render relative date
-            my($y, $mo, $d, $h, $m, $s) = $ts =~ /(\d\d\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)/;
-            $mo--;
-            my $fds = format_ts($args->{'format'}, $ts, $blog, $lang);
-            my $js = <<EOT;
-<script type="text/javascript">
-/* <![CDATA[ */
-document.write(mtRelativeDate(new Date($y,$mo,$d,$h,$m,$s), '$fds'));
-/* ]]> */
-</script><noscript>$fds</noscript>
-EOT
-            return $js;
-        } else {
-            my $old_lang = MT->current_language;
-            MT->set_language($lang) if $lang && ($lang ne $old_lang);
-            my $date = relative_date($ts, time, $blog, $args->{format}, $r);
-            MT->set_language($old_lang) if $lang && ($lang ne $old_lang);
-            if ($date) {
-                return $date;
-            } else {
-                if (!$args->{format}) {
-                    return '';
-                }
-            }
-        }
-    }
-    my $mail_flag = $args->{mail} || 0;
-    return format_ts($args->{'format'}, $ts, $blog, $lang, $mail_flag);
-}
 
 sub _comment_follow {
     my($ctx, $arg) = @_;
@@ -11068,7 +5642,7 @@ sub _hdlr_comments {
         $i++;
     }
     if (!@comments) {
-        return _hdlr_pass_tokens_else(@_);
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_);
     }
     return $html;
 }
@@ -11089,7 +5663,7 @@ sub _hdlr_comment_date {
     my $c = $ctx->stash('comment')
         or return $ctx->_no_comment_error();
     $args->{ts} = $c->created_on;
-    return _hdlr_date($ctx, $args);
+    return $ctx->build_date($ctx, $args);
 }
 
 ###########################################################################
@@ -11824,7 +6398,7 @@ sub _hdlr_comment_replies {
         $i++;
     }
     if (!@comments) {
-        return _hdlr_pass_tokens_else(@_);
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_);
     }
     $html;
 }
@@ -11917,7 +6491,7 @@ sub _hdlr_comment_replies_recurse {
         $i++;
     }
     if (!@comments) {
-        return _hdlr_pass_tokens_else(@_);
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_);
     }
     $html;
 }
@@ -12728,36 +7302,6 @@ sub _hdlr_index_name {
 
 ###########################################################################
 
-=head2 IndexBasename
-
-Outputs the C<IndexBasename> MT configuration setting.
-
-B<Attributes:>
-
-=over 4
-
-=item * extension (optional; default "0")
-
-If specified, will append the blog's configured file extension.
-
-=back
-
-=cut
-
-sub _hdlr_index_basename {
-    my ($ctx, $args, $cond) = @_;
-    my $name = $ctx->{config}->IndexBasename;
-    if (!$args->{extension}) {
-        return $name;
-    }
-    my $blog = $ctx->stash('blog');
-    my $ext = $blog->file_extension;
-    $ext = '.' . $ext if $ext;
-    $name . $ext;
-}
-
-###########################################################################
-
 =head2 Archives
 
 A container tag representing a list of all the enabled archive types in
@@ -13176,7 +7720,7 @@ sub _hdlr_archive_date_end {
             "[_1] can be used only with Daily, Weekly, or Monthly archives.",
             '<$MTArchiveDateEnd$>' ));
     $args->{ts} = $end;
-    return _hdlr_date(@_);
+    return $ctx->build_date(@_);
 }
 
 ###########################################################################
@@ -14869,7 +9413,7 @@ sub _hdlr_ping_date {
     my $p = $ctx->stash('ping')
         or return $ctx->_no_ping_error();
     $args->{ts} = $p->created_on;
-    return _hdlr_date($ctx, $args);
+    return $ctx->build_date($ctx, $args);
 }
 
 ###########################################################################
@@ -16408,49 +10952,6 @@ sub _hdlr_entry_edit_link {
 
 ###########################################################################
 
-=head2 HTTPContentType
-
-When this tag is used in a dynamically published index template, the value
-specified to the type attribute will be returned in the Content-Type HTTP
-header sent to web browser. This content is never displayed directly to the
-user but is instead used to signal to the browser the data type of the
-response.
-
-When this tag is used in a system template, such as the search results
-template, mt-search.cgi will use the value specified to "type" attribute and
-returns it in Content-Type HTTP header to web browser.
-
-When this tag is used in statically published template, this template tag
-outputs nothing.
-
-B<Attributes:>
-
-=over 4
-
-=item * type
-
-A valid HTTP Content-Type value, for example 'application/xml'. Note that you
-must not specify charset portion of Content-Type header value in this
-attribute. MT will set the portion automatically by using PublishCharset
-configuration directive.
-
-=back
-
-B<Example:>
-
-    <$mt:HTTPContentType type="application/xml"$>
-
-=cut
-
-sub _hdlr_http_content_type {
-    my($ctx, $args) = @_;
-    my $type = $args->{type};
-    $ctx->stash('content_type', $type);
-    return qq{};
-}
-
-###########################################################################
-
 =head2 Assets
 
 A container tag which iterates over a list of assets.
@@ -16561,10 +11062,10 @@ sub _hdlr_assets {
                 asset_id => \$join_str, object_ds => 'entry', object_id => $e->id })});
         }
         #
-        # Call _hdlr_pass_tokens_else if there are no assets, so that MTElse
+        # Call MT::Template::Context::_hdlr_pass_tokens_else if there are no assets, so that MTElse
         # is properly executed if it's present.
         #
-        return _hdlr_pass_tokens_else(@_) unless @$assets[0];
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_) unless @$assets[0];
     } else {
         $assets = $ctx->stash('assets');
     }
@@ -16879,7 +11380,7 @@ sub _hdlr_assets {
     # Patch to handle mt:Else
     # http://bugs.movabletype.org/?86618
     if (!@assets) {
-        return _hdlr_pass_tokens_else(@_);
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_);
     }
 
     my $res = '';
@@ -16915,7 +11416,7 @@ sub _hdlr_assets {
         $i++;
     }
     if (!@assets) {
-        return _hdlr_pass_tokens_else(@_);
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_);
     }
 
     $res;
@@ -17372,7 +11873,7 @@ sub _hdlr_asset_date_added {
     my $a = $ctx->stash('asset')
         or return $ctx->_no_asset_error();
     $args->{ts} = $a->created_on;
-    return _hdlr_date($ctx, $args);
+    return $ctx->build_date($ctx, $args);
 }
 
 ###########################################################################
@@ -20102,140 +14603,6 @@ sub _get_author {
     $author;
 }
 
-###########################################################################
-
-=head2 Section
-
-A utility block tag that is used to wrap content that can be cached,
-or merely manipulated by any of Movable Type's tag modifiers.
-
-B<Attributes:>
-
-=over 4
-
-=item * cache_prefix (optional)
-
-When specified, causes the contents of the section tag to be cached
-for some period of time. The 'period' attribute can specify the
-cache duration (in seconds), or will use the C<DashboardCachePeriod>
-configuration setting as a default (this feature was initially added
-to support cacheable portions of the Movable Type Dashboard).
-
-=item * period (optional)
-
-A number in seconds defining the duration to cache the content produced
-by the tag. Use in combination with the 'cache_prefix' attribute.
-
-=item * by_blog (optional)
-
-When using the 'cache_prefix' attribute, specifying '1' for this
-attribute will cause the content to be cached on a per-blog basis
-(otherwise, the default is system-wide).
-
-=item * by_user (optional)
-
-When using the 'cache_prefix' attribute, specifying '1' for this
-attribute will cause the content to be cached on a per-user basis
-(otherwise, the default is system-wide).
-
-=item * html_tag (optional)
-
-If specified, causes the content of the tag to be enclosed in a
-the HTML tag identified. Example:
-
-    <mt:Section html_tag="p">Lorem ipsum...</mt:Section>
-
-Which would output:
-
-    <p>Lorem ipsum...</p>
-
-=item * id (optional)
-
-If specified in combination with the 'html_tag' attribute, this 'id'
-is added to the wrapping HTML tag.
-
-=back
-
-=for tags utility, templating
-
-=cut
-
-sub _hdlr_section {
-    my($ctx, $args, $cond) = @_;
-    my $app = MT->instance;
-    my $out;
-    my $cache_require;
-
-    # make cache id
-    my $cache_id = $args->{cache_prefix} || undef;
-
-    # read timeout. if timeout == 0 then, content is never cached.
-    my $timeout = $args->{period};
-    $timeout = $app->config('DashboardCachePeriod') if !defined $timeout;
-    if (defined $timeout && ($timeout > 0)) {
-        if (defined $cache_id) {
-            if ($args->{by_blog}) {
-                my $blog = $app->blog;
-                $cache_id .= ':blog_id=';
-                $cache_id .= $blog ? $blog->id : '0';
-            }
-            if ($args->{by_user}) {
-                my $author = $app->user
-                    or return $ctx->error(MT->translate(
-                        "Can't load user."));
-                $cache_id .= ':user_id='.$author->id;
-            }
-
-            # try to load from session
-            require MT::Session;
-            my $sess = MT::Session::get_unexpired_value(
-                $timeout,
-                { id => $cache_id, kind => 'CO' }); # CO == Cache Object
-            if (defined $sess) {
-                $out = $sess->data();
-                if ($out) {
-                    if (my $wrap_tag = $args->{html_tag}) {
-                        my $id = $args->{id};
-                        $id = " id=\"$id\"" if $id;
-                        $id = '' unless defined $id;
-                        $out = "<$wrap_tag$id>" . $out . "</$wrap_tag>";
-                    }
-                    return $out;
-                }
-            }
-        }
-
-        # load failed (timeout or record not found)
-        $cache_require = 1;
-    }
-
-    # build content
-    defined($out = $ctx->stash('builder')->build($ctx, $ctx->stash('tokens'), $cond))
-        or return $ctx->error($ctx->stash('builder')->errstr);
-
-    if ($cache_require && (defined $cache_id)) {
-        my $sess = MT::Session->load({
-            id => $cache_id, kind => 'CO'});
-        if ($sess) {
-            $sess->remove();
-        }
-        $sess = MT::Session->new;
-        $sess->set_values({ id => $cache_id,
-                            kind => 'CO',
-                            start => time,
-                            data => $out});
-        $sess->save();
-    }
-
-    if (my $wrap_tag = $args->{html_tag}) {
-        my $id = $args->{id};
-        $id = " id=\"$id\"" if $id;
-        $id = '' unless defined $id;
-        $out = "<$wrap_tag$id>" . $out . "</$wrap_tag>";
-    }
-    return $out;
-}
-
 sub _math_operation {
     my ($ctx, $op, $lvalue, $rvalue) = @_;
     return $lvalue
@@ -20633,6 +15000,4384 @@ sub _hdlr_if_commenter_registration_allowed {
     return $registration->{Allow}
         && ( $blog && $blog->allow_commenter_regist );
 }
+
+###########################################################################
+# CORE TAGS
+###########################################################################
+package MT::Template::Tags::Core;
+use strict;
+
+sub _math_operation {
+    my ($ctx, $op, $lvalue, $rvalue) = @_;
+    return $lvalue
+        unless ( $lvalue =~ m/^\-?[\d\.]+$/ )
+            && ( ( defined($rvalue) && ( $rvalue =~ m/^\-?[\d\.]+$/ ) )
+              || ( ( $op eq 'inc' ) || ( $op eq 'dec' ) || ( $op eq '++' ) || ( $op eq '--' ) )
+            );
+    if ( ( '+' eq $op ) || ( 'add' eq $op ) ) {
+        return $lvalue + $rvalue;
+    }
+    elsif ( ( '++' eq $op ) || ( 'inc' eq $op ) ) {
+        return $lvalue + 1;
+    }
+    elsif ( ( '-' eq $op ) || ( 'sub' eq $op ) ) {
+        return $lvalue - $rvalue;
+    }
+    elsif ( ( '--' eq $op ) || ( 'dec' eq $op ) ) {
+        return $lvalue - 1;
+    }
+    elsif ( ( '*' eq $op ) || ( 'mul' eq $op ) ) {
+        return $lvalue * $rvalue;
+    }
+    elsif ( ( '/' eq $op ) || ( 'div' eq $op ) ) {
+        return $ctx->error( MT->translate('Division by zero.') )
+            if $rvalue == 0;
+        return $lvalue / $rvalue;
+    }
+    elsif ( ( '%' eq $op ) || ( 'mod' eq $op ) ) {
+        # Perl % is integer only
+        $lvalue = int($lvalue);
+        $rvalue = int($rvalue);
+        return $ctx->error( MT->translate('Division by zero.') )
+            if $rvalue == 0;
+        return $lvalue % $rvalue;
+    }
+    return $lvalue;
+}
+
+###########################################################################
+
+=head2 If
+
+A conditional block that is evaluated if the attributes/modifiers evaluate
+true. This tag can be used in combination with the L<ElseIf> and L<Else>
+tags to test for a variety of cases.
+
+B<Attributes:>
+
+=over 4
+
+=item * name
+
+=item * var
+
+Declares a variable to test. When none of the comparison attributes are
+present ("eq", "ne", "lt", etc.) the If tag tests if the variable has
+a "true" value, meaning if it is assigned a non-empty, non-zero value.
+
+=item * tag
+
+Declares a MT tag to execute; the value of which is used for testing.
+When none of the comparison attributes are present ("eq", "ne", "lt", etc.)
+the If tag tests if the specified tag produces a "true" value, meaning if
+it produces a non-empty, non-zero value. For MT conditional tags, the
+If tag passes through the logical result of that conditional tag.
+
+=item * op
+
+If specified, applies the specified mathematical operator to the value
+being tested. 'op' may be one of the following (those that require a
+second value use the 'value' attribute):
+
+=over 4
+
+=item * + or add
+
+Addition.
+
+=item * - or sub
+
+Subtraction.
+
+=item * ++ or inc
+
+Adds 1 to the given value.
+
+=item * -- or dec
+
+Subtracts 1 from the given value.
+
+=item * * or mul
+
+Multiplication.
+
+=item * / or div
+
+Division.
+
+=item * % or mod
+
+Issues a modulus operator.
+
+=back
+
+=item * value
+
+Used in conjunction with the 'op' attribute.
+
+=item * eq
+
+Tests whether the given value is equal to the value of the 'eq' attribute.
+
+=item * ne
+
+Tests whether the given value is not equal to the value of the 'ne' attribute.
+
+=item * gt
+
+Tests whether the given value is greater than the value of the 'gt' attribute.
+
+=item * lt
+
+Tests whether the given value is less than the value of the 'lt' attribute.
+
+=item * ge
+
+Tests whether the given value is greater than or equal to the value of the
+'ge' attribute.
+
+=item * le
+
+Tests whether the given value is less than or equal to the value of the
+'le' attribute.
+
+=item * like
+
+Tests whether the given value matches the regex pattern in the 'like'
+attribute.
+
+=item * test
+
+Uses a Perl (or PHP under Dynamic Publishing) expression. For Perl, this
+requires the "Safe" Perl module to be installed.
+
+=back
+
+B<Examples:>
+
+If variable "foo" has a non-zero value:
+
+    <mt:SetVar name="foo" value="bar">
+    <mt:If name="foo">
+        <!-- do something -->
+    </mt:If>
+
+If variable "foo" has a value equal to "bar":
+
+    <mt:SetVar name="foo" value="bar">
+    <mt:If name="foo" eq="bar">
+        <!-- do something -->
+    </mt:If>
+
+If variable "foo" has a value that starts with "bar" or "baz":
+
+    <mt:SetVar name="foo" value="barcamp" />
+    <mt:If name="foo" like="^(bar|baz)">
+        <!-- do something -->
+    </mt:If>
+
+If tag <$mt:EntryTitle$> has a value of "hello world":
+
+    <mt:If tag="EntryTitle" eq="hello world">
+        <!-- do something -->
+    </mt:If>
+
+If tag <$mt:CategoryCount$> is greater than 10 add "(Popular)" after
+Category Label:
+
+    <mt:Categories>
+        <$mt:CategoryLabel$>
+        <mt:If tag="CategoryCount" gt="10">(Popular)</mt:If>
+    </mt:Categories>
+
+
+If tag <$mt:EntryAuthor$> is "Melody" or "melody" and last name is "Nelson"
+or "nelson" then do something:
+
+    <mt:Authors>
+        <mt:If tag="EntryAuthor" like="/(M|m)elody (N|n)elson/"
+            <!-- do something -->
+        </mt:If>
+    </mt:Authors>
+
+If the <$mt:CommenterEmail$> matches foo@domain.com or bar@domain.com:
+
+    <mt:If tag="CommenterEmail" like="(foo@domain.com|bar@domain.com)">
+        <!-- do something -->
+    </mt:If>
+
+If the <$mt:CommenterUsername$> matches the username of someone on the
+Movable Type team:
+
+    <mt:If tag="CommenterUsername" like="(beau|byrne|brad|jim|mark|fumiaki|yuji|djchall)">
+        <!-- do something -->
+    </mt:If>
+
+If <$mt:EntryCategory$> is "Comic" then use the Comic template module
+otherwise use the default:
+
+    <mt:If tag="EntryCategory" eq="Comic">
+        <$mt:Include module="Comic Entry Detail"$>
+    <mt:Else>
+        <$mt:Include module="Entry Detail"$>
+    </mt:If>
+
+If <$mt:EntryCategory$> is "Comic", "Sports", or "News" then link to the
+category archive:
+
+    <mt:If tag="EntryCategory" like="(Comic|Sports|News)">
+        <a href="<$mt:CategoryArchiveLink$>"><$mt:CategoryLabel$></a>
+    <mt:Else>
+        <$mt:CategoryLabel$>
+    </mt:If>
+
+List all categories and link to categories it the category has one or more
+entries:
+
+    <mt:Categories show_empty="1">
+        <mt:If name="__first__">
+    <ul>
+        </mt:If>
+        <mt:If tag="CategoryCount" gte="1">
+        <li><a href="<$MTCategoryArchiveLink$>"><$MTCategoryLabel$></a></li>
+        <mt:Else>
+        <li><$MTCategoryLabel$></li>
+        </mt:If>
+        <mt:If name="__last__">
+    </ul>
+        </mt:If>
+    </mt:Categories>
+
+Test a variable using Perl:
+
+    <mt:If test="length($some_variable) > 10">
+        '<$mt:Var name="some_variable"$>' is 11 characters or longer
+    </mt:If>
+
+=for tags templating
+
+=cut
+
+sub _hdlr_if {
+    my ($ctx, $args, $cond) = @_;
+    my $var = $args->{name} || $args->{var};
+    my $value;
+    if (defined $var) {
+        # pick off any {...} or [...] from the name.
+        my ($index, $key);
+        if ($var =~ m/^(.+)([\[\{])(.+)[\]\}]$/) {
+            $var = $1;
+            my $br = $2;
+            my $ref = $3;
+            if ($ref =~ m/^\$(.+)/) {
+                $ref = $ctx->var($1);
+            }
+            $br eq '[' ? $index = $ref : $key = $ref;
+        } else {
+            $index = $args->{index} if exists $args->{index};
+            $key = $args->{key} if exists $args->{key};
+        }
+
+        $value = $ctx->var($var);
+        if (ref($value)) {
+            if (UNIVERSAL::isa($value, 'MT::Template')) {
+                local $value->{context} = $ctx;
+                $value = $value->output();
+            } elsif (UNIVERSAL::isa($value, 'MT::Template::Tokens')) {
+                local $ctx->{__stash}{tokens} = $value;
+                $value = _hdlr_pass_tokens(@_) or return;
+            } elsif (ref($value) eq 'ARRAY') {
+                $value = $value->[$index] if defined $index;
+            } elsif (ref($value) eq 'HASH') {
+                $value = $value->{$key} if defined $key;
+            }
+        }
+    }
+    elsif (defined(my $tag = $args->{tag})) {
+        $tag =~ s/^MT:?//i;
+        my ($handler, $type) = $ctx->handler_for($tag);
+        if (defined($handler)) {
+            local $ctx->{__stash}{tag} = $args->{tag};
+            $value = $handler->($ctx, { %$args });
+            if ($type == 2) { # conditional tag; just use boolean
+                $value = $value ? 1 : 0;
+            } else {
+                if (my $ph = $ctx->post_process_handler) {
+                    $value = $ph->($ctx, $args, $value);
+                }
+            }
+            $ctx->{__stash}{vars}{__cond_tag__} = $args->{tag};
+        }
+        else {
+            return $ctx->error(MT->translate("Invalid tag [_1] specified.", $tag));
+        }
+    }
+
+    $ctx->{__stash}{vars}{__cond_value__} = $value;
+    $ctx->{__stash}{vars}{__cond_name__} = $var;
+
+    if ( my $op = $args->{op} ) {
+        my $rvalue = $args->{'value'};
+        if ( $op && (defined $value) && !ref($value) ) {
+            $value = _math_operation($ctx, $op, $value, $rvalue);
+        }
+    }
+
+    my $numeric = qr/^[-]?\d+(\.\d+)?$/;
+    no warnings;
+    if (exists $args->{eq}) {
+        return 0 unless defined($value);
+        my $eq = $args->{eq};
+        if ($value =~ m/$numeric/ && $eq =~ m/$numeric/) {
+            return $value == $eq;
+        } else {
+            return $value eq $eq;
+        }
+    }
+    elsif (exists $args->{ne}) {
+        return 0 unless defined($value);
+        my $ne = $args->{ne};
+        if ($value =~ m/$numeric/ && $ne =~ m/$numeric/) {
+            return $value != $ne;
+        } else {
+            return $value ne $ne;
+        }
+    }
+    elsif (exists $args->{gt}) {
+        return 0 unless defined($value);
+        my $gt = $args->{gt};
+        if ($value =~ m/$numeric/ && $gt =~ m/$numeric/) {
+            return $value > $gt;
+        } else {
+            return $value gt $gt;
+        }
+    }
+    elsif (exists $args->{lt}) {
+        return 0 unless defined($value);
+        my $lt = $args->{lt};
+        if ($value =~ m/$numeric/ && $lt =~ m/$numeric/) {
+            return $value < $lt;
+        } else {
+            return $value lt $lt;
+        }
+    }
+    elsif (exists $args->{ge}) {
+        return 0 unless defined($value);
+        my $ge = $args->{ge};
+        if ($value =~ m/$numeric/ && $ge =~ m/$numeric/) {
+            return $value >= $ge;
+        } else {
+            return $value ge $ge;
+        }
+    }
+    elsif (exists $args->{le}) {
+        return 0 unless defined($value);
+        my $le = $args->{le};
+        if ($value =~ m/$numeric/ && $le =~ m/$numeric/) {
+            return $value <= $le;
+        } else {
+            return $value le $le;
+        }
+    }
+    elsif (exists $args->{like}) {
+        my $like = $args->{like};
+        if (!ref $like) {
+            if ($like =~ m!^/.+/([si]+)?$!s) {
+                my $opt = $1;
+                $like =~ s!^/|/([si]+)?$!!g; # /abc/ => abc
+                $like = "(?$opt)" . $like if defined $opt;
+            }
+            my $re = eval { qr/$like/ };
+            return 0 unless $re;
+            $args->{like} = $like = $re;
+        }
+        return defined($value) && ($value =~ m/$like/) ? 1 : 0;
+    }
+    elsif (exists $args->{test}) {
+        my $expr = $args->{'test'};
+        my $safe = $ctx->{__safe_compartment};
+        if (!$safe) {
+            $safe = eval { require Safe; new Safe; }
+                or return $ctx->error("Cannot evaluate expression [$expr]: Perl 'Safe' module is required.");
+            $ctx->{__safe_compartment} = $safe;
+        }
+        my $vars = $ctx->{__stash}{vars};
+        my $ns = $safe->root;
+        {
+            no strict 'refs';
+            foreach my $v (keys %$vars) {
+                # or should we be using $ctx->var here ?
+                # can we limit this step to just the variables
+                # mentioned in $expr ??
+                ${ $ns . '::' . $v } = $vars->{$v};
+            }
+        }
+        my $res = $safe->reval($expr);
+        if ($@) {
+            return $ctx->error("Error in expression [$expr]: $@");
+        }
+        return $res;
+    }
+    if ((defined $value) && $value) {
+        if (ref($value) eq 'ARRAY') {
+            return @$value ? 1 : 0;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+###########################################################################
+
+=head2 Unless
+
+A conditional tag that is the logical opposite of the L<If> tag. All
+attributes supported by the L<If> tag are also supported for this tag.
+
+=for tags templating
+
+=cut
+
+sub _hdlr_unless {
+    defined(my $r = &_hdlr_if) or return;
+    !$r;
+}
+
+###########################################################################
+
+=head2 Else
+
+A container tag used within If and Unless blocks to output the alternate
+case.
+
+This tag supports all of the attributes and logical operators available in
+the L<If> tag and can be used multiple times to test for different
+scenarios.
+
+B<Example:>
+
+    <mt:If name="some_variable">
+        'some_variable' is assigned
+    <mt:Else name="some_other_variable">
+        'some_other_variable' is assigned
+    <mt:Else>
+        'some_variable' nor 'some_other_variable' is assigned
+    </mt:If>
+
+=for tags templating
+
+=cut
+
+sub _hdlr_else {
+    my ($ctx, $args, $cond) = @_;
+    local $args->{'@'};
+    delete $args->{'@'};
+    if  ((keys %$args) >= 1) {
+        unless ($args->{name} || $args->{var} || $args->{tag}) {
+            if ( my $t = $ctx->var('__cond_tag__') ) {
+                $args->{tag} = $t;
+            }
+            elsif ( my $n = $ctx->var('__cond_name__') ) {
+                $args->{name} = $n;
+            }
+        }
+    }
+    if (%$args) {
+        defined(my $res = _hdlr_if(@_)) or return;
+        return $res ? $ctx->slurp(@_) : $ctx->else();
+    }
+    return $ctx->slurp(@_);
+}
+
+###########################################################################
+
+=head2 ElseIf
+
+An alias for the 'Else' tag.
+
+=for tags templating
+
+=cut
+
+sub _hdlr_elseif {
+    my ($ctx, $args, $cond) = @_;
+    unless ($args->{name} || $args->{var} || $args->{tag}) {
+        if ( my $t = $ctx->var('__cond_tag__') ) {
+            $args->{tag} = $t;
+        }
+        elsif ( my $n = $ctx->var('__cond_name__') ) {
+            $args->{name} = $n;
+        }
+    }
+    return _hdlr_else($ctx, $args, $cond);
+}
+
+###########################################################################
+
+=head2 IfNonEmpty
+
+A conditional tag used to test whether a template variable or tag are
+non-empty. This tag is considered deprecated, in favor of the L<If> tag.
+
+B<Attributes:>
+
+=over 4
+
+=item * tag
+
+A tag which is evaluated and tested for non-emptiness.
+
+=item * name or var
+
+A variable whose contents are tested for non-emptiness.
+
+=back
+
+=for tags deprecated
+
+=cut
+
+sub _hdlr_if_nonempty {
+    my ($ctx, $args, $cond) = @_;
+    my $value;
+    if (exists $args->{tag}) {
+        $args->{tag} =~ s/^MT:?//i;
+        my ($handler) = $ctx->handler_for($args->{tag});
+        if (defined($handler)) {
+            local $ctx->{__stash}{tag} = $args->{tag};
+            $value = $handler->($ctx, { %$args });
+            if (my $ph = $ctx->post_process_handler) {
+                $value = $ph->($ctx, $args, $value);
+            }
+        }
+    } elsif (exists $args->{name}) {
+        $value = $ctx->var($args->{name});
+    } elsif (exists $args->{var}) {
+        $value = $ctx->var($args->{var});
+    }
+    if (defined($value) && $value ne '') { # want to include "0" here
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+###########################################################################
+
+=head2 IfNonZero
+
+A conditional tag used to test whether a template variable or tag are
+non-zero. This tag is considered deprecated, in favor of the L<If> tag.
+
+B<Attributes:>
+
+=over 4
+
+=item * tag
+
+A tag which is evaluated and tested for non-zeroness.
+
+=item * name or var
+
+A variable whose contents are tested for non-zeroness.
+
+=back
+
+=for tags deprecated
+
+=cut
+
+sub _hdlr_if_nonzero {
+    my ($ctx, $args, $cond) = @_;
+    my $value;
+    if (exists $args->{tag}) {
+        $args->{tag} =~ s/^MT:?//i;
+        my ($handler) = $ctx->handler_for($args->{tag});
+        if (defined($handler)) {
+            local $ctx->{__stash}{tag} = $args->{tag};
+            $value = $handler->($ctx, { %$args });
+            if (my $ph = $ctx->post_process_handler) {
+                $value = $ph->($ctx, $args, $value);
+            }
+        }
+    } elsif (exists $args->{name}) {
+        $value = $ctx->var($args->{name});
+    } elsif (exists $args->{var}) {
+        $value = $ctx->var($args->{var});
+    }
+    if (defined($value) && $value) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+###########################################################################
+
+=head2 Loop
+
+This tag is primarily used for MT application templates, for processing
+a Perl array of hashref data. This tag's heritage comes from the
+CPAN HTML::Template module and it's C<TMPL_LOOP> tag and offers similar
+capabilities. This tag can also handle a hashref variable, which
+causes it to loop over all keys in the hash.
+
+B<Attributes:>
+
+=over 4
+
+=item * name
+
+=item * var
+
+The template variable that contains the array of hashref data to
+process.
+
+=item * sort_by (optional)
+
+Causes the data in the given array to be resorted in the manner
+specified. The 'sort_by' attribute may specify "key" or "value"
+and may additionally include the keywords "numeric" (to imply
+a numeric sort instead of the default alphabetic sort) and/or
+"reverse" to force the sort to be done in reverse order.
+
+B<Example:>
+
+    sort_by="key reverse"; sort_by="value numeric"
+
+=item * glue (optional)
+
+If specified, this string will be placed inbetween each "row"
+of data produced by the loop tag.
+
+=back
+
+Within the tag, the following variables are assigned and may
+be used:
+
+=over 4
+
+=item * __first__
+
+Assigned when the loop is in the first iteration.
+
+=item * __last__
+
+Assigned when the loop is in the last iteration.
+
+=item * __odd__
+
+Assigned 1 when the loop is on odd numbered rows, 0 when even.
+
+=item * __even__
+
+Assigned 1 when the loop is on even numbered rows, 0 when odd.
+
+=item * __key__
+
+When looping over a hashref template variable, this variable is
+assigned the key currently in context.
+
+=item * __value__
+
+This variable holds the value of the array or hashref element
+currently in context.
+
+=back
+
+=for tags loop, templating
+
+=cut
+
+sub _hdlr_loop {
+    my ($ctx, $args, $cond) = @_;
+    my $name = $args->{name} || $args->{var};
+    my $var = $ctx->var($name);
+    return '' unless $var
+      && ( (ref($var) eq 'ARRAY') && (scalar @$var) )
+        || ( (ref($var) eq 'HASH') && (scalar(keys %$var)) );
+
+    my $hash_var;
+    if ( 'HASH' eq ref($var) ) {
+        $hash_var = $var;
+        my @keys = keys %$var;
+        $var = \@keys;
+    }
+    if (my $sort = $args->{sort_by}) {
+        $sort = lc $sort;
+        if ($sort =~ m/\bkey\b/) {
+            @$var = sort {$a cmp $b} @$var;
+        } elsif ($sort =~ m/\bvalue\b/) {
+            no warnings;
+            if ($sort =~ m/\bnumeric\b/) {
+                no warnings;
+                if (defined $hash_var) {
+                    @$var = sort {$hash_var->{$a} <=> $hash_var->{$b}} @$var;
+                } else {
+                    @$var = sort {$a <=> $b} @$var;
+                }
+            } else {
+                if (defined $hash_var) {
+                    @$var = sort {$hash_var->{$a} cmp $hash_var->{$b}} @$var;
+                } else {
+                    @$var = sort {$a cmp $b} @$var;
+                }
+            }
+        }
+        if ($sort =~ m/\breverse\b/) {
+            @$var = reverse @$var;
+        }
+    }
+
+    my $builder = $ctx->stash('builder');
+    my $tokens = $ctx->stash('tokens');
+    my $out = '';
+    my $i = 1;
+    my $vars = $ctx->{__stash}{vars} ||= {};
+    my $glue = $args->{glue};
+    foreach my $item (@$var) {
+        local $vars->{__first__} = $i == 1;
+        local $vars->{__last__} = $i == scalar @$var;
+        local $vars->{__odd__} = ($i % 2 ) == 1;
+        local $vars->{__even__} = ($i % 2 ) == 0;
+        local $vars->{__counter__} = $i;
+        my @names;
+        if (UNIVERSAL::isa($item, 'MT::Object')) {
+            @names = @{ $item->column_names };
+        } else {
+            if (ref($item) eq 'HASH') {
+                @names = keys %$item;
+            } elsif ( $hash_var ) {
+                @names = ( '__key__', '__value__' );
+            } else {
+                @names = '__value__';
+            }
+        }
+        my @var_names;
+        push @var_names, lc $_ for @names;
+        local @{$vars}{@var_names};
+        if (UNIVERSAL::isa($item, 'MT::Object')) {
+            $vars->{lc($_)} = $item->column($_) for @names;
+        } elsif (ref($item) eq 'HASH') {
+            $vars->{lc($_)} = $item->{$_} for @names;
+        } elsif ( $hash_var ) {
+            $vars->{'__key__'} = $item;
+            $vars->{'__value__'} = $hash_var->{$item};
+        } else {
+            $vars->{'__value__'} = $item;
+        }
+        my $res = $builder->build($ctx, $tokens, $cond);
+        return $ctx->error($builder->errstr) unless defined $res;
+        if ($res ne '') {
+            $out .= $glue if defined $glue && $i > 1 && length($out) && length($res);
+            $out .= $res;
+            $i++;
+        }
+    }
+    return $out;
+}
+
+###########################################################################
+
+=head2 For
+
+Many programming languages support the notion of a "for" loop. In the most
+simple use case one could give, a for loop is a way to repeatedly execute a
+piece of code n times.
+
+Technically a for loop advances through a sequence (e.g. all odd numbers, all
+even numbers, every nth number, etc), giving the programmer greater control
+over the seed value (or "index") of each iteration through the loop.
+
+B<Attributes:>
+
+=over 4
+
+=item * var (optional)
+
+If assigned, the current 'index' of the loop is assigned to this template
+variable.
+
+=item * from (optional; default "0")
+
+=item * start
+
+Identifies the starting number for the loop.
+
+=item * to
+
+=item * end
+
+Identifies the ending number for the loop. Either 'to' or 'end' must
+be specified.
+
+=item * step (optional; default "1")
+
+=item * increment
+
+Provides the amount to increment the loop counter.
+
+=item * glue (optional)
+
+If specified, this string is added inbetween each block of the loop.
+
+=back
+
+Within the tag, the following variables are assigned:
+
+=over 4
+
+=item * __first__
+
+Assigned 1 when the loop is in the first iteration.
+
+=item * __last__
+
+Assigned 1 when the loop is in the last iteration.
+
+=item * __odd__
+
+Assigned 1 when the loop index is odd, 0 when it is even.
+
+=item * __even__
+
+Assigned 1 when the loop index is even, 0 when it is odd.
+
+=item * __index__
+
+Holds the current loop index value, even if the 'var' attribute has
+been given.
+
+=item * __counter__
+
+Tracks the number of times the loop has run (starts at 1).
+
+=back
+
+B<Example:>
+
+    <mt:For from="2" to="10" step="2" glue=","><$mt:Var name="__index__"$></mt:For>
+
+Produces:
+
+    2,4,6,8,10
+
+=for tags loop, templating
+
+=cut
+
+sub _hdlr_for {
+    my ($ctx, $args, $cond) = @_;
+
+    my $start = (exists $args->{from} ? $args->{from} : $args->{start}) || 0;
+    $start = 0 unless $start =~ /^-?\d+$/;
+    my $end = (exists $args->{to} ? $args->{to} : $args->{end}) || 0;
+    return q() unless $end =~ /^-?\d+$/;
+    my $incr = $args->{increment} || $args->{step} || 1;
+    # FIXME: support negative "step" values
+    $incr = 1 unless $incr =~ /^\d+$/;
+    $incr = 1 unless $incr;
+
+    my $builder = $ctx->stash('builder');
+    my $tokens = $ctx->stash('tokens');
+    my $cnt = 1;
+    my $out = '';
+    my $vars = $ctx->{__stash}{vars} ||= {};
+    my $glue = $args->{glue};
+    my $var = $args->{var};
+    for (my $i = $start; $i <= $end; $i += $incr) {
+        local $vars->{__first__} = $i == $start;
+        local $vars->{__last__} = $i == $end;
+        local $vars->{__odd__} = ($cnt % 2 ) == 1;
+        local $vars->{__even__} = ($cnt % 2 ) == 0;
+        local $vars->{__index__} = $i;
+        local $vars->{__counter__} = $cnt;
+        local $vars->{$var} = $i if defined $var;
+        my $res = $builder->build($ctx, $tokens, $cond);
+        return $ctx->error($builder->errstr) unless defined $res;
+        $out .= $glue
+            if defined $glue && $cnt > 1 && length($out) && length($res);
+        $out .= $res;
+        $cnt++;
+    }
+    return $out;
+}
+
+###########################################################################
+
+=head2 SetVarBlock
+
+A block tag used to set the value of a template variable. Note that
+you can also use the global 'setvar' modifier to achieve the same result
+as it can be applied to any MT tag.
+
+B<Attributes:>
+
+=over 4
+
+=item * var or name (required)
+
+Identifies the name of the template variable. See L<Var> for more
+information on the format of this attribute.
+
+=item * op (optional)
+
+See the L<Var> tag for more information about this attribute.
+
+=item * prepend (optional)
+
+If specified, places the contents at the front of any existing value
+for the template variable.
+
+=item * append (optional)
+
+If specified, places the contents at the end of any existing value
+for the template variable.
+
+=back
+
+=for tags templating
+
+=cut
+
+###########################################################################
+
+=head2 SetVarTemplate
+
+Similar to the L<SetVarBlock> tag, but does not evaluate the contents
+of the tag, but saves it for later evaluation, when the variable is
+requested. This allows you to create inline template modules that you
+can use over and over again.
+
+B<Attributes:>
+
+=over 4
+
+=item * var or name (required)
+
+Identifies the name of the template variable. See L<Var> for more
+information on the format of this attribute.
+
+=back
+
+B<Example:>
+
+    <mt:SetVarTemplate name="entry_title">
+        <h1><$MTEntryTitle$></h1>
+    </mt:SetVarTemplate>
+    
+    <mt:Entries>
+        <$mt:Var name="entry_title"$>
+    </mt:Entries>
+
+=for tags templating
+
+=cut
+
+###########################################################################
+
+=head2 SetVars
+
+A block tag that is useful for assigning multiple template variables at
+once.
+
+B<Example:>
+
+    <mt:SetVars>
+    title=My Favorite Color
+    color=Blue
+    </mt:SetVars>
+
+Then later:
+
+    <h1><$mt:Var name="title"$></h1>
+
+    <ul><li><$mt:Var name="color"$></li></ul>
+
+=for tags templating
+
+=cut
+
+sub _hdlr_set_vars {
+    my($ctx, $args) = @_;
+    my $tag = lc $ctx->stash('tag');
+    my $val =_hdlr_pass_tokens(@_);
+    $val =~ s/(^\s+|\s+$)//g;
+    my @pairs = split(/\r?\n/, $val);
+    foreach my $line (@pairs) {
+        next if $line =~ m/^\s*$/;
+        my ($var, $value) = split(/\s*=/, $line, 2);
+        unless (defined($var) && defined($value)) {
+            return $ctx->error("Invalid variable assignment: $line");
+        }
+        $var =~ s/^\s+//;
+        $ctx->var($var, $value);
+    }
+    return '';
+}
+
+###########################################################################
+
+=head2 SetHashVar
+
+A block tag that is used for creating a hash template variable. A hash
+is a variable that stores many values. You can even nest L<SetHashVar>
+tags so you can store hashes inside hashes for more complex structures.
+
+B<Example:>
+
+    <mt:SetHashVar name="my_hash">
+        <$mt:Var name="foo" value="bar"$>
+        <$mt:Var name="fizzle" value="fozzle"$>
+    </mt:SetHashVar>
+
+Then later:
+
+    foo is assigned: <$mt:Var name="my_hash{foo}"$>
+
+=for tags templating
+
+=cut
+
+sub _hdlr_set_hashvar {
+    my($ctx, $args) = @_;
+    my $tag = lc $ctx->stash('tag');
+    my $name = $args->{name} || $args->{var};
+    if ($name =~ m/^\$/) {
+        $name = $ctx->var($name);
+    }
+    return $ctx->error(MT->translate(
+        "You used a [_1] tag without a valid name attribute.", "<MT$tag>" ))
+        unless defined $name;
+
+    my $hash = $ctx->var($name) || {};
+    return $ctx->error(MT->translate( "[_1] is not a hash.", $name ))
+        unless 'HASH' eq ref($hash);
+
+    {
+        local $ctx->{__inside_set_hashvar} = $hash;
+        _hdlr_pass_tokens(@_);
+    }
+    if ( my $parent_hash = $ctx->{__inside_set_hashvar} ) {
+        $parent_hash->{$name} = $hash;
+    }
+    else {
+        $ctx->var($name, $hash);
+    }
+    return q();
+}
+
+###########################################################################
+
+=head2 SetVar
+
+A function tag used to set the value of a template variable.
+
+For simply setting variables you can use the L<Var> tag with a value attribute to assign template variables.
+
+B<Attributes:>
+
+=over 4
+
+=item * var or name
+
+Identifies the name of the template variable. See L<Var> for more
+information on the format of this attribute.
+
+=item * value
+
+The value to assign to the variable.
+
+=item * op (optional)
+
+See the L<Var> tag for more information about this attribute.
+
+=item * prepend (optional)
+
+If specified, places the contents at the front of any existing value
+for the template variable.
+
+=item * append (optional)
+
+If specified, places the contents at the end of any existing value
+for the template variable.
+
+=back
+
+=for tags
+
+=cut
+
+sub _hdlr_set_var {
+    my($ctx, $args) = @_;
+    my $tag = lc $ctx->stash('tag');
+    my $name = $args->{name} || $args->{var};
+
+    return $ctx->error(MT->translate(
+        "You used a [_1] tag without a valid name attribute.", "<MT$tag>" ))
+        unless defined $name;
+
+    my ($func, $key, $index, $value);
+    if ($name =~ m/^(\w+)\((.+)\)$/) {
+        $func = $1;
+        $name = $2;
+    } else {
+        $func = $args->{function} if exists $args->{function};
+    }
+
+    # pick off any {...} or [...] from the name.
+    if ($name =~ m/^(.+)([\[\{])(.+)[\]\}]$/) {
+        $name = $1;
+        my $br = $2;
+        my $ref = $3;
+        if ($ref =~ m/^\$(.+)/) {
+            $ref = $ctx->var($1);
+            $ref = chr(0) unless defined $ref;
+        }
+        $br eq '[' ? $index = $ref : $key = $ref;
+    } else {
+        $index = $args->{index} if exists $args->{index};
+        $key = $args->{key} if exists $args->{key};
+    }
+
+    if ($name =~ m/^\$/) {
+        $name = $ctx->var($name);
+        return $ctx->error(MT->translate(
+            "You used a [_1] tag without a valid name attribute.", "<MT$tag>" ))
+            unless defined $name;
+    }
+
+    my $val = '';
+    my $data = $ctx->var($name);
+    if (($tag eq 'setvar') || ($tag eq 'var')) {
+        $val = defined $args->{value} ? $args->{value} : '';
+    } elsif ($tag eq 'setvarblock') {
+        $val = $ctx->slurp($args);
+        return unless defined($val);
+    } elsif ($tag eq 'setvartemplate') {
+        $val = $ctx->stash('tokens');
+        return unless defined($val);
+        $val = bless $val, 'MT::Template::Tokens';
+    }
+
+    my $existing = $ctx->var($name);
+    $existing = '' unless defined $existing;
+    if ( 'HASH' eq ref($existing) ) {
+        $existing = $existing->{ $key };
+    }
+    elsif ( 'ARRAY' eq ref($existing) ) {
+        $existing = ( defined $index && ( $index =~ /^-?\d+$/ ) )
+          ? $existing->[ $index ] 
+          : undef;
+    }
+    $existing = '' unless defined $existing;
+
+    if ($args->{prepend}) {
+        $val = $val . $existing;
+    }
+    elsif ($args->{append}) {
+        $val = $existing . $val;
+    }
+    elsif ( $existing ne '' && ( my $op = $args->{op} ) ) {
+        $val = _math_operation($ctx, $op, $existing, $val);
+    }
+
+    if ( defined $key ) {
+        $data ||= {};
+        return $ctx->error( MT->translate("'[_1]' is not a hash.", $name) )
+            unless 'HASH' eq ref($data);
+
+        if ( ( defined $func )
+          && ( 'delete' eq lc( $func ) ) ) {
+            delete $data->{ $key };
+        }
+        else {
+            $data->{ $key } = $val;
+        }
+    }
+    elsif ( defined $index ) {
+        $data ||= [];
+        return $ctx->error( MT->translate("'[_1]' is not an array.", $name) )
+            unless 'ARRAY' eq ref($data);
+        return $ctx->error( MT->translate("Invalid index.") )
+            unless $index =~ /^-?\d+$/;
+        $data->[ $index ] = $val;
+    }
+    elsif ( defined $func ) {
+        if ( 'undef' eq lc( $func ) ) {
+            $data = undef;
+        }
+        else {
+            $data ||= [];
+            return $ctx->error( MT->translate("'[_1]' is not an array.", $name) )
+                unless 'ARRAY' eq ref($data);
+            if ( 'push' eq lc( $func ) ) {
+                push @$data, $val;
+            }
+            elsif ( 'unshift' eq lc( $func ) ) {
+                $data ||= [];
+                unshift @$data, $val;
+            }
+            else {
+                return $ctx->error(
+                    MT->translate("'[_1]' is not a valid function.", $func)
+                );
+            }
+        }
+    }
+    else {
+        $data = $val;
+    }
+
+    if ( my $hash = $ctx->{__inside_set_hashvar} ) {
+        $hash->{$name} = $data;
+    }
+    else {
+        $ctx->var($name, $data);
+    }
+    return '';
+}
+
+###########################################################################
+
+=head2 GetVar
+
+An alias for the 'Var' tag, and considered deprecated in favor of 'Var'.
+
+=for tags deprecated
+
+=cut
+
+###########################################################################
+
+=head2 Var
+
+A B<function tag> used to store and later output data in a template.
+
+B<Attributes:>
+
+=over 4
+
+=item * name (or var)
+
+Identifies the template variable. The 'name' attribute supports a variety
+of expressions. The typical case is a simple variable name:
+
+    <$mt:Var name="foo"$>
+
+Template variables may be arrays, or hash variables, in which case you
+may want to reference a specific element instead of the array or hash
+itself.
+
+This selects the second element from the 'foo' array template variable:
+
+    <$mt:Var name="foo[1]"$>
+
+This selects the 'bar' element from the 'foo' hash template variable:
+
+    <$mt:Var name="foo{bar}"$>
+
+Sometimes you want to obtain the value of a function that is applied
+to a variable (see the 'function' attribute). This will obtain the
+number of elements in the 'foo' array:
+
+    <$mt:Var name="count(foo)"$>
+
+Excluding the punctuation required in the examples above, the 'name'
+attribute value should contain only alphanumeric characters and,
+optionally, underscores.
+
+=item * value
+
+In the simplest case, this attribute triggers I<assignment> of the
+specified value to the variable.
+
+    <$mt:Var name="little_pig_count" value="3"$>          # Stores 3
+
+However, if provided with the 'op' attribute (see below), the value becomes
+the operand for the specified mathematical operation and no assignment takes
+place.
+
+The 'value' attribute can contain anything other than a double quote. If you
+need to use a double quote or the value is very long, you may want to use
+the L<SetVarBlock> tag or the L<setvar> global modifier instead.
+
+=item * op
+
+Used along with the 'value' attribute to perform a number of mathematical
+operations on the value of the variable.  When used in this way, the stored
+value of the variable doesn't change but instead gets transformed in the
+process of being output.
+
+    <$mt:Var name="little_pig_count">                     # Displays 3
+    <$mt:Var name="little_pig_count" value="1" op="sub"$> # Displays 2
+    <$mt:Var name="little_pig_count" value="2" op="sub"$> # Displays 1
+    <$mt:Var name="little_pig_count" value="3" op="sub"$> # Displays 0
+
+See the L<If> tag for the list of supported operators.
+
+=item * prepend
+
+When used in conjuction with the 'value' attribute to store a value, this
+attribute acts as a flag (i.e. 'prepend="1"') to indicate that the new value
+should be added to the front of any existing value instead of replacing it.
+
+    <$mt:Var name="greeting" value="World"$>
+    <$mt:Var name="greeting" value="Hello " prepend="1"$>
+    <$mt:Var name="greeting"$>  # Displays: Hello World
+
+=item * append
+
+When used in conjuction with the 'value' attribute to store a value, this
+attribute acts as a flag (i.e. 'append="1"') to indicate that the new value
+should be added to the back of any existing value instead of replacing it.
+
+    <$mt:Var name="greeting" value="Hello"$>
+    <$mt:Var name="greeting" value=" World" append="1"$>
+    <$mt:Var name="greeting"$>  # Displays: Hello World
+
+=item * function
+
+For array template variables, this attribute supports:
+
+=over 4
+
+=item * push
+
+Adds the element to the end of the array (becomes the last element).
+
+=item * pop
+
+Removes an element from the end of the array (last element) and
+outputs it.
+
+=item * unshift
+
+Adds the element to the front of the array (index 0).
+
+=item * shift
+
+Takes an element from the front of the array (index 0).
+
+=item * count
+
+Returns the number of elements in the array template variable.
+
+=back
+
+For hash template variables, this attribute supports:
+
+=over 4
+
+=item * delete
+
+Only valid when used with the 'key' attribute, or if a key is present
+in the variable name.
+
+=item * count
+
+Returns the number of keys present in the hash template variable.
+
+=back
+
+=item * index
+
+Identifies an element of an array template variable.
+
+=item * key
+
+Identifies a value stored for the key of a hash template variable.
+
+=item * default
+
+If the variable is undefined or empty, this value will be output
+instead. Use of the 'default' and 'setvar' attributes together make
+for an excellent way to conditionally initialize variables. The
+following sets the "max_pages" variable to 10 if and only if it does
+not yet have a value.
+
+    <mt:var name="max_pages" default="10" setvar="max_pages"> 
+
+=item * to_json
+
+Formats the variable in JSON notation.
+
+=item * glue
+
+For array template variables, this attribute is used in joining the
+values of the array together.
+
+=back
+
+=for tags templating
+
+=cut
+
+sub _hdlr_get_var {
+    my ($ctx, $args, $cond) = @_;
+    if ( exists( $args->{value} )
+      && !exists( $args->{op} ) ) {
+        return &_hdlr_set_var(@_);
+    }
+    my $name = $args->{name} || $args->{var};
+    return $ctx->error(MT->translate(
+        "You used a [_1] tag without a valid name attribute.", "<MT" . $ctx->stash('tag') . ">" ))
+        unless defined $name;
+
+    my ($func, $key, $index, $value);
+    if ($name =~ m/^(\w+)\((.+)\)$/) {
+        $func = $1;
+        $name = $2;
+    } else {
+        $func = $args->{function} if exists $args->{function};
+    }
+
+    # pick off any {...} or [...] from the name.
+    if ($name =~ m/^(.+)([\[\{])(.+)[\]\}]$/) {
+        $name = $1;
+        my $br = $2;
+        my $ref = $3;
+        if ($ref =~ m/^\$(.+)/) {
+            $ref = $ctx->var($1);
+            $ref = chr(0) unless defined $ref;
+        }
+        $br eq '[' ? $index = $ref : $key = $ref;
+    } else {
+        $index = $args->{index} if exists $args->{index};
+        $key = $args->{key} if exists $args->{key};
+    }
+
+    if ($name =~ m/^\$/) {
+        $name = $ctx->var($name);
+    }
+
+    if (defined $name) {
+        $value = $ctx->var($name);
+        if (ref($value) eq 'CODE') { # handle coderefs
+            $value = $value->(@_);
+        }
+        if (ref($value)) {
+            if (UNIVERSAL::isa($value, 'MT::Template')) {
+                local $args->{name} = undef;
+                local $args->{var} = undef;
+                local $value->{context} = $ctx;
+                $value = $value->output($args);
+            } elsif (UNIVERSAL::isa($value, 'MT::Template::Tokens')) {
+                local $ctx->{__stash}{tokens} = $value;
+                local $args->{name} = undef;
+                local $args->{var} = undef;
+                # Pass through SetVarTemplate arguments as variables
+                # so that they do not affect the global stash
+                my $vars = $ctx->{__stash}{vars} ||= {};
+                my @names = keys %$args;
+                my @var_names;
+                push @var_names, lc $_ for @names;
+                local @{$vars}{@var_names};
+                $vars->{lc($_)} = $args->{$_} for @names;
+                $value = $ctx->slurp($args) or return;
+            } elsif (ref($value) eq 'ARRAY') {
+                if ( defined $index ) {
+                    if ($index =~ /^-?\d+$/) {
+                        $value = $value->[ $index ];
+                    } else {
+                        $value = undef; # fall through to any 'default'
+                    }
+                }
+                elsif ( defined $func ) {
+                    $func = lc $func;
+                    if ( 'pop' eq $func ) {
+                        $value = @$value ? pop @$value : undef;
+                    }
+                    elsif ( 'shift' eq $func ) {
+                        $value = @$value ? shift @$value : undef;
+                    }
+                    elsif ( 'count' eq $func ) {
+                        $value = scalar @$value;
+                    }
+                    else {
+                        return $ctx->error(
+                            MT->translate("'[_1]' is not a valid function for an array.", $func)
+                        );
+                    }
+                }
+                else {
+                    unless ($args->{to_json}) {
+                        my $glue = exists $args->{glue} ? $args->{glue} : "";
+                        $value = join $glue, @$value;
+                    }
+                }
+            } elsif ( ref($value) eq 'HASH' ) {
+                if ( defined $key ) {
+                    if ( defined $func ) {
+                        if ( 'delete' eq lc($func) ) {
+                            $value = delete $value->{$key};
+                        } else {
+                            return $ctx->error(
+                                MT->translate("'[_1]' is not a valid function for a hash.", $func)
+                            );
+                        }
+                    } else {
+                        if ($key ne chr(0)) {
+                            $value = $value->{$key};
+                        } else {
+                            $value = undef;
+                        }
+                    }
+                }
+                elsif ( defined $func ) {
+                    if ( 'count' eq lc($func) ) {
+                        $value = scalar( keys %$value );
+                    }
+                    else {
+                        return $ctx->error(
+                            MT->translate("'[_1]' is not a valid function for a hash.", $func)
+                        );
+                    }
+                }
+            }
+        }
+        if ( my $op = $args->{op} ) {
+            my $rvalue = $args->{'value'};
+            if ( $op && (defined $value) && !ref($value) ) {
+                $value = _math_operation($ctx, $op, $value, $rvalue);
+            }
+        }
+    }
+    if ((!defined $value) || ($value eq '')) {
+        if (exists $args->{default}) {
+            $value = $args->{default};
+        }
+    }
+
+    if (ref($value) && $args->{to_json}) {
+        return MT::Util::to_json($value);
+    }
+    return defined $value ? $value : "";
+}
+
+###########################################################################
+
+=head2 Ignore
+
+A block tag that always produces an empty string. This tag is useful
+for wrapping template code you wish to disable, or perhaps annotating
+sections of your template.
+
+B<Example:>
+
+    <mt:Ignore>
+        The API key for the following tag is D3ADB33F.
+    </mt:Ignore>
+
+=for tags templating
+
+=cut
+
+###########################################################################
+
+=head2 TemplateNote
+
+A function tag that always returns an empty string. This tag is useful
+for placing simple notes in your templates, since it produces nothing.
+
+B<Example:>
+
+    <$mt:TemplateNote note="Hi, mom!"$>
+
+=for tags templating
+
+=cut
+
+###########################################################################
+# APP TAGS
+###########################################################################
+package MT::Template::Tags::App;
+
+use strict;
+
+use MT;
+use MT::Util qw( encode_html encode_url );
+
+###########################################################################
+
+=head2 App:Setting
+
+An application template tag used to display an application form field.
+
+B<Attributes:>
+
+=over 4
+
+=item * id (required)
+
+Each application setting tag requires a unique 'id' attribute. This id
+should not be re-used within the template.
+
+=item * required (optional; default "0")
+
+Controls whether the field is displayed with visual cues that the
+field is a required field or not.
+
+=item * label
+
+Supplies the label phrase for the setting.
+
+=item * show_label (optional; default "1")
+
+Controls whether the label portion of the setting is shown or not.
+
+=item * shown (optional; default "1")
+
+Controls whether the setting is visible or not. If specified, adds
+a "hidden" class to the outermost C<div> tag produced for the
+setting.
+
+=item * label_class (optional)
+
+Allows an additional CSS class to be applied to the label of the
+setting.
+
+=item * content_class (optional)
+
+Allows an addtional CSS class to be applied to the contents of the
+setting.
+
+=item * hint (optional)
+
+Supplies a "hint" phrase that provides inline instruction to the user.
+By default, this hint is hidden, unless the 'show_hint' attribute
+forces it to display.
+
+=item * show_hint (optional; default "0")
+
+Controls whether the inline help 'hint' label is shown or not.
+
+=item * warning
+
+Supplies a warning message to the user regarding the use of this setting.
+
+=item * show_warning
+
+Controls whether the warning message is shown or not.
+
+=item * help_page
+
+Identifies a specific page of the MT help documentation for this setting.
+
+=item * help_section
+
+Identifies a section name of the MT help documentation for this setting.
+
+=back
+
+B<Example:>
+
+    <mtapp:Setting
+        id="name"
+        required="1"
+        label="Username"
+        hint="The username used to login">
+            <input type="text" name="name" id="name" value="<$mt:Var name="name" escape="html"$>" />
+    </mtapp:setting>
+
+The basic structural output of a setting tag looks like this:
+
+    <div id="ID-field" class="field pkg">
+        <div class="field-inner">
+            <div class="field-header">
+                <label id="ID-label" for="ID">LABEL</label>
+            </div>
+            <div class="field-content">
+                (content of App:Setting tag)
+            </div>
+        </div>
+    </div>
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_setting {
+    my ($ctx, $args, $cond) = @_;
+    my $id = $args->{id};
+    return $ctx->error("'id' attribute missing") unless $id;
+
+    my $label = $args->{label};
+    my $show_label = exists $args->{show_label} ? $args->{show_label} : 1;
+    my $shown = exists $args->{shown} ? ($args->{shown} ? 1 : 0) : 1;
+    my $label_class = $args->{label_class} || "";
+    my $content_class = $args->{content_class} || "";
+    my $hint = $args->{hint} || "";
+    my $show_hint = $args->{show_hint} || 0;
+    my $warning = $args->{warning} || "";
+    my $show_warning = $args->{show_warning} || 0;
+    my $indent = $args->{indent};
+    my $help;
+    # Formatting for help link, placed at the end of the hint.
+    if ($help = $args->{help_page} || "") {
+        my $section = $args->{help_section} || '';
+        $section = qq{, '$section'} if $section;
+        $help = qq{ <a href="javascript:void(0)" onclick="return openManual('$help'$section)" class="help-link">?</a><br />};
+    }
+    my $label_help = "";
+    if ($label && $show_label) {
+        # do nothing;
+    } else {
+        $label = ''; # zero it out, because the user turned it off
+    }
+    if ($hint && $show_hint) {
+        $hint = "\n<div class=\"hint\">$hint$help</div>";
+    } else {
+        $hint = ''; # hiding hint because it is either empty or should not be shown
+    }
+    if ($warning && $show_warning) {
+        $warning = qq{\n<p><img src="<mt:var name="static_uri">images/status_icons/warning.gif" alt="<__trans phrase="Warning">" width="9" height="9" />
+<span class="alert-warning-inline">$warning</span></p>\n};
+    } else {
+        $warning = ''; # hiding hint because it is either empty or should not be shown
+    }
+    unless ($label_class) {
+        $label_class = 'field-left-label';
+    } else {
+        $label_class = 'field-' . $label_class;
+    }
+    my $indent_css = "";
+    if ($indent) {
+        $indent_css = " style=\"padding-left: ".$indent."px;\""
+    }
+    # 'Required' indicator plus CSS class
+    my $req = $args->{required} ? " *" : "";
+    my $req_class = $args->{required} ? " required" : "";
+
+    my $insides = $ctx->slurp($args, $cond);
+    $insides =~ s/^\s*(<textarea)\b/<div class="textarea-wrapper">$1/g;
+    $insides =~ s/(<\/textarea>)\s*$/$1<\/div>/g;
+
+    my $class = $args->{class} || "";
+    $class = ($class eq '') ? 'hidden' : $class . ' hidden' unless $shown;
+
+    return $ctx->build(<<"EOT");
+<div id="$id-field" class="field$req_class $label_class pkg $class"$indent_css>
+    <div class="field-inner">
+        <div class="field-header">
+            <label id="$id-label" for="$id">$label$req</label>
+        </div>
+        <div class="field-content $content_class">
+            $insides$hint$warning
+        </div>
+    </div>
+</div>
+EOT
+}
+
+###########################################################################
+
+=head2 App:Widget
+
+An application template tag that produces HTML for displaying a MT CMS
+dashboard widget. Custom widget templates should utilize this tag to wrap
+their widget content.
+
+B<Attributes:>
+
+=over 4
+
+=item * id (optional)
+
+If specified, will be used as the 'id' attribute for the outermost C<div>
+tag for the widget. If unspecified, will use the 'widget_id' template
+variable instead.
+
+=item * label (required)
+
+The label to display above the widget.
+
+=item * label_link (optional)
+
+If specified, this link will wrap the label for the widget.
+
+=item * label_onclick
+
+If specified, this JavaScript code will be assigned to the 'onclick'
+attribute of a link tag wrapping the widget label.
+
+=item * class (optional)
+
+If unspecified, will use the id of the widget. This class is included in the
+'class' attribute of the outermost C<div> tag for the widget.
+
+=item * header_action
+
+=item * can_close (optional; default "0")
+
+Identifies whether widget may be closed or not.
+
+=item * tabbed (optional; default "0")
+
+If specified, the widget will be assigned an attribute that gives it
+a tabbed interface.
+
+=back
+
+B<Example:>
+
+    <mtapp:Widget class="widget my-widget"
+        label="<__trans phrase="All About Me">" can_close="1">
+        (contents of widget go here)
+    </mtapp:Widget>
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_widget {
+    my ($ctx, $args, $cond) = @_;
+    my $hosted_widget = $ctx->var('widget_id') ? 1 : 0;
+    my $id = $args->{id} || $ctx->var('widget_id') || '';
+    my $label = $args->{label};
+    my $class = $args->{class} || $id;
+    my $label_link = $args->{label_link} || "";
+    my $label_onclick = $args->{label_onclick} || "";
+    my $header_action = $args->{header_action} || "";
+    my $closable = $args->{can_close} ? 1 : 0;
+    if ($closable) {
+        $header_action = qq{<a title="<__trans phrase="Remove this widget">" onclick="javascript:removeWidget('$id'); return false;" href="javascript:void(0);" class="widget-close-link"><span>close</span></a>};
+    }
+    my $widget_header = "";
+    if ($label_link && $label_onclick) {
+        $widget_header = "\n<h3 class=\"widget-label\"><a href=\"$label_link\" onclick=\"$label_onclick\"><span>$label</span></a></h3>";
+    } elsif ($label_link) {
+        $widget_header = "\n<h3 class=\"widget-label\"><a href=\"$label_link\"><span>$label</span></a></h3>";
+    } else {
+        $widget_header = "\n<h3 class=\"widget-label\"><span>$label</span></h3>";
+    }
+    my $token = $ctx->var('magic_token') || '';
+    my $scope = $ctx->var('widget_scope') || 'system';
+    my $singular = $ctx->var('widget_singular') || '';
+    # Make certain widget_id is set
+    my $vars = $ctx->{__stash}{vars};
+    local $vars->{widget_id} = $id;
+    local $vars->{widget_header} = '';
+    local $vars->{widget_footer} = '';
+    my $app = MT->instance;
+    my $blog = $app->can('blog') ? $app->blog : $ctx->stash('blog');
+    my $blog_field = $blog ? qq{<input type="hidden" name="blog_id" value="} . $blog->id . q{" />} : "";
+    local $vars->{blog_id} = $blog->id if $blog;
+    my $insides = $ctx->slurp($args, $cond);
+    my $widget_footer = ($ctx->var('widget_footer') || '');
+    my $var_header = ($ctx->var('widget_header') || '');
+    if ($var_header =~ m/<h3[ >]/i) {
+        $widget_header = $var_header;
+    } else {
+        $widget_header .= $var_header;
+    }
+    my $corners = $args->{corners} ? '<div class="corners"><b></b><u></u><s></s><i></i></div>' : "";
+    my $tabbed = $args->{tabbed} ? ' mt:delegate="tab-container"' : "";
+    my $header_class = $tabbed ? 'widget-header-tabs' : '';
+    my $return_args = $app->make_return_args;
+    $return_args = encode_html( $return_args );
+    my $cgi = $app->uri;
+    if ($hosted_widget && (!$insides !~ m/<form\s/i)) {
+        $insides = <<"EOT";
+        <form id="$id-form" method="post" action="$cgi" onsubmit="updateWidget('$id'); return false">
+        <input type="hidden" name="__mode" value="update_widget_prefs" />
+        <input type="hidden" name="widget_id" value="$id" />
+        $blog_field
+        <input type="hidden" name="widget_action" value="save" />
+        <input type="hidden" name="widget_scope" value="$scope" />
+        <input type="hidden" name="widget_singular" value="$singular" />
+        <input type="hidden" name="magic_token" value="$token" />
+        <input type="hidden" name="return_args" value="$return_args" />
+$insides
+        </form>
+EOT
+    }
+    return <<"EOT";
+<div id="$id" class="widget pkg $class"$tabbed>
+    <div class="widget-inner inner">
+        <div class="widget-header $header_class">
+            <div class="widget-header-inner pkg">
+                $header_action
+                $widget_header
+            </div>
+        </div>
+        <div class="widget-content">
+            <div class="widget-content-inner">
+$insides
+            </div>
+        </div>
+        <div class="widget-footer">$widget_footer</div>$corners
+    </div>
+</div>
+EOT
+}
+
+###########################################################################
+
+=head2 App:StatusMsg
+
+An application template tag that outputs a MT status message.
+
+B<Attributes:>
+
+=over 4
+
+=item * id (optional)
+
+=item * class (optional; default "info")
+
+=item * rebuild (optional)
+
+Accepted values: "all", "index".
+
+=item * can_close (optional; default "1")
+
+=back
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_statusmsg {
+    my ($ctx, $args, $cond) = @_;
+    my $id = $args->{id};
+    my $class = $args->{class} || 'info';
+    my $msg = $ctx->slurp;
+    my $rebuild = $args->{rebuild} || '';
+    my $blog_id = $ctx->var('blog_id');
+    my $blog = $ctx->stash('blog');
+    if (!$blog && $blog_id) {
+        $blog = MT->model('blog')->load($blog_id);
+    }
+    $rebuild = '' if $blog && $blog->custom_dynamic_templates eq 'all';
+    $rebuild = qq{<__trans phrase="[_1]Publish[_2] your site to see these changes take effect." params="<a href="javascript:void(0);" class="rebuild-link" onclick="doRebuild('$blog_id');">%%</a>">} if $rebuild eq 'all';
+    $rebuild = qq{<__trans phrase="[_1]Publish[_2] your site to see these changes take effect." params="<a href="javascript:void(0);" class="rebuild-link" onclick="doRebuild('$blog_id', 'prompt=index');">%%</a>">} if $rebuild eq 'index';
+    my $close = '';
+    if ($id && ($args->{can_close} || (!exists $args->{can_close}))) {
+        $close = qq{<a href="javascript:void(0)" onclick="javascript:hide('$id');return false;" class="close-me"><span>close</span></a>};
+    }
+    $id = defined $id ? qq{ id="$id"} : "";
+    $class = defined $class ? qq{msg msg-$class} : "msg";
+    return <<"EOT";
+    <div$id class="$class">$close$msg $rebuild</div>
+EOT
+}
+
+###########################################################################
+
+=head2 App:Listing
+
+This application tag is used in MT application templates to produce
+a table listing. It expects an C<object_loop> variable to be available,
+or you can use the C<loop> attribute to have it use a different source.
+
+It will output it's contents once for each row of the input array. It
+produces markup that is compatible with the MT application templates
+and CSS structure, so it is not meant for general blog publishing use.
+
+The C<return_args> variable is recognized and will populate a hidden
+field in the produced C<form> tag if available.
+
+The C<blog_id> variable is recognized and will populate a hidden
+field in the produced C<form> tag if available.
+
+The C<screen_class> variable is recognized and will force the
+C<hide_pager> attribute to 1 if it is set to 'search-replace'.
+
+The C<magic_token> variable is recognized and will populate a hidden
+field in the produced C<form> tag if available (or will retrieve
+a token from the current application if unset).
+
+The C<view_expanded> variable is recognized and will affect the
+class name applied to the table. If assigned, the table tag will
+receive a 'expanded' class; otherwise, it is given a 'compact'
+class.
+
+The C<listing_header> variable is recognized and will be output
+in a C<div> tag (classed with 'listing-header') that appears
+at the top of the listing. This is only output when 'actions'
+are shown (see 'show_actions' attribute).
+
+The structure of the output from a typical use like this:
+
+    <MTApp:Listing type="entry">
+        (contents of one row for table)
+    </MTApp:Listing>
+
+produces something like this:
+
+    <div id="entry-listing" class="listing">
+        <div class="listing-header">
+        </div>
+        <form id="entry-listing-form" class="listing-form"
+            action="..../mt.cgi" method="post"
+            onsubmit="return this['__mode'] ? true : false">
+            <input type="hidden" name="__mode" value="" />
+            <input type="hidden" name="_type" value="entry" />
+            <input type="hidden" name="action_name" value="" />
+            <input type="hidden" name="itemset_action_input" value="" />
+            <input type="hidden" name="return_args" value="..." />
+            <input type="hidden" name="blog_id" value="1" />
+            <input type="hidden" name="magic_token" value="abcd" />
+            <$MTApp:ActionBar bar_position="top"
+                form_id="entry-listing-form"$>
+            <table id="entry-listing-table"
+                class="entry-listing-table compact" cellspacing="0">
+
+                (contents of tag are placed here)
+
+            </table>
+            <$MTApp:ActionBar bar_position="bottom"
+                form_id="entry-listing-form"$>
+        </form>
+    </div>
+
+B<Attributes:>
+
+=over 4
+
+=item * type (optional)
+
+The C<MT::Object> object type the listing is processing. If unset,
+will use the contents of the C<object_type> variable.
+
+=item * loop (optional)
+
+The source of data to process. This is an array of hashes, similar
+to the kind used with the L<Loop> tag. If unset, the C<object_loop>
+variable is used instead.
+
+=item * empty_message (optional)
+
+Used when there are no rows to output for the listing. If not set,
+it will process any 'else' block that is available instead, or, failing
+that, will output an L<App:StatusMsg> tag saying that no data could be
+found.
+
+=item * id (optional)
+
+Used to construct the DOM id for the listing. The outer C<div> tag
+will use this value. If unset, it will be assigned C<type-listing> (where
+'type' is the object type determined for the listing; see 'type'
+attribute).
+
+=item * listing_class (optional)
+
+Provides a custom class name that can be applied to the main
+C<div> tag produced (this is in addition to the 'listing' class
+that is always applied).
+
+=item * action (optional; default 'script_url' variable)
+
+Supplies the 'action' attribute of the C<form> tag produced.
+
+=item * hide_pager (optional; default '0')
+
+Controls whether the pagination controls are shown or not.
+If unspecified, pagination is shown.
+
+=item * show_actions (optional; default '1')
+
+Controls whether the actions associated with the object type
+processed are shown or not. If unspecified, actions are shown.
+
+=back
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_listing {
+    my ($ctx, $args, $cond) = @_;
+
+    my $type = $args->{type} || $ctx->var('object_type');
+    my $class = MT->model($type) if $type;
+    my $loop = $args->{loop} || 'object_loop';
+    my $loop_obj = $ctx->var($loop);
+
+    unless ((ref($loop_obj) eq 'ARRAY') && (@$loop_obj)) {
+        my @else = @{ $ctx->stash('tokens_else') || [] };
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_) if @else;
+        my $msg = $args->{empty_message} || MT->translate("No [_1] could be found.", $class ? lowercase($class->class_label_plural) : ($type ? $type : MT->translate("records")));
+        return $ctx->build(qq{<mtapp:statusmsg
+            id="zero-state"
+            class="info zero-state">
+            $msg
+            </mtapp:statusmsg>});
+    }
+
+    my $id = $args->{id} || ($type ? $type . '-listing' : 'listing');
+    my $listing_class = $args->{listing_class} || "";
+    my $hide_pager = $args->{hide_pager} || 0;
+    $hide_pager = 1 if ($ctx->var('screen_class') || '') eq 'search-replace';
+    my $show_actions = exists $args->{show_actions} ? $args->{show_actions} : 1;
+    my $return_args = $ctx->var('return_args') || '';
+    $return_args = encode_html( $return_args );
+    $return_args = qq{\n        <input type="hidden" name="return_args" value="$return_args" />} if $return_args;
+    my $blog_id = $ctx->var('blog_id') || '';
+    $blog_id = qq{\n        <input type="hidden" name="blog_id" value="$blog_id" />} if $blog_id;
+    my $token = $ctx->var('magic_token') || MT->app->current_magic;
+    my $action = $args->{action} || '<mt:var name="script_url">';
+
+    my $actions_top = "";
+    my $actions_bottom = "";
+    my $form_id = "$id-form";
+    if ($show_actions) {
+        $actions_top = qq{<\$MTApp:ActionBar bar_position="top" hide_pager="$hide_pager" form_id="$form_id"\$>};
+        $actions_bottom = qq{<\$MTApp:ActionBar bar_position="bottom" hide_pager="$hide_pager" form_id="$form_id"\$>};
+    } else {
+        $listing_class .= " hide_actions";
+    }
+
+    my $insides;
+    {
+        local $args->{name} = $loop;
+        defined($insides = _hdlr_loop($ctx, $args, $cond))
+            or return;
+    }
+    my $listing_header = $ctx->var('listing_header') || '';
+    my $view = $ctx->var('view_expanded') ? ' expanded' : ' compact';
+
+    my $table = <<TABLE;
+        <table id="$id-table" class="$id-table$view" cellspacing="0">
+$insides
+        </table>
+TABLE
+
+    if ($show_actions) {
+        local $ctx->{__stash}{vars}{__contents__} = $table;
+        return $ctx->build(<<EOT);
+<div id="$id" class="listing $listing_class">
+    <div class="listing-header">
+        $listing_header
+    </div>
+    <form id="$form_id" class="listing-form"
+        action="$action" method="post"
+        onsubmit="return this['__mode'] ? true : false">
+        <input type="hidden" name="__mode" value="" />
+        <input type="hidden" name="_type" value="$type" />
+        <input type="hidden" name="action_name" value="" />
+        <input type="hidden" name="itemset_action_input" value="" />
+$return_args
+$blog_id
+        <input type="hidden" name="magic_token" value="$token" />
+        $actions_top
+        <mt:var name="__contents__">
+        $actions_bottom
+    </form>
+</div>
+EOT
+    }
+    else {
+        return <<EOT;
+<div id="$id" class="listing $listing_class">
+        $table
+</div>
+EOT
+    }
+}
+
+###########################################################################
+
+=head2 App:SettingGroup
+
+An application template tag used to wrap a number of L<App:Setting> tags.
+
+B<Attributes:>
+
+=over 4
+
+=item * id (required)
+
+A unique identifier for this group of settings.
+
+=item * class (optional)
+
+If specified, applies this CSS class to the C<fieldset> tag produced.
+
+=item * shown (optional; default "1")
+
+Controls whether the C<fieldset> is initially shown or not. If hidden,
+a CSS "hidden" class is applied to the C<fieldset> tag.
+
+=back
+
+B<Example:>
+
+    <MTApp:SettingGroup id="foo">
+        <MTApp:Setting ...>
+        <MTApp:Setting ...>
+        <MTApp:Setting ...>
+    </MTApp:SettingGroup>
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_setting_group {
+    my ($ctx, $args, $cond) = @_;
+    my $id = $args->{id};
+    return $ctx->error("'id' attribute missing") unless $id;
+
+    my $class = $args->{class} || "";
+    my $shown = exists $args->{shown} ? ($args->{shown} ? 1 : 0) : 1;
+    $class .= ($class ne '' ? " " : "") . "hidden" unless $shown;
+    $class = qq{ class="$class"} if $class ne '';
+
+    my $insides = $ctx->slurp($args, $cond);
+    return <<"EOT";
+<fieldset id="$id"$class>
+    $insides
+</fieldset>
+EOT
+}
+
+###########################################################################
+
+=head2 App:Form
+
+Used for application templates that need to express a standard MT
+application form. This produces certain hidden fields that are typically
+required by MT application forms.
+
+B<Attributes:>
+
+=over 4
+
+=item * action (optional)
+
+Identifies the URL to submit the form to. If not given, will use
+the current application URI.
+
+=item * method (optional; default "POST")
+
+Supplies the C<form> method. "GET" or "POST" are the typical values
+for this, but will accept any HTTP-compatible method (ie: "PUT", "DELETE").
+
+=item * object_id (optional)
+
+Populates a hidden 'id' field in the form. If not given, will also use any
+'id' template variable defined.
+
+=item * blog_id (optional)
+
+Populates a hidden 'blog_id' field in the form. If not given, will also use
+any 'blog_id' template variable defined.
+
+=item * object_type (optional)
+
+Populates a hidden '_type' field in the form. If not given, will also use
+any 'type' template variable defined.
+
+=item * id (optional)
+
+Used to form the 'id' element of the HTML C<form> tag. If not specified,
+the C<form> tag 'id' element will be assigned TYPE-form, where TYPE is the
+determined object_type.
+
+=item * name (optional)
+
+Supplies the C<form> name attribute. If unspecified, will use the C<id>
+attribute, if available.
+
+=item * enctype (optional)
+
+If assigned, sets an 'enctype' attribute on the C<form> tag using the value
+supplied. This is typically used to create a form that is capable of
+uploading files.
+
+=back
+
+B<Example:>
+
+    <mtapp:Form id="update" mode="update_blog_name">
+        Blog Name: <input type="text" name="blog_name" />
+        <input type="submit" />
+    </mtapp:Form>
+
+Producing:
+
+    <form id="update" name="update" action="/cgi-bin/mt.cgi" method="POST">
+    <input type="hidden" name="__mode" value="update_blog_name" />
+        Blog Name: <input type="text" name="blog_name" />
+        <input type="submit" />
+    </form>
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_form {
+    my ($ctx, $args, $cond) = @_;
+    my $app = MT->instance;
+    my $action = $args->{action} || $app->uri;
+    my $method = $args->{method} || 'POST';
+    my @fields;
+    my $token = $ctx->var('magic_token');
+    my $return = $ctx->var('return_args');
+    my $id = $args->{object_id} || $ctx->var('id');
+    my $blog_id = $args->{blog_id} || $ctx->var('blog_id');
+    my $type = $args->{object_type} || $ctx->var('type');
+    my $form_id = $args->{id} || $type . '-form';
+    my $form_name = $args->{name} || $args->{id};
+    my $enctype = $args->{enctype} ? " enctype=\"" . $args->{enctype} . "\"" : "";
+    my $mode = $args->{mode};
+    push @fields, qq{<input type="hidden" name="__mode" value="$mode" />}
+        if defined $mode;
+    push @fields, qq{<input type="hidden" name="_type" value="$type" />}
+        if defined $type;
+    push @fields, qq{<input type="hidden" name="id" value="$id" />}
+        if defined $id;
+    push @fields, qq{<input type="hidden" name="blog_id" value="$blog_id" />}
+        if defined $blog_id;
+    push @fields, qq{<input type="hidden" name="magic_token" value="$token" />}
+        if defined $token;
+    $return = encode_html($return) if $return;
+    push @fields, qq{<input type="hidden" name="return_args" value="$return" />}
+        if defined $return;
+    my $fields = '';
+    $fields = join("\n", @fields) if @fields;
+    my $insides = $ctx->slurp($args, $cond);
+    return <<"EOT";
+<form id="$form_id" name="$form_name" action="$action" method="$method"$enctype>
+$fields
+    $insides
+</form>
+EOT
+}
+
+###########################################################################
+
+=head2 App:PageActions
+
+An application template tag used to produce an unordered list of actions
+for a given listing screen. The actions are drawn from a C<page_actions>
+template variable which is an array of hashes.
+
+B<Example:>
+
+    <$mtapp:PageActions$>
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_page_actions {
+    my ($ctx, $args, $cond) = @_;
+    my $app = MT->instance;
+    my $from = $args->{from} || $app->mode;
+    my $loop = $ctx->var('page_actions');
+    return '' if (ref($loop) ne 'ARRAY') || (! @$loop);
+    my $mt = '&amp;magic_token=' . $app->current_magic;
+    return $ctx->build(<<EOT, $cond);
+    <mtapp:widget
+        id="page_actions"
+        label="<__trans phrase="Actions">">
+                <ul>
+        <mt:loop name="page_actions">
+            <mt:if name="page">
+                    <li class="icon-left icon<mt:unless name="core">-plugin</mt:unless>-action"><a href="<mt:var name="page" escape="html"><mt:if name="page_has_params">&amp;</mt:if>from=$from<mt:if name="id">&amp;id=<mt:var name="id"></mt:if><mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id"></mt:if>$mt&amp;return_args=<mt:var name="return_args" escape="url">"<mt:if name="continue_prompt"> onclick="return confirm('<mt:var name="continue_prompt" escape="js">');"</mt:if>><mt:var name="label"></a></li>
+            <mt:else><mt:if name="link">
+                    <li class="icon-left icon<mt:unless name="core">-plugin</mt:unless>-action"><a href="<mt:var name="link" escape="html">&amp;from=$from<mt:if name="id">&amp;id=<mt:var name="id"></mt:if><mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id"></mt:if>$mt&amp;return_args=<mt:var name="return_args" escape="url">"<mt:if name="continue_prompt"> onclick="return confirm('<mt:var name="continue_prompt" escape="js">');"</mt:if>><mt:var name="label"></a></li>
+            </mt:if><mt:if name="dialog">
+                    <li class="icon-left icon<mt:unless name="core">-plugin</mt:unless>-action"><a href="javascript:void(0)" onclick="<mt:if name="continue_prompt">if(!confirm('<mt:var name="continue_prompt" escape="js">'))return false;</mt:if>return openDialog(false, '<mt:var name="dialog">', '<mt:if name="dialog_args"><mt:var name="dialog_args" escape="url">&amp;</mt:if>from=$from<mt:if name="id">&amp;id=<mt:var name="id"></mt:if><mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id"></mt:if>$mt&amp;return_args=<mt:var name="return_args" escape="url">')"><mt:var name="label"></a></li>
+            </mt:if></mt:if>
+        </mt:loop>
+                </ul>
+    </mtapp:widget>
+EOT
+}
+
+###########################################################################
+
+=head2 App:ListFilters
+
+An application template tag used to produce an unordered list of quickfilters
+for a given listing screen. The filters are drawn from a C<list_filters>
+template variable which is an array of hashes.
+
+B<Example:>
+
+    <$mtapp:ListFilters$>
+
+=cut
+
+sub _hdlr_app_list_filters {
+    my ($ctx, $args, $cond) = @_;
+    my $app = MT->app;
+    my $filters = $ctx->var("list_filters");
+    return '' if (ref($filters) ne 'ARRAY') || (! @$filters );
+    my $mode = $app->mode;
+    my $type = $app->query->param('_type');
+    my $type_param = "";
+    $type_param = "&amp;_type=" . encode_url($type) if defined $type;
+    return $ctx->build(<<EOT, $cond);
+    <mt:loop name="list_filters">
+        <mt:if name="__first__">
+    <ul>
+        </mt:if>
+        <mt:if name="key" eq="\$filter_key"><li class="current-filter"><strong><mt:else><li></mt:if><a href="<mt:var name="script_url">?__mode=$mode$type_param<mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id"></mt:if>&amp;filter_key=<mt:var name="key" escape="url">"><mt:var name="label"></a><mt:if name="key" eq="\$filter_key"></strong></mt:if></li>
+    <mt:if name="__last__">
+    </ul>
+    </mt:if>
+    </mt:loop>
+EOT
+}
+
+###########################################################################
+
+=head2 App:ActionBar
+
+Produces markup for application templates for the strip of actions
+for a application listing or edit screen.
+
+B<Attributes:>
+
+=over 4
+
+=item * bar_position (optional; default "top")
+
+Assigns a CSS class name indicating whether the control is above or
+below the listing or edit form it is associated with.
+
+=item * hide_pager
+
+Assign either 1 or 0 to control whether the pagination controls are
+displayed or not.
+
+=item * form_id
+
+Associates the pagition controls and item action widget with the
+given form element.
+
+=back
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_action_bar {
+    my ($ctx, $args, $cond) = @_;
+    my $pos = $args->{bar_position} || 'top';
+    my $form_id = $args->{form_id} ? qq{ form_id="$args->{form_id}"} : "";
+    my $pager = $args->{hide_pager} ? ''
+        : qq{\n        <mt:include name="include/pagination.tmpl" bar_position="$pos">};
+    my $buttons = $ctx->var('action_buttons') || '';
+    return $ctx->build(<<EOT);
+<div id="actions-bar-$pos" class="actions-bar actions-bar-$pos">
+    <div class="actions-bar-inner pkg">$pager
+        <span class="button-actions actions">$buttons</span>
+        <span class="plugin-actions actions">
+    <mt:include name="include/itemset_action_widget.tmpl"$form_id>
+        </span>
+    </div>
+</div>
+EOT
+}
+
+###########################################################################
+
+=head2 App:Link
+
+Produces a application link to the current script with the mode and
+attributes specified.
+
+B<Attributes:>
+
+=over 4
+
+=item * mode
+
+Maps to a '__mode' argument.
+
+=item * type
+
+Maps to a '_type' argument.
+
+=back
+
+B<Example:>
+
+    <$MTApp:Link mode="foo" type="entry" bar="1"$>
+
+produces:
+
+    /cgi-bin/mt/mt.cgi?__mode=foo&_type=entry&bar=1
+
+This tag produces unescaped '&' characters. If you use this tag
+in an HTML tag attribute, be sure to add a C<escape="html"> attribute
+which will encode these to HTML entities.
+
+=for tags application
+
+=cut
+
+sub _hdlr_app_link {
+    my ($ctx, $args, $cond) = @_;
+    my $app = MT->instance;
+
+    my %args = %$args;
+
+    # eliminate special '@' argument (and anything other refs that may exist)
+    ref($args{$_}) && delete $args{$_} for keys %args;
+
+    # strip off any arguments that are actually global filters
+    my $filters = MT->registry('tags', 'modifier');
+    exists($filters->{$_}) && delete $args{$_} for keys %args;
+
+    # remap 'type' attribute since we always express this as
+    # a '_type' query parameter.
+    my $mode = delete $args{mode} or return $ctx->error("mode attribute is required");
+    $args{_type} = delete $args{type} if exists $args{type};
+    if (exists $args{blog_id} && !($args{blog_id})) {
+        delete $args{blog_id};
+    } else {
+        if (my $blog_id = $ctx->var('blog_id')) {
+            $args{blog_id} = $blog_id;
+        }
+    }
+    return $app->uri(mode => $mode, args => \%args);
+}
+
+###########################################################################
+# SYSTEM TAGS
+###########################################################################
+package MT::Template::Tags::System;
+
+use strict;
+
+use MT;
+use MT::Util qw( offset_time_list );
+use MT::Request;
+
+{
+    my %include_stack;
+    my %restricted_include_filenames = (
+        'mt-config.cgi' => 1,
+        'passwd' => 1
+    );
+
+###########################################################################
+
+=head2 IncludeBlock
+
+This tag provides MT with the ability to 'wrap' content with an included
+module. This behaves much like the MTInclude tag, but it is a container tag.
+The contents of the tag are taken and assigned to a variable (either one
+explicitly named with a 'var' attribute, or will default to 'contents').
+i.e.:
+
+    <mt:IncludeBlock module="Some Module">
+        (do something here)
+    </mt:IncludeBlock>
+
+In the "Some Module" template module, you would then have the following
+template tag allowing you to reference the contents of the L<IncludeBlock>
+tag used to include this "Some Module" template module, like so:
+
+    (header stuff)
+    <$mt:Var name="contents"$>
+    (footer stuff)
+
+B<Important:> Modules used as IncludeBlocks should never be processed as a Server Side Include or be cached.
+
+B<Attributes:>
+
+=over 4
+
+=item * var (optional)
+
+Supplies a variable name to use for assigning the contents of the
+L<IncludeBlock> tag. If unassigned, the "contents" variable is used.
+
+=back
+
+=for tags templating
+
+=cut
+
+sub _hdlr_include_block {
+    my($ctx, $args, $cond) = @_;
+    my $name = delete $args->{var} || 'contents';
+    # defer the evaluation of the child tokens until used inside
+    # the block (so any variables/context changes made in that template
+    # affect the contained template code)
+    my $tokens = $ctx->stash('tokens');
+    local $ctx->{__stash}{vars}{$name} = sub {
+        my $builder = $ctx->stash('builder');
+        my $html = $builder->build($ctx, $tokens, $cond);
+        return $ctx->error($builder->errstr) unless defined $html;
+        return $html;
+    };
+    return $ctx->tag('include', $args, $cond);
+}
+
+###########################################################################
+
+=head2 Include
+
+Includes a template module or external file and outputs the result.
+
+B<NOTE:> One and only one of the 'module', 'widget', 'file' and
+'identifier' attributes can be specified.
+
+B<Attributes:>
+
+=over 4
+
+=item * module
+
+The name of a template module in the current blog.
+
+=item * widget
+
+The name of the widget in the current blog to include.
+
+=item * file
+
+The path to an external file on the system. The path can be absolute or
+relative to the Local Site Path. This file is included at the time your
+page is built. It should not be confused with dynamic server side
+includes like that found in PHP.
+
+=item * identifier
+
+For selecting Index templates by their unique identifier.
+
+=item * name
+
+For application template use: identifies an application template by
+filename to load.
+
+=item * blog_id (optional)
+
+Used to include a template from another blog in the system. Use in
+conjunction with the module, widget or identifier attributes.
+
+=item * local (optional)
+
+Forces an Include of a template that exists in the blog that is being
+published.
+
+=item * global (optional; default "0")
+
+Forces an Include of a globally defined template even if the
+template is also available in the blog currently in context.
+(For module, widget and identifier includes.)
+
+=item * ssi (optional; default "0")
+
+If specified, causes the include to be handled as a server-side
+include. The value of the 'ssi' attribute determines the type of
+include that is produced. Acceptable values are: C<php>, C<asp>,
+C<jsp>, C<shtml>. This causes the contents of the include to be
+processed and written to a file (stored to the blog's publishing
+path, under the 'includes_c' subdirectory). The include tag itself
+then returns the include directive appropriate to the 'ssi' type
+specified. So, for example:
+
+    <$mt:Include module="Tag Cloud" ssi="php"$>
+
+This would generate the contents for the "Tag Cloud" template module
+and write it to a "tag_cloud.php" file. The output of the include
+tag would look like this:
+
+    <?php include("/path/to/blog/includes_c/tag_cloud.php") ?>
+
+Suitable for module, widget or identifier includes.
+
+=item * cache (optional; default "0")
+
+Enables caching of the contents of the include. Suitable for module,
+widget or identifier includes.
+
+=item * key or cache_key (optional)
+
+Used to cache the template module. Used in conjunction with the 'cache'
+attribute. Suitable for module, widget or identifier includes.
+
+=item * ttl (optional)
+
+Specifies the lifetime in seconds of a cached template module. Suitable
+for module, widget or identifier includes.
+
+=back
+
+Also, other attributes given to this tag are locally assigned as
+variables when invoking the include template.
+
+The contents of the file or module are further evaluated for more Movable
+Type template tags.
+
+B<Example:> Including a Widget
+
+    <$mt:Include widget="Search Box"$>
+
+B<Example:> Including a File
+
+    <$mt:Include file="/var/www/html/some-fragment.html"$>
+
+B<Example:> Including a Template Module
+
+    <$mt:Include module="Sidebar - Left Column"$>
+
+B<Example:> Passing Parameters to a Template Module
+
+    <$mt:Include module="Section Header" title="Elsewhere"$>
+
+(from the "Section Header" template module)
+
+    <h2><$mt:Var name="title"$></h2>
+
+=for tags templating
+
+=cut
+
+sub _hdlr_include {
+    my ($ctx, $arg, $cond) = @_;
+
+    # Pass through include arguments as variables to included template
+    my $vars = $ctx->{__stash}{vars} ||= {};
+    my @names = keys %$arg;
+    my @var_names;
+    push @var_names, lc $_ for @names;
+    local @{$vars}{@var_names};
+    $vars->{lc($_)} = $arg->{$_} for @names;
+
+    # Run include process
+    my $out = $arg->{module}     ? _include_module(@_)
+            : $arg->{widget}     ? _include_module(@_)
+            : $arg->{identifier} ? _include_module(@_)
+            : $arg->{file}       ? _include_file(@_)
+            : $arg->{name}       ? _include_name(@_)
+            :                      $ctx->error(MT->translate(
+                                       'No template to include specified'))
+            ;
+
+    return $out;
+}
+
+sub _include_module {
+    my ($ctx, $arg, $cond) = @_;
+    my $tmpl_name = $arg->{module} || $arg->{widget} || $arg->{identifier}
+        or return;
+    my $name = $arg->{widget} ? 'widget' : $arg->{identifier} ? 'identifier' : 'module';
+    my $type = $arg->{widget} ? 'widget' : 'custom';
+    if (($type eq 'custom') && ($tmpl_name =~ m/^Widget:/)) {
+        # handle old-style widget include references
+        $type = 'widget';
+        $tmpl_name =~ s/^Widget: ?//;
+    }
+    my $blog_id = defined($arg->{blog_id})
+      ? $arg->{blog_id}
+      : ( $arg->{global} )
+        ? 0 
+        : defined($ctx->{__stash}{blog_id})
+          ? $ctx->{__stash}{blog_id}
+          : 0;
+    $blog_id = $ctx->stash('local_blog_id') if $arg->{local};
+    my $stash_id = 'template_' . $type . '::' . $blog_id . '::' . $tmpl_name;
+    return $ctx->error(MT->translate("Recursion attempt on [_1]: [_2]", MT->translate($name), $tmpl_name))
+        if $include_stack{$stash_id};
+    local $include_stack{$stash_id} = 1;
+
+    my $req = MT::Request->instance;
+    my ($tmpl, $tokens);
+    if (my $tmpl_data = $req->stash($stash_id)) {
+        ($tmpl, $tokens) = @$tmpl_data;
+    }
+    else {
+        my %terms = $arg->{identifier} ? ( identifier => $tmpl_name )
+                  :                      ( name => $tmpl_name,
+                                           type => $type )
+                  ;
+        $terms{blog_id} = !exists $arg->{global} ? [ $blog_id, 0 ]
+                        : $arg->{global}         ? 0
+                        :                          $blog_id
+                        ;
+        ($tmpl) = MT->model('template')->load(\%terms, {
+            sort      => 'blog_id',
+            direction => 'descend',
+        }) or return $ctx->error(MT->translate(
+            "Can't find included template [_1] '[_2]'", MT->translate($name), $tmpl_name ));
+
+        my $cur_tmpl = $ctx->stash('template');
+        return $ctx->error(MT->translate("Recursion attempt on [_1]: [_2]", MT->translate($name), $tmpl_name))
+            if $cur_tmpl && $cur_tmpl->id && ($cur_tmpl->id == $tmpl->id);
+
+        $req->stash($stash_id, [ $tmpl, undef ]);
+    }
+
+    my $blog = $ctx->stash('blog') || MT->model('blog')->load($blog_id);
+
+    my %include_recipe;
+    my $use_ssi = $blog && $blog->include_system
+        && ($arg->{ssi} || $tmpl->include_with_ssi) ? 1 : 0;
+    if ($use_ssi) {
+        # disable SSI for templates that are system templates;
+        # easiest way to determine this is from the variable
+        # space setting.
+        if ($ctx->var('system_template')) {
+            $use_ssi = 0;
+        } else {
+            my $extra_path = ($arg->{cache_key} || $arg->{key}) ? $arg->{cache_key} || $arg->{key}
+                : $tmpl->cache_path ? $tmpl->cache_path
+                    : '';
+           %include_recipe = (
+                name => $tmpl_name,
+                id   => $tmpl->id,
+                path => $extra_path,
+            );
+        }
+    }
+
+    # Try to read from cache
+    my $cache_expire_type = $tmpl->cache_expire_type || 0;
+    my $cache_enabled =
+         $blog
+      && $blog->include_cache
+      && ( ( $arg->{cache} && $arg->{cache} > 0 )
+        || $arg->{cache_key}
+        || $arg->{key}
+        || ( exists $arg->{ttl} )
+        || ( $cache_expire_type != 0 ) ) ? 1 : 0;
+    my $cache_key =
+        ($arg->{cache_key} || $arg->{key})
+      ? $arg->{cache_key} || $arg->{key}
+      : 'blog::' . $blog_id . '::template_' . $type . '::' . $tmpl_name;
+    my $ttl =
+      exists $arg->{ttl} ? $arg->{ttl}
+          : ( $cache_expire_type == 1 ) ? $tmpl->cache_expire_interval
+              : ( $cache_expire_type == 2 ) ? 0
+                  :   60 * 60;    # default 60 min.
+
+    if ( $cache_expire_type == 2 ) {
+        my @types = split(/,/, ($tmpl->cache_expire_event || ''));
+        if (@types) {
+            require MT::Touch;
+            if (my $latest = MT::Touch->latest_touch($blog_id, @types)) {
+                if ($use_ssi) {
+                    # base cache expiration on physical file timestamp
+                    my $include_file = $blog->include_path(\%include_recipe);
+                    my $mtime = (stat($include_file))[9];
+                    if ($mtime && (MT::Util::ts2epoch(undef, $latest) > $mtime ) ) {
+                        $ttl = 1; # bound to force an update
+                    }
+                } else {
+                    $ttl = time - MT::Util::ts2epoch(undef, $latest);
+                }
+            }
+        }
+    }
+
+    my $cache_driver;
+    if ($cache_enabled) {
+        my $tmpl_mod = $tmpl->modified_on;
+        my $tmpl_ts = MT::Util::ts2epoch($tmpl->blog_id ? $tmpl->blog : undef, $tmpl_mod);
+        if (($ttl == 0) || (time - $tmpl_ts < $ttl)) {
+            $ttl = time - $tmpl_ts;
+        }
+        require MT::Cache::Negotiate;
+        $cache_driver = MT::Cache::Negotiate->new( ttl => $ttl );
+        my $cache_value = $cache_driver->get($cache_key);
+
+        if ($cache_value) {
+            return $cache_value if !$use_ssi;
+
+            # The template may still be cached from before we were using SSI
+            # for this template, so check that it's also on disk.
+            my $include_file = $blog->include_path(\%include_recipe);
+            if ($blog->file_mgr->exists($include_file)) {
+                return $blog->include_statement(\%include_recipe);
+            }
+        }
+    }
+
+    my $builder = $ctx->{__stash}{builder};
+    if (!$tokens) {
+        # Compile the included template against the includ*ing* template's
+        # context.
+        $tokens = $builder->compile($ctx, $tmpl->text);
+        unless (defined $tokens) {
+            $req->cache('build_template', $tmpl);
+            return $ctx->error($builder->errstr);
+        }
+        $tmpl->tokens( $tokens );
+
+        $req->stash($stash_id, [ $tmpl, $tokens ]);
+    }
+
+    # Build the included template against the includ*ing* template's context.
+    my $ret = $tmpl->build( $ctx, $cond );
+    if (!defined $ret) {
+        $req->cache('build_template', $tmpl) if $tmpl;
+        return $ctx->error("error in $name $tmpl_name: " . $tmpl->errstr);
+    }
+
+    if ($cache_enabled) {
+        $cache_driver->replace($cache_key, $ret, $ttl);
+    }
+
+    if ($use_ssi) {
+        my ($include_file, $path, $filename) =
+            $blog->include_path(\%include_recipe);
+        my $fmgr = $blog->file_mgr;
+        if (!$fmgr->exists($path)) {
+            if (!$fmgr->mkpath($path)) {
+                return $ctx->error(MT->translate("Error making path '[_1]': [_2]",
+                    $path, $fmgr->errstr));
+            }
+        }
+        defined($fmgr->put_data($ret, $include_file))
+            or return $ctx->error(MT->translate("Writing to '[_1]' failed: [_2]",
+                $include_file, $fmgr->errstr));
+
+        MT->upload_file_to_sync(
+            url  => $blog->include_url(\%include_recipe),
+            file => $include_file,
+            blog => $blog,
+        );
+
+        my $stat = $blog->include_statement(\%include_recipe);
+        return $stat;
+    }
+
+    return $ret;
+}
+
+sub _include_file {
+    my ($ctx, $arg, $cond) = @_;
+    my $file = $arg->{file} or return;
+    require File::Basename;
+    my $base_filename = File::Basename::basename($file);
+    if (exists $restricted_include_filenames{lc $base_filename}) {
+        return $ctx->error("You cannot include a file with this name: $base_filename");
+    }
+
+    my $blog_id = $arg->{blog_id} || $ctx->{__stash}{blog_id} || 0;
+    my $stash_id = 'template_file::' . $blog_id . '::' . $file;
+    return $ctx->error("Recursion attempt on file: [_1]", $file)
+        if $include_stack{$stash_id};
+    local $include_stack{$stash_id} = 1;
+    my $req = MT::Request->instance;
+    my $cref = $req->stash($stash_id);
+    my $tokens;
+    my $builder = $ctx->{__stash}{builder};
+    if ($cref) {
+        $tokens = $cref;
+    } else {
+        my $blog = $ctx->stash('blog');
+        if ($blog && $blog->id != $blog_id) {
+            $blog = MT::Blog->load($blog_id)
+                or return $ctx->error(MT->translate(
+                    "Can't find blog for id '[_1]", $blog_id));
+        }
+        my @paths = ($file);
+        push @paths, map { File::Spec->catfile($_, $file) }
+            ($blog->site_path, $blog->archive_path)
+            if $blog;
+        my $path;
+        for my $p (@paths) {
+            $path = $p, last if -e $p && -r _;
+        }
+        return $ctx->error(MT->translate(
+            "Can't find included file '[_1]'", $file )) unless $path;
+        local *FH;
+        open FH, $path
+            or return $ctx->error(MT->translate(
+                "Error opening included file '[_1]': [_2]", $path, $! ));
+        my $c;
+        local $/; $c = <FH>;
+        close FH;
+        $tokens = $builder->compile($ctx, $c);
+        return $ctx->error($builder->errstr) unless defined $tokens;
+        $req->stash($stash_id, $tokens);
+    }
+    my $ret = $builder->build($ctx, $tokens, $cond);
+    return defined($ret) ? $ret : $ctx->error("error in file $file: " . $builder->errstr);
+}
+
+sub _include_name {
+    my ($ctx, $arg, $cond) = @_;
+    my $app_file = $arg->{name};
+
+    # app template include mode
+    my $mt = MT->instance;
+    local $mt->{component} = $arg->{component} if exists $arg->{component};
+    my $stash_id = 'template_file::' . $app_file;
+    return $ctx->error(MT->translate("Recursion attempt on file: [_1]", $app_file))
+        if $include_stack{$stash_id};
+    local $include_stack{$stash_id} = 1;
+    my $tmpl = $mt->load_tmpl($app_file);
+    if ($tmpl) {
+        $tmpl->name($app_file);
+
+        my $tmpl_file = $app_file;
+        if ($tmpl_file) {
+            $tmpl_file = File::Basename::basename($tmpl_file);
+            $tmpl_file =~ s/\.tmpl$//;
+            $tmpl_file = '.' . $tmpl_file;
+        }
+        $mt->run_callbacks('template_param' . $tmpl_file, $mt, $tmpl->param, $tmpl);
+
+        # propagate our context
+        local $tmpl->{context} = $ctx;
+        my $out = $tmpl->output();
+        return $ctx->error($tmpl->errstr) unless defined $out;
+
+        $mt->run_callbacks('template_output' . $tmpl_file, $mt, \$out, $tmpl->param, $tmpl);
+        return $out;
+    } else {
+        return defined $arg->{default} ? $arg->{default} : '';
+    }
+}
+}
+
+###########################################################################
+
+=head2 IfStatic
+
+Returns true if the current publishing context is static publishing,
+and false otherwise.
+
+=for tags templating, utility
+
+=cut
+
+###########################################################################
+
+=head2 IfDynamic
+
+Returns true if the current publishing context is dynamic publishing,
+and false otherwise.
+
+=for tags templating, utility
+
+=cut
+
+###########################################################################
+
+=head2 Section
+
+A utility block tag that is used to wrap content that can be cached,
+or merely manipulated by any of Movable Type's tag modifiers.
+
+B<Attributes:>
+
+=over 4
+
+=item * cache_prefix (optional)
+
+When specified, causes the contents of the section tag to be cached
+for some period of time. The 'period' attribute can specify the
+cache duration (in seconds), or will use the C<DashboardCachePeriod>
+configuration setting as a default (this feature was initially added
+to support cacheable portions of the Movable Type Dashboard).
+
+=item * period (optional)
+
+A number in seconds defining the duration to cache the content produced
+by the tag. Use in combination with the 'cache_prefix' attribute.
+
+=item * by_blog (optional)
+
+When using the 'cache_prefix' attribute, specifying '1' for this
+attribute will cause the content to be cached on a per-blog basis
+(otherwise, the default is system-wide).
+
+=item * by_user (optional)
+
+When using the 'cache_prefix' attribute, specifying '1' for this
+attribute will cause the content to be cached on a per-user basis
+(otherwise, the default is system-wide).
+
+=item * html_tag (optional)
+
+If specified, causes the content of the tag to be enclosed in a
+the HTML tag identified. Example:
+
+    <mt:Section html_tag="p">Lorem ipsum...</mt:Section>
+
+Which would output:
+
+    <p>Lorem ipsum...</p>
+
+=item * id (optional)
+
+If specified in combination with the 'html_tag' attribute, this 'id'
+is added to the wrapping HTML tag.
+
+=back
+
+=for tags utility, templating
+
+=cut
+
+sub _hdlr_section {
+    my($ctx, $args, $cond) = @_;
+    my $app = MT->instance;
+    my $out;
+    my $cache_require;
+
+    # make cache id
+    my $cache_id = $args->{cache_prefix} || undef;
+
+    # read timeout. if timeout == 0 then, content is never cached.
+    my $timeout = $args->{period};
+    $timeout = $app->config('DashboardCachePeriod') if !defined $timeout;
+    if (defined $timeout && ($timeout > 0)) {
+        if (defined $cache_id) {
+            if ($args->{by_blog}) {
+                my $blog = $app->blog;
+                $cache_id .= ':blog_id=';
+                $cache_id .= $blog ? $blog->id : '0';
+            }
+            if ($args->{by_user}) {
+                my $author = $app->user
+                    or return $ctx->error(MT->translate(
+                        "Can't load user."));
+                $cache_id .= ':user_id='.$author->id;
+            }
+
+            # try to load from session
+            require MT::Session;
+            my $sess = MT::Session::get_unexpired_value(
+                $timeout,
+                { id => $cache_id, kind => 'CO' }); # CO == Cache Object
+            if (defined $sess) {
+                $out = $sess->data();
+                if ($out) {
+                    if (my $wrap_tag = $args->{html_tag}) {
+                        my $id = $args->{id};
+                        $id = " id=\"$id\"" if $id;
+                        $id = '' unless defined $id;
+                        $out = "<$wrap_tag$id>" . $out . "</$wrap_tag>";
+                    }
+                    return $out;
+                }
+            }
+        }
+
+        # load failed (timeout or record not found)
+        $cache_require = 1;
+    }
+
+    # build content
+    defined($out = $ctx->stash('builder')->build($ctx, $ctx->stash('tokens'), $cond))
+        or return $ctx->error($ctx->stash('builder')->errstr);
+
+    if ($cache_require && (defined $cache_id)) {
+        my $sess = MT::Session->load({
+            id => $cache_id, kind => 'CO'});
+        if ($sess) {
+            $sess->remove();
+        }
+        $sess = MT::Session->new;
+        $sess->set_values({ id => $cache_id,
+                            kind => 'CO',
+                            start => time,
+                            data => $out});
+        $sess->save();
+    }
+
+    if (my $wrap_tag = $args->{html_tag}) {
+        my $id = $args->{id};
+        $id = " id=\"$id\"" if $id;
+        $id = '' unless defined $id;
+        $out = "<$wrap_tag$id>" . $out . "</$wrap_tag>";
+    }
+    return $out;
+}
+
+###########################################################################
+
+=head2 Link
+
+Generates the absolute URL to an index template or specific entry in the system.
+
+B<NOTE:> Only one of the 'template', 'identifier' and 'entry_id'
+attributes can be specified at a time.
+
+B<Attributes:>
+
+=over 4
+
+=item * template
+
+The name of the index template.
+
+=item * identifier
+
+A template identifier.
+
+=item * entry_id
+
+The numeric system ID of the entry.
+
+=item * with_index (optional; default "0")
+
+If not set to 1, remove index filenames (by default, index.html)
+from resulting links.
+
+=back
+
+B<Examples:>
+
+    <a href="<mt:Link template="About Page">">My About Page</a>
+
+    <a href="<mt:Link entry_id="221">">the entry about my vacation</a>
+
+    <a href="<mt:Link identifier="main_index">">Home</a>
+
+=for tags archives
+=cut
+
+sub _hdlr_link {
+    my($ctx, $arg, $cond) = @_;
+    my $blog = $ctx->stash('blog');
+    my $blog_id = $blog->id;
+    if (my $tmpl_name = $arg->{template}) {
+        require MT::Template;
+        my $tmpl = MT::Template->load({ identifier => $tmpl_name,
+                type => 'index', blog_id => $blog_id })
+            || MT::Template->load({ name => $tmpl_name,
+                                        type => 'index',
+                                        blog_id => $blog_id })
+                || MT::Template->load({ outfile => $tmpl_name,
+                                        type => 'index',
+                                        blog_id => $blog_id })
+            or return $ctx->error(MT->translate(
+                "Can't find template '[_1]'", $tmpl_name ));
+        my $site_url = $blog->site_url;
+        $site_url .= '/' unless $site_url =~ m!/$!;
+        my $link = $site_url . $tmpl->outfile;
+        $link = MT::Util::strip_index($link, $blog) unless $arg->{with_index};
+        $link;
+    } elsif (my $entry_id = $arg->{entry_id}) {
+        my $entry = MT::Entry->load($entry_id)
+            or return $ctx->error(MT->translate(
+                "Can't find entry '[_1]'", $entry_id ));
+        my $link = $entry->permalink;
+        $link = MT::Util::strip_index($link, $blog) unless $arg->{with_index};
+        $link;
+    }
+}
+
+###########################################################################
+
+=head2 Date
+
+Outputs the current date.
+
+B<Attributes:>
+
+=over 4
+
+=item * ts (optional)
+
+If specified, will use the given date as the date to publish. Must be
+in the format of "YYYYMMDDhhmmss".
+
+=item * relative (optional)
+
+If specified, will publish the date using a phrase, if the date is
+less than a week from the current date. Accepted values are "1", "2", "3"
+and "js". The options for "1", "2" and "3" affect the style of the phrase.
+
+=over 4
+
+=item * relative="1"
+
+Supports display of one duration: moments ago; N minutes ago; N hours ago; N days ago. For older dates in the same year, the date is shown as the abbreviated month and day of the month ("Jan 3"). For older dates, the year is added to that ("Jan 3 2005").
+
+=item * relative="2"
+
+Supports display of two durations: less than 1 minute ago; N seconds, N minutes ago; N minutes ago; N hours, N minutes ago; N hours ago; N days, N hours ago; N days ago.
+
+=item * relative="3"
+
+Supports display of two durations: N seconds ago; N seconds, N minutes ago;
+N minutes ago; N hours, N minutes ago; N hours ago; N days, N hours ago; N days ago.
+
+=item * relative="js"
+
+When specified, publishes the date using JavaScript, which relies on a
+MT JavaScript function 'mtRelativeDate' to format the date.
+
+=back
+
+=item * format (optional)
+
+A string that provides the format in which to publish the date. If
+unspecified, the default that is appropriate for the language of the blog
+is used (for English, this is "%B %e, %Y %l:%M %p"). The format specifiers
+supported are:
+
+=over 4
+
+=item * %Y
+
+The 4-digit year. Example: "1999".
+
+=item * %m
+
+The 2-digit month (zero-padded). Example: for a date in September, this would output "09".
+
+=item * %d
+
+The 2-digit day of the month (zero-padded). Example: "05".
+
+=item * %H
+
+The 2-digit hour of the day (24-hour clock, zero-padded). Example: "18".
+
+=item * %M
+
+The 2-digit minute of the hour (zero-padded). Example: "09".
+
+=item * %S
+
+The 2-digit second of the minute (zero-padded). Example: "04".
+
+=item * %w
+
+The numeric day of the week, in the range C<0>-C<6>, where C<0> is
+C<Sunday>. Example: "3".
+
+=item * %j
+
+The numeric day of the year, in the range C<0>-C<365>. Zero-padded to
+three digits. Example: "040".
+
+=item * %y
+
+The two-digit year, zero-padded. Example: %y for a date in 2008 would
+output "08".
+
+=item * %b
+
+The abbreviated month name. Example: %b for a date in January would
+output "Jan".
+
+=item * %B
+
+The full month name. Example: "January".
+
+=item * %a
+
+The abbreviated day of the week. Example: %a for a date on a Monday would
+output "Mon".
+
+=item * %A
+
+The full day of the week. Example: "Friday".
+
+=item * %e
+
+The numeric day of the month (space-padded). Example: " 8".
+
+=item * %I
+
+The two-digit hour on a 12-hour clock padded with a zero if applicable.
+Example: "04".
+
+=item * %k
+
+The two-digit military time hour padded with a space if applicable.
+Example: " 9".
+
+=item * %l
+
+The hour on a 12-hour clock padded with a space if applicable.
+Example: " 4".
+
+=back
+
+=item * format_name (optional)
+
+Supports date formatting for particular standards.
+
+=over 4
+
+=item * rfc822
+
+Outputs the date in the format: "%a, %d %b %Y %H:%M:%S Z".
+
+=item * iso8601
+
+Outputs the date in the format: "%Y-%m-%dT%H:%M:%SZ".
+
+=back
+
+=item * utc (optional)
+
+Converts the date into UTC time.
+
+=item * offset_blog_id (optional)
+
+Identifies the ID of the blog to use for adjusting the time to
+blog time. Will default to the current blog in context if unset.
+
+=item * language (optional)
+
+Used to force localization of the date to a specific language.
+Accepted values: "cz" (Czechoslovakian), "dk" (Scandinavian),
+"nl" (Dutch), "en" (English), "fr" (French), "de" (German),
+"is" (Icelandic), "ja" (Japanese), "it" (Italian), "no" (Norwegian),
+"pl" (Polish), "pt" (Portuguese), "si" (Slovenian), "es" (Spanish),
+"fi" (Finnish), "se" (Swedish). Will use the blog's date language
+setting as a default.
+
+=back
+
+=cut
+
+sub _hdlr_sys_date {
+    my ($ctx, $args) = @_;
+    unless ($args->{ts}) {
+        my $t = time;
+        my @ts = offset_time_list($t, $ctx->stash('blog_id'));
+        $args->{ts} = sprintf "%04d%02d%02d%02d%02d%02d",
+            $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
+    }
+    return $ctx->build_date($ctx, $args);
+}
+
+###########################################################################
+
+=head2 AdminScript
+
+Returns the value of the C<AdminScript> configuration setting. The default
+for this setting if unassigned is "mt.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:AdminScript url="1"$>>
+might give you http://example.com/mt/mt.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:AdminScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt.cgi>
+
+=back
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_admin_script {
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'AdminScript');
+}
+
+###########################################################################
+
+=head2 CommentScript
+
+Returns the value of the C<CommentScript> configuration setting. The
+default for this setting if unassigned is "mt-comments.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example
+C<<$mt:CommentScript url="1"$>> might give you
+http://example.com/mt/mt-comments.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:CommentScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-comments.cgi>
+
+=back
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_comment_script {
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'CommentScript');
+}
+
+###########################################################################
+
+=head2 TrackbackScript
+
+Returns the value of the C<TrackbackScript> configuration setting. The
+default for this setting if unassigned is "mt-tb.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example 
+C<<$mt:TrackbackScript url="1"$>> might give you
+http://example.com/mt/mt-tb.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:TrackbackScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-tb.cgi>
+
+=back
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_trackback_script {
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'TrackbackScript');
+}
+
+###########################################################################
+
+=head2 SearchScript
+
+Returns the value of the C<SearchScript> configuration setting. The
+default for this setting if unassigned is "mt-search.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:SearchScript url="1"$>>
+might give you http://example.com/mt/mt-search.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:SearchScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-search.cgi>
+
+=back
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_search_script {
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'SearchScript');
+}
+
+###########################################################################
+
+=head2 XMLRPCScript
+
+Returns the value of the C<XMLRPCScript> configuration setting. The
+default for this setting if unassigned is "mt-xmlrpc.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:XMLRPCScript url="1"$>>
+might give you http://example.com/mt/mt-xmlrpc.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:XMLRPCScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-xmlrpc.cgi>
+
+=back
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_xmlrpc_script {
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'XMLRPCScript');
+}
+
+###########################################################################
+
+=head2 AtomScript
+
+Returns the value of the C<AtomScript> configuration setting. The
+default for this setting if unassigned is "mt-atom.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:AtomScript url="1"$>>
+might give you http://example.com/mt/mt-atom.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:AtomScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-atom.cgi>
+
+=back
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_atom_script {
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'AtomScript');
+}
+
+###########################################################################
+
+=head2 NotifyScript
+
+Returns the value of the C<NotifyScript> configuration setting. The
+default for this setting if unassigned is "mt-add-notify.cgi".
+
+=over 4
+
+=item * url
+
+Returns the script as a URL value.  For example C<<$mt:NotifyScript url="1"$>>
+might give you http://example.com/mt/mt-add-notify.cgi
+
+=item * filepath
+
+Returns the script as an absolute filesystem value.  For example
+C<<$mt:NotifyScript filepath="1"$>> might give you
+C</var/www/example.com/htdocs/mt/mt-add-notify.cgi>
+
+=back
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_notify_script {
+    my ($ctx) = shift;
+    return $ctx->_get_script_location(@_,'NotifyScript');
+}
+
+###########################################################################
+
+=head2 CGIHost
+
+Returns the domain host from the configuration directive CGIPath. If CGIPath
+is defined as a relative path, then the domain is derived from the Site URL
+in the blog's "Publishing Settings".
+
+B<Attributes:>
+
+=over 4
+
+=item * exclude_port (optional; default "0")
+
+If set, exclude the port number from the CGIHost.
+
+=back
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_cgi_host {
+    my ($ctx, $args, $cond) = @_;
+    my $path = _hdlr_cgi_path(@_);
+    if ($path =~ m!^https?://([^/:]+)(:\d+)?/!) {
+        return $args->{exclude_port} ? $1 : $1 . ($2 || '');
+    } else {
+        return '';
+    }
+}
+
+###########################################################################
+
+=head2 CGIPath
+
+The value of the C<CGIPath> configuration setting. Example (the output
+is guaranteed to end with "/", so appending one prior to a script
+name is unnecessary):
+
+    <a href="<$mt:CGIPath$>some-cgi-script.cgi">
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_cgi_path {
+    my ($ctx) = @_;
+    my $path = $ctx->{config}->CGIPath;
+    if ($path =~ m!^/!) {
+        # relative path, prepend blog domain
+        if (my $blog = $ctx->stash('blog')) {
+            my ($blog_domain) = $blog->archive_url =~ m|(.+://[^/]+)|;
+            $path = $blog_domain . $path;
+        }
+    }
+    $path .= '/' unless $path =~ m!/$!;
+    return $path;
+}
+
+###########################################################################
+
+=head2 AdminCGIPath
+
+Returns the value of the C<AdminCGIPath> configuration setting if set. Otherwise, the value of the C<CGIPath> setting is returned.
+
+In the event that the configured path has no domain (ie, "/cgi-bin/"), the active blog's domain will be used.
+
+The path produced by this tag will always have an ending '/', even if one does not exist as configured.
+
+B<Example:>
+
+    <$mt:AdminCGIPath$>
+
+=for tags path, configuration
+
+=cut
+
+sub _hdlr_admin_cgi_path {
+    my ($ctx) = @_;
+    my $cfg = $ctx->{config};
+    my $path = $cfg->AdminCGIPath || $cfg->CGIPath;
+    if ($path =~ m!^/!) {
+        # relative path, prepend blog domain
+        my $blog = $ctx->stash('blog');
+        my ($blog_domain) = $blog->archive_url =~ m|(.+://[^/]+)|;
+        $path = $blog_domain . $path;
+    }
+    $path .= '/' unless $path =~ m!/$!;
+    return $path;
+}
+
+###########################################################################
+
+=head2 CGIRelativeURL
+
+The relative URL (path) extracted from the CGIPath setting in
+mt-config.cgi. This is the same as L<CGIPath>, but without any
+domain name. This value is guaranteed to end with a "/" character.
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_cgi_relative_url {
+    my ($ctx) = @_;
+    my $url = $ctx->{config}->CGIPath;
+    $url .= '/' unless $url =~ m!/$!;
+    if ($url =~ m!^https?://[^/]+(/.*)$!) {
+        return $1;
+    }
+    return $url;
+}
+
+###########################################################################
+
+=head2 CGIServerPath
+
+Returns the file path to the directory where Movable Type has been
+installed. Any trailing "/" character is removed.
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_cgi_server_path {
+    my $path = MT->instance->server_path() || "";
+    $path =~ s!/*$!!;
+    return $path;
+}
+###########################################################################
+
+=head2 StaticFilePath
+
+The file path to the directory where Movable Type's static files are
+stored (as configured by the C<StaticFilePath> setting, or based on
+the location of the MT application files alone). This value is
+guaranteed to end with a "/" character.
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_static_file_path {
+    my ($ctx) = @_;
+    my $cfg = $ctx->{config};
+    my $path = $cfg->StaticFilePath;
+    if (!$path) {
+        $path = MT->instance->{mt_dir};
+        $path .= '/' unless $path =~ m!/$!;
+        $path .= 'mt-static/';
+    }
+    $path .= '/' unless $path =~ m!/$!;
+    return $path;
+}
+
+###########################################################################
+
+=head2 StaticWebPath
+
+The value of the C<StaticWebPath> configuration setting. If this setting
+has no domain, the blog domain is added to it. This value is
+guaranteed to end with a "/" character.
+
+B<Example:>
+
+    <img src="<$mt:StaticWebPath$>images/powered.gif"
+        alt="Powered by MT" />
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_static_path {
+    my ($ctx) = @_;
+    my $cfg = $ctx->{config};
+    my $path = $cfg->StaticWebPath;
+    if (!$path) {
+        $path = $cfg->CGIPath;
+        $path .= '/' unless $path =~ m!/$!;
+        $path .= 'mt-static/';
+    }
+    if ($path =~ m!^/!) {
+        # relative path, prepend blog domain
+        my $blog = $ctx->stash('blog');
+        if ($blog) {
+            my ($blog_domain) = $blog->archive_url =~ m|(.+://[^/]+)|;
+            $path = $blog_domain . $path;
+        }
+    }
+    $path .= '/' unless $path =~ m!/$!;
+    return $path;
+}
+
+###########################################################################
+# TODO - From MT5 
+#
+#=head2 SupportDirectoryURL
+#                                                                                                                                                        
+#The value of the C<SupportDirectoryURL> configuration setting. This value is
+#guaranteed to end with a "/" character.
+#
+#=for tags configuration
+#
+#=cut
+#
+#sub _hdlr_support_directory_url {
+#    my ($ctx) = @_;
+#    return MT->support_directory_url;
+#}
+
+###########################################################################
+
+=head2 Version
+
+The version number of the Movable Type system.
+
+B<Example:>
+
+    <mt:Version />
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_mt_version {
+    require MT;
+    MT->version_id;
+}
+
+###########################################################################
+
+=head2 ProductName
+
+The Movable Type edition in use.
+
+B<Attributes:>
+
+=over 4
+
+=item * version (optional; default "0")
+
+If specified, also outputs the version (same as L<Version>).
+
+=back
+
+B<Example:>
+
+    <$mt:ProductName$>
+
+for the MTOS edition, this would output:
+
+    Movable Type Open Source
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_product_name {
+    my ($ctx, $args, $cond) = @_;
+    require MT;
+    my $short_name = MT->translate(MT->product_name);
+    if ($args->{version}) {
+        return MT->translate("[_1] [_2]", $short_name, MT->version_id);
+    } else {
+        return $short_name;
+    }
+}
+
+###########################################################################
+
+=head2 PublishCharset
+
+The value of the C<PublishCharset> directive in the system configuration.
+
+B<Example:>
+
+    <$mt:PublishCharset$>
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_publish_charset {
+    my ($ctx) = @_;
+    return $ctx->{config}->PublishCharset || 'utf-8';
+}
+
+###########################################################################
+
+=head2 DefaultLanguage
+
+The value of the C<DefaultLanguage> configuration setting.
+
+B<Example:>
+
+    <$mt:DefaultLanguage$>
+
+This outputs a language code, ie: "en_US", "ja", "de", "es", "fr", "nl" or
+other installed language.
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_default_language {
+    my ($ctx) = @_;
+    return $ctx->{config}->DefaultLanguage || 'en_US';
+}
+
+###########################################################################
+
+=head2 ConfigFile
+
+Returns the full file path for the Movable Type configuration file
+(mt-config.cgi).
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_config_file {
+    return MT->instance->{cfg_file};
+}
+
+###########################################################################
+
+=head2 IndexBasename
+
+Outputs the C<IndexBasename> MT configuration setting.
+
+B<Attributes:>
+
+=over 4
+
+=item * extension (optional; default "0")
+
+If specified, will append the blog's configured file extension.
+
+=back
+
+=cut
+
+sub _hdlr_index_basename {
+    my ($ctx, $args, $cond) = @_;
+    my $name = $ctx->{config}->IndexBasename;
+    if (!$args->{extension}) {
+        return $name;
+    }
+    my $blog = $ctx->stash('blog');
+    my $ext = $blog->file_extension;
+    $ext = '.' . $ext if $ext;
+    $name . $ext;
+}
+
+###########################################################################
+
+=head2 HTTPContentType
+
+When this tag is used in a dynamically published index template, the value
+specified to the type attribute will be returned in the Content-Type HTTP
+header sent to web browser. This content is never displayed directly to the
+user but is instead used to signal to the browser the data type of the
+response.
+
+When this tag is used in a system template, such as the search results
+template, mt-search.cgi will use the value specified to "type" attribute and
+returns it in Content-Type HTTP header to web browser.
+
+When this tag is used in statically published template, this template tag
+outputs nothing.
+
+B<Attributes:>
+
+=over 4
+
+=item * type
+
+A valid HTTP Content-Type value, for example 'application/xml'. Note that you
+must not specify charset portion of Content-Type header value in this
+attribute. MT will set the portion automatically by using PublishCharset
+configuration directive.
+
+=back
+
+B<Example:>
+
+    <$mt:HTTPContentType type="application/xml"$>
+
+=cut
+
+sub _hdlr_http_content_type {
+    my($ctx, $args) = @_;
+    my $type = $args->{type};
+    $ctx->stash('content_type', $type);
+    return qq{};
+}
+
+###########################################################################
+
+=head2 FileTemplate
+
+Produces a file name and path using the archive file naming specifiers.
+
+B<Attributes:>
+
+=over 4
+
+=item * format
+
+A required attribute that defines the template with a string of specifiers.
+The supported specifiers are (B<NOTE:> do not confuse the following
+table with the specifiers used for MT date tags. There is no relationship
+between these -- any similarities are coincidental. These specifiers are
+tuned for publishing filenames and paths for various contexts.)
+
+=over 4
+
+=item * %a
+
+The entry's author's display name passed through the dirify global filter. Example: melody_nelson
+
+=item * %-a
+
+The same as above except using dashes. Example: melody-nelson
+
+=item * %b
+
+For individual archive mappings, this returns the basename of the entry. By
+default, this is the first thirty characters of an entry dirified with
+underscores. It can be specified by using the basename field on the edit
+entry screen. Example: my_summer_vacation
+
+=item * %-b
+
+Same as above but using dashes. Example: my-summer-vacation
+
+=item * %c
+
+The entry's primary category/subcategory path, built using the category
+basename field. Example: arts_and_entertainment/tv_and_movies
+
+=item * %-c
+
+Same as above but using dashes. Example: arts-and-entertainment/tv-and-movies
+
+=item * %C
+
+The entry's primary category label passed through the dirify global filter. Example: arts_and_entertainment
+
+=item * %-C
+
+Same as above but using dashes. Example: arts-and-entertainment
+
+=item * %d
+
+2-digit day of the month. Example: 09
+
+=item * %D
+
+3-letter language-dependent abbreviation of the week day. Example: Tue
+
+=item * %e
+
+A numeric entry ID padded with leading zeroes to six digits. Example: 000040
+
+=item * %E
+
+The entry's numeric ID. Example: 40
+
+=item * %f
+
+Archive filename with the specified extension. This can be used instead of
+%b or %i and will do the right thing based on the context.
+Example: entry_basename.html or index.html
+
+=item * %F
+
+Same as above but without the file extension. Example: filename
+
+=item * %h
+
+2-digit hour on a 24-hour clock with a leading zero if applicable.
+Example: 09 for 9am, 16 for 4pm
+
+=item * %H
+
+2-digit hour on a 24-hour clock without a leading zero if applicable.
+Example: 9 for 9am, 16 for 4pm
+
+=item * %i
+
+The setting of the IndexBasename configuration directive with the default
+file extension appended. Example: index.html
+
+=item * %I
+
+Same as above but without the file extension. Example: index
+
+=item * %j
+
+3-digit day of year, zero-padded. Example: 040
+
+=item * %m
+
+2-digit month, zero-padded. Example: 07
+
+=item * %M
+
+3-letter language-dependent abbreviation of the month. Example: Sep
+
+=item * %n
+
+2-digit minute, zero-padded. Example: 04
+
+=item * %s
+
+2-digit second, zero-padded. Example: 01
+
+=item * %x
+
+File extension with a leading dot (.). If a file extension has not
+been specified a blank string is returned. Example: .html
+
+=item * %y
+
+4-digit year. Example: 2005
+
+=item * %Y
+
+2-digit year with zero-padding. Example: 05
+
+=back
+
+=back
+
+B<Example:>
+
+    <$mt:FileTemplate format="%y/%m/%f"$>
+
+=for tags archives
+
+=cut
+
+sub _hdlr_file_template {
+    my ($ctx, $args, $cond) = @_;
+
+    my $at = $ctx->{current_archive_type} || $ctx->{archive_type};
+    $at = 'Category' if $ctx->{inside_mt_categories};
+    my $format = $args->{format};
+    unless ($format) {
+        my $archiver = MT->publisher->archiver($at);
+        $format = $archiver->default_archive_templates if $archiver;
+    }
+    return $ctx->error(MT->translate("Unspecified archive template")) unless $format;
+
+    my ($dir, $sep);
+    if ($args->{separator}) {
+        $dir = "dirify='$args->{separator}'";
+        $sep = "separator='$args->{separator}'";
+    } else {
+        $dir = "dirify='1'";
+        $sep = "";
+    }
+    my %f = (
+        'a' => "<MTAuthorBasename $dir>",
+        '-a' => "<MTAuthorBasename separator='-'>",
+        '_a' => "<MTAuthorBasename separator='_'>",
+        'b' => "<MTEntryBasename $sep>",
+        '-b' => "<MTEntryBasename separator='-'>",
+        '_b' => "<MTEntryBasename separator='_'>",
+        'c' => "<MTSubCategoryPath $sep>",
+        '-c' => "<MTSubCategoryPath separator='-'>",
+        '_c' => "<MTSubCategoryPath separator='_'>",
+        'C' => "<MTCategoryBasename $sep>",
+        '-C' => "<MTCategoryBasename separator='-'>",
+        'd' => "<MTArchiveDate format='%d'>",
+        'D' => "<MTArchiveDate format='%e' trim='1'>",
+        'e' => "<MTEntryID pad='1'>",
+        'E' => "<MTEntryID pad='0'>",
+        'f' => "<MTArchiveFile $sep>",
+        '-f' => "<MTArchiveFile separator='-'>",
+        'F' => "<MTArchiveFile extension='0' $sep>",
+        '-F' => "<MTArchiveFile extension='0' separator='-'>",
+        'h' => "<MTArchiveDate format='%H'>",
+        'H' => "<MTArchiveDate format='%k' trim='1'>",
+        'i' => '<MTIndexBasename extension="1">',
+        'I' => "<MTIndexBasename>",
+        'j' => "<MTArchiveDate format='%j'>",  # 3-digit day of year
+        'm' => "<MTArchiveDate format='%m'>",  # 2-digit month
+        'M' => "<MTArchiveDate format='%b'>",  # 3-letter month
+        'n' => "<MTArchiveDate format='%M'>",  # 2-digit minute
+        's' => "<MTArchiveDate format='%S'>",  # 2-digit second
+        'x' => "<MTBlogFileExtension>",
+        'y' => "<MTArchiveDate format='%Y'>",  # year
+        'Y' => "<MTArchiveDate format='%y'>",  # 2-digit year
+        'p' => "<mt:PagerBlock><mt:IfCurrentPage><mt:Var name='__value__'></mt:IfCurrentPage></mt:PagerBlock>", # current page number
+    );
+    $format =~ s!%([_-]?[A-Za-z])!$f{$1}!g if defined $format;
+    # now build this template and return result
+    my $builder = $ctx->stash('builder');
+    my $tok = $builder->compile($ctx, $format);
+    return $ctx->error(MT->translate("Error in file template: [_1]", $args->{format}))
+        unless defined $tok;
+    defined(my $file = $builder->build($ctx, $tok, $cond))
+        or return $ctx->error($builder->errstr);
+    $file =~ s!/{2,}!/!g;
+    $file =~ s!(^/|/$)!!g;
+    $file;
+}
+
+###########################################################################
+
+=head2 TemplateCreatedOn
+
+Returns the creation date for the template publishing the current file.
+
+B<Example:>
+
+    <$mt:TemplateCreatedOn$>
+
+=for tags date
+
+=for tags templates
+
+=cut
+
+sub _hdlr_template_created_on {
+    my($ctx, $args, $cond) = @_;
+    my $template = $ctx->stash('template')
+        or return $ctx->error(MT->translate("Can't load template"));
+    $args->{ts} = $template->created_on;
+    $ctx->build_date($ctx, $args);
+}
+
+###########################################################################
+
+=head2 BuildTemplateID
+
+Returns the ID of the template (index, archive or system template) currently
+being built.
+
+=cut
+
+sub _hdlr_build_template_id {
+    my ($ctx, $args, $cond) = @_;
+    my $tmpl = $ctx->stash('template');
+    if ($tmpl && $tmpl->id) {
+        return $tmpl->id;
+    }
+    return 0;
+}
+
+###########################################################################
+
+=head2 ErrorMessage
+
+This tag is used by the system to display the text of any user error
+message. Used in system templates, such as the 'Comment Response' template.
+
+=for tags templating
+
+=cut
+
+sub _hdlr_error_message {
+    my ($ctx) = @_;
+    my $err = $ctx->stash('error_message');
+    defined $err ? $err : '';
+}
+
+###########################################################################
+
+=head2 JQueryURL
+
+Returns the URL for the installation's jQuery library set by the
+C<JQueryURL> configuration directive (in mt-config.cgi) which defaults
+to C<STATIC_WEB_PATH/jquery/jquery.js> if unset.  
+
+It can be set to any relative, absolute or external FQDN (fully-qualified
+domain name) jQuery source URL which is useful in enhancing page
+load performance.
+
+B<CAVEAT:> This tag is used internally by Melody to load jQuery for its
+admin UI screens so use caution if setting the directive to different
+version than that which the application uses.  If you really must use a
+different version of jQuery for your site's pages, you're better off
+hardcoding it in your templates.
+
+B<Example template tag usage:>
+
+    <script src="<$mt:jqueryurl$>"
+            type="text/javascript" charset="utf-8"></script>
+
+B<Examples of mt-config.cgi directive use (remember: CASE SENSITIVE!):>
+
+    # Use a CDN for better caching and geographical distribution
+    JQueryURL  http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js
+
+    # Use a subdomain to parallelize loading of static helper files 
+    JQueryURL  http://static.mydomain.com/jquery/jquery.min.js
+
+    # Non-FQDN, absolute URLs to internal resources work fine and are
+    # preferred when you're publishing to multiple domains. In this case,
+    # the tag will return the exact, non-FQDN value shown below.
+    JQueryURL  /scripts/jquery/jquery.min.js
+
+    # Relative URLs to internal resources are OK and will have
+    # StaticWebPath prepended to it,
+    # e.g. http://example.com/mt/mt-static/jquery/jquery.min.js
+    JQueryURL  jquery/jquery.min.js
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_jquery_url { MT->instance->config->JQueryURL }
 
 1;
 
