@@ -11,6 +11,52 @@ package MultiBlog::Tags;
 use strict;
 use warnings;
 
+###########################################################################
+
+=head2 MultiBlog
+
+Container tag that wraps the tags inside of it inside loop which covers multiple blogs.
+
+B<Example:>
+<mt:MultiBlog include_blogs="1">
+    <mt:Entries category="Releases" lastn="4">
+         <$mt:EntryTitle$>
+    </mt:Entries>
+</mt:MultiBlog>
+
+Include the last 4 entries from the category "Releases" in blog with the ID of 1
+
+
+B<Example:>
+<ul>
+<MTMultiBlog include_blogs="1,2,3,4,5,6">
+    <li><$mt:BlogName$>
+         <ul>
+    <mt:Entries lastn="4">
+         <li><a href="<$mt:EntryPermalink$>"><$mt:EntryTitle$></a></li>
+    </mt:Entries>
+         </ul>
+    </li>
+</MTMultiBlog>
+</ul>
+
+Print a nested ordered list that shows a blog's name and then the last four entries
+for the blogs with IDs 1 through 6.
+
+=cut
+
+###########################################################################
+
+=head2 OtherBlog
+
+An alias for the MultiBlog tag. This is tag is in place only to support a transition
+from older versions of Movable Type which used the "OtherBlog" plugin. OtherBlog was
+the predecessor to the MultiBlog feature/plugin. It is recommended that any new template
+be designed using the MultiBlog tag instead this one, and that anyone using OtherBlog
+should plan to use MultiBlog instead (no loss of functionality should occur).
+
+=cut
+
 sub MultiBlog {
     my $plugin = MT->component('MultiBlog');
     my ( $ctx, $args, $cond ) = @_;
@@ -70,6 +116,42 @@ sub MultiBlog {
     return defined($res) ? $res : $ctx->error($ctx->errstr);
 }
 
+###########################################################################
+
+=head2 MultiBlogLocalBlog
+
+A container tag that sets the immediate context inside of it to the local blog that
+is being published. 
+
+B<Example:>
+<$mt:BlogID setvar="exclude_me"$>
+<mt:MultiBlog exclude_blogs="$exclude_me">
+    <mt:If name="__first__">
+        <ul>
+    </mt:If>
+
+    <li <mt:MultiBlogIfLocalBlog>class="local_blog"</mt:MultiBlogIfLocalBlog>>
+        <a href="<$mt:BlogURL$>"><$mt:BlogName$></a> recent updates:
+        <ul>
+        <mt:Entries lastn="3">
+            <a href="<$mt:EntryPermalink$>"><$mt:EntryTitle$></a>
+        </mt:Entries>
+        </ul>
+    </li>
+
+    <mt:If name="__last__">
+        </ul>
+        <mt:MultiBlogLocalBlog>
+            <a href="<$mt:BlogURL$>">&larr; Go Home</a>
+        </mt:MultiBlogLocalBlog>
+    </mt:If>
+</mt:MultiBlog>
+
+Generate a list of all of the blogs, excluding the current one, and their most recent
+updates, and then put a link to the main index of the current blog right after the list.
+
+=cut
+
 sub MultiBlogLocalBlog {
     my $plugin = MT->component('MultiBlog');
     MT->log({message => $plugin});
@@ -97,6 +179,47 @@ sub MultiBlogLocalBlog {
 
     $out;
 }
+
+###########################################################################
+
+=head2 MultiBlogIfLocalBlog
+
+A conditional tag that will test for whether or not the local blog is the one currently
+in context inside of a MultiBlog tag.
+
+B<Example:>
+<MTMultiBlog include_blogs="1,2,3">
+    <MTEntries category="Releases" lastn="4">
+         <$MTEntryTitle$>
+    </MTEntries>
+    <MT MultiBlogIfLocalBlog>
+        <$MTBlogID$> is the local blog!
+    </MTMultiBlogIfLocalBlog>
+</MTMultiBlog>
+
+That will output the ID of the local blog along with the string "is the local blog!" when
+the MultiBlog loop reaches the local blog.
+
+<mt:MultiBlog include_blogs="all">
+    <mt:If name="__first__">
+        <ul>
+    </mt:If>
+
+    <li <mt:MultiBlogIfLocalBlog>class="local_blog"</mt:MultiBlogIfLocalBlog>>
+        <a href="<$mt:BlogURL$>"><$mt:BlogName$></a>
+    </li>
+
+    <mt:If name="__last__">
+        </ul>
+    </mt:If>
+
+</mt:MultiBlog>
+
+That will generate a list of blogs, spanning the entire installation of Melody, with
+a specially CSS attribute, local_blog, applied to the list item that corresponds to the local
+blog.
+
+=cut
 
 sub MultiBlogIfLocalBlog {
     my $plugin = MT->component('MultiBlog');

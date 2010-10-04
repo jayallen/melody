@@ -164,6 +164,24 @@ sub expire_entry_count {
 
 # ============= tags ===============
 
+###########################################################################
+
+=head2 AuthorCommentCount
+
+The number of comments left by the current author in context.
+
+B<Example:>
+    <mt:Authors>
+    <$mt:AuthorDisplayName$>
+        <ul>
+            <li><$mt:AuthorCommentCount$> comments</li>
+            <li><$mt:AuthorEntriesCount$> posts</li>
+            <li><$mt:AuthorEntryCount$> published</li>
+        </ul>
+    </mt:Authors>
+
+=cut
+
 sub _hdlr_author_comment_count {
     my ($ctx, $args, $cond) = @_;
     my $author = $ctx->stash('author')
@@ -171,6 +189,24 @@ sub _hdlr_author_comment_count {
 
     return $ctx->count_format($author->summarize('comment_count'), $args);
 }
+
+###########################################################################
+
+=head2 AuthorEntriesCount
+
+The number of entries created by the current author in context.
+
+B<Example:>
+    <mt:Authors>
+    <$mt:AuthorDisplayName$>
+        <ul>
+            <li><$mt:AuthorCommentCount$> comments</li>
+            <li><$mt:AuthorEntriesCount$> posts</li>
+            <li><$mt:AuthorEntryCount$> published</li>
+        </ul>
+    </mt:Authors>
+
+=cut
 
 sub _hdlr_author_entries_count {
     my ($ctx, $args, $cond) = @_;

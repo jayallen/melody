@@ -12,6 +12,7 @@ my $components = {
         paths => [
             'MT/Template/ContextHandlers.pm',
             'MT/Template/Context/Search.pm',
+            'MT/Summary/Author.pm'
         ],
     },
     'multiblog' => {

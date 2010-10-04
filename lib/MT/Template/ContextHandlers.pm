@@ -4267,6 +4267,23 @@ sub _hdlr_object_tags {
     $res;
 }
 
+###########################################################################
+
+=head2 CategoryTags
+
+Creates the context for using "Tag tags" on categories that have been tagged.
+
+B<Example:>
+    <mt:Categories>
+        <$mt:CategoryLabel$>&nbsp;
+        <mt:CategoryTags>
+            <$mt:TagName$>&nbsp;
+        </mt:CategoryTags>
+        <br/>
+    </mt:Categories>
+
+=cut
+
 sub _hdlr_category_tags {
     return _hdlr_object_tags ('category', @_);
 }
@@ -9423,6 +9440,10 @@ If the author has not provided a display name for publishing, this tag
 will output an empty string.
 
 =for tags author entry
+
+=cut
+
+###########################################################################
 
 =head2 EntryAuthorNickname
 
