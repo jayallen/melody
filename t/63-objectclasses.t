@@ -18,6 +18,7 @@ __PACKAGE__->install_properties({
     },
     primary_key => 'id',
     class_type => 'file',
+    datasource => 'asset'
 });
 
 package MT::TestAsset::Image;
@@ -56,6 +57,9 @@ ok($image->class_type eq 'image', 'image class_type is image');
 ok($audio->class_type eq 'audio', 'audio class_type is audio');
 ok(MT::TestAsset->class_type eq 'file', 'generic asset class_type is file');
 ok(MT::TestAsset::Image->class_type eq 'image', 'generic image asset class type is image');
+
+##This was never set, which makes it a little hard to properly unit test below...
+$audio->title('Test Title');
 
 # deflate/inflate tests; object should be re-blessed with proper package name
 # upon inflation with base class
