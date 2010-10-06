@@ -3789,8 +3789,6 @@ sub usage {
 
 package Melody::DeprecatedQueryUsage;
 
-# FIXME Move Melody::DeprecatedQueryUsage to a Melody compatibility layer
-
 sub TIESCALAR { return bless {}, $_[0]; }
 
 sub FETCH {

@@ -42,7 +42,7 @@ $q->param(status => 1);
 # $q->param(password => 'bass');
 $q->param(text => "Buddha blessed and boo-ya blasted; 
 these are the words that she manifested.");
-$cms->{query} = $q;
+$cms->query($q);
 $cms->{perms} = MT::Permission->new();
 $cms->{perms}->can_post(1);
 $cms->{author} = MT::Author->new();

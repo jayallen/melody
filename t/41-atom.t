@@ -2,6 +2,10 @@ use strict;
 use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 use POSIX;
 
+use Test::More skip_all => <<REASON;
+Broken test. XML::Atom requires XML::LibXML which is not a listed as a prerequisite of MT and requires compiling. This functionality should probably get moved to a plugin and/or an alternative with a pure Perl fallback.
+REASON
+
 use MT;
 use MT::Atom;
 use XML::LibXML; # this test would not work without it
@@ -11,7 +15,7 @@ use XML::Atom::Feed;
 use XML::Atom::Entry;
 use POSIX qw( ceil );
 
-use Test::More qw( no_plan );#tests => 97;
+# use Test::More qw( no_plan );#tests => 97;
 
 # To keep away from being under FastCGI
 $ENV{HTTP_HOST} = 'localhost';

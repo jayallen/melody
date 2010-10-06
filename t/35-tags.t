@@ -21,7 +21,9 @@ use MT::Builder;
 
 require POSIX;
 
-my $mt = MT->new();
+use vars qw( $DB_DIR $T_CFG );
+
+my $mt = MT->instance( Config => $T_CFG ) or die MT->errstr;
 
 local $/ = undef;
 open F, "<t/35-tags.dat";
