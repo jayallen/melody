@@ -1,8 +1,8 @@
 id: MultiBlog
 key: MultiBlog
 name: MultiBlog
-description: <MT_TRANS phrase="MultiBlog allows you to publish content from other blogs and define publishing rules and access controls between them.">
-version: 2.11
+description: <MT_TRANS phrase="MultiBlog allows you to publish content from other blogs and define publishing rules and access controls between them. This version of MultiBlog has been enhanced with bug fixes and abilities to work with Melody.">
+version: 2.11.1
 author_name: Six Apart, Ltd.
 author_link: http://www.sixapart.com/
 system_config_template: system_config.tmpl
@@ -36,6 +36,7 @@ callbacks:
     scheduled_post_published: $MultiBlog::MultiBlog::post_entry_pub
     MT::Comment::post_save: $MultiBlog::MultiBlog::post_feedback_save
     MT::TBPing::post_save: $MultiBlog::MultiBlog::post_feedback_save
+    search_blog_list: $MultiBlog::MultiBlog::Melody::search_blog_filter
 
 applications:
     cms:
