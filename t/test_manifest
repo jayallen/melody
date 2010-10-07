@@ -59,3 +59,7 @@
 97-impexp.t
 98-check.t
 99-includeblogs.t
+meta.t
+mt_cms_blog.t
+mt_cms_tag.t
+mt_cms_tools.t
