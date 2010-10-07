@@ -4,9 +4,9 @@ use strict;
 use warnings;
 use IPC::Open2;
 
-BEGIN {
-    $ENV{MT_CONFIG} = 'mysql-test.cfg';
-}
+#BEGIN {
+#    $ENV{MT_CONFIG} ||= 'sqllite-test.cfg';
+#}
 
 $| = 1;
 
