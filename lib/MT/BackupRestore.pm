@@ -1084,7 +1084,8 @@ sub restore_parent_ids {
     };
 
     $u = $processor->('author');
-    $g = $processor->('group');
+# Removed since 'group' is a part of Movable Type Enterprise
+#    $g = $processor->('group');
     $b = $processor->('blog');
     $r = $processor->('role');
 
@@ -1095,7 +1096,8 @@ sub restore_parent_ids {
     # USER_ROLE       => 4;
     # GROUP_ROLE      => 5;
 
-    ($u && $g) || ($u && $r) || ($g && $r) ? 1 : 0; # || ($u && $b && $r) || ($g && $b && $r)
+#    ($u && $g) || ($u && $r) || ($g && $r) ? 1 : 0; # || ($u && $b && $r) || ($g && $b && $r)
+    ($u && $r) ? 1 : 0; # || ($u && $b && $r) || ($g && $b && $r)
 }
 
 package MT::Category;
