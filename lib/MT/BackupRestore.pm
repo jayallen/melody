@@ -874,7 +874,7 @@ sub _restore_id {
     my ($key, $val, $data, $objects) = @_;
 
     return 0 unless 'ARRAY' eq ref($val);
-    return 1 if 0 == $data->{$key}; 
+    return 1 if !($data->{$key}) || (0 == $data->{$key}); 
 
     my $new_obj;
     my $old_id = $data->{$key};
