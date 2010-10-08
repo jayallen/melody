@@ -319,8 +319,8 @@ sub end_element {
             elsif ('role' eq $name) {
                 my $role = $class->load( { name => $obj->name } );
                 if ( $role ) {
-                    my $old_perms = join '', sort { $a <=> $b } split(',', $obj->permissions);
-                    my $cur_perms = join '', sort { $a <=> $b } split(',', $role->permissions);
+                    my $old_perms = join '', sort { $a cmp $b } split(',', $obj->permissions);
+                    my $cur_perms = join '', sort { $a cmp $b } split(',', $role->permissions);
                     if ($old_perms eq $cur_perms) {
                         $self->{objects}->{"$class#$old_id"} = $role;
                         $exists = 1;
