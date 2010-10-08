@@ -311,7 +311,6 @@ sub _loop_through_objects {
                 }
                 # TODO - length might need to be utf8 safe: use utf8; use Encode qw(encode); length encode 'UTF-8', "Hello, world!"
                 my $bytes_to_add = length $printer->($object->to_xml(undef, \@metacolumns) . "\n");
-#                print STDERR "bytes to add: $bytes_to_add\n";
                 $bytes += $bytes_to_add;
                 $records++;
                 if ($size && ($bytes >= $size)) {
