@@ -359,6 +359,7 @@ sub end_element {
                     $self->{callback}->(($self->{state} ? $self->{state} . " " : '') . 
                                         MT->translate("[_1] records restored...", $records), $data->{LocalName})
                         if $records && ($records % 10 == 0);
+                    $records ||= 0;
                     $self->{records} = $records + 1;
                     my $cb = "restored.$name";
                     $cb .= ":$ns" if MT::BackupRestore::NS_MOVABLETYPE() ne $ns;
