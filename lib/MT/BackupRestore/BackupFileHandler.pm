@@ -73,7 +73,7 @@ sub start_element {
             unless ($class) {
                 push @{$self->{errors}}, MT->translate('[_1] is not a subject to be restored by Movable Type.', $name);
             } else {
-                if ($self->{current_class} ne $class) {
+                if ($self->{current_class} && $self->{current_class} ne $class) {
                     if (my $c = $self->{current_class}) {
                         my $state = $self->{state};
                         my $records = $self->{records};
