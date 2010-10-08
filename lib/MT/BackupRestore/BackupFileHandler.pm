@@ -356,7 +356,8 @@ sub end_element {
                     }
                     $self->{objects}->{"$class#$old_id"} = $obj;
                     my $records = $self->{records};
-                    $self->{callback}->($self->{state} . " " . MT->translate("[_1] records restored...", $records), $data->{LocalName})
+                    $self->{callback}->(($self->{state} ? $self->{state} . " " : '') . 
+                                        MT->translate("[_1] records restored...", $records), $data->{LocalName})
                         if $records && ($records % 10 == 0);
                     $self->{records} = $records + 1;
                     my $cb = "restored.$name";
