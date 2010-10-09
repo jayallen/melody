@@ -1494,7 +1494,7 @@ sub core_menus {
         },
         'system:settings' => {
             label             => "Settings",
-            mode              => 'cfg_system',
+            mode              => 'cfg_system_settings',
             order             => 300,
             system_permission => 'administer',
         },
