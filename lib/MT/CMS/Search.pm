@@ -417,7 +417,7 @@ sub do_search_replace {
     my $api   = $search_api->{$type};
     my $class = $app->model($api->{object_type} || $type);
     my %param = %$list_pref;
-    my $limit = $q->param('limit');
+    my $limit = $q->param('limit') || '';
     if ($limit ne 'all') {
         # type-specific directives override global CMSSearchLimit
         my $directive = 'CMSSearchLimit' . ucfirst($type);

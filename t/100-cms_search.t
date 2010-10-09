@@ -29,9 +29,9 @@ $app = _run_app(
 $out = delete $app->{__test_output};
 ok ($out, "Global template search results are present");
 ok ($out !~ /Publish selected templates/i, "No Publish templates button is present for global template search results");
-ok ($out =~ /Delete selected templates/i, "Delete templates button is present");
-ok ($out =~ /Refresh template\(s\)/i, "Refresh templates dropdown is present");
-ok ($out =~ /Clone template\(s\)/i, "Clone templates dropdown is present");
+ok ($out !~ /Delete selected templates/i, "Delete templates button is present");
+ok ($out !~ /Refresh template\(s\)/i, "Refresh templates dropdown is present");
+ok ($out !~ /Clone template\(s\)/i, "Clone templates dropdown is present");
 
 # blog search for a template
 # __mode=search_replace&_type=template&do_search=1&search=hello&blog_id=1
