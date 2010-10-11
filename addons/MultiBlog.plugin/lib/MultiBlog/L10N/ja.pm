@@ -53,7 +53,7 @@ use vars qw( %Lexicon );
 	'Cross-blog aggregation will be disallowed by default.  Individual blogs can be configured through the blog-level MultiBlog settings to allow access to their content by other blogs.' => 'ブログをまたがったアグリゲーションが既定で不許可になります。個別のブログレベルでのMultiBlogの設定で他のブログからのコンテンツへのアクセスを許可することもできます。',
 
 ## plugins/MultiBlog/multiblog.pl
-	'MultiBlog allows you to publish content from other blogs and define publishing rules and access controls between them.' => 'MultiBlogを使うと他のブログのコンテンツを公開したりブログ同士での公開ルールの設定やアクセス制限を行うことができます。',
+	'This version of MultiBlog has been enhanced with bug fixes and abilities to work with Melody.' => 'MultiBlogを使うと他のブログのコンテンツを公開したりブログ同士での公開ルールの設定やアクセス制限を行うことができます。',
 	'MultiBlog' => 'マルチブログ',
 	'Create Trigger' => 'トリガーを作成',
 	'Weblog Name' => 'ブログ名',
