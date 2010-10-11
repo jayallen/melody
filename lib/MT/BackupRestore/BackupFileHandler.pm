@@ -73,7 +73,7 @@ sub start_element {
             unless ($class) {
                 push @{$self->{errors}}, MT->translate('[_1] is not a subject to be restored by Movable Type.', $name);
             } else {
-                if ($self->{current_class} ne $class) {
+                if ($self->{current_class} && $self->{current_class} ne $class) {
                     if (my $c = $self->{current_class}) {
                         my $state = $self->{state};
                         my $records = $self->{records};
@@ -319,8 +319,8 @@ sub end_element {
             elsif ('role' eq $name) {
                 my $role = $class->load( { name => $obj->name } );
                 if ( $role ) {
-                    my $old_perms = join '', sort { $a <=> $b } split(',', $obj->permissions);
-                    my $cur_perms = join '', sort { $a <=> $b } split(',', $role->permissions);
+                    my $old_perms = join '', sort { $a cmp $b } split(',', $obj->permissions);
+                    my $cur_perms = join '', sort { $a cmp $b } split(',', $role->permissions);
                     if ($old_perms eq $cur_perms) {
                         $self->{objects}->{"$class#$old_id"} = $role;
                         $exists = 1;
@@ -356,8 +356,10 @@ sub end_element {
                     }
                     $self->{objects}->{"$class#$old_id"} = $obj;
                     my $records = $self->{records};
-                    $self->{callback}->($self->{state} . " " . MT->translate("[_1] records restored...", $records), $data->{LocalName})
+                    $self->{callback}->(($self->{state} ? $self->{state} . " " : '') . 
+                                        MT->translate("[_1] records restored...", $records), $data->{LocalName})
                         if $records && ($records % 10 == 0);
+                    $records ||= 0;
                     $self->{records} = $records + 1;
                     my $cb = "restored.$name";
                     $cb .= ":$ns" if MT::BackupRestore::NS_MOVABLETYPE() ne $ns;

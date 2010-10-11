@@ -309,7 +309,9 @@ sub _loop_through_objects {
                   && ( exists $authors_seen{$object->id} ) ) {
                     next;
                 }
-                $bytes += $printer->($object->to_xml(undef, \@metacolumns) . "\n");
+                # TODO - length might need to be utf8 safe: use utf8; use Encode qw(encode); length encode 'UTF-8', "Hello, world!"
+                my $bytes_to_add = length $printer->($object->to_xml(undef, \@metacolumns) . "\n");
+                $bytes += $bytes_to_add;
                 $records++;
                 if ($size && ($bytes >= $size)) {
                     $splitter->(++$counter);
@@ -874,7 +876,7 @@ sub _restore_id {
     my ($key, $val, $data, $objects) = @_;
 
     return 0 unless 'ARRAY' eq ref($val);
-    return 1 if 0 == $data->{$key}; 
+    return 1 if !($data->{$key}) || (0 == $data->{$key}); 
 
     my $new_obj;
     my $old_id = $data->{$key};
@@ -1084,7 +1086,8 @@ sub restore_parent_ids {
     };
 
     $u = $processor->('author');
-    $g = $processor->('group');
+# Removed since 'group' is a part of Movable Type Enterprise
+#    $g = $processor->('group');
     $b = $processor->('blog');
     $r = $processor->('role');
 
@@ -1095,7 +1098,8 @@ sub restore_parent_ids {
     # USER_ROLE       => 4;
     # GROUP_ROLE      => 5;
 
-    ($u && $g) || ($u && $r) || ($g && $r) ? 1 : 0; # || ($u && $b && $r) || ($g && $b && $r)
+#    ($u && $g) || ($u && $r) || ($g && $r) ? 1 : 0; # || ($u && $b && $r) || ($g && $b && $r)
+    ($u && $r) ? 1 : 0; # || ($u && $b && $r) || ($g && $b && $r)
 }
 
 package MT::Category;

@@ -55,7 +55,7 @@ SKIP: {
       like(Test::LeakTrace::leaked_count(sub {
         my $frozen = $ser->serialize( \$data2 );
         my $thawed = ${$ser->unserialize( $frozen )};
-      }), qr/^(17|18)$/, "17-18 leaks with circular data");
+      }), qr/^(17|18|19)$/, "17-19 leaks with circular data");
     }
   }
 }
@@ -66,7 +66,7 @@ $Data::Dumper::Indent = 0;
 
 my $dj = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',[1],3,2],'d'=>1},undef]!;                           # to use with JSON
 my $dn = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},3,2],'d'=>1},undef]!;               # to use for non-recursive structure
-my $dd = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},\3,2],'d'=>1,'z'=>$VAR1},undef]!; # to use for recursive structure
+my $dd = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},\'3',2],'d'=>1,'z'=>$VAR1},undef]!; # to use for recursive structure
 
 # serialize and deserialize, check the results
 # compare structures with Data::Dumper
@@ -76,7 +76,8 @@ for my $label (keys %sers) {
   print "# Checking serialization for $label\n";
   my $json = ($label eq 'JSON' || $label eq 'MTJ');
 
-  my $frozen = $ser->serialize( $json ? \$data1 : \$data2 );
+  my $data_to_freeze = $json ? \$data1 : \$data2;
+  my $frozen = $ser->serialize( $data_to_freeze );
   my $thawed = ${$ser->unserialize( $frozen )};
 
   is(ref $thawed, 'ARRAY', 'Returns correct type ARRAYREF');
@@ -100,10 +101,12 @@ for my $label (keys %sers) {
 
   # fix stringified numbers for MT2
   if ($label eq 'MT2' || $label eq 'MT') {
-    $_ += 0 for $thawed->[0], $thawed->[1]{b}[0], ${$thawed->[1]{c}[2]}, $thawed->[1]{c}[3], $thawed->[1]{d};
+#    $_ += 0 for $thawed->[0], $thawed->[1]{b}[0], ${$thawed->[1]{c}[2]}, $thawed->[1]{c}[3], $thawed->[1]{d};
+    $_ += 0 for $thawed->[0], $thawed->[1]{b}[0], $thawed->[1]{c}[3], $thawed->[1]{d};
   }
 
-  (my $dump = Dumper($thawed)) =~ s/^\$VAR1\s*=\s*|\s|;$//g; # remove spaces, $VAR and ; if any
+  my $dump = Dumper($thawed);
+  $dump =~ s/^\$VAR1\s*=\s*|\s|;$//g; # remove spaces, $VAR and ; if any
   is($dump, ($json ? $dj : $dd), 'Returns the structure that matches Data::Dumper\'s');
 }
 
