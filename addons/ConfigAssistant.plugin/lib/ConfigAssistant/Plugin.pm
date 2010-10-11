@@ -1151,7 +1151,7 @@ sub entry_search_api_prep {
     my ($terms, $args, $blog_id) = @_;
 
     $terms->{blog_id} = $blog_id if $blog_id;
-    $terms->{status} = $app->param('status') if ($app->param('status'));
+    $terms->{status} = $app->query->param('status') if ($app->query->param('status'));
 
     my $search_api = $app->registry("search_apis");
     my $api = $search_api->{entry};
