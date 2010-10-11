@@ -10,6 +10,9 @@ lib/MT/FileMgr/FTP.pm
 lib/MT/FileMgr/SFTP.pm
 lib/MT/FileMgr/DAV.pm
 
+# Propritary Oracle Driver
+Oracle.pm$
+
 ^schemas
 ^t/
 .*/t/
