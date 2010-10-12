@@ -364,7 +364,7 @@ BEGIN {
             'UploadPerms'           => { default => '0666', },
             'NoTempFiles'           => { default => 0, },
             'TempDir'               => { default => '/tmp', },
-            'RichTextEditor'        => { default => 'archetype', },
+            'RichTextEditor'        => { default => 'sixapart', },
             'EntriesPerRebuild'     => { default => 40, },
             'UseNFSSafeLocking'     => { default => 0, },
             'NoLocking'             => { default => 0, },
@@ -650,14 +650,11 @@ BEGIN {
                 handler => 'MT::Util::rich_text_transform',
                 condition => sub {
                     my ($type) = @_;
+                    my $rte = lc(MT->config('RichTextEditor'));
+                    my $editors = MT->registry("richtext_editors");
+                    return 0 unless $rte && $editors && $editors->{$rte};
                     return 1 if $type && ($type ne 'comment');
                 },
-            },
-        },
-        richtext_editors => {
-            'archetype' => {
-                label => 'Movable Type Default',
-                template => 'archetype_editor.tmpl',
             },
         },
         ping_servers  => {

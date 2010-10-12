@@ -202,8 +202,9 @@ sub edit {
            push @{$assets}, $asset_1;
        }
        elsif ($id) {
+           my $join_str = '= asset_id';
            my @assets = MT::Asset->load({ class => '*' },
-                                        { join => MT::ObjectAsset->join_on(undef, {asset_id => \'= asset_id', object_ds => 'entry', object_id => $id })});
+                                        { join => MT::ObjectAsset->join_on(undef, {asset_id => \$join_str, object_ds => 'entry', object_id => $id })});
            foreach my $asset (@assets) {
                my $asset_1;
                if ($asset->class eq 'image') {
@@ -233,7 +234,7 @@ sub edit {
     }
     my $cats = $q->param('category_ids');
     if ( defined $cats ) {
-        if ( my @cats = grep { $_ =~ /^\d+/ } split /,/, $cats ) {
+        if ( my @cats = grep { $_ =~ /^\d+/ } split(/,/, $cats) ) {
             $cat_id = $cats[0];
             %places = map { $_ => 1 } @cats;
         }
@@ -345,7 +346,7 @@ sub edit {
     ## Load text filters if user displays them
     my %entry_filters;
     if ( defined( my $filter = $q->param('convert_breaks') ) ) {
-        my @filters = split /\s*,\s*/, $filter;
+        my @filters = split(/\s*,\s*/, $filter);
         $entry_filters{$_} = 1 for @filters;
     }
     elsif ($obj) {
@@ -398,15 +399,14 @@ sub edit {
         ## Rich Text editor
         $rte = lc($app->config('RichTextEditor'));
     }
-    else {
-        $rte = 'archetype';
-    }
+
     my $editors = $app->registry("richtext_editors");
-    my $edit_reg = $editors->{$rte} || $editors->{archetype};
-    my $rich_editor_tmpl;
-    if ($rich_editor_tmpl = $edit_reg->{plugin}->load_tmpl($edit_reg->{template})) {
-        $param->{rich_editor} = $rte;
-        $param->{rich_editor_tmpl} = $rich_editor_tmpl;
+    my $edit_reg = $editors->{$rte};
+    if ($edit_reg) {
+        if (my $rich_editor_tmpl = $edit_reg->{plugin}->load_tmpl($edit_reg->{template})) {
+            $param->{rich_editor} = $rte;
+            $param->{rich_editor_tmpl} = $rich_editor_tmpl;
+        }
     }
 
     $param->{object_type}  = $type;
@@ -440,7 +440,7 @@ sub build_junk_table {
     #       ( $obj->junk_score > 0 ? '+' : '' ) . $obj->junk_score;
     # }
     my $log = $obj->junk_log || '';
-    my @log = split /\r?\n/, $log;
+    my @log = split(/\r?\n/, $log);
     my @junk;
     for ( my $i = 0 ; $i < scalar(@log) ; $i++ ) {
         my $line = $log[$i];
@@ -868,7 +868,7 @@ sub list {
     }
 
     $param->{return_args} ||= $app->make_return_args;
-    my @return_args = grep { $_ !~ /offset=\d/ } split /&/, $param->{return_args};
+    my @return_args = grep { $_ !~ /offset=\d/ } split(/&/, $param->{return_args});
     $param{return_args} = join '&', @return_args;
     $param{return_args} .= "&offset=$offset" if $offset;
     $param{screen_id} = "list-entry";
@@ -924,7 +924,7 @@ sub preview {
 
     my $cat_ids = $q->param('category_ids');
     if ($cat_ids) {
-        my @cats = split /,/, $cat_ids;
+        my @cats = split(/,/, $cat_ids);
         if (@cats) {
             my $primary_cat = $cats[0];
             $cat =
@@ -1258,8 +1258,8 @@ sub save {
 
     ## Get rid of category_id param, because we don't want to just set it
     ## in the Entry record; save it for later when we will set the Placement.
-    my ( $cat_id, @add_cat ) = split /\s*,\s*/,
-      ( $q->param('category_ids') || '' );
+    my ( $cat_id, @add_cat ) = split(/\s*,\s*/,
+      ( $q->param('category_ids') || '' ));
     $app->delete_param('category_id');
     if ($id) {
         ## Delete the author_id param (if present), because we don't want to

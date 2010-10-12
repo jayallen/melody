@@ -1,0 +1,10 @@
+id: SimpleEditor
+name: 'Simple Rich Text Editor'
+description: 'The legacy Movable Type rich text editor developed by Six Apart.'
+plugin_author: 'Six Apart. Ltd.'
+static_version: 1
+
+richtext_editors:
+  sixapart:
+    label: 'Six Apart Editor'
+    template: 'sixapart_editor.tmpl'
