@@ -3421,7 +3421,7 @@ sub numerate {
 	'What would a blog be without content? Start your Melody experience by creating your very first post.' => 'Что за блог без содержания? Начните знакомиться с Melody прямо сейчас, создавая своё первое сообщение.',
 	'Design your blog' => 'Настроить оформление блога',
 	'Customize the look and feel of your blog quickly by selecting a design from one of our professionally designed themes.' => 'Персонализируйте ваш блог, используя дизайн, созданный профессионалами.',
-	'Explore what\'s new in Melody 4' => 'Узнайте, что нового появилось в Melody 4',
+	'Explore what\'s new in Melody' => 'Узнайте, что нового появилось в Melody',
 	'Whether you\'re new to Melody or using it for the first time, learn more about what this tool can do for you.' => 'Вы только что установили Melody и, возможно, пока не знаете, на что способна эта платформа. Посмотрите, что этот инструмент может сделать для вас.',
 
 ## tmpl/cms/widget/blog_stats_comment.tmpl

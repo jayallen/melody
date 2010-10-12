@@ -4031,7 +4031,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Customize the look and feel of your blog quickly by selecting a design from one of our professionally designed themes.' => 'プロがデザインしたテーマを選択するだけで簡単にブログの見栄えをカスタマイズできます。',
 	'Add more users to your blog' => 'ブログにユーザーを追加する',
 	'Start building your network of blogs and your community now. Invite users to join your blog and promote them to authors.' => 'ブログのネットワークやコミュニティを作りましょう。ユーザーをブログに招待して、ブログ記事を書いてもらうことができます。',
-	'Explore what\'s new in Melody 4' => 'Melody 4の新機能に触れる',
+	'Explore what\'s new in Melody' => 'Melody 4の新機能に触れる',
 	'Whether you\'re new to Melody or using it for the first time, learn more about what this tool can do for you.' => 'Melody で何ができるか、詳しくはこちら。',
 
 ## tmpl/cms/widget/new_user.tmpl

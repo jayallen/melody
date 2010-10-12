@@ -3893,7 +3893,7 @@ use vars qw( @ISA %Lexicon );
 	'What would a blog be without content? Start your Melody experience by creating your very first post.' => 'Que serait un blog sans contenu ? Débutez votre expérience Melody en créant votre toute première note.',
 	'Design your blog' => 'Choisissez l\'habillage de votre blog',
 	'Customize the look and feel of your blog quickly by selecting a design from one of our professionally designed themes.' => 'Personnalisez votre blog en sélectionnant un habillage créé par des professionnels.',
-	'Explore what\'s new in Melody 4' => 'Découvrez ce qui est nouveau dans Melody 4',
+	'Explore what\'s new in Melody' => 'Découvrez ce qui est nouveau dans Melody',
 	'Whether you\'re new to Melody or using it for the first time, learn more about what this tool can do for you.' => 'Que vous découvriez Melody ou que vous l\'utilisiez pour la première fois, découvrez ce que cet outil peut faire pour vous.',
 
 ## tmpl/cms/widget/blog_stats_recent_entries.tmpl
