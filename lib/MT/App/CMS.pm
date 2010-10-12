@@ -1409,7 +1409,7 @@ sub core_menus {
 	    permission => "administer_blog,edit_config",
 	},
         'prefs:plugins' => {
-	    label      => "Plugins",
+	    label      => "Plugin Settings",
 	    order      => 110,
 	    mode       => "cfg_plugins",
 	    permission => "manage_plugins",
