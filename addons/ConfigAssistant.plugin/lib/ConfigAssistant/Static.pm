@@ -47,9 +47,9 @@ sub upgrade {
             $static_path, 'support', 'plugins', $plugin->id);
         my $find_params = {
             wanted => sub {
-                -f && deploy_static_file( $srcdir, 
-                                          $File::Find::name, 
-                                          $destdir )
+                -f && $self->deploy_static_file($srcdir, 
+                                                $File::Find::name, 
+                                                $destdir )
             },
         };
 
@@ -108,10 +108,12 @@ sub plugin_has_static_upgrade {
 }
 
 sub deploy_static_file {
+    my $self = shift;
     my ($src, $abspath, $dest ) = @_;
     my $relpath      = File::Spec->abs2rel( $abspath, $src );
     my $abspath_dest = File::Spec->catfile( $dest, $relpath );
-    fcopy( $abspath, $abspath_dest );
+    eval { fcopy( $abspath, $abspath_dest ) };
+    $self->progress( $@ ? $@ : "Copied $dest." );
 }
 
 1;
