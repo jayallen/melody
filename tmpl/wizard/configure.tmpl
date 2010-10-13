@@ -164,7 +164,7 @@ window.onload = function() {
 <mt:unless name="success">
 <mt:setvarblock name="db_setup_url"><__trans phrase="http://www.movabletype.org/documentation/[_1]" params="installation/setting-up-your-database.html"></mt:setvarblock>
     <div id="db_hint">
-        <p class="hint"><__trans phrase="Is your preferred database not listed? View the <a href="[_1]" target="_blank">Movable Type System Check</a> see if additional modules are necessary." params="mt-check.cgi"></p>
+        <p class="hint"><__trans phrase="Is your preferred database not listed? View the <a href="[_1]" target="_blank">Melody System Check</a> see if additional modules are necessary." params="mt-check.cgi"></p>
         <p class="hint"><__trans phrase="Once installed, <a href="javascript:void(0)" onclick="[_1]">click here to refresh this screen</a>." params="reTest();"></p>
         <p class="hint"><__trans phrase="Read more: <a href="[_1]" target="_blank">Setting Up Your Database</a>" params="<mt:var name="db_setup_url">"></p>
     </div>
@@ -182,7 +182,7 @@ window.onload = function() {
         label="<__trans phrase="Database Path">"
         label_class="top-label">
 <input type="text" id="dbpath" class="ti" name="dbpath" value="<mt:if name="dbpath"><mt:var name="dbpath" escape="html"><mt:else>./db/mt.db</mt:if>" /><br />
-<__trans phrase="The physical file path for your SQLite database. "><mt:unless name="dbpath"><__trans phrase="A default location of './db/mt.db' will store the database file underneath your Movable Type directory."></p></mt:unless>
+<__trans phrase="The physical file path for your SQLite database. "><mt:unless name="dbpath"><__trans phrase="A default location of './db/mt.db' will store the database file underneath your Melody directory."></p></mt:unless>
     </mtapp:setting>
 
 </div>

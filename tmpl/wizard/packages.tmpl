@@ -50,11 +50,11 @@ function toggleList() {
     <mtapp:statusmsg
         id="missing_db"
         class="error">
-        <__trans phrase="The following Perl modules are required in order to make a database connection.  Movable Type requires a database in order to store your blog's data.  Please install one of the packages listed here in order to proceed.  When you are ready, click the 'Retry' button.">
+        <__trans phrase="The following Perl modules are required in order to make a database connection.  Melody requires a database in order to store your blog's data.  Please install one of the packages listed here in order to proceed.  When you are ready, click the 'Retry' button.">
     </mtapp:statusmsg>
 </mt:if>
 <mt:if name="optional">
-<p class="intro"><span class="ready"><__trans phrase="All required Perl modules were found."></span> <__trans phrase="You are ready to proceed with the installation of Movable Type."></p>
+<p class="intro"><span class="ready"><__trans phrase="All required Perl modules were found."></span> <__trans phrase="You are ready to proceed with the installation of Melody."></p>
 <div class="right pkg">
    <input name="continue" type="submit" class="sb" value="<__trans phrase="Continue">" onclick="go('next_step');" />
 </div>
@@ -64,9 +64,9 @@ function toggleList() {
     <mtapp:statusmsg
         id="required"
         class="error">
-        <__trans phrase="One or more Perl modules required by Movable Type could not be found.">
+        <__trans phrase="One or more Perl modules required by Melody could not be found.">
     </mtapp:statusmsg>
-    <p><__trans phrase="The following Perl modules are required for Movable Type to run properly. Once you have met these requirements, click the 'Retry' button to re-test for these packages."></p>
+    <p><__trans phrase="The following Perl modules are required for Melody to run properly. Once you have met these requirements, click the 'Retry' button to re-test for these packages."></p>
 </mt:if>
 
 <mt:if name="optional">
