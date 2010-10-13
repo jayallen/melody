@@ -222,7 +222,7 @@ sub numerate {
 	'You are receiving this email either because you have elected to receive notifications about new content on [_1], or the author of the post thought you would be interested. If you no longer wish to receive these emails, please contact the following person:' => 'Вы получили это письмо, так как подписались на получение уведомлений о новом контенте на сайте «[_1]», или автор посчитал, что вам будет это интересно. Если вы не желаете получать подобные уведомления, пожалуйста, свяжитесь с отправителем:',
 
 ## default_templates/footer-email.mtml
-	'Powered by Movable Type [_1]' => 'Работает на Movable Type [_1]',
+	'Powered by Melody [_1]' => 'Работает на Melody [_1]',
 
 ## default_templates/date_based_author_archives.mtml
 	'Author Yearly Archives' => 'Ежегодные архивы авторов',
@@ -312,7 +312,7 @@ sub numerate {
 	'Trackbacks' => 'Трекбэки',
 
 ## default_templates/comment_throttle.mtml
-	'If this was a mistake, you can unblock the IP address and allow the visitor to add it again by logging in to your Movable Type installation, going to Blog Config - IP Banning, and deleting the IP address [_1] from the list of banned addresses.' => 'Если произошла ошибка, вы можете разблокировать IP адрес. Для этого зайдите в Movable Type, перейдите к настройке блога — Блокировка IP, а затем удалите адрес [_1] из списка заблокированных.',
+	'If this was a mistake, you can unblock the IP address and allow the visitor to add it again by logging in to your Melody installation, going to Blog Config - IP Banning, and deleting the IP address [_1] from the list of banned addresses.' => 'Если произошла ошибка, вы можете разблокировать IP адрес. Для этого зайдите в Melody, перейдите к настройке блога — Блокировка IP, а затем удалите адрес [_1] из списка заблокированных.',
 	'A visitor to your blog [_1] has automatically been banned by adding more than the allowed number of comments in the last [_2] seconds.' => 'Посетитель вашего блога «[_1]» был автоматически заблокирован, так как пытался добавить больше позволенного количества комментариев за [quant,_2,секунду,секунды,секунд].',
 	'This has been done to prevent a malicious script from overwhelming your weblog with comments. The banned IP address is' => 'Это сделано для того, чтобы предотвратить засорение блога комментариями, добавляемыми автоматически с помощью специальных программ (спам-ботов).',
 
@@ -452,7 +452,7 @@ sub numerate {
 ## default_templates/comment_listing.mtml
 
 ## default_templates/recover-password.mtml
-	'A request has been made to change your password in Movable Type. To complete this process click on the link below to select a new password.' => 'Сделан запрос на изменение пароля в Movable Type. Для завершения процесса, перейдите по ссылке, расположенной ниже:',
+	'A request has been made to change your password in Melody. To complete this process click on the link below to select a new password.' => 'Сделан запрос на изменение пароля в Melody. Для завершения процесса, перейдите по ссылке, расположенной ниже:',
 	'If you did not request this change, you can safely ignore this email.' => 'Если вы не запрашивали изменение пароля, проигнорируйте это письмо.',
 
 ## default_templates/entry.mtml
@@ -523,8 +523,8 @@ sub numerate {
 	'All Weblog Entries' => 'Все записи блога',
 	'[_1] Weblog Activity' => 'Активность в блоге [_1] ',
 	'All Weblog Activity' => 'Активность во всех блогах',
-	'Movable Type System Activity' => 'Активность — системный уровень',
-	'Movable Type Debug Activity' => 'Активность — отладочная информация',
+	'Melody System Activity' => 'Активность — системный уровень',
+	'Melody Debug Activity' => 'Активность — отладочная информация',
 	'[_1] Weblog Pages' => 'Страницы блога [_1]',
 	'All Weblog Pages' => 'Все страницы блога',
 
@@ -567,8 +567,8 @@ sub numerate {
 	'An error occurred while attempting to connect to the database.  Check the settings and try again.' => 'Не удалось соединиться с базой данных. Пожалуйста, проверьте параметры и попробуйте ещё раз.',
 	'SMTP Server' => 'SMTP сервер',
 	'Sendmail' => 'Sendmail',
-	'Test email from Movable Type Configuration Wizard' => 'Тестовое письмо от Movable Type',
-	'This is the test email sent by your new installation of Movable Type.' => 'Это тестовое письмо, отправленное во время установки Movable Type.',
+	'Test email from Melody Configuration Wizard' => 'Тестовое письмо от Melody',
+	'This is the test email sent by your new installation of Melody.' => 'Это тестовое письмо, отправленное во время установки Melody.',
 	'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in mt-config.cgi.' => 'Модуль необходим для кодирования специальных символов. Но вы можете отключить эту возможность, используя опцию NoHTMLEntities в mt-config.cgi.',
 	'This module is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.' => 'Модуль необходим, если вы хотите использовать трекбэки и пинги сервисов (weblogs.com, technorati.com, blogs.google.com, и т.д.).',
 	'HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.' => 'HTML::Parser не обязателен, но он необходим, если вы хотите использовать функцию трекбэков и отправлять уведомления на сервера типа weblogs.com или Яндекс.Блоги',
@@ -591,12 +591,12 @@ sub numerate {
 	'This module is required for sending mail via SMTP Server.' => 'Модуль необходим для отправки почты посредством SMTP сервера.',
 	'This module is used in test attribute of MTIf conditional tag.' => 'Модуль используется для тестирования тега MTIf.',
 	'This module is used by the Markdown text filter.' => 'Модуль используется в текстовом фильтре Markdown.',
-	'This module is required in mt-search.cgi if you are running Movable Type on Perl older than Perl 5.8.' => 'Модуль необходим для mt-search.cgi, если ваш Movable Type работает на Perl версии старше 5.8.',
+	'This module is required in mt-search.cgi if you are running Melody on Perl older than Perl 5.8.' => 'Модуль необходим для mt-search.cgi, если ваш Melody работает на Perl версии старше 5.8.',
 	'This module required for action streams.' => 'Модуль необходим для Action Streams',
 	'This module is required for file uploads (to determine the size of uploaded images in many different formats).' => 'Модуль необходим для загрузки файлов (чтобы определить размер загруженных изображений в различных форматах).',
 	'This module is required for cookie authentication.' => 'Модуль необходим для авторизации через куки (cookie).',
 	'DBI is required to store data in database.' => 'Для хранения данных в базе данных обязателен DBI.',
-	'CGI is required for all Movable Type application functionality.' => 'Для работы Movable Type необходим CGI.',
+	'CGI is required for all Melody application functionality.' => 'Для работы Melody необходим CGI.',
 	'File::Spec is required for path manipulation across operating systems.' => 'File::Spec обязателен для работы с файлами.',
 
 ## lib/MT/App/Upgrader.pm
@@ -607,8 +607,8 @@ sub numerate {
 	'The e-mail address is required.' => 'Email адрес обязателен.',
 	'The path provided below is not writable.' => 'Указанный ниже путь не перезаписываемый.',
 	'Invalid session.' => 'Неверная сессия.',
-	'No permissions. Please contact your administrator for upgrading Movable Type.' => 'Недостаточно прав для выполнения этого действия. Пожалуйста, свяжитесь с администратором для обновления Movable Type.',
-	'Movable Type has been upgraded to version [_1].' => 'Movable Type обновлён до версии [_1].',
+	'No permissions. Please contact your administrator for upgrading Melody.' => 'Недостаточно прав для выполнения этого действия. Пожалуйста, свяжитесь с администратором для обновления Melody.',
+	'Melody has been upgraded to version [_1].' => 'Melody обновлён до версии [_1].',
 
 ## lib/MT/App/CMS.pm
 	'Invalid request' => 'Неверный запрос',
@@ -639,7 +639,7 @@ sub numerate {
 	'Error during publishing: [_1]' => 'Ошибка во время публикации: [_1]',
 	'This is You' => 'Это вы',
 	'Handy Shortcuts' => 'Быстрый доступ',
-	'Movable Type News' => 'Новости Movable Type',
+	'Melody News' => 'Новости Melody',
 	'Blog Stats' => 'Статистика',
 	'Entries' => 'Записи',
 	'Refresh Blog Templates' => 'Восстановить шаблоны блога',
@@ -735,7 +735,7 @@ sub numerate {
 ## lib/MT/App/Comments.pm
 	'Error assigning commenting rights to user \'[_1] (ID: [_2])\' for weblog \'[_3] (ID: [_4])\'. No suitable commenting role was found.' => 'Ошибка при назначении прав комментирования для пользователя «[_1]» (ID: [_2]), блог «[_3]» (ID: [_4]). Подходящая роль комментатора не нашлась.',
 	'Can\'t load blog #[_1].' => 'Не удалось загрузить блог #[_1].',
-	'Invalid commenter login attempt from [_1] to blog [_2](ID: [_3]) which does not allow Movable Type native authentication.' => 'Неудавшаяся попытка входа комментатора от [_1] в блоге «[_2]» (ID: [_3]), в котором отключена возможность авторизовываться через Movable Type.',
+	'Invalid commenter login attempt from [_1] to blog [_2](ID: [_3]) which does not allow Melody native authentication.' => 'Неудавшаяся попытка входа комментатора от [_1] в блоге «[_2]» (ID: [_3]), в котором отключена возможность авторизовываться через Melody.',
 	'Invalid login' => 'Неверный логин',
 	'Successfully authenticated but signing up is not allowed.  Please contact system administrator.' => 'Авторизация прошла успешно, но, к сожалению, она запрещена в этом блоге. Пожалуйста, свяжитесь с администратором блога.',
 	'You need to sign up first.' => 'Для начала необходимо авторизоваться.',
@@ -745,7 +745,7 @@ sub numerate {
 	'Failed login attempt by disabled user \'[_1]\'' => 'Авторизация не удалась, потому что пользователь «[_1]» не активен.',
 	'Failed login attempt by unknown user \'[_1]\'' => 'Неудачная попытка входа, используя неизвестный логин «[_1]»',
 	'Signing up is not allowed.' => 'Авторизация запрещена.',
-	'Movable Type Account Confirmation' => 'Активация аккаунта Movable Type',
+	'Melody Account Confirmation' => 'Активация аккаунта Melody',
 	'System Email Address is not configured.' => 'Системный email не указан в параметрах.',
 	'Commenter \'[_1]\' (ID:[_2]) has been successfully registered.' => 'Комментатор «[_1]» (ID:[_2]) успешно зарегистрировался.',
 	'Thanks for the confirmation.  Please sign in to comment.' => 'Активация прошла успешно, спасибо. Пожалуйста, авторизуйтесь для комментирования.',
@@ -810,7 +810,7 @@ sub numerate {
 	'Can\'t open directory \'[_1]\': [_2]' => 'Не удалось открыть директорию «[_1]» : [_2]',
 	'No manifest file could be found in your import directory [_1].' => 'В директории импорта [_1] не найдено необходимого файла.',
 	'Can\'t open [_1].' => 'Не удалось открыть [_1].',
-	'Manifest file [_1] was not a valid Movable Type backup manifest file.' => 'Содержимое указанного файла в неправильном для импорта формате.',
+	'Manifest file [_1] was not a valid Melody backup manifest file.' => 'Содержимое указанного файла в неправильном для импорта формате.',
 	'Manifest file: [_1]' => 'Файл импорта: [_1]',
 	'Path was not found for the file ([_1]).' => 'Путь для файла указан неверно ([_1]).',
 	'[_1] is not writable.' => '[_1] — не доступно для записи.',
@@ -992,11 +992,11 @@ sub numerate {
 	'Unknown tag found: [_1]' => 'Найден неизвестный тег: [_1]',
 
 ## lib/MT/BackupRestore/ManifestFileHandler.pm
-	'Uploaded file was not a valid Movable Type backup manifest file.' => 'Загруженный файл не соответствует формату Movable Type.',
+	'Uploaded file was not a valid Melody backup manifest file.' => 'Загруженный файл не соответствует формату Melody.',
 
 ## lib/MT/BackupRestore/BackupFileHandler.pm
-	'Uploaded file was backed up from Movable Type but the different schema version ([_1]) from the one in this system ([_2]).  It is not safe to restore the file to this version of Movable Type.' => 'Загруженный файл — резервная копия Movable Type, но его версия схемы базы данных ([_1]) отличается от текущей версии ([_2]). Восстановление данных из этого файла может быть небезопасно.',
-	'[_1] is not a subject to be restored by Movable Type.' => '[_1] — не является причиной для восстановления Movable Type.',
+	'Uploaded file was backed up from Melody but the different schema version ([_1]) from the one in this system ([_2]).  It is not safe to restore the file to this version of Melody.' => 'Загруженный файл — резервная копия Melody, но его версия схемы базы данных ([_1]) отличается от текущей версии ([_2]). Восстановление данных из этого файла может быть небезопасно.',
+	'[_1] is not a subject to be restored by Melody.' => '[_1] — не является причиной для восстановления Melody.',
 	'[_1] records restored.' => '[_1] записей восстановлено.',
 	'Restoring [_1] records:' => 'Восстановление [_1] записей:',
 	'User with the same name as the name of the currently logged in ([_1]) found.  Skipped the record.' => 'Пользователь с тем же самым именем уже авторизован ([_1]). Пропуск отчёта.',
@@ -1421,8 +1421,8 @@ sub numerate {
 	'General Settings' => 'Общая настройка',
 	'You don\'t have a system email address configured.  Please set this first, save it, then try the test email again.' => 'Вы не сконфигурировали email-адрес. Пожалуйста, укажите системный email, сохраните изменения и попробуйте отправить тестовое письмо ещё раз.',
 	'Please enter a valid email address' => 'Пожалуйста, укажите правильный email',
-	'Test email from Movable Type' => 'Тестовое письмо от Movable Type',
-	'This is the test email sent by your installation of Movable Type.' => 'Это тестовое письмо, отправленное вам из Movable Type.',
+	'Test email from Melody' => 'Тестовое письмо от Melody',
+	'This is the test email sent by your installation of Melody.' => 'Это тестовое письмо, отправленное вам из Melody.',
 	'Mail was not properly sent' => 'Письмо не отправлено',
 	'Test e-mail was successfully sent to [_1]' => 'Тестовое письмо успешно отправлено на адрес [_1]',
 	'These setting(s) are overridden by a value in the MT configuration file: [_1]. Remove the value from the configuration file in order to control the value on this page.' => 'Этот параметр переопределён в конфигурационном файле: [_1]. Удалите это значение из конфигурационного файла, если хотите управлять этим параметром с этой страницы.',
@@ -1458,7 +1458,7 @@ sub numerate {
 	'File was not uploaded.' => 'Файл не загружен.',
 	'Restoring a file failed: ' => 'Не удалось восстановить файл: ',
 	'Some of the files were not restored correctly.' => 'Некоторые из файлов восстановлены некорректно.',
-	'Successfully restored objects to Movable Type system by user \'[_1]\'' => 'Объекты успешно восстановлены в Movable Type пользователем «[_1]»',
+	'Successfully restored objects to Melody system by user \'[_1]\'' => 'Объекты успешно восстановлены в Melody пользователем «[_1]»',
 	'Can\'t recover password in this configuration' => 'Невозможно восстановить пароль при текущей настройке',
 	'Invalid user name \'[_1]\' in password recovery attempt' => 'Имя пользователя «[_1]», указанное при восстановлении пароля, указано неверно',
 	'User name or password hint is incorrect.' => 'Имя пользователя или слово/фраза для восстановления пароля указаны неверно.',
@@ -1471,12 +1471,12 @@ sub numerate {
 	'Error occured during restore process.' => 'В процессе восстановления произошла ошибка.',
 	'Some of files could not be restored.' => 'Не удалось восстановить некоторые файлы.',
 	'Blog(s) (ID:[_1]) was/were successfully backed up by user \'[_2]\'' => 'Бэкап блога(ов) (ID:[_1]) был успешно сделан пользователем «[_2]»',
-	'Movable Type system was successfully backed up by user \'[_1]\'' => 'Полный бекап Movable Type был успешно сделан пользователем «[_1]»',
+	'Melody system was successfully backed up by user \'[_1]\'' => 'Полный бекап Melody был успешно сделан пользователем «[_1]»',
 	'Some [_1] were not restored because their parent objects were not restored.' => 'Некоторые объекты (приблизительно [_1]) не были восстановлены, так как не были восстановлены их родительские объекты.',
 
 ## lib/MT/CMS/Dashboard.pm
 	'Better, Stronger, Faster' => 'Лучше, мощнее, быстрее',
-	'Movable Type has undergone a significant overhaul in all aspects of performance. Memory utilization has been reduced, publishing times have been increased significantly and search is now 100x faster!' => 'Movable Type подвергся существенной перестройке, связанной со всеми аспектами работы. Было уменьшено использование памяти, значительно сокращено время публикации, а поиск стал быстрее в 100 раз!',
+	'Melody has undergone a significant overhaul in all aspects of performance. Memory utilization has been reduced, publishing times have been increased significantly and search is now 100x faster!' => 'Melody подвергся существенной перестройке, связанной со всеми аспектами работы. Было уменьшено использование памяти, значительно сокращено время публикации, а поиск стал быстрее в 100 раз!',
 	'Module Caching' => 'Модуль кэширования',
 	'Template module and widget content can now be cached in the database to dramatically speed up publishing.' => 'Модули шаблонов и виджеты теперь могут кэшироваться в базе данных, что существенно ускоряется процесс публикации.',
 	'Improved Template and Design Management' => 'Улучшенное управление шаблонами и дизайном',
@@ -1580,8 +1580,8 @@ sub numerate {
 	'You did not specify an Archive Root.' => 'Вы не указали путь публикации архивов.',
 	'Blog \'[_1]\' (ID:[_2]) deleted by \'[_3]\'' => 'Блог «[_1]» (ID:[_2]) удалён пользователем «[_3]»',
 	'Saving blog failed: [_1]' => 'Не удалось сохранить блог: [_1]',
-	'Error: Movable Type cannot write to the template cache directory. Please check the permissions for the directory called <code>[_1]</code> underneath your blog directory.' => 'Ошибка: Movable Type не удалось записать файлы в папку с кешом шаблонов. Пожалуйста, проверьте права доступа для вызываемой директории <code>[_1]</code>, расположенной в папке блога.',
-	'Error: Movable Type was not able to create a directory to cache your dynamic templates. You should create a directory called <code>[_1]</code> underneath your blog directory.' => 'Ошибка: Movable Type не удалось создать директорию для кеширования динамических шаблонов. Вам необходимо создать директорию <code>[_1]</code>, расположенную в папке блога.',
+	'Error: Melody cannot write to the template cache directory. Please check the permissions for the directory called <code>[_1]</code> underneath your blog directory.' => 'Ошибка: Melody не удалось записать файлы в папку с кешом шаблонов. Пожалуйста, проверьте права доступа для вызываемой директории <code>[_1]</code>, расположенной в папке блога.',
+	'Error: Melody was not able to create a directory to cache your dynamic templates. You should create a directory called <code>[_1]</code> underneath your blog directory.' => 'Ошибка: Melody не удалось создать директорию для кеширования динамических шаблонов. Вам необходимо создать директорию <code>[_1]</code>, расположенную в папке блога.',
 
 ## lib/MT/TemplateMap.pm
 	'Archive Mapping' => 'Путь публикации архивов',
@@ -1602,7 +1602,7 @@ sub numerate {
 	'Not privileged to upload files' => 'Недостаточно прав для загрузки файлов',
 	'No filename provided' => 'Не указано имя файла',
 	'Error writing uploaded file: [_1]' => 'Ошибки при записи загружаемого файла: [_1]',
-	'Template methods are not implemented, due to differences between the Blogger API and the Movable Type API.' => 'Из-за различий в Blogger API и Movable Type API методы шаблона не реализованы.',
+	'Template methods are not implemented, due to differences between the Blogger API and the Melody API.' => 'Из-за различий в Blogger API и Melody API методы шаблона не реализованы.',
 
 ## lib/MT/Auth/MT.pm
 	'Failed to verify current password.' => 'Неверно указан текущий пароль.',
@@ -1642,7 +1642,7 @@ sub numerate {
 	'Migrating Nofollow plugin settings...' => 'Миграция настроек плагина Nofollow…',
 	'Updating system search template records...' => 'Обновление элементов системного шаблона поиска…',
 	'Custom ([_1])' => '([_1]) Выборочный',
-	'This role was generated by Movable Type upon upgrade.' => 'Эта роль будет обновлена Movable Type.',
+	'This role was generated by Melody upon upgrade.' => 'Эта роль будет обновлена Melody.',
 	'Migrating permission records to new structure...' => 'Миграция прав пользователей на новую структуру…',
 	'Migrating role records to new structure...' => 'Миграция ролей на новую структуру…',
 	'Migrating system level permissions to new structure...' => 'Перемещение прав системного уровня на новую структуру…',
@@ -1651,9 +1651,9 @@ sub numerate {
 	'Creating initial blog and user records...' => 'Создание первоначального блога и записей пользователя…',
 	'Error saving record: [_1].' => 'Ошибка сохранения записи: [_1].',
 	'First Blog' => 'Первый блог',
-	'I just finished installing Movable Type [_1]!' => 'Я установил Movable Type [_1]!',
-	'Welcome to my new blog powered by Movable Type. This is the first post on my blog and was created for me automatically when I finished the installation process. But that is ok, because I will soon be creating posts of my own!' => 'Добро пожаловать в мой новый блог, созданный на платформе Movable Type. Это первая запись, она была создана для меня автоматически, когда закончился процесс установки. Уже скоро я создам собственные записи!',
-	'Movable Type also created a comment for me as well so that I could see what a comment will look like on my blog once people start submitting comments on all the posts I will write.' => 'Movable Type также создал для меня комментарий, что бы я мог видеть, как он будет выглядеть в моем блоге.',
+	'I just finished installing Melody [_1]!' => 'Я установил Melody [_1]!',
+	'Welcome to my new blog powered by Melody. This is the first post on my blog and was created for me automatically when I finished the installation process. But that is ok, because I will soon be creating posts of my own!' => 'Добро пожаловать в мой новый блог, созданный на платформе Melody. Это первая запись, она была создана для меня автоматически, когда закончился процесс установки. Уже скоро я создам собственные записи!',
+	'Melody also created a comment for me as well so that I could see what a comment will look like on my blog once people start submitting comments on all the posts I will write.' => 'Melody также создал для меня комментарий, что бы я мог видеть, как он будет выглядеть в моем блоге.',
 	'Blog Administrator' => 'Администратор блога',
 	'Can administer the blog.' => 'Может управлять блогом.',
 	'Editor' => 'Редактор',
@@ -1768,7 +1768,7 @@ sub numerate {
 	'SQLite Database (v2)' => 'База данных SQLite (v2)',
 	'Convert Line Breaks' => 'Автоматический разрыв строк',
 	'Rich Text' => 'Визуальный редактор',
-	'Movable Type Default' => 'Movable Type по умолчанию',
+	'Melody Default' => 'Melody по умолчанию',
 	'weblogs.com' => 'weblogs.com',
 	'technorati.com' => 'technorati.com',
 	'google.com' => 'google.com',
@@ -1814,7 +1814,7 @@ sub numerate {
 	'Role' => 'Роль',
 
 ## lib/MT/Util/Captcha.pm
-	'Movable Type default CAPTCHA provider requires Image::Magick.' => 'Для работы CAPTCHA необходим модуль Image::Magick.',
+	'Melody default CAPTCHA provider requires Image::Magick.' => 'Для работы CAPTCHA необходим модуль Image::Magick.',
 	'You need to configure CaptchaSourceImageBase.' => 'Необходимо настроить CaptchaSourceImagebase.',
 	'Image creation failed.' => 'Не удалось создать картинку.',
 	'Image error: [_1]' => 'Ошибка изображения: [_1]',
@@ -1854,7 +1854,7 @@ sub numerate {
 	'Blog \'[_1] (ID: [_2])\' for user \'[_3] (ID: [_4])\' has been created.' => 'Блог «[_1]» (ID: [_2]) для пользователя «[_3]» (ID: [_4]) успешно создан.',
 	'Error assigning blog administration rights to user \'[_1] (ID: [_2])\' for blog \'[_3] (ID: [_4])\'. No suitable blog administrator role was found.' => 'Ошибка при назначении администраторских прав для пользователя «[_1]» (ID: [_2]), блог «[_3]» (ID: [_4]) — не найдено подходящей роли администратора блога.',
 	'The login could not be confirmed because of a database error ([_1])' => 'Вход с систему не может быть осуществлён из-за ошибки в базе данных ([_1])',
-	'Our apologies, but you do not have permission to access any blogs within this installation. If you feel you have reached this message in error, please contact your Movable Type system administrator.' => 'Приносим извинения, но у вас нет разрешения для доступа к блогам в этой системе. Если вы считаете, что произошла ошибка, свяжитесь с администратором Movable Type.',
+	'Our apologies, but you do not have permission to access any blogs within this installation. If you feel you have reached this message in error, please contact your Melody system administrator.' => 'Приносим извинения, но у вас нет разрешения для доступа к блогам в этой системе. Если вы считаете, что произошла ошибка, свяжитесь с администратором Melody.',
 	'This account has been disabled. Please see your system administrator for access.' => 'Эта учётная запись заблокирована. Пожалуйста, свяжитесь с администратором для получения доступа.',
 	'Failed login attempt by pending user \'[_1]\'' => 'Ошибка авторизации: попытка входа от ожидающего пользователя «[_1]»',
 	'This account has been deleted. Please see your system administrator for access.' => 'Эта учётная запись удалена. Пожалуйста, свяжитесь с администратором для получения доступа.',
@@ -1954,8 +1954,8 @@ sub numerate {
 	'Can\'t rewind' => 'Невозможно вернуть',
 	'No readable files could be found in your import directory [_1].' => 'В директории [_1] не найдено читаемых файлов для импорта.',
 	'Couldn\'t resolve import format [_1]' => 'Не удалось определить формат импорта [_1]',
-	'Movable Type' => 'Movable Type',
-	'Another system (Movable Type format)' => 'Другие системы (формат Movable Type)',
+	'Melody' => 'Melody',
+	'Another system (Melody format)' => 'Другие системы (формат Melody)',
 
 ## lib/MT/Folder.pm
 
@@ -2033,7 +2033,7 @@ sub numerate {
 	'Your Vox Blog URL' => 'Адрес вашего блога на Vox',
 	'Learn more about Vox.' => 'Узнать больше о Vox.',
 	'Sign in using your Gmail account' => 'Авторизоваться через GMail-аккаунт',
-	'Sign in to Movable Type with your[_1] Account[_2]' => 'Авторизоваться в Movable Type, используя ваш [_1] аккаунт [_2]',
+	'Sign in to Melody with your[_1] Account[_2]' => 'Авторизоваться в Melody, используя ваш [_1] аккаунт [_2]',
 	'Turn on OpenID for your Yahoo! account now' => 'Активировать OpenID для своего аккаунта Yahoo!',
 	'Your AIM or AOL Screen Name' => 'Отображаемое имя в AIM или AOL (Screen Name)',
 	'Sign in using your AIM or AOL screen name. Your screen name will be displayed publicly.' => 'Авторизоваться с помощью отображаемого имени AIM или AOL. Отображаемое имя будет доступно публично.',
@@ -2070,7 +2070,7 @@ sub numerate {
 	'Yahoo! JAPAN' => 'Yahoo! JAPAN',
 	'livedoor' => 'livedoor',
 	'Hatena' => 'Hatena',
-	'Movable Type default' => 'Movable Type по умолчанию',
+	'Melody default' => 'Melody по умолчанию',
 
 ## mt-static/js/dialog.js
 	'(None)' => '(Нет)',
@@ -2159,7 +2159,7 @@ sub numerate {
 	'Select the time interval that you\'d like to search in, then click \'Find new comments\'' => 'Выберите период времени, в котором будет осуществлён поиск, а затем нажмите «Найти новые комментарии»',
 
 ## tmpl/include/chromeless_footer.tmpl
-	'<a href="[_1]">Movable Type</a> version [_2]' => '<a href="[_1]">Movable Type</a> версии [_2]',
+	'<a href="[_1]">Melody</a> version [_2]' => '<a href="[_1]">Melody</a> версии [_2]',
 
 ## tmpl/cms/edit_category.tmpl
 	'Edit Category' => 'Редактировать категорию',
@@ -2186,13 +2186,13 @@ sub numerate {
 	'Save Changes' => 'Сохранить изменения',
 
 ## tmpl/cms/list_blog.tmpl
-	'You have successfully deleted the blogs from the Movable Type system.' => 'Блоги успешно удалены из системы Movable Type.',
+	'You have successfully deleted the blogs from the Melody system.' => 'Блоги успешно удалены из системы Melody.',
 	'You have successfully refreshed your templates.' => 'Шаблоны успешно обновлены.',
 	'You can not refresh templates: [_1]' => 'Вы не можете восстановить ваши шалоны: [_1]',
 	'Create Blog' => 'Создать блог',
 
 ## tmpl/cms/cfg_archives.tmpl
-	'Error: Movable Type was not able to create a directory for publishing your blog. If you create this directory yourself, assign sufficient permissions that allow Movable Type to create files within it.' => 'Ошибка: система Movable Type не смогла создать каталог для публикации блога. Если Вы создаёте этот каталог самостоятельно, установите права доступа, позволяющие Movable Type создавать файлы в нем.',
+	'Error: Melody was not able to create a directory for publishing your blog. If you create this directory yourself, assign sufficient permissions that allow Melody to create files within it.' => 'Ошибка: система Melody не смогла создать каталог для публикации блога. Если Вы создаёте этот каталог самостоятельно, установите права доступа, позволяющие Melody создавать файлы в нем.',
 	'Your blog\'s archive configuration has been saved.' => 'Конфигурация архива блога сохранена.',
 	'You have successfully added a new archive-template association.' => 'Ассоциация архив-шаблон успешно добавлена.',
 	'You may need to update your \'Master Archive Index\' template to account for your new archive configuration.' => 'Возможно требуется обновление шаблона «Master Archive Index» с учетом изменений в конфигурации архива.',
@@ -2208,7 +2208,7 @@ sub numerate {
 	'The URL of your website. Do not include a filename (i.e. exclude index.html). Example: http://www.example.com/blog/' => 'URL вашего сайта. Не включайте имя файла (например, исключите index.html). Пример : http://www.example.com/blog/',
 	'Unlock this blog&rsquo;s site URL for editing' => 'Разблокировать URL сайта для редактирования',
 	'Warning: Changing the site URL can result in breaking all the links in your blog.' => 'Внимание : если вы измените URL сайта, входящие ссылки на него будут утеряны.',
-	'The path where your index files will be published. An absolute path (starting with \'/\') is preferred, but you can also use a path relative to the Movable Type directory. Example: /home/melody/public_html/blog' => 'Путь публикации индексных файлов. Рекомендуется использовать абсолютный путь (начинающийся с «/»), но можно также указать путь относительно каталога Movable Type. Пример абсолютного пути: /home/melody/public_html/blog',
+	'The path where your index files will be published. An absolute path (starting with \'/\') is preferred, but you can also use a path relative to the Melody directory. Example: /home/melody/public_html/blog' => 'Путь публикации индексных файлов. Рекомендуется использовать абсолютный путь (начинающийся с «/»), но можно также указать путь относительно каталога Melody. Пример абсолютного пути: /home/melody/public_html/blog',
 	'Unlock this blog&rsquo;s site path for editing' => 'Разблокировать путь сайта этого блога для редактирования',
 	'Note: Changing your site root requires a complete publish of your site.' => 'Замечание: При изменении корневого пути требуется полная публикация сайта.',
 	'Advanced Archive Publishing' => 'Дополнительные параметры публикации архивов',
@@ -2283,7 +2283,7 @@ sub numerate {
 	'Disable \'nofollow\' for trusted commenters' => 'Отключить nofollow и noindex для доверенных комментаторов',
 	'If enabled, the \'nofollow\' link relation will not be applied to any comments left by trusted commenters.' => 'Если активно, к ссылкам от доверенных комментаторов не будет добавлять атрибут nofollow и тег noindex.',
 	'E-mail Notification' => 'Уведомление по email',
-	'Specify when Movable Type should notify you of new comments if at all.' => 'Укажите, когда Movable Type должен уведомлять вас о новых комментариях.',
+	'Specify when Melody should notify you of new comments if at all.' => 'Укажите, когда Melody должен уведомлять вас о новых комментариях.',
 	'On' => 'Активно',
 	'Only when attention is required' => 'Только, когда требуется проверка',
 	'Off' => 'Отключено',
@@ -2308,10 +2308,10 @@ sub numerate {
 	'Number of users in this system.' => 'Число пользователей системы',
 	'Total Users' => 'Всего пользователей',
 	'Active Users' => 'Активных пользователей',
-	'Users who have logged in within 90 days are considered <strong>active</strong> in Movable Type license agreement.' => 'Пользователи, выполнившие вход в систему в течение последних 90 дней, считаются <strong>активными</strong> по условиям лицензионного соглашения Movable Type.',
+	'Users who have logged in within 90 days are considered <strong>active</strong> in Melody license agreement.' => 'Пользователи, выполнившие вход в систему в течение последних 90 дней, считаются <strong>активными</strong> по условиям лицензионного соглашения Melody.',
 	'Memcache Status' => 'Стутус Memcache',
 	'Server Model' => 'Серверная модель',
-	'Movable Type could not find the script named \'mt-check.cgi\'. To resolve this issue, please ensure that the mt-check.cgi script exists and/or the CheckScript configuration parameter references it properly.' => 'Movable Type не может найти скрипт «mt-check.cgi». Убедитесь, что скрипт mt-check.cgi существует, а также, что параметр CheckScript настроен правильно.',
+	'Melody could not find the script named \'mt-check.cgi\'. To resolve this issue, please ensure that the mt-check.cgi script exists and/or the CheckScript configuration parameter references it properly.' => 'Melody не может найти скрипт «mt-check.cgi». Убедитесь, что скрипт mt-check.cgi существует, а также, что параметр CheckScript настроен правильно.',
 
 ## tmpl/cms/cfg_system_feedback.tmpl
 	'System: Feedback Settings' => 'Настройка обратной связи: системный уровень',
@@ -2328,7 +2328,7 @@ sub numerate {
 	'Allow to any site' => 'Разрешено для любого сайта',
 	'Disabled' => 'Отключено',
 	'(No outbound TrackBacks)' => '(Нет исходящих трекбэков)',
-	'Only allow to blogs on this installation' => 'Разрешить только блогам, обслуживаемым данной инсталляцией Movable Type.',
+	'Only allow to blogs on this installation' => 'Разрешить только блогам, обслуживаемым данной инсталляцией Melody.',
 	'Only allow the sites on the following domains:' => 'Разрешить для сайтов на следующих доменах:',
 
 ## tmpl/cms/edit_widget.tmpl
@@ -2355,7 +2355,7 @@ sub numerate {
 	'Registration Settings' => 'Настройка регистрации',
 	'Your blog preferences have been saved.' => 'Параметры блога сохранены.',
 	'User Registration' => 'Регистрация пользователей',
-	'Allow registration for Movable Type.' => 'Разрешить регистрацию в Movable Type.',
+	'Allow registration for Melody.' => 'Разрешить регистрацию в Melody.',
 	'Registration Not Enabled' => 'Регистрация запрещена',
 	'Note: Registration is currently disabled at the system level.' => 'Внимание: регистрация запрещена на системном уровне.',
 	'Allow Registration' => 'Разрешить регистрацию',
@@ -2526,8 +2526,8 @@ sub numerate {
 	'Users: System-wide' => 'Пользователи: системный уровень',
 	'You have successfully disabled the selected user(s).' => 'Выбранные пользователи успешно деактивированы.',
 	'You have successfully enabled the selected user(s).' => 'Выбранные пользователи успешно активированы.',
-	'You have successfully deleted the user(s) from the Movable Type system.' => 'Выбранные пользователи были успешно удалены из Movable Type.',
-	'The deleted user(s) still exist in the external directory. As such, they will still be able to login to Movable Type Enterprise.' => 'Удалённые пользователи всё ещё существуют во внешнем каталоге. Поэтому они по-прежнему имеют возможность авторизовываться в Movable Type Enterprise.',
+	'You have successfully deleted the user(s) from the Melody system.' => 'Выбранные пользователи были успешно удалены из Melody.',
+	'The deleted user(s) still exist in the external directory. As such, they will still be able to login to Melody Enterprise.' => 'Удалённые пользователи всё ещё существуют во внешнем каталоге. Поэтому они по-прежнему имеют возможность авторизовываться в Melody Enterprise.',
 	'You have successfully synchronized users\' information with the external directory.' => 'Информация о пользователяъ успешно синхронизирована с внешним каталогом.',
 	'Some ([_1]) of the selected user(s) could not be re-enabled because they were no longer found in the external directory.' => 'Несколько ([_1])из выбранных пользователей не могут быть реактивированы, так как они больше не существуют во внешнем каталоге.',
 	'An error occured during synchronization.  See the <a href=\'[_1]\'>activity log</a> for detailed information.' => 'При синхронизации произошла ошибка. Более подробная информация содержится в <a href=\'[_1]\'>журнале активности</a>.',
@@ -2535,7 +2535,7 @@ sub numerate {
 	'users' => 'пользователи',
 	'Enable selected users (e)' => 'Активировать выбранных пользователей (e)',
 	'_USER_ENABLE' => 'Активировать',
-	'_NO_SUPERUSER_DISABLE' => 'Вы не можете отключить себя, так как являетесь администратором системы Movable Type.',
+	'_NO_SUPERUSER_DISABLE' => 'Вы не можете отключить себя, так как являетесь администратором системы Melody.',
 	'Disable selected users (d)' => 'Деактивировать выбранных пользователей (d)',
 	'_USER_DISABLE' => 'Деактивировать',
 	'Showing All Users' => 'Показать всех пользователей',
@@ -2554,7 +2554,7 @@ sub numerate {
 	'Template Set' => 'Связка шаблонов',
 	'Select the templates you wish to use for this new blog.' => 'Выберите шаблоны, которые вы хотите использовать в новом блоге.',
 	'Enter the URL of your public website. Do not include a filename (i.e. exclude index.html). Example: http://www.example.com/weblog/' => 'Укажите URL вашего сайта. Не включайте имени файла (подобно index.html). Пример: http://www.example.com/blog/',
-	'Enter the path where your main index file will be located. An absolute path (starting with \'/\') is preferred, but you can also use a path relative to the Movable Type directory. Example: /home/melody/public_html/weblog' => 'Укажите путь, где будут расположены индексные файла. Предпочтительнее указывать абсолютный путь (который начинается с знака «/»), но вы также можете использовать путь относительно каталога Movable Type. Пример абсолютного пути: /home/melody/public_html/blog',
+	'Enter the path where your main index file will be located. An absolute path (starting with \'/\') is preferred, but you can also use a path relative to the Melody directory. Example: /home/melody/public_html/weblog' => 'Укажите путь, где будут расположены индексные файла. Предпочтительнее указывать абсолютный путь (который начинается с знака «/»), но вы также можете использовать путь относительно каталога Melody. Пример абсолютного пути: /home/melody/public_html/blog',
 	'Timezone' => 'Часовой пояс',
 	'Select your timezone from the pulldown menu.' => 'Выберите часовой пояс из выпадающего меню.',
 	'Time zone not selected' => 'Часовой пояс не выбрана',
@@ -2661,7 +2661,7 @@ sub numerate {
 	'Enabled' => 'Работает',
 	'(Enable)' => '(Активировать)',
 	'Settings for [_1]' => 'Настройки для [_1]',
-	'This plugin has not been upgraded to support Movable Type [_1]. As such, it may not be 100% functional. Furthermore, it will require an upgrade once you have upgraded to the next Movable Type major release (when available).' => 'Этот плагин не был обновлён для совместимости с Movable Type [_1]. Это значит, что он может работать с ошибками или с частичной функциональностью. Кроме того, плагину потребуется обновление, когда вы будете обновлять Movable Type до следующей версии (когда она будет доступна).',
+	'This plugin has not been upgraded to support Melody [_1]. As such, it may not be 100% functional. Furthermore, it will require an upgrade once you have upgraded to the next Melody major release (when available).' => 'Этот плагин не был обновлён для совместимости с Melody [_1]. Это значит, что он может работать с ошибками или с частичной функциональностью. Кроме того, плагину потребуется обновление, когда вы будете обновлять Melody до следующей версии (когда она будет доступна).',
 	'Plugin error:' => 'Ошибка плагина:',
 	'Info' => 'Информация',
 	'Resources' => 'Ресурсы',
@@ -2692,20 +2692,20 @@ sub numerate {
 	'Time to Upgrade!' => 'Пришло время обновиться!',
 	'Upgrade Check' => 'Проверка обновлений',
 	'The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]).' => 'Версия Perl, установленная на Вашем сервере ([_1]), ниже минимально поддерживаемой версии ([_2]).',
-	'While Movable Type may run, it is an <strong>untested and unsupported environment</strong>.  We strongly recommend upgrading to at least Perl [_1].' => 'Несмотря на то, что Movable Type может работать на данной версии Perl, <strong>эта версия не тестируется и не поддерживается</strong>.  Мы настоятельно рекоммендуем установить версию Perl не ниже [_1].',
+	'While Melody may run, it is an <strong>untested and unsupported environment</strong>.  We strongly recommend upgrading to at least Perl [_1].' => 'Несмотря на то, что Melody может работать на данной версии Perl, <strong>эта версия не тестируется и не поддерживается</strong>.  Мы настоятельно рекоммендуем установить версию Perl не ниже [_1].',
 	'Do you want to proceed with the upgrade anyway?' => 'Хотите продолжить обновление?',
 	'Yes (s)' => 'Да (s)',
 	'Yes' => 'Да',
 	'View MT-Check (x)' => 'Посмотреть MT-Check (x)',
 	'No' => 'Нет',
-	'A new version of Movable Type has been installed.  We\'ll need to complete a few tasks to update your database.' => 'Новая версия Movable Type установлена. Для завершения операции необходимо выполнить несколько задач по обновлению базы данных.',
+	'A new version of Melody has been installed.  We\'ll need to complete a few tasks to update your database.' => 'Новая версия Melody установлена. Для завершения операции необходимо выполнить несколько задач по обновлению базы данных.',
 	'Information about this upgrade can be found <a href=\'[_1]\' target=\'_blank\'>here</a>.' => 'Информация об этом обновлении содержится на <a href=\'[_1]\' target=\'_blank\'>специальной странице</a>.',
-	'In addition, the following Movable Type components require upgrading or installation:' => 'Кроме того, необходимо обновить или установить следующие компоненты Movable Type:',
-	'The following Movable Type components require upgrading or installation:' => 'Необходимо обновить или установить следующие компоненты Movable Type:',
+	'In addition, the following Melody components require upgrading or installation:' => 'Кроме того, необходимо обновить или установить следующие компоненты Melody:',
+	'The following Melody components require upgrading or installation:' => 'Необходимо обновить или установить следующие компоненты Melody:',
 	'Begin Upgrade' => 'Обновление',
-	'Congratulations, you have successfully upgraded to Movable Type [_1].' => 'Поздравляем, вы успешно обновили Movable Type до версии [_1].',
-	'Return to Movable Type' => 'Продолжить работу с Movable Type',
-	'Your Movable Type installation is already up to date.' => 'Ваш Movable Type не нуждается в обновлении.',
+	'Congratulations, you have successfully upgraded to Melody [_1].' => 'Поздравляем, вы успешно обновили Melody до версии [_1].',
+	'Return to Melody' => 'Продолжить работу с Melody',
+	'Your Melody installation is already up to date.' => 'Ваш Melody не нуждается в обновлении.',
 
 ## tmpl/cms/restore_end.tmpl
 	'All data restored successfully!' => 'Все данные восстановлены успешно!',
@@ -2806,7 +2806,7 @@ sub numerate {
 	'Remove this role' => 'Удалить эту роль',
 
 ## tmpl/cms/include/backup_start.tmpl
-	'Backing up Movable Type' => 'Старт резервного копирования Movable Type',
+	'Backing up Melody' => 'Старт резервного копирования Melody',
 
 ## tmpl/cms/include/listing_panel.tmpl
 	'Step [_1] of [_2]' => 'Шаг [_1] из [_2]',
@@ -2966,7 +2966,7 @@ sub numerate {
 	'Close display options' => 'Закрыть параметры отображения',
 
 ## tmpl/cms/include/footer.tmpl
-	'This is a beta version of Movable Type and is not recommended for production use.' => 'Это бета-версия Movable Type, не рекомендуется использовать как рабочую версию.',
+	'This is a beta version of Melody and is not recommended for production use.' => 'Это бета-версия Melody, не рекомендуется использовать как рабочую версию.',
 	'http://www.movabletype.org' => 'http://www.movabletype.org',
 	'MovableType.org' => 'MovableType.org',
 	'http://wiki.movabletype.org/' => 'http://wiki.movabletype.org/',
@@ -3167,8 +3167,8 @@ sub numerate {
 	'The email address provided is not unique.  Please enter your username.' => 'Email-адрес не является уникальным. Пожалуйста, введите своё имя пользователя.',
 	'An email with a link to reset your password has been sent to your email address ([_1]).' => 'На адрес [_1] отправлено письмо, содержащее ссылку для сброса пароля.',
 	'Go Back (x)' => 'Назад (x)',
-	'Sign in to Movable Type (s)' => 'Авторизация в Movable Type (s)',
-	'Sign in to Movable Type' => 'Авторизация в Movable Type',
+	'Sign in to Melody (s)' => 'Авторизация в Melody (s)',
+	'Sign in to Melody' => 'Авторизация в Melody',
 	'Recover (s)' => 'Восстановить (s)',
 	'Recover' => 'Восстановить',
 
@@ -3408,21 +3408,21 @@ sub numerate {
 	'Oct.' => '&#1054;&#1082;&#1090;.',
 	'Nov.' => '&#1053;&#1086;&#1103;.',
 	'Dec.' => '&#1044;&#1077;&#1082;.',
-	'Movable Type was unable to locate your \'mt-static\' directory. Please configure the \'StaticFilePath\' configuration setting in your mt-config.cgi file, and create a writable \'support\' directory underneath your \'mt-static\' directory.' => 'Movable Type не удалось определить местонахождение вашего каталога «mt-static». Пожалуйста, проверьте параметр «StaticFilePath» в файле mt-config.cgi. Также необходимо убедиться, чтобы каталог находящаяся в mt-static папка «support» была перезаписываема.',
-	'Movable Type was unable to write to its \'support\' directory. Please create a directory at this location: [_1], and assign permissions that will allow the web server write access to it.' => 'Movable Type не удалось записать файлы в в папку «support». Пожалуйста, создайте эту папку в этой директории: [_1]. После этого сделайте папку support перезаписываемой.',
+	'Melody was unable to locate your \'mt-static\' directory. Please configure the \'StaticFilePath\' configuration setting in your mt-config.cgi file, and create a writable \'support\' directory underneath your \'mt-static\' directory.' => 'Melody не удалось определить местонахождение вашего каталога «mt-static». Пожалуйста, проверьте параметр «StaticFilePath» в файле mt-config.cgi. Также необходимо убедиться, чтобы каталог находящаяся в mt-static папка «support» была перезаписываема.',
+	'Melody was unable to write to its \'support\' directory. Please create a directory at this location: [_1], and assign permissions that will allow the web server write access to it.' => 'Melody не удалось записать файлы в в папку «support». Пожалуйста, создайте эту папку в этой директории: [_1]. После этого сделайте папку support перезаписываемой.',
 	'[_1] [_2] - [_3] [_4]' => '[_1] [_2] — [_3] [_4]',
 	'You have <a href=\'[_3]\'>[quant,_1,comment,comments] from [_2]</a>' => 'У вас <a href=\'[_3]\'>[quant,_1,комментарий,комментария,комментариев] в [_2]</a>',
 	'You have <a href=\'[_3]\'>[quant,_1,entry,entries] from [_2]</a>' => 'У вас <a href=\'[_3]\'>[quant,_1,запись,записи,записей] в [_2]</a>',
 
 ## tmpl/cms/widget/new_user.tmpl
-	'Welcome to Movable Type' => 'Добро пожаловать в Movable Type',
-	'Welcome to Movable Type, the world\'s most powerful blogging, publishing and social media platform. To help you get started we have provided you with links to some of the more common tasks new users like to perform:' => 'Добро пожаловать в Movable Type — наиболее мощную блогинг-платформу в мире, с помощью которой вы сможете публиковать материалы и создать собственное социальное медиа. Для начала предлагаем воспользоваться слудующими ссылками — они помогут справиться с задачами, которые часто возникают у новых пользователей:',
+	'Welcome to Melody' => 'Добро пожаловать в Melody',
+	'Welcome to Melody, the world\'s most powerful blogging, publishing and social media platform. To help you get started we have provided you with links to some of the more common tasks new users like to perform:' => 'Добро пожаловать в Melody — наиболее мощную блогинг-платформу в мире, с помощью которой вы сможете публиковать материалы и создать собственное социальное медиа. Для начала предлагаем воспользоваться слудующими ссылками — они помогут справиться с задачами, которые часто возникают у новых пользователей:',
 	'Write your first post' => 'Создать первое сообщение',
-	'What would a blog be without content? Start your Movable Type experience by creating your very first post.' => 'Что за блог без содержания? Начните знакомиться с Movable Type прямо сейчас, создавая своё первое сообщение.',
+	'What would a blog be without content? Start your Melody experience by creating your very first post.' => 'Что за блог без содержания? Начните знакомиться с Melody прямо сейчас, создавая своё первое сообщение.',
 	'Design your blog' => 'Настроить оформление блога',
 	'Customize the look and feel of your blog quickly by selecting a design from one of our professionally designed themes.' => 'Персонализируйте ваш блог, используя дизайн, созданный профессионалами.',
-	'Explore what\'s new in Movable Type 4' => 'Узнайте, что нового появилось в Movable Type 4',
-	'Whether you\'re new to Movable Type or using it for the first time, learn more about what this tool can do for you.' => 'Вы только что установили Movable Type и, возможно, пока не знаете, на что способна эта платформа. Посмотрите, что этот инструмент может сделать для вас.',
+	'Explore what\'s new in Melody 4' => 'Узнайте, что нового появилось в Melody 4',
+	'Whether you\'re new to Melody or using it for the first time, learn more about what this tool can do for you.' => 'Вы только что установили Melody и, возможно, пока не знаете, на что способна эта платформа. Посмотрите, что этот инструмент может сделать для вас.',
 
 ## tmpl/cms/widget/blog_stats_comment.tmpl
 	'Most Recent Comments' => 'Последние комментарии',
@@ -3439,10 +3439,10 @@ sub numerate {
 	'Welcome to [_1].' => 'Добро пожаловать в [_1].',
 	'You can manage your blog by selecting an option from the menu located to the left of this message.' => 'Вы можете управлять вашим блогом, выбирая различный опции из меню, расположенного в левом углу от этого сообщения.',
 	'If you need assistance, try:' => 'Если вам необходима помощь, вы можете проконсультироваться у:',
-	'Movable Type User Manual' => 'Руководство пользователя Movable Type',
+	'Melody User Manual' => 'Руководство пользователя Melody',
 	'http://www.sixapart.com/movabletype/support' => 'http://www.sixapart.com/movabletype/support',
-	'Movable Type Technical Support' => 'Техническая поддержка Movable Type',
-	'Movable Type Community Forums' => 'Форум сообщества Movable Type ',
+	'Melody Technical Support' => 'Техническая поддержка Melody',
+	'Melody Community Forums' => 'Форум сообщества Melody ',
 	'Save Changes (s)' => 'Сохранить изменения',
 	'Change this message.' => 'Изменить это сообщение.',
 	'Edit this message.' => 'Редактировать это сообщение.',
@@ -3464,8 +3464,8 @@ sub numerate {
 	'Blog Preferences' => 'Настройка блога',
 
 ## tmpl/cms/widget/new_install.tmpl
-	'Thank you for installing Movable Type' => 'Спасибо за установку Movable Type',
-	'Congratulations on installing Movable Type, the world\'s most powerful blogging, publishing and social media platform. To help you get started we have provided you with links to some of the more common tasks new users like to perform:' => 'Поздравляем, вы успешно установили Movable Type — наиболее мощную блогинг-платформу в мире, с помощью которой вы сможете публиковать материалы и создать собственное социальное медиа. Для начала предлагаем воспользоваться слудующими ссылками — они помогут справиться с задачами, которые часто возникают у новых пользователей:',
+	'Thank you for installing Melody' => 'Спасибо за установку Melody',
+	'Congratulations on installing Melody, the world\'s most powerful blogging, publishing and social media platform. To help you get started we have provided you with links to some of the more common tasks new users like to perform:' => 'Поздравляем, вы успешно установили Melody — наиболее мощную блогинг-платформу в мире, с помощью которой вы сможете публиковать материалы и создать собственное социальное медиа. Для начала предлагаем воспользоваться слудующими ссылками — они помогут справиться с задачами, которые часто возникают у новых пользователей:',
 	'Add more users to your blog' => 'Добавить пользователей в ваш блог',
 	'Start building your network of blogs and your community now. Invite users to join your blog and promote them to authors.' => 'Начните создавать вашу сеть блогов или сообщество прямо сейчас. Пригласите пользователей присоединиться к вашему блогу и предоставьте им статус авторов.',
 
@@ -3474,15 +3474,15 @@ sub numerate {
 ## tmpl/cms/widget/mt_news.tmpl
 	'News' => 'Новости',
 	'MT News' => 'Новости MT',
-	'Learning MT' => 'Изучая Movable Type',
+	'Learning MT' => 'Изучая Melody',
 	'Hacking MT' => 'Hacking MT',
 	'Pronet' => 'Pronet',
-	'No Movable Type news available.' => 'Нет доступных новостей от Movable Type.',
-	'No Learning Movable Type news available.' => 'Нет доступных новостей из блога «Изучая Movable Type».',
+	'No Melody news available.' => 'Нет доступных новостей от Melody.',
+	'No Learning Melody news available.' => 'Нет доступных новостей из блога «Изучая Melody».',
 
 ## tmpl/cms/widget/new_version.tmpl
-	'What\'s new in Movable Type [_1]' => 'Что нового в Movable Type [_1]',
-	'Congratulations, you have successfully installed Movable Type [_1]. Listed below is an overview of the new features found in this release.' => 'Поздравляем, вы успешно установили Movable Type [_1]. Ниже представлен обзор новых возможностей этого релиза.',
+	'What\'s new in Melody [_1]' => 'Что нового в Melody [_1]',
+	'Congratulations, you have successfully installed Melody [_1]. Listed below is an overview of the new features found in this release.' => 'Поздравляем, вы успешно установили Melody [_1]. Ниже представлен обзор новых возможностей этого релиза.',
 
 ## tmpl/cms/edit_template.tmpl
 	'Edit Widget' => 'Редактировать виджет',
@@ -3534,9 +3534,9 @@ sub numerate {
 	'Last auto-save at [_1]:[_2]:[_3]' => 'Автоматически сохранено [_1]:[_2]:[_3]',
 
 ## tmpl/cms/login.tmpl
-	'Your Movable Type session has ended.' => 'Ваша сессия Movable Type завершена.',
-	'Your Movable Type session has ended. If you wish to sign in again, you can do so below.' => 'Ваша сессия Movable Type завершена. Если Вы хотите снова авторизоваться, используйте форму ниже.',
-	'Your Movable Type session has ended. Please sign in again to continue this action.' => 'Ваша сессия Movable Type завершена. Пожалуйста, авторизуйтесь заново для продолжения работы.',
+	'Your Melody session has ended.' => 'Ваша сессия Melody завершена.',
+	'Your Melody session has ended. If you wish to sign in again, you can do so below.' => 'Ваша сессия Melody завершена. Если Вы хотите снова авторизоваться, используйте форму ниже.',
+	'Your Melody session has ended. Please sign in again to continue this action.' => 'Ваша сессия Melody завершена. Пожалуйста, авторизуйтесь заново для продолжения работы.',
 	'Forgot your password?' => 'Забыли пароль?',
 	'Sign In (s)' => 'Войти (s)',
 
@@ -3548,7 +3548,7 @@ sub numerate {
 	'You must set a valid Default Site Root.' => 'Необходимо указать правильный путь публикации для сайта по умолчанию.',
 	'(None selected)' => '(Ничего не выбрано)',
 	'Select a system administrator you wish to notify when commenters successfully registered themselves.' => 'Выберите администратора, которого вы хотите уведомить о новых зарегистрированных комментаторах.',
-	'Allow commenters to register to Movable Type' => 'Разрешить комментаторам регистрироваться в Movable Type',
+	'Allow commenters to register to Melody' => 'Разрешить комментаторам регистрироваться в Melody',
 	'Notify the following administrators upon registration:' => 'Уведомлять следующих администраторов о регистрации:',
 	'Select Administrators' => 'Выбрать администраторов',
 	'Clear' => 'Очистить',
@@ -3590,10 +3590,10 @@ sub numerate {
 	'TrackBack Policy' => 'Правила для трекбэков',
 	'Moderation' => 'Модерация',
 	'Hold all TrackBacks for approval before they\'re published.' => 'Не публиковать трекбэки, пока они не будут проверены.',
-	'Specify when Movable Type should notify you of new TrackBacks if at all.' => 'Укажите, когда Movable Type должен будет уведомить о новых трекбэках.',
+	'Specify when Melody should notify you of new TrackBacks if at all.' => 'Укажите, когда Melody должен будет уведомить о новых трекбэках.',
 	'TrackBack Options' => 'Опции трекбэков',
 	'TrackBack Auto-Discovery' => 'Автоматическая отправка трекбэков',
-	'If you turn on auto-discovery, when you write a new entry, any external links will be extracted and the appropriate sites automatically sent TrackBacks.' => 'Если вы активируете автоматическую отправку трекбэков, то при сохранении новой записи, Movable Type автоматически отправит трекбэки на сайты, ссылки на которые есть в записи.',
+	'If you turn on auto-discovery, when you write a new entry, any external links will be extracted and the appropriate sites automatically sent TrackBacks.' => 'Если вы активируете автоматическую отправку трекбэков, то при сохранении новой записи, Melody автоматически отправит трекбэки на сайты, ссылки на которые есть в записи.',
 	'Enable External TrackBack Auto-Discovery' => 'Для записей в других блогах',
 	'Setting Notice' => 'Настройка уведомлений',
 	'Note: The above option may be affected since outbound pings are constrained system-wide.' => 'Примечание: вышеупомянутая опция может быть применена, если исходящие пинги ограничены на системном уровне.',
@@ -3631,7 +3631,7 @@ sub numerate {
 	'Please click the Save Changes button below to enable TypePad.' => 'Пожалуйста, не забудьте нажать кнопку «Сохранить изменения», чтобы активировать TypePad.',
 	'External Notifications' => 'Внешние уведомления',
 	'Notify of blog updates' => 'Уведомлять об обновлениях в блоге:',
-	'When this blog is updated, Movable Type will automatically notify the selected sites.' => 'Когда в этом блоге появится новое содержимое, Movable Type автоматически уведомит следующие сайты.',
+	'When this blog is updated, Melody will automatically notify the selected sites.' => 'Когда в этом блоге появится новое содержимое, Melody автоматически уведомит следующие сайты.',
 	'Note: This option is currently ignored since outbound notification pings are disabled system-wide.' => 'Примечание: в настоящее время эта опция игнорируется, так как исходязие пинги отключены на системном уровне.',
 	'Others:' => 'Другие:',
 	'(Separate URLs with a carriage return.)' => '(Разделяйте URL переводом строки.)',
@@ -3639,7 +3639,7 @@ sub numerate {
 	'If you have received a recently updated key (by virtue of your purchase), enter it here.' => 'Если у вас ключ для уведомления об последних обновлениях сайта Six Apart, введите его здесь.',
 
 ## tmpl/cms/restore_start.tmpl
-	'Restoring Movable Type' => 'Восстановление Movable Type',
+	'Restoring Melody' => 'Восстановление Melody',
 
 ## tmpl/cms/edit_role.tmpl
 	'Edit Role' => 'Изменить роль',
@@ -3753,7 +3753,7 @@ sub numerate {
 	'Your Dashboard has been updated.' => 'Ваша обзорная панель обновлена.',
 	'You have attempted to use a feature that you do not have permission to access. If you believe you are seeing this message in error contact your system administrator.' => 'Вы пытались выполнить действие, на которое не имеете полномочий. Если вы считаете, что эта ошибка случайна, обратитесь к администратору.',
 	'The directory you have configured for uploading userpics is not writable. In order to enable users to upload userpics, please make the following directory writable by your web server: [_1]' => 'Директория, которую вы указали для загрузки аватаров, не перезаписываема. Если вы хотите, чтобы пользователи могли загружать аватары, пожалуйста, сделайте следующую директорию перезаписываемой: [_1]',
-	'Image::Magick is either not present on your server or incorrectly configured. Due to that, you will not be able to use Movable Type\'s userpics feature. If you wish to use that feature, please install Image::Magick or use an alternative image driver.' => 'Image::Magick не установлен на вашем сервере или неправильно настроен. Поэтому вы не сможете использовать функцию аватаров. Если вы хотите использовать функции обработки изображений, пожалуйста, установите Image::Magick или используйте альтернативные обработчики изображений.',
+	'Image::Magick is either not present on your server or incorrectly configured. Due to that, you will not be able to use Melody\'s userpics feature. If you wish to use that feature, please install Image::Magick or use an alternative image driver.' => 'Image::Magick не установлен на вашем сервере или неправильно настроен. Поэтому вы не сможете использовать функцию аватаров. Если вы хотите использовать функции обработки изображений, пожалуйста, установите Image::Magick или используйте альтернативные обработчики изображений.',
 	'Your dashboard is empty!' => 'Ваша обзорная панель пуста!',
 
 ## tmpl/cms/list_association.tmpl
@@ -3786,7 +3786,7 @@ sub numerate {
 	'Starting upgrade...' => 'Старт обновления…',
 	'Error during installation:' => 'Ошибка в процессе установки:',
 	'Error during upgrade:' => 'Ошибка в процессе обновления:',
-	'Return to Movable Type (s)' => 'Вернуться в Movable Type',
+	'Return to Melody (s)' => 'Вернуться в Melody',
 	'Your database is already current.' => 'Ваша база данных не нуждается в обновлении.',
 
 ## tmpl/cms/export.tmpl
@@ -3799,7 +3799,7 @@ sub numerate {
 
 ## tmpl/cms/import.tmpl
 	'You must select a blog to import.' => 'Необходимо выбрать блог для импорта.',
-	'Transfer weblog entries into Movable Type from other Movable Type installations or even other blogging tools or export your entries to create a backup or copy.' => 'Перенос в Movable Type записей из другой инсталляции Movable Type, из другой блог-платформы, или экспорт записей для резервного копирования.',
+	'Transfer weblog entries into Melody from other Melody installations or even other blogging tools or export your entries to create a backup or copy.' => 'Перенос в Melody записей из другой инсталляции Melody, из другой блог-платформы, или экспорт записей для резервного копирования.',
 	'Import data into' => 'Импорт данных в',
 	'Select a blog to import.' => 'Выберите блог для импорта.',
 	'Importing from' => 'Импорт из',
@@ -3810,10 +3810,10 @@ sub numerate {
 	'Default password for new users:' => 'Пароль по умолчанию для новых пользователей:',
 	'You will be assigned the user of all imported entries.  If you wish the original user to keep ownership, you must contact your MT system administrator to perform the import so that new users can be created if necessary.' => 'Вы станете владельцем всех импортированных записей. Если вы желаете сохранить исходную информацию о пользователях, обратитесь к администратору системы MT для выполнения импорта с созданием новых пользователей.',
 	'Upload import file (optional)' => 'Загрузка файла импорта (опционально)',
-	'If your import file is located on your computer, you can upload it here.  Otherwise, Movable Type will automatically look in the \'import\' folder of your Movable Type directory.' => 'Если импортируемый файл находится на вашем компьютере, вы можете загрузить его здесь. Иначе Movable Type будет искать файл в подкаталоге «import» инсталляционного каталога.',
+	'If your import file is located on your computer, you can upload it here.  Otherwise, Melody will automatically look in the \'import\' folder of your Melody directory.' => 'Если импортируемый файл находится на вашем компьютере, вы можете загрузить его здесь. Иначе Melody будет искать файл в подкаталоге «import» инсталляционного каталога.',
 	'More options' => 'Дополнительные опции',
 	'Import File Encoding' => 'Кодиковка файла импорта',
-	'By default, Movable Type will attempt to automatically detect the character encoding of your import file.  However, if you experience difficulties, you can set it explicitly.' => 'По умолчанию Movable Type будет пытаться определить кодировку автоматически. Однако вы можете выбрать кодировку вручную.',
+	'By default, Melody will attempt to automatically detect the character encoding of your import file.  However, if you experience difficulties, you can set it explicitly.' => 'По умолчанию Melody будет пытаться определить кодировку автоматически. Однако вы можете выбрать кодировку вручную.',
 	'<mt:var name="display_name" escape="html">' => '<mt:var name="display_name" escape="html">',
 	'Default category for entries (optional)' => 'Категория по умолчанию (опционально)',
 	'You can specify a default category for imported entries which have none assigned.' => 'Вы можете указать категорию по умолчанию для тех импортируемых записей, которые не имеют категории.',
@@ -3827,10 +3827,10 @@ sub numerate {
 	'The blog URL is required.' => 'Необходимо указать URL блога.',
 	'The publishing path is required.' => 'Необходимо указать путь публикации.',
 	'The timezone is required.' => 'Необходимо указать часовой пояс.',
-	'In order to properly publish your blog, you must provide Movable Type with your blog\'s URL and the path on the filesystem where its files should be published.' => 'Чтобы Movable Type смог обеспечить работу вашего блога, необходимо указать его URL и путь публикации (абсолютный путь на сервере).',
+	'In order to properly publish your blog, you must provide Melody with your blog\'s URL and the path on the filesystem where its files should be published.' => 'Чтобы Melody смог обеспечить работу вашего блога, необходимо указать его URL и путь публикации (абсолютный путь на сервере).',
 	'My First Blog' => 'Мой первый блог',
 	'Publishing Path' => 'Путь публикации',
-	'Your \'Publishing Path\' is the path on your web server\'s file system where Movable Type will publish all the files for your blog. Your web server must have write access to this directory.' => 'Ваш путь публикации — это путь на веб-сервере, где будут располагаться сгенерированные Movable Type файлы. Эта директория должна быть перезаписываема.',
+	'Your \'Publishing Path\' is the path on your web server\'s file system where Melody will publish all the files for your blog. Your web server must have write access to this directory.' => 'Ваш путь публикации — это путь на веб-сервере, где будут располагаться сгенерированные Melody файлы. Эта директория должна быть перезаписываема.',
 	'Finish install (s)' => 'Завершить установку (s)',
 	'Finish install' => 'Завершить установку',
 	'Back (x)' => 'Назад',
@@ -3841,11 +3841,11 @@ sub numerate {
 	'The display name is required.' => 'Необходимо указать отображаемое имя.',
 	'Password recovery word/phrase is required.' => 'Необходимо ввести слово (или фразу) для восстановления пароля.',
 	'Do you want to proceed with the installation anyway?' => 'Вы уверены, что все равно хотите продолжить инсталляцию?',
-	'Before you can begin blogging, you must create an administrator account for your system. When you are done, Movable Type will then initialize your database.' => 'Перед тем как начать писать в блог, вам необходимо создать администраторский аккаунт. После этого Movable Type инициализирует базу данных.',
+	'Before you can begin blogging, you must create an administrator account for your system. When you are done, Melody will then initialize your database.' => 'Перед тем как начать писать в блог, вам необходимо создать администраторский аккаунт. После этого Melody инициализирует базу данных.',
 	'To proceed, you must authenticate properly with your LDAP server.' => 'Для продолжения вам необходимо авторизоваться при помощи LDAP-сервера.',
 	'The name used by this user to login.' => 'Имя для входа в систему (login).',
 	'The user&rsquo;s email address.' => 'Email адрес',
-	'The email address used in the From: header of each email sent from the system.' => 'Этот email используется в заголовке From, содержащихся в письмах, отправляемых Movable Type.',
+	'The email address used in the From: header of each email sent from the system.' => 'Этот email используется в заголовке From, содержащихся в письмах, отправляемых Melody.',
 	'Use this as system email address' => 'Использовать как системный email',
 	'The user&rsquo;s preferred language.' => 'Язык, предпочитаемый пользователем',
 	'Select a password for your account.' => 'Выбрать пароль для учетной записи.',
@@ -3868,10 +3868,10 @@ sub numerate {
 
 ## tmpl/cms/restore.tmpl
 	'Restore from a Backup' => 'Восстановить из бекапа',
-	'Perl module XML::SAX and/or its dependencies are missing - Movable Type can not restore the system without it.' => 'Не хватает модуля Perl XML::SAX и/или зависимых от него — Movable Type не может восстановить данные без него.',
+	'Perl module XML::SAX and/or its dependencies are missing - Melody can not restore the system without it.' => 'Не хватает модуля Perl XML::SAX и/или зависимых от него — Melody не может восстановить данные без него.',
 	'Backup file' => 'Файл бекапа',
-	'If your backup file is located on your computer, you can upload it here.  Otherwise, Movable Type will automatically look in the \'import\' folder of your Movable Type directory.' => 'Если файл бекапа находится на вашем компьютере, вы можете загрузить его здесь.  В противном случае, Movable Type проверит наличие файла в папке «import», которая находится в папке со всеми скриптами.',
-	'Check this and files backed up from newer versions can be restored to this system.  NOTE: Ignoring Schema Version can damage Movable Type permanently.' => 'Проверить это, и файлы бэкапа новых версий могут быть восстановлены в этой системе. ПРИМЕЧАНИЕ: игнорирование схемы версий базы данных может повредить Movable Type навсегда.',
+	'If your backup file is located on your computer, you can upload it here.  Otherwise, Melody will automatically look in the \'import\' folder of your Melody directory.' => 'Если файл бекапа находится на вашем компьютере, вы можете загрузить его здесь.  В противном случае, Melody проверит наличие файла в папке «import», которая находится в папке со всеми скриптами.',
+	'Check this and files backed up from newer versions can be restored to this system.  NOTE: Ignoring Schema Version can damage Melody permanently.' => 'Проверить это, и файлы бэкапа новых версий могут быть восстановлены в этой системе. ПРИМЕЧАНИЕ: игнорирование схемы версий базы данных может повредить Melody навсегда.',
 	'Ignore schema version conflicts' => 'Игнорировать конфликты схем версий базы данных',
 	'Check this and existing global templates will be overwritten from the backup file.' => 'Проверить это, и существующие глобальные шаблоны будут перезаписаны из файла резервной копии.',
 	'Overwrite global templates.' => 'Перезаписать глобальные шаблоны.',
@@ -3999,7 +3999,7 @@ sub numerate {
 	'(comma-delimited list)' => '(через запятую)',
 	'(space-delimited list)' => '(через пробел)',
 	'(delimited by \'[_1]\')' => '(разделитель «[_1]»)',
-	'Use <a href="http://blogit.typepad.com/">Blog It</a> to post to Movable Type from social networks like Facebook.' => 'Для публикации в Movable Type из социальных сетей можно использовать приложение <a href="http://blogit.typepad.com/">Blog It</a>.',
+	'Use <a href="http://blogit.typepad.com/">Blog It</a> to post to Melody from social networks like Facebook.' => 'Для публикации в Melody из социальных сетей можно использовать приложение <a href="http://blogit.typepad.com/">Blog It</a>.',
 	'None selected' => 'Ничего не выбрано',
 
 ## tmpl/cms/list_entry.tmpl
@@ -4033,9 +4033,9 @@ sub numerate {
 ## tmpl/wizard/optional.tmpl
 	'Mail Configuration' => 'Конфигурация почты',
 	'Your mail configuration is complete.' => 'Почтовые параметры сконфигурированы.',
-	'Check your email to confirm receipt of a test email from Movable Type and then proceed to the next step.' => 'Проверьте свой почтовый ящик, чтобы убедиться в получении тестового письма от Movable Type, а затем перейдите к следующему шагу.',
+	'Check your email to confirm receipt of a test email from Melody and then proceed to the next step.' => 'Проверьте свой почтовый ящик, чтобы убедиться в получении тестового письма от Melody, а затем перейдите к следующему шагу.',
 	'Show current mail settings' => 'Показать текущие параметры почты',
-	'Periodically Movable Type will send email to inform users of new comments as well as other other events. For these emails to be sent properly, you must instruct Movable Type how to send email.' => 'Периодически Movable Type будет отправлять письма с информацией о новых пользователях, комментариях и других событиях. Чтобы эти письма могли быть отправлены, пожалуйста, укажите, с помощью чего будет отправлять почта.',
+	'Periodically Melody will send email to inform users of new comments as well as other other events. For these emails to be sent properly, you must instruct Melody how to send email.' => 'Периодически Melody будет отправлять письма с информацией о новых пользователях, комментариях и других событиях. Чтобы эти письма могли быть отправлены, пожалуйста, укажите, с помощью чего будет отправлять почта.',
 	'An error occurred while attempting to send mail: ' => 'Ошибка при попытке отправке письма: ',
 	'Send email via:' => 'Отправлять почту через:',
 	'Select One...' => 'Выберите один…',
@@ -4057,7 +4057,7 @@ sub numerate {
 ## tmpl/wizard/complete.tmpl
 	'Configuration File' => 'Файл конфигурации',
 	'The [_1] configuration file can\'t be located.' => 'Файл конфигурации [_1] не найден',
-	'Please use the configuration text below to create a file named \'mt-config.cgi\' in the root directory of [_1] (the same directory in which mt.cgi is found).' => 'Создайте файл «mt-config.cgi», расположенный в корневой директории Movable Type [_1] (в этой директории находится скрипт mt.cgi).',
+	'Please use the configuration text below to create a file named \'mt-config.cgi\' in the root directory of [_1] (the same directory in which mt.cgi is found).' => 'Создайте файл «mt-config.cgi», расположенный в корневой директории Melody [_1] (в этой директории находится скрипт mt.cgi).',
 	'The wizard was unable to save the [_1] configuration file.' => 'Помошнику не удалось создать файл конфигурации [_1].',
 	'Confirm your [_1] home directory (the directory that contains mt.cgi) is writable by your web server and then click \'Retry\'.' => 'Проверьте, является ли каталог [_1] (там находится mt.cgi) доступным для записи и нажмите «Повторить».',
 	'Congratulations! You\'ve successfully configured [_1].' => 'Поздравляем! Вы успешно настроили [_1].',
@@ -4069,15 +4069,15 @@ sub numerate {
 
 ## tmpl/wizard/start.tmpl
 	'Configuration File Exists' => 'Найден файл конфигурации',
-	'A configuration (mt-config.cgi) file already exists, <a href="[_1]">sign in</a> to Movable Type.' => 'Файл конфигурации (mt-config.cgi) уже существует, <a href="[_1]">авторизуйтесь</a> в Movable Type.',
+	'A configuration (mt-config.cgi) file already exists, <a href="[_1]">sign in</a> to Melody.' => 'Файл конфигурации (mt-config.cgi) уже существует, <a href="[_1]">авторизуйтесь</a> в Melody.',
 	'To create a new configuration file using the Wizard, remove the current configuration file and then refresh this page' => 'Чтобы создать новый файл конфигурации, удалите старый и обновите эту страницу.',
-	'Movable Type requires that you enable JavaScript in your browser. Please enable it and refresh this page to proceed.' => 'Для работы с Movable Type необходимо, чтобы у вас был включен JavaScript. Вкючите его и обновите эту страницу.',
-	'This wizard will help you configure the basic settings needed to run Movable Type.' => 'Этот помошник поможет вам указать базовые параметры, которые необходимы для запуска Movable Type.',
+	'Melody requires that you enable JavaScript in your browser. Please enable it and refresh this page to proceed.' => 'Для работы с Melody необходимо, чтобы у вас был включен JavaScript. Вкючите его и обновите эту страницу.',
+	'This wizard will help you configure the basic settings needed to run Melody.' => 'Этот помошник поможет вам указать базовые параметры, которые необходимы для запуска Melody.',
 	'<strong>Error: \'[_1]\' could not be found.</strong>  Please move your static files to the directory first or correct the setting if it is incorrect.' => '<strong>Ошибка: «[_1]» не найден.</strong>  Пожалуйста, переместите статические файлы в первичную директорию или скорректируйте параметры.',
 	'Configure Static Web Path' => 'Параметры адреса статических файлов',
-	'Movable Type ships with directory named [_1] which contains a number of important files such as images, javascript files and stylesheets.' => 'Movable Type связан с каталогом [_1], в котором содержится множество важных файлов — графика, javascript файлы и таблицы стилей.',
-	'The [_1] directory is in the main Movable Type directory which this wizard script resides, but due to your web server\'s configuration, the [_1] directory is not accessible in this location and must be moved to a web-accessible location (e.g., your web document root directory).' => 'Папка [_1] находится в основной директории Movable Type (здесь содержатся все скрипты, включая скрипт этого помошника). Параметры вашего сервера не позволяют просматривать статические файлы в этой директори, поэтому переместите папку [_1] в общедоступное место (например, вкорневой каталог вашего сайта). ',
-	'This directory has either been renamed or moved to a location outside of the Movable Type directory.' => 'Этот каталог был переименован или перемещён в местоположение, распологающееся вне каталога Movable Type.',
+	'Melody ships with directory named [_1] which contains a number of important files such as images, javascript files and stylesheets.' => 'Melody связан с каталогом [_1], в котором содержится множество важных файлов — графика, javascript файлы и таблицы стилей.',
+	'The [_1] directory is in the main Melody directory which this wizard script resides, but due to your web server\'s configuration, the [_1] directory is not accessible in this location and must be moved to a web-accessible location (e.g., your web document root directory).' => 'Папка [_1] находится в основной директории Melody (здесь содержатся все скрипты, включая скрипт этого помошника). Параметры вашего сервера не позволяют просматривать статические файлы в этой директори, поэтому переместите папку [_1] в общедоступное место (например, вкорневой каталог вашего сайта). ',
+	'This directory has either been renamed or moved to a location outside of the Melody directory.' => 'Этот каталог был переименован или перемещён в местоположение, распологающееся вне каталога Melody.',
 	'Once the [_1] directory is in a web-accessible location, specify the location below.' => 'Можно просто переместить папку [_1] в другое место или создать символическую ссылку. После того, как это будет сделано, укажите необходимую информацию в следующие поля.',
 	'This URL path can be in the form of [_1] or simply [_2]' => 'Этот URL может быть в форме [_1] или просто [_2]',
 	'This path must be in the form of [_1]' => 'Этот путь может быть в форме [_1]',
@@ -4100,12 +4100,12 @@ sub numerate {
 	'Show Current Settings' => 'Показать текущие параметры',
 	'Database Type' => 'Тип базы данных',
 	'http://www.movabletype.org/documentation/[_1]' => 'http://www.movabletype.org/documentation/[_1]',
-	'Is your preferred database not listed? View the <a href="[_1]" target="_blank">Movable Type System Check</a> see if additional modules are necessary.' => 'Вашей базы данных нет в списке? Попробуйте <a href="[_1]" target="_blank">проверку системы от Movable Type</a>, чтобы узнать, необходимы ли дополнительные модули.',
+	'Is your preferred database not listed? View the <a href="[_1]" target="_blank">Melody System Check</a> see if additional modules are necessary.' => 'Вашей базы данных нет в списке? Попробуйте <a href="[_1]" target="_blank">проверку системы от Melody</a>, чтобы узнать, необходимы ли дополнительные модули.',
 	'Once installed, <a href="javascript:void(0)" onclick="[_1]">click here to refresh this screen</a>.' => 'После установки <a href="javascript:void(0)" onclick="[_1]">нажмите здесь для обновления страницы</a>.',
 	'Read more: <a href="[_1]" target="_blank">Setting Up Your Database</a>' => 'Узнать больше: <a href="[_1]" target="_blank">Настройка вашей базы данных</a>',
 	'Database Path' => 'Путь к базе данных',
 	'The physical file path for your SQLite database. ' => 'Физический путь к файлам вашей SQLite базы данных. ',
-	'A default location of \'./db/mt.db\' will store the database file underneath your Movable Type directory.' => 'Расположение по умолчанию «./db/mt.db» — файл базы данных хранится в директории Movable Type.',
+	'A default location of \'./db/mt.db\' will store the database file underneath your Melody directory.' => 'Расположение по умолчанию «./db/mt.db» — файл базы данных хранится в директории Melody.',
 	'Database Server' => 'Сервер базы данных',
 	'This is usually \'localhost\'.' => 'Обычно это «localhost».',
 	'Database Name' => 'Имя базы данных',
@@ -4122,12 +4122,12 @@ sub numerate {
 
 ## tmpl/wizard/packages.tmpl
 	'Requirements Check' => 'Проверка необходимых компонентов',
-	'The following Perl modules are required in order to make a database connection.  Movable Type requires a database in order to store your blog\'s data.  Please install one of the packages listed here in order to proceed.  When you are ready, click the \'Retry\' button.' => 'Следующие модули Perl необходимы для соединения с базой данных. База данных необходима для хранения информации из вашего блога. Прежде чем продолжить, установите, пожалуйста, один из следующих пакетов, указанных ниже.',
+	'The following Perl modules are required in order to make a database connection.  Melody requires a database in order to store your blog\'s data.  Please install one of the packages listed here in order to proceed.  When you are ready, click the \'Retry\' button.' => 'Следующие модули Perl необходимы для соединения с базой данных. База данных необходима для хранения информации из вашего блога. Прежде чем продолжить, установите, пожалуйста, один из следующих пакетов, указанных ниже.',
 	'All required Perl modules were found.' => 'Все обязательные модули Perl найдены.',
-	'You are ready to proceed with the installation of Movable Type.' => 'Вы можете приступить к установке Movable Type.',
+	'You are ready to proceed with the installation of Melody.' => 'Вы можете приступить к установке Melody.',
 	'Some optional Perl modules could not be found. <a href="javascript:void(0)" onclick="[_1]">Display list of optional modules</a>' => 'Некоторые опциональные модуль Perl не найдены. <a href="javascript:void(0)" onclick="[_1]">Показать список опциональных модулей</a>',
-	'One or more Perl modules required by Movable Type could not be found.' => 'Один или несколько модулей Perl, необходимых для работы Movable Type, не найдены.',
-	'The following Perl modules are required for Movable Type to run properly. Once you have met these requirements, click the \'Retry\' button to re-test for these packages.' => 'Следущие модули Perl необходимы для работы Movable Type. Как только эти модули будут установлены, нажмите кнопку «Повторить», чтобы повторно проверить их.',
+	'One or more Perl modules required by Melody could not be found.' => 'Один или несколько модулей Perl, необходимых для работы Melody, не найдены.',
+	'The following Perl modules are required for Melody to run properly. Once you have met these requirements, click the \'Retry\' button to re-test for these packages.' => 'Следущие модули Perl необходимы для работы Melody. Как только эти модули будут установлены, нажмите кнопку «Повторить», чтобы повторно проверить их.',
 	'Some optional Perl modules could not be found. You may continue without installing these optional Perl modules. They may be installed at any time if they are needed. Click \'Retry\' to test for the modules again.' => 'Некоторые опциональные модули Perl не найдены. Вы можете продолжить, не устанавливая их сейчас. Если же вы установили их, нажмите кнопку «Повторить».',
 	'Missing Database Modules' => 'Отсутствует модуль базы данных',
 	'Missing Optional Modules' => 'Отсутствуют опциональные модули',
@@ -4144,7 +4144,7 @@ sub numerate {
 	'On this day' => 'В течении этого дня',
 
 ## tmpl/feeds/login.tmpl
-	'Movable Type Activity Log' => 'Журнал активности Movable Type',
+	'Melody Activity Log' => 'Журнал активности Melody',
 	'This link is invalid. Please resubscribe to your activity feed.' => 'Неправильная ссылка. Пожалуйста, переподпишитесь на фид активности.',
 
 ## tmpl/feeds/feed_comment.tmpl
@@ -4198,14 +4198,14 @@ sub numerate {
 
 ## tmpl/error.tmpl
 	'Missing Configuration File' => 'Файл конфигурации не найден',
-	'_ERROR_CONFIG_FILE' => 'Файл конфигурации Movable Type отсутствует или не может быть прочитан. Пожалуйста, ознакомьтесь с базой знаний.',
+	'_ERROR_CONFIG_FILE' => 'Файл конфигурации Melody отсутствует или не может быть прочитан. Пожалуйста, ознакомьтесь с базой знаний.',
 	'Database Connection Error' => 'Ошибка соединения с базой данных',
 	'_ERROR_DATABASE_CONNECTION' => 'Параметры соединения с базой данных неверны, отсутствуют, либо не могут быть правильно прочитаны. Для получения большей информации ознакомьтесь с базой знаний.',
 	'CGI Path Configuration Required' => 'Необходима указать путь CGI',
 	'_ERROR_CGI_PATH' => 'Путь CGI, указанный в конфигурации, неправильный или вообще отсутствует в файле конфигурации. Пожалуйста, ознакомьтесь с базой знаний.',
 
 ## plugins/TypePadAntiSpam/TypePadAntiSpam.pl
-	'TypePad AntiSpam is a free service from Six Apart that helps protect your blog from comment and TrackBack spam. The TypePad AntiSpam plugin will send every comment or TrackBack submitted to your blog to the service for evaluation, and Movable Type will filter items if TypePad AntiSpam determines it is spam. If you discover that TypePad AntiSpam incorrectly classifies an item, simply change its classification by marking it as "Spam" or "Not Spam" from the Manage Comments screen, and TypePad AntiSpam will learn from your actions. Over time the service will improve based on reports from its users, so take care when marking items as "Spam" or "Not Spam."' => 'TypePad AntiSpam — это бесплатный сервис от Six Apart, который помогает защищать блог от спама в комментариях и трекбэках. Плагин TypePad AntiSpam отправляет каждый комментарий или трекбэк на проверку, после которой Movable Type сможет пометить эти элементы как спам, если TypePad AntiSpam решит, что это — спам. Если вы заметите, что TypePad AntiSpam неправильно классифицирует какой-то элемент, просто измените его классификацию, пометив флагом «Спам» или, наоборот, «Не спам» со страницы управления комментариями, и в дальнейшем TypePad AntiSpam будет обучаться от ваших действий. Благодаря подобным действиям, сервис будет постоянно улучшаться и, соответственно, спама будет меньше.',
+	'TypePad AntiSpam is a free service from Six Apart that helps protect your blog from comment and TrackBack spam. The TypePad AntiSpam plugin will send every comment or TrackBack submitted to your blog to the service for evaluation, and Melody will filter items if TypePad AntiSpam determines it is spam. If you discover that TypePad AntiSpam incorrectly classifies an item, simply change its classification by marking it as "Spam" or "Not Spam" from the Manage Comments screen, and TypePad AntiSpam will learn from your actions. Over time the service will improve based on reports from its users, so take care when marking items as "Spam" or "Not Spam."' => 'TypePad AntiSpam — это бесплатный сервис от Six Apart, который помогает защищать блог от спама в комментариях и трекбэках. Плагин TypePad AntiSpam отправляет каждый комментарий или трекбэк на проверку, после которой Melody сможет пометить эти элементы как спам, если TypePad AntiSpam решит, что это — спам. Если вы заметите, что TypePad AntiSpam неправильно классифицирует какой-то элемент, просто измените его классификацию, пометив флагом «Спам» или, наоборот, «Не спам» со страницы управления комментариями, и в дальнейшем TypePad AntiSpam будет обучаться от ваших действий. Благодаря подобным действиям, сервис будет постоянно улучшаться и, соответственно, спама будет меньше.',
 	'So far, TypePad AntiSpam has blocked [quant,_1,message,messages] for this blog, and [quant,_2,message,messages] system-wide.' => 'На данный момент TypePad AntiSpam заблокировал [quant,_1,сообщение,сообщения,сообщений] в этом блоге и [quant,_1,сообщение,сообщения,сообщений] во всех блогах.',
 	'So far, TypePad AntiSpam has blocked [quant,_1,message,messages] system-wide.' => 'На данный момент TypePad AntiSpam заблокировал [quant,_1,сообщение,сообщения,сообщений].',
 	'Failed to verify your TypePad AntiSpam API key: [_1]' => 'Ошибка при проверке вашего API-ключа для TypePad AntiSpam',
@@ -4239,7 +4239,7 @@ sub numerate {
 	'Textile 2' => 'Textile 2',
 
 ## plugins/WidgetManager/WidgetManager.pl
-	'Widget Manager version 1.1; This version of the plugin is to upgrade data from older version of Widget Manager that has been shipped with Movable Type to the Movable Type core schema.  No other features are included.  You can safely remove this plugin after installing/upgrading Movable Type.' => 'Менеджер виджетов, версия 1.1; Эта версия плагина предназначена для обновления данных со старой версии менеджера виджетов. Поскольку менеджер виджетов теперь встроен в Movable Type, вы можете удалить этот плагин после установки/обновления MT.',
+	'Widget Manager version 1.1; This version of the plugin is to upgrade data from older version of Widget Manager that has been shipped with Melody to the Melody core schema.  No other features are included.  You can safely remove this plugin after installing/upgrading Melody.' => 'Менеджер виджетов, версия 1.1; Эта версия плагина предназначена для обновления данных со старой версии менеджера виджетов. Поскольку менеджер виджетов теперь встроен в Melody, вы можете удалить этот плагин после установки/обновления MT.',
 	'Moving storage of Widget Manager [_1]...' => 'Перемещение данных менеджера виджетов [_1]…',
 
 ## plugins/spamlookup/lib/spamlookup.pm
@@ -4336,7 +4336,7 @@ sub numerate {
 ## plugins/WXRImporter/lib/WXRImporter/Import.pm
 
 ## plugins/WXRImporter/tmpl/options.tmpl
-	'Before you import WordPress posts to Movable Type, we recommend that you <a href=\'[_1]\'>configure your blog\'s publishing paths</a> first.' => 'Прежде чем импортировать контент из Wordpress в Movable Type, рекомендуем <a href=\'[_1]\'>настроить путь публикации блога</a>.',
+	'Before you import WordPress posts to Melody, we recommend that you <a href=\'[_1]\'>configure your blog\'s publishing paths</a> first.' => 'Прежде чем импортировать контент из Wordpress в Melody, рекомендуем <a href=\'[_1]\'>настроить путь публикации блога</a>.',
 	'Upload path for this WordPress blog' => 'Путь к загруженным файлам этого WordPress блога',
 	'Replace with' => 'Заменять',
 	'Download attachments' => 'Скачать файлы',
@@ -4408,9 +4408,9 @@ sub numerate {
 	'Create MultiBlog Trigger' => 'Создать условие MultiBlog',
 
 ## plugins/StyleCatcher/config.yaml
-	'StyleCatcher lets you easily browse through styles and then apply them to your blog in just a few clicks. To find out more about Movable Type styles, or for new sources for styles, visit the <a href=\'http://www.sixapart.com/movabletype/styles\'>Movable Type styles</a> page.' => 'StyleCatcher позволяет быстро найти и установить стили для вашего блога. Чтобы узнать больше о стилях Movable Type или получить новые стили, посетите <a href=\'http://www.sixapart.com/movabletype/styles\'>специальную страницу</a>.',
+	'StyleCatcher lets you easily browse through styles and then apply them to your blog in just a few clicks. To find out more about Melody styles, or for new sources for styles, visit the <a href=\'http://www.sixapart.com/movabletype/styles\'>Melody styles</a> page.' => 'StyleCatcher позволяет быстро найти и установить стили для вашего блога. Чтобы узнать больше о стилях Melody или получить новые стили, посетите <a href=\'http://www.sixapart.com/movabletype/styles\'>специальную страницу</a>.',
 	'MT 4 Style Library' => 'Стили MT4',
-	'A collection of styles compatible with Movable Type 4 default templates.' => 'Коллекция стилей, совместимых с Movable Type 4.',
+	'A collection of styles compatible with Melody 4 default templates.' => 'Коллекция стилей, совместимых с Melody 4.',
 	'Styles' => 'Стили',
 
 ## plugins/StyleCatcher/lib/StyleCatcher/CMS.pm
