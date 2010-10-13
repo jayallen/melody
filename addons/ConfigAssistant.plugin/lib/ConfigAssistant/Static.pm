@@ -1,5 +1,8 @@
 package ConfigAssistant::Static;
 
+* https://openmelody.lighthouseapp.com/projects/26604-melody/tickets/389
+* https://endevver.lighthouseapp.com/projects/42884-config-assistant/tickets/15
+
 use strict;
 
 use base qw( MT::ErrorHandler );
