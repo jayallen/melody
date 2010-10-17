@@ -467,7 +467,7 @@ sub core_list_actions {
                     $q->param('blog_id')
                         && ( $app->user->is_superuser()
                             || $app->permissions->can_edit_all_posts )
-                        && !( defined  $q->param('filter_val') && $q->param('filter_val') == MT::Entry::JUNK())
+                        && !( defined  $q->param('filter_val') && $q->param('filter_val') == MT::Junkable::JUNK())
                         && !(defined $q->param('filter_key') && $q->param('filter_key') eq 'spam_entries')
                 },
             },
@@ -797,7 +797,7 @@ sub core_list_filters {
                     $args->{join} = MT::Comment->join_on(
                         'entry_id',
                         {   created_on  => [ $ts, undef ],
-                            junk_status => MT::Comment::NOT_JUNK(),
+                            junk_status => MT::Junkable::NOT_JUNK(),
                         },
                         { 
                             range_incl => { created_on => 1 }, 
@@ -861,7 +861,7 @@ sub core_list_filters {
                 handler => sub {
                     my ( $terms, $args ) = @_;
                     require MT::TBPing;
-                    $terms->{junk_status} = MT::TBPing::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
                 },
             },
             my_posts => {
@@ -873,7 +873,7 @@ sub core_list_filters {
                     my $app = MT->instance;
                     require MT::TBPing;
                     require MT::Trackback;
-                    $terms->{junk_status} = MT::TBPing::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
                     $args->{join}         = MT::Trackback->join_on(
                         undef,
                         { id => \'= tbping_tb_id', },
@@ -901,7 +901,7 @@ sub core_list_filters {
                 handler => sub {
                     my ( $terms, $args ) = @_;
                     require MT::TBPing;
-                    $terms->{junk_status} = MT::TBPing::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
                     $terms->{visible}     = 0;
                 },
             },
@@ -911,7 +911,7 @@ sub core_list_filters {
                 handler => sub {
                     my ( $terms, $args ) = @_;
                     require MT::TBPing;
-                    $terms->{junk_status} = MT::TBPing::JUNK();
+                    $terms->{junk_status} = MT::Junkable::JUNK();
                 },
             },
             last_7_days => {
@@ -923,7 +923,7 @@ sub core_list_filters {
                     $ts = epoch2ts( MT->app->blog, $ts );
                     $terms->{created_on} = [ $ts, undef ];
                     $args->{range_incl}{created_on} = 1;
-                    $terms->{junk_status} = MT::TBPing::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
                 },
             },
         },
@@ -934,7 +934,7 @@ sub core_list_filters {
                 handler => sub {
                     my ( $terms, $args ) = @_;
                     require MT::Comment;
-                    $terms->{junk_status} = MT::Comment::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
                 },
             },
             my_posts => {
@@ -945,7 +945,7 @@ sub core_list_filters {
                     require MT::Entry;
                     require MT::Comment;
                     my $app = MT->instance;
-                    $terms->{junk_status} = MT::Comment::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
 
                     # This join syntax employs a hack that allows us
                     # to do joins on abitrary columns. Typically,
@@ -975,7 +975,7 @@ sub core_list_filters {
                 handler => sub {
                     my ( $terms, $args ) = @_;
                     require MT::Comment;
-                    $terms->{junk_status} = MT::Comment::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
                     $terms->{visible}     = 0;
                 },
             },
@@ -985,7 +985,7 @@ sub core_list_filters {
                 handler => sub {
                     my ( $terms, $args ) = @_;
                     require MT::Comment;
-                    $terms->{junk_status} = MT::Comment::JUNK();
+                    $terms->{junk_status} = MT::Junkable::JUNK();
                 },
             },
             published => {
@@ -1006,7 +1006,7 @@ sub core_list_filters {
                     $ts = epoch2ts( MT->app->blog, $ts );
                     $terms->{created_on} = [ $ts, undef ];
                     $args->{range_incl}{created_on} = 1;
-                    $terms->{junk_status} = MT::Comment::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
                 },
             },
             _comments_by_user => {
@@ -1045,7 +1045,7 @@ sub core_list_filters {
                     require MT::Comment;
                     my $entry_id = int( MT->app->param('filter_val') );
                     $terms->{entry_id}    = $entry_id;
-                    $terms->{junk_status} = MT::Comment::NOT_JUNK();
+                    $terms->{junk_status} = MT::Junkable::NOT_JUNK();
                 },
             },
             _by_date => {
@@ -1088,7 +1088,7 @@ sub core_list_filters {
                     $from .= '000000';
                     $to = undef unless $to =~ m/^\d{8}$/;
                     $to .= '235959';
-                    $terms->{junk_status}           = MT::Comment::NOT_JUNK();
+                    $terms->{junk_status}           = MT::Junkable::NOT_JUNK();
                     $terms->{created_on}            = [ $from, $to ];
                     $args->{range_incl}{created_on} = 1;
                 },
@@ -2857,7 +2857,7 @@ sub _entry_prefs_from_params {
         $prefs .= ':' . $fields{$_} if $fields{$_} > 1;
     }
     if ( $type && lc $type eq 'custom' ) {
-        my @fields = split /,/, $q->param('custom_prefs');
+        my @fields = split(/,/, $q->param('custom_prefs'));
         foreach (@fields) {
             $prefs .= ',' if $prefs ne '';
             $prefs .= $_;
@@ -3079,7 +3079,7 @@ sub _build_category_list {
         $tb_counts = {};
         my $tb_count_iter
             = MT::TBPing->count_group_by(
-            { blog_id => $blog_id, junk_status => MT::TBPing::NOT_JUNK() },
+            { blog_id => $blog_id, junk_status => MT::Junkable::NOT_JUNK() },
             { group => ['tb_id'] } );
         while ( my ( $count, $tb_id ) = $tb_count_iter->() ) {
             $tb_counts->{$tb_id} = $count;
@@ -3159,7 +3159,7 @@ sub _build_category_list {
                     ? ( $tb_counts->{ $tb->id } || 0 )
                     : MT::TBPing->count(
                     {   tb_id       => $tb->id,
-                        junk_status => MT::TBPing::NOT_JUNK(),
+                        junk_status => MT::Junkable::NOT_JUNK(),
                     }
                     );
             }

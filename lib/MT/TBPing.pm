@@ -7,10 +7,7 @@
 package MT::TBPing;
 
 use strict;
-use base qw( MT::Object MT::Scorable );
-
-sub JUNK()      { -1 }
-sub NOT_JUNK () {  1 }
+use base qw( MT::Object MT::Scorable MT::Junkable );
 
 __PACKAGE__->install_properties({
     column_defs => {
@@ -23,10 +20,6 @@ __PACKAGE__->install_properties({
         'ip' => 'string(50) not null',
         'blog_name' => 'string(255)',
         'visible' => 'boolean',
-        'junk_status' => 'smallint not null',
-        'last_moved_on' => 'datetime not null',
-        'junk_score' => 'float',
-        'junk_log' => 'text',
     },
     indexes => {
         created_on => 1,
@@ -34,13 +27,9 @@ __PACKAGE__->install_properties({
             columns => [ 'tb_id', 'visible', 'created_on' ],
         },
         ip => 1,
-        last_moved_on => 1, # used for junk expiration
         # For URL lookups to aid spam filtering
         blog_url => {
             columns => [ 'blog_id', 'visible', 'source_url' ],
-        },
-        blog_stat => {
-            columns => ['blog_id', 'junk_status', 'created_on'],
         },
         blog_visible => {
             columns => ['blog_id', 'visible', 'created_on', 'id'],
@@ -48,13 +37,8 @@ __PACKAGE__->install_properties({
         visible_date => {
             columns => [ 'visible', 'created_on' ],
         },
-        junk_date => {
-            columns => [ 'junk_status', 'created_on' ],
-        },
     },
     defaults => {
-        junk_status => NOT_JUNK,
-        last_moved_on => '20000101000000',
     },
     audit => 1,
     meta => 1,
@@ -68,13 +52,6 @@ sub class_label {
 
 sub class_label_plural {
     return MT->translate('TrackBacks');
-}
-
-sub is_junk {
-    $_[0]->junk_status == JUNK;
-}
-sub is_not_junk {
-    $_[0]->junk_status != JUNK;
 }
 
 sub is_published {
@@ -105,6 +82,12 @@ sub parent_id {
             return ('MT::Category', $tb->category_id);
         }
     }
+}
+
+sub can_be_junked_by {
+    my $obj = shift;
+    my ($user) = @_;
+    return $obj->parent->author_id == $user->id;
 }
 
 sub next {
@@ -198,19 +181,6 @@ sub _nextprev {
     return;
 }
 
-sub junk {
-    my $ping = shift;
-    if (($ping->junk_status || 0) != JUNK) {
-        require MT::Util;
-        my @ts = MT::Util::offset_time_list(time, $ping->blog_id);
-        my $ts = sprintf("%04d%02d%02d%02d%02d%02d",
-                         $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0]);
-        $ping->last_moved_on($ts);
-    }
-    $ping->junk_status(JUNK);
-    $ping->visible(0);
-}
-
 sub moderate {
     my $ping = shift;
     $ping->visible(0);
@@ -219,7 +189,7 @@ sub moderate {
 sub approve {
     my $ping = shift;
     $ping->visible(1);
-    $ping->junk_status(NOT_JUNK);
+    $ping->junk_status(MT::Junkable::NOT_JUNK);
 }
 
 sub all_text {
@@ -264,7 +234,7 @@ sub visible {
     }
     $ping->{__changed}{visibility} = $vis_delta;
 
-    $ping->junk_status(NOT_JUNK) if $is_visible;
+    $ping->junk_status(MT::Junkable::NOT_JUNK) if $is_visible;
     return $ping->SUPER::visible($is_visible);
 }
 

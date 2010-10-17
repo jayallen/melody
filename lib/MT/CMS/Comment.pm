@@ -334,10 +334,10 @@ sub list {
                 $terms{visible} = 0;
             }
             elsif ( $val eq 'junk' ) {
-                $terms{junk_status} = MT::Comment::JUNK();
+                $terms{junk_status} = MT::Junkable::JUNK();
             }
             else {
-                $terms{junk_status} = MT::Comment::NOT_JUNK();
+                $terms{junk_status} = MT::Junkable::NOT_JUNK();
             }
         }
     }
@@ -880,7 +880,7 @@ sub empty_junk {
     my $class = $app->model($type);
     my $arg   = {};
     require MT::Comment;
-    $arg->{junk_status} = MT::Comment::JUNK();
+    $arg->{junk_status} = MT::Junkable::JUNK();
     $arg->{blog_id} = $blog_id if $blog_id;
     $class->remove($arg);
     $app->add_return_arg( 'emptied' => 1 );
@@ -947,12 +947,7 @@ sub handle_junk {
         my $obj = $class->load($id) or die "No $class $id";
         my $old_visible = $obj->visible || 0;
         unless ($perm_checked) {
-            if ( $obj->isa('MT::TBPing') && $obj->parent->isa('MT::Entry') ) {
-                next if $obj->parent->author_id != $app->user->id;
-            }
-            elsif ( $obj->isa('MT::Comment') ) {
-                next if $obj->entry->author_id != $app->user->id;
-            }
+            next unless $obj->isa('MT::Junkable') && $obj->can_be_junked_by( $app->user );
             next unless $perms->can_publish_post;
         }
         $obj->junk;

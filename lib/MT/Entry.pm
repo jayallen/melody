@@ -10,7 +10,7 @@ use strict;
 
 use MT::Tag; # Holds MT::Taggable
 use MT::Summary; # Holds MT::Summarizable
-use base qw( MT::Object MT::Taggable MT::Scorable MT::Summarizable );
+use base qw( MT::Object MT::Taggable MT::Scorable MT::Summarizable MT::Junkable );
 
 use MT::Blog;
 use MT::Author;
@@ -48,7 +48,6 @@ __PACKAGE__->install_properties({
         'template_id' => 'integer',
         'comment_count' => 'integer',
         'ping_count' => 'integer',
-        'junk_log' => 'string meta',
 ## Have to keep this around for use in mt-upgrade.cgi.
         'category_id' => 'integer',
     },
@@ -185,6 +184,11 @@ sub status_int {
             $s eq 'review' ? REVIEW :
                 $s eq 'future' ? FUTURE :
                     $s eq 'junk' ? JUNK : undef;
+}
+
+sub junk {
+    $_[0]->status( JUNK );
+    MT::Junkable::junk(@_);
 }
 
 sub authored_on_obj {

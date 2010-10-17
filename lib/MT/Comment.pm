@@ -7,11 +7,8 @@
 package MT::Comment;
 
 use strict;
-use base qw( MT::Object MT::Scorable );
+use base qw( MT::Object MT::Scorable MT::Junkable );
 use MT::Util qw( weaken );
-
-sub JUNK ()     { -1 }
-sub NOT_JUNK () { 1 }
 
 __PACKAGE__->install_properties({
     column_defs => {
@@ -21,32 +18,24 @@ __PACKAGE__->install_properties({
         'author' => 'string(100)',
         'commenter_id' => 'integer',
         'visible' => 'boolean',
-        'junk_status' => 'smallint',
         'email' => 'string(127)',
         'url' => 'string(255)',
         'text' => 'text',
         'ip' => 'string(50)',
-        'last_moved_on' => 'datetime not null',
-        'junk_score' => 'float',
-        'junk_log' => 'text',
         'parent_id' => 'integer',
     },
     indexes => {
         entry_visible => {
             columns => [ 'entry_id', 'visible', 'created_on' ],
         },
-	author => 1,
+        author => 1,
         email => 1,
         commenter_id => 1,
-	parent_id => 1,
-        last_moved_on => 1, # used for junk expiration
+        parent_id => 1,
 
         # For URL lookups to aid spam filtering
         blog_url => {
             columns => [ 'blog_id', 'visible', 'url' ],
-        },
-        blog_stat => {
-            columns => [ 'blog_id', 'junk_status', 'created_on' ],
         },
         blog_visible => {
             columns => [ 'blog_id', 'visible', 'created_on', 'id' ],
@@ -60,8 +49,6 @@ __PACKAGE__->install_properties({
     },
     meta => 1,
     defaults => {
-        junk_status => NOT_JUNK,
-        last_moved_on => '20000101000000',
     },
     audit => 1,
     datasource => 'comment',
@@ -76,14 +63,6 @@ sub class_label {
 
 sub class_label_plural {
     return MT->translate("Comments");
-}
-
-sub is_junk {
-    $_[0]->junk_status == JUNK;
-}
-
-sub is_not_junk {
-    $_[0]->junk_status != JUNK;
 }
 
 sub is_not_blocked { 
@@ -159,29 +138,16 @@ sub entry {
     return $entry;
 }
 
-sub junk {
-    my ($comment) = @_;
-    if (($comment->junk_status || 0) != JUNK) {
-        require MT::Util;
-        my @ts = MT::Util::offset_time_list(time, $comment->blog_id);
-        my $ts = sprintf("%04d%02d%02d%02d%02d%02d",
-                         $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0]);
-        $comment->last_moved_on($ts);
-    }
-    $comment->junk_status(JUNK);
-    $comment->visible(0);
-}
-
 sub moderate {
     my ($comment) = @_;
     $comment->visible(0);
-    $comment->junk_status(NOT_JUNK);
+    $comment->junk_status(MT::Junkable::NOT_JUNK);
 }
 
 sub approve {
     my ($comment) = @_;
     $comment->visible(1);
-    $comment->junk_status(NOT_JUNK);
+    $comment->junk_status(MT::Junkable::NOT_JUNK);
 }
 
 *publish = \&approve;
@@ -214,16 +180,8 @@ sub is_moderated {
     return !$_[0]->visible() && !$_[0]->is_junk();
 }
 
-sub log {
-    # TBD: pre-load __junk_log when loading the comment
-    my $comment = shift;
-    push @{$comment->{__junk_log}}, @_;
-}
-
 sub save {
     my $comment = shift;
-    $comment->junk_log(join "\n", @{$comment->{__junk_log}})
-        if ref $comment->{__junk_log} eq 'ARRAY';
     my $ret = $comment->SUPER::save();
     delete $comment->{__changed}{visibility} if $ret;
     return $ret;
@@ -264,6 +222,12 @@ sub to_hash {
     }
 
     $hash;
+}
+
+sub can_be_junked_by {
+    my $obj = shift;
+    my ($user) = @_;
+    return $obj->entry->author_id == $user->id;
 }
 
 sub visible {

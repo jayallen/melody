@@ -38,7 +38,7 @@ BEGIN {
         use version; our $VERSION = qv('0.9.24'); # MakeMaker stops here
         $PRODUCT_VERSION          = $VERSION;    # The rightful resting place
         $VERSION                  = '4.34';      # The true API version
-        $SCHEMA_VERSION           = '4.0077';
+        $SCHEMA_VERSION           = '4.0078';
         $PRODUCT_NAME             = 'Melody';
         $PRODUCT_CODE             = 'OM';
         $VERSION_ID               = '0.9.24 (MT 4.34+)';
