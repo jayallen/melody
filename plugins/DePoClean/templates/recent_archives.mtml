@@ -1,0 +1,10 @@
+<div> 
+	<p><strong>Recent Archives</strong></p> 
+	<ul class="nav">
+	<$mt:MonthlyArchivesCount setvar="ma_count"$>
+	<mt:ArchiveList type="Monthly" lastn="$ma_count">
+		<li><a href='<$mt:ArchiveLink$>' title='<$mt:ArchiveTitle escape="html"$>'><$mt:ArchiveTitle$></a></li>
+	</mt:ArchiveList>
+	</ul> 
+ 	<p><a href="<$mt:Link template="Archives"$>">View All Archives</a></p>
+</div> 

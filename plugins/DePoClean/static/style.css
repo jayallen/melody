@@ -1,0 +1,268 @@
+/*
+Theme Name:   DePo Clean
+Theme URI:    http://powazek.com
+Description:  A clean, organized theme by <a href="http://powazek.com">Derek Powazek</a>.
+Version:      0.5
+Author:       Derek Powazek
+Author URI:   http://powazek.com
+*/
+
+* { 
+    margin: 0; 
+    padding: 0;
+}
+
+body {
+    background: #fff;
+    color: black;
+    text-align: center;
+    font-size: 13px;
+    line-height: 18px;
+    font-family: "Lucida Grande", Verdana, Arial, sans-serif;
+}
+
+img#wpstats { width:0px; height:0px; overflow:hidden; }
+
+a { color:#000; text-decoration: none }
+a:hover { color:#066; text-decoration: underline }
+
+p, ul, ol, li { 
+    margin-bottom: 18px; 
+}
+
+blockquote { 
+    margin: 0 18px 18px 18px;
+    font-size:12px;
+    font-color:#333;
+}
+
+ul {
+    list-style-type: square;
+    margin-left: 2em;
+}
+
+ol {
+    margin-left: 2em;
+}
+
+h1 { 
+    font-size: 24px; 
+    line-height: 36px;
+    margin-bottom: 18px; 
+}
+
+h2 { 
+    font-size: 22px; 
+    line-height: 36px;
+    margin-bottom: 18px;
+}
+
+h3 { 
+    font-size: 18px; 
+    line-height: 18px;
+    margin-bottom: 20px;
+}
+
+.container {
+    margin: 0 auto;
+    padding: 0;
+    width: 840px;
+}
+
+
+/* HEADER */
+
+.header {
+    padding: 30px 0 10px 0;
+    border-bottom: 1px solid #666;
+    text-align:left;
+}
+
+.header h1 {
+    font-size: 26px;
+    color: #000;
+    font-weight: normal;
+}
+
+.header span {
+    font-size: 12px;
+    color: #666;
+    font-weight: normal;
+}
+
+.header a {    color: #333; }
+.header a:hover { color: #066; }
+
+.search {
+    padding:11px 0 0 20px;
+    background:url('./images/search.gif') 0 14px no-repeat;
+    float:right;
+}
+
+.search input {
+    width:150px;
+}
+
+
+/* POSTS */
+
+.flickr {
+    text-align:left;
+    width: 668px;
+    padding: 10px 0 10px 3px;
+    border-bottom: 1px solid #ccc;
+}
+
+.flickr img {
+    width: 58px;
+    height: 58px;
+    margin: 1px 4px;
+    border: 1px solid #666;
+}
+
+.flickr img:hover {
+    width: 72px;
+    height: 72px;
+    margin: -6px -3px;
+    border: 1px solid #000;
+}
+
+.flickr span {
+    float:left;
+    width: 56px;
+    font-size: 14px;
+    color: #666;
+}
+
+.flickr span a { color: #666; }
+
+.flickr small {
+    font-size:9px;
+}
+
+small.fey { color: #ccc; }
+
+.blogads {
+    padding: 31px 0 18px 0;
+    width: 152px;
+    font-size: 12px;
+    color: #666;
+    float:right;
+    text-align:left;
+}
+
+.blogads a { font-weight:bold }
+
+.firstpost {
+    text-align:left;
+    width: 668px;
+    padding: 28px 0 18px 0;
+}
+
+.post {
+    text-align:left;
+    width: 668px;
+    padding: 27px 0 7px 0;
+    border-bottom: 1px solid #ccc;
+}
+
+.postnoline {
+    text-align:left;
+    width: 668px;
+    padding: 22px 0 22px 0;
+}
+
+.posttopline {
+    border-top: 1px solid #ccc;
+    text-align:left;
+    width: 668px;
+    padding: 22px 0 22px 0;
+}
+
+span.previous { padding: 0 20px 0 0; float: left; }
+    
+span.next { float: right; }
+
+span.edit a { 
+    float:right;
+    font-weight:normal; 
+    font-size:11px; 
+    color:#666; 
+    border:1px solid #ccc; 
+    padding:0 4px; 
+}
+
+.metainfo {
+    float:left;
+    width: 152px;
+    font-size: 12px;
+    color: #666;
+    padding: 3px 0;
+}
+
+.metainfo a { font-weight:bold }
+
+.content {
+    margin-left:177px;
+    width: 480px;
+    text-align:left;
+}
+
+.content a { font-weight:bold }
+
+.previously {
+   text-align:left;
+    width: 668px;
+    padding: 20px 0 3px 0;
+    border-top: 1px solid #ccc;
+    font-size: 12px;
+}
+
+.previously a { font-weight:bold }
+
+.text_area { width: 480px !important; }
+
+.postform { width:150px; margin: 0;} 
+
+.delicious-tags { font-size:11px; color:#666 }
+.delicious-tags a { font-weight:normal; color:#333 }
+
+
+/* FOOTER */
+
+.footer {
+    padding: 22px 0 10px 5px;
+    border-top: 1px solid #666;
+    text-align:left;
+    font-size: 12px;
+    color: #666;
+}
+
+.footer div {
+    width:152px;
+    margin: 0 20px 0 0;
+    float:left;
+}
+
+.footer img {
+    border:0;
+}
+
+.footer div.last {
+    width:142px;
+    margin: 0 0 0 0;
+}
+
+.copyright {
+    margin:12px 0 0 0;
+    padding: 18px 0 10px 0;
+    border-top: 1px solid #666;
+    text-align:right;
+    font-size: 12px;
+    color: #666;
+}
+
+ul.nav li { margin: 0 }
+
+
+

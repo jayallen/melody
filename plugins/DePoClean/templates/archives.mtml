@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head profile="http://gmpg.org/xfn/11"> 
+	<title><$mt:BlogName escape="html"$> -   Archived</title> 
+	<$mt:Include module="HTML Head"$>
+
+	<link rel='canonical' href='<$mt:Link template="Archives"$>' /> 
+</head> 
+ 
+<body> 
+ 
+<div class="container"> 
+ 
+	<$mt:Include module="Header"$>
+
+		<div class="post">
+			<h2>The Archives</h2>
+		</div>
+			
+		<div class="post" style="border-bottom:0px">
+		    
+		<div style="float:right;width:250px;">
+			<h3>By Month</h3>
+			<ul class="nav">
+			<mt:ArchiveList type="Monthly">
+				<li><a href='<$mt:ArchiveLink$>' title='<$mt:ArchiveTitle escape="html"$>'><$mt:ArchiveTitle$></a></li>
+			</mt:ArchiveList>
+			</ul>
+		</div>
+            
+		<h3>By Category</h3>
+		<ul class="nav">
+			<mt:TopLevelCategories>
+				<li class="cat-item"><a href="<$mt:CategoryArchiveLink$>" title="View all posts filed under <$mt:CategoryLabel escape="html"$>"><$mt:CategoryLabel$></a>
+				<mt:SubCategories>
+					<mt:SubCatIsFirst>
+					<ul class="children">
+					</mt:SubCatIsFirst>
+					<li class="cat-item"><a href="<$mt:CategoryArchiveLink$>" title="View all posts filed under <$mt:CategoryLabel escape="html"$>"><$mt:CategoryLabel$></a>
+					<$mt:SubCatsRecurse$>
+					<mt:SubCatIsLast>
+					</ul>
+					</mt:SubCatIsLast>
+				</mt:SubCategories>
+			</mt:TopLevelCategories>
+		</ul>
+		</div>
+
+<br clear="all" />
+
+	<$mt:Include module="Footer"$>
+
+	</div> <!-- end container -->
+</body>
+</html>

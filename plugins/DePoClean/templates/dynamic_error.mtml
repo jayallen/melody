@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head profile="http://gmpg.org/xfn/11"> 
+	<title><$mt:BlogName escape="html"$> &#8211; <$mt:BlogDescription escape="html"$></title> 
+	<meta name='robots' content='noindex,nofollow' />
+	<$mt:Include module="HTML Head"$>
+</head> 
+<body> 
+<div class="container"> 
+	<$mt:Include module="Header"$>
+
+                <div class="post">
+                    <div class="metainfo">
+                        <p><$mt:EntryDate format="%e %B %Y @ %l%p"$></p>
+                    </div>
+                    <div class="content">
+                        <h3><__trans phrase="Page Not Found"></h3>
+                        <p><strong><$mt:ErrorMessage$></strong></p>
+                        <br clear="left" />
+                    </div>
+        </div><!-- end post -->
+		
+	<div class="postnoline"> 
+		<$mt:var name="pagination_navigation"$>
+	</div> 
+ 
+	<br clear="all" />
+	<$mt:Include module="Footer"$>
+ 
+	</div> <!-- end container --> 
+</body> 
+</html> 

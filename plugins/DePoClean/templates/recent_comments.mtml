@@ -1,0 +1,13 @@
+<mt:If tag="BlogCommentCount" gt="0">
+<div> 
+	<p><strong><__trans phrase="Recent Comments"></strong></p> 
+	<ul class="nav">
+	<$mt:RecentCommentsCount setvar="rc_count"$>
+	<mt:Comments lastn="$rc_count">
+		<mt:CommentEntry>
+		<li><mt:If tag="CommentURL"><a href="<$mt:CommentURL$>"><$mt:CommentAuthor$></a><mt:Else><$mt:CommentAuthor$></mt:If> commented on <a href='<$mt:EntryPermalink$>' title='<$mt:EntryTitle escape="html"$>'><$mt:EntryTitle$></a></li>
+		</mt:CommentEntry>
+	</mt:Comments>
+	</ul> 
+</div>
+</mt:If>

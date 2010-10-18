@@ -1,0 +1,13 @@
+	<div class="header"> 
+        	<div class="search"> 
+			<form method="get" id="sform" action="<$mt:CGIPath$><$mt:SearchScript$>"> 
+				<input type="text" id="q" value="" name="search" size="15" />
+				<input type="hidden" name="limit" value="<$mt:EntriesInSearchResults$>"/>
+				<input type="hidden" name="IncludeBlogs" value="<$mt:BlogID$>"/>
+			</form> 
+ 	       </div><!-- end search --> 
+		<h1><mt:If name="main_index"><$mt:BlogName escape="html"$><mt:Else><a href="<$mt:BlogURL$>"><$mt:BlogName escape="html"$></a></mt:If> <span><$mt:BlogDescription escape="html"$></span></h1> 
+	</div><!-- end header --> 
+	<div class="blogads"> 
+		<$mt:WidgetSet name="Sidebar"$>
+	</div>

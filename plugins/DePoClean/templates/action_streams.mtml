@@ -1,0 +1,32 @@
+<mt:If tag="PrimaryAuthor" ne="">
+    <mt:PrimaryAuthor setvar="author">
+    <mt:ActionStreams authors="$author" lastn="10">
+        <mt:if name="__first__">
+<div>
+    <p><strong><__trans phrase="Recent Activity"></h3>
+            <ul class="nave">
+        </mt:if>
+                <li>
+                    <mt:StreamAction>
+                </li>
+        <mt:if name="__last__">
+            </ul>
+</div>
+        </mt:if>
+    </mt:ActionStreams>
+<mt:Else>
+    <mt:ActionStreams lastn="10">
+        <mt:if name="__first__">
+<div>
+    <p><strong><__trans phrase="Recent Activity"></strong></p>
+            <ul class="nav">
+        </mt:if>
+                <li>
+                    <mt:StreamAction>
+                </li>
+        <mt:if name="__last__">
+            </ul>
+</div>
+        </mt:if>
+    </mt:ActionStreams>
+</mt:If>

@@ -1,0 +1,373 @@
+name: DePoClean
+id: DePoClean
+key: DePoClean
+author_link: http://openmelody.org
+author_name: OpenMelody Team, based on DePoClean.
+description: This plugin provides a Movable Type/Melody version of the DePoClean Theme
+version: 1.0
+static_version: 1
+plugin_link: http://openmelody.org
+l10n_class: DePoCleanTheme::L10N
+
+template_sets:
+    DePoClean_theme:
+        label: 'DePoClean'
+        base_path: 'templates'
+        description: DePoClean converted from WordPress. License terms are the exact same as those imposed by Derek Powazek. A copy of his terms can be found in the file LICENSE.original in this theme's folder.
+        author_name: 'OpenMelody Team, based on work by Derek Powazek (http://powazek.com)'
+        author_link: 'http://openmelody.org'
+        blog_preferences: 'DePoClean_theme_preferences'
+        thumbnail: 'depo-small.png'
+        preview: depo-large.png
+        options:
+            fieldsets:
+                flickr:
+                    label: Flickr
+                    order: 1
+                listing_widgets:
+                    label: Listing Widgets
+                    order: 2
+                limits:
+                    label: Per Page Entry Limits
+                    order: 3
+                metadata:
+                    label: User and Site Metadata
+                    order: 4
+                    hint: This area configures miscellaneous widgets and features which provide information about you and your blog.
+            listing_widgets_monthly:
+                label: Monthly Archive Limit
+                hint: Controls the number of months that will be displayed in the Monthly Archives widget.
+                default: 5
+                type: select
+                values: 1,2,3,4,5,10,15,20
+                tag: MonthlyArchivesCount
+                fieldset: listing_widgets
+                order: 1
+            listing_widgets_recent_comments:
+                label: Recent Comments Limit
+                hint: Controls the number of comments that will be displayed in the Recent Comments widget.
+                default: 5
+                type: select
+                values: 1,2,3,4,5,10,15,20
+                tag: RecentCommentsCount
+                fieldset: listing_widgets
+                order: 2
+            listing_widgets_recent_entries:
+                label: Recent Entries Limit
+                hint: Controls the number of comments that will be displayed in the Recent Entries widget.
+                default: 5
+                type: select
+                values: 1,2,3,4,5,10,15,20
+                tag: RecentEntriesCount
+                fieldset: listing_widgets
+                order: 3
+            flickr_type:
+                label: Type of photo display
+                hint: Which Flickr feed do you want to use to control the photoset displayed on the top of the main page?
+                type: select
+                fieldset: flickr
+                values: Disable,User,Photoset,Group,Favorites,Public
+                default: User
+                tag: FlickrPhotoType
+            flickr_user_id:
+                label: User ID
+                hint: Your Flickr User ID number. If you don't know it, <a href="http://idgettr.com/">go here</a>
+                type: text
+                fieldset: flickr
+                tag: FlickrUserID
+            flickr_group_id:
+                label: Group ID
+                hint: This field is used in conjunction with the group display.
+                type: text
+                tag: FlickrGroupID
+                fieldset: flickr
+            flickr_photoset_id:
+                label: Photoset ID
+                hint: This field is used in conjunction with the photoset display.
+                type: text
+                tag: FlickrPhotosetID
+                fieldset: flickr
+            flickr_tags:
+                label: Tags
+                hint: A list of tags that can be sent to Flickr to show photos of a particular type.
+                type: text
+                tag: FlickrTags
+                fieldset: flickr
+            comments_in_comment_feed:
+                label: Number of comments in comment feed
+                hint: This will limit the number of comments that are put into the recent comment news feed
+                tag: CommentsInFeed
+                type: text
+                fieldset: limits
+                default: 25
+            number_of_entries_on_main_index:
+                label: Number of entries on the main page
+                hint: This is the number of entries that will be displayed on the main page.
+                tag: EntriesOnMainPage
+                type: text
+                fieldset: limits
+                default: 20
+            number_of_entries_on_listings:
+                label: Number of entries on the listing pages
+                hint: This is the number of entries that will be displayed on the listing pages (Category, Monthly, Author, etc).
+                tag: EntriesOnListingPages2
+                type: text
+                fieldset: limits
+                default: 20
+            number_of_entries_in_search_results:
+                label: Number of entries in the search results
+                hint: This is the number of entries that will be displayed in the search results.
+                tag: EntriesInSearchResults
+                type: text
+                fieldset: limits
+                default: 20
+            metadata_about_option:
+                label: About You
+                tag: AboutYou
+                hint: This will populate the "About" widget. No <p> tags in here.
+                type: text
+                default: Your info here.
+                fieldset: metadata
+            metadata_contact_option:
+                label: Contact Information
+                tag: ContactInformation
+                hint: This will populate the "Contact" widget. No <p> tags in here.
+                type: text
+                default: Your info here.
+                fieldset: metadata
+            metadata_primary_author:
+                label: Primary Author
+                hint: Enter the username of the primary author to display <em>only</em> this users Action Stream profiles in the Other Profiles widget. (By default all author's profiles are displayed.)
+                tag: PrimaryAuthor
+                type: text
+                fieldset: metadata
+        templates:
+            index:
+                archives:
+                    label: Archives
+                    outfile: archives/index.html
+                    build_type: 4
+                    rebuild_me: 1
+                atom_feed:
+                    label: Atom Feed
+                    outfile: atom.xml
+                    build_type: 4
+                    rebuild_me: 1
+                main_index:
+                    label: Main Index
+                    outfile: index.html
+                    build_type: 1
+                    rebuild_me: 1
+                mt_jquery_data:
+                    label: MT jQuery Data
+                    outfile: jquery.mt.js
+                    build_type: 4
+                    rebuild_me: 1
+                rsd:
+                    label: RSD
+                    outfile: rsd.xml
+                    build_type: 4
+                    rebuild_me: 1
+                rss:
+                    label: RSS Feed
+                    outfile: rss.xml
+                    build_type: 4
+                    rebuild_me: 1
+                comments_rss:
+                    label: RSS Feed (comments)
+                    outfile: comments_rss.xml
+                    build_type: 4
+                    rebuild_me: 1
+                sitemap:
+                    label: Sitemap
+                    outfile: sitemap.xml
+                    build_type: 4
+                    rebuild_me: 1
+            archive:
+                entry_listing:
+                    label: Entry Listing
+                    mappings:
+                        monthly:
+                            archive_type: Monthly
+                            file_template: %y/%m/%i
+                            build_type: 4
+                        category:
+                            archive_type: Category
+                            file_template: %-c/%i
+                            build_type: 4
+                        author:
+                            archive_type: Author
+                            file_type: author/%-a/%f
+                            build_type: 4
+            individual:
+                entry:
+                    label: Entry
+                    mappings:
+                        entry_archive:
+                            archive_type: Individual
+                            file_template: %y/%m/%-b/%i
+                            preferred: 1
+                        page_archive:
+                            archive_type: Page
+                            file_template: %-c/%-b/%i
+                feed_entry:
+                    label: Comment Feeds
+                    mappings:
+                        entry_archive:
+                            archive_type: Individual
+                            file_template: %y/%m/%-b/comments.xml
+                            preferred: 0
+                            build_type: 4
+                        page_archive:
+                            archive_type: Page
+                            file_template: %-c/%-b/comments.xml
+                            build_type: 4
+                            preferred: 0
+            module:
+                entry_details:
+                    label: Entry Details
+                flickr:
+                    label: Flickr
+                    cache:
+                        expire_type: 1
+                        expire_interval: 2592000
+                footer:
+                    label: Footer
+                header:
+                    label: Header
+                    cache:
+                        expire_type: 2
+                        expire_event: author,comment,entry,page,category,folder,ping
+                html_head:
+                    label: HTML Head
+                    cache:
+                        expire_type: 1
+                        expire_interval: 7776000
+            system:
+                comment_response:
+                    label: Comment Response
+                dynamic_error:
+                    label: Dynamic Error
+                search_results:
+                    label: Search Results
+                popup_image:
+                    label: Popup Image
+            widget:
+                about:
+                    label: About
+                action_streams:
+                    label: Action Streams
+                    cache:
+                        expire_type: 1
+                        expire_interval: 900
+                authors:
+                    label: Authors
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                categories:
+                    label: Categories
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                contact:
+                    label: Contact
+                recent_archives:
+                    label: Recent Archives
+                    cache:
+                        expire_type: 1
+                        expire_interval: 2592000
+                recent_comments:
+                    label: Recent Comments
+                    cache:
+                        expire_type: 2
+                        expire_event: comment
+                recent_entries:
+                    label: Recent Entries
+                    cache:
+                        expire_type: 2
+                        expire_event: entry
+
+            widgetset:
+                footer:
+                    label: Footer
+                    widgets:
+                        - About
+                        - Recent Archives
+                sidebar:
+                    label: Sidebar
+
+
+blog_preferences:
+    DePoClean_theme_preferences:
+        label: 'DePoClean Theme Preferences'
+        description: 'Preferred preferences for the DePoClean Theme'
+        plugin_data:
+            ActionStreams:
+                rebuild_for_action_stream_events: 1
+        preferences:
+            allow_anon_comments: 1
+            allow_comment_html: 1
+            allow_commenter_regist: 1
+            allow_comments_default: 1
+            allow_pings: 1
+            allow_pings_default: 1
+            allow_reg_comments: 1
+            allow_unreg_comments: 1
+            #archive_type:
+            archive_type_preferred: Individual
+            autodiscover_links: 0
+            autolink_urls: 1
+            basename_limit: 100
+            captcha_provider:
+            cc_license:
+            commenter_authenticators: MovableType
+            convert_paras: 'Markdown with Smartypants'
+            convert_paras_comments: 1
+            custom_dynamic_templates: none
+            days_on_index: 0
+            email_new_comments: 1
+            email_new_pings: 1
+            entries_on_index: 10
+            file_extension: html
+            follow_auth_links: 1
+            image_default_align: right
+            image_default_constrain: 1
+            image_default_thumb: 1
+            image_default_width: 150
+            #image_default_popup: 0
+            #image_default_wrap_text:
+            #image_default_wunits:
+            include_cache: 1
+            include_system: 0
+            internal_autodiscovery: 0
+            is_dynamic: 0
+            junk_folder_expiry: 7
+            junk_score_threshold: 0
+            #language:
+            manual_approve_commenters: 0
+            moderate_pings: 1
+            moderate_unreg_comments: 0
+            nofollow_urls: 0
+            #nwc_smart_replace:
+            #nwc_replace_field:
+            #ping_blogs:
+            #ping_google:
+            ping_others: http://rpc.pingomatic.com
+            #ping_technorati:
+            #ping_weblogs:
+            #remote_auth_token:
+            require_comment_emails: 1
+            require_typekey_emails: 0
+            #sanitize_spec:
+            #server_offset:
+            sort_order_comments: ascend
+            sort_order_posts: descend
+            status_default: 2
+            #update_pings:
+            use_comment_confirmation: 1
+            #welcome_msg:
+            words_in_excerpt: 40
+
+
+

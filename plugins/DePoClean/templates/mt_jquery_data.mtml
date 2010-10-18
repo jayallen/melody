@@ -1,0 +1,38 @@
+ //
+// This file defines blog variables and phrases which are used by javascript functions.
+//
+var mt;
+mt = {
+    cookie: {
+        name: "<$mt:UserSessionCookieName$>",
+        domain: "<$mt:UserSessionCookieDomain$>",
+        path: "<$mt:UserSessionCookiePath$>",
+        timeout: <$mt:UserSessionCookieTimeout$>
+    },
+    links: {
+        signIn: '<$mt:SignInLink$>',
+        signOut: '<$mt:SignOutLink$>'
+    },
+    blog: {
+        id: <$mt:BlogID _default="0"$>,
+        url: '<$mt:BlogURL encode_url="1"$>',
+        staticWebPath: '<$mt:StaticWebPath$>',
+        adminScript: '<$mt:AdminScript$>',
+        signInLink: '<$mt:SignInLink$>',
+        signOutLink: '<$mt:SignOutLink$>',
+        comments: {
+            script: '<$mt:CGIPath$><$mt:CommentScript$>',
+            armor: '<$mt:BlogSitePath encode_sha1="1"$>',
+            accepted: <mt:IfCommentsAccepted>1<mt:Else>0</mt:IfCommentsAccepted>,
+            captchaFields: '<$mt:CaptchaFields$>'
+        },
+        pings: {
+            accepted: <mt:IfPingsAccepted>1<mt:Else>0</mt:IfPingsAccepted>
+        },
+        registration: {
+            required: <mt:IfRegistrationRequired>1<mt:Else>0</mt:IfRegistrationRequired>,
+            allowed: <mt:IfRegistrationAllowed>1<mt:Else>0</mt:IfRegistrationAllowed>
+        }
+    }
+};
+

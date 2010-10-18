@@ -1,0 +1,34 @@
+<$mt:CommentsInFeed setvar="comment_limit"$>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+		>
+	<channel>
+		<title>Comments for <$mt:BlogName$></title>
+		<atom:link href="<$mt:Link template="RSS Feed (comments)"$>" rel="self" type="application/rss+xml" />
+		<link><$mt:BlogURL$></link>
+		<description><$mt:BlogDescription$></description>
+		<lastBuildDate><$mt:Date format="%a, %d %m %Y %H:%M:%S +0000" utc="1"$></lastBuildDate>
+		<sy:updatePeriod>hourly</sy:updatePeriod>
+
+		<sy:updateFrequency>1</sy:updateFrequency>
+		<generator><$mt:ProductName$> <$mt:Version$></generator>
+		<mt:Comments lastn="$comment_limit" sort_by="created_on" sort_order="descend">
+		<item>
+			<title>Comment on <mt:CommentEntry><$mt:EntryTitle escape="html"$></mt:CommentEntry> by <$mt:CommentAuthor$></title>
+			<link><mt:CommentEntry><$mt:EntryPermalink$></mt:CommentEntry>#comment-<$mt:CommentID$></link>
+			<dc:creator><$mt:CommentAuthor$></dc:creator>
+
+			<pubDate><$mt:CommentDate format="%a, %d %m %Y %H:%M:%S +0000" utc="1"$></pubDate>
+			<guid isPermaLink="false"><mt:CommentEntry><$mt:EntryPermalink$></mt:CommentEntry>#comment-<$mt:CommentID$></guid>
+			<description><$mt:CommentBody escape="html"$></description>
+
+			<content:encoded><![CDATA[<$mt:CommentBody>$>]]></content:encoded>
+		</item>
+		</mt:Comments>
+	</channel>
+</rss>

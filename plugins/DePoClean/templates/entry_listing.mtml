@@ -1,0 +1,73 @@
+<$mt:EntriesOnListingPages2 setvar="entries_per_page"$>
+<mt:SetVarBlock name="search_link">
+<$mt:CGIPath$><$mt:SearchScript$>?IncludeBlogs=<$mt:BlogID$>&amp;template_id=<$mt:BuildTemplateID$>&amp;limit=<$mt:Var name="entries_per_page"$><mt:If name="archive_template">&amp;archive_type=<$mt:ArchiveType$><mt:If name="datebased_archive">&amp;year=<$mt:ArchiveDate format='%Y'$>&amp;month=<$mt:ArchiveDate format='%m'$>&amp;day=<$mt:ArchiveDate format='%d'$></mt:If><mt:If name="category_archive">&amp;category=<$mt:CategoryID$></mt:If><mt:If name="author_archive">&amp;author=<$mt:AuthorID$></mt:If><mt:Else>&amp;archive_type=Index</mt:If>&amp;page=
+</mt:SetVarBlock>
+<mt:SetVarBlock name="pagination_navigation">
+        <mt:If name="search_results">
+                <mt:IfMoreResults>
+                        <span class="previous">
+                                <a href="<$mt:NextLink$>">&larr; Before</a>
+                        </span>
+                </mt:IfMoreResults>
+                <mt:IfPreviousResults>
+                       <span class="next">
+                                <a href="<$mt:PreviousLink$>">After &rarr;</a>
+                        </span>
+                </mt:IfPreviousResults>
+        <mt:Else>
+                <mt:If name="archive_template">
+                        <$mt:ArchiveCount setvar="total_entries"$>
+                <mt:Else>
+                        <$mt:BlogEntryCount setvar="total_entries"$>
+                </mt:If>
+                <mt:If name="total_entries" gt="$entries_per_page">
+                        <span class="previous">
+                                <a href="<$mt:var name="search_link"$>2">&larr; Before</a>
+                        </span>
+                </mt:If>
+        </mt:If>
+</mt:SetVarBlock>
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head profile="http://gmpg.org/xfn/11"> 
+	<title><$mt:BlogName escape="html"$> &#8211; <$mt:ArchiveTitle escape="html"$></title> 
+	<meta name='robots' content='noindex,nofollow' />
+	<$mt:Include module="HTML Head"$>
+</head> 
+<body> 
+<div class="container"> 
+	<$mt:Include module="Header"$>
+ 
+	<div class="post">
+		<h2 style="font-weight:normal">Posts from <strong><$mt:ArchiveTitle escape="html"$></strong></h2>
+	</div>
+	
+	<mt:If name="search_results">
+		<$mt:var name="isSearch" value="1"$>
+	<mt:Else>
+		<$mt:var name="isSearch" value="0"$>
+	</mt:If>
+
+<$mt:Date format="%Y$%m%d" setvar="today"$>
+<mt:Entries limit="$entries_per_page" search_results="$isSearch">
+        <$mt:EntryDate format="%Y%M%d" setvar="this_entry"$>
+        <mt:If name="today" gt="$this_entry">
+                <mt:SetVarBlock name="cache_key">Listing;EntryDetails;<$mt:EntryID$></mt:SetVarBlock>
+                <$mt:Include module="<__trans phrase="Entry Details">" cache="1" cache_key="$cache_key" ttl="604800"$>
+        <mt:Else>
+                <$mt:Include module="<__trans phrase="Entry Details">"$>
+        </mt:If>
+</mt:Entries>
+		
+	<div class="postnoline"> 
+		<$mt:var name="pagination_navigation"$>
+	</div> 
+ 
+	<br clear="all" />
+	<$mt:Include module="Footer"$>
+ 
+	</div> <!-- end container --> 
+</body> 
+</html> 

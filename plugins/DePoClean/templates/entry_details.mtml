@@ -1,0 +1,17 @@
+		<div class="post"> 
+		    <div class="metainfo"> 
+		        <p>Posted<br /> 
+                <a href="<$mt:EntryPermalink$>" rel="bookmark" title="Permanent Link to <$mt:EntryTitle escape="html"$>."><$mt:EntryDate format="%e %B %Y @ %l%p"$></a></p> 
+                <p>Tagged<br /> 
+                <mt:If tag="EntryCategories"><mt:EntryCategories glue=","><a href="<$mt:CategoryArchiveLink$>" title="View all posts in <$mt:CategoryLabel escape="html"$>" rel="category"><$mt:CategoryLabel escape="html"$></a></mt:EntryCategories><mt:Else>Uncategorized</mt:If>
+		
+		</p> 
+                <mt:Unless name="feedback_template"><p><a href="<$mt:EntryPermalink$>#comments" title="Comment on <$mt:EntryTitle escape="html"$>."><$mt:EntryCommentCount singular="1 Comment" plural="# Comments" none="No Comments Yet"$></a></p></mt:Unless>
+		    </div> 
+		    <div class="content"> 
+		        <h3><a href="<$mt:EntryPermalink$>" rel="bookmark" title="Permanent Link to <$mt:EntryTitle escape="html"$>."><$mt:EntryTitle escape="html"$></a> 
+		        </h3> 
+		        <p><$mt:EntryBody$></p>
+		        <br clear="left" /> 
+		    </div> 
+        </div><!-- end post --> 

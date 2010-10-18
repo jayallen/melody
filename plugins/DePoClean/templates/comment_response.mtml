@@ -1,0 +1,46 @@
+<mt:If name="comment_confirmation">
+    <mt:Ignore><!-- Success message when comment has been submitted --></mt:Ignore>
+    <$mt:Var name="page_title" value="<__trans phrase="Confirmation...">"$>
+    <$mt:Var name="message" value="<p><__trans phrase="Your comment has been submitted!"></p>"$>
+<mt:Else name="comment_pending">
+    <mt:Ignore><!-- Pending message when comment is being held for review --></mt:Ignore>
+    <$mt:Var name="page_title" value="<__trans phrase="Thank you for commenting.">"$>
+    <$mt:Var name="message" value="<p><__trans phrase="Your comment has been received and held for approval by the blog owner."></p>"$>
+<mt:Else name="comment_error">
+    <mt:Ignore><!-- Error message when comment submission fails --></mt:Ignore>
+    <$mt:Var name="page_title" value="<__trans phrase="Comment Submission Error">"$>
+    <mt:SetVarBlock name="message"><p><__trans phrase="Your comment submission failed for the following reasons: [_1]" params="<$mt:ErrorMessage$>"></p></mt:SetVarBlock>
+</mt:If>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head profile="http://gmpg.org/xfn/11"> 
+	<title><$mt:BlogName escape="html"$> &#8211; <$mt:BlogDescription escape="html"$></title> 
+	<meta name='robots' content='noindex,nofollow' />
+	<$mt:Include module="HTML Head"$>
+</head> 
+<body> 
+<div class="container"> 
+	<$mt:Include module="Header"$>
+
+                <div class="post">
+                    <div class="metainfo">
+                        <p><$mt:EntryDate format="%e %B %Y @ %l%p"$></p>
+                    </div>
+                    <div class="content">
+                        <h3><$mt:Var name="page_title"$></h3>
+                        <p><__trans phrase="Return to the <a href="[_1]">original entry</a>." params="<mt:If name="comment_error">javascript:history.back()<mt:Else><$mt:EntryLink$></mt:If>"></p>
+                        <br clear="left" />
+                    </div>
+        </div><!-- end post -->
+		
+	<div class="postnoline"> 
+		<$mt:var name="pagination_navigation"$>
+	</div> 
+ 
+	<br clear="all" />
+	<$mt:Include module="Footer"$>
+ 
+	</div> <!-- end container --> 
+</body> 
+</html> 

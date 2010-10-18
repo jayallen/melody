@@ -1,0 +1,50 @@
+<$mt:CommentsInFeed setvar="entry_limit"$>
+
+<?xml version="1.0" encoding="<$mt:PublishCharset$>"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:thr="http://purl.org/syndication/thread/1.0" xml:lang="en">
+    <title><__trans phrase="Comments for [_1]" params="<$mt:ArchiveTitle remove_html="1" encode_xml="1"$>"></title>
+    <link rel="alternate" type="text/html" href="<$mt:ArchiveLink encode_xml="1"$>" />
+    <link rel="self" type="application/atom+xml" href="<$mt:BlogURL$>atom.xml" />
+    <id>tag:<$mt:BlogHost exclude_port="1" encode_xml="1"$>,<$mt:Date format="%Y"$>:<$mt:BlogRelativeURL encode_xml="1"$>/<$mt:BlogID$>/<$mt:EntryAtomID$>-</id>
+    <updated><mt:Comments lastn="1"><$mt:Date utc="1" format="%Y-%m-%dT%H:%M:%SZ"$></mt:Comments></updated>
+    <mt:If tag="BlogDescription"><subtitle><$mt:BlogDescription remove_html="1" encode_xml="1"$></subtitle></mt:If>
+    <generator uri="http://www.sixapart.com/movabletype/">Movable Type <$mt:Version$></generator>
+<mt:Ignore>
+    <entry>
+        <id><$mt:EntryAtomID$></id>
+        <link rel="alternate" type="text/html" href="<$mt:EntryPermalink encode_xml="1"$>" />
+        <link rel="service.edit" type="application/atom+xml" href="<$mt:CGIPath$><$mt:AtomScript$>/weblog/blog_id=<$mt:BlogID$>/entry_id=<$mt:EntryID$>" title="<$mt:EntryTitle encode_html="1"$>" />
+        <published><$mt:EntryDate utc="1" format="%Y-%m-%dT%H:%M:%SZ"$></published>
+        <updated><$mt:EntryModifiedDate utc="1" format="%Y-%m-%dT%H:%M:%SZ"$></updated>
+        <title><$mt:EntryTitle remove_html="1" encode_xml="1"$></title>
+        <summary><$mt:EntryExcerpt remove_html="1" encode_xml="1"$></summary>
+        <author>
+            <name><$mt:EntryAuthorDisplayName encode_xml="1"$></name>
+            <mt:If tag="EntryAuthorURL"><uri><$mt:EntryAuthorURL encode_xml="1"$></uri></mt:If>
+        </author>
+        <mt:EntryCategories>
+        <category term="<$mt:CategoryLabel encode_xml="1"$>" />
+        </mt:EntryCategories>
+        <content type="html" xml:lang="<$mt:BlogLanguage ietf="1"$>" xml:base="<$mt:BlogURL encode_xml="1"$>">
+            <$mt:EntryBody encode_xml="1"$>
+            <$mt:EntryMore encode_xml="1"$>
+        </content>
+    </entry>
+</mt:Ignore>
+<mt:Comments lastn="$entry_limit">
+    <entry>
+        <id><$mt:EntryAtomID$>-comment:<$mt:CommentID$></id>
+        <thr:in-reply-to ref="<$mt:EntryAtomID$>" type="text/html" href="<$mt:EntryPermalink encode_xml="1"$>"/>
+        <link rel="alternate" type="text/html" href="<$mt:EntryPermalink encode_xml="1"$>#c<$mt:CommentID$>" />
+        <title><__trans phrase="Comment from [_1] on [_2]" params="<$mt:CommentAuthor encode_xml="1"$>%%<$mt:CommentDate format="%Y-%m-%d"$>"></title>
+        <author>
+            <name><$mt:CommentAuthor encode_xml="1"$></name>
+            <uri><$mt:CommentURL encode_xml="1"$></uri>
+        </author>
+        <content type="html" xml:lang="<$mt:BlogLanguage ietf="1"$>" xml:base="<$mt:CommentURL encode_xml="1"$>">
+            <$mt:CommentBody encode_xml="1"$>
+        </content>
+        <published><$mt:CommentDate utc="1" format="%Y-%m-%dT%H:%M:%SZ"$></published>
+    </entry>
+</mt:Comments>
+</feed>

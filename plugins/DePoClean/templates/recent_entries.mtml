@@ -1,0 +1,11 @@
+<mt:If tag="BlogEntryCount" gt="0">
+<div> 
+	<p><strong><__trans phrase="Recent Entries"></strong></p> 
+	<ul class="nav">
+	<$mt:RecentEntriesCount setvar="re_count"$>
+	<mt:Entries lastn="$re_count">
+		<li><a href='<$mt:EntryPermalink$>' title='<$mt:EntryTitle escape="html"$>'><$mt:EntryTitle$></a></li>
+	</mt:Entries>
+	</ul> 
+</div>
+</mt:If>
