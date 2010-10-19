@@ -759,7 +759,7 @@ sub asset_insert_text {
 
 sub _process_post_upload {
     my $app   = shift;
-    my %param = $app->query->param;
+    my %param = $app->param; #TODO: Fix this when $app->query->param is a fully working substitute
     my $asset;
     require MT::Asset;
     $param{id} && ( $asset = MT::Asset->load( $param{id} ) )
