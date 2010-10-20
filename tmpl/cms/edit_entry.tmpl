@@ -1,8 +1,14 @@
+<mt:ignore><!-- FIXME: proper handling of show/hide this widget below --></mt:ignore>
+<$mt:setvar name="disp_prefs_show_revision" value="1"$>
 <mt:if name="object_type" eq="page">
     <mt:if name="can_manage_pages">
         <$mt:setvar name="can_publish_post" value="1"$>
     </mt:if>
+    <mt:if name="loaded_revision">
+    <mt:setvarblock name="page_title"><__trans phrase="Edit Page"></mt:setvarblock>
+    <mt:else>
     <$mt:setvar name="page_title" value="<__trans phrase="Edit Page">"$>
+    </mt:if>
     <mt:if name="new_object">
         <$mt:setvar name="page_title" value="<__trans phrase="Create Page">"$>
     </mt:if>
@@ -26,7 +32,11 @@
         </mt:if>
     </mt:if>
 <mt:else>
+    <mt:if name="loaded_revision">
+    <mt:setvarblock name="page_title"><__trans phrase="Edit Entry"></mt:setvarblock>
+    <mt:else>
     <$mt:setvar name="page_title" value="<__trans phrase="Edit Entry">"$>
+    </mt:if>
     <mt:if name="new_object">
         <$mt:setvar name="page_title" value="<__trans phrase="Create Entry">"$>
     </mt:if>
@@ -180,6 +190,27 @@
             <__trans phrase="You have successfully deleted the checked TrackBack(s).">
         </mtapp:statusmsg>
     </mt:if>
+    <mt:if name="loaded_revision">
+        <mtapp:statusmsg
+            id="loaded_revision"
+            class="info">
+            <__trans phrase="Restored revision (Date:[_1]).  The current status is: [_2]" params="<$mt:var name="rev_date" escape="html"$>%%<span class="icon-left-wide icon-<$mt:var name="current_status_text" lower_case="1">"><$mt:var name="current_status_label"$></span>">
+        </mtapp:statusmsg>
+        <mt:if name="missing_tags_rev">
+            <mtapp:statusmsg
+                id="missing_tags_rev"
+                class="info">
+                <__trans phrase="Some of tags in the revision could not be loaded because they have been removed.">
+            </mtapp:statusmsg>
+        </mt:if>
+        <mt:if name="missing_cats_rev">
+            <mtapp:statusmsg
+                id="missing_cats_rev"
+                class="info">
+                <__trans phrase="Some [_1] in the revision could not be loaded because they have been removed." params="<mt:if name="object_type" eq="entry">categories<mt:else>folders</mt:if>">
+            </mtapp:statusmsg>
+        </mt:if>
+    </mt:if>
     <mt:if name="error">
         <mtapp:statusmsg
             id="generic-error"
@@ -203,6 +234,11 @@
         <input type="hidden" name="magic_token" value="<$mt:var name="magic_token"$>" id="m_t" />
         <input type="hidden" name="action_name" value="" />
         <input type="hidden" name="itemset_action_input" value="" />
+        <input type="hidden" name="dirty" value="" />
+     <mt:if name="use_revision">
+        <input type="hidden" name="save_revision" id="save_revision" value="1" />
+        <input type="hidden" name="current_revision" id="current_revision" value="<mt:var name="current_revision">" />
+     </mt:if>
 </mt:setvarblock>
 <mt:setvarblock name="category_setting">
     <mtapp:setting
@@ -356,17 +392,33 @@
                     </mt:if>
                 </mt:if>
             </mt:unless>
-            <mt:unless name="new_object">
-            <ul>
-                <li><__trans phrase="[_1] - Created by [_2]" params="<$mt:date ts="$created_on_ts" relative="1" _default="$created_on_formatted"$>%%<$mt:var name="created_by" escape="html" escape="html"$>"></li>
-            <mt:if name="status_publish">
-                <li><__trans phrase="[_1] - Published by [_2]" params="<$MTDate ts="$authored_on_ts" relative="1" _default="$authored_on_formatted"$>%%<$mt:var name="author_name" escape="html" escape="html"$>"></li>
-            </mt:if>
-            <mt:if name="modified_by">
-                <li><__trans phrase="[_1] - Edited by [_2]" params="<$MTDate ts="$modified_on_ts" relative="1" _default="$modified_on_formatted"$>%%<$mt:var name="modified_by" escape="html" escape="html"$>"></li>
-            </mt:if>
-            </ul>
-            </mt:unless>
+
+
+<mt:unless name="new_object">
+    <mt:if name="use_revision">
+    <div class="revision-info">
+        <mt:if name="rev_date">
+        <p><__trans phrase="Revision: <strong>[_1]</strong>" params="<mt:var name="rev_date" escape="html">"></p>
+        <a href="javascript:void(0);" 
+           onclick="openDialog(null,'list_revision','_type=<mt:var name="object_type" default="entry">&id=<$mt:var name="id"$ escape="url">&blog_id=<mt:var name="blog_id">&r=<mt:var name="rev_number" escape="html">');return false;"
+           title="<__trans phrase="View revisions of this [_1]" params="<mt:var name="object_label">">"><__trans phrase="View revisions"></a>
+        <mt:else>
+        <p class="zero-state"><__trans phrase="No revision(s) associated with this [_1]" params="<mt:var name="object_label" lower_case="1" escape="html">"></p>
+        </mt:if>
+    </div>
+    <mt:else>
+    <ul>
+        <li><__trans phrase="[_1] - Created by [_2]" params="<$mt:date ts="$created_on_ts" relative="1" _default="$created_on_formatted"$>%%<$mt:var name="created_by" escape="html" escape="html"$>"></li>
+        <mt:if name="status_publish">
+        <li><__trans phrase="[_1] - Published by [_2]" params="<$MTDate ts="$authored_on_ts" relative="1" _default="$authored_on_formatted"$>%%<$mt:var name="author_name" escape="html" escape="html"$>"></li>
+        </mt:if>
+        <mt:if name="modified_by">
+        <li><__trans phrase="[_1] - Edited by [_2]" params="<$MTDate ts="$modified_on_ts" relative="1" _default="$modified_on_formatted"$>%%<$mt:var name="modified_by" escape="html" escape="html"$>"></li>
+        </mt:if>
+    </ul>
+    </mt:if>
+</mt:unless>
+
         </mtapp:setting>
 
         <mt:if name="status_future">
@@ -417,6 +469,14 @@
                 <input type="hidden" name="basename_manual" id="basename_manual" value="1" />
             </mt:if>
         </mtapp:setting>
+<mt:if name="use_revision">
+    <mtapp:setting
+        id="revision-note"
+        label="<__trans phrase="Change note">"
+        label_class="top-label">
+        <input type="text" name="revision-note" id="revision-note" value="<mt:var name="revision-note" escape="html">" />
+    </mtapp:setting>
+</mt:if>
     </mtapp:widget>
 </div>
 <div id="category-field"<mt:unless name="disp_prefs_show_category"> class="hidden"</mt:unless>>

@@ -4856,6 +4856,39 @@ body.dialog {
     background-position: -22px 0;
 }
 
+/* Revision Histories ---------------------------------------------------------------------------------------- */
+
+#page-revison-listing,
+#entry-revision-listing,
+#template-revision-listing{margin-bottom:0;padding:0;}.list-revision-dialog tr.current-revision{background-color:#f2f2b0 ! important;}.list-revision-dialog .datetime{width:25%;}.list-revision-dialog .note{width:50%;}
+
+#max_revisions_entry,
+#max_revisions_template{width:5em;}
+
+/* -- List Revision */
+#page-revison-listing, 
+#entry-revision-listing, 
+#template-revision-listing { 
+    margin-bottom: 0;
+    padding: 0;
+}
+
+.list-revision-dialog tr.current-revision { 
+    background-color: #f2f2b0 ! important;
+}
+
+.list-revision-dialog .datetime { 
+    width: 25%;
+}
+
+.list-revision-dialog .note { 
+    width: 50%;
+}
+
+#max_revisions_entry,
+#max_revisions_template { 
+    width: 5em;
+}
 /* MT3 Styles to deprecate ----------------------------------------------------------------------------------- */
 
 .setting-advanced {

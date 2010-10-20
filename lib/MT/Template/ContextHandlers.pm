@@ -1742,6 +1742,7 @@ sub _hdlr_app_listing {
     }
 
     my $id = $args->{id} || ($type ? $type . '-listing' : 'listing');
+    $id =~ s/:/\-/g; # meta and revision uses colon as a separator
     my $listing_class = $args->{listing_class} || "";
     my $hide_pager = $args->{hide_pager} || 0;
     $hide_pager = 1 if ($ctx->var('screen_class') || '') eq 'search-replace';

@@ -22,9 +22,36 @@ sub edit {
     # to trigger autosave logic in main edit routine
     $param->{autosave_support} = 1;
 
+    my $original_revision;
     if ($id) {
         return $app->error( $app->translate("Invalid parameter") )
           if $obj->class ne $type;
+
+        if ( $blog->use_revision ) {
+            $original_revision = $obj->revision;
+            my $rn = $q->param('r');
+            if ( $rn != $obj->current_revision ) {
+                my $status_text = MT::Entry::status_text( $obj->status );
+                $param->{current_status_text} = $status_text;
+                $param->{current_status_label} = $app->translate( $status_text );
+                my $rev = $obj->load_revision( { rev_number => $rn } );
+                if ( $rev && @$rev ) {
+                    $obj = $rev->[0];
+                    my $values = $obj->get_values;
+                    $param->{$_} = $values->{$_} foreach keys %$values;
+                    $param->{loaded_revision} = 1;
+                }
+                $param->{rev_number} = $rn;
+                $param->{no_snapshot} = 1 if $q->param('no_snapshot');
+                $param->{missing_cats_rev} = 1
+                    if exists($obj->{__missing_cats_rev}) && $obj->{__missing_cats_rev};
+                $param->{missing_tags_rev} = 1
+                    if exists($obj->{__missing_tags_rev}) && $obj->{__missing_tags_rev};
+            }
+            $param->{rev_date} = format_ts( "%Y-%m-%d %H:%M:%S",
+                $obj->modified_on, $blog,
+                $app->user ? $app->user->preferred_language : undef );
+        }
 
         $param->{nav_entries} = 1;
         $param->{entry_edit}  = 1;
@@ -202,8 +229,9 @@ sub edit {
            push @{$assets}, $asset_1;
        }
        elsif ($id) {
+           my $join_str = '= asset_id';
            my @assets = MT::Asset->load({ class => '*' },
-                                        { join => MT::ObjectAsset->join_on(undef, {asset_id => \'= asset_id', object_ds => 'entry', object_id => $id })});
+                                        { join => MT::ObjectAsset->join_on(undef, {asset_id => \$join_str, object_ds => 'entry', object_id => $id })});
            foreach my $asset (@assets) {
                my $asset_1;
                if ($asset->class eq 'image') {
@@ -233,7 +261,7 @@ sub edit {
     }
     my $cats = $q->param('category_ids');
     if ( defined $cats ) {
-        if ( my @cats = grep { $_ =~ /^\d+/ } split /,/, $cats ) {
+        if ( my @cats = grep { $_ =~ /^\d+/ } split(/,/, $cats) ) {
             $cat_id = $cats[0];
             %places = map { $_ => 1 } @cats;
         }
@@ -242,6 +270,13 @@ sub edit {
         $param->{reedit} = 1;
         if ( !$q->param('basename_manual') ) {
             $param->{'basename'} = '';
+        }
+        $param->{'revision-note'} = $q->param('revision-note');
+        if ( $q->param('save_revision') ) {
+            $param->{'save_revision'} = 1;
+        }
+        else {
+            $param->{'save_revision'} = 0;
         }
     }
     if ($blog) {
@@ -345,7 +380,7 @@ sub edit {
     ## Load text filters if user displays them
     my %entry_filters;
     if ( defined( my $filter = $q->param('convert_breaks') ) ) {
-        my @filters = split /\s*,\s*/, $filter;
+        my @filters = split(/\s*,\s*/, $filter);
         $entry_filters{$_} = 1 for @filters;
     }
     elsif ($obj) {
@@ -425,6 +460,30 @@ sub edit {
         $param->{screen_class} = 'edit-page edit-entry';
     }
     $param->{sitepath_configured} = $blog && $blog->site_path ? 1 : 0;
+    if ( $blog->use_revision ) {
+        $param->{use_revision} = 1;
+    #TODO: the list of revisions won't appear on the edit screen.
+    #    $param->{revision_table} = $app->build_page(
+    #        MT::CMS::Common::build_revision_table(
+    #            $app,
+    #            object => $obj || $class->new,
+    #            param => {
+    #                template => 'include/revision_table.tmpl',
+    #                args     => {
+    #                    sort_order => 'rev_number',
+    #                    direction  => 'descend',
+    #                    limit      => 5,              # TODO: configurable?
+    #                },
+    #                revision => $original_revision
+    #                  ? $original_revision
+    #                  : $obj
+    #                    ? $obj->revision || $obj->current_revision
+    #                    : 0,
+    #            }
+    #        ),
+    #        { show_actions => 0, hide_pager => 1 }
+    #    );
+    }
     1;
 }
 
@@ -440,7 +499,7 @@ sub build_junk_table {
     #       ( $obj->junk_score > 0 ? '+' : '' ) . $obj->junk_score;
     # }
     my $log = $obj->junk_log || '';
-    my @log = split /\r?\n/, $log;
+    my @log = split(/\r?\n/, $log);
     my @junk;
     for ( my $i = 0 ; $i < scalar(@log) ; $i++ ) {
         my $line = $log[$i];
@@ -868,7 +927,7 @@ sub list {
     }
 
     $param->{return_args} ||= $app->make_return_args;
-    my @return_args = grep { $_ !~ /offset=\d/ } split /&/, $param->{return_args};
+    my @return_args = grep { $_ !~ /offset=\d/ } split(/&/, $param->{return_args});
     $param{return_args} = join '&', @return_args;
     $param{return_args} .= "&offset=$offset" if $offset;
     $param{screen_id} = "list-entry";
@@ -924,7 +983,7 @@ sub preview {
 
     my $cat_ids = $q->param('category_ids');
     if ($cat_ids) {
-        my @cats = split /,/, $cat_ids;
+        my @cats = split(/,/, $cat_ids);
         if (@cats) {
             my $primary_cat = $cats[0];
             $cat =
@@ -1119,14 +1178,8 @@ sub preview {
           || $col eq 'class'
           || $col eq 'meta'
           || $col eq 'comment_count'
-          || $col eq 'ping_count';
-        if ( $col eq 'basename' ) {
-            if (   ( !defined $q->param('basename') )
-                || ( $q->param('basename') eq '' ) )
-            {
-                $q->param( 'basename', $q->param('basename_old') );
-            }
-        }
+          || $col eq 'ping_count'
+          || $col eq 'current_revision';
         push @data,
           {
             data_name  => $col,
@@ -1134,7 +1187,7 @@ sub preview {
           };
     }
     for my $data (
-        qw( authored_on_date authored_on_time basename_manual basename_old category_ids tags include_asset_ids )
+        qw( authored_on_date authored_on_time basename_manual basename_old category_ids tags include_asset_ids save_revision revision-note )
       )
     {
         push @data,
@@ -1175,6 +1228,17 @@ sub preview {
     }
     $param{object_type}  = $type;
     $param{object_label} = $entry_class->class_label;
+
+    $param{diff_view} = $app->param('rev_numbers') || $app->param('collision');
+    $param{collision} = 1;
+    if(my @rev_numbers = split(/,/, $app->param('rev_numbers'))) {
+        $param{comparing_revisions} = 1;
+        $param{rev_a} = $rev_numbers[0];
+        $param{rev_b} = $rev_numbers[1];
+    }
+    $param{dirty} = $q->param('dirty') ? 1 : 0;
+
+
     if ($fullscreen) {
         return $app->load_tmpl( 'preview_entry.tmpl', \%param );
     }
@@ -1258,8 +1322,8 @@ sub save {
 
     ## Get rid of category_id param, because we don't want to just set it
     ## in the Entry record; save it for later when we will set the Placement.
-    my ( $cat_id, @add_cat ) = split /\s*,\s*/,
-      ( $q->param('category_ids') || '' );
+    my ( $cat_id, @add_cat ) = split(/\s*,\s*/,
+      ( $q->param('category_ids') || '' ));
     $app->delete_param('category_id');
     if ($id) {
         ## Delete the author_id param (if present), because we don't want to
@@ -1403,8 +1467,6 @@ $ao
 
     MT::Util::translate_naughty_words($obj);
 
-    $obj->modified_by( $author->id ) unless $is_new;
-
     $app->run_callbacks( 'cms_pre_save.' . $type, $app, $obj, $orig_obj )
       || return $app->error(
         $app->translate(
@@ -1412,6 +1474,10 @@ $ao
             $class->class_label, $app->errstr
         )
       );
+
+    # Setting modified_by updates modified_on which we want to do before
+    # a save but after pre_save callbacks fire.  
+    $obj->modified_by( $author->id ) unless $is_new;
 
     $obj->save
       or return $app->error(

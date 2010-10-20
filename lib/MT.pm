@@ -38,7 +38,7 @@ BEGIN {
         use version; our $VERSION = qv('0.9.20'); # MakeMaker stops here
         $PRODUCT_VERSION          = $VERSION;    # The rightful resting place
         $VERSION                  = '4.34';      # The true API version
-        $SCHEMA_VERSION           = '4.0077';
+        $SCHEMA_VERSION           = '4.0078';
         $PRODUCT_NAME             = 'Melody';
         $PRODUCT_CODE             = 'OM';
         $VERSION_ID               = '0.9.20 (MT 4.34+)';
@@ -317,6 +317,12 @@ sub construct {
             my $ppkg = $pkg->model($1);
             my $mpkg = $ppkg->meta_pkg($2);
             return $mpkg ? $object_types{$k} = $mpkg : undef;
+        }
+
+        if ($k =~ m/^(.+):revision$/) {
+            my $ppkg = $pkg->model($1);
+            my $rpkg = $ppkg->revision_pkg;
+            return $rpkg ? $object_types{$k} = $rpkg : undef;
         }
 
         my $model = $pkg->registry( 'object_types', $k );

@@ -258,6 +258,11 @@ sub install_properties {
         );
     }
 
+    # Because of the inheritance of MT::Entry by MT::Page, we need to do this here
+    if($class->isa('MT::Revisable')) {
+        $class->init_revisioning();
+    }
+
     return $props;
 }
 
@@ -309,7 +314,8 @@ sub _pre_search_scope_terms_to_class {
             } elsif ($terms->{$col} =~ m/^(\w+:)\*$/) {
                 # class term is in form "foo:*"; translate to a sql-compatible
                 # syntax of "like 'foo:%'"
-                $terms->{$col} = \"like '$1%'";
+                my $join_str = "like '$1%'";
+                $terms->{$col} = \$join_str;
             }
             # term has been explicitly given or explictly removed. make
             # no further changes.
@@ -1230,10 +1236,12 @@ sub column_defs {
     my $defs = $props->{column_defs};
     return undef if !$defs;
     my ($key) = keys %$defs;
-    if (!(ref $defs->{$key})) {
+    unless ($props->{column_defs_parsed}) {  
         $obj->__parse_defs($props->{column_defs});
-    }
-    $props->{column_defs};
+        $props->{column_defs_parsed} = 1;  
+    }  
+
+    return $props->{column_defs}; 
 }
 
 sub __parse_defs {
@@ -1261,6 +1269,7 @@ sub __parse_def {
     $def{key} = 1 if $def =~ m/\bprimary key\b/i;
     $def{key} = 1 if ($props->{primary_key}) && ($props->{primary_key} eq $col);
     $def{auto} = 1 if $def =~ m/\bauto[_ ]increment\b/i;
+    $def{revisioned} = 1 if $def =~ m/\brevisioned\b/i;
     $def{default} = $props->{defaults}{$col}
         if exists $props->{defaults}{$col};
     \%def;

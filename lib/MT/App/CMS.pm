@@ -50,6 +50,8 @@ sub core_methods {
         'list'           => "${pkg}Common::list",
         'delete'         => "${pkg}Common::delete",
         'search_replace' => "${pkg}Search::search_replace",
+        'list_revision'  => "${pkg}Common::list_revision",
+        'save_snapshot'  => "${pkg}Common::save_snapshot",
 
         ## Edit methods
         'edit_role'   => "${pkg}User::edit_role",
@@ -1494,7 +1496,7 @@ sub core_menus {
         },
         'system:settings' => {
             label             => "Settings",
-            mode              => 'cfg_system',
+            mode              => 'cfg_system_settings',
             order             => 300,
             system_permission => 'administer',
         },

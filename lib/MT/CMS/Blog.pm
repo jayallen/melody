@@ -244,6 +244,12 @@ sub edit {
         if ( $blog->include_cache ) {
             $param->{include_cache} = 1;
         }
+        $param->{'master_revision_switch'} = $app->config->TrackRevisions;
+        $param->{'use_revision'} = ( $obj->use_revision || 0 );
+        $param->{'max_revisions_entry'} =
+            ( $obj->max_revisions_entry || $MT::Revisable::MAX_REVISIONS );
+        $param->{'max_revisions_template'} =
+            ( $obj->max_revisions_template || $MT::Revisable::MAX_REVISIONS );
 
         ( my $offset = $obj->server_offset ) =~ s![-\.]!_!g;
         $offset =~ s!_0+$!!; # fix syntax highlight ->!
@@ -1387,6 +1393,7 @@ sub pre_save {
                            require_comment_emails 
                            require_typekey_emails
                            use_comment_confirmation 
+                           use_revision
         );
 
         for my $bool (@booleans) {
@@ -1622,7 +1629,8 @@ sub post_save {
                             archive_tmpl_monthly archive_tmpl_category archive_tmpl_individual image_default_wrap_text image_default_align
                             image_default_thumb image_default_width image_default_wunits image_default_constrain image_default_popup 
                             commenter_authenticators require_typekey_emails nofollow_urls follow_auth_links update_pings captcha_provider
-                            publish_queue nwc_smart_replace nwc_replace_field template_set page_layout include_system include_cache )) {
+                            publish_queue nwc_smart_replace nwc_replace_field template_set page_layout include_system include_cache 
+                            use_revision )) {
         if ( $obj->$blog_field() ne $original->$blog_field() ) {
                 my $old = $original->$blog_field() ? $original->$blog_field() : "none";
                 my $new = $obj->$blog_field() ? $obj->$blog_field() : "none";
@@ -1845,6 +1853,11 @@ sub save_filter {
       if $app->param('archive_path') =~ m/^\s*$/
         && $app->param('enable_archive_paths');
 
+    return $eh->error( MT->translate("The number of revisions to store must be a positive integer.") )
+        unless 0 < sprintf('%d', $app->param('max_revisions_entry'));
+    return $eh->error( MT->translate("The number of revisions to store must be a positive integer.") )
+        unless 0 < sprintf('%d', $app->param('max_revisions_template'));
+
     return 1;
 }
 
@@ -2047,6 +2060,13 @@ sub cfg_archives_save {
             _create_mtview( $blog, $blog->archive_path, $cache, $conditional );
             _create_dynamiccache_dir( $blog, $blog->archive_path ) if $cache;
         }
+    }
+    $blog->use_revision( $app->param('use_revision') ? 1 : 0 );
+    if ( $app->param('use_revision') ) {
+        $blog->max_revisions_entry( $app->param('max_revisions_entry') )
+          if $app->param('max_revisions_entry');
+        $blog->max_revisions_template( $app->param('max_revisions_template') )
+          if $app->param('max_revisions_template');
     }
 # Removed by Byrne in blog settings refactor. Saving now happens in the post_save callback
 #    $blog->save
