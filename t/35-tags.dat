@@ -12,7 +12,7 @@
 { "r" : "1", "t" : "<MTEntries lastn='1'><MTEntryDate format_name=\"\"></MTEntries>", "e" : "January 31, 1978  7:45 AM"}, #11
 { "r" : "1", "t" : "<MTEntries lastn='1'><MTEntryDate format=\"%Y-%m-%dT%H:%M:%S\"></MTEntries>", "e" : "1978-01-31T07:45:00"}, #12
 { "r" : "1", "t" : "<MTEntries lastn='1'><MTEntryDate language=\"pl\"></MTEntries>", "e" : "31 stycznia 1978  7:45"}, #13
-{ "r" : "1", "t" : "<MTPublishCharset>", "e" : "utf-8"}, #14
+{ "r" : "1", "t" : "<MTPublishCharset>", "e" : "UTF-8"}, #14
 { "r" : "1", "t" : "<MTIfNonEmpty tag=\"MTDate\">nonempty</MTIfNonEmpty>", "e" : "nonempty"}, #15
 { "r" : "1", "t" : "", "e" : ""}, #16
 { "r" : "1", "t" : "<MTIfNonZero tag=\"MTBlogEntryCount\">nonzero</MTIfNonZero>", "e" : "nonzero"}, #17
@@ -128,7 +128,7 @@
 { "r" : "1", "t" : "<MTPings lastn=\"1\"><MTPingBlogName></MTPings>", "e" : "Example Blog"}, #126
 { "r" : "1", "t" : "<MTCategories><MTCategoryLabel>: <MTCategoryCount>; </MTCategories>", "e" : "foo: 1; subfoo: 1; "}, #127
 { "r" : "1", "t" : "<MTCategories><MTCategoryArchiveLink>; </MTCategories>", "e" : "http://narnia.na/nana/archives/foo/; http://narnia.na/nana/archives/foo/subfoo/; "}, #128
-{ "r" : "1", "t" : "<MTCategories show_empty=\"1\"><MTCategoryLabel>: <MTCategoryTrackbackLink> </MTCategories>", "e" : "bar: http://narnia.na/cgi-bin/mt-tb.cgi/2 foo:  subfoo:  "}, #129
+{ "r" : "1", "t" : "<MTCategories show_empty=\"1\"><MTCategoryLabel>: <MTCategoryTrackbackLink> </MTCategories>", "e" : "bar: http://narnia.na/cgi-bin/mt-tb.cgi/12 foo:  subfoo:  "}, #129
 { "r" : "1", "t" : "<MTSubCategories show_empty=\"1\" top=\"1\"><MTCategoryLabel></MTSubCategories>", "e" : "barfoo"}, #130
 { "r" : "1", "t" : "<MTSubCategories show_empty=\"1\" top=\"1\"><MTSubCatIsFirst>First: <MTCategoryLabel></MTSubCatIsFirst></MTSubCategories>", "e" : "First: bar"}, #131
 { "r" : "1", "t" : "<MTSubCategories show_empty=\"1\" top=\"1\">[[<MTCategoryLabel><MTSubCatsRecurse>]]</MTSubCategories>", "e" : "[[bar]][[foo[[subfoo]]]]"}, #132

@@ -656,7 +656,6 @@ sub init_data {
     }
     $entry->clear_cache();
 
-    require MT::Trackback;
     my $tb = MT::Trackback->load(1);
     if ( !$tb ) {
         $tb = new MT::Trackback;
@@ -726,7 +725,7 @@ It\'s a hard rain\'s a-gonna fall',
         $cat->save or die "Couldn't save category record 2: " . $cat->errstr;
     }
 
-    $tb = MT::Trackback->load(2);
+    $tb = MT::Trackback->load(12);
     if ( !$tb ) {
         $tb = new MT::Trackback;
         $tb->title("Category TrackBack Title");
@@ -734,7 +733,7 @@ It\'s a hard rain\'s a-gonna fall',
         $tb->entry_id(0);
         $tb->blog_id(1);
         $tb->category_id(2);
-        $tb->id(2);
+        $tb->id(12);
         $tb->save or die "Couldn't save Trackback record 2: " . $tb->errstr;
     }
 
