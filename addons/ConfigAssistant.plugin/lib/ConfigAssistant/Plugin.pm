@@ -22,7 +22,7 @@ sub tag_plugin_static_web_path {
                           $ctx->stash('tag'), $sig)
         );
     } elsif ( $obj->registry('static_version') ) {
-        my $url = MT->config('StaticWebPath');
+        my $url = MT->instance->static_path;
         $url   .= '/' unless $url =~ m!/$!;
         $url   .= 'support/plugins/'.$obj->id.'/';
         return $url;
@@ -45,8 +45,8 @@ sub tag_plugin_static_file_path {
                           $ctx->stash('tag'), $sig)
         );
     } elsif ( $obj->registry('static_version') ) {
-        my $url = File::Spec->catdir( MT->config('StaticFilePath'), 'support', 'plugins', $obj->id );
-        return $url;
+        return File::Spec->catdir( 
+            MT->instance->static_file_path, 'support', 'plugins', $obj->id );
     } else {
         return $ctx->error(
             MT->translate(
@@ -60,7 +60,7 @@ sub tag_plugin_static_file_path {
 sub theme_options {
     my $app     = shift;
     my ($param) = @_;
-    my $q       = $app->{query};
+    my $q       = $app->can('query') ? $app->query : $app->param;
     my $blog    = $app->blog;
 
     $param ||= {};
@@ -115,6 +115,15 @@ sub theme_options {
             }
             next unless $cond->();
         }
+        if (!$field->{'type'}) {
+            MT->log(
+                {
+                    message => "Option '$optname' in template set '$ts' did not declare a type. Skipping"
+                }
+            );
+            next;
+        }
+
 
         my $field_id = $ts . '_' . $optname;
 
@@ -258,7 +267,7 @@ sub theme_options {
 # Code for this method taken from MT::CMS::Plugin
 sub save_config {
     my $app = shift;
-    my $q          = $app->param;
+    my $q          = $app->can('query') ? $app->query : $app->param;
     my $plugin_sig = $q->param('plugin_sig');
     my $profile    = $MT::Plugins{$plugin_sig};
     my $blog_id    = $q->param('blog_id');
@@ -443,7 +452,7 @@ sub type_colorpicker {
 sub type_link_group {
     my $app = shift;
     my ( $ctx, $field_id, $field, $value ) = @_;
-    my $static = $app->config->StaticWebPath;
+    my $static = $app->static_path;
     $value = '"[]"' if (!$value || $value eq '');
     eval "\$value = $value";
     if ($@) { $value = '"[]"'; }
@@ -673,7 +682,7 @@ sub type_radio_image {
     my $app = shift;
     my ( $ctx, $field_id, $field, $value ) = @_;
     my $out;
-    my $static = $app->config->StaticWebPath;
+    my $static = $app->static_path;
     $out .= "      <ul class=\"pkg\">\n";
     while ( $field->{values} =~ /\"([^\"]*)\":\"([^\"]*)\",?/g ) {
         my ($url,$label) = ($1,$2);
@@ -812,6 +821,46 @@ sub type_category {
     return $out;
 }
 
+sub type_folder_list {
+    my $app = shift;
+    my ( $ctx, $field_id, $field, $value ) = @_;
+    $ctx->stash('object_class', 'folder');
+    return type_category_list($app, @_);
+}
+
+sub type_category_list {
+    my $app = shift;
+    my ( $ctx, $field_id, $field, $value ) = @_;
+    $value = defined($value) ? $value: 0;
+    my @values = ref $value eq 'ARRAY' ? @$value : (0);
+    my $out;
+    my $obj_class = $ctx->stash('object_class') || 'category';
+
+    my $params = { };
+    $params->{blog_id} = $app->blog->id;
+    $params->{parent} = 0 unless $ctx->stash('show_children');
+
+    my @cats = MT->model($obj_class)->load( $params,
+                                            { sort => 'label' });
+    $out .= "      <select style=\"width: 300px;height:100px\" name=\"$field_id\" multiple=\"true\">\n";
+    foreach my $cat (@cats) {
+        my $found = 0;
+        foreach (@values) {
+            if ($cat->id == $_) {
+                $found = 1;
+            }
+        }
+        $out .=
+            "        <option value=\""
+          . $cat->id . "\" "
+          . ( $found ? " selected" : "" ) . ">"
+          . $cat->label
+          . "</option>\n";
+    }
+    $out .= "      </select>\n";
+    return $out;
+}
+
 sub type_folder {
     my $app = shift;
     my ( $ctx, $field_id, $field, $value ) = @_;
@@ -889,6 +938,34 @@ sub _hdlr_field_array_contains {
     return MT::Template::Context::_hdlr_pass_tokens_else(@_);
 }
 
+sub _hdlr_field_category_list {
+    my $plugin = shift;
+    my ( $ctx, $args, $cond ) = @_;
+    my $field     = $ctx->stash('field')
+      or return _no_field($ctx);
+    my $value = _get_field_value($ctx);
+    my @ids = split(/,/, $value);
+    my $class = $ctx->stash('obj_class');
+
+    my @categories = MT->model( $class )->load({ id => \@ids });
+    my $out = '';
+    my $vars = $ctx->{__stash}{vars};
+    my $glue = $args->{glue};
+    for (my $index = 0; $index <= $#categories; $index++) {
+        
+        local $vars->{__first__} = $index == 0;
+        local $vars->{__last__}  = $index == $#categories;
+        local $vars->{__odd__}   = $index % 2 == 1;
+        local $vars->{__even__}  = $index % 2 == 0;
+        local $vars->{__index__} = $index;
+        local $vars->{__size__}  = scalar(@categories);
+
+        $ctx->stash('category', $categories[$index]);
+        $out .= $ctx->slurp( $args, $cond ) . ($glue && $index< $#categories ? $glue : ''  );
+    }
+    return $out;
+}
+
 sub _get_field_value {
     my ($ctx) = @_;
     my $plugin_ns = $ctx->stash('plugin_ns');
@@ -906,6 +983,9 @@ sub _get_field_value {
     }
     else {
         $value = $plugin->get_config_value($field);
+    }
+    if (ref $value eq 'ARRAY') {
+        $value = join (',', @$value);
     }
     return $value;
 }
@@ -1157,9 +1237,10 @@ sub plugin_options {
 sub entry_search_api_prep {
     my $app = MT->instance;
     my ($terms, $args, $blog_id) = @_;
+    my $q = $app->can('query') ? $app->query : $app->param;
 
     $terms->{blog_id} = $blog_id if $blog_id;
-    $terms->{status} = $app->param('status') if ($app->param('status'));
+    $terms->{status} = $q->param('status') if ($q->param('status'));
 
     my $search_api = $app->registry("search_apis");
     my $api = $search_api->{entry};
@@ -1176,9 +1257,10 @@ sub entry_search_api_prep {
 
 sub list_entry_mini {
     my $app = shift;
+    my $q = $app->can('query') ? $app->query : $app->param;
 
-    my $blog_id  = $app->param('blog_id') || 0;
-    my $obj_type = $app->param('class') || 'entry';
+    my $blog_id  = $q->param('blog_id') || 0;
+    my $obj_type = $q->param('class') || 'entry';
     my $pkg      = $app->model($obj_type) or return "Invalid request: unknown class $obj_type";
 
     my $terms;
@@ -1200,8 +1282,8 @@ sub list_entry_mini {
             params   => {
                 panel_searchable => 1,
                 edit_blog_id     => $blog_id,
-                edit_field       => $app->param('edit_field'),
-                search           => $app->param('search'),
+                edit_field       => $q->param('edit_field'),
+                search           => $q->param('search'),
                 blog_id          => $blog_id,
             },
             code => sub {
@@ -1234,13 +1316,14 @@ sub list_entry_mini {
 
 sub select_entry {
     my $app = shift;
+    my $q = $app->can('query') ? $app->query : $app->param;
 
-    my $class = $app->param('class') || 'entry';
-    my $obj_id = $app->param('id')
+    my $class = $q->param('class') || 'entry';
+    my $obj_id = $q->param('id')
       or return $app->errtrans('No id');
     my $obj = MT->model($class)->load($obj_id)
       or return $app->errtrans( 'No entry #[_1]', $obj_id );
-    my $edit_field = $app->param('edit_field')
+    my $edit_field = $q->param('edit_field')
       or return $app->errtrans('No edit_field');
 
     my $plugin = MT->component('ConfigAssistant') or die "OMG NO COMPONENT!?!";
