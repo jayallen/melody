@@ -175,39 +175,39 @@ sub build_plugin_config_html {
     my $settings = $plugin->get_config_obj($scope);
     $plugin->load_config( \%plugin_param, $scope );
     if ( my $snip_tmpl =
-     $plugin->config_template( \%plugin_param, $scope ) )
+         $plugin->config_template( \%plugin_param, $scope ) )
     {
-    my $tmpl;
-    if ( ref $snip_tmpl ne 'MT::Template' ) {
-        $tmpl = MT->model('template')->new(
-        type   => 'scalarref',
-        source => ref $snip_tmpl
-        ? $snip_tmpl
-        : \$snip_tmpl
-        # TBD: add path for plugin template directory
-        );
+        my $tmpl;
+        if ( ref $snip_tmpl ne 'MT::Template' ) {
+            $tmpl = MT->model('template')->new(
+                type   => 'scalarref',
+                source => ref $snip_tmpl
+                ? $snip_tmpl
+                : \$snip_tmpl
+                # TBD: add path for plugin template directory
+                );
+        }
+        else {
+            $tmpl = $snip_tmpl;
+        }
+        
+        # Process template independent of $app to avoid premature
+        # localization (give plugin a chance to do L10N first).
+        $tmpl->param( blog_id => $app->blog->id ) if $app->blog;
+        $tmpl->param( \%plugin_param );
+        
+        $app->run_callbacks('plugin_template_param' . $plugin->id, 
+                            $app, $scope, $tmpl->param, $tmpl);
+        
+        $config_html = $tmpl->output()
+            or $config_html = "Error in configuration template: " . $tmpl->errstr;
+        $config_html = $plugin->translate_templatized($config_html)
+            if $config_html =~ m/<(?:__trans|mt_trans) /i;
     }
     else {
-        $tmpl = $snip_tmpl;
-    }
-
-    # Process template independent of $app to avoid premature
-    # localization (give plugin a chance to do L10N first).
-    $tmpl->param( blog_id => $app->blog->id ) if $app->blog;
-    $tmpl->param( \%plugin_param );
-    
-    $app->run_callbacks('plugin_template_param' . $plugin->id, 
-                $app, $scope, $tmpl->param, $tmpl);
-    
-    $config_html = $tmpl->output()
-        or $config_html = "Error in configuration template: " . $tmpl->errstr;
-    $config_html = $plugin->translate_templatized($config_html)
-        if $config_html =~ m/<(?:__trans|mt_trans) /i;
-            }
-    else {
-    
-    # don't list non-configurable plugins for blog scope...
-    next if $scope ne 'system';
+        
+        # don't list non-configurable plugins for blog scope...
+        return '' if $scope ne 'system';
     }
     return $config_html;
 }
@@ -304,7 +304,7 @@ sub build_plugin_table {
                   $app->static_path . $plugin->envelope . '/' . $doc_link;
             }
 
-        my $config_html = build_plugin_config_html($app, $plugin,$scope);
+            my $config_html = build_plugin_config_html($app, $plugin,$scope);
 
 # Removed for Melody - obsolete
 #            if ( $last_fld ne $fld ) {
@@ -320,7 +320,7 @@ sub build_plugin_table {
 #            }
 
             my $registry = $plugin->registry;
-        my $settings = $plugin->get_config_obj($scope);
+            my $settings = $plugin->get_config_obj($scope);
             my $row      = {
                 first                => $next_is_first,
                 plugin_name          => $plugin_name,
@@ -338,7 +338,7 @@ sub build_plugin_table {
                 plugin_key           => $plugin->key(),
                 plugin_config_link   => $plugin->config_link(),
                 plugin_config_html   => $config_html,
-        plugin_has_config    => $config_html ne '',
+                plugin_has_config    => $config_html ne '',
                 plugin_settings_id   => $settings->id,
                 plugin_id            => $plugin->id,
                 plugin_num           => $id,
