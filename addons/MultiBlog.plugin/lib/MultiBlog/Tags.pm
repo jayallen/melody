@@ -18,9 +18,7 @@ use warnings;
 
 ###########################################################################
 
-=head2 Template Tags
-
-=head3 MultiBlog
+=head2 MultiBlog
 
 Container tag that sets a blog context for the tags it contains. This context could be a single blog or multiple blogs.
 
@@ -76,7 +74,7 @@ last four entries for the blogs with IDs 1 through 6.
 
 ###########################################################################
 
-=head3 OtherBlog (deprecated)
+=head2 OtherBlog
 
 An deprecated alias for the MultiBlog tag.
 
@@ -142,7 +140,7 @@ sub MultiBlog {
 
 ###########################################################################
 
-=head3 MultiBlogLocalBlog
+=head2 MultiBlogLocalBlog
 
 A container tag that sets the immediate context inside of it to the local blog
 that is being published.
@@ -208,7 +206,7 @@ sub MultiBlogLocalBlog {
 
 ###########################################################################
 
-=head3 MultiBlogIfLocalBlog
+=head2 MultiBlogIfLocalBlog
 
 A conditional tag that will test for whether or not the local blog is the one
 currently in context inside of a MultiBlog tag.
