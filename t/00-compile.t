@@ -7,7 +7,7 @@ use warnings;
 use lib 't/lib', 'lib', 'extlib';
 use MT::Test;
 
-use Test::More tests => 180;
+use Test::More tests => 179;
 
 use_ok('MT::Bootstrap');
 use_ok('MT::ErrorHandler');
@@ -130,7 +130,7 @@ use_ok('MT::Util::Archive');
 use_ok('MT::Util::Archive::Tgz');
 use_ok('MT::Util::Archive::Zip');
 use_ok('MT::Util::Captcha');
-use_ok('MT::Util::LogProcessor');
+# use_ok('MT::Util::LogProcessor');
 use_ok('MT::Util::PerformanceData');
 use_ok('MT::Util::ReqTimer');
 
