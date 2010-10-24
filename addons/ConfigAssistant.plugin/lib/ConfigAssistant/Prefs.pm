@@ -4,12 +4,11 @@ use strict;
 
 sub apply {
     my $app = shift;
-    my $q = $app->can('query') ? $app->query : $app->param;
     my ($param) = @_;
+    my $q = $app->can('query') ? $app->query : $app->param;
 
     $app->validate_magic or return;
 
-    my $q = $app->can('query') ? $app->query : $app->param;
     my $blog = MT->model('blog')->load( $q->param('blog_id') );
     my $pid  = $q->param('pref_id');
 
@@ -30,9 +29,8 @@ sub apply {
 
 sub chooser {
     my $app     = shift;
-    my $q       = $app->can('query') ? $app->query : $app->param;
     my ($param) = @_;
-    my $q = $app->can('query') ? $app->query : $app->param;
+    my $q       = $app->can('query') ? $app->query : $app->param;
     my $blog    = MT->model('blog')->load( $q->param('blog_id') );
 
     $param ||= {};
