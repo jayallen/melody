@@ -22,9 +22,36 @@ sub edit {
     # to trigger autosave logic in main edit routine
     $param->{autosave_support} = 1;
 
+    my $original_revision;
     if ($id) {
         return $app->error( $app->translate("Invalid parameter") )
           if $obj->class ne $type;
+
+        if ( $blog->use_revision ) {
+            $original_revision = $obj->revision;
+            my $rn = $q->param('r');
+            if ( $rn != $obj->current_revision ) {
+                my $status_text = MT::Entry::status_text( $obj->status );
+                $param->{current_status_text} = $status_text;
+                $param->{current_status_label} = $app->translate( $status_text );
+                my $rev = $obj->load_revision( { rev_number => $rn } );
+                if ( $rev && @$rev ) {
+                    $obj = $rev->[0];
+                    my $values = $obj->get_values;
+                    $param->{$_} = $values->{$_} foreach keys %$values;
+                    $param->{loaded_revision} = 1;
+                }
+                $param->{rev_number} = $rn;
+                $param->{no_snapshot} = 1 if $q->param('no_snapshot');
+                $param->{missing_cats_rev} = 1
+                    if exists($obj->{__missing_cats_rev}) && $obj->{__missing_cats_rev};
+                $param->{missing_tags_rev} = 1
+                    if exists($obj->{__missing_tags_rev}) && $obj->{__missing_tags_rev};
+            }
+            $param->{rev_date} = format_ts( "%Y-%m-%d %H:%M:%S",
+                $obj->modified_on, $blog,
+                $app->user ? $app->user->preferred_language : undef );
+        }
 
         $param->{nav_entries} = 1;
         $param->{entry_edit}  = 1;
@@ -244,6 +271,13 @@ sub edit {
         if ( !$q->param('basename_manual') ) {
             $param->{'basename'} = '';
         }
+        $param->{'revision-note'} = $q->param('revision-note');
+        if ( $q->param('save_revision') ) {
+            $param->{'save_revision'} = 1;
+        }
+        else {
+            $param->{'save_revision'} = 0;
+        }
     }
     if ($blog) {
         $param->{file_extension} = $blog->file_extension || '';
@@ -425,6 +459,30 @@ sub edit {
         $param->{screen_class} = 'edit-page edit-entry';
     }
     $param->{sitepath_configured} = $blog && $blog->site_path ? 1 : 0;
+    if ( $blog->use_revision ) {
+        $param->{use_revision} = 1;
+    #TODO: the list of revisions won't appear on the edit screen.
+    #    $param->{revision_table} = $app->build_page(
+    #        MT::CMS::Common::build_revision_table(
+    #            $app,
+    #            object => $obj || $class->new,
+    #            param => {
+    #                template => 'include/revision_table.tmpl',
+    #                args     => {
+    #                    sort_order => 'rev_number',
+    #                    direction  => 'descend',
+    #                    limit      => 5,              # TODO: configurable?
+    #                },
+    #                revision => $original_revision
+    #                  ? $original_revision
+    #                  : $obj
+    #                    ? $obj->revision || $obj->current_revision
+    #                    : 0,
+    #            }
+    #        ),
+    #        { show_actions => 0, hide_pager => 1 }
+    #    );
+    }
     1;
 }
 
@@ -1119,14 +1177,8 @@ sub preview {
           || $col eq 'class'
           || $col eq 'meta'
           || $col eq 'comment_count'
-          || $col eq 'ping_count';
-        if ( $col eq 'basename' ) {
-            if (   ( !defined $q->param('basename') )
-                || ( $q->param('basename') eq '' ) )
-            {
-                $q->param( 'basename', $q->param('basename_old') );
-            }
-        }
+          || $col eq 'ping_count'
+          || $col eq 'current_revision';
         push @data,
           {
             data_name  => $col,
@@ -1134,7 +1186,7 @@ sub preview {
           };
     }
     for my $data (
-        qw( authored_on_date authored_on_time basename_manual basename_old category_ids tags include_asset_ids )
+        qw( authored_on_date authored_on_time basename_manual basename_old category_ids tags include_asset_ids save_revision revision-note )
       )
     {
         push @data,
@@ -1175,6 +1227,17 @@ sub preview {
     }
     $param{object_type}  = $type;
     $param{object_label} = $entry_class->class_label;
+
+    $param{diff_view} = $app->param('rev_numbers') || $app->param('collision');
+    $param{collision} = 1;
+    if(my @rev_numbers = split(/,/, $app->param('rev_numbers'))) {
+        $param{comparing_revisions} = 1;
+        $param{rev_a} = $rev_numbers[0];
+        $param{rev_b} = $rev_numbers[1];
+    }
+    $param{dirty} = $q->param('dirty') ? 1 : 0;
+
+
     if ($fullscreen) {
         return $app->load_tmpl( 'preview_entry.tmpl', \%param );
     }
@@ -1403,8 +1466,6 @@ $ao
 
     MT::Util::translate_naughty_words($obj);
 
-    $obj->modified_by( $author->id ) unless $is_new;
-
     $app->run_callbacks( 'cms_pre_save.' . $type, $app, $obj, $orig_obj )
       || return $app->error(
         $app->translate(
@@ -1412,6 +1473,10 @@ $ao
             $class->class_label, $app->errstr
         )
       );
+
+    # Setting modified_by updates modified_on which we want to do before
+    # a save but after pre_save callbacks fire.  
+    $obj->modified_by( $author->id ) unless $is_new;
 
     $obj->save
       or return $app->error(

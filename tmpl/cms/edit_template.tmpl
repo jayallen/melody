@@ -47,6 +47,13 @@
             <__trans phrase="An error occurred while trying to recover your saved [_1]." params="<mt:var name="object_label">">
         </mtapp:statusmsg>
     </mt:if>
+    <mt:if name="loaded_revision">
+        <mtapp:statusmsg
+            id="loaded_revision"
+            class="info">
+            <__trans phrase="Restored revision (Date:[_1])." params="<$mt:var name="rev_date" escape="html"$>">
+        </mtapp:statusmsg>
+    </mt:if>
     <mt:if name="saved">
         <mt:if name="error">
             <mtapp:statusmsg
@@ -104,6 +111,27 @@
     </mt:if>
 </mt:setvarblock>
 <mt:setvarblock name="related_content">
+<mt:if name="use_revision">
+<mtapp:widget
+    id="template-status-widget"
+    class="status-widget"
+    label="<__trans phrase="Status">">
+    <mt:if name="new_object">
+    <p class="zero-state"><__trans phrase="New Template"></p>
+    <mt:else>
+    <div class="revision-info">
+        <mt:if name="rev_date">
+        <p><__trans phrase="Revision: <strong>[_1]</strong>" params="<mt:var name="rev_date" escape="html">"></p>
+        <a href="javascript:void(0);"
+           onclick="openDialog(null,'list_revision','_type=<mt:var name="object_type" default="entry">&id=<$mt:var name="id"$ escape="url">&blog_id=<mt:var name="blog_id">&r=<mt:var name="rev_number" escape="html">');return false;"
+           class="mt-open-dialog" title="<__trans phrase="View revisions of this template">"><__trans phrase="View revisions"></a>
+        <mt:else>
+        <p class="zero-state"><__trans phrase="No revision(s) associated with this template"></p>
+        </mt:if>
+    </div>
+    </mt:if>
+</mtapp:widget>
+</mt:if>
     <mtapp:widget
         id="useful-links"
         label="<__trans phrase="Useful Links">">
@@ -507,6 +535,10 @@ TC.attachLoadEvent( init );
 <input type="hidden" name="rebuild" value="" />
 <input type="hidden" name="action_name" value="" />
 <input type="hidden" name="action_input" value="" />
+<mt:if name="use_revision">
+<input type="hidden" name="save_revision" id="save_revision" value="1" />
+<input type="hidden" name="current_revision" id="current_revision" value="<mt:var name="current_revision">" />
+</mt:if>
 <input type="hidden" name="return_args" value="<mt:var name="return_args" escape="html">" />
 <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
 
@@ -749,6 +781,15 @@ Wrapping is currently hard-coded active for demonstration via the text-area's mt
 </mt:if>
     </div>
 </div>
+
+<mt:if name="use_revision">
+<mtapp:setting
+    id="revision-note"
+    label="<__trans phrase="Change note">"
+    label_class="top-label">
+    <input type="text" name="revision-note" id="revision-note" value="<mt:var name="revision-note" escape="html">"<mt:if name="save_revision" eq="0"> style="display:none"</mt:if>/>
+</mtapp:setting>
+</mt:if>
 
 <mt:include name="include/actions_bar.tmpl" bar_position="bottom" hide_pager="1">
 </form>

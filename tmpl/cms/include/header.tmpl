@@ -64,7 +64,7 @@
 <$mt:var name="js_include"$>
 </head>
 
-<body id="<$mt:var name="screen_id"$>" class="<mt:if name="system_overview_nav">system<mt:else>blog blog-<$mt:var name="blog_id"$></mt:if> <$mt:var name="screen_type" default="main-screen"$> <mt:if name="screen_class"> <$mt:var name="screen_class"$></mt:if><mt:if name="new_object"> create-new</mt:if><mt:if name="mt_beta"> mt-beta</mt:if>">
+<body id="<$mt:var name="screen_id"$>" class="<mt:if name="system_overview_nav">system<mt:else>blog blog-<$mt:var name="blog_id"$></mt:if> <$mt:var name="screen_type" default="main-screen"$> <mt:if name="screen_class"> <$mt:var name="screen_class"$></mt:if><mt:if name="new_object"> create-new</mt:if><mt:if name="mt_beta"> mt-beta</mt:if><mt:if name="loaded_revision"> loaded-revision</mt:if>">
 <div id="modal-mask" class="autolayout-height-parent modal-mask hidden">
     <div></div>
 </div>
@@ -214,7 +214,7 @@
     <a href="javascript:void(0)" class="display-options-link" mt:command="open-flyout" mt:flyout="display-options-widget"><__trans phrase="Display Options"></a>
 </mt:if>
 <mt:if name="object_nav"><$mt:var name="object_nav"$></mt:if>
-    <h2 id="page-title"><$mt:var name="page_title"$></h2>
+    <h2 id="page-title"><$mt:var name="page_title"$><mt:if name="loaded_revision">: <em><__trans phrase="from Revision History"></em></mt:if></h2>
     <mt:if name="content_header">
         <$mt:var name="content_header"$>
     </mt:if>

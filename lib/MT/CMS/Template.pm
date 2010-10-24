@@ -6,8 +6,8 @@
 
 package MT::CMS::Template;
 
+use MT::Util qw( format_ts );
 use strict;
-
 
 ###This is put here to accommodate bug fix 256 which is
 ###a merge with Byrne Reese's Batch Template Options plugin
@@ -17,7 +17,7 @@ sub itemset_handler {
    my ($app,$type) = @_;
    $app->validate_magic or return;
    require MT::Template;
-   my @tmpls = $app->param('id');
+   my @tmpls = $app->query->param('id');
    for my $tmpl_id (@tmpls) {
        my $tmpl = MT::Template->load($tmpl_id) or next;
        $tmpl->build_type($type);
@@ -32,7 +32,6 @@ sub itemset_stc { return itemset_handler(@_, MT::PublishOption::ONDEMAND()); }
 sub itemset_dyn { return itemset_handler(@_, MT::PublishOption::DYNAMIC()); }
 sub itemset_dis { return itemset_handler(@_, MT::PublishOption::DISABLED()); }
 sub itemset_man { return itemset_handler(@_, MT::PublishOption::MANUALLY()); }
-
 
 sub edit {
     my $cb = shift;
@@ -59,6 +58,15 @@ sub edit {
     my $perms = $app->blog ? $app->permissions : $app->user->permissions;
     my $can_preview = 0;
 
+    if ( $q->param('reedit') ) {
+        $param->{'revision-note'} = $q->param('revision-note');
+        if ( $q->param('save_revision') ) {
+            $param->{'save_revision'} = 1;
+        }
+        else {
+            $param->{'save_revision'} = 0;
+        }
+    }
     if ($blog) {
         # include_system/include_cache are only applicable
         # to blog-level templates
@@ -67,9 +75,26 @@ sub edit {
     }
 
     if ($id) {
-        # FIXME: Template types should not be enumerated here
+        if ( $blog && $blog->use_revision ) {
+            my $rn = $q->param('r') || 0;
+            if ( $rn != $obj->current_revision ) {
+                my $rev = $obj->load_revision( { rev_number => $rn } );
+                if ( $rev && @$rev ) {
+                    $obj = $rev->[0];
+                    my $values = $obj->get_values;
+                    $param->{$_} = $values->{$_} foreach keys %$values;
+                    $param->{loaded_revision} = 1;
+                }
+                $param->{rev_number} = $rn;
+                $param->{rev_date} = format_ts( "%Y-%m-%d %H:%M:%S",
+                    $obj->modified_on, $blog,
+                    $app->user ? $app->user->preferred_language : undef );
+                $param->{no_snapshot} = 1 if $q->param('no_snapshot');
+            }
+        }
         $param->{nav_templates} = 1;
         my $tab;
+        # FIXME: Template types should not be enumerated here
         if ( $obj->type eq 'index' ) {
             $tab = 'index';
             $param->{template_group_trans} = $app->translate('index');
@@ -592,6 +617,26 @@ sub edit {
     $param->{can_preview} = 1
         if (!$param->{is_special}) && (!$obj || ($obj && ($obj->outfile || '') !~ m/\.(css|xml|rss|js)$/)) && (!exists $param->{can_preview});
 
+    if ( $blog && $blog->use_revision ) {
+        $param->{use_revision} = 1;
+        #TODO: the list of revisions won't appear on the edit screen.
+        #$param->{revision_table} = $app->build_page(
+        #    MT::CMS::Common::build_revision_table(
+        #        $app,
+        #        object => $obj || MT::Template->new,
+        #        param => {
+        #            template => 'include/revision_table.tmpl',
+        #            args     => {
+        #                sort_order => 'rev_number',
+        #                direction  => 'descend',
+        #                limit      => 5,              # TODO: configurable?
+        #            },
+        #            revision => $obj ? $obj->revision || $obj->current_revision : 0,
+        #        }
+        #    ),
+        #    { show_actions => 0, hide_pager => 1 }
+        #);
+    }
     1;
 }
 
@@ -1026,7 +1071,7 @@ sub preview {
         $q->param( 'build_type', $tmpl->build_type );
     }
     my $cols = $tmpl->column_names;
-    for my $col (@$cols) {
+    for my $col ( ( @$cols, 'save_revision', 'revision-note' ) ) {
         push @data,
           {
             data_name  => $col,
@@ -1992,6 +2037,10 @@ sub refresh_individual_templates {
         $set = $blog->template_set()
             if $blog;
     }
+
+    # force saving the revision when indiv. templates are refreshed.
+    $q->param('save_revision', 1);
+    $q->param('revision-note', $app->translate('Template Referesh'));
 
     require MT::DefaultTemplates;
     my $tmpl_list = MT::DefaultTemplates->templates($set) or return;

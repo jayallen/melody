@@ -2251,6 +2251,7 @@ sub cfg_system_general {
     $param{system_performance_logging} = $cfg->PerformanceLogging;
     $param{system_performance_logging_path} = $cfg->PerformanceLoggingPath;
     $param{system_performance_logging_threshold} = $cfg->PerformanceLoggingThreshold;
+    $param{track_revisions}      = $cfg->TrackRevisions;
     $param{saved}                = $app->param('saved');
     $param{error}                = $app->param('error');
     $param{screen_class}         = "settings-screen system-general-settings";
@@ -2263,6 +2264,7 @@ sub save_cfg_system_general {
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
     my $cfg = $app->config;
+    $app->config( 'TrackRevisions', $app->param('track_revisions') ? 1 : 0, 1 );
 
     # construct the message to the activity log
     my @meta_messages = (); 

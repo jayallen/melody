@@ -590,6 +590,10 @@ BEGIN {
             'SchwartzClientDeadline' => undef,
             'SchwartzFreeMemoryLimit' => undef,
             'SchwartzSwapMemoryLimit' => undef,
+
+            # Revision History
+            'TrackRevisions'     => { default => 1 },
+            'RevisioningDriver'  => { default => 'Local' },
         },
         upgrade_functions => \&load_upgrade_fns,
         applications      => {

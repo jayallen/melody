@@ -50,6 +50,8 @@ sub core_methods {
         'list'           => "${pkg}Common::list",
         'delete'         => "${pkg}Common::delete",
         'search_replace' => "${pkg}Search::search_replace",
+        'list_revision'  => "${pkg}Common::list_revision",
+        'save_snapshot'  => "${pkg}Common::save_snapshot",
 
         ## Edit methods
         'edit_role'   => "${pkg}User::edit_role",

@@ -319,6 +319,12 @@ sub construct {
             return $mpkg ? $object_types{$k} = $mpkg : undef;
         }
 
+        if ($k =~ m/^(.+):revision$/) {
+            my $ppkg = $pkg->model($1);
+            my $rpkg = $ppkg->revision_pkg;
+            return $rpkg ? $object_types{$k} = $rpkg : undef;
+        }
+
         my $model = $pkg->registry( 'object_types', $k );
         if ( ref($model) eq 'ARRAY' ) {
 

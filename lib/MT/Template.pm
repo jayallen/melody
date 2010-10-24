@@ -7,7 +7,9 @@
 package MT::Template;
 
 use strict;
-use base qw( MT::Object );
+use utf8;
+use open ':utf8';
+use base qw( MT::Object MT::Revisable );
 use MT::Util qw( weaken );
 
 sub NODE () { 'MT::Template::Node' }
@@ -22,18 +24,49 @@ __PACKAGE__->install_properties({
     column_defs => {
         'id' => 'integer not null auto_increment',
         'blog_id' => 'integer not null',
-        'name' => 'string(255) not null',
+        'name' => {
+            type => 'string',
+            size => '255',
+            not_null => 1,
+            label => 'Name',
+            revisioned => 1,
+        },
         'type' => 'string(25) not null',
-        'outfile' => 'string(255)',
-        'text' => 'text',
+        'outfile' => {
+            type => 'string',
+            size => '255',
+            label => 'Output File',
+            revisioned => 1
+        },
+        'text' => {
+            type => 'text',
+            label => 'Template Text',
+            revisioned => 1
+        },
         'linked_file' => 'string(255)',
         'linked_file_mtime' => 'string(10)',
         'linked_file_size' => 'integer',
-        'rebuild_me' => 'boolean',
-        'build_dynamic' => 'boolean',
+        'rebuild_me' => {
+            type => 'boolean',
+            label => 'Rebuild with Indexes',
+            revisioned => 1,
+        },
+        'build_dynamic' => {
+            type => 'boolean',
+            label => 'Dynamicity',
+            revisioned => 1
+        },
         'identifier' => 'string(50)',
-        'build_type' => 'smallint',
-        'build_interval' => 'integer',
+        'build_type' => {
+            type => 'smallint',
+            label => 'Build Type',
+            revisioned => 1
+        },
+        'build_interval' => {
+            type => 'integer',
+            label => 'Interval',
+            revisioned => 1,
+        },
 
         # meta properties
         'last_rebuild_time' => 'integer meta',
@@ -44,6 +77,8 @@ __PACKAGE__->install_properties({
         'cache_expire_event' => 'string meta',
         'cache_path' => 'string meta',
         'modulesets' => 'string meta',
+        # This is registered by MT::Revisable
+        # 'revision' => 'integer meta',
     },
     indexes => {
         blog_id => 1,

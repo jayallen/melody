@@ -1774,6 +1774,11 @@ sub check_type {
 		}
 	}
 
+    # handle schema updates for revision table
+    if ($class->isa('MT::Revisable')) {
+        $self->check_type($type . ':revision');
+    }
+
     if (my $result = $self->type_diff($type)) {
         if ($result->{fix}) {
             $self->add_step('core_fix_type', type => $type);

@@ -176,7 +176,7 @@ sub save {
     unless (
         $app->run_callbacks( 'cms_pre_save.' . $type, $app, $obj, $original ) )
     {
-        $param->{return_args} = $app->param('return_args');
+        $param->{return_args} = $q->param('return_args');
         return edit( $app,
             {
                 %$param,
@@ -1241,6 +1241,217 @@ sub not_junk_test {
     require MT::JunkFilter;
     MT::JunkFilter->filter($obj);
     $obj->is_junk ? 0 : 1;
+}
+
+sub build_revision_table {
+    my $app = shift;
+    my (%args) = @_;
+
+    my $q = $app->query;
+    my $type = $q->param('_type');
+    my $class = $app->model($type);
+    my $param = $args{param};
+    my $obj   = $args{object};
+    my $blog = $obj->blog || MT->model('blog')->load( $q->param('blog_id') ) || undef;
+    my $lang = $app->user ? $app->user->preferred_language : undef;
+
+    my $js = $param->{rev_js};
+    unless ( $js ) {
+        $js = "location.href='"
+          . $app->uri
+          . '?__mode=view&amp;_type='
+          . $type;
+        if ( my $id = $obj->id ) {
+            $js .= '&amp;id=' . $id;
+        }
+        if ( defined $blog ) {
+            $js .= '&amp;blog_id=' . $blog->id;
+        }
+    }
+    my %users;
+    my $hasher = sub {
+        my ( $rev, $row ) = @_;
+        if ( my $ts = $rev->created_on ) {
+            $row->{created_on_formatted} =
+              format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $ts, $blog, $lang );
+            $row->{created_on_time_formatted} =
+              format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $ts, $blog, $lang );
+            $row->{created_on_relative} =
+              relative_date( $ts, time, $blog );
+        }
+        if ( $row->{created_by} ) {
+            my $created_user = $users{ $row->{created_by} } ||=
+              MT::Author->load( $row->{created_by} );
+            if ($created_user) {
+                $row->{created_by} = $created_user->nickname;
+            }
+            else {
+                $row->{created_by} = $app->translate('(user deleted)');
+            }
+        }
+        my $revision = $obj->object_from_revision( $rev );
+        my $column_defs = $obj->column_defs;
+        #my @changed = map {
+        #    my $label = $column_defs->{$_}->{label};
+        #    $label ||= $_;
+        #    $app->translate( $label );
+        #} @{ $revision->[1] };
+        #$row->{changed_columns} = \@changed;
+        if ( ( 'entry' eq $type ) || ( 'page' eq $type ) ) {
+            $row->{rev_status} = $revision->[0]->status;
+        }
+        $row->{rev_js} = $js . '&amp;r=' . $row->{rev_number} . "'";
+        $row->{is_current} = $param->{revision} == $row->{rev_number};
+    };
+    return $app->listing(
+        {
+            type   => "$type:revision",
+            code   => $hasher,
+            terms  => { $class->datasource . '_id' => $obj->id },
+            source => $type,
+            params => { dialog => $q->param('dialog'), },
+            %$param
+        }
+    );
+}
+
+sub list_revision {
+    my $app = shift;
+    my $q = $app->query;
+    my $type = $q->param('_type');
+    my $class = $app->model($type);
+    my $id = $q->param('id');
+    my $rn = $q->param('r');
+    $id =~ s/\D//g;
+    my $obj = $class->load( $id )
+        or return $app->error($app->translate('Can\'t load [_1] #[_1].', $class->class_label, $id));
+    my $blog = $obj->blog || MT::Blog->load( $q->param('blog_id') ) || undef;
+
+    my $js = "parent.location.href='"
+      . $app->uri
+      . '?__mode=view&amp;_type='
+      . $type
+      . '&amp;id=' . $obj->id;
+    if ( defined $blog ) {
+        $js .= '&amp;blog_id=' . $blog->id;
+    }
+    my $revision = $rn
+        || (
+          $obj->has_meta('revision')
+        ? $obj->revision || $obj->current_revision
+        : $obj->current_revision
+        || 0
+        );
+    return build_revision_table( $app,
+        object => $obj,
+        param  => {
+            template => 'dialog/list_revision.tmpl',
+            args     => {
+                sort_order => 'rev_number',
+                direction => 'descend',
+            },
+            rev_js => $js,
+            revision => $revision,
+        }
+    );
+}
+
+sub save_snapshot {
+    my $app = shift;
+    my $q    = $app->query;
+    my $type = $q->param('_type');
+    my $id = $q->param('id');
+    my $param = {};
+
+    return $app->errtrans("Invalid request.")
+      unless $type;
+
+    $app->validate_magic() or return;
+
+    $app->run_callbacks( 'cms_save_permission_filter.' . "$type:revision", $app, $id )
+      || return $app->error(
+        $app->translate( "Permission denied: [_1]", $app->errstr() ) );
+
+    my $filter_result = $app->run_callbacks( 'cms_save_filter.' . "$type:revision", $app );
+    if ( !$filter_result ) {
+        my %param = (%$param);
+        $param{error}       = $app->errstr;
+        $param{return_args} = $q->param('return_args');
+        my $mode = 'view_' . $type;
+        if ( $app->handlers_for_mode($mode) ) {
+            return $app->forward( $mode, \%param );
+        }
+        return $app->forward( 'view', \%param );
+    }
+
+    my $class = $app->model($type)
+      or return $app->errtrans( "Invalid type [_1]", $type );
+    my $obj;
+    if ($id) {
+        $obj = $class->load($id)
+            or return $app->error($app->translate("Invalid ID [_1]", $id));
+    }
+    else {
+        $obj = $class->new;
+    }
+
+    my $original = $obj->clone();
+    my $names  = $obj->column_names;
+    my %values = map { $_ => ( scalar $q->param($_) ) } @$names;
+
+    if ( ( 'entry' eq $type ) || ( 'page' eq $type ) ) {
+        $app->_translate_naughty_words($obj);
+    }
+    delete $values{'id'} if exists( $values{'id'} ) && !$values{'id'};
+    $obj->set_values( \%values );
+    unless (
+        $app->run_callbacks( 'cms_pre_save.' . "$type:revision", $app, $obj, undef ) )
+    {
+        $param->{return_args} = $q->param('return_args');
+        return edit( $app,
+            {
+                %$param,
+                error => $app->translate( "Saving snapshot failed: [_1]", $app->errstr )
+            }
+        );
+    }
+    $obj->gather_changed_cols($original);
+    if ( exists $obj->{changed_revisioned_cols} ) {
+        my $col = 'max_revisions_' . $obj->datasource;
+        if ( my $blog = $obj->blog ) {
+            my $max = $blog->$col;
+            $obj->handle_max_revisions( $max );
+        }
+        my $revision = $obj->save_revision( $q->param('revision-note') );
+        $app->add_return_arg( r => $revision );
+        if ( $id ) {
+            my $obj_revision = $original->revision || 0;
+            unless ( $obj_revision ) {
+                $original->revision($revision - 1);
+                # hack to bypass instance save method
+                $original->{__meta}->save;
+            }
+            $original->current_revision($revision);
+            # call update to bypass instance save method
+            $original->update or return $original->error($original->errstr);
+        }
+
+        $app->run_callbacks( 'cms_post_save.' . "$type:revision", $app, $obj, undef )
+          or return $app->error( $app->errstr() );
+    
+        $app->add_return_arg( 'saved_snapshot' => 1 );
+    }
+    else {
+        $app->add_return_arg( 'no_snapshot' => 1 );
+    }
+
+    $app->add_return_arg( 'id' => $obj->id ) if !$original->id;
+    $app->call_return;
+}
+
+sub empty_dialog {
+    my $app = shift;
+    $app->build_page( 'dialog/empty_dialog.tmpl' );
 }
 
 1;

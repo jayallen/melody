@@ -89,4 +89,38 @@
 <input type="hidden" name="cc_license" value="<mt:var name="cc_license" escape="html">" />
     </mtapp:setting>
 
-    </fieldset>
+</fieldset>
+
+<fieldset>
+<h3><__trans phrase="Revision History"></h3>
+    <mt:unless name="master_revision_switch">
+        <mtapp:statusmsg
+            id="master_revision_off"
+            class="error">
+            <__trans phrase="Note: Revision History is currently disabled at the system level.">
+        </mtapp:statusmsg>
+    </mt:unless>
+    <mtapp:setting
+        id="use-revision"
+        class="has-option"
+        label="<__trans phrase="Revision history">"
+        content_class="field-content-text">
+        <label for="use-revision"><input type="checkbox" value="1" name="use_revision" id="use-revision"<mt:if name="use_revision"> checked="checked"</mt:if><mt:unless name="master_revision_switch"> disabled="disabled"</mt:unless> /> <__trans phrase="Enable revision history"></label>
+    </mtapp:setting>
+
+    <div id="use-revision-option" class="setting-option">
+        <mt:setvarblock name="revisions_entry_label">
+        <mt:if name="is_blog"><__trans phrase="Number of revisions per entry/page"><mt:else><__trans phrase="Number of revisions per page"></mt:if>
+        </mt:setvarblock>
+        <mtapp:setting
+            id="max_revisions_entry"
+            label="<mt:var name="revisions_entry_label">">
+           <input type="text" name="max_revisions_entry" id="max_revisions_entry" size="2" value="<mt:var name="max_revisions_entry" escape="html">" />
+        </mtapp:setting>
+        <mtapp:setting
+            id="max_revisions_template"
+            label="<__trans phrase="Number of revisions per template">">
+            <input type="text" name="max_revisions_template" id="max_revisions_template" size="2" value="<mt:var name="max_revisions_template" escape="html">" />
+        </mtapp:setting>
+    </div>
+</fieldset>

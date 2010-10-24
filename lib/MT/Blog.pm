@@ -66,6 +66,8 @@ __PACKAGE__->install_properties({
         'basename_limit' => 'smallint',
         'use_comment_confirmation' => 'boolean',
         'allow_commenter_regist' => 'boolean',
+        'use_revision' => 'boolean',
+
         ## Have to keep these around for use in mt-upgrade.cgi.
         'archive_url' => 'string(255)',
         'archive_path' => 'string(255)',
@@ -97,6 +99,8 @@ __PACKAGE__->install_properties({
         'page_layout' => 'string meta',
         'include_system' => 'string meta',
         'include_cache' => 'integer meta',
+        'max_revisions_entry' => 'integer meta',
+        'max_revisions_template' => 'integer meta',
     },
     meta => 1,
     audit => 1,
@@ -104,8 +108,8 @@ __PACKAGE__->install_properties({
         name => 1,
     },
     defaults => {
-        'custom_dynamic_templates' => 'none',
-    },
+        'custom_dynamic_templates' => 'none', 
+   },
     child_classes => ['MT::Entry', 'MT::Page', 'MT::Template', 'MT::Asset',
                       'MT::Category', 'MT::Folder', 'MT::Notification', 'MT::Log',
                       'MT::ObjectTag', 'MT::Association', 'MT::Comment',
@@ -196,6 +200,7 @@ sub set_defaults {
         server_offset => MT->config('DefaultTimezone') || 0,
         # something far in the future to force dynamic side to read it.
         children_modified_on => '20101231120000',
+        use_revision => 1,
     });
     return $blog;
 }
@@ -954,7 +959,7 @@ sub clone_with_children {
             { blog_id => $old_blog_id, type => 'widgetset' }
         );
         while (my $tmpl = $iter->()) {
-            my @old_widgets = split /,/, $tmpl->modulesets;
+            my @old_widgets = split(/,/, $tmpl->modulesets);
             my $new_tmpl = $tmpl->clone();
             $tmpl_processor->($new_blog_id, \$counter, $tmpl, $new_tmpl, \%tmpl_map);
             my @new_widgets;
@@ -1026,6 +1031,15 @@ sub smart_replace_fields {
     }
     my $val = $blog->nwc_replace_field;
     return defined($val) ? $val : MT->config->NwcReplaceField;
+}
+
+sub use_revision {
+    my $blog = shift;
+    return unless ref($blog);
+    return $blog->SUPER::use_revision( @_ )
+        if 0 < scalar( @_ );
+    return 0 unless MT->config->TrackRevisions;
+    return $blog->SUPER::use_revision;
 }
 
 #trans('blog')
@@ -1208,6 +1222,11 @@ The language for date and time display for this particular blog.
 
 The welcome message to be displayed on the main Editing Menu for this blog.
 Should contain all desired HTML formatting.
+
+=item * use_revision
+
+Returns 0 if TrackRevisions master switch in mt-config is off.
+Otherwise it returns the value stored in the column.
 
 =back
 
