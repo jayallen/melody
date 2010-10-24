@@ -18,7 +18,7 @@ use lib 't/lib';
 
 BEGIN {
     plan skip_all => "Configuration file $ENV{MT_CONFIG} not found"
-        if !-r "t/$ENV{MT_CONFIG}";
+        if ! $ENV{MT_CONFIG} or ! -r "t/$ENV{MT_CONFIG}";
 }
 
 use MT::Test qw(:testdb :time);

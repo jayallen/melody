@@ -317,9 +317,10 @@ sub init_memcached {
 sub init_newdb {
     my $pkg = shift;
     my ($cfg) = @_;
-
+print "CONFIG: $cfg\n";
     my $mt = MT->instance( $cfg ? ( Config => $cfg ) : () )
       or die "No MT object " . MT->errstr;
+    $mt->config->DBIRaiseError(1);
 
     my $types = MT->registry('object_types');
     $types->{$_} = MT->model($_)

@@ -3,6 +3,12 @@ use lib qw( t/lib lib extlib );
 use strict;
 use warnings;
 
+# BEGIN {
+# print "MT_CONFIG: $ENV{MT_CONFIG}\n";
+# exit;
+#     
+# }
+
 use MT::Test qw( :memcached :db :data :app );
 use Test::More tests => 7;
 

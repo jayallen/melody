@@ -150,6 +150,7 @@ sub fetch {
     $driver->start_query($sql, $stmt->{bind});
 
     my $sth = $orig_args->{no_cached_prepare} ? $dbh->prepare($sql) : $driver->_prepare_cached($dbh, $sql);
+defined $sth or print STDERR Carp::longmess();
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
 
@@ -249,6 +250,7 @@ sub select_one {
 
     $driver->start_query($sql, $bind);
     my $sth = $driver->_prepare_cached($dbh, $sql);
+defined $sth or print STDERR Carp::longmess();
     $sth->execute(@$bind);
     $sth->bind_columns(undef, \my($val));
     unless ($sth->fetch) {
