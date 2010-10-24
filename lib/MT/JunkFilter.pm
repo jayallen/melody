@@ -30,17 +30,7 @@ sub core_filters {
 sub filter {
     my $pkg       = shift;
     my ($obj)     = @_;
-    unless ($obj->isa("MT::Junkable")) {
-        MT->log({
-                 message  => MT->translate("Object is not junkable. Cannot be passed through a junk filter."),
-                 blog_id  => $obj->blog_id,
-                 level    => MT::Log::ERROR(),
-                 class    => 'system',
-                 category => 'junk_filter'                 
-                });
-        return undef;
-    }
-    my $blog      = MT->model('blog')->load( $obj->blog_id ) if $obj->blog_id;
+    my $blog      = MT::Blog->load( $obj->blog_id ) if $obj->blog_id;
     my $threshold = $blog ? $blog->junk_score_threshold : 0;
 
     # Have the item scored by plugin tests, save any log messages:
@@ -62,7 +52,6 @@ sub filter {
 
             # If the item has been moderated, we're done.
             # (Plugin has the responsibility of logging its moderate action.)
-            # TODO - check for existence of is_moderated flag
             return if ( $obj->is_moderated );
 
             $obj->junk_log( $obj->junk_log
@@ -155,7 +144,8 @@ sub score {
 
 sub task_expire_junk {
     my $pkg = shift;
-    my $iter    = MT->model('blog')->load_iter;
+    require MT::Blog;
+    my $iter    = MT::Blog->load_iter;
     my $removed = 0;
     my @blogs;
     my $blog;
@@ -163,6 +153,9 @@ sub task_expire_junk {
         push @blogs, $blog if $blog->junk_folder_expiry;
     }
     require MT::Util;
+    require MT::Comment;
+    require MT::TBPing;
+    require MT::Entry;
     foreach $blog (@blogs) {
         my ( $blog_id, $expiry_age ) =
           ( $blog->id, 86400 * $blog->junk_folder_expiry );
@@ -173,16 +166,7 @@ sub task_expire_junk {
             $ts[4] + 1,
             @ts[ 3, 2, 1, 0 ]
         );
-
-        my $types = MT->registry('object_types');
-        my $classes;
-        foreach (keys %$types) {
-            if (MT->model($_)->isa('MT::Junkable')) {
-                my $class = MT->model($_)->class_handler;
-                $classes->{ $class } = 1;
-            }
-        }
-        for my $class (keys %$classes) {
+        for my $class (qw(MT::Comment MT::TBPing)) {
             while (
                 my @junk = $class->load(
                     {
@@ -196,6 +180,23 @@ sub task_expire_junk {
             {
                 $removed++, $_->remove for @junk;
             }
+        }
+
+        while (
+            my @junk = MT::Entry->load(
+                {   status     => MT::Entry->JUNK(),
+                    blog_id    => $blog_id,
+                    created_on => [ '19700101000000', $ts ],
+                },
+                {   range => {
+                        created_on => 1,
+                        limit      => 1000
+                    }
+                }
+            )
+            )
+        {
+            $removed++, $_->remove for @junk;
         }
     }
     $pkg->_expire_commenter_registration;

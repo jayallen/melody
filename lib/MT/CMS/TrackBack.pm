@@ -156,12 +156,12 @@ sub list {
     require MT::TBPing;
     if ( ( $q->param('tab') || '' ) eq 'junk' ) {
         $q->param( 'filter',     'junk_status' );
-        $q->param( 'filter_val', MT::Junkable::JUNK() );
+        $q->param( 'filter_val', MT::TBPing::JUNK() );
         $param{filter_special} = 1;
         $param{filter_phrase}  = $app->translate('Junk TrackBacks');
     }
     else {
-        $terms{'junk_status'} = MT::Junkable::NOT_JUNK();
+        $terms{'junk_status'} = MT::TBPing::NOT_JUNK();
     }
 
     my $filter_key = $q->param('filter_key');

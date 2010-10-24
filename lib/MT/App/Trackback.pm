@@ -594,7 +594,7 @@ RSS
     }
     my $iter = MT::TBPing->load_iter(
         {   tb_id       => $tb->id,
-            junk_status => MT::Junkable::NOT_JUNK(),
+            junk_status => MT::TBPing::NOT_JUNK(),
             visible     => 1
         },
         \%arg

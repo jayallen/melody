@@ -11,8 +11,7 @@ use strict;
 use MT::Tag; # Holds MT::Taggable
 use MT::Summary; # Holds MT::Summarizable
 use base qw( MT::Object
-             MT::Taggable MT::Scorable MT::Summarizable 
-             MT::Junkable MT::Revisable );
+             MT::Taggable MT::Scorable MT::Summarizable MT::Revisable);
 
 use MT::Blog;
 use MT::Author;
@@ -242,11 +241,6 @@ sub status_int {
             $s eq 'review' ? REVIEW :
                 $s eq 'future' ? FUTURE :
                     $s eq 'junk' ? JUNK : undef;
-}
-
-sub junk {
-    $_[0]->status( JUNK );
-    MT::Junkable::junk(@_);
 }
 
 sub authored_on_obj {
