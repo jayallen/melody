@@ -11,6 +11,7 @@ sub _refresh_all_templates {
     # version 4.261), with some necessary changes to work with Theme Manager.
     my ($ts_id, $blog_id, $app) = @_;
     my $q = $app->can('query') ? $app->query : $app->param;
+
     my $t = time;
 
     my @id = ( scalar $blog_id );
@@ -229,7 +230,7 @@ sub template_filter {
 
     # If a new blog is being created/saved, we don't want to run this callback.
     return if ( 
-        eval{$q->param} 
+        eval{$q} 
         && eval{$q->param('__mode')} 
         && ($q->param('__mode') eq 'save') 
         && ($q->param('_type') eq 'blog')
@@ -238,7 +239,7 @@ sub template_filter {
     # context won't be set properly.
     return unless eval{$app->blog};
 
-    my $blog_id = $app->can('blog') 
+    my $blog_id = $q->can('blog') 
         ? $app->blog->id 
         : return; # Only work on blog-specific widgets and widget sets
 
@@ -312,7 +313,7 @@ sub template_set_change {
     # that templates are linked by default.
     my $tm   = MT->component('ThemeManager');
     my $mode = $tm->get_config_value('tm_mode', 'system');
-    if ($mode eq 'Production Mode') {
+    if ($mode eq 'Designer and Developer Mode') {
         # Link installed templates to theme files
         _link_templates(@_);
     }

@@ -26,7 +26,6 @@ sub _translate {
     # This is basically lifted right from MT::CMS::Template (from Movable Type
     # version 4.261), with some necessary changes to work with Theme Manager.
     my $c       = shift;
-    use Data::Dumper;
     my $handles = MT->request('l10n_handle') || {};
     my $h       = $handles->{ $c->id };
     unless ($h) {
@@ -49,9 +48,9 @@ sub _translate {
     # translations.
     my $app = MT->instance;
     my $q = $app->can('query') ? $app->query : $app->param;
-    # This first check for $app->param is necessary so that
-    # run-periodic-tasks doesn't throw errors.
-    if ( eval{$q->param} && $q->param('__mode') ) {
+    # This first check for $q is necessary so that run-periodic-tasks
+    # doesn't throw errors.
+    if ( eval{$q} && $q->param('__mode') ) {
         if ( $q->param('__mode') eq 'setup_theme' ) {
             # The user is applying a new theme.
             $c = find_theme_plugin( $q->param('theme_id') );

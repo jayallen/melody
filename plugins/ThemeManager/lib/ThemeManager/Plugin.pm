@@ -99,7 +99,7 @@ sub update_page_actions {
 }
 
 sub theme_dashboard {
-    my $app = MT::App->instance;
+    my $app = MT->instance;
     my $q = $app->can('query') ? $app->query : $app->param;
     # Since there is no Theme Dashboard at the system level, capture and
     # redirect to the System Dashboard, if necessary.
@@ -219,7 +219,7 @@ sub select_theme {
 
     my $app = shift;
     my $q = $app->can('query') ? $app->query : $app->param;
-
+    
     # If the user is applying a theme to many blogs, they've come from a list 
     # action, and the ID parameter is full of blog IDs. Pass these along to
     # the template.
@@ -299,6 +299,7 @@ sub select_theme {
 sub setup_theme {
     my $app = shift;
     my $q = $app->can('query') ? $app->query : $app->param;
+
     my $ts_id      = $q->param('theme_id');
     my $plugin_sig = $q->param('plugin_sig');
     
@@ -619,6 +620,7 @@ sub _make_thumbnail {
     # We want a custom thumbnail to display on the Theme Options About tab.
     my ($ts_id, $plugin) = @_;
     my $app = MT->instance;
+    my $q = $app->can('query') ? $app->query : $app->param;
     
     # Craft the destination path and URL.
     use File::Spec;
@@ -686,7 +688,9 @@ sub _check_thumbalizr_result {
 
 sub _make_mini {
     my $app = MT->instance;
-    my $tm     = MT->component('ThemeManager');
+    my $q = $app->can('query') ? $app->query : $app->param;
+    my $tm = MT->component('ThemeManager');
+
     use File::Spec;
     my $dest_path = File::Spec->catfile( _theme_thumb_path(), $app->blog->id.'-mini.jpg' );
     my $dest_url = caturl($app->static_path,'support','plugins',$tm->id,'theme_thumbs',
@@ -735,7 +739,7 @@ sub unlink_templates {
     my $q = $app->can('query') ? $app->query : $app->param;
     my $blog_id = $q->param('blog_id');
     my $iter = MT->model('template')->load_iter({ blog_id     => $blog_id,
-						  linked_file => '*', });
+                                                  linked_file => '*', });
     while ( my $tmpl = $iter->() ) {
         $tmpl->linked_file(undef);
         $tmpl->linked_file_mtime(undef);
@@ -782,6 +786,7 @@ sub xfrm_disable_tmpl_link {
     # them, because that "breaks the seal" and lets them modify the template,
     # so upgrades are no longer easy. 
     my ($cb, $app, $tmpl) = @_;
+    my $q = $app->can('query') ? $app->query : $app->param;
     my $linked = MT->model('template')->load(
                         { id          => $q->param('id'),
                           linked_file => '*', });
