@@ -5,7 +5,7 @@ use warnings;
 
 use lib 'lib';
 use lib 'extlib';
-use lib 't/inc/lib';
+use lib 't/lib';
 
 use Test::More;
 use File::Spec;
