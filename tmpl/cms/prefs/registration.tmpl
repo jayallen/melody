@@ -3,7 +3,7 @@
         id="allow_commenter_regist"
         label="<__trans phrase="User Registration">"
         content_class="field-content-text"
-        hint="<__trans phrase="Allow registration for Movable Type.">">
+        hint="<__trans phrase="Allow registration for Melody.">">
         <mt:if name="system_disallow_registration">
         <img src="<mt:var name="static_uri">images/status_icons/warning.gif" alt="<__trans phrase="Registration Not Enabled">" width="9" height="9" />
         <span class="alert-warning-inline"><__trans phrase="Note: Registration is currently disabled at the system level."></span>
@@ -27,7 +27,7 @@
         </mt:unless></mt:if></mt:unless>
         <mt:include name="include/anonymous_comment.tmpl">
 
-        <p><input type="checkbox" id="enabled_MovableType" name="enabled_MovableType" value="1"<mt:if name="enabled_MovableType"> checked="checked"</mt:if> /> <label for="enabled_MovableType">Movable Type <__trans phrase="Native"></label></p>
+        <p><input type="checkbox" id="enabled_MovableType" name="enabled_MovableType" value="1"<mt:if name="enabled_MovableType"> checked="checked"</mt:if> /> <label for="enabled_MovableType">Melody <__trans phrase="Native"></label></p>
 
         <mt:if name="cmtauth_loop">
         <mt:loop name="cmtauth_loop">
