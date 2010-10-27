@@ -285,6 +285,7 @@ sub build_plugin_table {
         my $icon = $app->static_path . 'images/plugin.gif';
 
         if ( my $plugin = $profile->{object} ) {
+            next unless $plugin->isa('MT::Plugin');
             my $plugin_icon;
             if ( $plugin->can('icon') && $plugin->icon ) {
                 $plugin_icon =

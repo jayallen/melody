@@ -1210,6 +1210,7 @@ sub init {
     $mt->init_config( \%param ) or return;
     $mt->init_lang_defaults(@_) or return; 
     require MT::Plugin;
+    $mt->find_addons()          or return;
     $mt->init_addons(@_)        or return;
     $mt->init_config_from_db( \%param ) or return;
     $mt->init_debug_mode;
@@ -1293,12 +1294,10 @@ sub upload_file_to_sync {
 }
 
 sub init_addons {
-    my $mt = shift;
-    my $cfg = $mt->config;
-    my @PluginPaths;
-
-    unshift @PluginPaths, File::Spec->catdir( $MT_DIR, 'addons' );
-    return $mt->_init_plugins_core({}, 1, \@PluginPaths);
+    my $mt     = shift;
+    my $cfg    = $mt->config;
+    my $addons = $mt->find_addons('pack');
+    return $mt->_init_plugins_core({}, 1, $addons);
 }
 
 sub init_plugins {
@@ -1310,208 +1309,137 @@ sub init_plugins {
 
     my $cfg          = $mt->config;
     my $use_plugins  = $cfg->UsePlugins;
-    my @PluginPaths  = $cfg->PluginPath;
     my $PluginSwitch = $cfg->PluginSwitch || {};
-    return $mt->_init_plugins_core($PluginSwitch, $use_plugins, \@PluginPaths);
+    my $plugins      = $mt->find_addons('plugin');
+    return $mt->_init_plugins_core($PluginSwitch, $use_plugins, $plugins);
 }
 
 sub _init_plugins_core {
     my $mt = shift;
-    my ($PluginSwitch, $use_plugins, $PluginPaths) = @_;
+    my ($PluginSwitch, $use_plugins, $plugins) = @_;
 
     my $timer;
     if ($mt->config->PerformanceLogging) {
         $timer = $mt->get_timer();
     }
-
-    foreach my $PluginPath (@$PluginPaths) {
-        my $plugin_lastdir = $PluginPath;
-        $plugin_lastdir =~ s![\\/]$!!;
-        $plugin_lastdir =~ s!.*[\\/]!!;
-        local *DH;
-        if ( opendir DH, $PluginPath ) {
-            my @p = readdir DH;
-          PLUGIN:
-            for my $plugin_dir (@p) {
-                next if ( $plugin_dir =~ /^\.\.?$/ || $plugin_dir =~ /~$/ );
-
-                my $load_plugin = sub {
-                    my ( $plugin, $sig ) = @_;
-                    die "Bad plugin filename '$plugin'"
-                      if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
-                    local $plugin_sig      = $sig;
-                    local $plugin_registry = {};
-                    $plugin = $1;
-                    if (
-                        !$use_plugins
-                        || ( exists $PluginSwitch->{$plugin_sig}
-                            && !$PluginSwitch->{$plugin_sig} )
-                      )
-                    {
-                        $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-                        $Plugins{$plugin_sig}{enabled}   = 0;
-                        return 0;
-                    }
-                    return 0 if exists $Plugins{$plugin_sig};
-                    $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-                    $timer->pause_partial if $timer;
-                    eval "# line " . __LINE__ . " " . __FILE__ . "\nrequire '".
-                        File::Spec->catdir( $plugin_full_path, $sig ) . "';";
-                    $timer->mark("Loaded plugin " . $sig) if $timer;
-                    if ($@) {
-                        $Plugins{$plugin_sig}{error} = $@;
-                        # Issue MT log within another eval block in the
-                        # event that the plugin error is happening before
-                        # the database has been initialized...
-                        eval {
-                            # line __LINE__ __FILE__
-                            require MT::Log;
-                            $mt->log(
-                                {
-                                    message => $mt->translate(
-                                        "Plugin error: [_1] [_2]", $plugin,
-                                        $Plugins{$plugin_sig}{error}
-                                    ),
-                                    class => 'system',
-                                    level => MT::Log::ERROR()
-                                }
-                            );
-                        };
-                        return 0;
-                    }
-                    else {
-                        if ( my $obj = $Plugins{$plugin_sig}{object} ) {
-                            $obj->init_callbacks();
+    foreach my $plugin (@$plugins) {
+        my $load_plugin = sub {
+            my ( $plugin, $sig ) = @_;
+            die "Bad plugin filename '$plugin'"
+                if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
+            local $plugin_sig      = $sig;
+            local $plugin_registry = {};
+            $plugin = $1;
+            if (
+                !$use_plugins
+                || ( exists $PluginSwitch->{$plugin_sig}
+                     && !$PluginSwitch->{$plugin_sig} )
+                )
+            {
+                $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
+                $Plugins{$plugin_sig}{enabled}   = 0;
+                return 0;
+            }
+            return 0 if exists $Plugins{$plugin_sig};
+            $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
+            $timer->pause_partial if $timer;
+            eval "# line " . __LINE__ . " " . __FILE__ . "\nrequire '".
+                File::Spec->catdir( $plugin_full_path, $sig ) . "';";
+            $timer->mark("Loaded plugin " . $sig) if $timer;
+            if ($@) {
+                $Plugins{$plugin_sig}{error} = $@;
+                # Issue MT log within another eval block in the
+                # event that the plugin error is happening before
+                # the database has been initialized...
+                eval {
+                    # line __LINE__ __FILE__
+                    require MT::Log;
+                    $mt->log(
+                        {
+                            message => $mt->translate(
+                                "Plugin error: [_1] [_2]", $plugin,
+                                $Plugins{$plugin_sig}{error}
+                                ),
+                            class => 'system',
+                            level => MT::Log::ERROR()
                         }
-                        else {
-
-                            # A plugin did not register itself, so
-                            # create a dummy plugin object which will
-                            # cause it to show up in the plugin listing
-                            # by it's filename.
-                            MT->add_plugin( {} );
-                        }
-                    }
-                    $Plugins{$plugin_sig}{enabled} = 1;
-                    return 1;
-                }; # end load_plugin sub
-
-                my @plugins;
-                # Legacy support when plugins were not 
-                # placed in their own directory
-                $plugin_full_path
-                    = File::Spec->catfile( $PluginPath, $plugin_dir );
-                if ( -f $plugin_full_path ) {
-                    push @plugins, {
-                        dir  => $PluginPath,
-                        file => $plugin_dir,
-                        path => $plugin_full_path,
-                        envelope => $plugin_lastdir,
-                    } if $plugin_full_path =~ /\.pl$/;
+                        );
+                };
+                return 0;
+            }
+            else {
+                if ( my $obj = $Plugins{$plugin_sig}{object} ) {
+                    $obj->init_callbacks();
                 }
                 else {
-                    # open and scan the directory for plugin files,
-                    # save them to load later. Report errors in
-                    # the activity log
-                    unless (opendir SUBDIR, $plugin_full_path) {
-                        my $msg = $mt->translate(
-                            "Bad directory found in plugin initialization: [_1]",
-                            $plugin_full_path
-                        );
-                        $mt->log({
-                            message => $msg,
-                            class => 'system',
-                            level => MT->model('log')->ERROR()
-                        });
-                        next;
-                    }
-
-                    my @plugin_files = readdir SUBDIR;
-                    closedir SUBDIR;
-                    for my $file (@plugin_files) {
-                        if ($file eq 'lib' || $file eq 'extlib') {
-                            my $plib = File::Spec->catdir( $plugin_full_path, $file );
-                            unshift @INC, $plib if -d $plib;
-                            next;
-                        }
-                        next if $file !~ /\.pl$/ && $file !~ /config\.yaml$/;
-                        my $plugin_file =  File::Spec->catfile( $plugin_full_path, $file );
-                        if ( -f $plugin_file ) {
-                            # Plugin is a file, add it to list for processing
-                            push @plugins, {
-                                base => $plugin_full_path,
-                                dir  => $plugin_dir,
-                                file => $file,
-                                # TODO: remove following comment if app is stable
-                                # Changed from $plugin_file because load_tmpl was failing
-                                path => $plugin_full_path,
-                                envelope => "$plugin_lastdir/" . $plugin_dir,
-                            };
-                        }
-                    }
-                    # All plugins have been found, now load them
-                    foreach my $plugin (@plugins) {
-                        if ($plugin->{file} =~ /\.pl$/) {
-                            # TODO - do NOT load plugin, .pl is incompatible with Melody
-                            # TODO - issue warning
-                            $plugin_envelope = $plugin->{envelope};
-                            $load_plugin->(
-                                $plugin->{path}, $plugin->{file}
-                                );
-                        } else {
-                            my $pclass =
-                                $plugin->{dir} =~ m/\.pack$/ ? 'MT::Component' : 'MT::Plugin';
-                                
-                            # Don't process disabled plugin config.yaml files.
-                            if (
-                                $pclass eq 'MT::Plugin'
-                                && (
-                                    !$use_plugins
-                                    || ( exists $PluginSwitch->{ $plugin->{dir} }
-                                         && !$PluginSwitch->{ $plugin->{dir} } )
-                                )
-                                )
-                            {
-                                $Plugins{ $plugin->{dir} }{full_path} = $plugin->{path};
-                                $Plugins{ $plugin->{dir} }{enabled}   = 0;
-                                next;
-                            }
-
-                            # TODO - the plugin signature cannot simply be the base directory
-                            #        in the event that there are multiple yaml files. Therefore
-                            #        the signature must become a conjunction of the directory and
-                            #        config.yaml file.
-                            #        To address this, the ultimate normalizer should be the
-                            #        id declared in the yaml.
-                            # See http://bugs.movabletype.org/?79933
-                            local $plugin_sig = $plugin->{dir} . '/' . $plugin->{file};
-                            next if exists $Plugins{ $plugin_sig };
-                            # TODO - the id needs to be yaml specific, not directory
-                            # TODO - the id needs to be reformulated from contents of yaml
-                            my $id = lc $plugin->{dir};
-                            $id =~ s/\.\w+$//;
-
-                            my $p = $pclass->new(
-                                {
-                                    id       => $id,
-                                    path     => $plugin->{base},
-                                    config   => $plugin->{file},
-                                    envelope => $plugin->{envelope}
-                                }
-                                );
-                            
-                            # rebless? based on config?
-                            $Plugins{$plugin_sig}{enabled} = 1;
-                            $plugin_envelope = $plugin->{envelope};
-                            $plugin_full_path = $plugin->{path};
-                            MT->add_plugin($p);
-                            $p->init_callbacks();
-                            next;
-                        }
-                    }
+                    
+                    # A plugin did not register itself, so
+                    # create a dummy plugin object which will
+                    # cause it to show up in the plugin listing
+                    # by it's filename.
+                    MT->add_plugin( {} );
                 }
             }
-            closedir DH;
+            $Plugins{$plugin_sig}{enabled} = 1;
+            return 1;
+        }; # end load_plugin sub
+        
+        if ($plugin->{file} =~ /\.pl$/) {
+            # TODO - do NOT load plugin, .pl is incompatible with Melody
+            # TODO - issue warning
+            $plugin_envelope = $plugin->{envelope};
+            $load_plugin->(
+                $plugin->{path}, $plugin->{file}
+                );
+        } else {
+            my $pclass =
+                $plugin->{type} eq 'pack' ? 'MT::Component' : 'MT::Plugin';
+            
+            # Don't process disabled plugin config.yaml files.
+            if (
+                $pclass eq 'MT::Plugin'
+                && (
+                    !$use_plugins
+                    || ( exists $PluginSwitch->{ $plugin->{dir} }
+                         && !$PluginSwitch->{ $plugin->{dir} } )
+                )
+                )
+            {
+                $Plugins{ $plugin->{dir} }{full_path} = $plugin->{path};
+                $Plugins{ $plugin->{dir} }{enabled}   = 0;
+                next;
+            }
+            
+            # TODO - the plugin signature cannot simply be the base directory
+            #        in the event that there are multiple yaml files. Therefore
+            #        the signature must become a conjunction of the directory and
+            #        config.yaml file.
+            #        To address this, the ultimate normalizer should be the
+            #        id declared in the yaml.
+            # See http://bugs.movabletype.org/?79933
+            local $plugin_sig = $plugin->{dir} . '/' . $plugin->{file};
+            next if exists $Plugins{ $plugin_sig };
+            # TODO - the id needs to be yaml specific, not directory
+            # TODO - the id needs to be reformulated from contents of yaml
+            my $id = lc $plugin->{dir};
+            $id =~ s/\.\w+$//;
+            
+            my $p = $pclass->new(
+                {
+                    id       => $id,
+                    path     => $plugin->{base},
+                    config   => $plugin->{file},
+                    envelope => $plugin->{envelope}
+                }
+                );
+            
+            # rebless? based on config?
+            $Plugins{$plugin_sig}{enabled} = 1;
+            $plugin_envelope = $plugin->{envelope};
+            $plugin_full_path = $plugin->{path};
+            MT->add_plugin($p);
+            $p->init_callbacks();
+            next;
         }
     }
 
@@ -1529,46 +1457,113 @@ my %addons;
 sub find_addons {
     my $mt = shift;
     my ($type) = @_;
-
     unless (%addons) {
-        my $addon_path = File::Spec->catdir( $MT_DIR, 'addons' );
-        local *DH;
-        if ( opendir DH, $addon_path ) {
-            my @p = readdir DH;
-            foreach my $p (@p) {
-                next if $p eq '.' || $p eq '..';
-                my $full_path = File::Spec->catdir( $addon_path, $p );
-                if ( -d $full_path ) {
-                    if ( $p =~ m/^(.+)\.(\w+)$/ ) {
-                        my $label = $1;
-                        my $id    = lc $1;
-                        my $type  = $2;
-                        if ( $type eq 'pack' ) {
-                            $label .= ' Pack';
-                        }
-                        elsif ( $type eq 'theme' ) {
-                            $label .= ' Theme';
-                        }
-                        elsif ( $type eq 'plugin' ) {
-                            $label .= ' Plugin';
-                        }
-                        push @{ $addons{$type} },
-                          {
-                            label    => $label,
-                            id       => $id,
-                            envelope => 'addons/' . $p . '/',
-                            path     => $full_path,
-                          };
-                    }
-                }
-            }
-        }
+        my @PluginPaths;
+        my $cfg = $mt->config;
+        unshift @PluginPaths, File::Spec->catdir( $MT_DIR, 'addons' );
+        unshift @PluginPaths, $cfg->PluginPath;
+        foreach my $PluginPath (@PluginPaths) {
+            __merge_hash( \%addons, $mt->scan_directory_for_addons( $PluginPath ) );
+        }      
     }
     if ($type) {
         my $addons = $addons{$type} ||= [];
         return $addons;
     }
     return 1;
+}
+
+sub scan_directory_for_addons {
+    my $mt = shift;
+    my ($PluginPath) = @_;
+    my $plugin_lastdir = $PluginPath;
+    $plugin_lastdir =~ s![\\/]$!!;
+    $plugin_lastdir =~ s!.*[\\/]!!;
+    local *DH;
+    my %plugins;
+    if ( opendir DH, $PluginPath ) {
+        my @p = readdir DH;
+      PLUGIN:
+        for my $plugin_dir (@p) {
+            next if ( $plugin_dir =~ /^\.\.?$/ || $plugin_dir =~ /~$/ );
+            # Legacy support when plugins were not 
+            # placed in their own directory
+            $plugin_full_path = File::Spec->catfile( $PluginPath, $plugin_dir );
+            if ( -f $plugin_full_path ) {
+                if ($plugin_full_path =~ /\.pl$/) {
+                    push @{ $plugins{'plugin'} }, {
+                        dir  => $PluginPath,
+                        file => $plugin_dir,
+                        path => $plugin_full_path,
+                        envelope => $plugin_lastdir,
+                    };
+                }
+            }
+            else {
+                # open and scan the directory for plugin files,
+                # save them to load later. Report errors in
+                # the activity log
+                unless (opendir SUBDIR, $plugin_full_path) {
+                    my $msg = $mt->translate(
+                        "Bad directory found in plugin initialization: [_1]",
+                        $plugin_full_path
+                        );
+                    $mt->log({
+                        message => $msg,
+                        class => 'system',
+                        level => MT->model('log')->ERROR()
+                             });
+                    next;
+                }
+                
+                my @plugin_files = readdir SUBDIR;
+                closedir SUBDIR;
+                for my $file (@plugin_files) {
+                    if ($file eq 'lib' || $file eq 'extlib') {
+                        my $plib = File::Spec->catdir( $plugin_full_path, $file );
+                        unshift @INC, $plib if -d $plib;
+                        next;
+                    }
+                    next if $file !~ /\.pl$/ && $file !~ /config\.yaml$/;
+                    my ($label,$type) = ( $plugin_dir =~ /^([^\.]+)\.?(\w+)?$/ );
+                    unless ($type) {
+                        if ($plugin_dir =~ /addons/) {
+                            $type = 'pack';
+                        } else {
+                            $type = 'plugin';
+                        }
+                    }
+                    if ( $type eq 'pack' ) {
+                        $label .= ' Pack';
+                    }
+                    elsif ( $type eq 'theme' ) {
+                        $label .= ' Theme';
+                    }
+                    elsif ( $type eq 'plugin' ) {
+                        $label .= ' Plugin';
+                    }
+                    my $plugin_file =  File::Spec->catfile( $plugin_full_path, $file );
+                    if ( -f $plugin_file ) {
+                        # Plugin is a file, add it to list for processing
+                        push @{ $plugins{$type} }, {
+                            label    => $label,     # used only by packs
+                            id       => lc($label), # used only by packs
+                            type     => $type,
+                            base     => $plugin_full_path,
+                            dir      => $plugin_dir,
+                            file     => $file,
+                            # TODO: remove following comment if app is stable
+                            # Changed from $plugin_file because load_tmpl was failing
+                            path     => $plugin_full_path,
+                            envelope => "$plugin_lastdir/" . $plugin_dir,
+                        };
+                    }
+                }
+            }
+        }
+        closedir DH;
+    }
+    return \%plugins;
 }
 
 *mt_dir = \&server_path;
