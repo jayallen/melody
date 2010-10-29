@@ -1,7 +1,42 @@
+/* @override http://melody.studiolift.com/melody/mt-static/melody/chromeless.css?v=0.9.24%20%28MT%204.34%2B%29 */
+
+
 #brand {
-    display: block;
-    width: 250px;
-    height: 73px;
-    margin: 30px auto 0 auto;
-    background: url('melody-logo-white.png') no-repeat;
+    display:block;
+    width:250px;
+    height:73px;
+    margin:30px auto 0 auto;
+    background:url('melody-logo-white-banner.png') no-repeat!important;
 }
+
+
+.br_4,
+body.dialog #container-inner,
+body.dialog #container-inner button,
+body.dialog #container-inner input.ti,
+body.dialog #container-inner input.pw { -moz-border-radius:4px; -webkit-border-radius:4px; border-radius:4px; }
+
+/* OLD STYLE body.dialog #container-inner { border:1px solid rgb(230,230,230); background:url('../images/chromeless/chromeless_bg_b.png') repeat-x bottom center; }*/
+body.dialog #container-inner { background:#89599A; color:#fff; border:2px solid #89599A; }
+body.dialog #container-inner #page-title { font-weight:bold; }
+body.dialog #container-inner a { color:#E1D6E6; }
+body.dialog #container-inner a:hover { color:#89599A; }
+body.dialog #container-inner .field-header { margin:0 0 5px; }
+body.dialog #container-inner .field-header label { font-size:13px; }
+body.dialog #container-inner .field input { border:2px solid #6B3081; font-family:Arial; font-size:14px; padding:8px; width:300px; }
+body.dialog #container-inner .field input:focus { border-color:#D8224F; }
+body.dialog #container-inner button { background:#D8224F; color:#fff; border:2px solid #D8224F; }
+body.dialog #container-inner button:hover {  }
+
+.dialog .actions-bar { margin:0 0 5px; }
+.dialog .actions-bar .actions a {background:none!important; background-color:#E1D6E6!important; color:#fff!important; -moz-border-radius:4px;-webkit-border-radius:4px;}
+.dialog .actions-bar .actions a:hover {}
+
+body.dialog #container-inner div#ctl, body.dialog #container-inner div#ctr, body.dialog #container-inner div#cbl, body.dialog #container-inner div#cbr {background:none;}
+
+body.chromeless { background:#6B3081; }
+body.chromeless-wide { background:#6B3081; }
+
+p.login {background:none!important;}
+
+.msg-info {color:#000;}

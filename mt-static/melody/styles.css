@@ -1,4 +1,8 @@
-/* Brand */
+/* @override 
+	http://melody.studiolift.com/melody/mt-static/melody/styles.css?v=0.9.22%20%28MT%204.34%2B%29
+	http://melody.studiolift.com/melody/mt-static/melody/styles.css?v=0.9.24%20%28MT%204.34%2B%29
+*/
+  /* Brand */
 .main-screen #brand {
     position: absolute;
     top: 0px;
@@ -9,7 +13,7 @@
     display: block;
     width: 150px;
     height: 41px;
-    background: url('melody-logo-black.jpg') no-repeat;
+    background: url('melody-logo-white-banner.png') no-repeat;
 }
 
 /* Redesigned Plugins Screen */
@@ -58,3 +62,5 @@
 .listing tr.superuser .user-status-enabled img {
   background-image: url(../images/status_icons/user-enabled-sysadmin.png);
 }
+
+
