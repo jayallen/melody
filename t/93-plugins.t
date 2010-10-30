@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 16;
+use Test::More tests => 11;
 
 use MT;
 use MT::Test qw( :app :db );
@@ -33,21 +33,17 @@ for my $sig ( keys %MT::Plugins ) {
 
 # plguins that really exist with the build
 ok (exists $plugins->{"MultiBlog"}, "MultiBlog exists");
-ok (exists $plugins->{"Textile"}, "Textile exists");
 ok (exists $plugins->{"Markdown"}, "Markdown exists");
 ok (exists $plugins->{"SmartyPants"}, "SmartyPants exists");
-ok (exists $plugins->{"Widget Manager Upgrade Assistant"}, "Widget Manager Upgrade Assistant exists");
 ok (exists $plugins->{"Configuration Assistant"}, "Config Assistant exists");
 ok (exists $plugins->{"Theme Exporter"}, "Theme Exporter exists");
 ok (exists $plugins->{"Theme Manager"}, "Theme Manager exists");
-ok (exists $plugins->{"PubSubHubbub"}, "PubSubHubbub exists");
+ok (exists $plugins->{"Simple Rich Text Editor"}, "Simple Rich Text Editor exists");
+ok (exists $plugins->{"DePoClean"}, "DePoClean exists");
 
 # These are not loading for some reason
 ok (exists $plugins->{"WXR Importer"}, "WXR Importer exists");
 ok (exists $plugins->{"TypePad AntiSpam"}, "TypePad AntiSpam exists");
-ok (exists $plugins->{"SpamLookup - Keyword Filter"}, "SpamLookup - Keyword Filter exists");
-ok (exists $plugins->{"SpamLookup - Link"}, "SpamLookup - Link exists");
-ok (exists $plugins->{"SpamLookup - Lookups"}, "SpamLookup - Lookups exists");
 
 # test plugins created by MT::Test
 ok (exists $plugins->{"Awesome"}, "Awesome exists");
