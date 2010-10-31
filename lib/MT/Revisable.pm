@@ -101,7 +101,7 @@ sub mt_presave_obj {
     my ($cb, $app, $obj, $orig) = @_;
 
     return 1 unless $app->isa('MT::App');
-    return 1 unless $app->param('save_revision');
+    return 1 unless $app->query->param('save_revision');
     
     $obj->gather_changed_cols($orig, $app);
     return 1 unless exists $obj->{changed_revisioned_cols};
