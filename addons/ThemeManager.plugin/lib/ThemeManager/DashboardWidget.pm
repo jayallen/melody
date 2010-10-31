@@ -1,5 +1,9 @@
 package ThemeManager::DashboardWidget;
 
+use ThemeManager::Util qw( theme_label theme_description theme_author_name 
+        theme_author_link theme_version theme_link theme_doc_link theme_docs 
+    );
+
 use strict;
 use MT;
 
@@ -15,13 +19,18 @@ sub widget {
                 use ConfigAssistant::Util;
                 my $plugin = ConfigAssistant::Util::find_theme_plugin($ts_id);
 
-                $param->{theme_label}       = ThemeManager::Util::theme_label($ts_id, $plugin);
-                $param->{theme_description} = ThemeManager::Util::theme_description($ts_id, $plugin);
-                $param->{theme_author_name} = ThemeManager::Util::theme_author_name($ts_id, $plugin);
-                $param->{theme_author_link} = ThemeManager::Util::theme_author_link($ts_id, $plugin);
-                $param->{theme_link}        = ThemeManager::Util::theme_link($ts_id, $plugin);
-                $param->{theme_doc_link}    = ThemeManager::Util::theme_docs($ts_id, $plugin);
-                $param->{theme_version}     = ThemeManager::Util::theme_version($ts_id, $plugin);
+                # Convert the saved YAML back into a hash.
+                my $yaml = YAML::Tiny->new;
+                my $theme_meta = YAML::Tiny->read_string( $app->blog->theme_meta );
+                $theme_meta = $theme_meta->[0];
+
+                $param->{theme_label}       = theme_label($theme_meta->{label}, $plugin);
+                $param->{theme_description} = theme_description($theme_meta->{description}, $plugin);
+                $param->{theme_author_name} = theme_author_name($theme_meta->{author_name}, $plugin);
+                $param->{theme_author_link} = theme_author_link($theme_meta->{author_link}, $plugin);
+                $param->{theme_link}        = theme_link($theme_meta->{theme_link}, $plugin);
+                $param->{theme_doc_link}    = theme_doc_link($theme_meta->{theme_docs}, $plugin);
+                $param->{theme_version}     = theme_version($theme_meta->{version}, $plugin);
                 $param->{theme_mini}        = ThemeManager::Plugin::_make_mini();
             },
             template => 'dashboard_widget.mtml',

@@ -2,7 +2,7 @@ package ThemeManager::TemplateInstall;
 
 use strict;
 use ConfigAssistant::Util qw( find_theme_plugin );
-use ThemeManager::Util;
+use ThemeManager::Util qw( prepare_theme_meta );
 use MT::Util qw(caturl dirify offset_time_list);
 use MT;
 
@@ -99,11 +99,9 @@ sub _refresh_all_templates {
             # set here, instead of below.
             _create_default_templates($ts_id, $blog);
 
-            if ($ts_id) {
-                $blog->template_set( $ts_id );
-                $blog->save;
-                $app->run_callbacks( 'blog_template_set_change', { blog => $blog } );
-            }
+            $blog->template_set( $ts_id );
+            $blog->save;
+            $app->run_callbacks( 'blog_template_set_change', { blog => $blog } );
 
             next BLOG;
         }
@@ -133,6 +131,7 @@ sub _create_default_templates {
     my $ts_id = shift;
     my $blog  = shift;
     my $app = MT->instance;
+    my $tm = MT->component('ThemeManager');
     my $curr_lang = $app->current_language;
     $app->set_language($blog->language);
 
@@ -140,7 +139,7 @@ sub _create_default_templates {
     my $tmpl_list = MT::DefaultTemplates->templates( $ts_id );
     if ( !$tmpl_list || (ref($tmpl_list) ne 'ARRAY') || (!@$tmpl_list) ) {
         $app->set_language($curr_lang);
-        return $blog->error( MT->translate("No default templates were found.") );
+        return $blog->error( $tm->translate("No default templates were found.") );
     }
 
     my $p = find_theme_plugin($ts_id);
@@ -317,6 +316,16 @@ sub template_set_change {
         # Link installed templates to theme files
         _link_templates(@_);
     }
+
+    # Save the meta about this theme to the DB. This is particularly
+    # important in two cases:
+    # 1) When a user might uninstall a theme. We want things to (basically)
+    #    continue working as expected.
+    # 2) Save the theme version, in particular, so that when upgrading to
+    #    the new version of a theme the user doesn't falsely think that
+    #    they've already upgraded (as is the case with dynamic display of
+    #    the version.)
+    _save_theme_meta(@_);
 }
 
 sub _new_blog_template_set_language {
@@ -379,6 +388,8 @@ sub _set_module_caching_prefs {
         or return;
     my $tmpls = MT->app->registry( 'template_sets',$set_name,'templates' );
     foreach my $t (qw( module widget )) {
+        # Give up if there are no templates that match
+        next unless eval { %{ $tmpls->{$t} } };
         foreach my $m ( keys %{ $tmpls->{$t} } ) {
             if ($tmpls->{$t}->{$m}->{cache}) {
                 my $tmpl = MT->model('template')->load({
@@ -410,7 +421,10 @@ sub _set_archive_map_publish_types {
     my $set = MT->app->registry( 'template_sets', $set_name )
         or return;
     my $tmpls = MT->app->registry( 'template_sets',$set_name,'templates' );
+    my $tm = MT->component('ThemeManager');
     foreach my $a (qw( archive individual )) {
+        # Give up if there are no templates that match
+        next unless eval { %{ $tmpls->{$a} } };
         foreach my $t ( keys %{ $tmpls->{$a} } ) {
             foreach
                 my $m ( keys %{ $tmpls->{$a}->{$t}->{mappings} } )
@@ -431,9 +445,15 @@ sub _set_archive_map_publish_types {
                     $tm->build_type( $map->{build_type} );
                     $tm->is_preferred( $map->{preferred} );
                     $tm->save()
-                        or MT->log(
-                            { message => "Could not update template map for template $t." }
-                        );
+                        or MT->log({
+                            level   => MT->model('log')->ERROR(),
+                            blog_id => $blog->id,
+                            message => $tm->translate(
+                                "Could not update template map for '
+                                . 'template [_1].", 
+                                $t
+                            ),
+                        });
                 }
             }
         }
@@ -449,6 +469,11 @@ sub _set_index_publish_type {
         or return;
     my $tmpls = MT->app->registry( 'template_sets',$set_name,'templates' );
     
+    # Give up if there are no templates that match
+    return unless eval { %{ $tmpls->{index} } };
+
+    my $tm = MT->component('ThemeManager');
+
     foreach my $t ( keys %{ $tmpls->{index} } ) {
         if ( $tmpls->{index}->{$t}->{build_type} ) {
             my $tmpl = MT->model('template')->load({
@@ -458,9 +483,14 @@ sub _set_index_publish_type {
             return unless $tmpl;
             $tmpl->build_type( $tmpls->{index}->{$t}->{build_type} );
             $tmpl->save()
-                or MT->log(
-                    { message => "Could not update template map for template $t." }
-                );
+                or MT->log({
+                    level   => MT->model('log')->ERROR(),
+                    blog_id => $blog->id,
+                    message => $tm->translate(
+                        "Could not update template map for template [_1].", 
+                        $t
+                    ),
+                });
         }
     }
 }
@@ -475,6 +505,7 @@ sub _refresh_system_custom_fields {
     my ( $blog ) = @_;
     return unless MT->component('Commercial');
 
+    my $tm = MT->component('ThemeManager');
     my $set_name = $blog->template_set or return;
     my $set = MT->app->registry( 'template_sets', $set_name )
         or return;
@@ -493,8 +524,9 @@ sub _refresh_system_custom_fields {
             MT->log({
                     level   => MT->model('log')->ERROR(),
                     blog_id => $field_scope,
-                    message => MT->translate(
-                        'Could not install custom field [_1]: field attribute [_2] is required',
+                    message => $tm->translate(
+                        'Could not install custom field [_1]: field '
+                        . 'attribute [_2] is required',
                         $field_id,
                         $required,
                     ),
@@ -513,7 +545,7 @@ sub _refresh_system_custom_fields {
             MT->log({
                     level   => MT->model('log')->WARNING(),
                     blog_id => $field_scope,
-                    message => MT->translate(
+                    message => $tm->translate(
                         'Could not install custom field [_1] on blog [_2]: '
                           .'the blog already has a field [_1] with a '
                           .'conflicting type',
@@ -524,8 +556,8 @@ sub _refresh_system_custom_fields {
         }
 
         $field_obj = MT->model('field')->new;
-        use Data::Dumper;
-        MT->log("Setting fields: " . Dumper(%field));
+        #use Data::Dumper;
+        #MT->log("Setting fields: " . Dumper(%field));
         $field_obj->set_values({
                 blog_id  => $field_scope,
                 name     => $field_name,
@@ -651,6 +683,19 @@ sub _install_default_content {
     }
 }
 
+sub _save_theme_meta {
+    # When a new theme is being applied, save the theme meta for easy use later.
+    my ($cb, $param ) = @_;
+    my $blog = $param->{blog} or return;
+    my $ts_id = $blog->template_set or return;
+    my $set = MT->app->registry( 'template_sets', $ts_id )
+        or return;
+
+    # Save the data to the theme_meta meta field.
+    $blog->theme_meta( prepare_theme_meta($ts_id) );
+    $blog->save;
+}
+
 sub xfrm_add_language {
     # When a user is creating a new blog, we need to get in and update the
     # selections with language options. (and maybe others, in the future?) This
@@ -663,7 +708,7 @@ sub xfrm_add_language {
 <script type="text/javascript">
 $(document).ready( function() {
     // Expand upon the Template Sets dropdown with a visual chooser.
-    $('#template_set-field .field-content').append('<div class="hint">Select a theme template set to create a new blog with, or use the <a href="javascript:void(0)" onclick="return openDialog(false, \'select_theme\')">visual chooser</a>.</div>');
+    $('#template_set-field .field-content').append('<div class="hint"><__trans phrase="Select a theme template set to create a new blog with, or use the"> <a href="javascript:void(0)" onclick="return openDialog(false, \'select_theme\')"><__trans phrase="visual chooser"></a>.</div>');
     // Add an ID to the template set dropdown just to make things easier.
     $('#template_set-field select').attr('id', 'template_set');
     
@@ -683,7 +728,7 @@ $(document).ready( function() {
     // Build the blog_language field and place it after the
     // template_set dropdown.
     $('#template_set-field').after( $('<div id="template_set_language-field" class="field field-left-label pkg hidden"></div>') );
-    $('#template_set_language-field').html('<div class="field-inner"><div class="field-header"><label id="template_set_language-label" for="template_set_language">Template Set Language</label></div><div class="field-content"><select name="template_set_language"></select><div class="hint">Translate templates to the selected language.</div></div></div></div>');
+    $('#template_set_language-field').html('<div class="field-inner"><div class="field-header"><label id="template_set_language-label" for="template_set_language">Template Set Language</label></div><div class="field-content"><select name="template_set_language"></select><div class="hint"><__trans phrase="Translate templates to the selected language."></div></div></div></div>');
 
     $('#template_set-field select').click( function() {
         // By default, hide the language field for all template sets. No reason
@@ -712,7 +757,7 @@ $(document).ready( function() {
     });
     
     // Offer an explanation of what the Blog Language selection is.
-    $('#blog_language-field .field-content').append('<div class="hint">The blog language controls date and time display.</div>');
+    $('#blog_language-field .field-content').append('<div class="hint"><__trans phrase="The blog language controls date and time display.</div>">');
 });
 </script>
 HTML
