@@ -382,9 +382,16 @@ sub as_html {
     my $asset   = shift;
     my ($param) = @_;
     my $fname   = $asset->file_name;
-    my $app     = MT->instance;
-    my $is_cf_edit = (   $app->isa('MT::App')
-                      && $app->query->param('edit_field') =~ /^customfield/);
+    my $is_cf_edit = eval {
+        # FIXME Wrapped in an eval because:
+        #   1) It better highlights a call from the object layer
+        #      to the application layer that should probably be 
+        #      reviewed for soundness.
+        #
+        #   2) The call below ends in a fatal error unless the
+        #      current instances in a MT::App subclass
+        MT->instance->query->param('edit_field') =~ m/^customfield/;
+    };
     require MT::Util;
     my $text = sprintf '<a href="%s">%s</a>',
         MT::Util::encode_html($asset->url),
