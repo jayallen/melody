@@ -97,6 +97,7 @@ sub is_revisioned_column {
     return 1 if $defs->{$col} && exists $defs->{$col}{revisioned};
 }
 
+# TODO Review mt_presave_obj to determine if misplaced (MT::CMS::Common?)
 sub mt_presave_obj {
     my ($cb, $app, $obj, $orig) = @_;
 
@@ -125,6 +126,9 @@ sub mt_presave_obj {
     return 1;
 }
 
+# TODO Review mt_postsave_obj to determine if misnamed/misplaced (MT::CMS::Common?). 
+# TODO Is this *really* specific to MT::App subclasses? Do you need an MT::App $app to have MT track your revisions?
+# Also what is line 136 doing with that alternation? Useless...
 sub mt_postsave_obj {
     my ($cb, $app, $obj, $orig) = @_;
     
@@ -140,6 +144,7 @@ sub mt_postsave_obj {
         my $revision = $obj->save_revision( $app->param('revision-note') );
         $obj->current_revision($revision);
         # call update to bypass instance save method
+        # TODO: Review this.  We usually do $obj->SUPER::save no?
         $obj->update or return $obj->error($obj->errstr);
         if ( $obj->has_meta('revision') ) {
             $obj->revision( $revision );
