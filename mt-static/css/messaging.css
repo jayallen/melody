@@ -80,16 +80,16 @@ body#system-check .msg-info {
 
 .debug-panel {
     width: 100%;
-    border-top: 1px dotted #f55;
+/*    border-top: 1px dotted #f55;*/
     margin-top: 5px;
-    background-color: #daa;
+/*    background-color: #daa;*/
     text-align: left;
 }
 .debug-panel h3 {
     padding: 5px;
     font-size: 12px;
     margin: 0;
-    background-color: #f55;
+/*    background-color: #f55;*/
     color: #fff;
 }
 
