@@ -1325,6 +1325,8 @@ sub _init_plugins_core {
     if ($mt->config->PerformanceLogging) {
         $timer = $mt->get_timer();
     }
+
+    my @deprecated_perl_init = ();
     foreach my $plugin (@$plugins) {
         my $load_plugin = sub {
             my ( $plugin, $sig ) = @_;
@@ -1387,26 +1389,16 @@ sub _init_plugins_core {
             return 1;
         }; # end load_plugin sub
         
+        # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
         if ($plugin->{file} =~ /\.pl$/) {
-            # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
-            my $depmsg = MT->translate(
-                "You are using a plugin ([_1]) that uses a 
-                deprecated plugin file format (.pl)", $plugin->{file}
-            );
-            require MT::Log;
-            MT->log({
-                message  => $depmsg,
-                class    => 'system',
-                category => 'deprecation',
-                level    => MT::Log::INFO(),
-            });
-
+            push( @deprecated_perl_init, $plugin );
             $plugin_envelope = $plugin->{envelope};
             $plugin_full_path = $plugin->{path};
             $load_plugin->(
                 $plugin->{path}, $plugin->{file}
             );
-        } else {
+        }
+        else {
             my $pclass =
                 $plugin->{type} eq 'pack' ? 'MT::Component' : 'MT::Plugin';
             
@@ -1457,6 +1449,13 @@ sub _init_plugins_core {
             next;
         }
     }
+    
+    # FIXME See _perl_init_plugin_warnings() below for more details
+    if ( @deprecated_perl_init ) {
+        MT->add_callback( 'post_init', 1, undef, sub {
+            MT->_perl_init_plugin_warnings( @deprecated_perl_init );
+        });
+    }
 
     # Reset the Text_filters hash in case it was preloaded by plugins by
     # calling all_text_filters (Markdown in particular does this).
@@ -1465,6 +1464,76 @@ sub _init_plugins_core {
     %Text_filters = ();
 
     1;
+}
+
+###
+### FIXME Handle perl plugin deprecation properly
+###
+### This was a quickly cobbled together solution to preserve a good
+### feature gone horribly wrong: With EACH load of the application
+### ONE log message PER deprecated plugin would be generated. Do the math.
+# If we have deprecated plugins, we definitely warn them. Question is:
+#                           HOW LOUDLY?!?!?!
+#
+# Additional note: This had to be done post_init because
+# the MT::Session properties had not yet been initialized
+sub _perl_init_plugin_warnings {
+    my $cb = shift;
+    my @deps = @_;
+    my $warn_msg = sub {
+        return MT->translate(
+             "You are using a plugin ([_1]) that uses a "
+            ."deprecated plugin file format (.pl)", (shift)->{file}
+        );
+    };
+
+    # We definitely complain to STDERR every time for each plugin
+    print STDERR $warn_msg->($_)."\n" foreach @deps;
+
+    # We need to be more sensitive about the activity log...
+    # Get the session storing the last warning for perl-init plugins
+    # If it's over a day old, it doesn't exist.
+    require MT::Session;
+    my $sess_terms = { 
+        id   => 'Deprecation warning: Perl initialized plugins',
+        kind => 'DW ',
+    };
+    my $recent_warning
+        = MT::Session::get_unexpired_value( 86400, $sess_terms, {} );
+
+    # ISSUE A NEW WARNING IF:
+    #  -- No recent warning was found, OR
+    #  -- We find a perl-init'd plugin not recorded in most recent warn
+    my $needs_warning = ! $recent_warning;
+    $needs_warning  ||= grep { ! $recent_warning->get( $_->{envelope} ) 
+                                } @deps;
+
+    if ( $needs_warning ) {
+        my $dep_plugin_log_warn = sub {
+            require MT::Log;
+            MT->log({
+                message  => $warn_msg->( shift ),
+                class    => 'system',
+                category => 'deprecation',
+                level    => MT::Log::WARNING(),
+            });
+        };
+        # Reuse recent warning record or create a new session
+        $recent_warning ||= MT::Session->new();
+        $recent_warning->set_values( $sess_terms );
+        # $recent_warning->data( undef );
+        $recent_warning->start( time );
+        foreach my $p ( @deps ) {
+            $dep_plugin_log_warn->( $p );
+            $recent_warning->set( $p->{envelope}, ( $p->{label} || $p->{id} ))
+        }
+        unless ( $recent_warning->save ) {
+            warn "Could not record recent warning about "
+                ."perl initialized plugins : "
+                .($recent_warning->errstr||'Unknown error');
+        }
+    }
+
 }
 
 my %addons;

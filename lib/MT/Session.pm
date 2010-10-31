@@ -141,6 +141,10 @@ Active user sessions are held in 'US' records.
 The cached contents of the newsbox (top right of MT's welcome screen)
 is held in the I<single> record of kind 'NW'.
 
+=item DW
+
+At least temporarily, this is information about the latest deprecation warnings. Warnings are only sent out every 24 hours (again, for now...). There can be more than one of these but only one of a certain type (e.g. plugin deprecations, tag deprecations, etc).
+
 =back
 
 =head1 METHODS
