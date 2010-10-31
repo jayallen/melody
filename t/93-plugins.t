@@ -40,6 +40,7 @@ ok (exists $plugins->{"Theme Exporter"}, "Theme Exporter exists");
 ok (exists $plugins->{"Theme Manager"}, "Theme Manager exists");
 ok (exists $plugins->{"Simple Rich Text Editor"}, "Simple Rich Text Editor exists");
 ok (exists $plugins->{"DePoClean"}, "DePoClean exists");
+ok (exists $plugins->{"Open Melody Community Feedback"}, "Open Melody Community Feedback exists");
 
 # These are not loading for some reason
 ok (exists $plugins->{"WXR Importer"}, "WXR Importer exists");
