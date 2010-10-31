@@ -1385,12 +1385,24 @@ sub _init_plugins_core {
         }; # end load_plugin sub
         
         if ($plugin->{file} =~ /\.pl$/) {
-            # TODO - do NOT load plugin, .pl is incompatible with Melody
-            # TODO - issue warning
+            # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
+            my $depmsg = MT->translate(
+                "You are using a plugin ([_1]) that uses a 
+                deprecated plugin file format (.pl)", $plugin->{file}
+            );
+            require MT::Log;
+            MT->log({
+                message  => $depmsg,
+                class    => 'system',
+                category => 'deprecation',
+                level    => MT::Log::INFO(),
+            });
+
             $plugin_envelope = $plugin->{envelope};
+            $plugin_full_path = $plugin->{path};
             $load_plugin->(
                 $plugin->{path}, $plugin->{file}
-                );
+            );
         } else {
             my $pclass =
                 $plugin->{type} eq 'pack' ? 'MT::Component' : 'MT::Plugin';
