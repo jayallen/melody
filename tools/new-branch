@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [[ -z "$*" ]]; then
+    echo "Usage: $(basename $0) NEW_BRANCHNAME"
+    exit
+fi
+
+REMOTE=$(git remote -v | egrep "openmelody/melody.git \(fetch\)" | awk '{print $1}')
+
+git checkout -b "$*" $REMOTE/master
+echo -n "Updating branch with latest Melody changes..."
+git pull
