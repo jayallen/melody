@@ -1,0 +1,9 @@
+id: MelodyFeedback
+key: MelodyFeedback
+name: Open Melody Community Feedback
+description: Adds a GetSatisfaction feedback tab to the application for interacting with the Melody community
+author_name: The Open Melody Software Group
+author_link: http://openmelody.org/
+version: 0.1
+callbacks:
+  MT::App::CMS::template_output: $MelodyFeedback::Melody::Feedback::cb_insert_tab

@@ -63,3 +63,4 @@ meta.t
 mt_cms_blog.t
 mt_cms_tag.t
 mt_cms_tools.t
+plugin-melody-feedback.t
