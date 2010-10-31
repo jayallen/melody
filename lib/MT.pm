@@ -1372,12 +1372,113 @@ sub _init_plugins_core {
                     $obj->init_callbacks();
                 }
                 else {
-                    
-                    # A plugin did not register itself, so
-                    # create a dummy plugin object which will
-                    # cause it to show up in the plugin listing
-                    # by it's filename.
-                    MT->add_plugin( {} );
+                    # open and scan the directory for plugin files,
+                    # save them to load later. Report errors in
+                    # the activity log
+                    unless (opendir SUBDIR, $plugin_full_path) {
+                        my $msg = $mt->translate(
+                            "Bad directory found in plugin initialization: [_1]",
+                            $plugin_full_path
+                        );
+                        $mt->log({
+                            message => $msg,
+                            class => 'system',
+                            level => MT->model('log')->ERROR()
+                        });
+                        next;
+                    }
+
+                    my @plugin_files = readdir SUBDIR;
+                    closedir SUBDIR;
+                    for my $file (@plugin_files) {
+                        if ($file eq 'lib' || $file eq 'extlib') {
+                            my $plib = File::Spec->catdir( $plugin_full_path, $file );
+                            unshift @INC, $plib if -d $plib;
+                            next;
+                        }
+                        next if $file !~ /\.pl$/ && $file !~ /config\.yaml$/;
+                        my $plugin_file =  File::Spec->catfile( $plugin_full_path, $file );
+                        if ( -f $plugin_file ) {
+                            # Plugin is a file, add it to list for processing
+                            push @plugins, {
+                                base => $plugin_full_path,
+                                dir  => $plugin_dir,
+                                file => $file,
+                                # TODO: remove following comment if app is stable
+                                # Changed from $plugin_file because load_tmpl was failing
+                                path => $plugin_full_path,
+                                envelope => "$plugin_lastdir/" . $plugin_dir,
+                            };
+                        }
+                    }
+                    # All plugins have been found, now load them
+                    foreach my $plugin (@plugins) {
+                        if ($plugin->{file} =~ /\.pl$/) {
+                            # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
+                            MT->log(
+                                {
+                                    message => MT->translate( "You are using a plugin ([_1]) that uses a deprecated plugin file format (.pl)", $plugin->{file} ),
+                                    class   => 'system',
+                                    category => 'deprecation',
+                                    level    => MT::Log::INFO(),
+                                }
+                                );
+                            $plugin_envelope = $plugin->{envelope};
+                            $plugin_full_path = $plugin->{path};
+                            $load_plugin->(
+                                $plugin->{path}, $plugin->{file}
+                                );
+                        } else {
+                            my $pclass =
+                                $plugin->{dir} =~ m/\.pack$/ ? 'MT::Component' : 'MT::Plugin';
+                                
+                            # Don't process disabled plugin config.yaml files.
+                            if (
+                                $pclass eq 'MT::Plugin'
+                                && (
+                                    !$use_plugins
+                                    || ( exists $PluginSwitch->{ $plugin->{dir} }
+                                         && !$PluginSwitch->{ $plugin->{dir} } )
+                                )
+                                )
+                            {
+                                $Plugins{ $plugin->{dir} }{full_path} = $plugin->{path};
+                                $Plugins{ $plugin->{dir} }{enabled}   = 0;
+                                next;
+                            }
+
+                            # TODO - the plugin signature cannot simply be the base directory
+                            #        in the event that there are multiple yaml files. Therefore
+                            #        the signature must become a conjunction of the directory and
+                            #        config.yaml file.
+                            #        To address this, the ultimate normalizer should be the
+                            #        id declared in the yaml.
+                            # See http://bugs.movabletype.org/?79933
+                            local $plugin_sig = $plugin->{dir} . '/' . $plugin->{file};
+                            next if exists $Plugins{ $plugin_sig };
+                            # TODO - the id needs to be yaml specific, not directory
+                            # TODO - the id needs to be reformulated from contents of yaml
+                            my $id = lc $plugin->{dir};
+                            $id =~ s/\.\w+$//;
+
+                            my $p = $pclass->new(
+                                {
+                                    id       => $id,
+                                    path     => $plugin->{base},
+                                    config   => $plugin->{file},
+                                    envelope => $plugin->{envelope}
+                                }
+                                );
+                            
+                            # rebless? based on config?
+                            $Plugins{$plugin_sig}{enabled} = 1;
+                            $plugin_envelope = $plugin->{envelope};
+                            $plugin_full_path = $plugin->{path};
+                            MT->add_plugin($p);
+                            $p->init_callbacks();
+                            next;
+                        }
+                    }
                 }
             }
             $Plugins{$plugin_sig}{enabled} = 1;
