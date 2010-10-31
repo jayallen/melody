@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 11;
+use Test::More tests => 13;
 
 use MT;
 use MT::Test qw( :app :db );
@@ -13,18 +13,18 @@ use MT::Test qw( :app :db );
 my $plugins = ();
 
 my $app = MT->instance();
-my $cfg = $app->config;
-$cfg->PluginPath('addons');
-$cfg->PluginPath('plugins');
+# The horse left the barn long ago
+# my $cfg = $app->config;
+# $cfg->PluginPath(['t/plugins', 'plugins']); 
 $app->init_plugins();
 
 for my $sig ( keys %MT::Plugins ) {
-#    print STDERR "Plugin: $sig\n";
-	my $profile = $MT::Plugins{$sig};
-	if ( my $plugin = $profile->{object} ) {
-        print STDERR "  name: " . $plugin->name . "\n";
-		$plugins->{ $plugin->name }++;
-	}
+    # print STDERR "Plugin: $sig\n";
+    my $profile = $MT::Plugins{$sig};
+    if ( my $plugin = $profile->{object} ) {
+        # print STDERR "  name: " . $plugin->name . "\n";
+        $plugins->{ $plugin->name }++;
+    }
 }
 
 ###########################################################
@@ -41,11 +41,23 @@ ok (exists $plugins->{"Theme Manager"}, "Theme Manager exists");
 ok (exists $plugins->{"Simple Rich Text Editor"}, "Simple Rich Text Editor exists");
 ok (exists $plugins->{"DePoClean"}, "DePoClean exists");
 ok (exists $plugins->{"Open Melody Community Feedback"}, "Open Melody Community Feedback exists");
-
-# These are not loading for some reason
 ok (exists $plugins->{"WXR Importer"}, "WXR Importer exists");
 ok (exists $plugins->{"TypePad AntiSpam"}, "TypePad AntiSpam exists");
 
-# test plugins created by MT::Test
-ok (exists $plugins->{"Awesome"}, "Awesome exists");
-# ok (exists $plugins->{"testplug.pl"}, "testplug.pl exists");
+SKIP: {
+    # To test these, you need to do one of the following:
+    #   1) use a custom config file (like the ones we used to have) so you can
+    #      set the PluginPath normally
+    #   2) bootstrap the app yourself or 
+    #   3) Override/Hook into the init process so you can set the PluginPath
+    #      BEFORE the plugins are initialized, or
+    #   4) Break up the damn _init_plugins_core method so that it's actually
+    #      testable.
+    skip "MT::Test dummy plugins skipped", 2
+        unless ref( $app->config->PluginPath ) eq 'ARRAY'
+           and grep { m{(t|..)/plugins$} } @{ $app->config->PluginPath };
+
+    # test plugins created by MT::Test
+    ok (exists $plugins->{"Awesome"}, "Awesome exists");
+    ok (exists $plugins->{"testplug.pl"}, "testplug.pl exists");
+};

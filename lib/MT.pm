@@ -1293,10 +1293,12 @@ sub upload_file_to_sync {
     MT::TheSchwartz->insert($job);
 }
 
+# use Data::Dumper;
 sub init_addons {
     my $mt     = shift;
     my $cfg    = $mt->config;
     my $addons = $mt->find_addons('pack');
+    # print STDERR Dumper({addons => $addons})."\n";
     return $mt->_init_plugins_core({}, 1, $addons);
 }
 
@@ -1311,6 +1313,7 @@ sub init_plugins {
     my $use_plugins  = $cfg->UsePlugins;
     my $PluginSwitch = $cfg->PluginSwitch || {};
     my $plugins      = $mt->find_addons('plugin');
+    # print STDERR Dumper({plugins => $plugins})."\n";
     return $mt->_init_plugins_core($PluginSwitch, $use_plugins, $plugins);
 }
 
