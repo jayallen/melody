@@ -545,6 +545,7 @@ table.show-admin td {
     border: 1px solid #ccc;
     padding: 10px;
     background-color: #fafafa;
+    color: #000;
     height: 200px;
 }
 
