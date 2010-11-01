@@ -427,8 +427,6 @@ sub save {
 #    }
 
     delete $values{'id'} if exists( $values{'id'} ) && !$values{'id'};
-    use Data::Dumper;
-    MT->log({ blog_id => $obj->id, message => "values: " . Dumper( %values ) });
     $obj->set_values( \%values );
 
     if ( $obj->properties->{audit} ) {
