@@ -45,6 +45,27 @@ sub pre_save {
             )
         ) if $_->basename eq $obj->basename;
     }
+
+    my $tags = $app->query->param('tags');
+    if ( defined $tags )
+    {
+        my $blog = $app->blog;
+        my $fields = $blog->smart_replace_fields;
+        if ( $fields =~ m/tags/ig ) {
+            $tags = $app->_convert_word_chars( $tags );
+        }
+
+        require MT::Tag;
+        my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
+        my @tags = MT::Tag->split( $tag_delim, $tags );
+        if (@tags) {
+            $obj->set_tags(@tags);
+        }
+        else {
+            $obj->remove_tags();
+        }
+    }
+
     1;
 }
 

@@ -112,7 +112,7 @@ sub core_tags {
             EntryNext => \&_hdlr_entry_next,
             EntryTags => \&_hdlr_entry_tags,
             CategoryTags => \&_hdlr_category_tags,
-
+            FolderTags => \&_hdlr_category_tags,
             DateHeader => \&_hdlr_pass_tokens,
             DateFooter => \&_hdlr_pass_tokens,
 
@@ -4241,7 +4241,6 @@ sub _hdlr_entry_tags {
 
 sub _hdlr_object_tags {
     my ($obj_type, $ctx, $args, $cond) = @_;
-
     my $obj = $ctx->stash($obj_type);
     return '' unless $obj;
     my $glue = $args->{glue};
@@ -4285,10 +4284,26 @@ B<Example:>
 
 =cut
 
+###########################################################################
+
+=head2 FolderTags
+
+Creates the context for using "Tag tags" on folders that have been tagged.
+
+B<Example:>
+    <mt:Folders>
+        <$mt:FolderLabel$>&nbsp;
+        <mt:FolderTags>
+            <$mt:TagName$>&nbsp;
+        </mt:FolderTags>
+        <br/>
+    </mt:Folders>
+
+=cut
+
 sub _hdlr_category_tags {
     return _hdlr_object_tags ('category', @_);
 }
-
 
 ###########################################################################
 
