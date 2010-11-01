@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"> 
 <head profile="http://gmpg.org/xfn/11"> 
 	<title><$mt:BlogName escape="html"$> &#8211; <$mt:EntryTitle escape="html"$></title>
-	<$mt:Include module="HTML Head"$>
+	<$mt:Include module="<__trans phrase="HTML Head">"$>
 	<mt:EntryPrevious>
 	<link rel='prev' title='<$mt:EntryTitle escape="html"$>' href='<$mt:EntryPermalink$>' />
 	</mt:EntryPrevious>
@@ -24,7 +24,7 @@
 		<h1><mt:If name="main_index"><$mt:BlogName escape="html"$><mt:Else><a href="<$mt:BlogURL$>"><$mt:BlogName escape="html"$></a></mt:If> <span><$mt:BlogDescription escape="html"$></span></h1> 
 	</div><!-- end header --> 
 	<div class="blogads"> 
-		<$mt:WidgetSet name="Sidebar"$>
+		<$mt:WidgetSet name="<__trans phrase="Sidebar">"$>
 	</div>
 
         <$mt:Date format="%Y%m%d" setvar="today"$>
@@ -54,7 +54,7 @@
 	</mt:Comments>
 	
 	<mt:SetVarBlock name="cache_key">CommentForm;<$mt:EntryID$></mt:SetVarBlock>
-	<$mt:Include module name="Comment Form" ttl="15552000" cache="1" cache_key="$cache_key"$>
+	<$mt:Include module name="<__trans phrase="Comment Form">" ttl="15552000" cache="1" cache_key="$cache_key"$>
         <!-- Comment Form -->
         <div class="postnoline">
                 <div class="content">
@@ -92,7 +92,7 @@
         </div> <!-- END posttopline -->
 	<br clear="all" /> 
  
-	<$mt:Include module="Footer"$>
+	<$mt:Include module="<__trans phrase="Footer">"$>
  
 	</div> <!-- end container --> 
 </body> 

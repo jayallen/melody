@@ -7,7 +7,7 @@ var url = null;
 	url = 'http://api.flickr.com/services/feeds/photos_public.gne?id=<$mt:FlickrUserID$><mt:If tag="FlickrTags">&tags=<$mt:FlickrTags$></mt:If>&format=json&jsoncallback=?';
 	<mt:Else>
 		<$mt:var name="show_error" value="1"$>
-		<$mt:var name="error_msg" value="To show a Flickr user gallery, you must specify a Flickr user ID in Theme Options."$>
+		<$mt:var name="error_msg" value="<__trans phrase="To show a Flickr user gallery, you must specify a Flickr user ID in Theme Options.">"$>
 	</mt:If>
 <mt:ElseIf name="type" eq="Photoset">
 	<mt:If tag="FlickrUserID">
@@ -15,26 +15,26 @@ var url = null;
 	url = 'http://api.flickr.com/services/feeds/photoset.gne?set=<$mt:FlickrPhotosetID$>&nsid=<$mt:FlickrUserID$>&format=json&jsoncallback=?';
 		<mt:Else>
 			<$mt:var name="show_error" value="1"$>
-			<$mt:var name="error_msg" value="To show a Flickr photoset gallery, you must specify a Flickr user ID in Theme Options."$>
+			<$mt:var name="error_msg" value="<__trans phrase="To show a Flickr photoset gallery, you must specify a Flickr user ID in Theme Options.">"$>
 		</mt:If>
 
 	<mt:Else>
 		<$mt:var name="show_error" value="1"$>
-		<$mt:var name="error_msg" value="To show a Flickr photoset gallery, you must specify a Flickr user ID in Theme Options."$>
+		<$mt:var name="error_msg" value="<__trans phrase="To show a Flickr photoset gallery, you must specify a Flickr user ID in Theme Options.">"$>
 	</mt:If>
 <mt:ElseIf name="type" eq="Group">
 	<mt:If tag="FlickrGroupID">
 	url = 'http://api.flickr.com/services/feeds/groups_pool.gne?id=<$mt:FlickrGroupID$>&format=json&jsoncallback=?';
 	<mt:Else>
                 <$mt:var name="show_error" value="1"$>
-                <$mt:var name="error_msg" value="To show a Flickr group gallery, you must specify a Flickr group ID in Theme Options."$>
+                <$mt:var name="error_msg" value="<__trans phrase="To show a Flickr group gallery, you must specify a Flickr group ID in Theme Options.">"$>
 	</mt:If>
 <mt:ElseIf name="type" eq="Favorites">
 	<mt:If tag="FlickrUserID">
 	url = 'http://api.flickr.com/services/feeds/photos_faves.gne?id=<$mt:FlickrUserID$>&format=json&jsoncallback=?';
 	<mt:Else>
                 <$mt:var name="show_error" value="1"$>
-                <$mt:var name="error_msg" value="To show a Flickr favorites gallery, you must specify a Flickr user ID in Theme Options."$>
+                <$mt:var name="error_msg" value="<__trans phrase="To show a Flickr favorites gallery, you must specify a Flickr user ID in Theme Options.">"$>
         </mt:If>
 <mt:ElseIf name="type" eq="Public">
 	url = 'http://api.flickr.com/services/feeds/photos_public.gne?<mt:If tag="FlickrTags">tags=&<$mt:FlickrTags$></mt:If>format=json&jsoncallback=?';
@@ -48,7 +48,7 @@ var url = null;
 
 <mt:Unless name="show_error">
 <div class="flickr">
-	<span><a href="http://flickr.com/photos/<$mt:var name="user_id"$>">Flickr <small class="fey">View All &#187;</small></a></span>
+	<span><a href="http://flickr.com/photos/<$mt:var name="user_id"$>">Flickr <small class="fey"><__trans phrase="View All"> &#187;</small></a></span>
 	<script type="text/javascript">
 	/* <![CDATA[ */
 		$(function() {
