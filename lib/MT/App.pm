@@ -3743,8 +3743,6 @@ sub set_no_cache {
 }
 
 
-
-
 package Melody::DeprecatedParamUsage;
 
 # FIXME Move Melody::DeprecatedParamUsage to a Melody compatibility layer
@@ -3778,7 +3776,7 @@ sub usage {
         },
         param_hash      => {
             description => 'fetch a hash of query parameters',
-            replacement => '$app->query->param',
+            replacement => '$app->query->Vars',
         },
         query_object    => {
             description => 'fetch the CGI query object',
@@ -4432,7 +4430,8 @@ http://search.cpan.org/perldoc?CGI
 
 =head2 $app->param_hash (DEPRECATED, FUTURE BREAK)
 
-B<This method will soon change and break existing code. See L</"C<< $app->query->param >>"> for a forward-compatible replacement.>
+B<This method will soon change and break existing code. See 
+L</"C<< $app->query->Vars >>"> for a forward-compatible replacement.>
 
 =head2 $app->query([ $QUERY_OBJECT ])
 

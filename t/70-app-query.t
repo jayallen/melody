@@ -8,8 +8,11 @@ This module tests MT::App's CGI query handling methods:
     * $app->query
       Initialization, storage and retrieval of the query object
 
-    * $app->query->param
+    * $app->query->param( $key )
       CGI module's ability to get/set query parameters
+
+    * $app->query->Vars
+      Retriever of hash of param keys and values (no args, list context)
 
   DEPRECATED METHODS
   For the proper warnings and return values to 
@@ -17,11 +20,23 @@ This module tests MT::App's CGI query handling methods:
 
     * $app->{query}
       Storage and retrieval of query object via direct hash access
-
+      Use $app->query
+      
     * $app->param
       Getter/setter of query parameters
       Retriever of query object (no args, scalar context)
       Retriever of hash of param keys and values (no args, list context)
+      Use: $app->query->param
+      
+    * $app->query->param
+      Retriever of hash of param keys and values (no args, list context)
+      Use: $app->query->Vars
+      ***THIS IS UNTESTABLE*** because it's a valid method in list context
+      but simply returns and array of parameter keys instead of a parameter
+      hash of keys and values.  Even if you overrode CGI.pm and filtered 
+      calls, you still couldn't know whether the left side of the assignment 
+      expected an array or a hash. Developers beware. Hic svnt dracones!
+
 
 ----------------------------------------------------------------------
 As of 07/27/2010:  All tests successful.
@@ -33,7 +48,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 40;
+use Test::More tests => 44;
 use Test::Differences;
 use Test::Deep;
 use Test::Warn;
@@ -68,12 +83,12 @@ foreach my $key ( keys %param_hash ) {
     # SUPPORTED methods
     test_mt_app_query( $key );
     test_mt_app_query_param( $key );
+    test_mt_app_query_vars( $key );
 
     # DEPRECATED methods
     warn_mt_app_query_hash( $key );
     warn_mt_app_param( $key );
 }
-
 
 sub new_cgi_object {
     my $key       = shift;
@@ -115,6 +130,16 @@ sub test_mt_app_query_param {
     $q->param( 'name', 'Ophelia' );
     is( $q->param( 'name' ), 'Ophelia', 'Param value assignment' );
     
+}
+
+## Testing $app->query->Vars()
+sub test_mt_app_query_vars {
+    my $key = shift;
+    my $q = init_query( $key );
+    can_ok( $q, 'Vars' );
+    my %returnvals = $q->Vars;
+    cmp_deeply( \%returnvals, $param_hash{$key},
+                "Vars: '$key' query parameter hash match");
 }
 
 ## Testing $app->{query}
