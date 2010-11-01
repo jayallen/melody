@@ -1326,68 +1326,73 @@ sub _init_plugins_core {
         $timer = $mt->get_timer();
     }
 
-    my @deprecated_perl_init = ();
-    foreach my $plugin (@$plugins) {
-        my $load_plugin = sub {
-            my ( $plugin, $sig ) = @_;
-            die "Bad plugin filename '$plugin'"
-                if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
-            local $plugin_sig      = $sig;
-            local $plugin_registry = {};
-            $plugin = $1;
-            if (
-                !$use_plugins
-                || ( exists $PluginSwitch->{$plugin_sig}
-                     && !$PluginSwitch->{$plugin_sig} )
-                )
-            {
-                $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-                $Plugins{$plugin_sig}{enabled}   = 0;
-                return 0;
-            }
-            return 0 if exists $Plugins{$plugin_sig};
+    # TODO Refactor/abstract this load_plugin anonymous subroutine out of here
+    # For testing purposes and maintainability, we need to make it a point
+    # to continually make large methods like this smaller and more focused.
+    my $load_plugin = sub {
+        my ( $plugin, $sig ) = @_;
+        die "Bad plugin filename '$plugin'"
+            if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
+        local $plugin_sig      = $sig;
+        local $plugin_registry = {};
+        $plugin = $1;
+        if (
+            !$use_plugins
+            || ( exists $PluginSwitch->{$plugin_sig}
+                 && !$PluginSwitch->{$plugin_sig} )
+            )
+        {
             $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-            $timer->pause_partial if $timer;
-            eval "# line " . __LINE__ . " " . __FILE__ . "\nrequire '".
-                File::Spec->catdir( $plugin_full_path, $sig ) . "';";
-            $timer->mark("Loaded plugin " . $sig) if $timer;
-            if ($@) {
-                $Plugins{$plugin_sig}{error} = $@;
-                # Issue MT log within another eval block in the
-                # event that the plugin error is happening before
-                # the database has been initialized...
-                eval {
-                    # line __LINE__ __FILE__
-                    require MT::Log;
-                    $mt->log(
-                        {
-                            message => $mt->translate(
-                                "Plugin error: [_1] [_2]", $plugin,
-                                $Plugins{$plugin_sig}{error}
-                                ),
-                            class => 'system',
-                            level => MT::Log::ERROR()
-                        }
-                        );
-                };
-                return 0;
+            $Plugins{$plugin_sig}{enabled}   = 0;
+            return 0;
+        }
+        return 0 if exists $Plugins{$plugin_sig};
+        $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
+        $timer->pause_partial if $timer;
+        eval "# line " . __LINE__ . " " . __FILE__ . "\nrequire '".
+            File::Spec->catdir( $plugin_full_path, $sig ) . "';";
+        $timer->mark("Loaded plugin " . $sig) if $timer;
+        if ($@) {
+            $Plugins{$plugin_sig}{error} = $@;
+            # Issue MT log within another eval block in the
+            # event that the plugin error is happening before
+            # the database has been initialized...
+            eval {
+                # line __LINE__ __FILE__
+                require MT::Log;
+                $mt->log(
+                    {
+                        message => $mt->translate(
+                            "Plugin error: [_1] [_2]", $plugin,
+                            $Plugins{$plugin_sig}{error}
+                            ),
+                        class => 'system',
+                        level => MT::Log::ERROR()
+                    }
+                    );
+            };
+            return 0;
+        }
+        else {
+            if ( my $obj = $Plugins{$plugin_sig}{object} ) {
+                $obj->init_callbacks();
             }
             else {
-                if ( my $obj = $Plugins{$plugin_sig}{object} ) {
-                    $obj->init_callbacks();
-                }
-                else {
-                    
-                    # A plugin did not register itself, so
-                    # create a dummy plugin object which will
-                    # cause it to show up in the plugin listing
-                    # by it's filename.
-                    MT->add_plugin( {} );
-                }
+                
+                # A plugin did not register itself, so
+                # create a dummy plugin object which will
+                # cause it to show up in the plugin listing
+                # by it's filename.
+                MT->add_plugin( {} );
             }
-            $Plugins{$plugin_sig}{enabled} = 1;
-            return 1;
-        }; # end load_plugin sub
+        }
+        $Plugins{$plugin_sig}{enabled} = 1;
+        return 1;
+    }; # end load_plugin sub
+
+
+    my @deprecated_perl_init = ();
+    foreach my $plugin (@$plugins) {
 
         # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
         if ($plugin->{file} =~ /\.pl$/) {
@@ -1449,7 +1454,7 @@ sub _init_plugins_core {
             next;
         }
     }
-    
+
     # FIXME See _perl_init_plugin_warnings() below for more details
     if ( @deprecated_perl_init ) {
         MT->add_callback( 'post_init', 1, undef, sub {
