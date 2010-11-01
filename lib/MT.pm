@@ -1388,7 +1388,7 @@ sub _init_plugins_core {
             $Plugins{$plugin_sig}{enabled} = 1;
             return 1;
         }; # end load_plugin sub
-        
+
         # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
         if ($plugin->{file} =~ /\.pl$/) {
             push( @deprecated_perl_init, $plugin );
@@ -1501,12 +1501,19 @@ sub _perl_init_plugin_warnings {
     my $recent_warning
         = MT::Session::get_unexpired_value( 86400, $sess_terms, {} );
 
+    require File::Spec;
+    my $plugin_sig = sub {
+        @_ and return File::Spec->catfile(( $_[0]->{envelope}||'' ),
+                                          ( $_[0]->{file}||''     ))
+    };
+
     # ISSUE A NEW WARNING IF:
     #  -- No recent warning was found, OR
     #  -- We find a perl-init'd plugin not recorded in most recent warn
     my $needs_warning = ! $recent_warning;
-    $needs_warning  ||= grep { ! $recent_warning->get( $_->{envelope} ) 
-                                } @deps;
+    $needs_warning  ||= grep { 
+                            ! $recent_warning->get( $plugin_sig->( $_ )) 
+                        } @deps;
 
     if ( $needs_warning ) {
         my $dep_plugin_log_warn = sub {
@@ -1521,11 +1528,11 @@ sub _perl_init_plugin_warnings {
         # Reuse recent warning record or create a new session
         $recent_warning ||= MT::Session->new();
         $recent_warning->set_values( $sess_terms );
-        # $recent_warning->data( undef );
         $recent_warning->start( time );
         foreach my $p ( @deps ) {
             $dep_plugin_log_warn->( $p );
-            $recent_warning->set( $p->{envelope}, ( $p->{label} || $p->{id} ))
+            $recent_warning->set( $plugin_sig->( $p ),
+                                  ( $p->{label} || $p->{id} ))
         }
         unless ( $recent_warning->save ) {
             warn "Could not record recent warning about "
@@ -1533,7 +1540,6 @@ sub _perl_init_plugin_warnings {
                 .($recent_warning->errstr||'Unknown error');
         }
     }
-
 }
 
 my %addons;
