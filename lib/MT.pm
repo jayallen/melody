@@ -1619,7 +1619,13 @@ sub scan_directory_for_addons {
                         unshift @INC, $plib if -d $plib;
                         next;
                     }
-                    next if $file !~ /\.pl$/ && $file !~ /config\.yaml$/;
+                    # Skip all unless it's a plugin file (pl or yaml)
+                    next unless $file =~ m{(\.pl|config\.yaml)$};
+                    # Give preference to config.yaml initialization
+                    next if ( '.pl' eq $1 )
+                        and -f File::Spec->catfile( $plugin_full_path,
+                                                    'config.yaml' );
+
                     my ($label,$type) = ( $plugin_dir =~ /^([^\.]+)\.?(\w+)?$/ );
                     unless ($type) {
                         if ($plugin_dir =~ /addons/) {
