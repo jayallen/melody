@@ -1,29 +1,47 @@
-/* Status Messages -------------------------------------------------------------------------------- */
+/* @override 
+	http://melody.studiolift.com/melody/mt-static/css/messaging.css?v=0.9.25%20%28MT%204.34%2B%29
+	http://melody.studiolift.com/melody/mt-static/css/messaging.css
+*/
+  /* Status Messages -------------------------------------------------------------------------------- */
 .msg {
     margin: 0 0 10px 0;
-    padding: 16px 10px 16px 46px;
+    padding: 16px 10px 16px 20px;
     background-repeat: no-repeat;
     background-position: 12px center;
+    -moz-border-radius:4px; 
+    -webkit-border-radius:4px; 
+    border-radius:4px;
 }
 .msg-success {
-    background-color: #CFC;
-    background-image: url('../images/icon_success.png');
+  /*  background-color: #CFC;
+    background-image: url('../images/icon_success.png'); */
+    background-color: #006633;
+    color: #fff;
 }
+
+.msg-success a {color:#fff;text-decoration:underline;}
+
 .msg-error {
-    background-color: #FF9;
-    background-image: url('../images/icon_error.png');
+    /* background-color: #FF9; 
+    background-image: url('../images/icon_error.png');*/
+    background-color: #CC0000;
+    color:#fff;
 }
 .msg-info {
     background-color: #fff;
-    background-image: url('../images/icon_info.gif');
+    /* background-image: url('../images/icon_info.gif'); */
+    color: #000;
 }
 .msg-alert {
-    background-color: #FF9;
-    background-image: url('../images/icon_alert.png');
+   /* background-color: #FF9;
+     background-image: url('../images/icon_alert.png'); */
+     background-color: #FFD83D;
+    color:#000;
 }
 .msg-publishing {
     background-color: #fff;
-    background-image: url('../images/ani-rebuild.gif');
+   /* background-image: url('../images/ani-rebuild.gif'); */
+    color: #000;
 }
 
 .msg a.close-me {

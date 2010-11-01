@@ -2104,8 +2104,8 @@ button.primary-button:hover {
  background: #6B3081;
  color: #fff !important;
  border: none;
-     -moz-border-radius:4px;
-    -webkit-border-radius:4px;
+ -moz-border-radius:4px;
+ -webkit-border-radius:4px;
 }
 .buttons a:link,
 .buttons a:visited,
@@ -2133,7 +2133,8 @@ button.primary-button:hover {
 .actions-bar .plugin-actions a:hover,
 .actions-bar .plugin-actions a:active,
 .actions-bar .plugin-actions button:hover {
-    color: #33789c !important;
+    background: #000;
+    color: #fff !important;
     background-position: 50% 30%;
 }
 .system .buttons a:hover,
@@ -2145,7 +2146,8 @@ button.primary-button:hover {
 .system .actions-bar .plugin-actions a:hover,
 .system .actions-bar .plugin-actions a:active,
 .system .actions-bar .plugin-actions button:hover {
-    color: #70A0BA !important;
+    background: #000;
+    color: #fff !important;
 }
 
 .listing .delete {

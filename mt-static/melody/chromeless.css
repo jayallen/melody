@@ -1,7 +1,8 @@
-/* @override http://melody.studiolift.com/melody/mt-static/melody/chromeless.css?v=0.9.24%20%28MT%204.34%2B%29 */
-
-
-#brand {
+/* @override 
+	http://melody.studiolift.com/melody/mt-static/melody/chromeless.css?v=0.9.24%20%28MT%204.34%2B%29
+	http://melody.studiolift.com/melody/mt-static/melody/chromeless.css?v=0.9.25%20%28MT%204.34%2B%29
+*/
+  #brand {
     display:block;
     width:250px;
     height:73px;
