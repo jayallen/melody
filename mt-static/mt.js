@@ -41,12 +41,15 @@ function doRebuild (blogID, otherParams) {
 
 function openManual (section, page) {
     var url;
-    if (page)
-        url = HelpBaseURI + 'help/' + section + '/' + page + '/';
-    else if (section)
-        url = HelpBaseURI + 'help/' + section + '/';
-    else
-        url = HelpBaseURI + 'help/';
+    //if (page)
+    //    url = HelpBaseURI + 'help/' + section + '/' + page + '/';
+    //else if (section)
+    //    url = HelpBaseURI + 'help/' + section + '/';
+    //else
+    //    url = HelpBaseURI + 'help/';
+    // Because we don't have a complete set of docs ready, just point the
+    // user to the root of the documentation project.
+    url = HelpBaseURI;
     window.open(url, 'mt_help', 
 'scrollbars=yes,status=yes,resizable=yes,toolbar=yes,location=yes,menubar=yes');
     return false;
