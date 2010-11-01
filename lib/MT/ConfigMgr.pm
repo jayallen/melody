@@ -354,7 +354,7 @@ MT::ConfigMgr - Movable Type configuration manager
 =head1 DESCRIPTION
 
 L<MT::ConfigMgr> is a singleton class that manages the Movable Type
-configuration file (F<mt-config.cgi>), allowing access to the config
+configuration file (F<config.cgi>), allowing access to the config
 directives contained therin.
 
 =head1 USAGE

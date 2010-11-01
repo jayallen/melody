@@ -27,7 +27,7 @@ isa_ok($mt, 'MT');
 use MT::Test qw(:db :data);
 
 my %test_data;
-$test_data{'/mt-atom.cgi/weblog'} = <<XML1;
+$test_data{'/atom.cgi/weblog'} = <<XML1;
 <?xml version="1.0" encoding="utf-8"?>
     <entry xmlns="http://purl.org/atom/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
     <title>Fight the Power</title>
@@ -35,7 +35,7 @@ $test_data{'/mt-atom.cgi/weblog'} = <<XML1;
     <issued>2004-08-06T00:43:34+01:00</issued>
     </entry>
 XML1
-#$test_data{'/mt-atom.cgi/1.0'} = <<XML2;
+#$test_data{'/atom.cgi/1.0'} = <<XML2;
 #<?xml version="1.0" encoding="utf-8"?>
 #<entry xmlns="http://www.w3.org/2005/Atom">
 #<title>Fight the Power</title>
@@ -45,7 +45,7 @@ XML1
 #XML2
 
 my %feed_link = (
-    '/mt-atom.cgi/weblog' => sub {
+    '/atom.cgi/weblog' => sub {
         my ($resp) = @_;
         my $feed = XML::Atom::Feed->new(\$resp->content());
         ok($feed, 'got feed');
@@ -54,7 +54,7 @@ my %feed_link = (
         } $feed->links;
         $sfeed->href;
     },
-    #'/mt-atom.cgi/1.0' => sub {
+    #'/atom.cgi/1.0' => sub {
     #    my ($resp) = @_;
     #    my $feed = XML::XPath->new(xml => $resp->content());
     #    ok($feed, 'got feed');
@@ -88,7 +88,7 @@ sub make_wsse {
 require LWP::UserAgent::Local;
 my $ua = new LWP::UserAgent::Local({ ScriptAlias => '/' });
 
-foreach my $base_uri ( qw{/mt-atom.cgi/weblog } ) { #/mt-atom.cgi/1.0 } ) {
+foreach my $base_uri ( qw{/atom.cgi/weblog } ) { #/atom.cgi/1.0 } ) {
 {
 # # # # First try a req with baloney auth, make sure it fails
     # TBD: Try more bogus auth varieties
@@ -171,7 +171,7 @@ foreach my $base_uri ( qw{/mt-atom.cgi/weblog } ) { #/mt-atom.cgi/1.0 } ) {
             } $entry->links;
             $failed = 2, last unless $replies;
             my $replies_uri = new URI($replies->href);
-            my $cmt_url = '/mt-atom.cgi/comments/blog_id=1/entry_id='.$mt_entry->id;
+            my $cmt_url = '/atom.cgi/comments/blog_id=1/entry_id='.$mt_entry->id;
             $failed = 3, last unless $replies_uri->path =~ m|${cmt_url}$|;
         }
         is($failed, 0, 'all the entries have replies link rel');
@@ -276,7 +276,7 @@ unless (USE_DIGEST)
     print "# nonce: $nonce\n";
 
     my $dir = `pwd`; chomp $dir;
-    while (! -x ($dir . "/mt-atom.cgi")) {
+    while (! -x ($dir . "/atom.cgi")) {
 	$dir =~ s!(/[^/]*)$!!;
 	last if $dir =~ m!^/?$!;
     }	

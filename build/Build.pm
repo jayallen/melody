@@ -286,9 +286,9 @@ sub create_distro_list {
             if( $self->{'stage'} ) {
                 # Magically use the internal production folder if it exists.
                 my $loc = $self->{'prod'} && $self->{'prod-dir=s'} && $dist =~ /$self->{'prod-dir=s'}/
-                    ? sprintf( "%s/%s/%s/mt.cgi",
+                    ? sprintf( "%s/%s/%s/index.cgi",
                         $self->{'stage-uri=s'}, $self->{'prod-dir=s'}, $self->{'export-dir=s'} )
-                    : sprintf( "%s/%s/mt.cgi", $self->{'stage-uri=s'}, $self->{'export-dir=s'} );
+                    : sprintf( "%s/%s/index.cgi", $self->{'stage-uri=s'}, $self->{'export-dir=s'} );
                 push @{ $distros->{url} }, $loc unless $seen{$loc}++;
             }
             elsif( $self->{'deploy:s'} =~ /:/ ) {
@@ -458,7 +458,7 @@ sub stage_distro {
         );
 
     # Give unto us a shiny, new config file.
-    my $config = 'mt-config.cgi';
+    my $config = 'config.cgi';
     unless( $self->{'debug'} ) {
         my $fh = IO::File->new( ">$config" );
         print $fh <<CONFIG;
@@ -521,7 +521,7 @@ CONFIG
 
     unless( $self->{'debug'} or $self->{'symlink!'} ) {
         # Make sure we can get to our symlink.
-        $url = sprintf "%s/%s/mt.cgi",
+        $url = sprintf "%s/%s/index.cgi",
             $self->{'stage-uri=s'}, $link;
         die( "ERROR: Staging $url can't be resolved." )
             unless $self->{'agent=s'}->head( $url );

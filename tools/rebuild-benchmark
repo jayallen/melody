@@ -210,7 +210,7 @@ sub usage {
     print STDERR << "EOT";
 usage: $0
   require:
-    -mt_url='URL to mt.cgi'
+    -mt_url='URL to index.cgi'
     -user='login account of mt'
     -pass='login password of mt'
 

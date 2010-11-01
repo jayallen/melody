@@ -104,7 +104,7 @@ __PACKAGE__->install_properties({
         'junk_log' => 'string meta',
         # This is registered by MT::Revisable
         #'revision' => 'integer meta',
-## Have to keep this around for use in mt-upgrade.cgi.
+## Have to keep this around for use in upgrade.cgi.
         'category_id' => 'integer',
     },
     indexes => {

@@ -261,7 +261,7 @@ sub run_app {
                 $cgipath .= $uri;
 
                 print "Status: 302 Moved\n";
-                print "Location: " . $cgipath . "mt-wizard.cgi\n\n";
+                print "Location: " . $cgipath . "wizard.cgi\n\n";
             }
             else {
                 print "Content-Type: text/plain; charset=$charset\n\n";
@@ -809,12 +809,12 @@ sub find_config {
     # the directory is the more important parameter between it and
     # the config parameter. if config is unreadable, then scan for
     # a config file using the directory as a base.  we support
-    # either mt.cfg or mt-config.cgi for the config file name. the
+    # either mt.cfg or config.cgi for the config file name. the
     # latter being a more secure choice since it is unreadable from
     # a browser.
     for my $cfg_file ( $param->{Config},
-        File::Spec->catfile( $param->{Directory}, 'mt-config.cgi' ),
-        'mt-config.cgi' )
+        File::Spec->catfile( $param->{Directory}, 'config.cgi' ),
+        'config.cgi' )
     {
         return $cfg_file if $cfg_file && -r $cfg_file && -f $cfg_file;
     }
@@ -839,7 +839,7 @@ sub init_config {
         my $cfg_file = $mt->find_config($param);
 
         return $mt->error(
-            "Missing configuration file. Maybe you forgot to move mt-config.cgi-original to mt-config.cgi?"
+            "Missing configuration file. Maybe you forgot to move config.cgi-original to config.cgi?"
         ) unless $cfg_file;
         $cfg_file = File::Spec->rel2abs($cfg_file);
         $mt->{cfg_file} = $cfg_file;
@@ -1117,7 +1117,7 @@ sub init_paths {
     }
     else {
         return $mt->trans_error(
-"Missing configuration file. Maybe you forgot to move mt-config.cgi-original to mt-config.cgi?"
+"Missing configuration file. Maybe you forgot to move config.cgi-original to config.cgi?"
         ) if ref($mt);
     }
 
@@ -3305,7 +3305,7 @@ the plugin bootstrap code can discover the MT configuration file (and thus
 the MT root directory) by traversing the filesystem; the absolute path
 to that file can be passed as the C<Config> parameter to
 MT::App::new. Working code to do this can be found in the
-examples/plugins/mirror/mt-mirror.cgi file.
+examples/plugins/mirror/mirror.cgi file.
 
 The I<app_dir>, on the other hand, always derives from the location of
 the currently-running program, so it typically does not need to be
@@ -3410,7 +3410,7 @@ method is a self-contained version found in L<MT::Bootstrap> and will
 eventually be the manner in which MT applications are run (eliminating
 the need for the bootstrap module). The MT::import module calls this
 method when the MT module is used with an 'App' parameter. So, you can
-write a mt.cgi script that looks like this:
+write an index.cgi script that looks like this:
 
     #!/usr/bin/perl
     use strict;

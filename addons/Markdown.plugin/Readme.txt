@@ -127,7 +127,7 @@ SmartyPants works with Movable Type version 2.5 or later.
 
 1.  Copy the "SmartyPants.pl" file into your Movable Type "plugins"
     directory. The "plugins" directory should be in the same directory
-    as "mt.cgi"; if it doesn't already exist, use your FTP program to
+    as "index.cgi"; if it doesn't already exist, use your FTP program to
     create it. Your installation should look like this:
 
         (mt home)/plugins/SmartyPants.pl

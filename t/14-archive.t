@@ -37,7 +37,7 @@ for my $type (qw( zip tgz )) {
     
     my $path = cwd();
     
-    ok($arc->add_file($path, 'mt-config.cgi-original'), 'Add file');
+    ok($arc->add_file($path, 'config.cgi-original'), 'Add file');
     ok($arc->add_string($str, 'november.txt'), 'Added string');
     
     ok($arc->close, 'Archive created');
@@ -52,7 +52,7 @@ for my $type (qw( zip tgz )) {
     
     my @files = $ext->files;
     is(@files, 2, 'Number of files is 2');
-    is($files[0], 'mt-config.cgi-original', 'The name of the file 0 is correct');
+    is($files[0], 'config.cgi-original', 'The name of the file 0 is correct');
     is($files[1], 'november.txt', 'The name of the file 1 is correct');
     
     ok($ext->extract($tmp), 'Extracted successfully');
@@ -64,7 +64,7 @@ for my $type (qw( zip tgz )) {
     open my $f1, '<', $file1;
     my $content1 = do { local $/; <$f1> };
     close $f1;
-    open my $f2, '<', File::Spec->catfile(cwd(), 'mt-config.cgi-original');
+    open my $f2, '<', File::Spec->catfile(cwd(), 'config.cgi-original');
     my $content2 = do { local $/; <$f2> };
     close $f2;
     is($content1, $content2, 'Contents are the same');
@@ -101,7 +101,7 @@ ok($ext, 'Archive file read');
 
 my @files = $ext->files;
 is(@files, 2, 'Number of files is 2');
-is($files[0], 'mt-config.cgi-original', 'The name of the file 0 is correct');
+is($files[0], 'config.cgi-original', 'The name of the file 0 is correct');
 is($files[1], 'november.txt', 'The name of the file 1 is correct');
 
 ok($ext->extract($tmp), 'Extracted successfully');
@@ -113,7 +113,7 @@ my $file6 = File::Spec->catfile($tmp, $files[1]);
 open my $f5, '<', $file5;
 my $content5 = do { local $/; <$f5> };
 close $f5;
-open my $f6, '<', File::Spec->catfile(cwd(), 'mt-config.cgi-original');
+open my $f6, '<', File::Spec->catfile(cwd(), 'config.cgi-original');
 my $content6 = do { local $/; <$f6> };
 close $f6;
 is($content5, $content6, 'Contents are the same');

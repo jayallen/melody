@@ -4226,7 +4226,7 @@ scripts.
 =head2 $app->mt_uri
 
 Returns the full URI of the MT "admin" script (typically a reference to
-mt.cgi).
+index.cgi).
 
 =head2 $app->blog
 
@@ -4606,27 +4606,27 @@ cookies as part of a 302 Redirect response.
 =head2 $app->base
 
 The protocol and domain of the application. For example, with the full URI
-F<http://www.foo.com/mt/mt.cgi>, this method will return F<http://www.foo.com>.
+F<http://www.foo.com/m/index.cgi>, this method will return F<http://www.foo.com>.
 
 =head2 $app->path
 
 The path component of the URL of the application directory. For
-example, with the full URL F<http://www.foo.com/mt/mt.cgi>, this
+example, with the full URL F<http://www.foo.com/m/index.cgi>, this
 method will return F</mt/>.
 
 =head2 $app->script
 
 In CGI mode, the filename of the active CGI script. For example, with
-the full URL F<http://www.foo.com/mt/mt.cgi>, this method will return
-F<mt.cgi>.
+the full URL F<http://www.foo.com/m/index.cgi>, this method will return
+F<index.cgi>.
 
 In mod_perl mode, the Request-URI without any query string.
 
 =head2 $app->uri([%params])
 
 The concatenation of C<$app-E<gt>path> and C<$app-E<gt>script>. For example,
-with the full URI F<http://www.foo.com/mt/mt.cgi>, this method will return
-F</mt/mt.cgi>. If C<%params> exist, they are passed to the
+with the full URI F<http://www.foo.com/m/index.cgi>, this method will return
+F</m/index.cgi>. If C<%params> exist, they are passed to the
 C<$app-E<gt>uri_params> method for processing.
 
 Example:
@@ -4800,10 +4800,10 @@ maps to the "PublishCharset" MT configuration setting.
 
 =item * STATIC_URI
 
-This provides the mt-config.cgi setting for "StaticWebPath" or "AdminCGIPath",
+This provides the config.cgi setting for "StaticWebPath" or "AdminCGIPath",
 depending on whether the active CGI is an admin CGI script or not (most
-likely it is, if it's meant to be used by an administrator (mt.cgi) and not
-an end user such as mt-comments.cgi).
+likely it is, if it's meant to be used by an administrator (index.cgi) and not
+an end user such as comments.cgi).
 
 Sample usage:
 
@@ -4833,7 +4833,7 @@ which may output:
 =item * MT_URI
 
 Yields the relative URL to the primary Movable Type application script
-(mt.cgi or the configured 'AdminScript').
+(index.cgi or the configured 'AdminScript').
 
 Sample usage:
 
@@ -4841,7 +4841,7 @@ Sample usage:
 
 producing:
 
-    /mt/mt.cgi?__mode=view&_type=entry&id=1&blog_id=1
+    /m/index.cgi?__mode=view&_type=entry&id=1&blog_id=1
 
 =item * SCRIPT_PATH
 
@@ -4849,11 +4849,11 @@ The path portion of URL for script
 
 Sample usage:
 
-    <TMPL_VAR NAME=SCRIPT_PATH>mt-check.cgi
+    <TMPL_VAR NAME=SCRIPT_PATH>check.cgi
 
 producing:
 
-    /mt/mt-check.cgi
+    /m/check.cgi
 
 =item * SCRIPT_FULL_URL
 

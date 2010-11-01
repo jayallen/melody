@@ -3,7 +3,7 @@
 
 # MT::App::Viewer
 lib/MT/App/Viewer.pm
-mt-view.cgi
+view.cgi
 
 # Experimental FileMgr Drivers from MTOS code
 lib/MT/FileMgr/FTP.pm
@@ -48,7 +48,7 @@ Makefile.PL
 ^MT-
 ^MT.*\.zip
 ^MT.*\.gz
-^mt-config.cgi$
+^config.cgi$
 
 # Plugins that aren't to be in the general release
 plugins/mixiComment

@@ -112,9 +112,9 @@ use vars qw( @ISA %Lexicon );
 
 ## php/mt.php.pre
 
-## mt-check.cgi
+## check.cgi
 	'Melody System Check' => 'Melody システムチェック',
-	'The mt-check.cgi script provides you with information on your system\'s configuration and determines whether you have all of the components you need to run Melody.' => 'mt-check.cgiはシステムの構成を確認し、Melodyを実行するために必要なコンポーネントがそろっていることを確認するためのスクリプトです。',
+	'The check.cgi script provides you with information on your system\'s configuration and determines whether you have all of the components you need to run Melody.' => 'check.cgiはシステムの構成を確認し、Melodyを実行するために必要なコンポーネントがそろっていることを確認するためのスクリプトです。',
 	'The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]). Please upgrade to at least Perl [_2].' => 'お使いのシステムにインストールされている Perl [_1] は、Melody でサポートされている最低限のバージョン[_2]を満たしていません。Perlをアップグレードしてください。',
 	'Melody configuration file was not found.' => 'Melodyの構成ファイルが見つかりませんでした。',
 	'System Information' => 'システム情報',
@@ -172,7 +172,7 @@ use vars qw( @ISA %Lexicon );
 	'Mail::Sendmail is required for sending mail via SMTP Server.' => 'Mail::SendmailはSMTPサーバーを経由してメールを送信する場合に必要となります。',
 	'This module is used in test attribute of MTIf conditional tag.' => 'MTIfタグの機能で使われます。',
 	'This module is used by the Markdown text filter.' => 'Markdown形式を利用するために必要です。',
-	'This module is required in mt-search.cgi if you are running Melody on Perl older than Perl 5.8.' => 'Perl 5.6.1以下の環境で、mt-search.cgiを利用するときに必要です。',
+	'This module is required in search.cgi if you are running Melody on Perl older than Perl 5.8.' => 'Perl 5.6.1以下の環境で、search.cgiを利用するときに必要です。',
 	'This module required for action streams.' => 'ActionStreamsを利用するにはこのモジュールが必要です。',
 	'The [_1] database driver is required to use [_2].' => '[_2]を使うには[_1]のデータベースドライバが必要です。',
 	'Checking for' => '確認中',
@@ -765,7 +765,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Sendmail' => 'Sendmail',
 	'Test email from Melody Configuration Wizard' => 'Melody構成ウィザードからのテスト送信',
 	'This is the test email sent by your new installation of Melody.' => 'Melodyのインストール中に送信されたテストメールです。',
-	'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in mt-config.cgi.' => '特殊な文字をエンコードするときに必要になりますが、構成ファイルにNoHTMLEntitiesを設定すればこの機能を無効化できます。',
+	'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in config.cgi.' => '特殊な文字をエンコードするときに必要になりますが、構成ファイルにNoHTMLEntitiesを設定すればこの機能を無効化できます。',
 	'This module is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.' => 'トラックバック機能や更新通知機能を利用する場合に必要となります。',
 	'This module is needed if you wish to use the MT XML-RPC server implementation.' => 'XML-RPC による作業を行う場合に必要となります。',
 	'This module is needed if you would like to be able to overwrite existing files when you upload.' => 'ファイルのアップロードを行う際に上書きを行う場合は必要となります。',
@@ -2079,7 +2079,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'[_1] died with: [_2]' => '[_1]でエラーが発生しました: [_2]',
 	'Bad ObjectDriver config' => 'ObjectDriverの設定が不正です。',
 	'Bad CGIPath config' => 'CGIPathの設定が不正です。',
-	'Missing configuration file. Maybe you forgot to move mt-config.cgi-original to mt-config.cgi?' => '構成ファイルがありません。mt-config.cgi-originalファイルの名前ををmt-config.cgiに変え忘れていませんか?',
+	'Missing configuration file. Maybe you forgot to move config.cgi-original to config.cgi?' => '構成ファイルがありません。config.cgi-originalファイルの名前ををconfig.cgiに変え忘れていませんか?',
 	'Plugin error: [_1] [_2]' => 'プラグインでエラーが発生しました: [_1] [_2]',
 	'Loading template \'[_1]\' failed.' => 'テンプレート「[_1]」のロードに失敗しました。',
 	'http://www.sixapart.jp/movabletype/' => 'http://www.sixapart.jp/movabletype/',
@@ -3902,7 +3902,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Users who have logged in within 90 days are considered <strong>active</strong> in Melody license agreement.' => '90日以内にログインしたユーザーがMelodyの使用許諾に基づいてアクティブとみなされます。',
 	'Memcache Status' => 'Memcacheの状態',
 	'Server Model' => 'サーバーモデル',
-	'Melody could not find the script named \'mt-check.cgi\'. To resolve this issue, please ensure that the mt-check.cgi script exists and/or the CheckScript configuration parameter references it properly.' => 'mt-check.cgiが見つかりませんでした。mt-check.cgiが存在すること、名前を変えた場合は構成ファイルのCheckScriptディレクティブに名前を指定してください。',
+	'Melody could not find the script named \'check.cgi\'. To resolve this issue, please ensure that the check.cgi script exists and/or the CheckScript configuration parameter references it properly.' => 'check.cgiが見つかりませんでした。check.cgiが存在すること、名前を変えた場合は構成ファイルのCheckScriptディレクティブに名前を指定してください。',
 
 ## tmpl/cms/upgrade.tmpl
 	'Time to Upgrade!' => 'アップグレード開始',
@@ -3969,7 +3969,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 	'Oct.' => '10/',
 	'Nov.' => '11/',
 	'Dec.' => '12/',
-	'Melody was unable to locate your \'mt-static\' directory. Please configure the \'StaticFilePath\' configuration setting in your mt-config.cgi file, and create a writable \'support\' directory underneath your \'mt-static\' directory.' => 'mt-staticディレクトリが見つかりません。構成ファイルでStaticFilePathの設定を記述し、mt-staticディレクトリ以下にsupportディレクトリを作成して書き込みできるようにしてください。',
+	'Melody was unable to locate your \'mt-static\' directory. Please configure the \'StaticFilePath\' configuration setting in your config.cgi file, and create a writable \'support\' directory underneath your \'mt-static\' directory.' => 'mt-staticディレクトリが見つかりません。構成ファイルでStaticFilePathの設定を記述し、mt-staticディレクトリ以下にsupportディレクトリを作成して書き込みできるようにしてください。',
 	'Melody was unable to write to its \'support\' directory. Please create a directory at this location: [_1], and assign permissions that will allow the web server write access to it.' => 'supportディレクトリに書き込みできません。[_1]にディレクトリを作成して、ウェブサーバーから書き込みできるパーミッションを与えてください。',
 	'[_1] [_2] - [_3] [_4]' => '[_1][_2] - [_3][_4]',
 	'You have <a href=\'[_3]\'>[quant,_1,comment,comments] from [_2]</a>' => '[_2]に<a href=\'[_3]\'>[quant,_1,件,件]のコメント</a>があります。',
@@ -4139,14 +4139,14 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 ## tmpl/wizard/complete.tmpl
 	'Configuration File' => '構成ファイル',
 	'The [_1] configuration file can\'t be located.' => '[_1]の構成ファイルを作成できませんでした。',
-	'Please use the configuration text below to create a file named \'mt-config.cgi\' in the root directory of [_1] (the same directory in which mt.cgi is found).' => '以下のテキストを利用して、mt-config.cgiという名前のファイルを[_1]のルートディレクトリ(mt.cgiがあるディレクトリ)に配置してください。',
+	'Please use the configuration text below to create a file named \'config.cgi\' in the root directory of [_1] (the same directory in which index.cgi is found).' => '以下のテキストを利用して、config.cgiという名前のファイルを[_1]のルートディレクトリ(index.cgiがあるディレクトリ)に配置してください。',
 	'The wizard was unable to save the [_1] configuration file.' => '[_1]の構成ファイルを保存できませんでした。',
-	'Confirm your [_1] home directory (the directory that contains mt.cgi) is writable by your web server and then click \'Retry\'.' => '[_1]のホームディレクトリ(mt.cgiがあるディレクトリ)にウェブサーバーから書き込めることを確認して「再試行」ボタンをクリックしてください。',
+	'Confirm your [_1] home directory (the directory that contains index.cgi) is writable by your web server and then click \'Retry\'.' => '[_1]のホームディレクトリ(index.cgiがあるディレクトリ)にウェブサーバーから書き込めることを確認して「再試行」ボタンをクリックしてください。',
 	'Congratulations! You\'ve successfully configured [_1].' => '[_1]の設定を完了しました。',
 	'Your configuration settings have been written to the following file:' => '設定内容を以下のファイルに書き込みました。',
 	'To reconfigure the settings, click the \'Back\' button below.' => '再設定する場合には、戻るボタンをクリックしてください。',
-	'Show the mt-config.cgi file generated by the wizard' => 'ウィザードで作成されたmt-config.cgiを表示する',
-	'The mt-config.cgi file has been created manually.' => 'mt-config.cgiを手動で作成しました。',
+	'Show the config.cgi file generated by the wizard' => 'ウィザードで作成されたconfig.cgiを表示する',
+	'The config.cgi file has been created manually.' => 'config.cgiを手動で作成しました。',
 	'Retry' => '再試行',
 
 ## tmpl/wizard/configure.tmpl
@@ -4214,7 +4214,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## tmpl/wizard/start.tmpl
 	'Configuration File Exists' => '構成ファイルが見つかりました',
-	'A configuration (mt-config.cgi) file already exists, <a href="[_1]">sign in</a> to Melody.' => '構成ファイル(mt-config.cgi)はすでに存在します。Melodyに<a href="[_1]">サインイン</a>してください。',
+	'A configuration (config.cgi) file already exists, <a href="[_1]">sign in</a> to Melody.' => '構成ファイル(config.cgi)はすでに存在します。Melodyに<a href="[_1]">サインイン</a>してください。',
 	'To create a new configuration file using the Wizard, remove the current configuration file and then refresh this page' => 'ウィザードで新しく構成ファイルを作るときは、現在の構成ファイルを別の場所に移動してこのページを更新してください。',
 	'Melody requires that you enable JavaScript in your browser. Please enable it and refresh this page to proceed.' => 'ブラウザのJavaScriptを有効にする必要があります。続けるにはブラウザのJavaScriptを有効にし、このページの表示を更新してください。',
 	'This wizard will help you configure the basic settings needed to run Melody.' => 'このウィザードでは、Melodyを利用するために必要となる基本的な環境設定を行います。',

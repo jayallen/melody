@@ -429,7 +429,7 @@ parameters are specified they will be persisted in the URL generated:
 
 Example URL returned:
 
-   /cgi-bin/mt/mt-search.cgi?search=cats+and+dogs&blog_id=4
+   /cgi-bin/m/search.cgi?search=cats+and+dogs&blog_id=4
 
 =cut
 

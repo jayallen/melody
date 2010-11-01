@@ -929,7 +929,7 @@ use vars qw( @ISA %Lexicon );
 	'Sendmail' => 'Sendmail',
 	'Test email from Melody Configuration Wizard' => 'Test email à partir de l\'Assistant de Configuration de Melody',
 	'This is the test email sent by your new installation of Melody.' => 'Ceci est un email de test envoyé par votre nouvelle installation Melody.',
-	'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in mt-config.cgi.' => 'Ce module est nécessaire pour encoder les caractères spéciaux, mais cette option peut être désactivée en utilisant NoHTMLEntities dans mt-config.cgi.',
+	'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in config.cgi.' => 'Ce module est nécessaire pour encoder les caractères spéciaux, mais cette option peut être désactivée en utilisant NoHTMLEntities dans config.cgi.',
 	'This module is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.' => 'Ce module est nécessaire si vous souhaitez utiliser le système de trackback, les pings weblogs.com, ou le ping Mises à jour récentes MT.',
 	'HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.' => 'HTML::Parser est optionnel. Il est utilisié si vous souhaitez utiliser le système de trackback, le ping weblogs.com ou le ping des mises à jours récentes MT.',
 	'This module is needed if you wish to use the MT XML-RPC server implementation.' => 'Ce module est nécessaire si vous souhaitez utiliser l\'implémentation du serveur XML-RPC MT.',
@@ -951,7 +951,7 @@ use vars qw( @ISA %Lexicon );
 	'This module is required for sending mail via SMTP Server.' => 'Ce module est nécessaire pour envoyer des emails via un serveur SMTP.',
 	'This module is used in test attribute of MTIf conditional tag.' => 'Ce module est utilisé dans l\'attribut de test du tag conditionnel MTIf.',
 	'This module is used by the Markdown text filter.' => 'Ce module est utilisé par le filtre de texte Markdown',
-	'This module is required in mt-search.cgi if you are running Melody on Perl older than Perl 5.8.' => 'Ce module est nécessaire pour mt-search.cgi si vous utilisez Melody sur une version de Perl supérieur à 5.8.',
+	'This module is required in search.cgi if you are running Melody on Perl older than Perl 5.8.' => 'Ce module est nécessaire pour search.cgi si vous utilisez Melody sur une version de Perl supérieur à 5.8.',
 	'This module required for action streams.' => 'Ce module est nécessaire pour les flux d\'activité.', # Translate - New
 	'This module is required for file uploads (to determine the size of uploaded images in many different formats).' => 'Ce module est nécessaire pour les envois de fichiers (pour déterminer la taille des images dans différents formats).',
 	'This module is required for cookie authentication.' => 'Ce module est nécessaire pour l\'authentification par cookies.',
@@ -2000,7 +2000,7 @@ use vars qw( @ISA %Lexicon );
 	'[_1] died with: [_2]' => '[_1] mort avec: [_2]',
 	'Bad ObjectDriver config' => 'Mauvaise config ObjectDriver',
 	'Bad CGIPath config' => 'Mauvaise config CGIPath',
-	'Missing configuration file. Maybe you forgot to move mt-config.cgi-original to mt-config.cgi?' => 'Fichier de configuration manquant. Avez-vous oublié de déplacer mt-config.cgi-original vers mt-config.cgi?',
+	'Missing configuration file. Maybe you forgot to move config.cgi-original to config.cgi?' => 'Fichier de configuration manquant. Avez-vous oublié de déplacer config.cgi-original vers config.cgi?',
 	'Plugin error: [_1] [_2]' => 'Erreur de Plugin: [_1] [_2]',
 	'Loading template \'[_1]\' failed.' => 'Le chargement du template \'[_1]\' a échoué.',
 	'__PORTAL_URL__' => '__PORTAL_URL__',
@@ -2125,14 +2125,14 @@ use vars qw( @ISA %Lexicon );
 ## tmpl/wizard/complete.tmpl
 	'Configuration File' => 'Fichier de configuration',
 	'The [_1] configuration file can\'t be located.' => 'Le fichier de configuration [_1] n\'a pas pu être trouvé',
-	'Please use the configuration text below to create a file named \'mt-config.cgi\' in the root directory of [_1] (the same directory in which mt.cgi is found).' => 'Créez un fichier nommé dans le répertoire racine de [_1] (le même qui contient mt.cgi) ayant pour contenu le texte de configuration ci-dessous.',
+	'Please use the configuration text below to create a file named \'config.cgi\' in the root directory of [_1] (the same directory in which index.cgi is found).' => 'Créez un fichier nommé dans le répertoire racine de [_1] (le même qui contient index.cgi) ayant pour contenu le texte de configuration ci-dessous.',
 	'The wizard was unable to save the [_1] configuration file.' => 'L\'assistant n\'a pas pu enregistrer le fichier de configuration [_1]',
-	'Confirm your [_1] home directory (the directory that contains mt.cgi) is writable by your web server and then click \'Retry\'.' => 'Vérifiez que votre répertoire [_1] (celui qui contient mt.cgi) est ouvert en écriture pour votre serveur web et cliquez sur Recommencer',
+	'Confirm your [_1] home directory (the directory that contains index.cgi) is writable by your web server and then click \'Retry\'.' => 'Vérifiez que votre répertoire [_1] (celui qui contient index.cgi) est ouvert en écriture pour votre serveur web et cliquez sur Recommencer',
 	'Congratulations! You\'ve successfully configured [_1].' => 'Félicitations ! Vous avez configuré [_1] avec succès.',
 	'Your configuration settings have been written to the following file:' => 'Vos paramètres de configuration ont été écrits dans le fichier suivant:',
 	'To reconfigure the settings, click the \'Back\' button below.' => 'Pour reconfigurer vos paramètres, cliquez sur le bouton \'Retour\' ci-dessous. Sinon, cliquez sur Continuer.',
-	'Show the mt-config.cgi file generated by the wizard' => 'Afficher le fichier mt-config.cgi généré par l\'assistant',
-	'The mt-config.cgi file has been created manually.' => 'Le fichier mt-config.cgi a été créé manuellement.',
+	'Show the config.cgi file generated by the wizard' => 'Afficher le fichier config.cgi généré par l\'assistant',
+	'The config.cgi file has been created manually.' => 'Le fichier config.cgi a été créé manuellement.',
 	'Retry' => 'Recommencer',
 
 ## tmpl/wizard/cfg_dir.tmpl
@@ -2148,7 +2148,7 @@ use vars qw( @ISA %Lexicon );
 ## tmpl/wizard/start.tmpl
 	'Welcome to Melody' => 'Bienvenue dans Melody',
 	'Configuration File Exists' => 'Le fichier de configuration existe',
-	'A configuration (mt-config.cgi) file already exists, <a href="[_1]">sign in</a> to Melody.' => 'Un fichier de configuration (mt-config.cgi) existe déjà, <a href="[_1]">identifiez-vous</a> dans Melody.',
+	'A configuration (config.cgi) file already exists, <a href="[_1]">sign in</a> to Melody.' => 'Un fichier de configuration (config.cgi) existe déjà, <a href="[_1]">identifiez-vous</a> dans Melody.',
 	'To create a new configuration file using the Wizard, remove the current configuration file and then refresh this page' => 'Pour créer un nouveau fichier de configuration avec l\'assistant, supprimez le fichier de configuration actuel puis rechargez cette page',
 	'Melody requires that you enable JavaScript in your browser. Please enable it and refresh this page to proceed.' => 'Pour utiliser Melody, vous devez activer les JavaScript sur votre navigateur. Merci de les activer et de relancer le navigateur pour commencer.',
 	'This wizard will help you configure the basic settings needed to run Melody.' => 'Vous allez maintenant, grâce à cet assistant de configuration, mettre en place les paramètres de base afin d\'assurer le fonctionnement de Melody.',
@@ -3964,7 +3964,7 @@ use vars qw( @ISA %Lexicon );
 	'Oct.' => 'Oct.',
 	'Nov.' => 'Nov.',
 	'Dec.' => 'Déc.',
-	'Melody was unable to locate your \'mt-static\' directory. Please configure the \'StaticFilePath\' configuration setting in your mt-config.cgi file, and create a writable \'support\' directory underneath your \'mt-static\' directory.' => 'Melody n\'a pas pu localiser votre répertoire \'mt-static\'. Merci de configurer la variable de configuration \'StaticFilePath\' dans votre fichier mt-config.cgi, et créez un répertoire \'support\' accessible en écriture dans le répertoire \'mt-static\'.',
+	'Melody was unable to locate your \'mt-static\' directory. Please configure the \'StaticFilePath\' configuration setting in your config.cgi file, and create a writable \'support\' directory underneath your \'mt-static\' directory.' => 'Melody n\'a pas pu localiser votre répertoire \'mt-static\'. Merci de configurer la variable de configuration \'StaticFilePath\' dans votre fichier config.cgi, et créez un répertoire \'support\' accessible en écriture dans le répertoire \'mt-static\'.',
 	'Melody was unable to write to its \'support\' directory. Please create a directory at this location: [_1], and assign permissions that will allow the web server write access to it.' => 'Melody n\'a pas pu écrire dans son répertoire \'support\'. Merci de créer un répertoire à cet endroit : [_1], et de lui ajouter des droits qui permettent au serveur web d\'écrire dedans.',
 	'[_1] [_2] - [_3] [_4]' => '[_1] [_2] - [_3] [_4]',
 	'You have <a href=\'[_3]\'>[quant,_1,comment,comments] from [_2]</a>' => 'Vous avez <a href=\'[_3]\'>[quant,_1,commentaire,commentaires] de [_2]</a>',
@@ -3994,7 +3994,7 @@ use vars qw( @ISA %Lexicon );
 	'Users who have logged in within 90 days are considered <strong>active</strong> in Melody license agreement.' => 'Les utilisateurs qui se sont connectés dans les 90 derniers jours sont considérés comme <strong>actifs</strong> dans les accords de licence Melody',
 	'Memcache Status' => 'Statut Memcache',
 	'Server Model' => 'Modèle du serveur',
-	'Melody could not find the script named \'mt-check.cgi\'. To resolve this issue, please ensure that the mt-check.cgi script exists and/or the CheckScript configuration parameter references it properly.' => 'Melody n\'a pu trouver le script nommé \'mt-check.cgi\'. Pour résoudre ce problème, assurez-vous que le script mt-check.cgi script existe et/ou que la configuration des paramètres de MTCheckScript le référence convenablement.',
+	'Melody could not find the script named \'check.cgi\'. To resolve this issue, please ensure that the check.cgi script exists and/or the CheckScript configuration parameter references it properly.' => 'Melody n\'a pu trouver le script nommé \'check.cgi\'. Pour résoudre ce problème, assurez-vous que le script check.cgi script existe et/ou que la configuration des paramètres de MTCheckScript le référence convenablement.',
 
 ## tmpl/cms/restore.tmpl
 	'Restore from a Backup' => 'Restaurer à partir d\'une sauvegarde',

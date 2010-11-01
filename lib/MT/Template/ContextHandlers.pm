@@ -235,7 +235,7 @@ sub core_tags {
             PagerBlock => \&_hdlr_pager_block,
             IfCurrentPage => \&_hdlr_pass_tokens,
 
-            # stubs for mt-search tags used in template includes
+            # stubs for search.cgi tags used in template includes
             IfTagSearch => sub { '' },
             SearchResults => sub { '' },
 
@@ -1645,7 +1645,7 @@ produces something like this:
         <div class="listing-header">
         </div>
         <form id="entry-listing-form" class="listing-form"
-            action="..../mt.cgi" method="post"
+            action="..../index.cgi" method="post"
             onsubmit="return this['__mode'] ? true : false">
             <input type="hidden" name="__mode" value="" />
             <input type="hidden" name="_type" value="entry" />
@@ -1840,7 +1840,7 @@ B<Example:>
 
 produces:
 
-    /cgi-bin/mt/mt.cgi?__mode=foo&_type=entry&bar=1
+    /cgi-bin/m/index.cgi?__mode=foo&_type=entry&bar=1
 
 This tag produces unescaped '&' characters. If you use this tag
 in an HTML tag attribute, be sure to add a C<escape="html"> attribute
@@ -2264,7 +2264,7 @@ B<Example:>
 
 Producing:
 
-    <form id="update" name="update" action="/cgi-bin/mt.cgi" method="POST">
+    <form id="update" name="update" action="/cgi-bin/m/index.cgi" method="POST">
     <input type="hidden" name="__mode" value="update_blog_name" />
         Blog Name: <input type="text" name="blog_name" />
         <input type="submit" />
@@ -3972,7 +3972,7 @@ entries with that tag assigned.
 
 The search link will look something like:
 
-    http://example.com/mt/mt-search.cgi?blog_id=1&tag=politics
+    http://example.com/m/search.cgi?blog_id=1&tag=politics
 
 Using Apache rewriting, the search URL can be cleaned up to look
 something like:
@@ -3984,7 +3984,7 @@ A URL like this would have to be built like this:
     <$mt:BlogURL$>tag/<$mt:TagName normalize="1"$>
 
 And of course, you would have to create the .htaccess rules to translate
-this into a request to mt-search.cgi.
+this into a request to search.cgi.
 
 =for tags tags, multiblog
 
@@ -4644,7 +4644,7 @@ sub nofollowfy_on {
 {
     my %include_stack;
     my %restricted_include_filenames = (
-        'mt-config.cgi' => 1,
+        'config.cgi' => 1,
         'passwd' => 1
     );
 
@@ -6066,7 +6066,7 @@ sub _hdlr_admin_cgi_path {
 =head2 ConfigFile
 
 Returns the full file path for the Movable Type configuration file
-(mt-config.cgi).
+(config.cgi).
 
 =for tags configuration
 
@@ -6081,7 +6081,7 @@ sub _hdlr_config_file {
 =head2 JQueryURL
 
 Returns the URL for the installation's jQuery library set by the
-C<JQueryURL> configuration directive (in mt-config.cgi) which defaults
+C<JQueryURL> configuration directive (in config.cgi) which defaults
 to C<STATIC_WEB_PATH/jquery/jquery.js> if unset.  
 
 It can be set to any relative, absolute or external FQDN (fully-qualified
@@ -6099,7 +6099,7 @@ B<Example template tag usage:>
     <script src="<$mt:jqueryurl$>"
             type="text/javascript" charset="utf-8"></script>
 
-B<Examples of mt-config.cgi directive use (remember: CASE SENSITIVE!):>
+B<Examples of config.cgi directive use (remember: CASE SENSITIVE!):>
 
     # Use a CDN for better caching and geographical distribution
     JQueryURL  http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js
@@ -6146,7 +6146,7 @@ sub _hdlr_cgi_server_path {
 =head2 CGIRelativeURL
 
 The relative URL (path) extracted from the CGIPath setting in
-mt-config.cgi. This is the same as L<CGIPath>, but without any
+config.cgi. This is the same as L<CGIPath>, but without any
 domain name. This value is guaranteed to end with a "/" character.
 
 =for tags configuration
@@ -6238,13 +6238,13 @@ An internal wrapper method around all of the "FooScript" config directives which
 =item * url
 
 Returns the script as a URL value.  For example C<<$mt:AdminScript url="1"$>>
-might give you http://example.com/mt/mt.cgi
+might give you http://example.com/m/index.cgi
 
 =item * filepath
 
 Returns the script as an absolute filesystem value.  For example
 C<<$mt:AdminScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt.cgi>
+C</var/www/example.com/htdocs/m/index.cgi>
 
 =back
 
@@ -6274,20 +6274,20 @@ sub _get_script_location {
 =head2 AdminScript
 
 Returns the value of the C<AdminScript> configuration setting. The default
-for this setting if unassigned is "mt.cgi".
+for this setting if unassigned is "index.cgi".
 
 =over 4
 
 =item * url
 
 Returns the script as a URL value.  For example C<<$mt:AdminScript url="1"$>>
-might give you http://example.com/mt/mt.cgi
+might give you http://example.com/m/index.cgi
 
 =item * filepath
 
 Returns the script as an absolute filesystem value.  For example
 C<<$mt:AdminScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt.cgi>
+C</var/www/example.com/htdocs/m/index.cgi>
 
 =back
 
@@ -6305,7 +6305,7 @@ sub _hdlr_admin_script {
 =head2 CommentScript
 
 Returns the value of the C<CommentScript> configuration setting. The
-default for this setting if unassigned is "mt-comments.cgi".
+default for this setting if unassigned is "comments.cgi".
 
 =over 4
 
@@ -6313,13 +6313,13 @@ default for this setting if unassigned is "mt-comments.cgi".
 
 Returns the script as a URL value.  For example
 C<<$mt:CommentScript url="1"$>> might give you
-http://example.com/mt/mt-comments.cgi
+http://example.com/m/comments.cgi
 
 =item * filepath
 
 Returns the script as an absolute filesystem value.  For example
 C<<$mt:CommentScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-comments.cgi>
+C</var/www/example.com/htdocs/m/comments.cgi>
 
 =back
 
@@ -6337,7 +6337,7 @@ sub _hdlr_comment_script {
 =head2 TrackbackScript
 
 Returns the value of the C<TrackbackScript> configuration setting. The
-default for this setting if unassigned is "mt-tb.cgi".
+default for this setting if unassigned is "tb.cgi".
 
 =over 4
 
@@ -6345,13 +6345,13 @@ default for this setting if unassigned is "mt-tb.cgi".
 
 Returns the script as a URL value.  For example 
 C<<$mt:TrackbackScript url="1"$>> might give you
-http://example.com/mt/mt-tb.cgi
+http://example.com/m/tb.cgi
 
 =item * filepath
 
 Returns the script as an absolute filesystem value.  For example
 C<<$mt:TrackbackScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-tb.cgi>
+C</var/www/example.com/htdocs/m/tb.cgi>
 
 =back
 
@@ -6369,20 +6369,20 @@ sub _hdlr_trackback_script {
 =head2 SearchScript
 
 Returns the value of the C<SearchScript> configuration setting. The
-default for this setting if unassigned is "mt-search.cgi".
+default for this setting if unassigned is "search.cgi".
 
 =over 4
 
 =item * url
 
 Returns the script as a URL value.  For example C<<$mt:SearchScript url="1"$>>
-might give you http://example.com/mt/mt-search.cgi
+might give you http://example.com/m/search.cgi
 
 =item * filepath
 
 Returns the script as an absolute filesystem value.  For example
 C<<$mt:SearchScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-search.cgi>
+C</var/www/example.com/htdocs/m/search.cgi>
 
 =back
 
@@ -6416,20 +6416,20 @@ sub _hdlr_search_max_results {
 =head2 XMLRPCScript
 
 Returns the value of the C<XMLRPCScript> configuration setting. The
-default for this setting if unassigned is "mt-xmlrpc.cgi".
+default for this setting if unassigned is "xmlrpc.cgi".
 
 =over 4
 
 =item * url
 
 Returns the script as a URL value.  For example C<<$mt:XMLRPCScript url="1"$>>
-might give you http://example.com/mt/mt-xmlrpc.cgi
+might give you http://example.com/m/xmlrpc.cgi
 
 =item * filepath
 
 Returns the script as an absolute filesystem value.  For example
 C<<$mt:XMLRPCScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-xmlrpc.cgi>
+C</var/www/example.com/htdocs/m/xmlrpc.cgi>
 
 =back
 
@@ -6447,20 +6447,20 @@ sub _hdlr_xmlrpc_script {
 =head2 AtomScript
 
 Returns the value of the C<AtomScript> configuration setting. The
-default for this setting if unassigned is "mt-atom.cgi".
+default for this setting if unassigned is "atom.cgi".
 
 =over 4
 
 =item * url
 
 Returns the script as a URL value.  For example C<<$mt:AtomScript url="1"$>>
-might give you http://example.com/mt/mt-atom.cgi
+might give you http://example.com/m/atom.cgi
 
 =item * filepath
 
 Returns the script as an absolute filesystem value.  For example
 C<<$mt:AtomScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-atom.cgi>
+C</var/www/example.com/htdocs/m/atom.cgi>
 
 =back
 
@@ -6478,20 +6478,20 @@ sub _hdlr_atom_script {
 =head2 NotifyScript
 
 Returns the value of the C<NotifyScript> configuration setting. The
-default for this setting if unassigned is "mt-add-notify.cgi".
+default for this setting if unassigned is "add-notify.cgi".
 
 =over 4
 
 =item * url
 
 Returns the script as a URL value.  For example C<<$mt:NotifyScript url="1"$>>
-might give you http://example.com/mt/mt-add-notify.cgi
+might give you http://example.com/m/add-notify.cgi
 
 =item * filepath
 
 Returns the script as an absolute filesystem value.  For example
 C<<$mt:NotifyScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/mt/mt-add-notify.cgi>
+C</var/www/example.com/htdocs/m/add-notify.cgi>
 
 =back
 
@@ -8198,7 +8198,7 @@ sub _hdlr_entries {
     my $blog = $ctx->stash('blog');
     my (@filters, %blog_terms, %blog_args, %terms, %args);
 
-    # for the case that we want to use mt:Entries with mt-search
+    # for the case that we want to use mt:Entries with search.cgi
     # send to MT::Template::Search if searh results are found
     if ($ctx->stash('results') && $args->{search_results} == 1) {
         require MT::Template::Context::Search;
@@ -8273,7 +8273,7 @@ sub _hdlr_entries {
     local $ctx->{__stash}{entries};
 
     # handle automatic offset based on 'offset' query parameter
-    # in case we're invoked through mt-view.cgi or some other
+    # in case we're invoked through view.cgi or some other
     # app.
     if (($args->{offset} || '') eq 'auto') {
         $args->{offset} = 0;
@@ -11271,7 +11271,7 @@ name.
 
 =item * no_redirect (optional; default "0")
 
-Prevents use of the mt-comments.cgi script to handle the comment author
+Prevents use of the comments.cgi script to handle the comment author
 link.
 
 =item * nofollowfy (optional)
@@ -16439,7 +16439,7 @@ user but is instead used to signal to the browser the data type of the
 response.
 
 When this tag is used in a system template, such as the search results
-template, mt-search.cgi will use the value specified to "type" attribute and
+template, search.cgi will use the value specified to "type" attribute and
 returns it in Content-Type HTTP header to web browser.
 
 When this tag is used in statically published template, this template tag

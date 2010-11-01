@@ -118,7 +118,7 @@
 <mt:unless name="has_stat_urls">
     <mt:if name="is_administrator">
         <mt:unless name="static_file_path">
-            <mt:setvarblock name="error"><__trans phrase="Melody was unable to locate your 'mt-static' directory. Please configure the 'StaticFilePath' configuration setting in your mt-config.cgi file, and create a writable 'support' directory underneath your 'mt-static' directory."></mt:setvarblock>
+            <mt:setvarblock name="error"><__trans phrase="Melody was unable to locate your 'mt-static' directory. Please configure the 'StaticFilePath' configuration setting in your config.cgi file, and create a writable 'support' directory underneath your 'mt-static' directory."></mt:setvarblock>
         <mt:else>
             <mt:setvarblock name="error"><__trans phrase="Melody was unable to write to its 'support' directory. Please create a directory at this location: [_1], and assign permissions that will allow the web server write access to it." params="<mt:var name="support_path">"></mt:setvarblock>
         </mt:unless>

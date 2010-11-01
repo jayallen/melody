@@ -60,7 +60,7 @@ intent of the setting.
 Users should be warned that Six Apart advises the following with regards to
 this capability:
 
-1) The prospective behavior (having mt-search respect Multiblog privacy
+1) The prospective behavior (having search.cgi respect Multiblog privacy
 settings) was never an intended function of the Multiblog plugin.
 
 2) Movable Type already provides the IncludeBlogs and ExcludeBlogs
@@ -76,7 +76,7 @@ with the inclusion / exclusion of blogs in searches much more difficult.
 There would be no clear way for Movable Type to show that Multiblog 
 privacy settings influence the search results, or that Multiblog privacy 
 settings may be overriding explicit IncludeBlogs / ExcludeBlogs settings 
-in the mt-config.cgi configuration file.
+in the config.cgi configuration file.
 
 =item 
 
