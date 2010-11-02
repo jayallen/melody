@@ -285,76 +285,77 @@ my $is_good = 1;
 my (@REQ, @DATA, @OPT);
 
 my @CORE_REQ = (
-    [ 'CGI', 0, 1, translate('CGI is required for all Melody application functionality.') ],
-
-    [ 'Image::Size', 0, 1, translate('Image::Size is required for file uploads (to determine the size of uploaded images in many different formats).') ],
-
-    [ 'File::Spec', 0.8, 1, translate('File::Spec is required for path manipulation across operating systems.') ],
-
-    [ 'CGI::Cookie', 0, 1, translate('CGI::Cookie is required for cookie authentication.') ],
+    [ 'CGI', 3.45, 1, translate('CGI is required for all Melody application functionality.') ],
+    [ 'Class::Accessor', 0.22, 1, translate('Class::Accessor is required for all Melody application functionality.') ],
+    [ 'Class::Trigger', '0.10_01', 1, translate('Class::Trigger is required for all Melody application functionality.') ],
+    [ 'Data::ObjectDriver', 0.06, 1, translate('Data::ObjectDriver is required for all Melody application functionality.') ],
+    [ 'Image::Size', 2.93, 1, translate('Image::Size is required for file uploads (to determine the size of uploaded images in many different formats).') ],
+    [ 'YAML::Tiny', 1.12, 1, translate('YAML::Tiny is required for all Melody application functionality.') ],
 );
 
 my @CORE_DATA = (
     [ 'DBI', 1.21, 0, translate('DBI is required to store data in database.') ],
-
     [ 'DBD::mysql', 0, 0, translate('DBI and DBD::mysql are required if you want to use the MySQL database backend.') ],
-
     [ 'DBD::Pg', 1.32, 0, translate('DBI and DBD::Pg are required if you want to use the PostgreSQL database backend.') ],
-
     [ 'DBD::SQLite', 0, 0, translate('DBI and DBD::SQLite are required if you want to use the SQLite database backend.') ],
-
     [ 'DBD::SQLite2', 0, 0, translate('DBI and DBD::SQLite2 are required if you want to use the SQLite 2.x database backend.') ],
-
 );
 
 my @CORE_OPT = (
-    [ 'HTML::Entities', 0, 0, translate('HTML::Entities is needed to encode some characters, but this feature can be turned off using the NoHTMLEntities option in the configuration file.') ],
-
-    [ 'LWP::UserAgent', 0, 0, translate('LWP::UserAgent is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the Melody Recently Updated ping.') ],
-
-    [ 'HTML::Parser', 0, 0, translate('HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the Melody Recently Updated ping.') ],
-
-    [ 'SOAP::Lite', 0.50, 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.') ],
-
-    [ 'File::Temp', 0, 0, translate('File::Temp is optional; It is needed if you would like to be able to overwrite existing files when you upload.') ],
-
-    [ 'Scalar::Util', 0, 1, translate('Scalar::Util is optional; It is needed if you want to use the Publish Queue feature.')],
-
-    [ 'List::Util', 0, 1, translate('List::Util is optional; It is needed if you want to use the Publish Queue feature.')],
-
-    [ 'Image::Magick', 0, 0, translate('Image::Magick is optional; It is needed if you would like to be able to create thumbnails of uploaded images.') ],
-
-    [ 'GD', 0, 0, translate('This module is needed if you would like to be able to create thumbnails of uploaded images.')],
-    [ 'IPC::Run', 0, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for Melody.')],
-
-    [ 'Storable', 0, 0, translate('Storable is optional; it is required by certain Melody plugins available from third parties.')],
-
-    [ 'Crypt::DSA', 0, 0, translate('Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.')],
-
-    [ 'Crypt::SSLeay', 0, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers such as AOL and Yahoo! which require SSL support.')],
-
-    [ 'MIME::Base64', 0, 0, translate('MIME::Base64 is required in order to enable comment registration.')],
-
-    [ 'XML::Atom', 0, 0, translate('XML::Atom is required in order to use the Atom API.')],
-
-    [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is required in order to use memcached as caching mechanism used by Melody.')],
-
+   
+    [ 'Archive::Extract', 0.08, 0, translate('Archive::Tar is required in order to archive files in backup/restore operation.')],  # Part of the HTML::Parser package in CPAN
     [ 'Archive::Tar', 0, 0, translate('Archive::Tar is required in order to archive files in backup/restore operation.')],
-
-    [ 'IO::Compress::Gzip', 0, 0, translate('IO::Compress::Gzip is required in order to compress files in backup/restore operation.')],
-        
-    [ 'IO::Uncompress::Gunzip', 0, 0, translate('IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.')],
-    
     [ 'Archive::Zip', 0, 0, translate('Archive::Zip is required in order to archive files in backup/restore operation.')],
-
-    [ 'XML::SAX', 0, 0, translate('XML::SAX and/or its dependencies is required in order to restore.')],
-
+    [ 'Attribute::Params::Validate', 1.7, 0, translate('')],
+    [ 'Cache', 2.04, 0, translate('')],
+    [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is required in order to use memcached as caching mechanism used by Melody.')],
+    [ 'Class::Data::Inheritable', 0.06, 0, translate('')],
+    [ 'Class::ErrorHandler', 0.01, 0, translate('')],
+    [ 'Crypt::DH', 0.96, 0, translate('')],
+    [ 'Crypt::DSA', 0, 0, translate('Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.')],
+    [ 'Crypt::SSLeay', 0, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers such as AOL and Yahoo! which require SSL support.')],
     [ 'Digest::SHA1', 0, 0, translate('Digest::SHA1 and its dependencies are required in order to allow commenters to be authenticated by OpenID providers including Vox and LiveJournal.')],
+    [ 'File::Copy::Recursive', 0.23, 0, translate('')],
+    [ 'GD', 0, 0, translate('This module is needed if you would like to be able to create thumbnails of uploaded images.')],
+    [ 'HTML::Entities', 0, 0, translate('HTML::Entities is needed to encode some characters, but this feature can be turned off using the NoHTMLEntities option in the configuration file.') ],
+    [ 'HTML::Parser', 0, 0, translate('HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the Melody Recently Updated ping.') ],
+    [ 'HTML::Template', 2.8, 0, translate('')],
+    [ 'Heap::Fibonacci', 0.71, 0, translate('')],
+    [ 'IO::Compress::Gzip', 0, 0, translate('IO::Compress::Gzip is required in order to compress files in backup/restore operation.')],
+    [ 'IO::Scalar', 2.110, 0, translate('')],
+    [ 'IO::Uncompress::Gunzip', 0, 0, translate('IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.')],
+    [ 'IPC::Cmd', 0.24, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for Melody.')],
+    [ 'IPC::Run', 0, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for Melody.')],
+    [ 'Image::Magick', 0, 0, translate('Image::Magick is optional; It is needed if you would like to be able to create thumbnails of uploaded images.') ],
+    [ 'JSON', 2.12, 0, translate('')],
+    [ 'Jcode', 0.88, 0, translate('')],
+    [ 'LWP', 5.831, 0, translate('LWP is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the Melody Recently Updated ping.') ],
+    [ 'Locale::Maketext', 1.13, 0, translate('')],
+    [ 'Lucene::QueryParser', 1.04, 0, translate('')],
+    [ 'MIME::Charset', 0.044, 0, translate('')],
+    [ 'MIME::EncWords', 0.96, 0, translate('')],
     [ 'Mail::Sendmail', 0, 0, translate('Mail::Sendmail is required for sending mail via SMTP Server.')],
-    [ 'Safe', 0, 0, translate('This module is used in test attribute of MTIf conditional tag.')],
-    [ 'Digest::MD5', 0, 0, translate('This module is used by the Markdown text filter.')],
-    [ 'Text::Balanced', 0, 0, translate('This module is required in search.cgi if you are running Melody on Perl older than Perl 5.8.') ],
-    [ 'XML::Parser', 0, 0, translate('This module required for action streams.')],
+    [ 'Math::BigInt', 1.63, 0, translate('')],
+    [ 'Module::Load', 0.10, 0, translate('')],
+    [ 'Module::Load::Conditional', 0.08, 0, translate('')],
+    [ 'Net::OAuth', 0.11, 0, translate('')],
+    [ 'Net::OpenID::Consumer', 1.03, 0, translate('')],
+    [ 'Param::Check', 0.24, 0, translate('')],
+    [ 'Param::Validate', 0.73, 0, translate('')],
+    [ 'SOAP::Lite', 0.710.08, 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.') ],
+    [ 'Sub::Install', 0, 0, translate('')],
+    [ 'TheSchwartz', 1.07, 0, translate('')],
+    [ 'URI', 1.36, 0, translate('')],
+    [ 'URI::Fetch', 0.08, 0, translate('')],
+    [ 'XML::Atom', 0, 0, translate('XML::Atom is required in order to use the Atom API.')],
+    [ 'XML::Elemental', 2.1, 0, translate('')],
+    [ 'XML::LibXML', 0, 0, translate('XML::LibXML is required in order to use the Atom API.')],
+    [ 'XML::NamespaceSupport', 1.09, 0, translate('')],
+    [ 'XML::SAX', 0.96, 0, translate('XML::SAX and/or its dependencies is required in order to restore.')],
+    [ 'XML::Simple', 2.14, 0, translate('')],
+    [ 'bignum', 0.23, 0, translate('')],
+    [ 'version', 0.76, 0, translate('')],
+    # [ 'XML::Parser', 0, 0, translate('This module required for action streams.')],
 );
 
 use Cwd;
@@ -373,7 +374,7 @@ my $cwd = '';
 
 my $ver = ref($^V) eq 'version' ? $^V->normal : ( $^V ? join('.', unpack 'C*', $^V) : $] );
 my $perl_ver_check = '';
-if ($] < 5.006001) {  # our minimal requirement for support
+if ($] < 5.008008) {  # our minimal requirement for support
     $perl_ver_check = <<EOT;
 <p class="warning"><MT_TRANS phrase="The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]). Please upgrade to at least Perl [_2]." params="$ver%%5.6.1"></p>
 EOT
@@ -454,9 +455,9 @@ if ($mt) {
         push @OPT, [ $key, $pkg->{version} || 0, 0, $pkg->{label}, $key, $pkg->{link} ];
     }
 }
-@REQ  = @CORE_REQ  unless @REQ;
-@DATA = @CORE_DATA unless @DATA;
-@OPT  = @CORE_OPT  unless @OPT;
+@REQ  = @CORE_REQ;  #unless @REQ;
+@DATA = @CORE_DATA; #unless @DATA;
+@OPT  = @CORE_OPT;  #unless @OPT;
 
 for my $list (\@REQ, \@DATA, \@OPT) {
     my $data = ($list == \@DATA);
