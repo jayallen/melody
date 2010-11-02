@@ -399,6 +399,8 @@ sub save {
     $obj->nofollow_urls(1);
     $obj->follow_auth_links(1);
     $obj->page_layout('layout-wtt');
+    $obj->max_revisions_entry($MT::Revisable::MAX_REVISIONS);
+    $obj->max_revisions_template($MT::Revisable::MAX_REVISIONS);
     my @authenticators = qw( MovableType );
     foreach my $auth (qw( Vox LiveJournal )) {
         my $a = MT->commenter_authenticator($auth);
@@ -1851,10 +1853,15 @@ sub save_filter {
       if $app->param('archive_path') =~ m/^\s*$/
         && $app->param('enable_archive_paths');
 
-    return $eh->error( MT->translate("The number of revisions to store must be a positive integer.") )
-        unless 0 < sprintf('%d', $app->param('max_revisions_entry'));
-    return $eh->error( MT->translate("The number of revisions to store must be a positive integer.") )
-        unless 0 < sprintf('%d', $app->param('max_revisions_template'));
+    return 1 unless $q->param('id');
+
+    # Only for existing blogs....
+    my $err = 'The number of revisions to store must be a positive integer.';
+    foreach my $type (qw( entry template )) {
+        warn $app->param('max_revisions_'.$type );
+        return $eh->error( MT->translate($err) )
+            unless int( $app->param('max_revisions_'.$type )) > 0;
+    }
 
     return 1;
 }
