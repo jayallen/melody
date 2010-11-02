@@ -16,13 +16,13 @@
 <head profile="http://gmpg.org/xfn/11"> 
 	<title><$mt:BlogName escape="html"$> &#8211; <$mt:BlogDescription escape="html"$></title> 
 	<meta name='robots' content='noindex,nofollow' />
-	<$mt:Include module="HTML Head"$>
+	<$mt:Include module="<__trans phrase="HTML Head">"$>
 </head> 
 <body> 
 <div class="container"> 
-	<$mt:Include module="Header"$>
+	<$mt:Include module="<__trans phrase="Header">"$>
 	<div class="post">
-		<h2 style="font-weight:normal">Search Results for <strong><$mt:SearchString$></strong></h2>
+		<h2 style="font-weight:normal"><__trans phrase="Search Results for"> <strong><$mt:SearchString$></strong></h2>
 	</div>
 
 	<mt:SearchResults>
@@ -35,7 +35,7 @@
 	</div> 
  
 	<br clear="all" />
-	<$mt:Include module="Footer"$>
+	<$mt:Include module="<__trans phrase="Footer">"$>
  
 	</div> <!-- end container --> 
 </body> 

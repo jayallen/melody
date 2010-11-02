@@ -33,7 +33,7 @@
 <head profile="http://gmpg.org/xfn/11"> 
 	<title><$mt:BlogName escape="html"$> &#8211; <$mt:BlogDescription escape="html"$></title> 
 	<meta name='robots' content='noindex,nofollow' />
-	<$mt:Include module="HTML Head"$>
+	<$mt:Include module="<__trans phrase="HTML Head">"$>
 </head> 
 <body> 
 <div class="container"> 
@@ -52,7 +52,7 @@
 	</div>
 
 	<mt:If tag="FlickrPhotoType" ne="Disable"> 
-	<$mt:Include module="Flickr"$>
+	<$mt:Include module="<__trans phrase="Flickr">"$>
 	</mt:If>
 
 <$mt:Date format="%Y$%m%d" setvar="today"$>
@@ -72,7 +72,7 @@
 	</div> 
  
 	<br clear="all" />
-	<$mt:Include module="Footer" cache="0"$>
+	<$mt:Include module="<__trans phrase="Footer">"$>
  
 	</div> <!-- end container --> 
 </body> 
