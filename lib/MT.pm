@@ -41,9 +41,7 @@ BEGIN {
         $SCHEMA_VERSION           = '4.0077';
         $PRODUCT_NAME             = 'Melody';
         $PRODUCT_CODE             = 'OM';
-        $VERSION_ID               = '1.0-beta 1 (build '
-                                    .(split('.', $PRODUCT_VERSION))[2]
-                                    .')';
+        $VERSION_ID               = '1.0-beta 1 (build 27)';
         $PORTAL_URL               = 'http://openmelody.org';
     }
     else { 
