@@ -41,7 +41,9 @@ BEGIN {
         $SCHEMA_VERSION           = '4.0077';
         $PRODUCT_NAME             = 'Melody';
         $PRODUCT_CODE             = 'OM';
-        $VERSION_ID               = '1.0-beta 1 (27)';
+        $VERSION_ID               = '1.0-beta 1 (build '
+                                    .(split('.', $PRODUCT_VERSION))[2]
+                                    .')';
         $PORTAL_URL               = 'http://openmelody.org';
     }
     else { 
@@ -112,7 +114,7 @@ sub version_slug {
     return MT->translate_templatized(<<"SLUG");
 <__trans phrase="Powered by [_1]" params="$PRODUCT_NAME">
 <__trans phrase="Version [_1]" params="$VERSION_ID">
-<__trans phrase="http://www.sixapart.com/movabletype/">
+<__trans phrase="http://openmelody.org/">
 SLUG
 }
 
