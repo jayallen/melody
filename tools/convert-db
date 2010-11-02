@@ -16,7 +16,7 @@ use lib 'extlib';
 use lib 'lib';
 
 unless ($new_config) {
-    print "Need configuration file location. cf: convert-db --new==mt-config.cgi.new";
+    print "Need configuration file location. cf: convert-db --new==config.cgi.new";
     exit;
 }
 
@@ -208,7 +208,7 @@ convert-db - A tool to convert backend database of Movable Type
 
 =head1 SYNOPSIS
 
-convert-db --new=mt-config.cgi.new [--old=mt-config.cgi.current]
+convert-db --new=config.cgi.new [--old=config.cgi.current]
 
 =head1 DESCRIPTION
 
@@ -218,8 +218,8 @@ MySQL to PostgreSQL.
 
 The following options are available:
 
-  --new       mt-config.cgi file of destination
-  --old       mt-config.cgi file of source (optional)
+  --new       config.cgi file of destination
+  --old       config.cgi file of source (optional)
 
 It is also useful to replicate Movable Type database.
 

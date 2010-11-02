@@ -576,7 +576,7 @@ I<NetPBM> tools, the I<ImageMagick> and I<Image::Magick> Perl module,
 or the I<GD> and I<GD> Perl module.
 
 The backend framework used (NetPBM, ImageMagick, GD) depends on the value of
-the I<ImageDriver> setting in the F<mt-config.cgi> file (or, correspondingly, set
+the I<ImageDriver> setting in the F<config.cgi> file (or, correspondingly, set
 on an instance of the I<MT::ConfigMgr> class).
 
 Currently all this is used for is to create thumbnails from uploaded images.
@@ -584,7 +584,7 @@ Currently all this is used for is to create thumbnails from uploaded images.
 =head1 CONFIGURATION
 
 To change the image manipulation library used for generating thumbnails in
-your system, edit your C<mt-config.cgi> file and edit or edit the 
+your system, edit your C<config.cgi> file and edit or edit the 
 C<ImageDriver> configuration directive. The system supports the following
 values for this directive:
 

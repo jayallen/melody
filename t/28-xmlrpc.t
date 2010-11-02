@@ -21,7 +21,7 @@ use MT::Test qw(:db :data);
 my $mt = MT->new() or die MT->errstr;
 isa_ok($mt, 'MT');
 
-my $base_uri = '/mt-xmlrpc.cgi';
+my $base_uri = '/xmlrpc.cgi';
 my $username = 'Chuck D';
 my $password = 'seecret';
 

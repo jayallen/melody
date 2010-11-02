@@ -26,10 +26,10 @@ sub BEGIN {
 my $cfg_exist;
 my $mt_static_path = q();
 my $mt_cgi_path;
-if ((-f File::Spec->catfile($ENV{MT_HOME}, 'mt-config.cgi')) ||
+if ((-f File::Spec->catfile($ENV{MT_HOME}, 'config.cgi')) ||
     (-f File::Spec->catfile($ENV{MT_HOME}, 'mt.cfg'))) {
     $cfg_exist = 1;
-    my $file_handle = open(CFG, $ENV{MT_HOME}.'/mt.cfg') || open(CFG, $ENV{MT_HOME}.'/mt-config.cgi');
+    my $file_handle = open(CFG, $ENV{MT_HOME}.'/mt.cfg') || open(CFG, $ENV{MT_HOME}.'/config.cgi');
     my $line;
     while ($line = <CFG>) {
         next if $line !~ /\S/ || $line =~ /^#/;
@@ -140,7 +140,7 @@ if (!$view) {
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta http-equiv="content-language" content="$lang" />
     
-    <title><MT_TRANS phrase="Melody System Check"> [mt-check.cgi]</title>
+    <title><MT_TRANS phrase="Melody System Check"> [check.cgi]</title>
     
     <style type=\"text/css\">
         <!--
@@ -274,10 +274,10 @@ HTML
         print "<body>\n";
     }
     print trans_templ(<<HTML);
-<div id="header"><h1><MT_TRANS phrase="Melody System Check"> [mt-check.cgi]</h1></div>
+<div id="header"><h1><MT_TRANS phrase="Melody System Check"> [check.cgi]</h1></div>
 
 <div id="content">
-<p class="msg msg-info"><MT_TRANS phrase="The mt-check.cgi script provides you with information on your system's configuration and determines whether you have all of the components you need to run Melody."></p>
+<p class="msg msg-info"><MT_TRANS phrase="The check.cgi script provides you with information on your system's configuration and determines whether you have all of the components you need to run Melody."></p>
 HTML
 }
 
@@ -353,7 +353,7 @@ my @CORE_OPT = (
     [ 'Mail::Sendmail', 0, 0, translate('Mail::Sendmail is required for sending mail via SMTP Server.')],
     [ 'Safe', 0, 0, translate('This module is used in test attribute of MTIf conditional tag.')],
     [ 'Digest::MD5', 0, 0, translate('This module is used by the Markdown text filter.')],
-    [ 'Text::Balanced', 0, 0, translate('This module is required in mt-search.cgi if you are running Melody on Perl older than Perl 5.8.') ],
+    [ 'Text::Balanced', 0, 0, translate('This module is required in search.cgi if you are running Melody on Perl older than Perl 5.8.') ],
     [ 'XML::Parser', 0, 0, translate('This module required for action streams.')],
 );
 

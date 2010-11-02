@@ -68,7 +68,7 @@ __PACKAGE__->install_properties({
         'allow_commenter_regist' => 'boolean',
         'use_revision' => 'boolean',
 
-        ## Have to keep these around for use in mt-upgrade.cgi.
+        ## Have to keep these around for use in upgrade.cgi.
         'archive_url' => 'string(255)',
         'archive_path' => 'string(255)',
         'old_style_archive_links' => 'boolean',
@@ -1225,7 +1225,7 @@ Should contain all desired HTML formatting.
 
 =item * use_revision
 
-Returns 0 if TrackRevisions master switch in mt-config is off.
+Returns 0 if TrackRevisions master switch in config.cgi is off.
 Otherwise it returns the value stored in the column.
 
 =back

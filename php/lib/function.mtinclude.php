@@ -6,7 +6,7 @@
 # $Id$
 
 global $restricted_include_filenames;
-$restricted_include_filenames = array('mt-config.cgi' => 1, 'passwd' => 1);
+$restricted_include_filenames = array('config.cgi' => 1, 'passwd' => 1);
 
 function smarty_function_mtinclude($args, &$ctx) {
     // status: partial

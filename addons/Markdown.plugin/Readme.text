@@ -42,7 +42,7 @@ MT 3.0 or later).
 
 1.  Copy the "Markdown.pl" file into your Movable Type "plugins"
     directory. The "plugins" directory should be in the same directory
-    as "mt.cgi"; if the "plugins" directory doesn't already exist, use
+    as "index.cgi"; if the "plugins" directory doesn't already exist, use
     your FTP program to create it. Your installation should look like
     this:
 

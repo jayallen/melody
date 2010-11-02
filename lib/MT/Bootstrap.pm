@@ -145,9 +145,9 @@ sub import {
                     my $script = $1;
                     my $ext = $2;
 
-                    if (-f File::Spec->catfile($ENV{MT_HOME}, "mt-wizard.$ext")) {
+                    if (-f File::Spec->catfile($ENV{MT_HOME}, "wizard.$ext")) {
                         $uri =~ s/\Q$script\E//;
-                        $uri .= '/mt-wizard.' . $ext;
+                        $uri .= '/wizard.' . $ext;
 
                         my $prot = $port == 443 ? 'https' : 'http';
                         my $cgipath = "$prot://$host";

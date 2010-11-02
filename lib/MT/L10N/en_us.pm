@@ -123,7 +123,7 @@ sub ascii_only { ((ref $_[0]) || $_[0]) eq __PACKAGE__ }
 please follow the link contained in that email. This will verify that
 the address you provided is correct and belongs to you.',
 
-    '_INDEX_INTRO' => '<p>If you are installing Movable Type, you may want to review the <a href="http://www.sixapart.com/movabletype/docs/mtinstall.html">installation instructions</a> and view the <a rel="nofollow" href="mt-check.cgi">Movable Type System Check</a> to make sure that your system has what it needs.</p>',
+    '_INDEX_INTRO' => '<p>If you are installing Movable Type, you may want to review the <a href="http://www.sixapart.com/movabletype/docs/mtinstall.html">installation instructions</a> and view the <a rel="nofollow" href="check.cgi">Movable Type System Check</a> to make sure that your system has what it needs.</p>',
     '_LOG_TABLE_BY' => 'By',
     '_REBUILD_PUBLISH' => 'Publish',
     '_DATE_FROM' => 'From',

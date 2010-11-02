@@ -17,7 +17,7 @@ REASON
 
 # use Test::More tests => 37;
 
-# This list of modules below is not in sync with what mt-check and Makefile requires.
+# This list of modules below is not in sync with what check.cgi and Makefile requires.
 
 # required modules in MT check
 use_ok('CGI::Cookie');

@@ -29,7 +29,7 @@ my $ua = new LWP::UserAgent::Local({ ScriptAlias => "$cgipath/",
                                      AddHandler => 'cgi-script .cgi',
                                      cookie_jar => $cookie_jar,
                                  });
-my $start_link = "http://localhost" . $cgipath . "/mt.cgi?username=$username&password=$password";
+my $start_link = "http://localhost" . $cgipath . "/index.cgi?username=$username&password=$password";
 my $start_url = new URI($start_link);
 
 my %link_queue;

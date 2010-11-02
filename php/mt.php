@@ -66,7 +66,7 @@ class MT {
 
         if (!file_exists($cfg_file)) {
             $mtdir = dirname(dirname(__FILE__));
-            $cfg_file = $mtdir . DIRECTORY_SEPARATOR . "mt-config.cgi";
+            $cfg_file = $mtdir . DIRECTORY_SEPARATOR . "config.cgi";
         }
 
         $this->configure($cfg_file);
@@ -194,7 +194,7 @@ class MT {
     }
 
     /***
-     * Loads configuration data from mt.cfg and mt-db-pass.cgi files.
+     * Loads configuration data from mt.cfg and db-pass.cgi files.
      * Stores content in the 'config' member variable.
      */
     function configure($file = null) {
@@ -266,7 +266,7 @@ class MT {
 
         // read in the database password
         if (!isset($cfg['dbpassword'])) {
-            $db_pass_file = $cfg['mtdir'] . DIRECTORY_SEPARATOR . 'mt-db-pass.cgi';
+            $db_pass_file = $cfg['mtdir'] . DIRECTORY_SEPARATOR . 'db-pass.cgi';
             if (file_exists($db_pass_file)) {
                 $password = implode('', file($db_pass_file));
                 $password = trim($password, "\n\r\0");
@@ -339,17 +339,17 @@ class MT {
         isset($cfg['publishcharset']) or
             $cfg['publishcharset'] = 'utf-8';
         isset($cfg['trackbackscript']) or
-            $cfg['trackbackscript'] = 'mt-tb.cgi';
+            $cfg['trackbackscript'] = 'tb.cgi';
         isset($cfg['adminscript']) or
-            $cfg['adminscript'] = 'mt.cgi';
+            $cfg['adminscript'] = 'index.cgi';
         isset($cfg['commentscript']) or
-            $cfg['commentscript'] = 'mt-comments.cgi';
+            $cfg['commentscript'] = 'comments.cgi';
         isset($cfg['atomscript']) or
-            $cfg['atomscript'] = 'mt-atom.cgi';
+            $cfg['atomscript'] = 'atom.cgi';
         isset($cfg['xmlrpcscript']) or
-            $cfg['xmlrpcscript'] = 'mt-xmlrpc.cgi';
+            $cfg['xmlrpcscript'] = 'xmlrpc.cgi';
         isset($cfg['searchscript']) or
-            $cfg['searchscript'] = 'mt-search.cgi';
+            $cfg['searchscript'] = 'search.cgi';
         isset($cfg['defaultlanguage']) or
             $cfg['defaultlanguage'] = 'en_US';
         isset($cfg['globalsanitizespec']) or

@@ -89,7 +89,7 @@ sub init_request {
         }
     }
 
-    # If mt-check.cgi exists, redirect to errro screen
+    # If check.cgi exists, redirect to errro screen
     my $cfg_exists = $app->is_config_exists();
     if ($cfg_exists && lc $step ne 'seed' && lc $mode ne 'retry') {
         my %param;
@@ -143,7 +143,7 @@ sub init_core_registry {
             'HTML::Entities' => {
                 link => 'http://search.cpan.org/dist/HTML-Entities',
                 label =>
-                    'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in mt-config.cgi.',
+                    'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in config.cgi.',
             },
             'LWP::UserAgent' => {
                 link => 'http://search.cpan.org/dist/LWP',
@@ -262,7 +262,7 @@ sub init_core_registry {
             'Text::Balanced' => {
                 link => 'http://search.cpan.org/dist/Text-Balanced',
                 label =>
-                    'This module is required in mt-search.cgi if you are using a version of Perl older than Perl 5.8.',
+                    'This module is required in search.cgi if you are using a version of Perl older than Perl 5.8.',
             },
             'XML::Parser' => {
                 link => 'http://search.cpan.org/dist/Text-Balanced',
@@ -875,7 +875,7 @@ sub seed {
 
     my $r_uri = $ENV{REQUEST_URI} || $ENV{SCRIPT_NAME};
     if ( $ENV{MOD_PERL}
-        || ( ( $r_uri =~ m/\/mt-wizard\.(\w+)(\?.*)?$/ ) && ( $1 ne 'cgi' ) )
+        || ( ( $r_uri =~ m/\/wizard\.(\w+)(\?.*)?$/ ) && ( $1 ne 'cgi' ) )
         )
     {
         my $new = '';
@@ -956,7 +956,7 @@ sub seed {
 
     my $data = $app->build_page( "mt-config.tmpl", \%param );
 
-    my $cfg_file = File::Spec->catfile( $app->{mt_dir}, 'mt-config.cgi' );
+    my $cfg_file = File::Spec->catfile( $app->{mt_dir}, 'config.cgi' );
     if ( !-f $cfg_file ) {
 
         # write!
@@ -1028,7 +1028,7 @@ sub cgipath {
 
     # REQUEST_URI for CGI-compliant servers; SCRIPT_NAME for IIS.
     my $uri = $ENV{REQUEST_URI} || $ENV{SCRIPT_NAME};
-    $uri =~ s!/mt-wizard(\.f?cgi|\.f?pl)(\?.*)?$!/!;
+    $uri =~ s!/wizard(\.f?cgi|\.f?pl)(\?.*)?$!/!;
 
     my $cgipath = '';
     $cgipath = $port == 443 ? 'https' : 'http';
@@ -1128,7 +1128,7 @@ sub is_config_exists {
     eval { use File::Spec; };
     my ( $cfg, $cfg_exists, $static_file_path );
     if ( !$@ ) {
-        $cfg = File::Spec->catfile( $app->{mt_dir}, 'mt-config.cgi' );
+        $cfg = File::Spec->catfile( $app->{mt_dir}, 'config.cgi' );
         $cfg_exists |= 1 if -f $cfg;
     }
     return $cfg_exists;
