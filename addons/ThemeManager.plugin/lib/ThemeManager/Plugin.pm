@@ -103,12 +103,10 @@ sub update_page_actions {
 sub theme_dashboard {
     my $app  = shift;
     my $q    = $app->can('query') ? $app->query : $app->param;
-    my $blog = $app->blog;
     # Since there is no Theme Dashboard at the system level, capture and
     # redirect to the System Dashboard, if necessary.
-    if ( !eval {$blog->id} && ($q->param('__mode') eq 'theme_dashboard') ) {
-        $app->redirect( $app->uri.'?__mode=dashboard&blog_id=0' );
-    }
+    my $blog = $app->blog
+        or $app->redirect( $app->uri.'?__mode=dashboard&blog_id=0' );
 
     my $ts_id  = $blog->template_set;
     my $tm     = MT->component('ThemeManager');
