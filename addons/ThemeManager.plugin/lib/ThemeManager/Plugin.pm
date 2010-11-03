@@ -127,10 +127,10 @@ sub theme_dashboard {
     }
     else {
         # This is Production Mode.
-        # Convert the saved YAML back into a hash.
-        my $yaml = YAML::Tiny->new;
-        $theme_meta = YAML::Tiny->read_string( $blog->theme_meta );
-        $theme_meta = $theme_meta->[0];
+        # If the blog has theme_meta, convert the saved YAML back into a hash.
+        $theme_meta
+            = eval { YAML::Tiny->read_string( $blog->theme_meta )->[0] };
+        
         # If theme meta isn't found, it wasn't set when the theme was 
         # applied (a very likely scenario for upgraders, who likely haven't
         # applied a new theme). Go ahead and just create the theme meta.
@@ -248,7 +248,6 @@ sub theme_dashboard {
             $row->{label}         = theme_label($theme->ts_label, $plugin);
 
             # Convert the saved YAML back into a hash.
-            my $yaml = YAML::Tiny->new;
             my $theme_meta = YAML::Tiny->read_string( $theme->theme_meta );
             $theme_meta = $theme_meta->[0];
             
@@ -401,13 +400,14 @@ sub setup_theme {
     # set up. If there are, we want them to look good (including being sorted)
     # into alphabeticized fieldsets and to be ordered correctly with in each
     # fieldset, just like on the Theme Options page.
-    my $plugin = $MT::Plugins{$plugin_sig}->{object};
+    # FIXME Use MT->component
+    my $plugin = $MT::Plugins{$plugin_sig}->{object}; 
+    # FIXME Use $plugin->registry('template_sets', $ts_id);
     my $ts     = $plugin->{registry}->{'template_sets'}->{$ts_id};
 
     # Convert the saved YAML back into a hash.
-    my $yaml = YAML::Tiny->new;
-    my $theme_meta = YAML::Tiny->read_string( $theme->theme_meta );
-    $theme_meta = $theme_meta->[0];
+    my $theme_meta
+        = eval { YAML::Tiny->read_string( $theme->theme_meta )->[0] };
     $param->{ts_label} = theme_label($theme_meta->{label}, $plugin);
 
     # Check for the widgetsets beacon. It will be set after visiting the 
