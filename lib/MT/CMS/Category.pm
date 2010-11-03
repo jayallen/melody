@@ -30,7 +30,8 @@ sub edit {
         my $tags_js = MT::Util::to_json(
             MT::Tag->cache(
                 blog_id => $blog_id,
-                class   => 'MT::Category',
+                class   => ( $app->query->param('_type') eq 'category' 
+                                    ? 'MT::Category' : 'MT::Folder'   ),
                 private => 1
             )
         );
