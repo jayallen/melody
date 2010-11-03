@@ -104,13 +104,14 @@ sub theme_dashboard {
     my $app = MT->instance;
     return unless $app->isa('MT::App');
     my $q = $app->can('query') ? $app->query : $app->param;
+    my $blog = $app->blog;
     # Since there is no Theme Dashboard at the system level, capture and
     # redirect to the System Dashboard, if necessary.
-    if ( !eval {$app->blog->id} && ($q->param('__mode') eq 'theme_dashboard') ) {
+    if ( !eval {$blog->id} && ($q->param('__mode') eq 'theme_dashboard') ) {
         $app->redirect( $app->uri.'?__mode=dashboard&blog_id=0' );
     }
 
-    my $ts_id  = $app->blog->template_set;
+    my $ts_id  = $blog->template_set;
     my $tm     = MT->component('ThemeManager');
     my $plugin = find_theme_plugin($ts_id);
 
@@ -131,13 +132,12 @@ sub theme_dashboard {
         # This is Production Mode.
         # Convert the saved YAML back into a hash.
         my $yaml = YAML::Tiny->new;
-        $theme_meta = YAML::Tiny->read_string( $app->blog->theme_meta );
+        $theme_meta = YAML::Tiny->read_string( $blog->theme_meta );
         $theme_meta = $theme_meta->[0];
         # If theme meta isn't found, it wasn't set when the theme was 
         # applied (a very likely scenario for upgraders, who likely haven't
         # applied a new theme). Go ahead and just create the theme meta.
         if (!$theme_meta) {
-            my $blog = $app->blog;
             my $meta = prepare_theme_meta($ts_id);
             my $yaml = YAML::Tiny->new;
             $yaml->[0] = $meta;
@@ -164,10 +164,10 @@ sub theme_dashboard {
     $param->{theme_docs}        = theme_docs($theme_meta->{documentation}, $plugin);
 
     # Grab the template set language, or fall back to the blog language.
-    my $template_set_language = $app->blog->template_set_language 
-        || $app->blog->language;
-    if ( $app->blog->language ne $app->blog->template_set_language ) {
-        $param->{template_set_language} = $app->blog->template_set_language;
+    my $template_set_language = $blog->template_set_language 
+        || $blog->language;
+    if ( $blog->language ne $blog->template_set_language ) {
+        $param->{template_set_language} = $blog->template_set_language;
     }
 
     my $dest_path = _theme_thumb_path();
@@ -180,7 +180,7 @@ sub theme_dashboard {
 
     # Are the templates linked? We use this to show/hide the Edit/View
     # Templates links.
-    my $linked = MT->model('template')->load({ blog_id     => $app->blog->id,
+    my $linked = MT->model('template')->load({ blog_id     => $blog->id,
                                                linked_file => '*', });
     if ($linked) {
         # These templates *are* linked.
@@ -194,7 +194,7 @@ sub theme_dashboard {
         # So, first grab templates in the current blog that are not 
         # backups and that have had modifications made (modified_on col).
         my $iter = MT->model('template')->load_iter({
-                blog_id     => $app->blog->id,
+                blog_id     => $blog->id,
                 type        => {not_like => 'backup'},
                 modified_on => {not_null => 1},
             });
