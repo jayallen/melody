@@ -61,6 +61,15 @@ template_sets:
                 tag: RecentEntriesCount
                 fieldset: listing_widgets
                 order: 3
+            flickr_enable:
+                label: Enable Flickr support
+                hint: If enabled, DePo Clean will display a list of photos from Flickr.
+                type: radio
+                values: Yes,No
+                default: No
+                tag: FlickrEnable
+                fieldset: flickr
+                order: 1
             flickr_type:
                 label: Type of photo display
                 hint: Which Flickr feed do you want to use to control the photoset displayed on the top of the main page?
@@ -69,30 +78,35 @@ template_sets:
                 values: Disable,User,Photoset,Group,Favorites,Public
                 default: User
                 tag: FlickrPhotoType
+                order: 2
             flickr_user_id:
                 label: User ID
                 hint: Your Flickr User ID number. If you don't know it, <a href="http://idgettr.com/">go here</a>
                 type: text
                 fieldset: flickr
                 tag: FlickrUserID
+                order: 3
             flickr_group_id:
                 label: Group ID
                 hint: This field is used in conjunction with the group display.
                 type: text
                 tag: FlickrGroupID
                 fieldset: flickr
+                order: 4
             flickr_photoset_id:
                 label: Photoset ID
                 hint: This field is used in conjunction with the photoset display.
                 type: text
                 tag: FlickrPhotosetID
                 fieldset: flickr
+                order: 5
             flickr_tags:
                 label: Tags
                 hint: A list of tags that can be sent to Flickr to show photos of a particular type.
                 type: text
                 tag: FlickrTags
                 fieldset: flickr
+                order: 6
             comments_in_comment_feed:
                 label: Number of comments in comment feed
                 hint: This will limit the number of comments that are put into the recent comment news feed
