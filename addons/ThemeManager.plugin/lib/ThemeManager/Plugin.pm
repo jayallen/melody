@@ -806,13 +806,13 @@ sub _make_mini {
 }
 
 sub paypal_donate {
+    my $app = shift;
+    my $q   = $app->can('query') ? $app->query : $app->param;
     # Donating through PayPal requires a pop-up dialog so that we can break 
     # out of MT and the normal button handling. (That is, clicking a PayPal
     # button on Theme Options causes MT to try to save Theme Options, not 
     # launch the PayPal link. Creating a dialog breaks out of that
     # requirement.)
-    my $app = MT->instance;
-    my $q = $app->can('query') ? $app->query : $app->param;
     my $param = {};
     $param->{theme_label}  = $q->param('theme_label');
     $param->{paypal_email} = $q->param('paypal_email');
@@ -848,10 +848,10 @@ sub unlink_templates {
 }
 
 sub theme_info {
+    my $app = shift;
+    my $q   = $app->can('query') ? $app->query : $app->param;
     # Theme info is displayed when a user clicks to select a theme (from the
     # Change Theme tab).
-    my $app = MT->instance;
-    my $q = $app->can('query') ? $app->query : $app->param;
     my $param = {};
     
     my $plugin_sig = $q->param('plugin_sig');
