@@ -101,9 +101,8 @@ sub update_page_actions {
 }
 
 sub theme_dashboard {
-    my $app = MT->instance;
-    return unless $app->isa('MT::App');
-    my $q = $app->can('query') ? $app->query : $app->param;
+    my $app  = shift;
+    my $q    = $app->can('query') ? $app->query : $app->param;
     my $blog = $app->blog;
     # Since there is no Theme Dashboard at the system level, capture and
     # redirect to the System Dashboard, if necessary.
