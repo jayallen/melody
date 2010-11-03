@@ -435,7 +435,7 @@ sub edit {
     }
 
     my $editors = $app->registry("richtext_editors");
-    my $edit_reg = $editors->{$rte};
+    my $edit_reg = $editors->{$rte} if $rte;
     if ($edit_reg) {
         if (my $rich_editor_tmpl = $edit_reg->{plugin}->load_tmpl($edit_reg->{template})) {
             $param->{rich_editor} = $rte;
