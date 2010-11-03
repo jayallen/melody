@@ -22,10 +22,15 @@ sub update_menus {
     # denying access is probably not best.
     my $blog_id = $q->param('blog_id');
     if ($blog_id) {
+        # FIXME This should be done in a pre_run or init_request callback like so:
+        #           my $a = $app->registry('menus');
+        #           delete $a->{'design:template'};
+        #       but don't do that here or else you'll get into a loop
         my $core = MT->component('Core');
         delete $core->{registry}->{applications}->{cms}->{menus}->{'design:template'};
     }
     # Now just add the Theme Dashboard menu item.
+    # TODO Move to config.yaml
     return {
         'design:theme_dashboard' => {
             label      => 'Theme Dashboard',
@@ -42,11 +47,18 @@ sub update_page_actions {
     my $q = $app->can('query') ? $app->query : $app->param;
     my $blog_id = $q->param('blog_id');
     if ($blog_id) {
+        # FIXME This should be done in a pre_run or init_request callback like so:
+        #       and it should just be:
+        #           my $a = $app->registry('page_actions', 'list_templates');
+        #           delete $a->{refresh_all_blog_templates};
+        #       but don't do that here or else you'll get into a loop
         my $core = MT->component('Core');
         # Delete the Refresh Blog Templates page action because we don't want
         # people to use this page action--they can apply a theme, instead.
         delete $core->{registry}->{applications}->{cms}->{page_actions}->{list_templates}->{refresh_all_blog_templates};
     }
+
+    # TODO Move these to the config.yaml but break out the perl code into methods
     return {
         list_templates => {
             refresh_fields => {
@@ -149,6 +161,7 @@ sub theme_dashboard {
     # use because it was previously sanitized through the Util methods (such
     # as theme_label and theme_description). But if the user is in Designer
     # Mode, we want to ensure that fallback values are used if necessary.
+    # TODO Refactor this into a single method call where you pass in $theme_meta and get out a parameter hash ref.
     $param->{theme_label}       = theme_label($theme_meta->{label}, $plugin);
     $param->{theme_description} = theme_description($theme_meta->{description}, $plugin);
     $param->{theme_author_name} = theme_author_name($theme_meta->{author_name}, $plugin);
@@ -161,8 +174,9 @@ sub theme_dashboard {
     $param->{theme_docs}        = theme_docs($theme_meta->{documentation}, $plugin);
 
     # Grab the template set language, or fall back to the blog language.
+    # FIXME Below looks like an inadvertent error: You assign to a variable and never use it but instead continue using the $blog->template_set_language
     my $template_set_language = $blog->template_set_language 
-        || $blog->language;
+                             || $blog->language;
     if ( $blog->language ne $blog->template_set_language ) {
         $param->{template_set_language} = $blog->template_set_language;
     }
@@ -177,6 +191,7 @@ sub theme_dashboard {
 
     # Are the templates linked? We use this to show/hide the Edit/View
     # Templates links.
+    # FIXME If this is simply a boolean test, use count() not load()!!
     my $linked = MT->model('template')->load({ blog_id     => $blog->id,
                                                linked_file => '*', });
     if ($linked) {
@@ -195,6 +210,7 @@ sub theme_dashboard {
                 type        => {not_like => 'backup'},
                 modified_on => {not_null => 1},
             });
+            # FIXME Why not_like instead of not? It's slower and you aren't using any metacharacters
         while ( my $tmpl = $iter->() ) { 
             if ($tmpl->modified_on > $tmpl->created_on) {
                 $param->{templates_modified} = 1;
@@ -206,6 +222,7 @@ sub theme_dashboard {
     }
     $param->{new_theme} = $q->param('new_theme');
 
+    # TODO This kind of construct indicates that we need to be our own app class
     _populate_list_templates_context( $app, $param );
 
     
@@ -235,6 +252,7 @@ sub theme_dashboard {
         code     => sub {
             my ($theme, $row) = @_;
             # Use the plugin sig to grab the plugin.
+            # FIXME $app->component($theme->plugin_sig) ???
             my $plugin = $MT::Plugins{$theme->plugin_sig}->{object};
             if (!$plugin) {
                 # This plugin couldn't be loaded! That must mean the theme has 
