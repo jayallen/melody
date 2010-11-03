@@ -123,7 +123,7 @@ sub theme_dashboard {
         # theme plugin has been disabled/removed. The dashboard links,
         # below, will also construct fallback data to display, if the
         # theme couldn't be loaded here.
-        $theme_meta = MT->app->registry( 'template_sets', $ts_id );
+        $theme_meta = $app->registry( 'template_sets', $ts_id );
     }
     else {
         # This is Production Mode.
