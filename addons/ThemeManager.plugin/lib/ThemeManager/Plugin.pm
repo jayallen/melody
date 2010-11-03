@@ -262,14 +262,14 @@ sub theme_dashboard {
 }
 
 sub select_theme {
+    my $app = shift;
+    my $q   = $app->can('query') ? $app->query : $app->param;
+
     # The user probably wants to apply a new theme; we start by browsing the
     # available themes.
     # Save themes to the theme table, so that we can build a listing screen from them.
     _theme_check();
 
-    my $app = shift;
-    my $q = $app->can('query') ? $app->query : $app->param;
-    
     # If the user is applying a theme to many blogs, they've come from a list 
     # action, and the ID parameter is full of blog IDs. Pass these along to
     # the template.
@@ -365,8 +365,8 @@ sub select_theme {
 
 sub setup_theme {
     my $app = shift;
-    my $q = $app->can('query') ? $app->query : $app->param;
-    my $tm = MT->component('ThemeManager');
+    my $q   = $app->can('query') ? $app->query : $app->param;
+    my $tm  = MT->component('ThemeManager');
 
     my $ts_id      = $q->param('theme_id');
     my $plugin_sig = $q->param('plugin_sig');
@@ -820,18 +820,18 @@ sub paypal_donate {
 }
 
 sub edit_templates {
-    # Pop up the warning dialog about what it really means to "edit templates."
     my $app = shift;
-    my $q = $app->can('query') ? $app->query : $app->param;
+    my $q   = $app->can('query') ? $app->query : $app->param;
+    # Pop up the warning dialog about what it really means to "edit templates."
     my $param = {};
     $param->{blog_id} = $q->param('blog_id');
     return $app->load_tmpl( 'edit_templates.mtml', $param );
 }
 
 sub unlink_templates {
-    # Unlink all templates.
     my $app = shift;
-    my $q = $app->can('query') ? $app->query : $app->param;
+    my $q   = $app->can('query') ? $app->query : $app->param;
+    # Unlink all templates.
     my $blog_id = $q->param('blog_id');
     my $iter = MT->model('template')->load_iter({ blog_id     => $blog_id,
                                                   linked_file => '*', });
@@ -998,8 +998,8 @@ sub _theme_check {
 }
 
 sub rebuild_tmpl {
-    my $app = shift;
-    my $q = $app->can('query') ? $app->query : $app->param;
+    my $app  = shift;
+    my $q    = $app->can('query') ? $app->query : $app->param;
     my $blog = $app->blog;
     my $return_val = {
         success => 0
