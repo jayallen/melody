@@ -28,7 +28,7 @@ sub init_default_filters {}
 
 sub core_tags {
     return {
-        help_url => sub { MT->translate('http://www.movabletype.org/documentation/appendices/tags/%t.html') },
+        help_url => sub { MT->translate('http://github.com/openmelody/melody/wiki/tags-%t') },
         block => {
             'App:Setting' => \&_hdlr_app_setting,
             'App:Widget' => \&_hdlr_app_widget,

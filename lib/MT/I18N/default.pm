@@ -28,7 +28,7 @@ sub DISPLAY_LENGTH_EDIT_ENTRY_TEXT_FROM_EXCERPT ()     { 50 }
 sub DISPLAY_LENGTH_EDIT_ENTRY_TEXT_BREAK_UP ()         { 30 }
 
 sub PORTAL_URL()            { '' } # default PORTAL_URL is determined in building packages 
-sub SUPPORT_URL()           { 'http://www.sixapart.com/movabletype/support/' } 
+sub SUPPORT_URL()           { 'http://getsatisfaction.com/openmelody/' } 
 sub NEWS_URL()              { 'http://openmelody.org/blog/' } 
 sub NEWSBOX_URL()           { 'http://openmelody.org/blog/melody_news_widget.html' } 
 sub LEARNINGNEWS_URL()      { 'http://learning.movabletype.org/newsbox.html' } 

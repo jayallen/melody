@@ -141,7 +141,7 @@ sub import {
                 $host =~ s/:\d+//;
                 my $port = $ENV{SERVER_PORT};
                 my $uri = $ENV{REQUEST_URI} || $ENV{SCRIPT_NAME};
-                if ($uri =~ m/(\/mt\.(f?cgi|f?pl)(\?.*)?)$/) {
+                if ($uri =~ m/(\/index\.(f?cgi|f?pl)(\?.*)?)$/) {
                     my $script = $1;
                     my $ext = $2;
 

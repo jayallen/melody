@@ -44,7 +44,7 @@ applications:
             multiblog_add_trigger: $MultiBlog::MultiBlog::CMSMethods::add_trigger
                 
 tags:
-    help_url: sub MT->translate(http://www.movabletype.org/documentation/appendices/tags/%t.html) 
+    help_url: sub MT->translate(http://github.com/openmelody/melody/wiki/tags-%t) 
     block:
         Entries: MultiBlog::preprocess_native_tags
         Categories: MultiBlog::preprocess_native_tags

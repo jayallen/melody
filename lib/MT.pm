@@ -35,13 +35,13 @@ BEGIN {
         # the Melody version for the dist name and other variables while
         # still maintaining the API version ($VERSION) for plugins to
         # test against for compatibility (i.e. "use MT 4.33;")
-        use version; our $VERSION = qv('0.9.26'); # MakeMaker stops here
+        use version; our $VERSION = qv('0.9.28'); # MakeMaker stops here
         $PRODUCT_VERSION          = $VERSION;    # The rightful resting place
         $VERSION                  = '4.34';      # The true API version
         $SCHEMA_VERSION           = '4.0077';
         $PRODUCT_NAME             = 'Melody';
         $PRODUCT_CODE             = 'OM';
-        $VERSION_ID               = '1.0-beta 1';
+        $VERSION_ID               = '1.0-beta 1 (build 28)';
         $PORTAL_URL               = 'http://openmelody.org';
     }
     else { 
@@ -112,7 +112,7 @@ sub version_slug {
     return MT->translate_templatized(<<"SLUG");
 <__trans phrase="Powered by [_1]" params="$PRODUCT_NAME">
 <__trans phrase="Version [_1]" params="$VERSION_ID">
-<__trans phrase="http://www.sixapart.com/movabletype/">
+<__trans phrase="http://openmelody.org/">
 SLUG
 }
 
@@ -809,9 +809,9 @@ sub find_config {
     # the directory is the more important parameter between it and
     # the config parameter. if config is unreadable, then scan for
     # a config file using the directory as a base.  we support
-    # either mt.cfg or config.cgi for the config file name. the
-    # latter being a more secure choice since it is unreadable from
-    # a browser.
+    # either config.cgi or mt.cfg (deprecated) or for the config file
+    # name. the latter being a more secure choice since it is
+    # unreadable from a browser.
     for my $cfg_file ( $param->{Config},
         File::Spec->catfile( $param->{Directory}, 'config.cgi' ),
         'config.cgi' )

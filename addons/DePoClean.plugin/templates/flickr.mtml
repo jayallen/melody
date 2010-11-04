@@ -1,3 +1,5 @@
+<mt:If tag="FlickrEnable" eq="Yes">
+
 <$mt:FlickrPhotoType setvar="type"$>
 <script type="text/javascript">
 /*<![CDATA[*/
@@ -74,6 +76,8 @@ var url = null;
 </div>
 <mt:Else>
 	<div class="flickr">
-		<span style="font-weight:bold"><$mt:var name="error_msg"$></span>
+		<p style="font-weight:bolder; color: red;"><$mt:var name="error_msg"$></p>
 	</div>
 </mt:Unless>
+
+</mt:If>
