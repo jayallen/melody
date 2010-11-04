@@ -1499,7 +1499,7 @@ sub core_menus {
             order             => 250,
             system_permission => 'edit_templates',
         },
-        'system:template' => {
+        'system:widgets' => {
              label             => 'Widgets',
              mode              => 'list_widget',
              order             => 251,
