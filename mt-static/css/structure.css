@@ -183,11 +183,11 @@ body.system #header {background: #6B3081 url('../images/header-inner.gif') repea
 #brand a {
     display: block;
     width: 150px;
-    height: 25px;
-    background: url('../images/movable-type-logo.gif') no-repeat;
+    height: 40px;
+    background: url('../melody/melody-logo-white-banner.png') no-repeat;
 }
 .system #brand a {
-    background-image: url('../images/movable-type-logo-system.gif');
+    background-image: url('../images/melody-logo-white-banner.png');
 }
 #brand span {
     position: relative;
