@@ -18,11 +18,11 @@ use constant ARCHIVE_TYPE => 'tgz';
 
 sub new {
     my $pkg = shift;
-    my ($type, $file) = @_;
+    my ( $type, $file ) = @_;
 
-    return $pkg->error(MT->translate('Type must be tgz.'))
-        unless $type eq ARCHIVE_TYPE;
-    
+    return $pkg->error( MT->translate('Type must be tgz.') )
+      unless $type eq ARCHIVE_TYPE;
+
     my $obj = {};
     if ( ref $file ) {
         bless $file, 'IO::File';
@@ -32,35 +32,35 @@ sub new {
         }
         my $tar;
         eval { $tar = Archive::Tar->new($z); };
-        return $pkg->error(MT->translate('Could not read from filehandle.'))
-            unless $tar;
+        return $pkg->error( MT->translate('Could not read from filehandle.') )
+          unless $tar;
         $obj->{_arc}  = $tar;
         $obj->{_mode} = 'r';
     }
-    elsif ((-e $file) && (-r $file)) {
+    elsif ( ( -e $file ) && ( -r $file ) ) {
         my $z;
         if ( $file =~ /\.t?gz$/i ) {
             open my $fh, '<', $file;
             bless $fh, 'IO::File';
-            $z = new IO::Uncompress::Gunzip $fh
-                or return $pkg->error($@);
+            $z = new IO::Uncompress::Gunzip $fh or return $pkg->error($@);
         }
         else {
             open $z, '<', $file;
         }
         my $tar = Archive::Tar->new($z)
-            or return $pkg->error(MT->translate('File [_1] is not a tgz file.', $file));
+          or return $pkg->error(
+                     MT->translate( 'File [_1] is not a tgz file.', $file ) );
         $obj->{_arc}  = $tar;
         $obj->{_mode} = 'r';
     }
-    elsif (!(-e $file)) {
+    elsif ( !( -e $file ) ) {
         $obj->{_arc}  = Archive::Tar->new();
         $obj->{_file} = $file;
         $obj->{_mode} = 'w';
     }
     bless $obj, $pkg;
     $obj;
-}
+} ## end sub new
 
 sub flush {
     my $obj = shift;
@@ -69,14 +69,15 @@ sub flush {
     return undef if $obj->{_flushed};
 
     my $file = $obj->{_file};
-    return $obj->error(MT->translate('File [_1] exists; could not overwrite.', $file))
-        if -e $file;
+    return $obj->error(
+            MT->translate( 'File [_1] exists; could not overwrite.', $file ) )
+      if -e $file;
 
     open my $fh, '>', $file;
     bless $fh, 'IO::File';
     my $z = IO::Compress::Gzip->new($fh);
     $obj->{_arc}->write($z);
-    $obj->{_file} = $z;
+    $obj->{_file}    = $z;
     $obj->{_flushed} = 1;
 }
 
@@ -85,10 +86,9 @@ sub close {
 
     $obj->flush;
 
-    $obj->{_file}->close
-        if exists $obj->{_file};
-    $obj->{_arc} = undef;
-    $obj->{_file}  = undef;
+    $obj->{_file}->close if exists $obj->{_file};
+    $obj->{_arc}  = undef;
+    $obj->{_file} = undef;
     1;
 }
 
@@ -111,8 +111,8 @@ sub files {
 sub extract {
     my $obj = shift;
     my ($path) = @_;
-    return $obj->error(MT->translate('Can\'t extract from the object'))
-        if 'w' eq $obj->{_mode};
+    return $obj->error( MT->translate('Can\'t extract from the object') )
+      if 'w' eq $obj->{_mode};
 
     $path ||= MT->config->TempDir;
     for my $file ( $obj->files ) {
@@ -124,25 +124,25 @@ sub extract {
 
 sub add_file {
     my $obj = shift;
-    my ($path, $file_path) = @_;
-    return $obj->error(MT->translate('Can\'t write to the object'))
-        if 'r' eq $obj->{_mode};
-    my $filename =
-        File::Spec->catfile( $path, $file_path );
-    my $arc = $obj->{_arc};
+    my ( $path, $file_path ) = @_;
+    return $obj->error( MT->translate('Can\'t write to the object') )
+      if 'r' eq $obj->{_mode};
+    my $filename  = File::Spec->catfile( $path, $file_path );
+    my $arc       = $obj->{_arc};
     my @arc_files = $arc->add_files($filename);
-    $arc_files[0]->rename( $file_path );
+    $arc_files[0]->rename($file_path);
 }
 
 sub add_string {
     my $obj = shift;
-    my ($string, $file_name) = @_;
-    return $obj->error(MT->translate('Can\'t write to the object'))
-        if 'r' eq $obj->{_mode};
-    return $obj->error(MT->translate('Both data and file name must be specified.'))
-        unless $string && $file_name;
+    my ( $string, $file_name ) = @_;
+    return $obj->error( MT->translate('Can\'t write to the object') )
+      if 'r' eq $obj->{_mode};
+    return $obj->error(
+                 MT->translate('Both data and file name must be specified.') )
+      unless $string && $file_name;
 
-    $obj->{_arc}->add_data($file_name, $string);
+    $obj->{_arc}->add_data( $file_name, $string );
 }
 
 1;

@@ -6,31 +6,31 @@ use MT::I18N qw( const break_up_text substr_text );
 
 sub edit {
     my $cb = shift;
-    my ($app, $id, $obj, $param) = @_;
-    my $q = $app->query;
-    my $perms = $app->permissions;
-    my $blog = $app->blog;
+    my ( $app, $id, $obj, $param ) = @_;
+    my $q       = $app->query;
+    my $perms   = $app->permissions;
+    my $blog    = $app->blog;
     my $blog_id = $q->param('blog_id');
-    my $type = $q->param('_type');
+    my $type    = $q->param('_type');
 
     if ($id) {
         $param->{nav_trackbacks} = 1;
         $app->add_breadcrumb(
-            $app->translate('TrackBacks'),
-            $app->uri(
-                'mode' => 'list_pings',
-                args   => { blog_id => $blog_id }
-            )
+                              $app->translate('TrackBacks'),
+                              $app->uri(
+                                         'mode' => 'list_pings',
+                                         args   => { blog_id => $blog_id }
+                              )
         );
         $app->add_breadcrumb( $app->translate('Edit TrackBack') );
         $param->{approved}           = $q->param('approved');
         $param->{unapproved}         = $q->param('unapproved');
         $param->{has_publish_access} = 1 if $app->user->is_superuser;
-        $param->{has_publish_access} = (
-            ( $perms->can_manage_feedback || $perms->can_edit_all_posts )
-            ? 1
-            : 0
-        ) unless $app->user->is_superuser;
+        $param->{has_publish_access}
+          = ( ( $perms->can_manage_feedback || $perms->can_edit_all_posts )
+              ? 1
+              : 0 )
+          unless $app->user->is_superuser;
         require MT::Trackback;
 
         if ( my $tb = MT::Trackback->load( $obj->tb_id ) ) {
@@ -41,8 +41,8 @@ sub edit {
                     $param->{entry_title} = $entry->title;
                     $param->{entry_id}    = $entry->id;
                     unless ( $param->{has_publish_access} ) {
-                        $param->{has_publish_access} =
-                          ( $perms->can_publish_post
+                        $param->{has_publish_access}
+                          = ( $perms->can_publish_post
                               && ( $app->user->id == $entry->author_id ) )
                           ? 1
                           : 0;
@@ -57,7 +57,7 @@ sub edit {
                     $param->{category_label} = $cat->label;
                 }
             }
-        }
+        } ## end if ( my $tb = MT::Trackback...)
 
         $param->{"ping_approved"} = $obj->is_published
           or $param->{"ping_pending"} = $obj->is_moderated
@@ -79,13 +79,27 @@ sub edit {
 
         if ( $obj->junk_log ) {
             require MT::CMS::Comment;
-            MT::CMS::Comment::build_junk_table( $app, param => $param, object => $obj );
+            MT::CMS::Comment::build_junk_table(
+                                                $app,
+                                                param  => $param,
+                                                object => $obj
+            );
         }
 
-        $param->{created_on_time_formatted} =
-          format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $obj->created_on(), $blog, $app->user ? $app->user->preferred_language : undef );
-        $param->{created_on_day_formatted} =
-          format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $obj->created_on(), $blog, $app->user ? $app->user->preferred_language : undef );
+        $param->{created_on_time_formatted}
+          = format_ts(
+                       MT::App::CMS::LISTING_DATETIME_FORMAT(),
+                       $obj->created_on(),
+                       $blog,
+                       $app->user ? $app->user->preferred_language : undef
+          );
+        $param->{created_on_day_formatted}
+          = format_ts(
+                       MT::App::CMS::LISTING_DATE_FORMAT(),
+                       $obj->created_on(),
+                       $blog,
+                       $app->user ? $app->user->preferred_language : undef
+          );
 
         $param->{search_label} = $app->translate('TrackBacks');
         $param->{object_type}  = 'ping';
@@ -94,9 +108,9 @@ sub edit {
 
         # since MT::App::build_page clobbers it:
         $param->{source_blog_name} = $param->{blog_name};
-    }
+    } ## end if ($id)
     1;
-}
+} ## end sub edit
 
 sub list {
     my $app   = shift;
@@ -105,20 +119,21 @@ sub list {
 
     my $can_empty_junk = 1;
     my $state_editable = 1;
-    my $admin = $app->user->is_superuser
+    my $admin          = $app->user->is_superuser
       || ( $perms && $perms->can_administer_blog );
     if ($perms) {
         unless ( $perms->can_view_feedback ) {
             return $app->error( $app->translate("Permission denied.") );
         }
         $can_empty_junk = $admin
-          || ( $perms && $perms->can_manage_feedback )
-          ? 1 : 0;
+          || ( $perms && $perms->can_manage_feedback ) ? 1 : 0;
         $state_editable = $admin
-          || ( $perms
-            && ( $perms->can_publish_post
-              || $perms->can_edit_all_posts || $perms->can_manage_feedback ) )
-          ? 1 : 0;
+          || (
+               $perms
+               && (    $perms->can_publish_post
+                    || $perms->can_edit_all_posts
+                    || $perms->can_manage_feedback )
+          ) ? 1 : 0;
     }    # otherwise we simply filter the list of objects
 
     my $list_pref = $app->list_pref('ping');
@@ -134,11 +149,10 @@ sub list {
         $terms{blog_id} = $blog_id;
     }
     elsif ( !$app->user->is_superuser ) {
-        $terms{blog_id} = [
-            map    { $_->blog_id }
+        $terms{blog_id}
+          = [ map { $_->blog_id }
               grep { $_->can_view_feedback }
-              MT::Permission->load( { author_id => $app->user->id } )
-        ];
+              MT::Permission->load( { author_id => $app->user->id } ) ];
         return $app->errtrans("Permission denied.")
           unless @{ $terms{blog_id} };
     }
@@ -151,7 +165,7 @@ sub list {
     ## page of next entries to link to. Obviously we only display $limit
     ## entries.
     my %arg;
-    $arg{'sort'}    = 'created_on';
+    $arg{'sort'} = 'created_on';
     $arg{direction} = $sort_direction;
     require MT::TBPing;
     if ( ( $q->param('tab') || '' ) eq 'junk' ) {
@@ -174,42 +188,44 @@ sub list {
         if ( $filter_col eq 'status' ) {
             $terms{visible} = $val eq 'approved' ? 1 : 0;
         }
-        elsif ($filter_col eq 'category_id'
-            || $filter_col eq 'entry_id' )
-        {
-	    my $tbping_tb_id = '= tbping_tb_id';
+        elsif ( $filter_col eq 'category_id' || $filter_col eq 'entry_id' ) {
+            my $tbping_tb_id = '= tbping_tb_id';
             $arg{join} = $app->model('trackback')->join_on(
-                undef,
-                {
-                    id          => \$tbping_tb_id,
-                    $filter_col => $val,
-                    $blog_id ? ( blog_id => $blog_id ) : (),
-                }
+                                                  undef,
+                                                  {
+                                                    id => \$tbping_tb_id,
+                                                    $filter_col => $val,
+                                                    $blog_id
+                                                    ? ( blog_id => $blog_id )
+                                                    : (),
+                                                  }
             );
             if ( $filter_col eq 'entry_id' ) {
                 my $pkg   = $app->model('entry');
                 my $entry = $pkg->load($val);
                 if ($entry) {
-                    $param{filter_phrase} = $app->translate(
-    "TrackBacks where <strong>[_1]</strong> is &quot;[_2]&quot;.",
+                    $param{filter_phrase}
+                      = $app->translate(
+                        "TrackBacks where <strong>[_1]</strong> is &quot;[_2]&quot;.",
                         $entry->class_label,
                         encode_html( $entry->title )
-                    );
+                      );
                 }
             }
             elsif ( $filter_col eq 'category_id' ) {
                 my $pkg = $app->model('category');
                 my $cat = $pkg->load($val);
                 if ($cat) {
-                    $param{filter_phrase} = $app->translate(
-    "TrackBacks where <strong>[_1]</strong> is &quot;[_2]&quot;.",
+                    $param{filter_phrase}
+                      = $app->translate(
+                        "TrackBacks where <strong>[_1]</strong> is &quot;[_2]&quot;.",
                         $cat->class_label,
                         encode_html( $cat->label )
-                    );
+                      );
                 }
             }
             $param{filter_special} = 1;
-        }
+        } ## end elsif ( $filter_col eq 'category_id'...)
         else {
             if ( $val[1] ) {
                 $terms{$filter_col} = [ $val[0], $val[1] ];
@@ -221,19 +237,23 @@ sub list {
                 $terms{$filter_col} = $val;
             }
         }
-        $param{filter_args} = "&filter=" . encode_url($filter_col) . "&filter_val=" . encode_url($val);
+        $param{filter_args}
+          = "&filter="
+          . encode_url($filter_col)
+          . "&filter_val="
+          . encode_url($val);
         $param{filter}     ||= $filter_col;
         $param{filter_val} ||= $val;
         $param{is_filtered} = 1;
         $param{is_ip_filter} = $filter_col eq "ip";
-    }
+    } ## end if ( $filter_col && ( ...))
     elsif ($filter_key) {
-        my $filters = $app->registry("list_filters", "ping") || {};
+        my $filters = $app->registry( "list_filters", "ping" ) || {};
         if ( my $filter = $filters->{$filter_key} ) {
             if ( my $code = $filter->{code}
-                || $app->handler_to_coderef( $filter->{handler} ) )
+                 || $app->handler_to_coderef( $filter->{handler} ) )
             {
-                $param{filter} = 1;
+                $param{filter}       = 1;
                 $param{filter_key}   = $filter_key;
                 $param{filter_label} = $filter->{label};
                 $code->( \%terms, \%arg );
@@ -242,8 +262,8 @@ sub list {
     }
 
     my $ping_class = $app->model('ping');
-    my $total      = $ping_class->count( \%terms, \%arg ) || 0;
-    $arg{limit}     = $limit + 1;
+    my $total = $ping_class->count( \%terms, \%arg ) || 0;
+    $arg{limit} = $limit + 1;
     if ( $total <= $limit ) {
         delete $arg{limit};
         $offset = 0;
@@ -251,7 +271,8 @@ sub list {
     elsif ( $total && $offset > $total - 1 ) {
         $arg{offset} = $offset = $total - $limit;
     }
-    elsif ( $offset && ( ( $offset < 0 ) || ( $total - $offset < $limit ) ) ) {
+    elsif ( $offset && ( ( $offset < 0 ) || ( $total - $offset < $limit ) ) )
+    {
         $arg{offset} = $offset = $total - $limit;
     }
     else {
@@ -310,19 +331,19 @@ sub list {
         $param{system_overview_nav} = 1;
         $param{nav_pings}           = 1;
     }
-    $param{filter_spam} =
-      ( $q->param('filter_key') && $q->param('filter_key') eq 'spam' );
+    $param{filter_spam}
+      = ( $q->param('filter_key') && $q->param('filter_key') eq 'spam' );
     if ( $param{'tab'} ne 'junk' ) {
         $param{feed_name} = $app->translate("TrackBack Activity Feed");
         $param{feed_url} =
           $app->make_feed_link( 'ping',
-            $blog_id ? { blog_id => $blog_id } : undef );
+                                $blog_id ? { blog_id => $blog_id } : undef );
     }
-    $param{screen_id} = "list-ping";
+    $param{screen_id}      = "list-ping";
     $param{listing_screen} = 1;
     $app->add_breadcrumb( $app->translate('TrackBacks') );
     $app->load_tmpl( "list_ping.tmpl", \%param );
-}
+} ## end sub list
 
 sub can_view {
     my $eh = shift;
@@ -335,10 +356,10 @@ sub can_view {
         if ( $tb->entry_id ) {
             require MT::Entry;
             my $entry = MT::Entry->load( $tb->entry_id );
-            return ( !$entry
-                  || $entry->author_id == $app->user->id
-                  || $perms->can_manage_feedback
-                  || $perms->can_edit_all_posts );
+            return (   !$entry
+                     || $entry->author_id == $app->user->id
+                     || $perms->can_manage_feedback
+                     || $perms->can_edit_all_posts );
         }
         elsif ( $tb->category_id ) {
             require MT::Category;
@@ -349,34 +370,31 @@ sub can_view {
     else {
         return 0;    # no TrackBack center--no edit
     }
-}
+} ## end sub can_view
 
 sub can_save {
     my ( $eh, $app, $id ) = @_;
-	my $q = $app->param;    
+    my $q = $app->param;
     return 0 unless $id;    # Can't create new pings here
     return 1 if $app->user->is_superuser();
     my $perms = $app->permissions;
     return 1
       if $perms
-      && ( $perms->can_edit_all_posts
-        || $perms->can_manage_feedback );
-    my $p      = MT::TBPing->load($id)
-        or return 0;
+          && ( $perms->can_edit_all_posts || $perms->can_manage_feedback );
+    my $p = MT::TBPing->load($id) or return 0;
     my $tbitem = $p->parent;
+
     if ( $tbitem->isa('MT::Entry') ) {
         if ( $perms && $perms->can_publish_post && $perms->can_create_post ) {
             return $tbitem->author_id == $app->user->id;
         }
         elsif ( $perms->can_create_post ) {
             return ( $tbitem->author_id == $app->user->id )
-              && (
-                ( $p->is_junk && ( 'junk' eq $q->param('status') ) )
-                || ( $p->is_moderated
-                    && ( 'moderate' eq $q->param('status') ) )
-                || ( $p->is_published
-                    && ( 'publish' eq $q->param('status') ) )
-              );
+              && ( ( $p->is_junk && ( 'junk' eq $q->param('status') ) )
+                   || ( $p->is_moderated
+                        && ( 'moderate' eq $q->param('status') ) )
+                   || ( $p->is_published
+                        && ( 'publish' eq $q->param('status') ) ) );
         }
         elsif ( $perms && $perms->can_publish_post ) {
             return 0 unless $tbitem->author_id == $app->user->id;
@@ -386,11 +404,11 @@ sub can_save {
               && ( $p->title      eq $q->param('title') )
               && ( $p->source_url eq $q->param('source_url') );
         }
-    }
+    } ## end if ( $tbitem->isa('MT::Entry'...))
     else {
         return $perms && $perms->can_edit_categories;
     }
-}
+} ## end sub can_save
 
 sub can_delete {
     my ( $eh, $app, $obj ) = @_;
@@ -398,8 +416,7 @@ sub can_delete {
     return 1 if $author->is_superuser();
     my $perms = $app->permissions;
     require MT::Trackback;
-    my $tb = MT::Trackback->load( $obj->tb_id )
-        or return 0;
+    my $tb = MT::Trackback->load( $obj->tb_id ) or return 0;
     if ( my $entry = $tb->entry ) {
         if ( !$perms || $perms->blog_id != $entry->blog_id ) {
             $perms ||= $author->permissions( $entry->blog_id );
@@ -408,8 +425,8 @@ sub can_delete {
         # publish_post allows entry author to delete comment.
         return 1
           if $perms->can_edit_all_posts
-          || $perms->can_manage_feedback
-          || $perms->can_edit_entry( $entry, $author, 1 );
+              || $perms->can_manage_feedback
+              || $perms->can_edit_entry( $entry, $author, 1 );
         return 0
           if $obj->visible;    # otherwise, visible comment can't be deleted.
         return $perms->can_edit_entry( $entry, $author );
@@ -419,24 +436,24 @@ sub can_delete {
         return ( $perms && $perms->can_edit_categories() );
     }
     return 0;
-}
+} ## end sub can_delete
 
 sub pre_save {
     my $eh = shift;
     my ( $app, $obj, $original ) = @_;
-    my $q = $app->query;
+    my $q     = $app->query;
     my $perms = $app->permissions;
     return 1
       unless $perms->can_publish_post
-      || $perms->can_edit_categories
-      || $perms->can_edit_all_posts
-      || $perms->can_manage_feedback;
+          || $perms->can_edit_categories
+          || $perms->can_edit_all_posts
+          || $perms->can_manage_feedback;
 
     unless ( $perms->can_edit_all_posts || $perms->can_manage_feedback ) {
-        return 1 unless $perms->can_publish_post || $perms->can_edit_categories;
+        return 1
+          unless $perms->can_publish_post || $perms->can_edit_categories;
         require MT::Trackback;
-        my $tb = MT::Trackback->load( $obj->tb_id )
-            or return 0;
+        my $tb = MT::Trackback->load( $obj->tb_id ) or return 0;
         if ($tb) {
             if ( $tb->entry_id ) {
                 require MT::Entry;
@@ -451,7 +468,7 @@ sub pre_save {
             my $cat = MT::Category->load( $tb->category_id );
             return 1 unless $cat && $perms->can_edit_categories;
         }
-    }
+    } ## end unless ( $perms->can_edit_all_posts...)
 
     my $status = $q->param('status');
     if ( $status eq 'publish' ) {
@@ -470,7 +487,7 @@ sub pre_save {
         }
     }
     return 1;
-}
+} ## end sub pre_save
 
 sub post_save {
     my $eh = shift;
@@ -480,23 +497,24 @@ sub post_save {
     require MT::Category;
     if ( my $tb = MT::Trackback->load( $obj->tb_id ) ) {
         my ( $entry, $cat );
-        if ( $tb->entry_id && ( $entry = MT::Entry->load( $tb->entry_id ) ) ) {
+        if ( $tb->entry_id && ( $entry = MT::Entry->load( $tb->entry_id ) ) )
+        {
             if ( $obj->visible
                 || ( ( $obj->visible || 0 ) != ( $original->visible || 0 ) ) )
             {
                 $app->rebuild_entry( Entry => $entry, BuildIndexes => 1 )
-                    or return $app->publish_error();
+                  or return $app->publish_error();
             }
         }
         elsif ( $tb->category_id
-            && ( $cat = MT::Category->load( $tb->category_id ) ) )
+                && ( $cat = MT::Category->load( $tb->category_id ) ) )
         {
 
             # FIXME: rebuild single category
         }
     }
     1;
-}
+} ## end sub post_save
 
 sub post_delete {
     my ( $eh, $app, $obj ) = @_;
@@ -504,29 +522,29 @@ sub post_delete {
     my ( $message, $title );
     my $obj_parent = $obj->parent();
     if ( $obj_parent->isa('MT::Category') ) {
-        $title = $obj_parent->label || $app->translate('(Unlabeled category)');
-        $message =
-          $app->translate(
+        $title = $obj_parent->label
+          || $app->translate('(Unlabeled category)');
+        $message
+          = $app->translate(
             "Ping (ID:[_1]) from '[_2]' deleted by '[_3]' from category '[_4]'",
             $obj->id, $obj->blog_name, $app->user->name, $title );
     }
     else {
         $title = $obj_parent->title || $app->translate('(Untitled entry)');
-        $message =
-          $app->translate(
-            "Ping (ID:[_1]) from '[_2]' deleted by '[_3]' from entry '[_4]'",
-            $obj->id, $obj->blog_name, $app->user->name, $title );
+        $message
+          = $app->translate(
+             "Ping (ID:[_1]) from '[_2]' deleted by '[_3]' from entry '[_4]'",
+             $obj->id, $obj->blog_name, $app->user->name, $title );
     }
 
-    $app->log(
-        {
-            message  => $message,
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            category => 'delete'
-        }
+    $app->log( {
+                 message  => $message,
+                 level    => MT::Log::INFO(),
+                 class    => 'system',
+                 category => 'delete'
+               }
     );
-}
+} ## end sub post_delete
 
 # takes param and one of load_args, iter, or items
 sub build_ping_table {
@@ -556,8 +574,9 @@ sub build_ping_table {
 
     my @data;
     my ( %blogs, %entries, %cats, %perms );
-    my $excerpt_max_len = const('DISPLAY_LENGTH_EDIT_PING_TITLE_FROM_EXCERPT');
-    my $title_max_len   = const('DISPLAY_LENGTH_EDIT_PING_BREAK_UP');
+    my $excerpt_max_len
+      = const('DISPLAY_LENGTH_EDIT_PING_TITLE_FROM_EXCERPT');
+    my $title_max_len = const('DISPLAY_LENGTH_EDIT_PING_BREAK_UP');
     while ( my $obj = $iter->() ) {
         my $row = $obj->get_values;
         my $blog = $blogs{ $obj->blog_id } ||= $obj->blog if $obj->blog_id;
@@ -567,66 +586,77 @@ sub build_ping_table {
             $row->{title} = '[' . $app->translate("No Title") . ']';
         }
         if ( !defined( $row->{title} ) ) {
-            $row->{title} =
-              substr_text( $row->{excerpt} || "", 0, $excerpt_max_len ) . '...';
+            $row->{title}
+              = substr_text( $row->{excerpt} || "", 0, $excerpt_max_len )
+              . '...';
         }
         $row->{excerpt} ||= '';
-        $row->{title}     = break_up_text( $row->{title},     $title_max_len );
-        $row->{excerpt}   = break_up_text( $row->{excerpt},   $title_max_len );
-        $row->{blog_name} = break_up_text( $row->{blog_name}, $title_max_len );
-        $row->{object}    = $obj;
+        $row->{title}   = break_up_text( $row->{title},   $title_max_len );
+        $row->{excerpt} = break_up_text( $row->{excerpt}, $title_max_len );
+        $row->{blog_name}
+          = break_up_text( $row->{blog_name}, $title_max_len );
+        $row->{object} = $obj;
         push @data, $row;
 
         my $entry;
         my $cat;
         if ( my $tb_center = MT::Trackback->load( $obj->tb_id ) ) {
             if ( $tb_center->entry_id ) {
-                $entry = $entries{ $tb_center->entry_id } ||=
-                  $app->model('entry')->load( $tb_center->entry_id );
+                $entry = $entries{ $tb_center->entry_id }
+                  ||= $app->model('entry')->load( $tb_center->entry_id );
                 my $class = $entry->class || 'entry';
                 if ($entry) {
                     $row->{target_title} = $entry->title;
-                    $row->{target_link}  = $app->uri(
-                        'mode' => 'view',
-                        args   => {
-                            '_type' => $class,
-                            id      => $entry->id,
-                            blog_id => $entry->blog_id,
-                            tab     => 'pings'
-                        }
-                    );
+                    $row->{target_link}
+                      = $app->uri(
+                                   'mode' => 'view',
+                                   args   => {
+                                             '_type' => $class,
+                                             id      => $entry->id,
+                                             blog_id => $entry->blog_id,
+                                             tab     => 'pings'
+                                   }
+                      );
                 }
                 else {
-                    $row->{target_title} =
-                      ( '* ' . $app->translate('Orphaned TrackBack') . ' *' );
+                    $row->{target_title} = (
+                        '* ' . $app->translate('Orphaned TrackBack') . ' *' );
                 }
                 $row->{target_type} = $app->translate($class);
-            }
+            } ## end if ( $tb_center->entry_id)
             elsif ( $tb_center->category_id ) {
-                $cat = $cats{ $tb_center->category_id } ||=
-                  MT::Category->load( $tb_center->category_id );
+                $cat = $cats{ $tb_center->category_id }
+                  ||= MT::Category->load( $tb_center->category_id );
                 if ($cat) {
-                    $row->{target_title} =
-                      ( '* ' . $app->translate('Orphaned TrackBack') . ' *' );
+                    $row->{target_title} = (
+                        '* ' . $app->translate('Orphaned TrackBack') . ' *' );
                     $row->{target_title} = $cat->label;
-                    $row->{target_link}  = $app->uri(
-                        'mode' => 'view',
-                        args   => {
-                            '_type' => 'category',
-                            id      => $cat->id,
-                            blog_id => $cat->blog_id,
-                            tab     => 'pings'
-                        }
-                    );
+                    $row->{target_link}
+                      = $app->uri(
+                                   'mode' => 'view',
+                                   args   => {
+                                             '_type' => 'category',
+                                             id      => $cat->id,
+                                             blog_id => $cat->blog_id,
+                                             tab     => 'pings'
+                                   }
+                      );
                 }
                 $row->{target_type} = $app->translate('category');
-            }
-        }
+            } ## end elsif ( $tb_center->category_id)
+        } ## end if ( my $tb_center = MT::Trackback...)
         if ( my $ts = $obj->created_on ) {
-            $row->{created_on_time_formatted} =
-              format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
-            $row->{created_on_formatted} =
-              format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
+            $row->{created_on_time_formatted}
+              = format_ts(
+                           MT::App::CMS::LISTING_DATETIME_FORMAT(),
+                           $ts,
+                           $blog,
+                           $app->user ? $app->user->preferred_language : undef
+              );
+            $row->{created_on_formatted}
+              = format_ts( MT::App::CMS::LISTING_DATE_FORMAT(),
+                        $ts, $blog,
+                        $app->user ? $app->user->preferred_language : undef );
             $row->{created_on_relative} = relative_date( $ts, time, $blog );
         }
         if ($blog) {
@@ -634,62 +664,60 @@ sub build_ping_table {
             $row->{weblog_name} = $blog->name;
         }
         else {
-            $row->{weblog_name} =
-              '* ' . $app->translate('Orphaned TrackBack') . ' *';
+            $row->{weblog_name}
+              = '* ' . $app->translate('Orphaned TrackBack') . ' *';
         }
         if ( $author->is_superuser() ) {
             $row->{has_edit_access} = 1;
             $row->{has_bulk_access} = 1;
         }
         else {
-            my $perms = $perms{ $obj->blog_id } ||=
-              $author->permissions( $obj->blog_id );
-            $row->{has_bulk_access} = (
-                (
-                    $perms
-                      && (
-                        (
-                            $entry && ( $perms->can_edit_all_posts
-                                || $perms->can_manage_feedback )
-                        )
-                        || (
-                            $cat
-                            && (   $perms->can_edit_categories
-                                || $perms->can_manage_feedback )
-                        )
-                      )
-                )
-                  || ( $cat && $author->id == $cat->author_id )
-                  || (
-                    $entry
-                    && ( ( $author->id == $entry->author_id )
-                        && $perms->can_publish_post )
-                  )
+            my $perms = $perms{ $obj->blog_id }
+              ||= $author->permissions( $obj->blog_id );
+            $row->{has_bulk_access} = ( (
+                                 $perms
+                                   && ( (
+                                        $entry
+                                        && (    $perms->can_edit_all_posts
+                                             || $perms->can_manage_feedback )
+                                      )
+                                      || (
+                                          $cat
+                                          && (   $perms->can_edit_categories
+                                              || $perms->can_manage_feedback )
+                                      )
+                                   )
+                               )
+                                 || ( $cat && $author->id == $cat->author_id )
+                                 || (
+                                     $entry
+                                     && ( ( $author->id == $entry->author_id )
+                                          && $perms->can_publish_post )
+                                 )
             );
-            $row->{has_edit_access} = (
-                (
-                    $perms
-                      && (
-                        (
-                            $entry && ( $perms->can_edit_all_posts
-                                || $perms->can_manage_feedback )
-                        )
-                        || (
-                            $cat
-                            && (   $perms->can_edit_categories
-                                || $perms->can_manage_feedback )
-                        )
-                      )
-                )
-                  || ( $cat && $author->id == $cat->author_id )
-                  || (
-                    $entry
-                    && ( ( $author->id == $entry->author_id )
-                        && $perms->can_create_post )
-                  )
+            $row->{has_edit_access} = ( (
+                                 $perms
+                                   && ( (
+                                        $entry
+                                        && (    $perms->can_edit_all_posts
+                                             || $perms->can_manage_feedback )
+                                      )
+                                      || (
+                                          $cat
+                                          && (   $perms->can_edit_categories
+                                              || $perms->can_manage_feedback )
+                                      )
+                                   )
+                               )
+                                 || ( $cat && $author->id == $cat->author_id )
+                                 || (
+                                     $entry
+                                     && ( ( $author->id == $entry->author_id )
+                                          && $perms->can_create_post )
+                                 )
             );
-        }
-    }
+        } ## end else [ if ( $author->is_superuser...)]
+    } ## end while ( my $obj = $iter->...)
     return [] unless @data;
 
     $param->{ping_table}[0] = {%$list_pref};
@@ -697,7 +725,7 @@ sub build_ping_table {
     $param->{ping_table}[0]{object_type} = 'ping';
     $app->load_list_actions( 'ping', $param );
     \@data;
-}
+} ## end sub build_ping_table
 
 1;
 __END__

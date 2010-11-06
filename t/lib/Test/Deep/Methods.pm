@@ -5,74 +5,64 @@ package Test::Deep::Methods;
 
 use Test::Deep::Cmp;
 
-sub init
-{
-	my $self = shift;
+sub init {
+    my $self = shift;
 
-	# get them all into [$name,@args] => $value format
-	my @methods;
-	while (@_)
-	{
-		my $name = shift;
-		my $value = shift;
-		push(@methods,
-			[
-				ref($name) ? $name : [ $name ],
-				$value
-			]
-		);
-	}
-	$self->{methods} = \@methods;
+    # get them all into [$name,@args] => $value format
+    my @methods;
+    while (@_) {
+        my $name  = shift;
+        my $value = shift;
+        push( @methods, [ ref($name) ? $name : [$name], $value ] );
+    }
+    $self->{methods} = \@methods;
 }
 
-sub descend
-{
-	my $self = shift;
-	my $got = shift;
+sub descend {
+    my $self = shift;
+    my $got  = shift;
 
-	my $data = $self->data;
+    my $data = $self->data;
 
-	foreach my $method (@{$self->{methods}})
-	{
-		$data->{method} = $method;
+    foreach my $method ( @{ $self->{methods} } ) {
+        $data->{method} = $method;
 
-		my ($call, $exp_res) = @$method;
-		my ($name) = @$call;
+        my ( $call, $exp_res ) = @$method;
+        my ($name) = @$call;
 
-		my $got_res = UNIVERSAL::can($got, $name) ?
-			$self->call_method($got, $call) :
-			$Test::Deep::DNE;
+        my $got_res
+          = UNIVERSAL::can( $got, $name )
+          ? $self->call_method( $got, $call )
+          : $Test::Deep::DNE;
 
-		next if Test::Deep::descend($got_res, $exp_res);
+        next if Test::Deep::descend( $got_res, $exp_res );
 
-		return 0;
-	}
+        return 0;
+    }
 
-	return 1;
+    return 1;
+} ## end sub descend
+
+sub call_method {
+    my $self = shift;
+    my ( $got,  $call ) = @_;
+    my ( $name, @args ) = @$call;
+
+    return $got->$name(@args);
 }
 
-sub call_method
-{
-	my $self = shift;
-	my ($got, $call) = @_;
-	my ($name, @args) = @$call;
+sub render_stack {
+    my $self = shift;
+    my ( $var, $data ) = @_;
 
-	return $got->$name(@args);
-}
+    my $method = $data->{method};
+    my ( $call, $expect ) = @$method;
+    my ( $name, @args )   = @$call;
 
-sub render_stack
-{
-	my $self = shift;
-	my ($var, $data) = @_;
+    my $args = @args ? "(" . join( ", ", @args ) . ")" : "";
+    $var .= "->$name$args";
 
-	my $method = $data->{method};
-	my ($call, $expect) = @$method;
-	my ($name, @args) = @$call;
-
-	my $args = @args ? "(".join(", ", @args).")" : "";
-	$var .= "->$name$args";
-
-	return $var;
+    return $var;
 }
 
 1;

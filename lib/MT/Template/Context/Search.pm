@@ -14,29 +14,34 @@ sub load_core_tags {
     require MT::Template::Context;
     return {
         function => {
-            SearchString => \&_hdlr_search_string,
-            SearchResultCount => \&_hdlr_result_count,
-            MaxResults => \&_hdlr_max_results,
-            SearchIncludeBlogs => \&_hdlr_include_blogs,
-            SearchTemplateID => \&_hdlr_template_id,
+                      SearchString       => \&_hdlr_search_string,
+                      SearchResultCount  => \&_hdlr_result_count,
+                      MaxResults         => \&_hdlr_max_results,
+                      SearchIncludeBlogs => \&_hdlr_include_blogs,
+                      SearchTemplateID   => \&_hdlr_template_id,
         },
         block => {
-            SearchResults => \&_hdlr_results,
-            'IfTagSearch?' => sub { MT->instance->mode eq 'tag' },
+            SearchResults       => \&_hdlr_results,
+            'IfTagSearch?'      => sub { MT->instance->mode eq 'tag' },
             'IfStraightSearch?' => sub { MT->instance->mode eq 'default' },
-            'NoSearchResults?' => sub { ( $_[0]->stash('search_string') &&
-                                   $_[0]->stash('search_string') =~ /\S/ &&
-                                   !$_[0]->stash('count') ) ? 1 : 0; },
-            'NoSearch?' => sub { ( $_[0]->stash('search_string') &&
-                                   $_[0]->stash('search_string') =~ /\S/ ) ? 0 : 1 },
+            'NoSearchResults?'  => sub {
+                (     $_[0]->stash('search_string')
+                   && $_[0]->stash('search_string') =~ /\S/
+                   && !$_[0]->stash('count') ) ? 1 : 0;
+            },
+            'NoSearch?' => sub {
+                (     $_[0]->stash('search_string')
+                   && $_[0]->stash('search_string') =~ /\S/ ) ? 0 : 1;
+            },
             SearchResultsHeader => \&MT::Template::Context::_hdlr_pass_tokens,
             SearchResultsFooter => \&MT::Template::Context::_hdlr_pass_tokens,
-            BlogResultHeader => \&MT::Template::Context::_hdlr_pass_tokens,
-            BlogResultFooter => \&MT::Template::Context::_hdlr_pass_tokens,
-            'IfMaxResultsCutoff?' => \&MT::Template::Context::_hdlr_pass_tokens,
+            BlogResultHeader    => \&MT::Template::Context::_hdlr_pass_tokens,
+            BlogResultFooter    => \&MT::Template::Context::_hdlr_pass_tokens,
+            'IfMaxResultsCutoff?' =>
+              \&MT::Template::Context::_hdlr_pass_tokens,
         },
     };
-}
+} ## end sub load_core_tags
 
 ###########################################################################
 
@@ -240,7 +245,7 @@ B<Example:>
 =cut
 
 sub _hdlr_template_id { $_[0]->stash('template_id') || '' }
-sub _hdlr_max_results { $_[0]->stash('maxresults') || '' }
+sub _hdlr_max_results { $_[0]->stash('maxresults')  || '' }
 
 ###########################################################################
 
@@ -277,34 +282,35 @@ This tag is only recognized in search templates.
 =cut
 
 sub _hdlr_results {
-    my($ctx, $args, $cond) = @_;
+    my ( $ctx, $args, $cond ) = @_;
 
     ## If there are no results, return the empty string, knowing
     ## that the handler for <MTNoSearchResults> will fill in the
     ## no results message.
-    my $iter = $ctx->stash('results') or return '';
-    my $count = $ctx->stash('count') or return '';
-    my $max = $ctx->stash('maxresults');
+    my $iter  = $ctx->stash('results') or return '';
+    my $count = $ctx->stash('count')   or return '';
+    my $max   = $ctx->stash('maxresults');
     my $stash_key = $ctx->stash('stash_key') || 'entry';
 
-    my $output = '';
-    my $build = $ctx->stash('builder');
-    my $tokens = $ctx->stash('tokens');
-    my $blog_header = 1;
-    my $blog_footer = 0;
-    my $footer = 0;
+    my $output         = '';
+    my $build          = $ctx->stash('builder');
+    my $tokens         = $ctx->stash('tokens');
+    my $blog_header    = 1;
+    my $blog_footer    = 0;
+    my $footer         = 0;
     my $count_per_blog = 0;
-    my $max_reached = 0;
+    my $max_reached    = 0;
     my ( $this_object, $next_object );
     $this_object = $iter->();
     return '' unless $this_object;
-    for ( my $i = 0; $i < $count; $i++) {
+
+    for ( my $i = 0; $i < $count; $i++ ) {
         $count_per_blog++;
-        $ctx->stash($stash_key, $this_object);
+        $ctx->stash( $stash_key, $this_object );
+
         # See case 81819 - http://bugs.movabletype.org/?81819
-        local $ctx->{__stash}{blog} =
-               $ctx->stash('template')->blog
-            || ($this_object->can('blog') ? $this_object->blog : undef);
+        local $ctx->{__stash}{blog} = $ctx->stash('template')->blog
+          || ( $this_object->can('blog') ? $this_object->blog : undef );
         my $ts;
         if ( $this_object->isa('MT::Entry') ) {
             $ts = $this_object->authored_on;
@@ -344,7 +350,8 @@ sub _hdlr_results {
         #}
         if ( $next_object = $iter->() ) {
             if ( $next_object->can('blog') ) {
-                $blog_footer = $next_object->blog_id ne $this_object->blog_id ? 1 : 0;
+                $blog_footer
+                  = $next_object->blog_id ne $this_object->blog_id ? 1 : 0;
             }
         }
         else {
@@ -352,31 +359,36 @@ sub _hdlr_results {
             $footer      = 1;
         }
 
-        defined(my $out = $build->build($ctx, $tokens,
-            { %$cond, 
-                SearchResultsHeader => $i == 0,
-                SearchResultsFooter => $footer,
-                BlogResultHeader => $blog_header,
-                BlogResultFooter => $blog_footer,
-                IfMaxResultsCutoff => $max_reached,
-            }
-            )) or return $ctx->error( $build->errstr );
+        defined(
+                 my $out =
+                   $build->build(
+                                  $ctx, $tokens,
+                                  {
+                                    %$cond,
+                                    SearchResultsHeader => $i == 0,
+                                    SearchResultsFooter => $footer,
+                                    BlogResultHeader    => $blog_header,
+                                    BlogResultFooter    => $blog_footer,
+                                    IfMaxResultsCutoff  => $max_reached,
+                                  }
+                   )
+        ) or return $ctx->error( $build->errstr );
         $output .= $out;
 
         $this_object = $next_object;
         last unless $this_object;
         $blog_header = $blog_footer ? 1 : 0;
-    }
+    } ## end for ( my $i = 0; $i < $count...)
     $output;
-}
+} ## end sub _hdlr_results
 
 sub context_script {
-	my ( $ctx, $args, $cond ) = @_;
+    my ( $ctx, $args, $cond ) = @_;
 
-    my $search_string = decode_html( $ctx->stash('search_string') ) ;
-    my $cgipath = $ctx->_hdlr_cgi_path($args);
-    my $script = $ctx->{config}->SearchScript;
-    my $link = $cgipath.$script . '?search=' . encode_url( $search_string );
+    my $search_string = decode_html( $ctx->stash('search_string') );
+    my $cgipath       = $ctx->_hdlr_cgi_path($args);
+    my $script        = $ctx->{config}->SearchScript;
+    my $link = $cgipath . $script . '?search=' . encode_url($search_string);
     if ( my $mode = $ctx->stash('mode') ) {
         $mode = encode_url($mode);
         $link .= "&__mode=$mode";
@@ -394,8 +406,8 @@ sub context_script {
     if ( my $format = $ctx->stash('format') ) {
         $link .= '&format=' . encode_url($format);
     }
-	$link;
-}
+    $link;
+} ## end sub context_script
 
 1;
 

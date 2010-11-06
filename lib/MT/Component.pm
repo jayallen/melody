@@ -35,7 +35,7 @@ sub select {
         $class = $pkg;
     }
     return @MT::Components if $class eq 'MT::Component';
-    return @MT::Plugins if $class eq 'MT::Plugin';
+    return @MT::Plugins    if $class eq 'MT::Plugin';
     return grep { UNIVERSAL::isa( $_, $class ) } @MT::Components;
 }
 
@@ -74,9 +74,7 @@ sub init_callbacks {
             }
         );
     }
-    elsif (_getset( $c, 'init_app' )
-        || _getset( $c, 'applications' ) )
-    {
+    elsif ( _getset( $c, 'init_app' ) || _getset( $c, 'applications' ) ) {
         MT->add_callback( 'init_app', 5, $c, \&on_init_app );
     }
 
@@ -100,47 +98,53 @@ sub init_callbacks {
     }
     elsif ( $c->can('init_tasks') ) {
         MT->add_callback( 'tasks', 5, $c,
-            sub { my $cb = shift; $c->init_tasks(@_) } );
+                          sub { my $cb = shift; $c->init_tasks(@_) } );
     }
 
     if ( my $callbacks = $c->callbacks ) {
         if ( ref $callbacks eq 'ARRAY' ) {
             foreach my $cb (@$callbacks) {
                 MT->add_callback( $_->{name}, $cb->{priority} || 5,
-                    $c, $cb->{handler} || $cb->{code} );
+                                  $c, $cb->{handler} || $cb->{code} );
             }
         }
         elsif ( ref $callbacks eq 'HASH' ) {
             foreach my $cbname ( keys %$callbacks ) {
-                if ( ref $callbacks->{$cbname} eq 'CODE' ||  (ref $callbacks->{$cbname} eq '' && $callbacks->{$cbname})) {
+                if (
+                     ref $callbacks->{$cbname} eq 'CODE'
+                     || ( ref $callbacks->{$cbname} eq ''
+                          && $callbacks->{$cbname} )
+                  )
+                {
                     MT->add_callback( $cbname, 5, $c, $callbacks->{$cbname} );
                 }
                 elsif ( ref $callbacks->{$cbname} eq 'HASH' ) {
                     MT->add_callback(
-                        $callbacks->{$cbname}{callback} || $cbname,
-                        $callbacks->{$cbname}{priority} || 5,
-                        $c,
-                        $callbacks->{$cbname}{handler}
-                          || $callbacks->{$cbname}{code}
+                                      $callbacks->{$cbname}{callback}
+                                        || $cbname,
+                                      $callbacks->{$cbname}{priority} || 5,
+                                      $c,
+                                      $callbacks->{$cbname}{handler}
+                                        || $callbacks->{$cbname}{code}
                     );
                 }
                 elsif ( ref $callbacks->{$cbname} eq 'ARRAY' ) {
                     my $list = $callbacks->{$cbname};
                     MT->add_callback( $cbname, $_->{priority} || 5,
-                        $c, $_->{handler} || $_->{code} )
+                                      $c, $_->{handler} || $_->{code} )
                       foreach @$list;
                 }
-            }
-        }
-    }
-    if (my $init = _getset( $c, 'init' )) {
+            } ## end foreach my $cbname ( keys %$callbacks)
+        } ## end elsif ( ref $callbacks eq...)
+    } ## end if ( my $callbacks = $c...)
+    if ( my $init = _getset( $c, 'init' ) ) {
         if ( !ref($init) ) {
             $init = MT->handler_to_coderef($init);
         }
         return $init->($c);
     }
     return 1;
-}
+} ## end sub init_callbacks
 
 sub load_registry {
     my $c      = shift;
@@ -150,20 +154,22 @@ sub load_registry {
 
     return unless -f $path;
     require YAML::Tiny;
+
     # Change related MT case: http://bugs.movabletype.org/?82426
     my $y = eval { YAML::Tiny->read($path) };
-    if (!$y) {
-        if ($c->isa('MT::Plugin') or $c->isa('MT::Component')) {
-            my $msg = sprintf  "PLUGIN Error reading %s: %s", $path, (YAML::Tiny->errstr||$@||$!);
-            print STDERR $msg."\n";
+    if ( !$y ) {
+        if ( $c->isa('MT::Plugin') or $c->isa('MT::Component') ) {
+            my $msg = sprintf "PLUGIN Error reading %s: %s", $path,
+              ( YAML::Tiny->errstr || $@ || $! );
+            print STDERR $msg . "\n";
             $c->error($msg);
             return 0;
         }
         else {
-           die "Error reading $path: " . (YAML::Tiny->errstr||$@||$!); 
+            die "Error reading $path: " . ( YAML::Tiny->errstr || $@ || $! );
         }
     }
-    
+
     if ( ref($y) ) {
 
         # skip over non-hash elements
@@ -171,7 +177,7 @@ sub load_registry {
         return $y->[0] if @$y;
     }
     return {};
-}
+} ## end sub load_registry
 
 sub init_registry {
     my $c = shift;
@@ -180,15 +186,15 @@ sub init_registry {
         return 1;
     }
 
-   # TBD: 'extends' support...
-   # if (my $ext = $r->{extends}) {
-   #     # require any other components declared here
-   #     $ext = [ $ext ] unless ref($ext) eq 'ARRAY';
-   #     foreach my $comp (@$ext) {
-   #         MT->require_component($comp)
-   #             or return $c->error("Error loading required component: $comp");
-   #     }
-   # }
+    # TBD: 'extends' support...
+    # if (my $ext = $r->{extends}) {
+    #     # require any other components declared here
+    #     $ext = [ $ext ] unless ref($ext) eq 'ARRAY';
+    #     foreach my $comp (@$ext) {
+    #         MT->require_component($comp)
+    #             or return $c->error("Error loading required component: $comp");
+    #     }
+    # }
     $c->registry($r);
 
     # map key registry elements into metadata
@@ -197,26 +203,26 @@ sub init_registry {
     }
     $c->name( $r->{label} ) if exists $r->{label};
     return 1;
-}
+} ## end sub init_registry
 
 sub callbacks {
-    my $c = shift;
-    my $root_cb = _getset($c, 'callbacks') || {};
-    my $apps = _getset($c, 'applications');
-    for my $app (keys %$apps) {
+    my $c       = shift;
+    my $root_cb = _getset( $c, 'callbacks' ) || {};
+    my $apps    = _getset( $c, 'applications' );
+    for my $app ( keys %$apps ) {
         my @path = qw( applications );
         push @path, $app;
-        my $r = $c->registry( @path );
+        my $r = $c->registry(@path);
         if ($r) {
-            my $cb = _getset($r, 'callbacks') || {};
-            MT::__merge_hash($root_cb, $cb);
+            my $cb = _getset( $r, 'callbacks' ) || {};
+            MT::__merge_hash( $root_cb, $cb );
         }
     }
     return $root_cb;
 }
 
 # STUB
-sub init_app { }
+sub init_app     { }
 sub init_request { }
 
 sub on_init_app {
@@ -244,7 +250,7 @@ sub on_init_app {
         local $MT::plugin_registry = $c->{registry};
         $c->init_app(@_);
     }
-}
+} ## end sub on_init_app
 
 sub on_init_request {
     my $cb      = shift;
@@ -267,7 +273,7 @@ sub on_init_request {
         local $MT::plugin_registry = $c->{registry};
         $init->( $app, @_ );
     }
-}
+} ## end sub on_init_request
 
 sub _getset {
     my $c = shift;
@@ -281,7 +287,9 @@ sub _getset {
 
             # Handle reference to another YAML file
             # (ie, app-cms.yaml/tags.yaml/etc.)
-            if ( defined($out) && !ref($out) && ( $out =~ m/^[-\w]+\.yaml$/ ) )
+            if (    defined($out)
+                 && !ref($out)
+                 && ( $out =~ m/^[-\w]+\.yaml$/ ) )
             {
                 my $r = $c->load_registry($out);
                 if ($r) {
@@ -291,9 +299,9 @@ sub _getset {
             }
             return $out;
         }
-    }
+    } ## end if ( exists $c->{registry...})
     return @_ > 1 ? $c->{$prop} = $_[1] : $c->{$prop};
-}
+} ## end sub _getset
 
 sub _getset_translate {
     my $c = shift;
@@ -312,14 +320,14 @@ sub _getset_translate {
     return $c->l10n_filter( defined $return ? $return : '' );
 }
 
-sub name { &_getset_translate }
+sub name {&_getset_translate}
 
 sub label {
     my $c = shift;
     return $c->_getset('label') || $c->name();
 }
 
-sub description { &_getset_translate }
+sub description {&_getset_translate}
 
 sub needs_upgrade {
     my $c  = shift;
@@ -357,38 +365,54 @@ sub template_paths {
       if $mt->{template_dir};
     push @paths, $path;
     return @paths;
-}
+} ## end sub template_paths
 
 sub load_tmpl {
     my $c = shift;
-    my ($file, $param) = @_;
+    my ( $file, $param ) = @_;
 
     my $mt = MT->instance;
-    my $type = { 'SCALAR' => 'scalarref', 'ARRAY' => 'arrayref' }->{ ref $file }
+    my $type
+      = { 'SCALAR' => 'scalarref', 'ARRAY' => 'arrayref' }->{ ref $file }
       || 'filename';
 
     my $tmpl = MT->model('template')->new(
         type   => $type,
         source => $file,
         path   => [ $c->template_paths ],
-        ($mt->isa('MT::App') ? ( filter => sub {
-            my ($str, $fname) = @_;
-            if ($fname) {
-                $fname = File::Basename::basename($fname);
-                $fname =~ s/\.tmpl$//;
-                $mt->run_callbacks("template_source.$fname", $mt, @_);
-            } else {
-                $mt->run_callbacks("template_source", $mt, @_);
-            }
-            return $str;
-        }) : ()),
+        (
+           $mt->isa('MT::App')
+           ? (
+               filter => sub {
+                   my ( $str, $fname ) = @_;
+                   if ($fname) {
+                       $fname = File::Basename::basename($fname);
+                       $fname =~ s/\.tmpl$//;
+                       $mt->run_callbacks( "template_source.$fname", $mt,
+                                           @_ );
+                   }
+                   else {
+                       $mt->run_callbacks( "template_source", $mt, @_ );
+                   }
+                   return $str;
+               }
+             )
+           : ()
+        ),
     );
-    return $c->error(
-        $mt->translate( "Loading template '[_1]' failed: [_2]", $file, MT->model('template')->errstr ) )
-      unless defined $tmpl;
+    return
+      $c->error(
+                $mt->translate(
+                                "Loading template '[_1]' failed: [_2]", $file,
+                                MT->model('template')->errstr
+                )
+      ) unless defined $tmpl;
     my $text = $tmpl->text;
-    if (($text =~ m/<(mt|_)_trans/i) && ($c->id)) {
-        $tmpl->text( '<__trans_section component="' . $c->id . '">' . $text . '</__trans_section>');
+    if ( ( $text =~ m/<(mt|_)_trans/i ) && ( $c->id ) ) {
+        $tmpl->text(   '<__trans_section component="'
+                     . $c->id . '">'
+                     . $text
+                     . '</__trans_section>' );
     }
     $tmpl->{__file} = $file if $type eq 'filename';
 
@@ -398,7 +422,7 @@ sub load_tmpl {
     $tmpl->param($param) if $param;
 
     return $tmpl;
-}
+} ## end sub load_tmpl
 
 sub l10n_class { _getset( shift, 'l10n_class', @_ ) || 'MT::L10N' }
 
@@ -432,9 +456,12 @@ sub translate {
             $str = MT::I18N::encode_text(
                 $h->maketext(
                     $format,
-                    map { MT::I18N::encode_text( $_, $enc, 'utf-8' ) } @args
+                    map {
+                        MT::I18N::encode_text( $_, $enc, 'utf-8' )
+                      } @args
                 ),
-                'utf-8', $enc
+                'utf-8',
+                $enc
             );
         }
     }
@@ -442,14 +469,15 @@ sub translate {
         $str = MT->translate(@_);
     }
     $str;
-}
+} ## end sub translate
 
 sub translate_templatized {
     my $c = shift;
     my ($text) = @_;
     my @cstack;
     while (1) {
-        $text =~ s!(<(/)?(?:_|MT)_TRANS(_SECTION)?(?:(?:\s+((?:\w+)\s*=\s*(["'])(?:(<(?:[^"'>]|"[^"]*"|'[^']*')+)?>|[^\5]+?)*?\5))+?\s*/?)?>)!
+        $text
+          =~ s!(<(/)?(?:_|MT)_TRANS(_SECTION)?(?:(?:\s+((?:\w+)\s*=\s*(["'])(?:(<(?:[^"'>]|"[^"]*"|'[^']*')+)?>|[^\5]+?)*?\5))+?\s*/?)?>)!
         my($msg, $close, $section, %args) = ($1, $2, $3);
         while ($msg =~ /\b(\w+)\s*=\s*(["'])((?:<(?:[^"'>]|"[^"]*"|'[^']*')+?>|[^\2])*?)?\2/g) {  #"
             $args{$1} = $3;
@@ -485,9 +513,9 @@ sub translate_templatized {
             $translation;
         }
         !igem or last;
-    }
+    } ## end while (1)
     return $text;
-}
+} ## end sub translate_templatized
 
 sub l10n_filter { $_[0]->translate_templatized( $_[1] ) }
 
@@ -528,41 +556,44 @@ sub registry {
                         if ( -f $f ) {
                             require YAML::Tiny;
                             my $y = eval { YAML::Tiny->read($f) }
-                                or die "Error reading $f: " . (YAML::Tiny->errstr||$@||$!);
+                              or die "Error reading $f: "
+                              . ( YAML::Tiny->errstr || $@ || $! );
+
                             # skip over non-hash elements
                             shift @$y
-                                while @$y && ( ref( $y->[0] ) ne 'HASH' );
+                              while @$y && ( ref( $y->[0] ) ne 'HASH' );
                             $r->{$p} = $y->[0] if @$y;
                         }
-                    } elsif ($v =~ m/^\$\w+::/) {
+                    }
+                    elsif ( $v =~ m/^\$\w+::/ ) {
                         my $code = MT->handler_to_coderef($v);
-                        if (ref $code eq 'CODE') {
+                        if ( ref $code eq 'CODE' ) {
                             $r->{$p} = $code->($c);
                         }
                     }
-                }
+                } ## end if ( $v && !ref($v) )
                 elsif ( ref($v) eq 'CODE' ) {
                     $r->{$p} = $v->($c);
                 }
                 $last_r = $r;
                 $last_p = $p;
                 $r      = $r->{$p};
-            }
+            } ## end if ( exists $r->{$p} )
             else {
                 return undef;
             }
-        }
+        } ## end foreach my $p (@path)
 
         # deepscan for any label elements since they will need translation
         if ( ref $r eq 'HASH' ) {
             __deep_localize_labels( $c, $r );
-            weaken($_->{plugin} = $c)
-                for grep { ref $_ eq 'HASH' } values %$r;
+            weaken( $_->{plugin} = $c )
+              for grep { ref $_ eq 'HASH' } values %$r;
         }
 
         # $r should now be the element of the path requested
         return $r;
-    }
+    } ## end if ( ref $c )
     else {
         my @objs = $c->select();
         my @list;
@@ -572,7 +603,7 @@ sub registry {
         }
         return @list ? \@list : undef;
     }
-}
+} ## end sub registry
 
 sub __deep_localize_labels {
     my ( $c, $hash ) = @_;

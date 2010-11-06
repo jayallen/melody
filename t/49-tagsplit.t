@@ -13,13 +13,14 @@ local $/ = undef;
 my $test_data = <TEST>;
 close TEST;
 my $tests = JSON::from_json($test_data);
-plan tests => scalar(keys %$tests) * 2;
+plan tests => scalar( keys %$tests ) * 2;
 
-foreach my $delim (',', ' ') {
-    foreach my $test (sort keys %$tests) {
-        my @tags = MT::Tag->split($delim, $test);
+foreach my $delim ( ',', ' ' ) {
+    foreach my $test ( sort keys %$tests ) {
+        my @tags = MT::Tag->split( $delim, $test );
         my %tags = map { $_ => 1 } @tags;
-        is(scalar keys %tags, $tests->{$test}{$delim},
-            "$test ($delim): $tests->{$test}{$delim} tags");
+        is( scalar keys %tags,
+            $tests->{$test}{$delim},
+            "$test ($delim): $tests->{$test}{$delim} tags" );
     }
 }

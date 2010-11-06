@@ -17,19 +17,19 @@ BEGIN {
     eval "use DBD::SQLite 1.11;";
     if ($@) {
         *bind_param_attributes = sub {
-            my ($dbd, $data_type) = @_;
-            if ($data_type && $data_type->{type} eq 'blob') {
+            my ( $dbd, $data_type ) = @_;
+            if ( $data_type && $data_type->{type} eq 'blob' ) {
                 return SQL_BLOB;
             }
             return;
         };
     }
-};
+}
 
 use base qw(
-    MT::ObjectDriver::Driver::DBD::Legacy
-    Data::ObjectDriver::Driver::DBD::SQLite
-    MT::ErrorHandler
+  MT::ObjectDriver::Driver::DBD::Legacy
+  Data::ObjectDriver::Driver::DBD::SQLite
+  MT::ErrorHandler
 );
 
 sub sql_class {
@@ -59,32 +59,34 @@ sub dsn_from_config {
 
     my $db_file = $cfg->Database;
     require File::Spec;
-    if (!File::Spec->file_name_is_absolute($db_file)) {
-        $db_file = File::Spec->catfile(MT->instance->config_dir, $db_file);
+    if ( !File::Spec->file_name_is_absolute($db_file) ) {
+        $db_file = File::Spec->catfile( MT->instance->config_dir, $db_file );
         $cfg->Database($db_file);
     }
     ## This is ugly but necessary. SQLite only creates files with 0644
     ## permissions, so we can't use umask settings to modify those. So
     ## instead, we have to create the file if it doesn't exist in order
     ## to give it the proper permissions.
-    unless (-e $db_file) {
+    unless ( -e $db_file ) {
         my $umask = oct $cfg->DBUmask;
-        my $old = umask($umask);
+        my $old   = umask($umask);
         local *JUNK;
-        sysopen JUNK, $db_file, O_RDWR|O_CREAT, 0666
-            or return undef;
-            #or return $driver->error(MT->translate("Can't open '[_1]': [_2]", $db_file, $!));
+        sysopen JUNK, $db_file, O_RDWR | O_CREAT, 0666 or return undef;
+
+        #or return $driver->error(MT->translate("Can't open '[_1]': [_2]", $db_file, $!));
         close JUNK;
         umask($old);
     }
-    unless (-w $db_file) {
+    unless ( -w $db_file ) {
         return undef;
+
         #return $driver->error(MT->translate(
         #    "Your database file ('[_1]') is not writable.", $db_file));
     }
     my $dir = dirname($db_file);
-    unless (-w $dir) {
+    unless ( -w $dir ) {
         return undef;
+
         #return $driver->error(MT->translate(
         #    "Your database directory ('[_1]') is not writable.", $dir));
     }
@@ -92,11 +94,11 @@ sub dsn_from_config {
     $dsn .= $cfg->UseSQLite2 ? 'SQLite2' : 'SQLite';
     $dsn .= ':dbname=' . $cfg->Database;
     $dsn;
-}
+} ## end sub dsn_from_config
 
 sub init_dbh {
     my $dbd = shift;
-    my($dbh) = @_;
+    my ($dbh) = @_;
     $dbd->SUPER::init_dbh($dbh);
     $dbh->{sqlite_handle_binary_nulls} = 1;
     $dbh->do('PRAGMA cache_size=4000');
@@ -122,44 +124,42 @@ sub configure {
 
 sub count {
     my $driver = shift;
-    my($class, $terms, $args) = @_;
+    my ( $class, $terms, $args ) = @_;
 
-    my $join = $args->{join};
+    my $join   = $args->{join};
     my $select = 'COUNT(*)';
-    if ($join && $join->[3]->{unique}) {
+    if ( $join && $join->[3]->{unique} ) {
         my $col;
-        if ($join->[3]{unique} =~ m/\D/) {
+        if ( $join->[3]{unique} =~ m/\D/ ) {
             $col = $args->{join}[3]{unique};
-        } else {
+        }
+        else {
             $col = $class->properties->{primary_key};
         }
-        my $dbcol = $driver->dbd->db_column_name($class->datasource, $col);
+        my $dbcol = $driver->dbd->db_column_name( $class->datasource, $col );
         ## the line below is the only difference from the DBI::count method.
         $args->{count_distinct} = { $col => 1 };
     }
 
-    my $result = $driver->_select_aggregate(
-        select   => $select,
-        class    => $class,
-        terms    => $terms,
-        args     => $args,
-        override => {
-                     order  => '',
-                     limit  => undef,
-                     offset => undef,
-                    },
-    );
+    my $result =
+      $driver->_select_aggregate(
+                select   => $select,
+                class    => $class,
+                terms    => $terms,
+                args     => $args,
+                override => { order => '', limit => undef, offset => undef, },
+      );
     delete $args->{count_distinct};
     $result;
-}
+} ## end sub count
 
 sub _load_iter {
     my $class = shift;
     my ( $terms, $args ) = @_;
     my $result = $orig_load_iter->( $class, @_ );
     return $result
-        if 'CODE' ne ref($result)
-            && 'Data::ObjectDriver::Iterator' ne ref($result);
+      if 'CODE' ne ref($result)
+          && 'Data::ObjectDriver::Iterator' ne ref($result);
 
     my @ids;
     while ( my $o = $result->() ) {
@@ -177,7 +177,7 @@ sub _load_iter {
         return Data::ObjectDriver::Iterator->new($iter);
     }
     return $result;
-}
+} ## end sub _load_iter
 
 1;
 __END__

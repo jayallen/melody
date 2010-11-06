@@ -6,8 +6,8 @@ package MT::Test;
 use base qw( Exporter );
 
 our $VERSION = 0.9;
-our @EXPORT =
-  qw( is_object are_objects _run_app out_like out_unlike err_like grab_stderr get_current_session _tmpl_out tmpl_out_like tmpl_out_unlike get_last_output get_tmpl_error get_tmpl_out _run_rpt _run_tasks );
+our @EXPORT
+  = qw( is_object are_objects _run_app out_like out_unlike err_like grab_stderr get_current_session _tmpl_out tmpl_out_like tmpl_out_unlike get_last_output get_tmpl_error get_tmpl_out _run_rpt _run_tasks );
 
 use strict;
 
@@ -46,13 +46,13 @@ BEGIN {
     # if MT_CONFIG is not set, set it
     if ( $ENV{MT_CONFIG} ) {
         if ( !File::Spec->file_name_is_absolute( $ENV{MT_CONFIG} ) ) {
-            $ENV{MT_CONFIG} =
-              File::Spec->catfile( $ENV{MT_HOME}, "t", $ENV{MT_CONFIG} );
+            $ENV{MT_CONFIG}
+              = File::Spec->catfile( $ENV{MT_HOME}, "t", $ENV{MT_CONFIG} );
         }
     }
     else {
-        $ENV{MT_CONFIG} =
-          File::Spec->catfile( $ENV{MT_HOME}, "t", "sqlite-test.cfg" );
+        $ENV{MT_CONFIG}
+          = File::Spec->catfile( $ENV{MT_HOME}, "t", "sqlite-test.cfg" );
     }
     chdir $ENV{MT_HOME};
     my $ds_dir = File::Spec->catdir( $ENV{MT_HOME}, "t", "db" );
@@ -63,16 +63,16 @@ BEGIN {
         my $file = $ds_dir . '/mt.db';
         `rm $file`;
     }
-}
+} ## end BEGIN
 
 # Override time and sleep so we can simulate time passing without making
 # test scripts wait for real wall seconds to pass.
 our $CORE_TIME;
 
 BEGIN {
-    *CORE::GLOBAL::time =
-      sub { my ($a) = @_; $a ? CORE::time + $_[0] : CORE::time };
-    *CORE::GLOBAL::sleep = sub { CORE::sleep };
+    *CORE::GLOBAL::time
+      = sub { my ($a) = @_; $a ? CORE::time + $_[0] : CORE::time };
+    *CORE::GLOBAL::sleep = sub {CORE::sleep};
 }
 
 sub import {
@@ -96,7 +96,7 @@ sub import {
 
     # Export requested or all exportable functions.
     $pkg->export_to_level( 1, @to_export || qw( :DEFAULT ) );
-}
+} ## end sub import
 
 our $session_id;
 our $session_username = '';
@@ -133,9 +133,9 @@ sub init_app {
             if ( my $user = $app->query->param('__test_user') ) {
 
                 # attempting to fake user session
-                if (  !$session_id
-                    || $user->name ne $session_username
-                    || $app->query->param('__test_new_session') )
+                if (   !$session_id
+                     || $user->name ne $session_username
+                     || $app->query->param('__test_new_session') )
                 {
                     $app->start_session( $user, 1 );
                     $session_id       = $app->{session}->id;
@@ -152,7 +152,7 @@ sub init_app {
         };
 
     }
-}
+} ## end sub init_app
 
 sub init_cms {
     my $pkg = shift;
@@ -166,7 +166,7 @@ sub init_time {
     $CORE_TIME = time;
 
     no warnings 'redefine';
-    *CORE::GLOBAL::time = sub { $CORE_TIME };
+    *CORE::GLOBAL::time = sub {$CORE_TIME};
     *CORE::GLOBAL::sleep = sub { $CORE_TIME += shift };
 }
 
@@ -190,21 +190,20 @@ sub init_testdb {
 
     # Replace the standard seed_database/install_template functions
     # with stubs since we're not creating a full schema.
-    MT::Upgrade->register_upgrade_function(
-        {
-            core_seed_database => {
-                code => sub { 1 }
-            },
-            core_upgrade_templates => {
-                code => sub { 1 }
-            },
-            core_finish => {
-                code => sub { 1 }
-            },
+    MT::Upgrade->register_upgrade_function( {
+           core_seed_database => {
+                                   code => sub {1}
+           },
+           core_upgrade_templates => {
+                                       code => sub {1}
+           },
+           core_finish => {
+                            code => sub {1}
+           },
         }
     );
     $pkg->init_db();
-}
+} ## end sub init_testdb
 
 our $MEMCACHED_SEARCHED;
 our $MEMCACHED_FAKE;
@@ -231,7 +230,7 @@ sub init_memcached {
         my $self  = MT::Memcached->new();
         return $self;
     };
-    *MT::Memcached::is_available = sub { 1 };
+    *MT::Memcached::is_available = sub {1};
     *MT::Memcached::get = sub {
         my $self = shift;
         my ($key) = @_;
@@ -312,7 +311,7 @@ sub init_memcached {
         require MT::ObjectDriver::Driver::Cache::RAM;
         MT::ObjectDriver::Driver::Cache::RAM->Disabled(1);
     };
-}
+} ## end sub init_memcached
 
 sub init_newdb {
     my $pkg = shift;
@@ -324,9 +323,7 @@ sub init_newdb {
     my $types = MT->registry('object_types');
     $types->{$_} = MT->model($_)
       for grep { MT->model($_) }
-      map      { $_ . ':meta' }
-      grep     { MT->model($_)->meta_pkg }
-      sort keys %$types;
+      map { $_ . ':meta' } grep { MT->model($_)->meta_pkg } sort keys %$types;
     my @classes = map { $types->{$_} } grep { $_ !~ /\./ } sort keys %$types;
     foreach my $class (@classes) {
         if ( ref($class) eq 'ARRAY' ) {
@@ -359,7 +356,7 @@ sub init_newdb {
     }
 
     1;
-}
+} ## end sub init_newdb
 
 sub init_upgrade {
     my $pkg = shift;
@@ -368,18 +365,14 @@ sub init_upgrade {
 
     # Initialize the MT database
     MT::Upgrade->do_upgrade(
-        Install => 1,
-        App     => __PACKAGE__,
-        User    => {},
-        Blog    => {}
+                             Install => 1,
+                             App     => __PACKAGE__,
+                             User    => {},
+                             Blog    => {}
     );
 
     MT->config->PluginSchemaVersion( {} );
-    MT::Upgrade->do_upgrade(
-        App  => __PACKAGE__,
-        User => {},
-        Blog => {}
-    );
+    MT::Upgrade->do_upgrade( App => __PACKAGE__, User => {}, Blog => {} );
 
     eval {
 
@@ -391,7 +384,7 @@ sub init_upgrade {
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
     1;
-}
+} ## end sub init_upgrade
 
 sub init_db {
     my $pkg = shift;
@@ -412,32 +405,31 @@ sub init_data {
     `rm -fR t/site` if ( -d 't/site' );
 
     my $blog = MT::Blog->new();
-    $blog->set_values(
-        {
-            name         => 'none',
-            site_url     => 'http://narnia.na/nana/',
-            archive_url  => 'http://narnia.na/nana/archives/',
-            site_path    => 't/site/',
-            archive_path => 't/site/archives/',
-            archive_type => 'Individual,Monthly,Weekly,Daily,Category,Page',
-            archive_type_preferred   => 'Individual',
-            description              => "Narnia None Test Blog",
-            custom_dynamic_templates => 'custom',
-            convert_paras            => 1,
-            allow_reg_comments       => 1,
-            allow_unreg_comments     => 0,
-            allow_pings              => 1,
-            sort_order_posts         => 'descend',
-            sort_order_comments      => 'ascend',
-            remote_auth_token        => 'token',
-            convert_paras_comments   => 1,
-            google_api_key           => 'r9Vj5K8PsjEu+OMsNZ/EEKjWmbCeQAv1',
-            cc_license =>
-'by-nc-sa http://creativecommons.org/licenses/by-nc-sa/2.0/ http://creativecommons.org/images/public/somerights20.gif',
-            server_offset        => '-3.5',
-            children_modified_on => '20000101000000',
-            language             => 'en_us',
-            file_extension       => 'html',
+    $blog->set_values( {
+           name         => 'none',
+           site_url     => 'http://narnia.na/nana/',
+           archive_url  => 'http://narnia.na/nana/archives/',
+           site_path    => 't/site/',
+           archive_path => 't/site/archives/',
+           archive_type => 'Individual,Monthly,Weekly,Daily,Category,Page',
+           archive_type_preferred   => 'Individual',
+           description              => "Narnia None Test Blog",
+           custom_dynamic_templates => 'custom',
+           convert_paras            => 1,
+           allow_reg_comments       => 1,
+           allow_unreg_comments     => 0,
+           allow_pings              => 1,
+           sort_order_posts         => 'descend',
+           sort_order_comments      => 'ascend',
+           remote_auth_token        => 'token',
+           convert_paras_comments   => 1,
+           google_api_key           => 'r9Vj5K8PsjEu+OMsNZ/EEKjWmbCeQAv1',
+           cc_license =>
+             'by-nc-sa http://creativecommons.org/licenses/by-nc-sa/2.0/ http://creativecommons.org/images/public/somerights20.gif',
+           server_offset        => '-3.5',
+           children_modified_on => '20000101000000',
+           language             => 'en_us',
+           file_extension       => 'html',
         }
     );
     $blog->id(1);
@@ -448,16 +440,15 @@ sub init_data {
     require MT::Entry;
     require MT::Author;
     my $chuckd = MT::Author->new();
-    $chuckd->set_values(
-        {
-            name         => 'Chuck D',
-            nickname     => 'Chucky Dee',
-            email        => 'chuckd@example.com',
-            url          => 'http://chuckd.com/',
-            api_password => 'seecret',
-            auth_type    => 'MT',
-            created_on   => '19780131074500',
-        }
+    $chuckd->set_values( {
+                           name         => 'Chuck D',
+                           nickname     => 'Chucky Dee',
+                           email        => 'chuckd@example.com',
+                           url          => 'http://chuckd.com/',
+                           api_password => 'seecret',
+                           auth_type    => 'MT',
+                           created_on   => '19780131074500',
+                         }
     );
     $chuckd->set_password("bass");
     $chuckd->type( MT::Author::AUTHOR() );
@@ -467,14 +458,13 @@ sub init_data {
       or die "Couldn't save author record 2: " . $chuckd->errstr;
 
     my $bobd = MT::Author->new();
-    $bobd->set_values(
-        {
-            name       => 'Bob D',
-            nickname   => 'Dylan',
-            email      => 'bobd@example.com',
-            auth_type  => 'MT',
-            created_on => '19780131075000',
-        }
+    $bobd->set_values( {
+                         name       => 'Bob D',
+                         nickname   => 'Dylan',
+                         email      => 'bobd@example.com',
+                         auth_type  => 'MT',
+                         created_on => '19780131075000',
+                       }
     );
     $bobd->set_password("flute");
     $bobd->type( MT::Author::AUTHOR() );
@@ -482,14 +472,13 @@ sub init_data {
     $bobd->save() or die "Couldn't save author record 3: " . $bobd->errstr;
 
     my $johnd = MT::Author->new();
-    $johnd->set_values(
-        {
-            name       => 'John Doe',
-            nickname   => 'John Doe',
-            email      => 'jdoe@doe.com',
-            auth_type  => 'TypeKey',
-            created_on => '19780131080000',
-        }
+    $johnd->set_values( {
+                          name       => 'John Doe',
+                          nickname   => 'John Doe',
+                          email      => 'jdoe@doe.com',
+                          auth_type  => 'TypeKey',
+                          created_on => '19780131080000',
+                        }
     );
     $johnd->type( MT::Author::COMMENTER() );
     $johnd->password('(none)');
@@ -497,14 +486,13 @@ sub init_data {
     $johnd->save() or die "Couldn't save author record 4: " . $johnd->errstr;
 
     my $hiro = MT::Author->new();
-    $hiro->set_values(
-        {
-            name       => 'Hiro Nakamura',
-            nickname   => 'Hiro',
-            email      => 'hiro@heroes.com',
-            auth_type  => 'MT',
-            created_on => '19780131081000',
-        }
+    $hiro->set_values( {
+                         name       => 'Hiro Nakamura',
+                         nickname   => 'Hiro',
+                         email      => 'hiro@heroes.com',
+                         auth_type  => 'MT',
+                         created_on => '19780131081000',
+                       }
     );
     $hiro->type( MT::Author::AUTHOR() );
     $hiro->password('time');
@@ -513,27 +501,26 @@ sub init_data {
     $hiro->save() or die "Couldn't save author record 5: " . $hiro->errstr;
 
     require MT::Role;
-    my ( $admin_role, $author_role ) =
-      map { MT::Role->load( { name => $_ } ) }
+    my ( $admin_role, $author_role )
+      = map { MT::Role->load( { name => $_ } ) }
       ( 'Blog Administrator', 'Author' );
 
     unless ( $admin_role && $author_role ) {
-        my @default_roles = (
-            {
-                name        => 'Blog Administrator',
-                description => 'Can administer the blog.',
-                role_mask   => 2**12,
-                perms       => ['administer_blog']
+        my @default_roles = ( {
+               name        => 'Blog Administrator',
+               description => 'Can administer the blog.',
+               role_mask   => 2**12,
+               perms       => ['administer_blog']
             },
             {
-                name => 'Author',
-                description =>
-'Can create entries, edit their own, upload files and publish.',
-                perms => [
-                    'comment',      'create_post',
-                    'publish_post', 'upload',
-                    'send_notifications'
-                ],
+               name => 'Author',
+               description =>
+                 'Can create entries, edit their own, upload files and publish.',
+               perms => [
+                          'comment',      'create_post',
+                          'publish_post', 'upload',
+                          'send_notifications'
+               ],
             },
         );
 
@@ -551,10 +538,10 @@ sub init_data {
         }
         require MT::Object;
         MT::Object->driver->clear_cache;
-        ( $admin_role, $author_role ) =
-          map { MT::Role->load( { name => $_ } ) }
+        ( $admin_role, $author_role )
+          = map { MT::Role->load( { name => $_ } ) }
           ( 'Blog Administrator', 'Author' );
-    }
+    } ## end unless ( $admin_role && $author_role)
 
     require MT::Association;
     my $assoc = MT::Association->new();
@@ -589,25 +576,27 @@ sub init_data {
         $entry->blog_id(1);
         $entry->author_id( $chuckd->id );
         $entry->set_defaults();
-        $entry->set_values({
-            title          => 'A Rainy Day',
-            text           => 'On a drizzly day last weekend,',
-            text_more      => 'I took my grandpa for a walk.',
-            excerpt        => 'A story of a stroll.',
-            keywords       => 'keywords',
-            created_on     => '19780131074500',
-            authored_on    => '19780131074500',
-            modified_on    => '19780131074600',
-            authored_on    => '19780131074500',
-            pinged_urls    => 'http://blogsearch.google.com/ping/RPC2',
-            allow_comments => 1,
-            allow_pings    => 1,
-            status         => MT::Entry::RELEASE(),
-        });
+        $entry->set_values( {
+                     title       => 'A Rainy Day',
+                     text        => 'On a drizzly day last weekend,',
+                     text_more   => 'I took my grandpa for a walk.',
+                     excerpt     => 'A story of a stroll.',
+                     keywords    => 'keywords',
+                     created_on  => '19780131074500',
+                     authored_on => '19780131074500',
+                     modified_on => '19780131074600',
+                     authored_on => '19780131074500',
+                     pinged_urls => 'http://blogsearch.google.com/ping/RPC2',
+                     allow_comments => 1,
+                     allow_pings    => 1,
+                     status         => MT::Entry::RELEASE(),
+                   }
+        );
         $entry->id(1);
         $entry->tags( 'rain', 'grandpa', 'strolling' );
-        $entry->save() or die "Couldn't save entry record 1: " . $entry->errstr;
-    }
+        $entry->save()
+          or die "Couldn't save entry record 1: " . $entry->errstr;
+    } ## end if ( !$entry )
     $entry->clear_cache();
 
     $entry = MT::Entry->load(2);
@@ -616,20 +605,22 @@ sub init_data {
         $entry->blog_id(1);
         $entry->author_id( $bobd->id );
         $entry->set_defaults();
-        $entry->set_values({
-            title          => 'A preponderance of evidence',
-            text           => 'It is sufficient to say...',
-            text_more      => 'I suck at making up test data.',
-            created_on     => '19790131074500',
-            authored_on    => '19790131074500',
-            modified_on    => '19790131074600',
-            authored_on    => '19780131074500',
-            allow_comments => 1,
-            status         => MT::Entry::FUTURE(),
-        });
+        $entry->set_values( {
+                              title       => 'A preponderance of evidence',
+                              text        => 'It is sufficient to say...',
+                              text_more   => 'I suck at making up test data.',
+                              created_on  => '19790131074500',
+                              authored_on => '19790131074500',
+                              modified_on => '19790131074600',
+                              authored_on => '19780131074500',
+                              allow_comments => 1,
+                              status         => MT::Entry::FUTURE(),
+                            }
+        );
         $entry->id(2);
-        $entry->save() or die "Couldn't save entry record 2: " . $entry->errstr;
-    }
+        $entry->save()
+          or die "Couldn't save entry record 2: " . $entry->errstr;
+    } ## end if ( !$entry )
     $entry->clear_cache();
 
     $entry = MT::Entry->load(3);
@@ -638,22 +629,24 @@ sub init_data {
         $entry->blog_id(1);
         $entry->author_id( $chuckd->id );
         $entry->set_defaults();
-        $entry->set_values({
-            title          => 'Spurious anemones',
-            text           => '...are better than the non-spurious',
-            text_more      => 'variety.',
-            created_on     => '19770131074500',
-            authored_on    => '19790131074500',
-            modified_on    => '19770131074600',
-            authored_on    => '19780131074500',
-            allow_comments => 1,
-            allow_pings    => 0,
-            status         => MT::Entry::HOLD(),
-        });
+        $entry->set_values( {
+                              title => 'Spurious anemones',
+                              text  => '...are better than the non-spurious',
+                              text_more      => 'variety.',
+                              created_on     => '19770131074500',
+                              authored_on    => '19790131074500',
+                              modified_on    => '19770131074600',
+                              authored_on    => '19780131074500',
+                              allow_comments => 1,
+                              allow_pings    => 0,
+                              status         => MT::Entry::HOLD(),
+                            }
+        );
         $entry->id(3);
         $entry->tags('anemones');
-        $entry->save() or die "Couldn't save entry record 3: " . $entry->errstr;
-    }
+        $entry->save()
+          or die "Couldn't save entry record 3: " . $entry->errstr;
+    } ## end if ( !$entry )
     $entry->clear_cache();
 
     my $tb = MT::Trackback->load(1);
@@ -757,17 +750,18 @@ It\'s a hard rain\'s a-gonna fall',
             $entry->blog_id(1);
             $entry->author_id( $i == 3 ? $bobd->id : $chuckd->id );
             $entry->set_defaults();
-            $entry->set_values({
-                title          => "Verse $i",
-                text           => $verses[$i],
-                created_on     => sprintf("%04d0131074501", $i + 1960),
-                authored_on    => sprintf("%04d0131074501", $i + 1960),
-                modified_on    => sprintf("%04d0131074601", $i + 1960),
-                authored_on    => sprintf("%04d0131074501", $i + 1960),
-                allow_comments => ($i <= 2 ? 0 : 1),
-                status         => MT::Entry::RELEASE(),
-            });
-            $entry->id($i+3);
+            $entry->set_values( {
+                       title       => "Verse $i",
+                       text        => $verses[$i],
+                       created_on  => sprintf( "%04d0131074501", $i + 1960 ),
+                       authored_on => sprintf( "%04d0131074501", $i + 1960 ),
+                       modified_on => sprintf( "%04d0131074601", $i + 1960 ),
+                       authored_on => sprintf( "%04d0131074501", $i + 1960 ),
+                       allow_comments => ( $i <= 2 ? 0 : 1 ),
+                       status         => MT::Entry::RELEASE(),
+                     }
+            );
+            $entry->id( $i + 3 );
             if ( $i == 1 || $i == 3 || $i == 5 ) {
                 $entry->tags( 'verse', 'rain' );
             }
@@ -796,26 +790,25 @@ It\'s a hard rain\'s a-gonna fall',
                 $place->save
                   or die "Couldn't save placement record: " . $place->errstr;
             }
-        }
-    }
+        } ## end if ( !$entry )
+    } ## end foreach my $i ( 1 .. @verses)
 
     # entry id 1 - 1 visible comment
     # entry id 4 - no comments, commenting is off
     require MT::Comment;
     unless ( MT::Comment->count( { entry_id => 1 } ) ) {
         my $cmt = new MT::Comment();
-        $cmt->set_values(
-            {
-                text =>
-'Postmodern false consciousness has always been firmly rooted in post-Freudian Lacanian neo-Marxist bojangles. Needless to say, this quickly and asymptotically approches a purpletacular jouissance of etic jumpinmypants.',
-                entry_id   => 1,
-                author     => 'v14GrUH 4 cheep',
-                visible    => 1,
-                email      => 'jake@fatman.com',
-                url        => 'http://fatman.com/',
-                blog_id    => 1,
-                ip         => '127.0.0.1',
-                created_on => '20040714182800',
+        $cmt->set_values( {
+               text =>
+                 'Postmodern false consciousness has always been firmly rooted in post-Freudian Lacanian neo-Marxist bojangles. Needless to say, this quickly and asymptotically approches a purpletacular jouissance of etic jumpinmypants.',
+               entry_id   => 1,
+               author     => 'v14GrUH 4 cheep',
+               visible    => 1,
+               email      => 'jake@fatman.com',
+               url        => 'http://fatman.com/',
+               blog_id    => 1,
+               ip         => '127.0.0.1',
+               created_on => '20040714182800',
             }
         );
         $cmt->id(1);
@@ -826,32 +819,33 @@ It\'s a hard rain\'s a-gonna fall',
         $cmt->author('Comment 11');
         $cmt->created_on('20040812182900');
         $cmt->parent_id(1);
-        $cmt->save() or die "Couldn't save comment record 11: " . $cmt->errstr;
+        $cmt->save()
+          or die "Couldn't save comment record 11: " . $cmt->errstr;
 
         $cmt->id(12);
         $cmt->text('Comment reply for comment 11');
         $cmt->author('Comment 12');
         $cmt->created_on('20040810183000');
         $cmt->parent_id(11);
-        $cmt->save() or die "Couldn't save comment record 12: " . $cmt->errstr;
-    }
+        $cmt->save()
+          or die "Couldn't save comment record 12: " . $cmt->errstr;
+    } ## end unless ( MT::Comment->count...)
 
     # entry id 5 - 1 comment, commenting is off (closed)
     unless ( MT::Comment->count( { entry_id => 5 } ) ) {
         my $cmt = new MT::Comment();
-        $cmt->set_values(
-            {
-                text         => 'Comment for entry 5, visible',
-                entry_id     => 5,
-                author       => 'Comment 2',
-                visible      => 1,
-                email        => 'johnd@doe.com',
-                url          => 'http://john.doe.com/',
-                commenter_id => $johnd->id,
-                blog_id      => 1,
-                ip           => '127.0.0.1',
-                created_on   => '20040912182800',
-            }
+        $cmt->set_values( {
+                            text         => 'Comment for entry 5, visible',
+                            entry_id     => 5,
+                            author       => 'Comment 2',
+                            visible      => 1,
+                            email        => 'johnd@doe.com',
+                            url          => 'http://john.doe.com/',
+                            commenter_id => $johnd->id,
+                            blog_id      => 1,
+                            ip           => '127.0.0.1',
+                            created_on   => '20040912182800',
+                          }
         );
         $cmt->id(2);
         $cmt->junk_score(1.5);
@@ -861,18 +855,17 @@ It\'s a hard rain\'s a-gonna fall',
     # entry id 6 - 3 comment visible, 1 moderated
     unless ( MT::Comment->count( { entry_id => 6 } ) ) {
         my $cmt = new MT::Comment();
-        $cmt->set_values(
-            {
-                text       => 'Comment for entry 6, visible',
-                entry_id   => 6,
-                author     => 'Comment 3',
-                visible    => 1,
-                email      => '',
-                url        => '',
-                blog_id    => 1,
-                ip         => '127.0.0.1',
-                created_on => '20040911182800',
-            }
+        $cmt->set_values( {
+                            text       => 'Comment for entry 6, visible',
+                            entry_id   => 6,
+                            author     => 'Comment 3',
+                            visible    => 1,
+                            email      => '',
+                            url        => '',
+                            blog_id    => 1,
+                            ip         => '127.0.0.1',
+                            created_on => '20040911182800',
+                          }
         );
         $cmt->id(3);
         $cmt->save() or die "Couldn't save comment record 3: " . $cmt->errstr;
@@ -897,23 +890,22 @@ It\'s a hard rain\'s a-gonna fall',
         $cmt->created_on('20040910182800');
         $cmt->id(15);
         $cmt->save or die "Couldn't save comment record 1: " . $cmt->errstr;
-    }
+    } ## end unless ( MT::Comment->count...)
 
     # entry id 7 - 0 comment visible, 1 moderated
     unless ( MT::Comment->count( { entry_id => 7 } ) ) {
         my $cmt = new MT::Comment();
-        $cmt->set_values(
-            {
-                text       => 'Comment for entry 7, moderated',
-                entry_id   => 7,
-                author     => 'Comment 7',
-                visible    => 0,
-                email      => '',
-                url        => '',
-                blog_id    => 1,
-                ip         => '127.0.0.1',
-                created_on => '20040909182800',
-            }
+        $cmt->set_values( {
+                            text       => 'Comment for entry 7, moderated',
+                            entry_id   => 7,
+                            author     => 'Comment 7',
+                            visible    => 0,
+                            email      => '',
+                            url        => '',
+                            blog_id    => 1,
+                            ip         => '127.0.0.1',
+                            created_on => '20040909182800',
+                          }
         );
         $cmt->id(5);
         $cmt->save() or die "Couldn't save comment record 5: " . $cmt->errstr;
@@ -922,18 +914,17 @@ It\'s a hard rain\'s a-gonna fall',
     # entry id 8 - 1 comment visible, 1 moderated, 1 junk
     unless ( MT::Comment->count( { entry_id => 8 } ) ) {
         my $cmt = new MT::Comment();
-        $cmt->set_values(
-            {
-                text       => 'Comment for entry 8, visible',
-                entry_id   => 8,
-                author     => 'Comment 8',
-                visible    => 1,
-                email      => '',
-                url        => '',
-                blog_id    => 1,
-                ip         => '127.0.0.1',
-                created_on => '20040614182800',
-            }
+        $cmt->set_values( {
+                            text       => 'Comment for entry 8, visible',
+                            entry_id   => 8,
+                            author     => 'Comment 8',
+                            visible    => 1,
+                            email      => '',
+                            url        => '',
+                            blog_id    => 1,
+                            ip         => '127.0.0.1',
+                            created_on => '20040614182800',
+                          }
         );
         $cmt->id(6);
         $cmt->save() or die "Couldn't save comment record 6: " . $cmt->errstr;
@@ -952,7 +943,7 @@ It\'s a hard rain\'s a-gonna fall',
         $cmt->author('JD8');
         $cmt->created_on('20040810182800');
         $cmt->save() or die "Couldn't save comment record 8: " . $cmt->errstr;
-    }
+    } ## end unless ( MT::Comment->count...)
 
     require MT::Template;
     require MT::TemplateMap;
@@ -971,7 +962,8 @@ It\'s a hard rain\'s a-gonna fall',
     $tmpl_map->is_preferred(1);
     $tmpl_map->build_type(1);
     $tmpl_map->save
-      or die "Couldn't save template map record (Daily): " . $tmpl_map->errstr;
+      or die "Couldn't save template map record (Daily): "
+      . $tmpl_map->errstr;
 
     $tmpl_map = new MT::TemplateMap;
     $tmpl_map->blog_id(1);
@@ -980,7 +972,8 @@ It\'s a hard rain\'s a-gonna fall',
     $tmpl_map->is_preferred(1);
     $tmpl_map->build_type(1);
     $tmpl_map->save
-      or die "Couldn't save template map record (Weekly): " . $tmpl_map->errstr;
+      or die "Couldn't save template map record (Weekly): "
+      . $tmpl_map->errstr;
 
     # Revert into default for test...
     $blog->archive_type('Individual,Monthly,Weekly,Daily,Category,Page');
@@ -995,7 +988,7 @@ It\'s a hard rain\'s a-gonna fall',
     $asset->blog_id(1);
     $asset->url('http://narnia.na/nana/images/test.jpg');
     $asset->file_path(
-        File::Spec->catfile( $ENV{MT_HOME}, "t", 'images', 'test.jpg' ) );
+            File::Spec->catfile( $ENV{MT_HOME}, "t", 'images', 'test.jpg' ) );
     $asset->file_name('test.jpg');
     $asset->file_ext('jpg');
     $asset->image_width(640);
@@ -1014,7 +1007,8 @@ It\'s a hard rain\'s a-gonna fall',
     $asset = new $file_pkg;
     $asset->blog_id(1);
     $asset->url('http://narnia.na/nana/files/test.tmpl');
-    $asset->file_path( File::Spec->catfile( $ENV{MT_HOME}, "t", 'test.tmpl' ) );
+    $asset->file_path(
+                     File::Spec->catfile( $ENV{MT_HOME}, "t", 'test.tmpl' ) );
     $asset->file_name('test.tmpl');
     $asset->file_ext('tmpl');
     $asset->mime_type('text/plain');
@@ -1048,18 +1042,17 @@ It\'s a hard rain\'s a-gonna fall',
     $page->blog_id(1);
     $page->author_id( $chuckd->id );
     $page->set_defaults();
-    $page->set_values(
-        {
-            title       => 'Watching the River Flow',
-            text        => 'What the matter with me,',
-            text_more   => 'I don\'t have much to say,',
-            keywords    => 'no folder',
-            excerpt     => 'excerpt',
-            created_on  => '19780131074500',
-            authored_on => '19780131074500',
-            modified_on => '19780131074600',
-            status      => MT::Entry::RELEASE(),
-        }
+    $page->set_values( {
+                         title       => 'Watching the River Flow',
+                         text        => 'What the matter with me,',
+                         text_more   => 'I don\'t have much to say,',
+                         keywords    => 'no folder',
+                         excerpt     => 'excerpt',
+                         created_on  => '19780131074500',
+                         authored_on => '19780131074500',
+                         modified_on => '19780131074600',
+                         status      => MT::Entry::RELEASE(),
+                       }
     );
     $page->id(20);
     $page->tags( 'river', 'flow', 'watch' );
@@ -1094,20 +1087,18 @@ It\'s a hard rain\'s a-gonna fall',
     $folder->save or die "Could'n sae folder record 22:" . $folder->errstr;
 
     $page = MT::Page->new();
-    $page->blog_id( 1 ),
-    $page->author_id( $chuckd->id );
+    $page->blog_id(1), $page->author_id( $chuckd->id );
     $page->set_defaults();
-    $page->set_values(
-        {
-            title       => 'Page #1',
-            text        => 'Wish I was back in the city',
-            text_more   => 'Instead of this old bank of sand,',
-            keywords    => 'keywords',
-            created_on  => '19790131074500',
-            authored_on => '19790131074500',
-            modified_on => '19790131074600',
-            status      => MT::Entry::RELEASE(),
-        }
+    $page->set_values( {
+                         title       => 'Page #1',
+                         text        => 'Wish I was back in the city',
+                         text_more   => 'Instead of this old bank of sand,',
+                         keywords    => 'keywords',
+                         created_on  => '19790131074500',
+                         authored_on => '19790131074500',
+                         modified_on => '19790131074600',
+                         status      => MT::Entry::RELEASE(),
+                       }
     );
     $page->id(21);
     $page->tags( 'page1', 'page2', 'page3' );
@@ -1125,17 +1116,16 @@ It\'s a hard rain\'s a-gonna fall',
     $page->blog_id(1);
     $page->author_id( $chuckd->id );
     $page->set_defaults();
-    $page->set_values(
-        {
-            title       => 'Page #2',
-            text        => 'With the sub beating down over the chimney tops',
-            text_more   => 'And the one I love so close at hand',
-            keywords    => 'keywords',
-            created_on  => '19800131074500',
-            authored_on => '19800131074500',
-            modified_on => '19800131074600',
-            status      => MT::Entry::RELEASE(),
-        }
+    $page->set_values( {
+                   title => 'Page #2',
+                   text  => 'With the sub beating down over the chimney tops',
+                   text_more   => 'And the one I love so close at hand',
+                   keywords    => 'keywords',
+                   created_on  => '19800131074500',
+                   authored_on => '19800131074500',
+                   modified_on => '19800131074600',
+                   status      => MT::Entry::RELEASE(),
+                 }
     );
     $page->id(22);
     $page->tags( 'page2', 'page3' );
@@ -1153,17 +1143,16 @@ It\'s a hard rain\'s a-gonna fall',
     $page->blog_id(1);
     $page->author_id( $bobd->id );
     $page->set_defaults();
-    $page->set_values(
-        {
-            title       => 'Page #3',
-            text        => 'If I had wings and I could fly,',
-            text_more   => 'I know where I would go.',
-            keywords    => 'keywords',
-            created_on  => '19810131074500',
-            authored_on => '19810131074500',
-            modified_on => '19810131074600',
-            status      => MT::Entry::RELEASE(),
-        }
+    $page->set_values( {
+                         title       => 'Page #3',
+                         text        => 'If I had wings and I could fly,',
+                         text_more   => 'I know where I would go.',
+                         keywords    => 'keywords',
+                         created_on  => '19810131074500',
+                         authored_on => '19810131074500',
+                         modified_on => '19810131074600',
+                         status      => MT::Entry::RELEASE(),
+                       }
     );
     $page->id(23);
     $page->tags('page3');
@@ -1179,25 +1168,24 @@ It\'s a hard rain\'s a-gonna fall',
 
     unless ( MT::Comment->count( { entry_id => $page->id } ) ) {
         my $page_cmt = new MT::Comment();
-        $page_cmt->set_values(
-            {
-                text =>
-"Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma - which is living with the results of other people's thinking. Don't let the noise of others' opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become. Everything else is secondary.",
-                entry_id    => 23,
-                author      => 'Steve Jobs',
-                visible     => 1,
-                email       => 'f@example.com',
-                url         => 'http://example.com/',
-                blog_id     => 1,
-                ip          => '127.0.0.1',
-                created_on  => '20040114182800',
-                modified_on => '20040114182800',
+        $page_cmt->set_values( {
+               text =>
+                 "Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma - which is living with the results of other people's thinking. Don't let the noise of others' opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become. Everything else is secondary.",
+               entry_id    => 23,
+               author      => 'Steve Jobs',
+               visible     => 1,
+               email       => 'f@example.com',
+               url         => 'http://example.com/',
+               blog_id     => 1,
+               ip          => '127.0.0.1',
+               created_on  => '20040114182800',
+               modified_on => '20040114182800',
             }
         );
         $page_cmt->id(13);
         $page_cmt->save()
           or die "Couldn't save comment record 1: " . $page_cmt->errstr;
-    }
+    } ## end unless ( MT::Comment->count...)
 
     my $page_tb = MT::Trackback->new;
     $page_tb->entry_id( $page->id );
@@ -1214,7 +1202,7 @@ It\'s a hard rain\'s a-gonna fall',
     $page_ping->ip('127.0.0.1');
     $page_ping->title('Trackbacking to a page');
     $page_ping->excerpt(
-'Four bridges in the bayarea.  Golden Gate, Bay, San Mateo and Dan Burton.'
+        'Four bridges in the bayarea.  Golden Gate, Bay, San Mateo and Dan Burton.'
     );
     $page_ping->source_url('http://example.com/');
     $page_ping->blog_name("Example Blog");
@@ -1249,7 +1237,7 @@ It\'s a hard rain\'s a-gonna fall',
     }
 
     1;
-}
+} ## end sub init_data
 
 sub _is_object {
     my ( $got, $expected, $name ) = @_;
@@ -1269,7 +1257,7 @@ sub _is_object {
     if ( $got == $expected ) {
         fail($name);
         diag(
-'    got the exact same instance as expected, when really expected a different but equivalent object'
+            '    got the exact same instance as expected, when really expected a different but equivalent object'
         );
         return;
     }
@@ -1291,7 +1279,7 @@ sub _is_object {
     }
 
     return 1;
-}
+} ## end sub _is_object
 
 sub is_object {
     my ( $got, $expected, $name ) = @_;
@@ -1370,9 +1358,12 @@ sub _run_app {
         }
         elsif ( $k eq '__test_upload' ) {
             my ( $param, $src ) = @$v;
-            my $seqno =
-              unpack( "%16C*",
-                join( '', localtime, grep { defined $_ } values %ENV ) );
+            my $seqno = unpack(
+                                "%16C*",
+                                join( '',
+                                      localtime,
+                                      grep { defined $_ } values %ENV )
+            );
             my $filename = basename($src);
             $CGITempFile::TMPDIRECTORY = '/tmp';
             my $tmpfile = new CGITempFile($seqno) or die "CGITempFile: $!";
@@ -1390,11 +1381,11 @@ sub _run_app {
             }
 
             $cgi->param( $param, $cgi_fh );
-        }
+        } ## end elsif ( $k eq '__test_upload')
         else {
             $cgi->param( $k, $v );
         }
-    }
+    } ## end while ( my ( $k, $v ) = each...)
     eval "require $class;";
     my $app = $class->new( CGIObject => $cgi );
     MT->set_instance($app);
@@ -1410,21 +1401,21 @@ sub _run_app {
     my $out = $app->{__test_output};
 
     # is the response a redirect
-    if (   $out
-        && $out =~ /^Status: 302 Moved\s*$/smi
-        && $follow_redirects
-        && $level < $max_redirects )
+    if (    $out
+         && $out =~ /^Status: 302 Moved\s*$/smi
+         && $follow_redirects
+         && $level < $max_redirects )
     {
         if ( $out =~ /^Location: \/cgi-bin\/mt\.cgi\?(.*)$/smi ) {
             my $location = $1;
             $location =~ s/\s*$//g;
             my @params = split( /&/, $location );
-            my %params =
-              map { my ( $k, $v ) = split( /=/, $_, 2 ); $k => $v } @params;
+            my %params
+              = map { my ( $k, $v ) = split( /=/, $_, 2 ); $k => $v } @params;
 
             # carry over the test parameters
             $params{$_} = $params->{$_}
-              foreach ( grep { /^__test/ } keys %$params );
+              foreach ( grep {/^__test/} keys %$params );
 
             # nix any any all caches!!
             require MT::Object;
@@ -1435,11 +1426,11 @@ sub _run_app {
             undef $app;
 
             $app = _run_app( $class, \%params, $level++ );
-        }
-    }
+        } ## end if ( $out =~ /^Location: \/cgi-bin\/mt\.cgi\?(.*)$/smi)
+    } ## end if ( $out && $out =~ /^Status: 302 Moved\s*$/smi...)
 
     return $app;
-}
+} ## end sub _run_app
 
 sub out_like {
     my ( $class, $params, $r, $name ) = @_;
@@ -1481,13 +1472,9 @@ sub err_like {
 
 sub get_current_session {
     require MT::Session;
-    my $sess = MT::Session::get_unexpired_value(
-        MT->config->UserSessionTimeout,
-        {
-            id   => $session_id,
-            kind => 'US'
-        }
-    );
+    my $sess =
+      MT::Session::get_unexpired_value( MT->config->UserSessionTimeout,
+                                        { id => $session_id, kind => 'US' } );
     return $sess;
 }
 
@@ -1520,7 +1507,7 @@ sub _tmpl_out {
     $tmpl_out = $tmpl->output;
     $tmpl_err = $tmpl->errstr;
     return $tmpl_out;
-}
+} ## end sub _tmpl_out
 
 sub tmpl_out_like {
     my ( $text, $param, $ctx_h, $re, $name ) = @_;

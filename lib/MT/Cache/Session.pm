@@ -12,7 +12,7 @@ use MT::Session;
 sub new {
     my $class = shift;
     my (%param) = @_;
-    $param{'ttl'} ||= 0;
+    $param{'ttl'}  ||= 0;
     $param{'kind'} ||= 'CO';
     my $self = bless \%param, $class;
     return $self;
@@ -24,8 +24,8 @@ sub get {
 
     my $record;
     if ( $self->{ttl} ) {
-        $record = MT::Session::get_unexpired_value(
-            $self->{ttl}, { id => $key, kind => $self->{kind} } );
+        $record = MT::Session::get_unexpired_value( $self->{ttl},
+                                      { id => $key, kind => $self->{kind} } );
     }
     else {
         $record = MT::Session->load( { id => $key, kind => $self->{kind} } );
@@ -39,7 +39,7 @@ sub get_multi {
     my @keys = @_;
 
     my @tmp = MT::Session->load( { id => \@keys, kind => $self->{kind} } )
-        or return;
+      or return;
 
     my @records;
     if ( $self->{ttl} ) {
@@ -56,65 +56,59 @@ sub get_multi {
     }
     my %values = map { $_->id => $_->data } @records;
     return \%values;
-}
+} ## end sub get_multi
 
 sub delete {
     my MT::Cache::Session $self = shift;
-    my ($key, $time) = @_;
-    MT::Session->remove( { id => $key, kind => $self->{kind} } )
-        or return 0;
+    my ( $key, $time ) = @_;
+    MT::Session->remove( { id => $key, kind => $self->{kind} } ) or return 0;
     1;
 }
 *remove = \&delete;
 
 sub add {
-    _set("add", @_);
+    _set( "add", @_ );
 }
 
 sub replace {
-    _set("replace", @_);
+    _set( "replace", @_ );
 }
 
 sub set {
-    _set("set", @_);
+    _set( "set", @_ );
 }
 
 sub _set {
     my $cmdname = shift;
     my MT::Cache::Session $self = shift;
-    my ($key, $val, $exptime) = @_;
+    my ( $key, $val, $exptime ) = @_;
 
-    my $cache = MT::Session->load({
-        id   => $key,
-        kind => $self->{kind},
-    });
+    my $cache = MT::Session->load( { id => $key, kind => $self->{kind}, } );
     $cache->remove() if $cache;
     $cache = MT::Session->new;
-    $cache->set_values({
-        id    => $key,
-        kind  => $self->{kind},
-        start => time,
-        data  => $val,
-    });
+    $cache->set_values(
+        { id => $key, kind => $self->{kind}, start => time, data => $val, } );
     $cache->save();
 }
 
 sub flush_all {
     my MT::Cache::Session $self = shift;
-    MT::Session->remove({ kind => $self->{kind} });
+    MT::Session->remove( { kind => $self->{kind} } );
 }
 
 sub purge_stale {
     my MT::Cache::Session $self = shift;
-    my ( $ttl ) = @_;
-    MT::Session->remove(
-        { kind => $self->{kind}, start => [ undef, time - $ttl ] },
-        { range => { start => 1 } }
+    my ($ttl) = @_;
+    MT::Session->remove( {
+                            kind  => $self->{kind},
+                            start => [ undef, time - $ttl ]
+                         },
+                         { range => { start => 1 } }
     );
     1;
 }
 
-sub DESTROY {}
+sub DESTROY { }
 
 1;
 __END__

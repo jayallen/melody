@@ -25,17 +25,17 @@ sub init {
     $app->SUPER::init(@_);
 
     $app->{mt_dir} ||= $ENV{MT_HOME} || $param{Directory};
-    $app->{is_admin} = 1;
+    $app->{is_admin}             = 1;
     $app->{plugin_template_path} = '';
     $app->add_methods(
-        pre_start => \&pre_start,
-        upgrade_from_mt => \&upgrade_from_mt,
-        run_step  => \&run_step,
+                       pre_start       => \&pre_start,
+                       upgrade_from_mt => \&upgrade_from_mt,
+                       run_step        => \&run_step,
     );
     $app->{template_dir} = 'wizard';
     $app->config->set( 'StaticWebPath', $app->static_path );
     return $app;
-}
+} ## end sub init
 
 sub init_request {
     my $app = shift;
@@ -48,21 +48,22 @@ sub init_request {
     my $q = $app->query;
     $app->set_no_cache;
     $app->{requires_login} = 0;
-    
-    my $default_lang = $q->param('default_language') || browser_language(); 
+
+    my $default_lang = $q->param('default_language') || browser_language();
     $app->set_language($default_lang);
 
-    if ($app->is_mtconfig_exists || $q->param('step') eq 'upgrade_from_mt') {
+    if ( $app->is_mtconfig_exists || $q->param('step') eq 'upgrade_from_mt' )
+    {
         $app->mode('upgrade_from_mt');
         return;
     }
 
     my $mode = $app->mode;
     return
-        unless $mode eq 'previous_step'
-            || $mode eq 'next_step'
-            || $mode eq 'retry'
-            || $mode eq 'test';
+      unless $mode eq 'previous_step'
+          || $mode eq 'next_step'
+          || $mode eq 'retry'
+          || $mode eq 'test';
 
     my $step = $q->param('step') || '';
 
@@ -81,8 +82,7 @@ sub init_request {
             if ( $mode eq 'next_step' ) {
                 if ( $prev_step eq $step ) {
                     $new_step = $s->{key};
-                    $q->param( 'save', 1 )
-                        if $app->request_method eq 'POST';
+                    $q->param( 'save', 1 ) if $app->request_method eq 'POST';
                     last;
                 }
             }
@@ -98,7 +98,7 @@ sub init_request {
 
     # If check.cgi exists, redirect to errro screen
     my $cfg_exists = $app->is_config_exists();
-    if ($cfg_exists && lc $step ne 'seed' && lc $mode ne 'retry') {
+    if ( $cfg_exists && lc $step ne 'seed' && lc $mode ne 'retry' ) {
         my %param;
         $param{cfg_exists} = 1;
         $app->mode('pre_start');
@@ -107,7 +107,7 @@ sub init_request {
 
     $q->param( 'next_step', $new_step );
     $app->mode('run_step');
-}
+} ## end sub init_request
 
 sub init_core_registry {
     my $app  = shift;
@@ -115,16 +115,16 @@ sub init_core_registry {
     $core->{registry}{applications}{wizard} = {
         wizard_steps => {
             start => {
-                order   => 0,
-                handler => \&start,
-                params  => [qw(set_static_uri_to set_static_file_to)],
+                       order   => 0,
+                       handler => \&start,
+                       params  => [qw(set_static_uri_to set_static_file_to)],
             },
             configure => {
                 order   => 100,
                 handler => \&configure,
                 params  => [
                     qw(dbpath dbname dbport dbserver dbsocket
-                        dbtype dbuser dbpass publish_charset)
+                      dbtype dbuser dbpass publish_charset)
                 ]
             },
             optional => {
@@ -132,185 +132,180 @@ sub init_core_registry {
                 handler => \&optional,
                 params  => [
                     qw(mail_transfer sendmail_path smtp_server
-                        test_mail_address)
+                      test_mail_address)
                 ]
             },
             cfg_dir => {
-                order     => 300,
-                handler   => \&cfg_dir,
-                params    => ['temp_dir'],
-                condition => \&cfg_dir_conditions,
+                         order     => 300,
+                         handler   => \&cfg_dir,
+                         params    => ['temp_dir'],
+                         condition => \&cfg_dir_conditions,
             },
-            seed => {
-                order   => 10000,
-                handler => \&seed,
-            },
+            seed => { order => 10000, handler => \&seed, },
         },
         optional_packages => {
             'HTML::Entities' => {
                 link => 'http://search.cpan.org/dist/HTML-Entities',
                 label =>
-                    'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in config.cgi.',
+                  'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in config.cgi.',
             },
             'LWP::UserAgent' => {
                 link => 'http://search.cpan.org/dist/LWP',
                 label =>
-                    'This module is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.',
+                  'This module is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.',
             },
             'HTML::Parser' => {
                 link => 'http://search.cpan.org/dist/HTML-Parser',
                 label =>
-                    'HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.',
+                  'HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.',
             },
             'SOAP::Lite' => {
                 link    => 'http://search.cpan.org/dist/SOAP-Lite',
                 version => 0.50,
                 label =>
-                    'This module is needed if you wish to use the MT XML-RPC server implementation.',
+                  'This module is needed if you wish to use the MT XML-RPC server implementation.',
             },
             'File::Temp' => {
                 link => 'http://search.cpan.org/dist/File-Temp',
                 label =>
-                    'This module is needed if you would like to be able to overwrite existing files when you upload.',
+                  'This module is needed if you would like to be able to overwrite existing files when you upload.',
             },
             'List::Util' => {
                 link => 'http://search.cpan.org/dist/Scalar-List-Utils',
                 label =>
-                    'List::Util is optional; It is needed if you want to use the Publish Queue feature.',
+                  'List::Util is optional; It is needed if you want to use the Publish Queue feature.',
             },
             'Scalar::Util' => {
                 link => 'http://search.cpan.org/dist/Scalar-List-Utils',
                 label =>
-                    'Scalar::Util is optional; It is needed if you want to use the Publish Queue feature.',
+                  'Scalar::Util is optional; It is needed if you want to use the Publish Queue feature.',
             },
             'Image::Magick' => {
                 link => 'http://www.imagemagick.org/script/perl-magick.php',
                 label =>
-                    'This module is needed if you would like to be able to create thumbnails of uploaded images.',
+                  'This module is needed if you would like to be able to create thumbnails of uploaded images.',
             },
             'GD' => {
                 link => 'http://search.cpan.org/dist/GD',
                 label =>
-                    'This module is needed if you would like to be able to create thumbnails of uploaded images.',
+                  'This module is needed if you would like to be able to create thumbnails of uploaded images.',
             },
             'IPC::Run' => {
                 link => 'http://search.cpan.org/dist/IPC-Run',
                 label =>
-                    'This module is needed if you would like to be able to use NetPBM as the image driver for MT.',
+                  'This module is needed if you would like to be able to use NetPBM as the image driver for MT.',
             },
             'Storable' => {
                 link => 'http://search.cpan.org/dist/Storable',
                 label =>
-                    'This module is required by certain MT plugins available from third parties.',
+                  'This module is required by certain MT plugins available from third parties.',
             },
             'Crypt::DSA' => {
-                link => 'http://search.cpan.org/dist/Crypt-DSA',
-                label =>
-                    'This module accelerates comment registration sign-ins.',
+                   link => 'http://search.cpan.org/dist/Crypt-DSA',
+                   label =>
+                     'This module accelerates comment registration sign-ins.',
             },
             'Crypt::SSLeay' => {
                 link => 'http://search.cpan.org/dist/Crypt-SSLeay',
                 label =>
-                    'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers such as AOL and Yahoo! which require SSL support.',
+                  'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers such as AOL and Yahoo! which require SSL support.',
             },
             'MIME::Base64' => {
-                link => 'http://search.cpan.org/dist/MIME-Base64',
-                label =>
-                    'This module is needed to enable comment registration.',
+                    link => 'http://search.cpan.org/dist/MIME-Base64',
+                    label =>
+                      'This module is needed to enable comment registration.',
             },
             'XML::Atom' => {
-                link  => 'http://search.cpan.org/dist/XML-Atom',
-                label => 'This module enables the use of the Atom API.',
+                      link  => 'http://search.cpan.org/dist/XML-Atom',
+                      label => 'This module enables the use of the Atom API.',
             },
             'Archive::Tar' => {
                 link => 'http://search.cpan.org/dist/Archive-Tar',
                 label =>
-                    'This module is required in order to archive files in backup/restore operation.',
+                  'This module is required in order to archive files in backup/restore operation.',
             },
             'IO::Compress::Gzip' => {
                 link => 'http://search.cpan.org/dist/IO-Compress-Zlib',
                 label =>
-                    'This module is required in order to compress files in backup/restore operation.',
+                  'This module is required in order to compress files in backup/restore operation.',
             },
             'IO::Uncompress::Gunzip' => {
                 link => 'http://search.cpan.org/dist/IO-Compress-Zlib',
                 label =>
-                    'This module is required in order to decompress files in backup/restore operation.',
+                  'This module is required in order to decompress files in backup/restore operation.',
             },
             'Archive::Zip' => {
                 link => 'http://search.cpan.org/dist/Archive-Zip',
                 label =>
-                    'This module is required in order to archive files in backup/restore operation.',
+                  'This module is required in order to archive files in backup/restore operation.',
             },
             'XML::SAX' => {
                 link => 'http://search.cpan.org/dist/XML-SAX',
                 label =>
-                    'This module and its dependencies are required in order to restore from a backup.',
+                  'This module and its dependencies are required in order to restore from a backup.',
             },
             'Digest::SHA1' => {
                 link => 'http://search.cpan.org/dist/Digest-SHA1',
                 label =>
-                    'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers including Vox and LiveJournal.',
+                  'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers including Vox and LiveJournal.',
             },
             'Mail::Sendmail' => {
                 link => 'http://search.cpan.org/dist/Mail-Sendmail',
                 label =>
-                    'This module is required for sending mail via SMTP Server.',
+                  'This module is required for sending mail via SMTP Server.',
             },
             'Safe' => {
                 link => 'http://search.cpan.org/dist/Safe',
                 label =>
-                    'This module is used in test attribute of MTIf conditional tag.',
+                  'This module is used in test attribute of MTIf conditional tag.',
             },
             'Digest::MD5' => {
-                link  => 'http://search.cpan.org/dist/Digest-MD5',
-                label => 'This module is used by the Markdown text filter.',
+                  link  => 'http://search.cpan.org/dist/Digest-MD5',
+                  label => 'This module is used by the Markdown text filter.',
             },
             'Text::Balanced' => {
                 link => 'http://search.cpan.org/dist/Text-Balanced',
                 label =>
-                    'This module is required in search.cgi if you are using a version of Perl older than Perl 5.8.',
+                  'This module is required in search.cgi if you are using a version of Perl older than Perl 5.8.',
             },
             'XML::Parser' => {
-                link => 'http://search.cpan.org/dist/Text-Balanced',
-                label =>
-                    'This module required for action streams.',
+                          link => 'http://search.cpan.org/dist/Text-Balanced',
+                          label => 'This module required for action streams.',
             },
         },
         required_packages => {
             'Image::Size' => {
                 link => 'http://search.cpan.org/dist/Image-Size',
                 label =>
-                    'This module is required for file uploads (to determine the size of uploaded images in many different formats).',
+                  'This module is required for file uploads (to determine the size of uploaded images in many different formats).',
             },
             'CGI::Cookie' => {
                 link =>
-                    'http://search.cpan.org/search?query=cgi-cookie&mode=module',
+                  'http://search.cpan.org/search?query=cgi-cookie&mode=module',
                 label => 'This module is required for cookie authentication.',
             },
             'DBI' => {
-                link    => 'http://search.cpan.org/dist/DBI',
-                label   => 'DBI is required to store data in database.',
-                version => 1.21,
+                       link  => 'http://search.cpan.org/dist/DBI',
+                       label => 'DBI is required to store data in database.',
+                       version => 1.21,
             },
             'CGI' => {
-                link => 'http://search.cpan.org/dist/CGI.pm',
-                label =>
-                    'CGI is required for all application functionality.',
+                link  => 'http://search.cpan.org/dist/CGI.pm',
+                label => 'CGI is required for all application functionality.',
             },
             'File::Spec' => {
                 link    => 'http://search.cpan.org/dist/File-Spec',
                 version => 0.8,
                 label =>
-                    'File::Spec is required for path manipulation across operating systems.',
+                  'File::Spec is required for path manipulation across operating systems.',
             }
         },
     };
-}
+} ## end sub init_core_registry
 
 sub run_step {
     my $app       = shift;
-	my $q         = $app->query;
+    my $q         = $app->query;
     my $steps     = $app->registry("wizard_steps");
     my $next_step = $q->param('next_step');
     my $curr_step = $q->param('step');
@@ -320,8 +315,7 @@ sub run_step {
     my $keys  = $app->config_keys;
     if ($curr_step) {
         foreach ( @{ $keys->{$curr_step} } ) {
-            $param{$_} = $q->param($_)
-                if defined $q->param($_);
+            $param{$_} = $q->param($_) if defined $q->param($_);
         }
 
         if ( $q->param('save') ) {
@@ -335,12 +329,11 @@ sub run_step {
         return $app->pre_start();
     }
 
-    $h = $app->handler_to_coderef($h)
-        unless ref($h) eq 'CODE';
+    $h = $app->handler_to_coderef($h) unless ref($h) eq 'CODE';
 
     $q->param( 'step', $next_step );
     return $h->( $app, %param );
-}
+} ## end sub run_step
 
 sub config_keys {
     my $app   = shift;
@@ -362,25 +355,26 @@ sub pre_start {
     my %param;
 
     eval { use File::Spec; };
-    my ( $static_file_path );
+    my ($static_file_path);
     if ( !$@ ) {
         $static_file_path = File::Spec->catfile( $app->static_file_path );
     }
 
     $param{cfg_exists}        = $app->is_config_exists;
     $param{valid_static_path} = 1
-        if $app->is_valid_static_path( $app->static_path );
+      if $app->is_valid_static_path( $app->static_path );
     $param{mt_static_exists} = $app->mt_static_exists;
     $param{static_file_path} = $static_file_path;
-    
-    $param{languages} = MT::I18N::languages_list( $app, $app->current_language );
+
+    $param{languages}
+      = MT::I18N::languages_list( $app, $app->current_language );
 
     return $app->build_page( "start.tmpl", \%param );
-}
+} ## end sub pre_start
 
 sub wizard_steps {
     my $app = shift;
-	my $q = $app->query;
+    my $q   = $app->query;
     my @steps;
     my $steps       = $app->registry("wizard_steps");
     my $active_step = $app->query->param('step') || 'start';
@@ -394,15 +388,15 @@ sub wizard_steps {
             next unless $cond->( $app, \%param );
         }
         push @steps,
-            {
+          {
             key    => $key,
             active => $active_step eq $key,
             %{ $steps->{$key} },
-            };
+          };
     }
     @steps = sort { $a->{order} <=> $b->{order} } @steps;
     return \@steps;
-}
+} ## end sub wizard_steps
 
 sub build_page {
     my $app = shift;
@@ -412,7 +406,7 @@ sub build_page {
     my $steps = $app->wizard_steps;
     $param->{'wizard_steps'} = $steps;
     $param->{'step'}         = $app->query->param('step');
-    
+
     $param->{'default_language'} ||= $app->query->param('default_language');
 
     return $app->SUPER::build_page( $tmpl, $param );
@@ -434,31 +428,44 @@ sub directories_to_remove {
             my @p = readdir DH;
             for my $plugin_dir (@p) {
                 next if ( $plugin_dir =~ /^\.\.?$/ || $plugin_dir =~ /~$/ );
-                my $plugin_full_path = File::Spec->catfile( $PluginPath, $plugin_dir );
-                if ($plugin_dir =~ /([^\/\\]*)\.pl$/) {
-                    push @{$dirs->{rename}}, {
+                my $plugin_full_path
+                  = File::Spec->catfile( $PluginPath, $plugin_dir );
+                if ( $plugin_dir =~ /([^\/\\]*)\.pl$/ ) {
+                    push @{ $dirs->{rename} },
+                      {
                         full_path => $plugin_full_path,
-                        rename_to => File::Spec->catfile( $PluginPath, $1, "$1.pl" )
-                    }
-                } elsif ($plugin_dir =~ /^(Textile|Cloner|spamlookup|StyleCatcher|feeds-app-lite|mixiComment)$/) {
-                    push @{$dirs->{optional}}, $plugin_full_path;
-                } elsif ($plugin_dir =~ /^(WidgetManager|ThemeExport|ThemeManager|FullScreen|AjaxPublish|SearchMenuOption|WidgetSystemMenuOption|AutoPrefs|ConfigAssistant.plugin|ConfigAssistant|Markdown|MultiBlog|TypePadAntiSpam|WXRImporter)$/) {
-                    push @{$dirs->{remove}}, $plugin_full_path;
-                } 
-            }
-        }      
-    }
+                        rename_to =>
+                          File::Spec->catfile( $PluginPath, $1, "$1.pl" )
+                      };
+                }
+                elsif ( $plugin_dir
+                    =~ /^(Textile|Cloner|spamlookup|StyleCatcher|feeds-app-lite|mixiComment)$/
+                  )
+                {
+                    push @{ $dirs->{optional} }, $plugin_full_path;
+                }
+                elsif ( $plugin_dir
+                    =~ /^(WidgetManager|ThemeExport|ThemeManager|FullScreen|AjaxPublish|SearchMenuOption|WidgetSystemMenuOption|AutoPrefs|ConfigAssistant.plugin|ConfigAssistant|Markdown|MultiBlog|TypePadAntiSpam|WXRImporter)$/
+                  )
+                {
+                    push @{ $dirs->{remove} }, $plugin_full_path;
+                }
+            } ## end for my $plugin_dir (@p)
+        } ## end if ( opendir DH, $PluginPath)
+    } ## end foreach my $PluginPath (@PluginPaths)
     return $dirs;
-}
+} ## end sub directories_to_remove
 
 sub upgrade_from_mt {
     my $app   = shift;
-	my $q = $app->query;
+    my $q     = $app->query;
     my %param = @_;
 
-    $app->{cfg_file} = File::Spec->catfile($app->{'mt_dir'} , 'mt-config.cgi');
-    unless (-e $app->{cfg_file}) {
-        $app->{cfg_file} = File::Spec->catfile($app->{'mt_dir'} , 'config.cgi');
+    $app->{cfg_file}
+      = File::Spec->catfile( $app->{'mt_dir'}, 'mt-config.cgi' );
+    unless ( -e $app->{cfg_file} ) {
+        $app->{cfg_file}
+          = File::Spec->catfile( $app->{'mt_dir'}, 'config.cgi' );
     }
 
     my $dirs = $app->directories_to_remove();
@@ -469,21 +476,22 @@ sub upgrade_from_mt {
 
     $param{cfg_file}     = $app->{cfg_file};
     $param{new_cfg_file} = $cfg;
-    $param{rename_cfg}   = ($app->{cfg_file} =~ /mt-config/);
-    $param{ready}        = !$param{remove_loop} && !$param{rename_loop} && !$param{rename_cfg};
+    $param{rename_cfg}   = ( $app->{cfg_file} =~ /mt-config/ );
+    $param{ready}
+      = !$param{remove_loop} && !$param{rename_loop} && !$param{rename_cfg};
     return $app->build_page( "upgrade_from_mt.tmpl", \%param );
-}
+} ## end sub upgrade_from_mt
 
 sub start {
     my $app   = shift;
-	my $q = $app->query;
+    my $q     = $app->query;
     my %param = @_;
 
     my $static_path = $q->param('set_static_uri_to');
     my $static_file_path
-        = defined $param{set_static_file_to}
-        ? $param{set_static_file_to}
-        : $q->param('set_static_file_to');
+      = defined $param{set_static_file_to}
+      ? $param{set_static_file_to}
+      : $q->param('set_static_file_to');
     $param{set_static_file_to} = $static_file_path;
 
     # test for static_path
@@ -493,7 +501,7 @@ sub start {
     }
 
     $static_path = $app->cgipath . $static_path
-        unless $static_path =~ m#^(https?:/)?/#;
+      unless $static_path =~ m#^(https?:/)?/#;
     $static_path =~ s#(^\s+|\s+$)##;
     $static_path .= '/' unless $static_path =~ m!/$!;
 
@@ -511,16 +519,16 @@ sub start {
         return $app->build_page( "start.tmpl", \%param );
     }
 
-    if (   !( -d $static_file_path )
-        || !( -f File::Spec->catfile( $static_file_path, "mt.js" ) ) )
+    if (    !( -d $static_file_path )
+         || !( -f File::Spec->catfile( $static_file_path, "mt.js" ) ) )
     {
         $param{file_invalid}      = 1;
         $param{set_static_uri_to} = $q->param('set_static_uri_to');
         return $app->build_page( "start.tmpl", \%param );
     }
     $param{default_language} = $q->param('default_language');
-    $param{config}      = $app->serialize_config(%param);
-    $param{static_file} = $static_file_path;
+    $param{config}           = $app->serialize_config(%param);
+    $param{static_file}      = $static_file_path;
 
     # test for required packages...
     my $req = $app->registry("required_packages");
@@ -528,10 +536,8 @@ sub start {
     foreach my $key ( keys %$req ) {
         my $pkg = $req->{$key};
         push @REQ,
-            [
-            $key, $pkg->{version} || 0, 1, $pkg->{label},
-            $key, $pkg->{link}
-            ];
+          [ $key, $pkg->{version} || 0, 1, $pkg->{label}, $key,
+            $pkg->{link} ];
     }
     my ($needed) = $app->module_check( \@REQ );
     if (@$needed) {
@@ -548,16 +554,16 @@ sub start {
         my $link   = 'http://search.cpan.org/dist/' . $driver->{dbd_package};
         $link =~ s/::/-/g;
         push @DATA,
-            [
+          [
             $driver->{dbd_package},
             $driver->{dbd_version},
             0,
             $app->translate(
-                "The [_1] database driver is required to use [_2].",
-                $driver->{dbd_package}, $label
+                          "The [_1] database driver is required to use [_2].",
+                          $driver->{dbd_package}, $label
             ),
             $label, $link
-            ];
+          ];
     }
     my ($db_missing) = $app->module_check( \@DATA );
     if ( ( scalar @$db_missing ) == ( scalar @DATA ) ) {
@@ -572,10 +578,8 @@ sub start {
     foreach my $key ( keys %$opt ) {
         my $pkg = $opt->{$key};
         push @OPT,
-            [
-            $key, $pkg->{version} || 0, 0, $pkg->{label},
-            $key, $pkg->{link}
-            ];
+          [ $key, $pkg->{version} || 0, 0, $pkg->{label}, $key,
+            $pkg->{link} ];
     }
     my ($opt_missing) = $app->module_check( \@OPT );
     push @$opt_missing, @$db_missing;
@@ -588,7 +592,7 @@ sub start {
 
     $param{success} = 1;
     return $app->build_page( "packages.tmpl", \%param );
-}
+} ## end sub start
 
 sub object_drivers {
     my $app = shift;
@@ -598,7 +602,7 @@ sub object_drivers {
 
 sub configure {
     my $app   = shift;
-    my $q = $app->query;
+    my $q     = $app->query;
     my %param = @_;
 
     $param{set_static_uri_to} = $q->param('set_static_uri_to');
@@ -606,7 +610,8 @@ sub configure {
     # set static web path
     $app->config->set( 'StaticWebPath', $param{set_static_uri_to} );
     delete $param{publish_charset};
-    if ( my $dbtype = $param{dbtype} ) { # This needs to be fixed so it is pluggable.
+    if ( my $dbtype = $param{dbtype} )
+    {    # This needs to be fixed so it is pluggable.
         $param{"dbtype_$dbtype"} = 1;
         if ( $dbtype eq 'mysql' ) {
             $param{login_required} = 1;
@@ -620,9 +625,9 @@ sub configure {
         elsif ( $dbtype eq 'mssqlserver' ) {
             $param{login_required}  = 1;
             $param{publish_charset} = $q->param('publish_charset')
-                || ( $app->{cfg}->DefaultLanguage eq 'ja'
-                ? 'Shift_JIS'
-                : 'ISO-8859-1' );
+              || ( $app->{cfg}->DefaultLanguage eq 'ja'
+                   ? 'Shift_JIS'
+                   : 'ISO-8859-1' );
         }
         elsif ( $dbtype eq 'sqlite' ) {
             $param{path_required} = 1;
@@ -630,7 +635,7 @@ sub configure {
         elsif ( $dbtype eq 'sqlite2' ) {
             $param{path_required} = 1;
         }
-    }
+    } ## end if ( my $dbtype = $param...)
 
     my @DATA;
     my $drivers = $app->object_drivers;
@@ -640,16 +645,16 @@ sub configure {
         my $link   = 'http://search.cpan.org/dist/' . $driver->{dbd_package};
         $link =~ s/::/-/g;
         push @DATA,
-            [
+          [
             $driver->{dbd_package},
             $driver->{dbd_version},
             0,
             $app->translate(
-                "The [_1] driver is required to use [_2].",
-                $driver->{dbd_package}, $label
+                             "The [_1] driver is required to use [_2].",
+                             $driver->{dbd_package}, $label
             ),
             $label, $link
-            ];
+          ];
     }
     my ( $missing, $dbmod ) = $app->module_check( \@DATA );
     if ( scalar(@$dbmod) == 0 ) {
@@ -683,7 +688,7 @@ sub configure {
         if ( $param{dbtype} && ( $param{dbtype} eq $_->{id} ) ) {
             $_->{selected} = 1;
         }
-    }
+    } ## end foreach (@$dbmod)
     $param{db_loop} = $dbmod;
     $param{one_db}  = $#$dbmod == 0;    # db module is only one or not
     $param{config} = $app->serialize_config(%param);
@@ -696,7 +701,7 @@ sub configure {
         $ok = 0;
         my $dbtype = $param{dbtype};
         my $driver = $drivers->{$dbtype}{config_package}
-            if exists $drivers->{$dbtype};
+          if exists $drivers->{$dbtype};
         $param{dbserver_null} = 1 unless $param{dbserver};
 
         if ($driver) {
@@ -708,17 +713,17 @@ sub configure {
             $cfg->DBPort( $param{dbport} )     if $param{dbport};
             $cfg->DBSocket( $param{dbsocket} ) if $param{dbsocket};
             $cfg->DBHost( $param{dbserver} )
-                if $param{dbserver} && ( $param{dbtype} ne 'oracle' );
+              if $param{dbserver} && ( $param{dbtype} ne 'oracle' );
             my $current_charset = $cfg->PublishCharset;
             $cfg->PublishCharset( $param{publish_charset} )
-                if $param{publish_charset};
+              if $param{publish_charset};
 
             if ( $dbtype eq 'sqlite' || $dbtype eq 'sqlite2' ) {
                 require File::Spec;
                 my $db_file = $param{dbpath};
                 if ( !File::Spec->file_name_is_absolute($db_file) ) {
                     $db_file
-                        = File::Spec->catfile( $app->{mt_dir}, $db_file );
+                      = File::Spec->catfile( $app->{mt_dir}, $db_file );
                 }
                 $cfg->Database($db_file) if $db_file;
                 $param{dbpath} = $db_file if $db_file;
@@ -731,25 +736,27 @@ sub configure {
             require MT::ObjectDriverFactory;
             my $od = MT::ObjectDriverFactory->new($driver);
 
-            $cfg->PublishCharset( $current_charset );
+            $cfg->PublishCharset($current_charset);
 
             eval { $od->rw_handle; };    ## to test connection
             if ( my $err = $@ ) {
                 $err_msg
-                    = $app->translate(
+                  = $app->translate(
                     'An error occurred while attempting to connect to the database.  Check the settings and try again.'
-                    );
+                  );
                 if ( $param{publish_charset} ne $current_charset ) {
+
                     # $param{publish_charset} is sometimes undef which forces encode_text
                     # to guess_encode which should handle all of the cases.
-                    $err = encode_text( $err, $param{publish_charset}, $current_charset );
+                    $err = encode_text( $err, $param{publish_charset},
+                                        $current_charset );
                 }
                 $err_more = $err;
             }
             else {
                 $ok = 1;
             }
-        }
+        } ## end if ($driver)
         if ($ok) {
             $param{success} = 1;
             return $app->build_page( "configure.tmpl", \%param );
@@ -757,13 +764,13 @@ sub configure {
         $param{connect_error} = 1;
         $param{error}         = $err_msg;
         $param{error_more}    = $err_more;
-    }
+    } ## end if ( $q->param('test'))
 
     $app->build_page( "configure.tmpl", \%param );
-}
+} ## end sub configure
 
 my @Sendmail
-    = qw( /usr/lib/sendmail /usr/sbin/sendmail /usr/ucblib/sendmail );
+  = qw( /usr/lib/sendmail /usr/sbin/sendmail /usr/ucblib/sendmail );
 
 sub cfg_dir_conditions {
     my $app = shift;
@@ -780,9 +787,10 @@ sub cfg_dir_conditions {
 
 sub cfg_dir {
     my $app   = shift;
-	my $q = $app->query;
+    my $q     = $app->query;
     my %param = @_;
     $param{set_static_uri_to} = $q->param('set_static_uri_to');
+
     # set static web path
     $app->config->set( 'StaticWebPath', $param{set_static_uri_to} );
     $param{config} = $app->serialize_config(%param);
@@ -826,11 +834,11 @@ sub cfg_dir {
     }
 
     $app->build_page( "cfg_dir.tmpl", \%param );
-}
+} ## end sub cfg_dir
 
 sub optional {
     my $app   = shift;
-	my $q = $app->query;
+    my $q     = $app->query;
     my %param = @_;
 
     $param{set_static_uri_to} = $q->param('set_static_uri_to');
@@ -850,7 +858,7 @@ sub optional {
     my $transfer;
     push @$transfer, { id => 'smtp', name => $app->translate('SMTP Server') };
     push @$transfer,
-        { id => 'sendmail', name => $app->translate('Sendmail') };
+      { id => 'sendmail', name => $app->translate('Sendmail') };
 
     foreach (@$transfer) {
         if ( $_->{id} eq $param{mail_transfer} ) {
@@ -869,31 +877,32 @@ sub optional {
         if ( $param{test_mail_address} ) {
             my $cfg = $app->config;
             $cfg->MailTransfer( $param{mail_transfer} )
-                if $param{mail_transfer};
+              if $param{mail_transfer};
             $cfg->SMTPServer( $param{smtp_server} )
-                if $param{mail_transfer}
-                    && ( $param{mail_transfer} eq 'smtp' )
-                    && $param{smtp_server};
+              if $param{mail_transfer}
+                  && ( $param{mail_transfer} eq 'smtp' )
+                  && $param{smtp_server};
             $cfg->SendMailPath( $param{sendmail_path} )
-                if $param{mail_transfer}
-                    && ( $param{mail_transfer} eq 'sendmail' )
-                    && $param{sendmail_path};
+              if $param{mail_transfer}
+                  && ( $param{mail_transfer} eq 'sendmail' )
+                  && $param{sendmail_path};
             my %head = (
-                id => 'wizard_test',
-                To => $param{test_mail_address},
-                From => $cfg->EmailAddressMain || $param{test_mail_address},
-                Subject => $app->translate(
-                    "Test email from [_1] Configuration Wizard",
-                    MT->product_name)
+                  id => 'wizard_test',
+                  To => $param{test_mail_address},
+                  From => $cfg->EmailAddressMain || $param{test_mail_address},
+                  Subject =>
+                    $app->translate(
+                                  "Test email from [_1] Configuration Wizard",
+                                  MT->product_name
+                    )
             );
             my $charset = $cfg->MailEncoding || $cfg->PublishCharset;
             $head{'Content-Type'} = qq(text/plain; charset="$charset");
 
-            my $body
-                = $app->translate(
+            my $body = $app->translate(
                 "This is the test email sent by your new installation of [_1].",
                 MT->product_name
-                );
+            );
 
             require MT::Mail;
             $ok = MT::Mail->send( \%head, $body );
@@ -905,17 +914,17 @@ sub optional {
             else {
                 $err_msg = MT::Mail->errstr;
             }
-        }
+        } ## end if ( $param{test_mail_address...})
 
         $param{send_error} = 1;
         $param{error}      = $err_msg;
-    }
+    } ## end if ( $q->param('test'))
     $app->build_page( "optional.tmpl", \%param );
-}
+} ## end sub optional
 
 sub seed {
     my $app   = shift;
-    my $q = $app->query;
+    my $q     = $app->query;
     my %param = @_;
 
     # input data unserialize to config
@@ -930,16 +939,15 @@ sub seed {
 
     require URI;
     my $uri = URI->new( $app->cgipath );
-    $param{cgi_path} = $uri->path;
-    $uri = URI->new( $q->param('set_static_uri_to') );
+    $param{cgi_path}        = $uri->path;
+    $uri                    = URI->new( $q->param('set_static_uri_to') );
     $param{static_web_path} = $uri->path;
     $param{static_uri}      = $uri->path;
     my $drivers = $app->object_drivers;
 
     my $r_uri = $ENV{REQUEST_URI} || $ENV{SCRIPT_NAME};
     if ( $ENV{MOD_PERL}
-        || ( ( $r_uri =~ m/\/wizard\.(\w+)(\?.*)?$/ ) && ( $1 ne 'cgi' ) )
-        )
+         || ( ( $r_uri =~ m/\/wizard\.(\w+)(\?.*)?$/ ) && ( $1 ne 'cgi' ) ) )
     {
         my $new = '';
         if ( $ENV{MOD_PERL} ) {
@@ -964,7 +972,7 @@ sub seed {
             $param{script_loop} = \@scripts if @scripts;
             $param{non_cgi_suffix} = 1;
         }
-    }
+    } ## end if ( $ENV{MOD_PERL} ||...)
     else {
         $param{mt_script} = $app->config->AdminScript;
     }
@@ -989,14 +997,14 @@ sub seed {
             $param{database_username} = $param{dbuser};
             $param{database_password} = $param{dbpass} if $param{dbpass};
             $param{database_host}     = $param{dbserver}
-                if ( $dbtype ne 'oracle' ) && $param{dbserver};
+              if ( $dbtype ne 'oracle' ) && $param{dbserver};
             $param{database_port}   = $param{dbport}   if $param{dbport};
             $param{database_socket} = $param{dbsocket} if $param{dbsocket};
             $param{use_setnames}    = $param{setnames} if $param{setnames};
             $param{publish_charset} = $param{publish_charset}
-                if $param{publish_charset};
+              if $param{publish_charset};
         }
-    }
+    } ## end if ( my $dbtype = $param...)
 
     if ( $param{temp_dir} eq $app->config->TempDir ) {
         $param{temp_dir} = '';
@@ -1041,7 +1049,7 @@ sub seed {
 
     # back to the complete screen
     return $app->build_page( "complete.tmpl", \%param );
-}
+} ## end sub seed
 
 sub serialize_config {
     my $app   = shift;
@@ -1079,7 +1087,7 @@ sub unserialize_config {
         }
     }
     %config;
-}
+} ## end sub unserialize_config
 
 sub cgipath {
     my $app = shift;
@@ -1100,7 +1108,7 @@ sub cgipath {
     $cgipath .= $uri;
 
     $cgipath;
-}
+} ## end sub cgipath
 
 sub module_check {
     my $self    = shift;
@@ -1112,29 +1120,29 @@ sub module_check {
         $mod .= $ver if $mod eq 'DBD::ODBC';
         if ($@) {
             push @missing,
-                {
+              {
                 module      => $mod,
                 version     => $ver,
                 required    => $req,
                 description => $desc,
                 label       => $name,
                 link        => $link
-                };
+              };
         }
         else {
             push @ok,
-                {
+              {
                 module      => $mod,
                 version     => $ver,
                 required    => $req,
                 description => $desc,
                 label       => $name,
                 link        => $link
-                };
+              };
         }
-    }
+    } ## end foreach my $ref (@$modules)
     ( \@missing, \@ok );
-}
+} ## end sub module_check
 
 sub static_path {
     my $app         = shift;
@@ -1151,8 +1159,8 @@ sub static_path {
 sub mt_static_exists {
     my $app = shift;
     return ( -f File::Spec->catfile( $app->{mt_dir}, "mt-static", "mt.js" ) )
-        ? 1
-        : 0;
+      ? 1
+      : 0;
 }
 
 sub is_valid_static_path {
@@ -1181,9 +1189,9 @@ sub is_valid_static_path {
     my $request  = HTTP::Request->new( GET => $path );
     my $response = $ua->request($request);
     $response->is_success
-        and ( $response->content_length() != 0 )
-        && ( $response->content =~ m/function\s+openManual/s );
-}
+      and ( $response->content_length() != 0 )
+      && ( $response->content =~ m/function\s+openManual/s );
+} ## end sub is_valid_static_path
 
 sub is_config_exists {
     my $app = shift;

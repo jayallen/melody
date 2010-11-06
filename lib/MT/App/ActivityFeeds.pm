@@ -10,7 +10,7 @@ use strict;
 use base 'MT::App';
 use MT::Author qw(AUTHOR);
 use MT::Util qw(perl_sha1_digest_hex ts2epoch epoch2ts ts2iso iso2ts
-    encode_html encode_url);
+  encode_html encode_url);
 use HTTP::Date qw(time2isoz str2time time2str);
 
 sub id {'feeds'}
@@ -33,15 +33,15 @@ sub init_request {
 sub init_core_callbacks {
     my $app = shift;
 
-    MT->_register_core_callbacks(
-        {   'ActivityFeed.system'  => \&_feed_system,
-            'ActivityFeed.comment' => \&_feed_comment,
-            'ActivityFeed.blog'    => \&_feed_blog,
-            'ActivityFeed.ping'    => \&_feed_ping,
-            'ActivityFeed.debug'   => \&_feed_debug,
-            'ActivityFeed.entry'   => \&_feed_entry,
-            'ActivityFeed.page'    => \&_feed_page,
-        }
+    MT->_register_core_callbacks( {
+                                   'ActivityFeed.system'  => \&_feed_system,
+                                   'ActivityFeed.comment' => \&_feed_comment,
+                                   'ActivityFeed.blog'    => \&_feed_blog,
+                                   'ActivityFeed.ping'    => \&_feed_ping,
+                                   'ActivityFeed.debug'   => \&_feed_debug,
+                                   'ActivityFeed.entry'   => \&_feed_entry,
+                                   'ActivityFeed.page'    => \&_feed_page,
+                                 }
     );
 }
 
@@ -50,26 +50,29 @@ sub init_core_callbacks {
 # session records, since we aren't setting a login cookie for feeds.
 sub login {
     my $app      = shift;
-    my $q 		 = $app->query;
+    my $q        = $app->query;
     my $username = $q->param('username');
     my $token    = $q->param('token');
 
     my $user_class = $app->{user_class};
     eval "use $user_class;";
     return $app->error(
-        $app->translate( "Error loading [_1]: [_2]", $user_class, $@ ) )
-        if $@;
+              $app->translate( "Error loading [_1]: [_2]", $user_class, $@ ) )
+      if $@;
     my $author = $user_class->load( { name => $username, type => AUTHOR } );
-    if ( $author && $author->is_active && ( ( $author->api_password || '' ) ne '' ) ) {
+    if (    $author
+         && $author->is_active
+         && ( ( $author->api_password || '' ) ne '' ) )
+    {
         my $auth_token
-            = perl_sha1_digest_hex( 'feed:' . $author->api_password );
+          = perl_sha1_digest_hex( 'feed:' . $author->api_password );
         if ( $token eq $auth_token ) {
             $app->user($author);
             return ($author);
         }
     }
     (undef);
-}
+} ## end sub login
 
 # A place to store session data for activity feeds.
 sub session {
@@ -109,15 +112,15 @@ sub session {
     }
 
     return $sess;
-}
+} ## end sub session
 
 # Default mode of MT::App::ActivityFeeds; uses the 'view' parameter to
 # differentiate between the different types of feeds available. Feed
 # data is populated by callback, so plugins can intercept the feed
 # elements if so desired, or can append things to a feed as well.
 sub mode_default {
-    my $app = shift;
-    my $q   = $app->query;
+    my $app  = shift;
+    my $q    = $app->query;
     my $view = $q->param('view') || 'system';
 
     eval {
@@ -134,15 +137,15 @@ sub mode_default {
             my $last_update;
             if ( $feed
                 =~ m!<updated>(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)</updated>!
-                )
+              )
             {
                 $last_update = time2str( str2time($1) );
             }
             my $mod_since = $app->get_header('If-Modified-Since');
             $app->{no_print_body} = 1;
-            if (   $last_update
-                && $mod_since
-                && ( str2time($last_update) <= str2time($mod_since) ) )
+            if (    $last_update
+                 && $mod_since
+                 && ( str2time($last_update) <= str2time($mod_since) ) )
             {
                 $app->response_code(304);
                 $app->response_message('Not Modified');
@@ -150,29 +153,30 @@ sub mode_default {
             }
             else {
                 $app->set_header( 'Last-Modified', $last_update )
-                    if $last_update;
+                  if $last_update;
                 $app->send_http_header("application/atom+xml");
                 $app->print($feed);
             }
-        }
+        } ## end if ( defined $feed )
         else {
             die MT->errstr;
         }
     };
     if ( my $err = $@ ) {
-        return $app->error(
+        return
+          $app->error(
             $app->translate(
                 "An error occurred while generating the activity feed: [_1].",
                 $err
             )
-        );
+          );
     }
-}
+} ## end sub mode_default
 
 # Generic log to feed; limit using $terms; returns the feed content
 sub process_log_feed {
     my $app = shift;
-	my $q = $app->query;
+    my $q   = $app->query;
     my ( $terms, $param ) = @_;
 
     my %templates;
@@ -193,11 +197,16 @@ sub process_log_feed {
     my $token = $q->param('token');
 
     require MT::Log;
-    my $cfg  = $app->config;
-    my @data = MT::Log->load( $terms,
-        { 'sort' => 'id', 'direction' => 'descend' } );
-    my $iter = MT::Log->load_iter( $terms,
-        { 'sort' => 'id', 'direction' => 'descend' } );
+    my $cfg = $app->config;
+    my @data
+      = MT::Log->load( $terms, { 'sort' => 'id', 'direction' => 'descend' } );
+    my $iter = MT::Log->load_iter(
+                                   $terms,
+                                   {
+                                      'sort'      => 'id',
+                                      'direction' => 'descend'
+                                   }
+    );
     my $count = 0;
     my $res   = '';
     my @entries;
@@ -210,7 +219,7 @@ sub process_log_feed {
     while ( my $log = $iter->() ) {
         if ( $log->blog_id ) {
             $blog = $blogs{ $log->blog_id }
-                ||= MT::Blog->load( $log->blog_id );
+              ||= MT::Blog->load( $log->blog_id );
         }
         else {
             $blog = undef;
@@ -234,12 +243,12 @@ sub process_log_feed {
         $item->{'log.permalink'} = $log_view_url . '#' . $id;
         $item->{'log.atom_id'}   = qq{tag:$host,$year:$path/$id};
         $item->{'log.message'}
-            = entity_translate( encode_html( $item->{'log.message'}, 1 ) );
+          = entity_translate( encode_html( $item->{'log.message'}, 1 ) );
         my $class = $log->class || 'system';
 
         if ( !$templates{$class} ) {
             $templates{$class} = $app->load_tmpl("feed_$class.tmpl")
-                || $app->load_tmpl("feed_system.tmpl");
+              || $app->load_tmpl("feed_system.tmpl");
         }
         else {
             $templates{$class}->clear_params();
@@ -251,17 +260,18 @@ sub process_log_feed {
         $item->{static_uri} = $static_path;
         $item->{feed_token} = $token;
         my $out = $app->build_page( $templates{$class}, $item )
-            or die $app->errstr;
+          or die $app->errstr;
         push @entries, { entry => $out };
         $count++;
         last if $last_mod && ( $ts < $last_mod );
         last if $count == $max_items;
-    }
+    } ## end while ( my $log = $iter->...)
     my $chrome_tmpl = $app->load_tmpl('feed_chrome.tmpl');
     $param->{loop_entries} = \@entries;
     my $str = qq();
     for my $key ( $q->param ) {
-        $str .= "&amp;" . encode_url($key) . "=" . encode_url($q->param($key));
+        $str
+          .= "&amp;" . encode_url($key) . "=" . encode_url( $q->param($key) );
     }
     $str =~ s/^&amp;(.+)$/?$1/;
     $param->{feed_self} = $app->base . $app->app_path . $app->script . $str;
@@ -277,7 +287,7 @@ sub process_log_feed {
         # set to current timestamp?
     }
     $app->build_page( $chrome_tmpl, $param );
-}
+} ## end sub process_log_feed
 
 sub entity_translate {
     my ($str) = @_;
@@ -321,16 +331,15 @@ sub apply_log_filter {
                     }
                 }
             }
-        }
-        $arg{blog_id} = [ split /,/, $param->{blog_id} ]
-            if $param->{blog_id};
-    }
+        } ## end if ( $filter_col && $val)
+        $arg{blog_id} = [ split /,/, $param->{blog_id} ] if $param->{blog_id};
+    } ## end if ($param)
     \%arg;
-}
+} ## end sub apply_log_filter
 
 sub _feed_ping {
     my ( $cb, $app, $view, $feed ) = @_;
-	my $q 	 = $app->query;
+    my $q    = $app->query;
     my $user = $app->user;
 
     require MT::Blog;
@@ -342,23 +351,20 @@ sub _feed_ping {
         if ( !$user->is_superuser ) {
             require MT::Permission;
             my $perm = MT::Permission->load(
-                {   author_id => $user->id,
-                    blog_id   => $blog_id
-                }
-            );
+                            { author_id => $user->id, blog_id => $blog_id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless $perm;
+              unless $perm;
         }
         $blog = MT::Blog->load($blog_id) or return;
     }
     else {
         if ( !$user->is_superuser ) {
 
-       # limit activity log view to only weblogs this user has permissions for
+            # limit activity log view to only weblogs this user has permissions for
             require MT::Permission;
             my @perms = MT::Permission->load( { author_id => $user->id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless @perms;
+              unless @perms;
             my @blog_list;
             push @blog_list, $_->blog_id foreach @perms;
             $blog_id = join ',', @blog_list;
@@ -366,30 +372,28 @@ sub _feed_ping {
     }
 
     my $link = $app->base
-        . $app->mt_uri(
-        mode => 'list_pings',
-        args => { $blog ? ( blog_id => $blog_id ) : () }
-        );
+      . $app->mt_uri( mode => 'list_pings',
+                      args => { $blog ? ( blog_id => $blog_id ) : () } );
     my $param = {
-        feed_link  => $link,
-        feed_title => $blog
-        ? $app->translate( '[_1] Weblog TrackBacks', $blog->name )
-        : $app->translate("All Weblog TrackBacks")
+                  feed_link  => $link,
+                  feed_title => $blog
+                  ? $app->translate( '[_1] Weblog TrackBacks', $blog->name )
+                  : $app->translate("All Weblog TrackBacks")
     };
 
     # user has permissions to view this type of feed... continue
-    my $terms = $app->apply_log_filter(
-        {   filter     => 'class',
-            filter_val => 'ping',
-            $blog_id ? ( blog_id => $blog_id ) : (),
-        }
+    my $terms = $app->apply_log_filter( {
+                                     filter     => 'class',
+                                     filter_val => 'ping',
+                                     $blog_id ? ( blog_id => $blog_id ) : (),
+                                   }
     );
     $$feed = $app->process_log_feed( $terms, $param );
-}
+} ## end sub _feed_ping
 
 sub _feed_comment {
     my ( $cb, $app, $view, $feed ) = @_;
-	my $q 	 = $app->query;
+    my $q    = $app->query;
     my $user = $app->user;
 
     require MT::Blog;
@@ -401,23 +405,20 @@ sub _feed_comment {
         if ( !$user->is_superuser ) {
             require MT::Permission;
             my $perm = MT::Permission->load(
-                {   author_id => $user->id,
-                    blog_id   => $blog_id
-                }
-            );
+                            { author_id => $user->id, blog_id => $blog_id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless $perm;
+              unless $perm;
         }
 
         $blog = MT::Blog->load($blog_id) or return;
     }
     else {
 
-       # limit activity log view to only weblogs this user has permissions for
+        # limit activity log view to only weblogs this user has permissions for
         if ( !$user->is_superuser ) {
             my @perms = MT::Permission->load( { author_id => $user->id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless @perms;
+              unless @perms;
             my @blog_list;
             push @blog_list, $_->blog_id foreach @perms;
             $blog_id = join ',', @blog_list;
@@ -425,30 +426,28 @@ sub _feed_comment {
     }
 
     my $link = $app->base
-        . $app->mt_uri(
-        mode => 'list_comments',
-        args => { $blog ? ( blog_id => $blog_id ) : () }
-        );
+      . $app->mt_uri( mode => 'list_comments',
+                      args => { $blog ? ( blog_id => $blog_id ) : () } );
     my $param = {
-        feed_link  => $link,
-        feed_title => $blog
-        ? $app->translate( '[_1] Weblog Comments', $blog->name )
-        : $app->translate("All Weblog Comments")
+                  feed_link  => $link,
+                  feed_title => $blog
+                  ? $app->translate( '[_1] Weblog Comments', $blog->name )
+                  : $app->translate("All Weblog Comments")
     };
 
     # user has permissions to view this type of feed... continue
-    my $terms = $app->apply_log_filter(
-        {   filter     => 'class',
-            filter_val => 'comment',
-            $blog_id ? ( blog_id => $blog_id ) : (),
-        }
+    my $terms = $app->apply_log_filter( {
+                                     filter     => 'class',
+                                     filter_val => 'comment',
+                                     $blog_id ? ( blog_id => $blog_id ) : (),
+                                   }
     );
     $$feed = $app->process_log_feed( $terms, $param );
-}
+} ## end sub _feed_comment
 
 sub _feed_entry {
     my ( $cb, $app, $view, $feed ) = @_;
-	my $q    = $app->query;
+    my $q    = $app->query;
     my $user = $app->user;
 
     require MT::Blog;
@@ -460,9 +459,9 @@ sub _feed_entry {
         if ( !$user->is_superuser ) {
             require MT::Permission;
             my $perm = MT::Permission->load(
-                { author_id => $user->id, blog_id => $blog_id } );
+                            { author_id => $user->id, blog_id => $blog_id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless $perm;
+              unless $perm;
         }
 
         $blog = MT::Blog->load($blog_id) or return;
@@ -470,10 +469,10 @@ sub _feed_entry {
     else {
         if ( !$user->is_superuser ) {
 
-       # limit activity log view to only weblogs this user has permissions for
+            # limit activity log view to only weblogs this user has permissions for
             my @perms = MT::Permission->load( { author_id => $user->id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless @perms;
+              unless @perms;
             my @blog_list;
             push @blog_list, $_->blog_id foreach @perms;
             $blog_id = join ',', @blog_list;
@@ -481,30 +480,28 @@ sub _feed_entry {
     }
 
     my $link = $app->base
-        . $app->mt_uri(
-        mode => 'list_entries',
-        args => { $blog ? ( blog_id => $blog_id ) : () }
-        );
+      . $app->mt_uri( mode => 'list_entries',
+                      args => { $blog ? ( blog_id => $blog_id ) : () } );
     my $param = {
-        feed_link  => $link,
-        feed_title => $blog
-        ? $app->translate( '[_1] Weblog Entries', $blog->name )
-        : $app->translate("All Weblog Entries")
+                  feed_link  => $link,
+                  feed_title => $blog
+                  ? $app->translate( '[_1] Weblog Entries', $blog->name )
+                  : $app->translate("All Weblog Entries")
     };
 
     # user has permissions to view this type of feed... continue
-    my $terms = $app->apply_log_filter(
-        {   filter     => 'class',
-            filter_val => 'entry',
-            $blog_id ? ( blog_id => $blog_id ) : (),
-        }
+    my $terms = $app->apply_log_filter( {
+                                     filter     => 'class',
+                                     filter_val => 'entry',
+                                     $blog_id ? ( blog_id => $blog_id ) : (),
+                                   }
     );
     $$feed = $app->process_log_feed( $terms, $param );
-}
+} ## end sub _feed_entry
 
 sub _feed_blog {
     my ( $cb, $app, $view, $feed ) = @_;
-	my $q    = $app->query;
+    my $q    = $app->query;
     my $user = $app->user;
 
     # verify user has permission to view entries for given weblog
@@ -517,9 +514,9 @@ sub _feed_blog {
         if ( !$user->is_superuser ) {
             require MT::Permission;
             my $perm = MT::Permission->load(
-                { author_id => $user->id, blog_id => $blog_id } );
+                            { author_id => $user->id, blog_id => $blog_id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless $perm;
+              unless $perm;
         }
 
         $blog = MT::Blog->load($blog_id) or return;
@@ -527,10 +524,10 @@ sub _feed_blog {
     else {
         if ( !$user->is_superuser ) {
 
-       # limit activity log view to only weblogs this user has permissions for
+            # limit activity log view to only weblogs this user has permissions for
             my @perms = MT::Permission->load( { author_id => $user->id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless @perms;
+              unless @perms;
             my @blog_list;
             push @blog_list, $_->blog_id foreach @perms;
             $blog_id = join ',', @blog_list;
@@ -540,34 +537,32 @@ sub _feed_blog {
     my $link;
     if ($blog) {
         $link = $app->base
-            . $app->mt_uri(
-            mode => 'show_menu',
-            args => { blog_id => $blog_id }
-            );
+          . $app->mt_uri( mode => 'show_menu',
+                          args => { blog_id => $blog_id } );
     }
     else {
         $link = $app->base . $app->mt_uri( mode => 'system_list_blogs' );
     }
     my $param = {
-        feed_link  => $link,
-        feed_title => $blog
-        ? $app->translate( '[_1] Weblog Activity', $blog->name )
-        : $app->translate("All Weblog Activity")
+                  feed_link  => $link,
+                  feed_title => $blog
+                  ? $app->translate( '[_1] Weblog Activity', $blog->name )
+                  : $app->translate("All Weblog Activity")
     };
 
     # user has permissions to view this type of feed... continue
-    my $terms = $app->apply_log_filter(
-        {   filter     => 'class',
-            filter_val => 'entry,comment,ping',
-            $blog_id ? ( blog_id => $blog_id ) : ()
-        }
+    my $terms = $app->apply_log_filter( {
+                                      filter     => 'class',
+                                      filter_val => 'entry,comment,ping',
+                                      $blog_id ? ( blog_id => $blog_id ) : ()
+                                    }
     );
     $$feed = $app->process_log_feed( $terms, $param );
-}
+} ## end sub _feed_blog
 
 sub _feed_system {
     my ( $cb, $app, $view, $feed ) = @_;
-	my $q    = $app->query;
+    my $q          = $app->query;
     my $user       = $app->user;
     my $blog_id    = $q->param('blog_id');
     my $filter     = $q->param('filter');
@@ -578,15 +573,15 @@ sub _feed_system {
         if ($blog_id) {
             require MT::Permission;
             my $perm = MT::Permission->load(
-                { author_id => $user->id, blog_id => $blog_id } );
+                            { author_id => $user->id, blog_id => $blog_id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless $perm
-                    && (   $perm->can_administer_blog
-                        || $perm->can_view_blog_log );
+              unless $perm
+                  && (    $perm->can_administer_blog
+                       || $perm->can_view_blog_log );
         }
         else {
             return $cb->error( $app->translate("No permissions.") )
-                unless $user->can_view_log;
+              unless $user->can_view_log;
         }
     }
 
@@ -600,36 +595,36 @@ sub _feed_system {
     $args->{blog_id}    = $blog_id if $blog_id;
     my $link = $app->base . $app->mt_uri( mode => 'view_log', args => $args );
     my $param = {
-        feed_link  => $link,
-        feed_title => $app->translate('Movable Type System Activity')
+                 feed_link  => $link,
+                 feed_title => $app->translate('Movable Type System Activity')
     };
     my $terms = $app->apply_log_filter($args);
     $$feed = $app->process_log_feed( $terms, $param );
-}
+} ## end sub _feed_system
 
 sub _feed_debug {
     my ( $cb, $app, $view, $feed ) = @_;
-	my $q    = $app->query;
+    my $q    = $app->query;
     my $user = $app->user;
     return unless $user->is_superuser;
     my $blog_id = $q->param('blog_id');
-    my $args    = {
-        'filter'     => 'class',
-        'filter_val' => 'debug',
-        $blog_id ? ( blog_id => $blog_id ) : ()
+    my $args = {
+                 'filter'     => 'class',
+                 'filter_val' => 'debug',
+                 $blog_id ? ( blog_id => $blog_id ) : ()
     };
     my $terms = $app->apply_log_filter($args);
     my $link = $app->base . $app->mt_uri( mode => 'view_log', args => $args );
     my $param = {
-        feed_link  => $link,
-        feed_title => $app->translate('Movable Type Debug Activity'),
+                 feed_link  => $link,
+                 feed_title => $app->translate('Movable Type Debug Activity'),
     };
     $$feed = $app->process_log_feed( $terms, $param );
 }
 
 sub _feed_page {
     my ( $cb, $app, $view, $feed ) = @_;
-	my $q    = $app->query;
+    my $q    = $app->query;
     my $user = $app->user;
 
     require MT::Blog;
@@ -641,9 +636,9 @@ sub _feed_page {
         if ( !$user->is_superuser ) {
             require MT::Permission;
             my $perm = MT::Permission->load(
-                { author_id => $user->id, blog_id => $blog_id } );
+                            { author_id => $user->id, blog_id => $blog_id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless $perm;
+              unless $perm;
         }
 
         $blog = MT::Blog->load($blog_id) or return;
@@ -651,10 +646,10 @@ sub _feed_page {
     else {
         if ( !$user->is_superuser ) {
 
-       # limit activity log view to only weblogs this user has permissions for
+            # limit activity log view to only weblogs this user has permissions for
             my @perms = MT::Permission->load( { author_id => $user->id } );
             return $cb->error( $app->translate("No permissions.") )
-                unless @perms;
+              unless @perms;
             my @blog_list;
             push @blog_list, $_->blog_id foreach @perms;
             $blog_id = join ',', @blog_list;
@@ -662,26 +657,24 @@ sub _feed_page {
     }
 
     my $link = $app->base
-        . $app->mt_uri(
-        mode => 'list_pages',
-        args => { $blog ? ( blog_id => $blog_id ) : () }
-        );
+      . $app->mt_uri( mode => 'list_pages',
+                      args => { $blog ? ( blog_id => $blog_id ) : () } );
     my $param = {
-        feed_link  => $link,
-        feed_title => $blog
-        ? $app->translate( '[_1] Weblog Pages', $blog->name )
-        : $app->translate("All Weblog Pages")
+                  feed_link  => $link,
+                  feed_title => $blog
+                  ? $app->translate( '[_1] Weblog Pages', $blog->name )
+                  : $app->translate("All Weblog Pages")
     };
 
     # user has permissions to view this type of feed... continue
-    my $terms = $app->apply_log_filter(
-        {   filter     => 'class',
-            filter_val => 'page',
-            $blog_id ? ( blog_id => $blog_id ) : (),
-        }
+    my $terms = $app->apply_log_filter( {
+                                     filter     => 'class',
+                                     filter_val => 'page',
+                                     $blog_id ? ( blog_id => $blog_id ) : (),
+                                   }
     );
     $$feed = $app->process_log_feed( $terms, $param );
-}
+} ## end sub _feed_page
 
 1;
 __END__

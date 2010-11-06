@@ -12,21 +12,22 @@ use base qw( Data::ObjectDriver::BaseObject MT::ErrorHandler );
 use MT;
 use MT::Util qw(offset_time_list);
 
-my (@PRE_INIT_PROPS, @PRE_INIT_META);
+my ( @PRE_INIT_PROPS, @PRE_INIT_META );
 
 sub install_pre_init_properties {
+
     # Just in case; to prevent any weird recursion
     local $MT::plugins_installed = 1;
 
     foreach my $def (@PRE_INIT_PROPS) {
-        my ($class, $props) = @$def;
+        my ( $class, $props ) = @$def;
         $class->install_properties($props);
     }
     @PRE_INIT_PROPS = ();
 
     foreach my $def (@PRE_INIT_META) {
-        my ($class, $meta, $which) = @$def;
-        $class->install_meta($meta, $which);
+        my ( $class, $meta, $which ) = @$def;
+        $class->install_meta( $meta, $which );
     }
     @PRE_INIT_META = ();
 }
@@ -35,7 +36,8 @@ sub install_properties {
     my $class = shift;
     my ($props) = @_;
 
-    if ( ( $class ne 'MT::Config') && ( !$MT::plugins_installed ) ) {
+    if ( ( $class ne 'MT::Config' ) && ( !$MT::plugins_installed ) ) {
+
         # We're too early in the phase of MT's bootstrapping to
         # be installing properties; we can't query the registry yet
         # since plugins are not all accounted for. So save this
@@ -48,7 +50,7 @@ sub install_properties {
         # have access to the MT configuration table in order to
         # bootstrap MT.
 
-        push @PRE_INIT_PROPS, [$class, $props];
+        push @PRE_INIT_PROPS, [ $class, $props ];
         return;
     }
 
@@ -60,93 +62,101 @@ sub install_properties {
         $props->{$which} = 1 if $super_props && $super_props->{$which};
     }
 
-    if ($props->{meta}) {
+    if ( $props->{meta} ) {
+
         # yank out any meta columns before we start working on column_defs
         $meta{$_} = delete $props->{column_defs}{$_}
-            for grep { $props->{column_defs}{$_} =~ m/\bmeta\b/ }
-            keys %{ $props->{column_defs} };
+          for grep { $props->{column_defs}{$_} =~ m/\bmeta\b/ }
+          keys %{ $props->{column_defs} };
     }
 
     if ($super_props) {
+
         # subclass; merge hash
         for (qw(primary_key class_column datasource driver audit)) {
             $props->{$_} = $super_props->{$_}
-                if exists $super_props->{$_} && !(exists $props->{$_});
+              if exists $super_props->{$_} && !( exists $props->{$_} );
         }
         for my $p (qw(column_defs defaults indexes)) {
-            if (exists $super_props->{$p}) {
-                foreach my $k (keys %{ $super_props->{$p} }) {
-                    if (!exists $props->{$p}{$k}) {
+            if ( exists $super_props->{$p} ) {
+                foreach my $k ( keys %{ $super_props->{$p} } ) {
+                    if ( !exists $props->{$p}{$k} ) {
                         $props->{$p}{$k} = $super_props->{$p}{$k};
                     }
                 }
-                if ($p eq 'column_defs') {
-                    $class->__parse_defs($props->{column_defs});
+                if ( $p eq 'column_defs' ) {
+                    $class->__parse_defs( $props->{column_defs} );
                 }
             }
         }
-        if ($super_props->{class_type}) {
+        if ( $super_props->{class_type} ) {
+
             # copy reference of class_to_type/type_to_class hashes
             $props->{__class_to_type} = $super_props->{__class_to_type};
             $props->{__type_to_class} = $super_props->{__type_to_class};
         }
-    }
+    } ## end if ($super_props)
 
     # Legacy MT::Object types only define 'columns'; we still support that
     # but they aren't handled properly with the upgrade system as a result.
-    if (! exists $props->{column_defs}) {
+    if ( !exists $props->{column_defs} ) {
         map { $props->{column_defs}{$_} = () } @{ $props->{columns} };
     }
     $props->{columns} = [ keys %{ $props->{column_defs} } ];
 
     # Support audit flags
-    if ($props->{audit}) {
-        unless (exists $props->{column_defs}{created_on}) {
-            $props->{column_defs}{created_on} = 'datetime';
-            $props->{column_defs}{created_by} = 'integer';
+    if ( $props->{audit} ) {
+        unless ( exists $props->{column_defs}{created_on} ) {
+            $props->{column_defs}{created_on}  = 'datetime';
+            $props->{column_defs}{created_by}  = 'integer';
             $props->{column_defs}{modified_on} = 'datetime';
             $props->{column_defs}{modified_by} = 'integer';
-            push @{ $props->{columns} }, qw( created_on created_by modified_on modified_by );
+            push @{ $props->{columns} },
+              qw( created_on created_by modified_on modified_by );
         }
     }
 
     # Classed object types
     $props->{class_column} ||= 'class' if exists $props->{class_type};
-    if (my $col = $props->{class_column}) {
-        if (!$props->{column_defs}{$col}) {
+    if ( my $col = $props->{class_column} ) {
+        if ( !$props->{column_defs}{$col} ) {
             $props->{column_defs}{$col} = 'string(255)';
-            push @{$props->{columns}}, $col;
+            push @{ $props->{columns} }, $col;
             $props->{indexes}{$col} = 1;
         }
-        if (!$super_props || !$super_props->{class_column}) {
-            $class->add_trigger( pre_search => \&_pre_search_scope_terms_to_class );
+        if ( !$super_props || !$super_props->{class_column} ) {
+            $class->add_trigger(
+                           pre_search => \&_pre_search_scope_terms_to_class );
             $class->add_trigger( post_load => \&_post_load_rebless_object );
-            $class->add_trigger( post_inflate => \&_post_load_rebless_object );
+            $class->add_trigger(
+                                post_inflate => \&_post_load_rebless_object );
         }
-        if (my $type = $props->{class_type}) {
-            $props->{defaults}{$col} = $type;
+        if ( my $type = $props->{class_type} ) {
+            $props->{defaults}{$col}          = $type;
             $props->{__class_to_type}{$class} = $type;
-            $props->{__type_to_class}{$type} = $class;
+            $props->{__type_to_class}{$type}  = $class;
         }
     }
 
     my $type_id;
-    if ($type_id = $props->{class_type}) {
-        if ($type_id ne $props->{datasource}) {
+    if ( $type_id = $props->{class_type} ) {
+        if ( $type_id ne $props->{datasource} ) {
             $type_id = $props->{datasource} . '.' . $type_id;
         }
-    } else {
+    }
+    else {
         $type_id = $props->{datasource};
     }
-    
-    if ($props->{summary}) {
-        my $type_summaries = MT->registry('summaries', $type_id);
-        %summary = map { $_ => 
-                ($type_summaries->{$_}->{type} =~ /(string|integer)/)
-                ? "$1 indexed meta" : "$type_summaries->{$_}->{type} meta"
-            } keys %$type_summaries;
+
+    if ( $props->{summary} ) {
+        my $type_summaries = MT->registry( 'summaries', $type_id );
+        %summary = map {
+            $_ => ( $type_summaries->{$_}->{type} =~ /(string|integer)/ )
+              ? "$1 indexed meta"
+              : "$type_summaries->{$_}->{type} meta"
+        } keys %$type_summaries;
     }
-    
+
     $props->{get_driver} ||= sub {
         require MT::ObjectDriverFactory;
         my $coderef = MT::ObjectDriverFactory->driver_for_class($class);
@@ -157,58 +167,64 @@ sub install_properties {
     $class->SUPER::install_properties($props);
 
     # check for any supplemental columns from other components
-    my $more_props = MT->registry('object_types', $type_id);
-    if ($more_props && (ref($more_props) eq 'ARRAY')) {
+    my $more_props = MT->registry( 'object_types', $type_id );
+    if ( $more_props && ( ref($more_props) eq 'ARRAY' ) ) {
         my $cols = {};
         for my $prop (@$more_props) {
             next if ref($prop) ne 'HASH';
-            MT::__merge_hash($cols, $prop, 1);
+            MT::__merge_hash( $cols, $prop, 1 );
         }
         my @classes = grep { !ref($_) } @$more_props;
         foreach my $isa_class (@classes) {
-            next if UNIVERSAL::isa($class, $isa_class);
-            eval "# line " . __LINE__ . " " . __FILE__ . "\nno warnings 'all';require $isa_class;" or die;
-            no strict 'refs'; ## no critic
-            push @{$class . '::ISA'}, $isa_class;
+            next if UNIVERSAL::isa( $class, $isa_class );
+            eval "# line " 
+              . __LINE__ . " " 
+              . __FILE__
+              . "\nno warnings 'all';require $isa_class;"
+              or die;
+            no strict 'refs';    ## no critic
+            push @{ $class . '::ISA' }, $isa_class;
         }
         if (%$cols) {
+
             # special case for 'plugin' key...
             delete $cols->{plugin} if exists $cols->{plugin};
-            for my $name (keys %$cols) {
+            for my $name ( keys %$cols ) {
                 next if exists $props->{column_defs}{$name};
-                if ($cols->{$name} =~ m/\bmeta\b/) {
+                if ( $cols->{$name} =~ m/\bmeta\b/ ) {
                     $meta{$name} = $cols->{$name};
                     next;
                 }
 
-                $class->install_column($name, $cols->{$name});
+                $class->install_column( $name, $cols->{$name} );
                 $props->{indexes}{$name} = 1
-                    if $cols->{$name} =~ m/\bindexed\b/;
-                if ($cols->{$name} =~ m/\bdefault (?:'([^']+?)'|(\d+))\b/) {
+                  if $cols->{$name} =~ m/\bindexed\b/;
+                if ( $cols->{$name} =~ m/\bdefault (?:'([^']+?)'|(\d+))\b/ ) {
                     $props->{defaults}{$name} = defined $1 ? $1 : $2;
                 }
             }
         }
-    }
+    } ## end if ( $more_props && ( ...))
 
     my $pk = $props->{primary_key} || '';
-    @{$props->{columns}} = sort { $a eq $pk ? -1 : $b eq $pk ? 1 : $a cmp $b }
-        @{$props->{columns}};
+    @{ $props->{columns} }
+      = sort { $a eq $pk ? -1 : $b eq $pk ? 1 : $a cmp $b }
+      @{ $props->{columns} };
 
     # Child classes are declared as an array;
     # convert them to a hashref for easier lookup.
-    if ((ref $props->{child_classes}) eq 'ARRAY') {
+    if ( ( ref $props->{child_classes} ) eq 'ARRAY' ) {
         my $classes = $props->{child_classes};
         $props->{child_classes} = {};
-        @{$props->{child_classes}}{@$classes} = ();
+        @{ $props->{child_classes} }{@$classes} = ();
     }
 
     # We're declared as a child of some other class; associate ourselves
     # with that package (the invoking class should have already use'd it.)
-    if (exists $props->{child_of}) {
+    if ( exists $props->{child_of} ) {
         my $parent_classes = $props->{child_of};
-        if (!ref $parent_classes) {
-            $parent_classes = [ $parent_classes ];
+        if ( !ref $parent_classes ) {
+            $parent_classes = [$parent_classes];
         }
         foreach my $pc (@$parent_classes) {
             my $pp = $pc->properties;
@@ -224,126 +240,154 @@ sub install_properties {
         no strict 'refs';
         @isa = @{ $class . '::ISA' };
     }
-    foreach my $isa_pkg ( @isa ) {
+    foreach my $isa_pkg (@isa) {
         next unless $isa_pkg =~ /able$/;
         next if $isa_pkg eq $class;
-        if ($isa_pkg->can('install_properties')) {
+        if ( $isa_pkg->can('install_properties') ) {
             $isa_pkg->install_properties($class);
         }
     }
 
     # install legacy date translation
-    if (0 < scalar @{ $class->columns_of_type('datetime', 'timestamp') }) {
-        if ($props->{audit}) {
-            $class->add_trigger( pre_save  => \&_assign_audited_fields);
+    if ( 0 < scalar @{ $class->columns_of_type( 'datetime', 'timestamp' ) } )
+    {
+        if ( $props->{audit} ) {
+            $class->add_trigger( pre_save  => \&_assign_audited_fields );
             $class->add_trigger( post_save => \&_translate_audited_fields );
         }
 
-        $class->add_trigger( pre_save  => _get_date_translator(\&_ts2db, 0) );
-        $class->add_trigger( post_load => _get_date_translator(\&_db2ts, 0) );
+        $class->add_trigger(
+                            pre_save => _get_date_translator( \&_ts2db, 0 ) );
+        $class->add_trigger(
+                           post_load => _get_date_translator( \&_db2ts, 0 ) );
     }
 
     # inherit parent's metadata setup
-    if ($props->{meta}) { # if ($super_props && $super_props->{meta_installed}) {
-        $class->install_meta(
-            { ( %meta ? ( column_defs => \%meta ) : ( columns => [] ) ) },
-            'meta'
+    if ( $props->{meta} )
+    {    # if ($super_props && $super_props->{meta_installed}) {
+        $class->install_meta( { (
+                                    %meta
+                                    ? ( column_defs => \%meta )
+                                    : ( columns => [] )
+                                 )
+                              },
+                              'meta'
         );
         $class->add_trigger( post_remove => \&remove_meta );
     }
-    if ($props->{summary}) { # if ($super_props && $super_props->{meta_installed}) {
-        $class->install_meta(
-            { ( %summary ? ( column_defs => \%summary ) : ( columns => [] ) ) },
-            'summary'
+    if ( $props->{summary} )
+    {    # if ($super_props && $super_props->{meta_installed}) {
+        $class->install_meta( { (
+                                    %summary
+                                    ? ( column_defs => \%summary )
+                                    : ( columns => [] )
+                                 )
+                              },
+                              'summary'
         );
     }
 
     # Because of the inheritance of MT::Entry by MT::Page, we need to do this here
-    if($class->isa('MT::Revisable')) {
+    if ( $class->isa('MT::Revisable') ) {
         $class->init_revisioning();
     }
 
     return $props;
-}
+} ## end sub install_properties
 
 # A post-load trigger for classed objects
 sub _post_load_rebless_object {
-    my $obj = shift;
+    my $obj   = shift;
     my $props = $obj->properties;
-    if (my $col = $props->{class_column}) {
-        my $pkg = ref($obj);
+    if ( my $col = $props->{class_column} ) {
+        my $pkg  = ref($obj);
         my $type = $obj->column($col);
-        if ($type and $pkg->class_type ne $type) {
-            if (my $class = $props->{__type_to_class}{$type}) {
+        if ( $type and $pkg->class_type ne $type ) {
+            if ( my $class = $props->{__type_to_class}{$type} ) {
                 bless $obj, $class;
-            } else {
-                my %models = map { $_ => 1 } MT->models($props->{datasource});
-                if (exists $models{ $props->{datasource} . '.' . $type}) {
-                    $class = MT->model($props->{datasource} . '.' . $type);
-                } elsif (exists $models{$type}) {
+            }
+            else {
+                my %models
+                  = map { $_ => 1 } MT->models( $props->{datasource} );
+                if ( exists $models{ $props->{datasource} . '.' . $type } ) {
+                    $class = MT->model( $props->{datasource} . '.' . $type );
+                }
+                elsif ( exists $models{$type} ) {
                     $class = MT->model($type);
                 }
                 bless $obj, $class if $class;
             }
         }
-    }
-}
+    } ## end if ( my $col = $props->...)
+} ## end sub _post_load_rebless_object
 
 # A pre-search trigger for classed objects
 sub _pre_search_scope_terms_to_class {
-    my ($class, $terms, $args) = @_;
+    my ( $class, $terms, $args ) = @_;
+
     # scope search terms to class
 
     $terms ||= {};
-    return if (ref $terms eq 'HASH') && exists($terms->{id});
+    return if ( ref $terms eq 'HASH' ) && exists( $terms->{id} );
 
     my $props = $class->properties;
-    my $col = $props->{class_column}
-        or return;
-    if (ref $terms eq 'HASH') {
+    my $col = $props->{class_column} or return;
+    if ( ref $terms eq 'HASH' ) {
         my $no_class = 0;
-        if ($args->{no_class}) {
+        if ( $args->{no_class} ) {
             delete $args->{no_class};
             $no_class = 1;
         }
-        if (exists $terms->{$col}) {
+        if ( exists $terms->{$col} ) {
             if ( ( $terms->{$col} eq '*' ) || $no_class ) {
+
                 # class term is '*', which signifies filtering for all classes.
                 # simply delete the term in this case.
-                delete $terms->{$col} ;
-            } elsif ($terms->{$col} =~ m/^(\w+:)\*$/) {
+                delete $terms->{$col};
+            }
+            elsif ( $terms->{$col} =~ m/^(\w+:)\*$/ ) {
+
                 # class term is in form "foo:*"; translate to a sql-compatible
                 # syntax of "like 'foo:%'"
                 my $join_str = "like '$1%'";
                 $terms->{$col} = \$join_str;
             }
+
             # term has been explicitly given or explictly removed. make
             # no further changes.
             return;
         }
-        $terms->{$col} = $props->{class_type}
-            unless $no_class;
-    }
-    elsif (ref $terms eq 'ARRAY') {
-        if (my @class_terms = grep { ref $_ eq 'HASH' && 1 == scalar keys %$_ && $_->{$col} } @$terms) {
+        $terms->{$col} = $props->{class_type} unless $no_class;
+    } ## end if ( ref $terms eq 'HASH')
+    elsif ( ref $terms eq 'ARRAY' ) {
+        if ( my @class_terms
+             = grep { ref $_ eq 'HASH' && 1 == scalar keys %$_ && $_->{$col} }
+             @$terms )
+        {
+
             # Filter out any unlimiting class terms (class = *).
-            @$terms = grep { ref $_ ne 'HASH' || 1 != scalar keys %$_ || !$_->{$col} || $_->{$col} ne '*' } @$terms;
+            @$terms = grep {
+                     ref $_ ne 'HASH'
+                  || 1 != scalar keys %$_
+                  || !$_->{$col}
+                  || $_->{$col} ne '*'
+            } @$terms;
 
             # The class column has been explicitly given or removed, so don't
             # add one.
             return;
         }
-        @$terms = ( { $col => $props->{class_type} } => 'AND' => [ @$terms ] );
-    }
-}
+        @$terms = ( { $col => $props->{class_type} } => 'AND' => [@$terms] );
+    } ## end elsif ( ref $terms eq 'ARRAY')
+} ## end sub _pre_search_scope_terms_to_class
 
 sub class_label {
     my $pkg = shift;
-    return MT->translate($pkg->datasource);
+    return MT->translate( $pkg->datasource );
 }
 
 sub class_label_plural {
-    my $pkg = shift;
+    my $pkg   = shift;
     my $label = $pkg->datasource;
     $label =~ s/y$/ie/;
     $label .= 's';
@@ -351,8 +395,8 @@ sub class_label_plural {
 }
 
 sub class_labels {
-    my $pkg = shift;
-    my @all_types = MT->models($pkg->properties->{datasource});
+    my $pkg       = shift;
+    my @all_types = MT->models( $pkg->properties->{datasource} );
     my %names;
     foreach my $type (@all_types) {
         my $class = $pkg->class_handler($type);
@@ -365,51 +409,56 @@ sub class_labels {
 # used to name them. (Ie, image => 'Image').
 sub class_type {
     my $pkg = shift;
-    if (ref $pkg) {
-        return $pkg->column($pkg->properties->{class_column});
-    } else {
+    if ( ref $pkg ) {
+        return $pkg->column( $pkg->properties->{class_column} );
+    }
+    else {
         return $pkg->properties->{class_type};
     }
 }
 
 sub class_handler {
-    my $pkg = shift;
-    my $props = $pkg->properties;
-    my ($type) = @_;
+    my $pkg     = shift;
+    my $props   = $pkg->properties;
+    my ($type)  = @_;
     my $package = $props->{__type_to_class}{$type};
     unless ($package) {
         my $ds = $props->{datasource};
-        if (($type eq $ds) || ($type =~ m/\./)) {
+        if ( ( $type eq $ds ) || ( $type =~ m/\./ ) ) {
             $package = MT->model($type);
-        } else {
-            $package = MT->model($ds . '.' . $type);
+        }
+        else {
+            $package = MT->model( $ds . '.' . $type );
         }
     }
     if ($package) {
-        if (defined *{$package.'::new'}) {
+        if ( defined *{ $package . '::new' } ) {
             return $package;
-        } else {
-            eval "# line " . __LINE__ . " " . __FILE__ . "\nno warnings 'all';require $package;";
+        }
+        else {
+            eval "# line " . __LINE__ . " " . __FILE__
+              . "\nno warnings 'all';require $package;";
             return $package unless $@;
-            eval "# line " . __LINE__ . " " . __FILE__ . "\nno warnings 'all';require $pkg; $package->new;";
+            eval "# line " . __LINE__ . " " . __FILE__
+              . "\nno warnings 'all';require $pkg; $package->new;";
             return $package unless $@;
         }
     }
     return $pkg;
-}
+} ## end sub class_handler
 
 sub add_class {
     my $pkg = shift;
-    my ($type, $class) = @_;
+    my ( $type, $class ) = @_;
     my $props = $pkg->properties;
-    if ($type =~ m/::/) {
-        ($type, $class) = ($class, $type);
+    if ( $type =~ m/::/ ) {
+        ( $type, $class ) = ( $class, $type );
     }
 
-    if (my $old_class = $props->{__type_to_class}{$type}) {
+    if ( my $old_class = $props->{__type_to_class}{$type} ) {
         delete $props->{__class_to_type}{$old_class};
     }
-    $props->{__type_to_class}{$type} = $class;
+    $props->{__type_to_class}{$type}  = $class;
     $props->{__class_to_type}{$class} = $type;
 }
 
@@ -417,9 +466,9 @@ sub add_class {
 
 sub new {
     my $class = shift;
-    my $obj = $class->SUPER::new(@_);
+    my $obj   = $class->SUPER::new(@_);
     for my $which (qw( meta summary )) {
-        if ($obj->properties->{$which . '_installed'}) {
+        if ( $obj->properties->{ $which . '_installed' } ) {
             $obj->init_meta($which);
         }
     }
@@ -437,146 +486,150 @@ sub init_meta {
 
 sub install_meta {
     my $class = shift;
-    my ($params, $which) = @_;
+    my ( $params, $which ) = @_;
     $which ||= 'meta';
-    my $installed = $which . '_installed';
+    my $installed  = $which . '_installed';
     my $meta_class = 'MT::' . ucfirst($which);
-    if ( ( $class ne 'MT::Config' ) && (!$MT::plugins_installed) ) {
-        push @PRE_INIT_META, [$class, $params, $which];
+    if ( ( $class ne 'MT::Config' ) && ( !$MT::plugins_installed ) ) {
+        push @PRE_INIT_META, [ $class, $params, $which ];
         return;
     }
 
     eval("require $meta_class");
     my $pkg = ref $class || $class;
-    if (!$pkg->SUPER::properties->{$installed}) {
-        $pkg->add_trigger( post_save => \&_post_save_save_metadata );
-        $pkg->add_trigger( post_load => \&_post_load_initialize_metadata );
+    if ( !$pkg->SUPER::properties->{$installed} ) {
+        $pkg->add_trigger( post_save    => \&_post_save_save_metadata );
+        $pkg->add_trigger( post_load    => \&_post_load_initialize_metadata );
         $pkg->add_trigger( post_inflate => \&_post_load_initialize_metadata );
     }
 
     my $props = $class->properties;
 
-    if (!$params->{columns} && !$params->{fields} && !$params->{column_defs}) {
+    if (    !$params->{columns}
+         && !$params->{fields}
+         && !$params->{column_defs} )
+    {
         return $class->error('No meta fields specified to install_meta');
     }
 
     $params->{fields} ||= [];
-    if (my $cols = delete $params->{columns}) {
+    if ( my $cols = delete $params->{columns} ) {
         foreach my $col (@$cols) {
-            push @{ $params->{fields} }, {
-                name => $col,
-                type => 'vblob',
-            };
+            push @{ $params->{fields} }, { name => $col, type => 'vblob', };
+
             # $props->{fields}{$col} = 'vblob';
         }
     }
-    if (my $cols = delete $params->{column_defs}) {
+    if ( my $cols = delete $params->{column_defs} ) {
         foreach my $col ( keys %$cols ) {
             my $type = $cols->{$col};
-            $type =~ s/\s.*//; # take first keyword, ignoring anything after
-            $type .= '_indexed'
-                if $cols->{$col} =~ m/\bindexed\b/;
+            $type =~ s/\s.*//;   # take first keyword, ignoring anything after
+            $type .= '_indexed' if $cols->{$col} =~ m/\bindexed\b/;
             $type = $meta_class->normalize_type($type);
 
-            push @{ $params->{fields} }, {
-                name => $col,
-                type => $type,
-            };
+            push @{ $params->{fields} }, { name => $col, type => $type, };
+
             # $props->{fields}{$col} = $type;
         }
     }
 
     $params->{datasource} ||= $class->datasource . "_$which";
 
-    if ($props->{$installed} && !@{ $params->{fields} }) {
+    if ( $props->{$installed} && !@{ $params->{fields} } ) {
         return 1;
     }
 
-    if (my $fields = $meta_class->install($pkg, $params, $which)) {
+    if ( my $fields = $meta_class->install( $pkg, $params, $which ) ) {
+
         # we may have inherited meta fields so lets update with
         # the fields returned by MT::Meta
-        my $which_fields = ($which eq 'meta') ? 'fields' : 'summaries';
+        my $which_fields = ( $which eq 'meta' ) ? 'fields' : 'summaries';
         $props->{$which_fields}->{$_} = $fields->{$_} for keys %$fields;
     }
 
     return $props->{$installed} = 1;
-}
+} ## end sub install_meta
 
 sub meta_args {
-    my $class = shift;
+    my $class    = shift;
     my $id_field = $class->datasource . '_id';
     return {
         key         => $class->datasource,
         column_defs => {
-            $id_field         => 'integer not null',
-            type              => 'string(75) not null',
-            vchar             => 'string(255)',
-            vchar_idx         => 'string(255)',
-            vdatetime         => 'datetime',
-            vdatetime_idx     => 'datetime',
-            vinteger          => 'integer',
-            vinteger_idx      => 'integer',
-            vfloat            => 'float',
-            vfloat_idx        => 'float',
-            vblob             => 'blob',
-            vclob             => 'text',
+                         $id_field     => 'integer not null',
+                         type          => 'string(75) not null',
+                         vchar         => 'string(255)',
+                         vchar_idx     => 'string(255)',
+                         vdatetime     => 'datetime',
+                         vdatetime_idx => 'datetime',
+                         vinteger      => 'integer',
+                         vinteger_idx  => 'integer',
+                         vfloat        => 'float',
+                         vfloat_idx    => 'float',
+                         vblob         => 'blob',
+                         vclob         => 'text',
         },
-        columns => [ $id_field, qw(
-            type
-            vchar
-            vchar_idx
-            vdatetime
-            vdatetime_idx
-            vinteger
-            vinteger_idx
-            vfloat
-            vfloat_idx
-            vblob
-            vclob
-        ) ],
+        columns => [
+            $id_field, qw(
+              type
+              vchar
+              vchar_idx
+              vdatetime
+              vdatetime_idx
+              vinteger
+              vinteger_idx
+              vfloat
+              vfloat_idx
+              vblob
+              vclob
+              )
+        ],
         indexes => {
+
             #id_type    => { columns => [ $id_field, 'type' ] }, # redundant
-            type_vchar => { columns => [ 'type', 'vchar_idx'     ] },
+            type_vchar => { columns => [ 'type', 'vchar_idx' ] },
             type_vdt   => { columns => [ 'type', 'vdatetime_idx' ] },
-            type_vint  => { columns => [ 'type', 'vinteger_idx'  ] },
-            type_vflt  => { columns => [ 'type', 'vfloat_idx'    ] },
+            type_vint  => { columns => [ 'type', 'vinteger_idx' ] },
+            type_vflt  => { columns => [ 'type', 'vfloat_idx' ] },
         },
         primary_key => [ $id_field, 'type' ],
     };
-}
+} ## end sub meta_args
 
 sub summary_args {
-    my $class = shift;
+    my $class    = shift;
     my $id_field = $class->datasource . '_id';
     return {
         key         => $class->datasource,
         column_defs => {
-            $id_field         => 'integer not null',
-            type              => 'string(255) not null',
-            class             => 'string(75) not null',
-            vchar_idx         => 'string(255)',
-            vinteger_idx      => 'integer',
-            vblob             => 'blob',
-            vclob             => 'text',
-            expired           => 'smallint',
+                         $id_field    => 'integer not null',
+                         type         => 'string(255) not null',
+                         class        => 'string(75) not null',
+                         vchar_idx    => 'string(255)',
+                         vinteger_idx => 'integer',
+                         vblob        => 'blob',
+                         vclob        => 'text',
+                         expired      => 'smallint',
         },
-        columns => [ $id_field, qw(
-            type
-            class
-            vchar_idx
-            vinteger_idx
-            vblob
-            vclob
-            expired
-        ) ],
+        columns => [
+            $id_field, qw(
+              type
+              class
+              vchar_idx
+              vinteger_idx
+              vblob
+              vclob
+              expired
+              )
+        ],
         indexes => {
-            id_class    => { columns => [ $id_field, 'class' ] },
-            class_vchar => { columns => [ 'class', 'vchar_idx'     ] },
-            class_vint  => { columns => [ 'class', 'vinteger_idx'  ] },
+                  id_class    => { columns => [ $id_field, 'class' ] },
+                  class_vchar => { columns => [ 'class',   'vchar_idx' ] },
+                  class_vint  => { columns => [ 'class',   'vinteger_idx' ] },
         },
         primary_key => [ $id_field, 'type' ],
     };
-}
+} ## end sub summary_args
 
 sub has_meta {
     my $obj = shift;
@@ -593,7 +646,7 @@ sub has_summary {
 sub _post_load_initialize_metadata {
     my $obj = shift;
     for my $which (qw( meta summary )) {
-        if (defined $obj && $obj->properties->{$which . '_installed'}) {
+        if ( defined $obj && $obj->properties->{ $which . '_installed' } ) {
             $obj->init_meta($which);
             $obj->{"__$which"}->set_primary_keys($obj);
         }
@@ -602,11 +655,11 @@ sub _post_load_initialize_metadata {
 
 sub is_meta_column {
     my $obj = shift;
-    my ($field, $which) = @_;
+    my ( $field, $which ) = @_;
     $which ||= 'meta';
-    my $which_fields = ($which eq 'meta') ? 'fields' : 'summaries';
+    my $which_fields = ( $which eq 'meta' ) ? 'fields' : 'summaries';
     my $props = $obj->properties;
-    return unless $props->{$which . '_installed'};
+    return unless $props->{ $which . '_installed' };
 
     my $meta = $obj->meta_pkg($which);
     return 1 if $props->{$which_fields}{$field};
@@ -616,14 +669,14 @@ sub is_meta_column {
 
 sub is_summary {
     my $obj = shift;
-    $obj->is_meta_column($_[0], 'summary');
+    $obj->is_meta_column( $_[0], 'summary' );
 }
 
 sub meta_pkg {
     my $class = shift;
     my ($which) = @_;
     $which ||= 'meta';
-    my $pkg = $which . '_pkg';
+    my $pkg   = $which . '_pkg';
     my $props = $class->properties;
     return unless $props->{$which}; # this only works for meta-enabled classes
 
@@ -644,12 +697,12 @@ sub has_column {
 sub _post_save_save_metadata {
     my $obj = shift;
     my ($orig_obj) = @_;
-    if (defined $obj && exists $obj->{__meta}) {
+    if ( defined $obj && exists $obj->{__meta} ) {
         $obj->{__meta}->set_primary_keys($obj);
         $obj->{__meta}->save;
         $orig_obj->{__meta} = $obj->{__meta};
     }
-    if (defined $obj && exists $obj->{__summary}) {
+    if ( defined $obj && exists $obj->{__summary} ) {
         $obj->{__summary}->set_primary_keys($obj);
         $orig_obj->{__summary} = $obj->{__summary};
     }
@@ -659,20 +712,22 @@ sub meta {
     my $obj = shift;
     my ( $name, $value ) = @_;
 
-    return !$obj->{__meta} ? undef
-         : 2 == scalar @_  ? $obj->{__meta}->set( $name, $value )
-         : 1 == scalar @_  ? (
-           ref($name) eq 'HASH' ? $obj->{__meta}->set_hash(@_)
-             :                    $obj->{__meta}->get($name) )
-         :                   $obj->{__meta}->get_hash;
+    return
+        !$obj->{__meta} ? undef
+      : 2 == scalar @_ ? $obj->{__meta}->set( $name, $value )
+      : 1 == scalar @_ ? (
+                           ref($name) eq 'HASH'
+                           ? $obj->{__meta}->set_hash(@_)
+                           : $obj->{__meta}->get($name) )
+      : $obj->{__meta}->get_hash;
 }
 
 sub summary {
     my $obj = shift;
     my ( $terms, $value ) = @_;
     $obj->{__summary}->set_primary_keys($obj);
-    return undef if (!$obj->{__summary});
-    return $obj->{__summary}->set( $terms, $value ) if (scalar @_ == 2);
+    return undef if ( !$obj->{__summary} );
+    return $obj->{__summary}->set( $terms, $value ) if ( scalar @_ == 2 );
     return $obj->{__summary}->get($terms);
 }
 
@@ -686,13 +741,12 @@ sub column_func {
     my ($col) = @_;
     return if !$col;
 
-    return $obj->SUPER::column_func(@_)
-        if !$obj->is_meta_column($col);
+    return $obj->SUPER::column_func(@_) if !$obj->is_meta_column($col);
 
     return sub {
         my $obj = shift;
         if (@_) {
-            $obj->{__meta}->set($col, @_);
+            $obj->{__meta}->set( $col, @_ );
         }
         else {
             $obj->{__meta}->get($col);
@@ -700,16 +754,17 @@ sub column_func {
     };
 }
 
-sub _ts2db {  
-    return unless $_[0];  
-    if($_[0] =~ m{ \A \d{4} - }xms) {  
-        return $_[0];  
-    }  
-    my $ret = sprintf '%04d-%02d-%02d %02d:%02d:%02d', unpack 'A4A2A2A2A2A2', $_[0];  
-    return $ret;  
+sub _ts2db {
+    return unless $_[0];
+    if ( $_[0] =~ m{ \A \d{4} - }xms ) {
+        return $_[0];
+    }
+    my $ret = sprintf '%04d-%02d-%02d %02d:%02d:%02d', unpack 'A4A2A2A2A2A2',
+      $_[0];
+    return $ret;
 }
-  
-sub _db2ts {  
+
+sub _db2ts {
     my $ts = $_[0];
     $ts =~ s/(?:\+|-)\d{2}$//;
     $ts =~ tr/\- ://d;
@@ -718,61 +773,65 @@ sub _db2ts {
 
 sub _get_date_translator {
     my $translator = shift;
-    my $change = shift;
+    my $change     = shift;
     return sub {
         my $obj = shift;
         my $dbd = $obj->driver->dbd;
-        FIELD: for my $field (@{$obj->columns_of_type('datetime', 'timestamp')}) {
+      FIELD:
+        for
+          my $field ( @{ $obj->columns_of_type( 'datetime', 'timestamp' ) } )
+        {
             my $value = $obj->column($field);
             next FIELD if !defined $value;
-            my $new_val = $translator->($value); 
-            if((defined $new_val) && ($new_val ne $value)) {
-                $obj->column($field, $new_val, { no_changed_flag => !$change });
+            my $new_val = $translator->($value);
+            if ( ( defined $new_val ) && ( $new_val ne $value ) ) {
+                $obj->column( $field, $new_val,
+                              { no_changed_flag => !$change } );
             }
         }
         if ( $obj->has_meta ) {
             my @meta_columns = MT::Meta->metadata_by_class( ref $obj );
-            my @date_meta = grep {
-                   $_->{type} eq 'vdatetime'
-                || $_->{type} eq 'vdatetime_idx'
+            my @date_meta    = grep {
+                     $_->{type} eq 'vdatetime'
+                  || $_->{type} eq 'vdatetime_idx'
             } @meta_columns;
-            META_FIELD: for my $f (@date_meta) {
+          META_FIELD: for my $f (@date_meta) {
                 my $field = $f->{name};
                 my $value = $obj->$field;
                 next META_FIELD if !defined $value;
-                my $new_val = $translator->($value); 
-                if((defined $new_val) && ($new_val ne $value)) {
-                    $obj->$field( $new_val );
+                my $new_val = $translator->($value);
+                if ( ( defined $new_val ) && ( $new_val ne $value ) ) {
+                    $obj->$field($new_val);
                 }
             }
         }
     };
-}
+} ## end sub _get_date_translator
 
 sub _translate_audited_fields {
-    my ($obj, $orig_obj) = @_;
+    my ( $obj, $orig_obj ) = @_;
     my $dbd = $obj->driver->dbd;
-    FIELD: for my $field (qw( created_on modified_on )) {
+  FIELD: for my $field (qw( created_on modified_on )) {
         my $value = $orig_obj->column($field);
         next FIELD if !defined $value;
-        my $new_val = _db2ts($value); 
-        if((defined $new_val) && ($new_val ne $value)) {
-            $orig_obj->column($field, $new_val);
+        my $new_val = _db2ts($value);
+        if ( ( defined $new_val ) && ( $new_val ne $value ) ) {
+            $orig_obj->column( $field, $new_val );
         }
     }
     return;
 }
 
 sub nextprev {
-    my $obj = shift;
+    my $obj   = shift;
     my $class = ref($obj);
     my %param = @_;
-    my ($direction, $terms, $args, $by_field)
-        = @param{qw( direction terms args by )};
-    return undef unless ($direction eq 'next' || $direction eq 'previous');
+    my ( $direction, $terms, $args, $by_field )
+      = @param{qw( direction terms args by )};
+    return undef unless ( $direction eq 'next' || $direction eq 'previous' );
     my $next = $direction eq 'next';
 
-    if (!$by_field) {
+    if ( !$by_field ) {
         return if !$class->properties->{audit};
         $by_field = 'created_on';
     }
@@ -783,30 +842,36 @@ sub nextprev {
     # to select all entries with the same timestamp, then compare them using
     # id as a secondary sort column.
 
-    my ($id, $ts) = ($obj->id, $obj->$by_field());
-    local @$args{qw( sort range_incl )}
-        = ( [ { column => $by_field, desc => $next ? 'ASC' : 'DESC' },
-            { column => 'id', desc => $next ? 'ASC' : 'DESC' } ],
-            { $by_field => 1 });
+    my ( $id, $ts ) = ( $obj->id, $obj->$by_field() );
+    local @$args{qw( sort range_incl )} = ( [
+                     { column => $by_field, desc => $next ? 'ASC' : 'DESC' },
+                     { column => 'id', desc => $next ? 'ASC' : 'DESC' }
+                   ],
+                   { $by_field => 1 }
+    );
 
-    my $sibling = $class->load({
-        $by_field => ($next ? [ $ts, undef ] : [ undef, $ts ]),
-        'id' => $id,
-        %{$terms}
-    }, { not => { 'id' => 1 }, limit => 1, %$args });
+    my $sibling = $class->load( {
+                                   $by_field => (
+                                       $next ? [ $ts, undef ] : [ undef, $ts ]
+                                   ),
+                                   'id' => $id,
+                                   %{$terms}
+                                },
+                                { not => { 'id' => 1 }, limit => 1, %$args }
+    );
 
     return $sibling;
-}
+} ## end sub nextprev
 
 ## Drivers.
 
-sub count          { shift->_proxy('count',          @_) }
-sub exist          { shift->_proxy('exist',          @_) }
-sub count_group_by { shift->_proxy('count_group_by', @_) }
-sub sum_group_by   { shift->_proxy('sum_group_by',   @_) }
-sub avg_group_by   { shift->_proxy('avg_group_by',   @_) }
-sub max_group_by   { shift->_proxy('max_group_by',   @_) }
-sub remove_all     { shift->_proxy('remove_all',     @_) }
+sub count          { shift->_proxy( 'count',          @_ ) }
+sub exist          { shift->_proxy( 'exist',          @_ ) }
+sub count_group_by { shift->_proxy( 'count_group_by', @_ ) }
+sub sum_group_by   { shift->_proxy( 'sum_group_by',   @_ ) }
+sub avg_group_by   { shift->_proxy( 'avg_group_by',   @_ ) }
+sub max_group_by   { shift->_proxy( 'max_group_by',   @_ ) }
+sub remove_all     { shift->_proxy( 'remove_all',     @_ ) }
 
 sub save {
     my $obj = shift;
@@ -815,7 +880,7 @@ sub save {
         local $dbh->{RaiseError} = 1;
         $obj->SUPER::save(@_);
     };
-    if (my $err = $@) {
+    if ( my $err = $@ ) {
         return $obj->error($err);
     }
     delete $obj->{__orig_value};
@@ -824,124 +889,129 @@ sub save {
 
 sub remove {
     my $obj = shift;
-    my(@args) = @_;
-    if (!ref $obj) {
+    my (@args) = @_;
+    if ( !ref $obj ) {
         for my $which (qw( meta summary )) {
             my $meth = "remove_$which";
-            my $has = "has_$which";
-            $obj->$meth( @args ) if $obj->$has;
+            my $has  = "has_$which";
+            $obj->$meth(@args) if $obj->$has;
         }
-        $obj->remove_scores( @args ) if $obj->isa('MT::Scorable');
-        MT->run_callbacks($obj . '::pre_remove_multi', @args);
-        return $obj->driver->direct_remove($obj, @args);
-    } else {
-        return $obj->driver->remove($obj, @args);
+        $obj->remove_scores(@args) if $obj->isa('MT::Scorable');
+        MT->run_callbacks( $obj . '::pre_remove_multi', @args );
+        return $obj->driver->direct_remove( $obj, @args );
+    }
+    else {
+        return $obj->driver->remove( $obj, @args );
     }
 }
 
 sub load {
     my $self = shift;
-    if (defined $_[0] && (!ref $_[0] || (ref $_[0] ne 'HASH' && ref $_[0] ne 'ARRAY'))) {
-        return $self->lookup($_[0]);
-    } else {
+    if ( defined $_[0]
+        && ( !ref $_[0] || ( ref $_[0] ne 'HASH' && ref $_[0] ne 'ARRAY' ) ) )
+    {
+        return $self->lookup( $_[0] );
+    }
+    else {
         if (wantarray) {
             ## MT::Object::load returns a list in list context, just like
             ## a D::OD search.
             return $self->search(@_);
-        } else {
+        }
+        else {
             ## MT::Object::load returns the first result in scalar context.
-            my ($terms, $args) = @_;
+            my ( $terms, $args ) = @_;
             $args ||= {};
             local $args->{limit} = 1;
-            my $iter = $self->search($terms, $args);
+            my $iter = $self->search( $terms, $args );
             return if !defined $iter;
             return $iter->();
         }
     }
-}
+} ## end sub load
 
 sub load_iter {
     my $class = shift;
-    my($terms, $args) = @_;
+    my ( $terms, $args ) = @_;
     $args ||= {};
-    local $args->{window_size} = 100
-        unless defined($args->{window_size});
-    return scalar $class->search($terms, $args);
+    local $args->{window_size} = 100 unless defined( $args->{window_size} );
+    return scalar $class->search( $terms, $args );
 }
 
 ## Callbacks
 
 sub _assign_audited_fields {
-    my ($obj, $orig_obj) = @_;
-    if ($obj->properties->{audit}) {
+    my ( $obj, $orig_obj ) = @_;
+    if ( $obj->properties->{audit} ) {
         my $blog_id;
-        if ($obj->has_column('blog_id')) {
+        if ( $obj->has_column('blog_id') ) {
             $blog_id = $obj->blog_id;
         }
-        my @ts = offset_time_list(time, $blog_id);
-        my $ts = sprintf '%04d%02d%02d%02d%02d%02d',
-            $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
+        my @ts = offset_time_list( time, $blog_id );
+        my $ts = sprintf '%04d%02d%02d%02d%02d%02d', $ts[5] + 1900,
+          $ts[4] + 1, @ts[ 3, 2, 1, 0 ];
 
         my $app = MT->instance;
-        if ($app && $app->can('user')) {
-            if (my $user = $app->user) {
-                if (!defined $obj->created_on) {
-                    $obj->created_by($user->id);
-                    $orig_obj->created_by($obj->created_by);
+        if ( $app && $app->can('user') ) {
+            if ( my $user = $app->user ) {
+                if ( !defined $obj->created_on ) {
+                    $obj->created_by( $user->id );
+                    $orig_obj->created_by( $obj->created_by );
                 }
             }
         }
-        unless ($obj->created_on) {
+        unless ( $obj->created_on ) {
             $obj->created_on($ts);
             $orig_obj->created_on($ts);
+
             # intentionally not calling modified_by to distinguish
             $obj->modified_on($ts);
             $orig_obj->modified_on($ts);
         }
-    }
-}
+    } ## end if ( $obj->properties->...)
+} ## end sub _assign_audited_fields
 
 sub modified_by {
     my $obj = shift;
     my ($user_id) = @_;
     if ($user_id) {
-        if ($obj->properties->{audit}) {
+        if ( $obj->properties->{audit} ) {
             my $res = $obj->SUPER::modified_by($user_id);
 
             my $blog_id;
-            if ($obj->has_column('blog_id')) {
+            if ( $obj->has_column('blog_id') ) {
                 $blog_id = $obj->blog_id;
             }
-            my @ts = offset_time_list(time, $blog_id);
-            my $ts = sprintf '%04d%02d%02d%02d%02d%02d',
-                $ts[5]+1900, $ts[4]+1, @ts[3,2,1,0];
+            my @ts = offset_time_list( time, $blog_id );
+            my $ts = sprintf '%04d%02d%02d%02d%02d%02d', $ts[5] + 1900,
+              $ts[4] + 1, @ts[ 3, 2, 1, 0 ];
             $obj->modified_on($ts);
             return $res;
         }
     }
     return $obj->SUPER::modified_by(@_);
-}
+} ## end sub modified_by
 
 # D::OD uses Class::Trigger. Map the call_trigger calls to also invoke
 # MT's callbacks (but internal Class::Trigger routines should be invoked
 # first in the case of pre-triggers, and last in the case of post-triggers).
 
 sub call_trigger {
-    my $obj = shift;
-    my $name = shift;
-    my $class = ref $obj || $obj;
+    my $obj         = shift;
+    my $name        = shift;
+    my $class       = ref $obj || $obj;
     my $pre_trigger = $name =~ m/^pre_/;
-    $obj->SUPER::call_trigger($name, @_) if $pre_trigger;
-    MT->run_callbacks($class . '::' . $name, $obj, @_);
-    $obj->SUPER::call_trigger($name, @_) unless $pre_trigger;
+    $obj->SUPER::call_trigger( $name, @_ ) if $pre_trigger;
+    MT->run_callbacks( $class . '::' . $name, $obj, @_ );
+    $obj->SUPER::call_trigger( $name, @_ ) unless $pre_trigger;
 }
 
 # Support for MT-based callbacks.
 
 sub add_callback {
     my $class = shift;
-    my $meth = shift;
-    MT->add_callback($class . '::' . $meth, @_);
+    my $meth  = shift;
+    MT->add_callback( $class . '::' . $meth, @_ );
 }
 
 ## Construction/initialization.
@@ -954,7 +1024,7 @@ sub init {
 }
 
 sub set_defaults {
-    my $obj = shift;
+    my $obj      = shift;
     my $defaults = $obj->properties->{'defaults'};
     $obj->{'column_values'} = $defaults ? {%$defaults} : {};
 }
@@ -962,10 +1032,11 @@ sub set_defaults {
 sub __properties { }
 
 our $DRIVER;
+
 sub driver {
     my $class = shift;
     return $DRIVER ||= MT::ObjectDriverFactory->instance
-        if UNIVERSAL::isa($class, 'MT::Object');
+      if UNIVERSAL::isa( $class, 'MT::Object' );
     my $driver = $class->SUPER::driver(@_);
     return $driver;
 }
@@ -973,12 +1044,13 @@ sub driver {
 sub dbi_driver {
     my $class = shift;
     my $props = $class->properties || {};
-    unless ($props->{dbi_driver}) {
+    unless ( $props->{dbi_driver} ) {
         my $driver = $class->driver(@_);
         while ( $driver->can('fallback') ) {
-            if ($driver->fallback) {
+            if ( $driver->fallback ) {
                 $driver = $driver->fallback;
-            } else {
+            }
+            else {
                 last;
             }
         }
@@ -993,33 +1065,39 @@ sub table_name {
 }
 
 sub clone_all {
-    my $obj = shift;
+    my $obj     = shift;
     my ($param) = @_;
-    my $clone = $obj->SUPER::clone_all();
-    if ($clone->properties->{meta_installed}) {
+    my $clone   = $obj->SUPER::clone_all();
+    if ( $clone->properties->{meta_installed} ) {
         $clone->init_meta();
         $clone->meta( $obj->meta );
-        if (!$param || !ref($param) || (ref($param) ne 'HASH') || !$param->{wantmeta}) {
+        if (    !$param
+             || !ref($param)
+             || ( ref($param) ne 'HASH' )
+             || !$param->{wantmeta} )
+        {
             for my $meta ( keys %{ $clone->{__meta}->{__objects} } ) {
                 $clone->{__meta}->{__objects}{$meta}->{changed_cols}
-                    = $obj->{__meta}->{__objects}->{$meta}->{changed_cols} || {};
+                  = $obj->{__meta}->{__objects}->{$meta}->{changed_cols}
+                  || {};
             }
         }
     }
     return $clone;
-}
+} ## end sub clone_all
 
 sub clone {
     my $obj = shift;
-    my($param) = @_;
+    my ($param) = @_;
+
     # pass wantmeta to indicate that it should clone all metadata regardless of
     # changed status
-    my $clone = $obj->clone_all({ wantmeta => 1 });
+    my $clone = $obj->clone_all( { wantmeta => 1 } );
 
     ## If the caller has listed a set of columns not to copy to the clone,
     ## delete them from the clone.
-    if ($param && ($param->{Except} || $param->{except})) {
-        for my $col (keys %{ $param->{Except} || $param->{except} }) {
+    if ( $param && ( $param->{Except} || $param->{except} ) ) {
+        for my $col ( keys %{ $param->{Except} || $param->{except} } ) {
             $clone->$col(undef);
         }
     }
@@ -1027,16 +1105,16 @@ sub clone {
 }
 
 sub columns_of_type {
-    my $obj = shift;
-    my(@types) = @_;
-    my $props = $obj->properties;
-    my $cols = $props->{columns};
+    my $obj      = shift;
+    my (@types)  = @_;
+    my $props    = $obj->properties;
+    my $cols     = $props->{columns};
     my $col_defs = $obj->column_defs;
     my @cols;
     my %types = map { $_ => 1 } @types;
     for my $col (@$cols) {
         push @cols, $col
-            if $col_defs->{$col} && exists $types{$col_defs->{$col}{type}};
+          if $col_defs->{$col} && exists $types{ $col_defs->{$col}{type} };
     }
     \@cols;
 }
@@ -1049,109 +1127,131 @@ sub created_on_obj {
 sub column_as_datetime {
     my $obj = shift;
     my ($col) = @_;
-    if (my $ts = $obj->column($col)) {
+    if ( my $ts = $obj->column($col) ) {
         my $blog;
-        if ($obj->isa('MT::Blog')) {
+        if ( $obj->isa('MT::Blog') ) {
             $blog = $obj;
-        } else {
-            if (my $blog_id = $obj->blog_id) {
+        }
+        else {
+            if ( my $blog_id = $obj->blog_id ) {
                 require MT::Blog;
                 $blog = MT::Blog->lookup($blog_id);
             }
         }
-        my($y, $mo, $d, $h, $m, $s) = $ts =~ /(\d\d\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)/;
+        my ( $y, $mo, $d, $h, $m, $s )
+          = $ts
+          =~ /(\d\d\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)[^\d]?(\d\d)/;
         require MT::DateTime;
         my $four_digit_offset;
         if ($blog) {
-            $four_digit_offset = sprintf('%.02d%.02d', int($blog->server_offset),
-                                        60 * abs($blog->server_offset
-                                                 - int($blog->server_offset)));
+            $four_digit_offset =
+              sprintf(
+                       '%.02d%.02d',
+                       int( $blog->server_offset ),
+                       60 * abs(
+                            $blog->server_offset - int( $blog->server_offset )
+                       )
+              );
         }
-        return new MT::DateTime(year => $y, month => $mo, day => $d,
-                                hour => $h, minute => $m, second => $s,
-                                time_zone => $four_digit_offset);
-    }
+        return
+          new MT::DateTime(
+                            year      => $y,
+                            month     => $mo,
+                            day       => $d,
+                            hour      => $h,
+                            minute    => $m,
+                            second    => $s,
+                            time_zone => $four_digit_offset
+          );
+    } ## end if ( my $ts = $obj->column...)
     undef;
-}
+} ## end sub column_as_datetime
 
 sub join_on {
-    return [ @_ ];
+    return [@_];
 }
 
 sub remove_meta {
     my $obj = shift;
     my $which;
-    if ($_[0] && !ref($_[0]) && (($_[0] || '') =~ /meta|summary/)) {
+    if ( $_[0] && !ref( $_[0] ) && ( ( $_[0] || '' ) =~ /meta|summary/ ) ) {
         $which = shift;
     }
     $which ||= 'meta';
-    my $mpkg = $obj->meta_pkg($which || 'meta') or return;
+    my $mpkg = $obj->meta_pkg( $which || 'meta' ) or return;
     if ( ref $obj ) {
         my $id_field = $obj->datasource . '_id';
-        return $mpkg->remove({ $id_field => $obj->id });
-    } else {
+        return $mpkg->remove( { $id_field => $obj->id } );
+    }
+    else {
+
         # static invocation
-        my ($terms, $args) = @_;
-        $args = { %$args } if $args; # copy so we can alter
+        my ( $terms, $args ) = @_;
+        $args = {%$args} if $args;    # copy so we can alter
         my $meta_id = $obj->datasource . '_id';
-        my $offset = 0;
+        my $offset  = 0;
         $args ||= {};
-        $args->{fetchonly} = [ 'id' ];
-        $args->{join} = [ $mpkg, $meta_id ];
+        $args->{fetchonly}   = ['id'];
+        $args->{join}        = [ $mpkg, $meta_id ];
         $args->{no_triggers} = 1;
-        $args->{limit} = 50;
+        $args->{limit}       = 50;
         while ( $offset >= 0 ) {
             $args->{offset} = $offset;
-            if (my @list = $obj->load( $terms, $args )) {
+            if ( my @list = $obj->load( $terms, $args ) ) {
                 my @ids = map { $_->id } @list;
-                $mpkg->driver->direct_remove( $mpkg, { $meta_id => \@ids });
+                $mpkg->driver->direct_remove( $mpkg, { $meta_id => \@ids } );
                 if ( scalar @list == 50 ) {
                     $offset += 50;
-                } else {
-                    $offset = -1; # break loop
                 }
-            } else {
+                else {
+                    $offset = -1;    # break loop
+                }
+            }
+            else {
                 $offset = -1;
             }
         }
         return 1;
-    }
-}
+    } ## end else [ if ( ref $obj ) ]
+} ## end sub remove_meta
 
 sub remove_summary {
     my $obj = shift;
-    $obj->remove_meta('summary', @_);
+    $obj->remove_meta( 'summary', @_ );
 }
 
 sub remove_scores {
     my $class = shift;
     require MT::ObjectScore;
-    my ($terms, $args) = @_;
-    $args = { %$args } if $args; # copy so we can alter
+    my ( $terms, $args ) = @_;
+    $args = {%$args} if $args;    # copy so we can alter
     my $offset = 0;
     $args ||= {};
-    $args->{fetchonly} = [ 'id' ];
-    $args->{join} = [ 'MT::ObjectScore', 'object_id', {
-        object_ds => $class->datasource } ];
+    $args->{fetchonly} = ['id'];
+    $args->{join} = [ 'MT::ObjectScore', 'object_id',
+                      { object_ds => $class->datasource } ];
     $args->{no_triggers} = 1;
-    $args->{limit} = 50;
+    $args->{limit}       = 50;
+
     while ( $offset >= 0 ) {
         $args->{offset} = $offset;
-        if (my @list = $class->load( $terms, $args )) {
+        if ( my @list = $class->load( $terms, $args ) ) {
             my @ids = map { $_->id } @list;
-            MT::ObjectScore->driver->direct_remove( 'MT::ObjectScore', {
-                object_ds => $class->datasource, 'object_id' => \@ids });
+            MT::ObjectScore->driver->direct_remove( 'MT::ObjectScore',
+                  { object_ds => $class->datasource, 'object_id' => \@ids } );
             if ( scalar @list == 50 ) {
                 $offset += 50;
-            } else {
-                $offset = -1; # break loop
             }
-        } else {
+            else {
+                $offset = -1;    # break loop
+            }
+        }
+        else {
             $offset = -1;
         }
     }
     return 1;
-}
+} ## end sub remove_scores
 
 sub remove_children {
     my $obj = shift;
@@ -1166,8 +1266,9 @@ sub remove_children {
     my $key = $param->{key} || $obj->datasource . '_id';
     my $obj_id = $obj->id;
     for my $class (@classes) {
-        eval "# line " . __LINE__ . " " . __FILE__ . "\nno warnings 'all';require $class;";
-        $class->remove({ $key => $obj_id });
+        eval "# line " . __LINE__ . " " . __FILE__
+          . "\nno warnings 'all';require $class;";
+        $class->remove( { $key => $obj_id } );
     }
     1;
 }
@@ -1175,7 +1276,7 @@ sub remove_children {
 sub get_by_key {
     my $class = shift;
     my ($key) = @_;
-    my($obj) = $class->search($key);
+    my ($obj) = $class->search($key);
     $obj ||= new $class;
     $obj->set_values($key);
     return $obj;
@@ -1183,128 +1284,132 @@ sub get_by_key {
 
 sub set_by_key {
     my $class = shift;
-    my ($key, $value) = @_;
+    my ( $key, $value ) = @_;
     my ($obj) = $class->search($key);
     unless ($obj) {
         $obj = new $class;
         $obj->set_values($key);
     }
     $obj->set_values($value) if $value;
-    $obj->save or return $class->error($obj->errstr);
+    $obj->save or return $class->error( $obj->errstr );
     return $obj;
 }
 
 sub set_values {
     my $obj = shift;
     my ($values) = @_;
-    for my $col (keys %$values) {
+    for my $col ( keys %$values ) {
         if ( $obj->has_column($col) ) {
+
             # there's no point in croaking here; just set the
             # values that are defined; ignore any others
-            $obj->$col($values->{$col}) if defined $values->{$col};
+            $obj->$col( $values->{$col} ) if defined $values->{$col};
         }
     }
 }
 
 sub get_values {
     my $obj = shift;
+
     # returns a copy of column_values, as accessing column_values directly
     # can be problematic.
     return { %{ $obj->column_values } };
 }
 
 sub column_def {
-    my $obj = shift;
+    my $obj    = shift;
     my ($name) = @_;
-    my $defs = $obj->column_defs;
-    my $def = $defs->{$name};
-    if (!ref($def)) {
-        $defs->{$name} = $def = $obj->__parse_def($name, $def);
+    my $defs   = $obj->column_defs;
+    my $def    = $defs->{$name};
+    if ( !ref($def) ) {
+        $defs->{$name} = $def = $obj->__parse_def( $name, $def );
     }
     return $def;
 }
 
 sub index_defs {
-    my $obj = shift;
+    my $obj   = shift;
     my $props = $obj->properties;
     $props->{indexes};
 }
 
 sub column_defs {
-    my $obj = shift;
+    my $obj   = shift;
     my $props = $obj->properties;
-    my $defs = $props->{column_defs};
+    my $defs  = $props->{column_defs};
     return undef if !$defs;
     my ($key) = keys %$defs;
-    unless ($props->{column_defs_parsed}) {  
-        $obj->__parse_defs($props->{column_defs});
-        $props->{column_defs_parsed} = 1;  
-    }  
+    unless ( $props->{column_defs_parsed} ) {
+        $obj->__parse_defs( $props->{column_defs} );
+        $props->{column_defs_parsed} = 1;
+    }
 
-    return $props->{column_defs}; 
+    return $props->{column_defs};
 }
 
 sub __parse_defs {
     my $obj = shift;
     my ($defs) = @_;
     foreach my $col ( keys %$defs ) {
-        next if ref($defs->{$col});
-        $defs->{$col} = $obj->__parse_def($col, $defs->{$col});
+        next if ref( $defs->{$col} );
+        $defs->{$col} = $obj->__parse_def( $col, $defs->{$col} );
     }
 }
 
 sub __parse_def {
     my $obj = shift;
-    my ($col, $def) = @_;
+    my ( $col, $def ) = @_;
     return undef if !defined $def;
     my $props = $obj->properties;
     my %def;
-    if ($def =~ s/^([^( ]+)\s*//) {
+    if ( $def =~ s/^([^( ]+)\s*// ) {
         $def{type} = $1;
     }
-    if ($def =~ s/^\((\d+)\)\s*//) {
+    if ( $def =~ s/^\((\d+)\)\s*// ) {
         $def{size} = $1;
     }
     $def{not_null} = 1 if $def =~ m/\bnot null\b/i;
-    $def{key} = 1 if $def =~ m/\bprimary key\b/i;
-    $def{key} = 1 if ($props->{primary_key}) && ($props->{primary_key} eq $col);
-    $def{auto} = 1 if $def =~ m/\bauto[_ ]increment\b/i;
+    $def{key}      = 1 if $def =~ m/\bprimary key\b/i;
+    $def{key}      = 1
+      if ( $props->{primary_key} ) && ( $props->{primary_key} eq $col );
+    $def{auto}       = 1 if $def =~ m/\bauto[_ ]increment\b/i;
     $def{revisioned} = 1 if $def =~ m/\brevisioned\b/i;
     $def{default} = $props->{defaults}{$col}
-        if exists $props->{defaults}{$col};
+      if exists $props->{defaults}{$col};
     \%def;
-}
+} ## end sub __parse_def
 
 sub cache_property {
-    my $obj = shift;
-    my $key = shift;
+    my $obj  = shift;
+    my $key  = shift;
     my $code = shift;
-    if (ref $key eq 'CODE') {
-        ($key, $code) = ($code, $key);
+    if ( ref $key eq 'CODE' ) {
+        ( $key, $code ) = ( $code, $key );
     }
-    $key ||= (caller(1))[3];
+    $key ||= ( caller(1) )[3];
 
-    my $r = MT->request;
+    my $r  = MT->request;
     my $oc = $r->cache('object_cache');
     unless ($oc) {
         $oc = {};
-        $r->cache('object_cache', $oc);
+        $r->cache( 'object_cache', $oc );
     }
 
     my $pk = $obj->primary_key;
-    return $code->($obj, @_) unless defined $pk;
+    return $code->( $obj, @_ ) unless defined $pk;
     $pk = join ":", @$pk if ref $pk;
-    $oc = $oc->{ref($obj). ':' . $pk} ||= {};
+    $oc = $oc->{ ref($obj) . ':' . $pk } ||= {};
 
     if (@_) {
         $oc->{$key} = $_[0];
-    } else {
-        if ((!exists $oc->{$key}) && $code) {
-            $oc->{$key} = $code->($obj, @_);
+    }
+    else {
+        if ( ( !exists $oc->{$key} ) && $code ) {
+            $oc->{$key} = $code->( $obj, @_ );
         }
     }
     return exists $oc->{$key} ? $oc->{$key} : undef;
-}
+} ## end sub cache_property
 
 sub clear_cache {
     my $obj = shift;
@@ -1312,12 +1417,13 @@ sub clear_cache {
 
     my $pk = $obj->primary_key;
     $pk = join ":", @$pk if ref $pk;
-    my $key = ref($obj). ':' . $pk;
+    my $key = ref($obj) . ':' . $pk;
 
     if (@_) {
         $oc = $oc->{$key};
         delete $oc->{ $_[0] } if $oc;
-    } else {
+    }
+    else {
         delete $oc->{$key};
     }
     1;
@@ -1327,72 +1433,77 @@ sub blog {
     my $obj = shift or return;
     return undef unless $obj->has_column('blog_id') and $obj->blog_id;
     my $blog_class = MT->model('blog');
-    $obj->cache_property('blog', sub {
-        $blog_class->load( $obj->blog_id )
-            or $obj->error(MT->translate(
-                "Load of blog '[_1]' failed: [_2]", $obj->blog_id, 
-                $blog_class->errstr
-                    || MT->translate("record does not exist.")));
-    });
+    $obj->cache_property(
+        'blog',
+        sub {
+            $blog_class->load( $obj->blog_id )
+              or $obj->error(
+                              MT->translate(
+                                  "Load of blog '[_1]' failed: [_2]",
+                                  $obj->blog_id,
+                                  $blog_class->errstr
+                                    || MT->translate("record does not exist.")
+                              )
+              );
+        }
+    );
 }
 
 sub to_hash {
-    my $obj = shift;
-    my $hash = {};
-    my $props = $obj->properties;
-    my $pfx = $obj->datasource;
+    my $obj    = shift;
+    my $hash   = {};
+    my $props  = $obj->properties;
+    my $pfx    = $obj->datasource;
     my $values = $obj->get_values;
-    foreach (keys %$values) {
+    foreach ( keys %$values ) {
         $hash->{"${pfx}.$_"} = $values->{$_};
     }
-    if (my $meta = $props->{meta_columns}) {
-        foreach (keys %$meta) {
+    if ( my $meta = $props->{meta_columns} ) {
+        foreach ( keys %$meta ) {
             $hash->{"${pfx}.$_"} = $obj->meta($_);
         }
     }
-    if ($obj->has_column('blog_id')) {
+    if ( $obj->has_column('blog_id') ) {
         my $blog_id = $obj->blog_id;
         require MT::Blog;
-        if (my $blog = MT::Blog->lookup($blog_id)) {
+        if ( my $blog = MT::Blog->lookup($blog_id) ) {
             my $blog_hash = $blog->to_hash;
             $hash->{"${pfx}.$_"} = $blog_hash->{$_} foreach keys %$blog_hash;
         }
     }
     $hash;
-}
+} ## end sub to_hash
 
 sub search_by_meta {
     my $class = shift;
-    my($key, $value, $terms, $args) = @_;
-    $terms ||= {}; $args ||= {};
+    my ( $key, $value, $terms, $args ) = @_;
+    $terms ||= {};
+    $args  ||= {};
     return unless $class->properties->{meta_installed};
     return $class->error("Unknown meta '$key' on $class")
-        unless $class->is_meta_column($key);
+      unless $class->is_meta_column($key);
 
-    my $meta_rec = MT::Meta->metadata_by_name($class, $key);
-    my $type_col = $meta_rec->{type};
-    my $type_id  = $meta_rec->{name};
-    my $meta_terms = {
-        $type_col => $value,
-        type      => $type_id,
-        %$terms,
-    };
+    my $meta_rec   = MT::Meta->metadata_by_name( $class, $key );
+    my $type_col   = $meta_rec->{type};
+    my $type_id    = $meta_rec->{name};
+    my $meta_terms = { $type_col => $value, type => $type_id, %$terms, };
     my $meta_class = $class->meta_pkg;
-    my $meta_pk = $meta_class->primary_key_tuple;
-    $meta_pk = [ $meta_pk->[0] ]; # we only need the first column, that's the id
-    my @metaobjs = $meta_class->search(
-        $meta_terms, { %$args, fetchonly => $meta_pk }
-    );
+    my $meta_pk    = $meta_class->primary_key_tuple;
+    $meta_pk
+      = [ $meta_pk->[0] ];    # we only need the first column, that's the id
+    my @metaobjs
+      = $meta_class->search( $meta_terms, { %$args, fetchonly => $meta_pk } );
 
-    my $pk = $class->primary_key_tuple;
-    my $get_pk = sub { 
+    my $pk     = $class->primary_key_tuple;
+    my $get_pk = sub {
         my $meta = shift;
         [ map { $meta->$_ } @$meta_pk ];
     };
 
     return unless @metaobjs;
-    return grep defined, @{ $class->lookup_multi([ map { $get_pk->($_) } @metaobjs ]) };
-}
+    return grep defined,
+      @{ $class->lookup_multi( [ map { $get_pk->($_) } @metaobjs ] ) };
+} ## end sub search_by_meta
 
 package MT::Object::Meta;
 
@@ -1401,8 +1512,7 @@ use base qw( Data::ObjectDriver::BaseObject );
 sub install_properties {
     my $class = shift;
     my ($props) = @_;
-    $props->{column_defs}->{$_} ||= 'string'
-        for @{ $props->{columns} };
+    $props->{column_defs}->{$_} ||= 'string' for @{ $props->{columns} };
 
     $props->{get_driver} ||= sub {
         require MT::ObjectDriverFactory;
@@ -1415,20 +1525,20 @@ sub install_properties {
 }
 
 sub __properties { }
-sub meta_pkg { undef }
+sub meta_pkg     {undef}
 
-*table_name = \&MT::Object::table_name;
-*column_defs = \&MT::Object::column_defs;
-*column_def = \&MT::Object::column_def;
-*index_defs = \&MT::Object::index_defs;
-*__parse_defs = \&MT::Object::__parse_defs;
-*__parse_def = \&MT::Object::__parse_def;
-*count = \&MT::Object::count;
+*table_name      = \&MT::Object::table_name;
+*column_defs     = \&MT::Object::column_defs;
+*column_def      = \&MT::Object::column_def;
+*index_defs      = \&MT::Object::index_defs;
+*__parse_defs    = \&MT::Object::__parse_defs;
+*__parse_def     = \&MT::Object::__parse_def;
+*count           = \&MT::Object::count;
 *columns_of_type = \&MT::Object::columns_of_type;
-*join_on = \&MT::Object::join_on;
+*join_on         = \&MT::Object::join_on;
 
 # TODO: copy this too
-sub blob_requires_zip {}
+sub blob_requires_zip { }
 
 1;
 __END__

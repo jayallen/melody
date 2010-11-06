@@ -24,33 +24,32 @@ sub dynamic_template {
 }
 
 sub default_archive_templates {
-    return [
-        {
-            label => MT->translate('category/sub-category/index.html'),
-            template => '%-c/%i',
-            default  => 1
-        },
-        {
-            label => MT->translate('category/sub_category/index.html'),
-            template => '%c/%i'
-        }
+    return [ {
+                label    => MT->translate('category/sub-category/index.html'),
+                template => '%-c/%i',
+                default  => 1
+             },
+             {
+                label    => MT->translate('category/sub_category/index.html'),
+                template => '%c/%i'
+             }
     ];
 }
 
 sub template_params {
     return {
-        archive_class              => "category-archive",
-        category_archive           => 1,
-        archive_template           => 1,
-        archive_listing            => 1,
-        'module_category_archives' => 1,
+             archive_class              => "category-archive",
+             category_archive           => 1,
+             archive_template           => 1,
+             archive_listing            => 1,
+             'module_category_archives' => 1,
     };
 }
 
 sub archive_title {
-    my $obj = shift;
+    my $obj   = shift;
     my ($ctx) = @_;
-    my $c = $ctx->stash('category');
+    my $c     = $ctx->stash('category');
     encode_html( remove_html( $c ? $c->label : '' ) );
 }
 
@@ -82,7 +81,7 @@ sub archive_file {
         $file = sprintf( "%s/index", $this_cat->category_path );
     }
     $file;
-}
+} ## end sub archive_file
 
 sub archive_group_iter {
     my $obj = shift;
@@ -91,56 +90,66 @@ sub archive_group_iter {
     my $blog_id = $ctx->stash('blog')->id;
     require MT::Category;
     my $iter = MT::Category->load_iter( { blog_id => $blog_id },
-        { 'sort' => 'label', direction => 'ascend' } );
+                               { 'sort' => 'label', direction => 'ascend' } );
     require MT::Placement;
     require MT::Entry;
 
     # issue a single count_group_by for all categories
-    my $cnt_iter = MT::Placement->count_group_by({
-        blog_id => $blog_id,
-    }, {
-        group => [ 'category_id' ],
-        join => MT::Entry->join_on('id', { status => MT::Entry::RELEASE() }),
-    });
+    my $cnt_iter =
+      MT::Placement->count_group_by(
+                                     { blog_id => $blog_id, },
+                                     {
+                                        group => ['category_id'],
+                                        join =>
+                                          MT::Entry->join_on(
+                                             'id',
+                                             {
+                                               status => MT::Entry::RELEASE()
+                                             }
+                                          ),
+                                     }
+      );
     my %counts;
-    while (my ($count, $cat_id) = $cnt_iter->()) {
+    while ( my ( $count, $cat_id ) = $cnt_iter->() ) {
         $counts{$cat_id} = $count;
     }
 
     return sub {
         while ( my $c = $iter->() ) {
-            my $count = $counts{$c->id};
+            my $count = $counts{ $c->id };
             next unless $count || $args->{show_empty};
             return ( $count, category => $c );
         }
         return ();
     };
-}
+} ## end sub archive_group_iter
 
 sub archive_group_entries {
     my $obj = shift;
     my ( $ctx, %param ) = @_;
     my $limit = $param{limit};
-    if ( $limit && ($limit eq 'auto') ) {
+    if ( $limit && ( $limit eq 'auto' ) ) {
         my $blog = $ctx->stash('blog');
         $limit = $blog->entries_on_index if $blog;
     }
     my $c = $ctx->stash('archive_category') || $ctx->stash('category');
     require MT::Entry;
     my @entries = MT::Entry->load(
-        { status => MT::Entry::RELEASE() },
-        {
-            join => [
-                'MT::Placement', 'entry_id',
-                { category_id => $c->id }, { unique => 1 }
-            ],
-            'sort'      => 'authored_on',
-            'direction' => 'descend',
-            ( $limit ? ( 'limit' => $limit ) : () ),
-        }
+                                   { status => MT::Entry::RELEASE() },
+                                   {
+                                      join => [
+                                                'MT::Placement',
+                                                'entry_id',
+                                                { category_id => $c->id },
+                                                { unique      => 1 }
+                                      ],
+                                      'sort'      => 'authored_on',
+                                      'direction' => 'descend',
+                                      ( $limit ? ( 'limit' => $limit ) : () ),
+                                   }
     );
     \@entries;
-}
+} ## end sub archive_group_entries
 
 sub archive_entries_count {
     my $obj = shift;
@@ -149,12 +158,7 @@ sub archive_entries_count {
     $cat = $entry->category unless $cat;
     return 0 unless $cat;
     return $obj->SUPER::archive_entries_count(
-        {
-            Blog        => $blog,
-            ArchiveType => $at,
-            Category    => $cat
-        }
-    );
+                    { Blog => $blog, ArchiveType => $at, Category => $cat } );
 }
 
 sub display_name {
@@ -163,10 +167,10 @@ sub display_name {
     my $tmpl     = $ctx->stash('template');
     my $cat      = '';
     if (   !$tmpl
-        || $tmpl->type eq 'index'
-        || !$archiver
-        || ( $archiver && !$archiver->category_based )
-        || !$ctx->{inside_archive_list} )
+         || $tmpl->type eq 'index'
+         || !$archiver
+         || ( $archiver && !$archiver->category_based )
+         || !$ctx->{inside_archive_list} )
     {
         $cat = $ctx->stash('archive_category') || $ctx->stash('category');
         $cat = $cat ? $cat->label . ': ' : '';

@@ -18,10 +18,10 @@ use constant NO_AUTO_GENERATE => 3;
 use constant INLINE           => 4;
 
 my $_REGENERATORS = {
-    inline           => INLINE(),
-    needs_job        => NEEDS_JOB(),
-    queue            => IN_QUEUE(),
-    no_auto_generate => NO_AUTO_GENERATE()
+                      inline           => INLINE(),
+                      needs_job        => NEEDS_JOB(),
+                      queue            => IN_QUEUE(),
+                      no_auto_generate => NO_AUTO_GENERATE()
 };
 
 our ($Registry);
@@ -45,26 +45,26 @@ sub register {
         my $type = $field->{type};
 
         my $type_id = $MT::Meta::TypesByName{$type}
-            or Carp::croak(
-            "Invalid summary type '$type' for field $pkg $field->{name}");
+          or Carp::croak(
+                "Invalid summary type '$type' for field $pkg $field->{name}");
 
         ## load registry
         print STDERR "$pkg is registering summary $key\t$name\n" if DEBUG;
 
         ## clone it
         my $value = {
-            name    => $name,
-            type_id => $type_id,
-            type    => $MT::Meta::Types{$type_id},
-            pkg     => $pkg,
+                      name    => $name,
+                      type_id => $type_id,
+                      type    => $MT::Meta::Types{$type_id},
+                      pkg     => $pkg,
         };
 
         $Registry->{$key}{$pkg}{$name} = $value;
-    }
-}
+    } ## end foreach my $field ( @{$fields...})
+} ## end sub register
 
 # default trigger for expiration handler to use in config.yaml that doesn't do anything
-sub expire_none {}
+sub expire_none { }
 
 # default trigger for expiration handler to use in config.yaml that expires a summary
 sub expire_all {
@@ -121,6 +121,7 @@ sub lookup_summary_objs {
     my $obj = shift;
     my ( $terms, $class ) = @_;
     my $summary = $obj->get_summary($terms);
+
     #
     # The lookup_summary_objs() sub routine has code that is very similar to the
     # get_summary_objs() code, and although it is not called by the MTEntryAssets
@@ -128,30 +129,45 @@ sub lookup_summary_objs {
     # prevent potential future database errors in MTE installations using an
     # Oracle database.
     #
-    return undef unless ( ref $summary eq 'ARRAY' ?  $summary->[0] : $summary  );
+    return undef
+      unless ( ref $summary eq 'ARRAY' ? $summary->[0] : $summary );
     eval("require $class;");
-    my $objs = $class->lookup_multi(ref $summary eq 'ARRAY' ? $summary : [split /,\s*/, $summary || '']);
+    my $objs
+      = $class->lookup_multi(
+                              ref $summary eq 'ARRAY'
+                              ? $summary
+                              : [ split /,\s*/, $summary || '' ] );
     return @$objs;
-}
+} ## end sub lookup_summary_objs
 
 sub get_summary_objs {
     my $obj = shift;
     my ( $terms, $class, $args ) = @_;
     my $summary = $obj->get_summary($terms);
+
     #
     # The get_summary_objs() sub in lib/MT/Summary.pm needs to check that it has
     # a non-empty list of asset IDs before calling MT::Asset->load(), and simply
     # return if the list of asset IDs is empty.
     #
-    return undef unless ( ref $summary eq 'ARRAY' ?  $summary->[0] : $summary  );
+    return undef
+      unless ( ref $summary eq 'ARRAY' ? $summary->[0] : $summary );
     eval("require $class;");
-    return $class->load( { id => ref $summary eq 'ARRAY' ? $summary : [split /,\s*/, $summary || ''] }, ref $args ? $args : () );
-}
+    return
+      $class->load( {
+                       id => ref $summary eq 'ARRAY'
+                       ? $summary
+                       : [ split /,\s*/, $summary || '' ]
+                    },
+                    ref $args ? $args : ()
+      );
+} ## end sub get_summary_objs
 
 sub get_summary_iter {
     my $obj = shift;
     my ( $terms, $class, $args ) = @_;
     my $summary = $obj->get_summary($terms);
+
     #
     # The get_summary_iter() sub routine has code that is very similar to the
     # get_summary_objs() code, and although it is not called by the MTEntryAssets
@@ -159,10 +175,18 @@ sub get_summary_iter {
     # prevent potential future database errors in MTE installations using an
     # Oracle database.
     #
-    return undef unless ( ref $summary eq 'ARRAY' ?  $summary->[0] : $summary  );
+    return undef
+      unless ( ref $summary eq 'ARRAY' ? $summary->[0] : $summary );
     eval("require $class;");
-    return $class->load_iter( { id => ref $summary eq 'ARRAY' ? $summary : [split /,\s*/, $summary || ''] }, ref $args ? $args : () );
-}
+    return
+      $class->load_iter( {
+                            id => ref $summary eq 'ARRAY'
+                            ? $summary
+                            : [ split /,\s*/, $summary || '' ]
+                         },
+                         ref $args ? $args : ()
+      );
+} ## end sub get_summary_iter
 
 sub _set_terms {
     my $terms = shift;
@@ -176,15 +200,12 @@ sub _set_terms {
             ( $terms->{class} ) = split( /::/, $str );
         }
         else {
-            $terms = {
-                type  => $str,
-                class => $str
-            };
+            $terms = { type => $str, class => $str };
         }
     }
     elsif ( $terms->{type} && $terms->{class} ) {
         $terms->{type} = join( '::', $terms->{class}, $terms->{type} )
-            if $terms->{type} ne $terms->{class} && $terms->{type} !~ /::/;
+          if $terms->{type} ne $terms->{class} && $terms->{type} !~ /::/;
     }
     elsif ( $terms->{type} && !$terms->{class} ) {
         $terms->{class} = $terms->{type};
@@ -194,10 +215,10 @@ sub _set_terms {
     }
     elsif ( !$terms->{class} && !$terms->{type} ) {
         die
-            "Can't process terms without class or type parameter: @{[%$terms]}\n";
+          "Can't process terms without class or type parameter: @{[%$terms]}\n";
     }
     return $terms;
-}
+} ## end sub _set_terms
 
 sub set_summary {
     my $obj = shift;
@@ -205,10 +226,10 @@ sub set_summary {
     return 0 unless $obj;
 
     die "Can't call set_summary on an object with no id (" . ref($obj) . ")"
-        unless $obj->id;
+      unless $obj->id;
 
     die "Can't call set_summary with no value (" . ref($obj) . ")"
-        unless (defined $value and ! $reset );
+      unless ( defined $value and !$reset );
 
     $terms = _set_terms($terms);
     if ( $obj->has_summary ) {
@@ -217,7 +238,7 @@ sub set_summary {
         }
         else {
             die ref($obj)
-                . " has not registered field $terms->{class} to be summarizable\n";
+              . " has not registered field $terms->{class} to be summarizable\n";
         }
     }
     else {
@@ -225,52 +246,60 @@ sub set_summary {
     }
 
     return 1;
-}
+} ## end sub set_summary
 
 sub summarize {
     my $obj = shift;
     return 0 unless $obj;
-    my $terms = _set_terms(shift);
+    my $terms  = _set_terms(shift);
     my %params = @_;
     die "Can't call set_summary without terms" unless $terms;
     die "Can't call set_summary on an object with no id (" . ref($obj) . ")"
-        unless $obj->id;
+      unless $obj->id;
     die ref($obj) . " has no summary enabled for it\n"
-        unless $obj->has_summary;
+      unless $obj->has_summary;
     die ref($obj)
-        . " has not registered field $terms->{class} to be summarizable\n"
-        unless $obj->is_summary( $terms->{class} );
+      . " has not registered field $terms->{class} to be summarizable\n"
+      unless $obj->is_summary( $terms->{class} );
 
     my $type_id = $obj->class_type;
-    my $class_type = $type_id ? ($type_id ne $obj->datasource ? $obj->datasource . '.' . $type_id : $type_id) : $obj->datasource;
+    my $class_type
+      = $type_id
+      ? ( $type_id ne $obj->datasource
+          ? $obj->datasource . '.' . $type_id
+          : $type_id )
+      : $obj->datasource;
     my $registry = MT->registry( summaries => $class_type );
     my $regen 
-        = $params{code}
-        || $registry->{ $terms->{class} }->{code}
-        || die
-        "Required code to summarize $terms->{class} is missing in registry for class $class_type/@{[$terms->{class}]}\n";
+      = $params{code}
+      || $registry->{ $terms->{class} }->{code}
+      || die
+      "Required code to summarize $terms->{class} is missing in registry for class $class_type/@{[$terms->{class}]}\n";
     $regen = MT->handler_to_coderef($regen) unless ref $regen;
+
     if ( ref $regen ne q{CODE} ) {
         die
-            "Required code to summarize $terms->{class} is not code or code handler\n";
+          "Required code to summarize $terms->{class} is not code or code handler\n";
     }
     my $value = $obj->summary($terms);
-    if ( (defined $params{force} && $params{force}) 
-       || $obj->summary_is_expired($terms) 
-       || !defined $value ) {
+    if (    ( defined $params{force} && $params{force} )
+         || $obj->summary_is_expired($terms)
+         || !defined $value )
+    {
         $value = $regen->( $obj, $terms );
         $obj->set_summary( $terms, $value );
     }
     return $value;
-}
+} ## end sub summarize
 
 sub summary_is_expired {
     my $obj = shift;
     return 0 unless $obj;
     my $terms = _set_terms(shift);
+
     # force load of this summary if not already loaded
     $obj->summary( $terms->{type} );
-    my $summary = $obj->{__summary}->{__objects}->{$terms->{type}};
+    my $summary = $obj->{__summary}->{__objects}->{ $terms->{type} };
     return $summary ? $summary->expired : 0;
 }
 
@@ -306,54 +335,57 @@ sub expire_summary {
     my $additional_args = $_[0];
     if ( ( !defined($terms) ) and defined($additional_args) ) {
         die
-            "Summary expiration cannot override default behavior without terms\n";
+          "Summary expiration cannot override default behavior without terms\n";
     }
     my $regenerate = $additional_args->{regenerate};
     my $priority   = $additional_args->{priority};
     if ( defined($terms) ) {
         my $type_id = $obj->class_type;
-        my $class_type = $type_id ? ($type_id ne $obj->datasource ? $obj->datasource . '.' . $type_id : $type_id) : $obj->datasource;
+        my $class_type
+          = $type_id
+          ? ( $type_id ne $obj->datasource
+              ? $obj->datasource . '.' . $type_id
+              : $type_id )
+          : $obj->datasource;
         my $r = MT->registry( q{summaries}, $class_type );
         $r = $r->{ $terms->{class} };
-        my $type_key = $obj->datasource . q{_id};
-        my $meta_class   = $obj->meta_pkg('summary');
-        my $params = {   
-           $type_key => $obj->id,
-           type      => $terms->{type},
-        };
-        my $new = 1;
-        my($summary) = $meta_class->search($params); # find an existing iterator
+        my $type_key   = $obj->datasource . q{_id};
+        my $meta_class = $obj->meta_pkg('summary');
+        my $params     = { $type_key => $obj->id, type => $terms->{type}, };
+        my $new        = 1;
+        my ($summary)
+          = $meta_class->search($params);    # find an existing iterator
         {
+
             if ( $r->{regenerate} ) {
                 $regenerate ||= $_REGENERATORS->{ $r->{regenerate} };
             }
             $regenerate ||= $_REGENERATORS->{q{needs_job}};
             if ( $regenerate eq MT::Summary::INLINE() ) {
-                $obj->summarize($terms, force => 1);
+                $obj->summarize( $terms, force => 1 );
             }
             else {
                 if ($summary) {
-                    $obj->summary($terms->{type});
-                    $obj->{__summary}->{__objects}->{$terms->{type}}->expired($regenerate);
+                    $obj->summary( $terms->{type} );
+                    $obj->{__summary}->{__objects}->{ $terms->{type} }
+                      ->expired($regenerate);
                     $obj->{__summary}->save_one($terms);
                 }
                 if ( $regenerate == MT::Summary::IN_QUEUE() ) {
                     $priority ||= $r->{priority};
-                    $obj->insert_summarize_worker(
-                        $class_type, $obj->id,
-                        $terms->{type},   $priority
-                    );
+                    $obj->insert_summarize_worker( $class_type, $obj->id,
+                                                  $terms->{type}, $priority );
                 }
             }
         }
-    }
+    } ## end if ( defined($terms) )
     else {
         foreach my $summary_key ( keys %{ $obj->{__summary}->{__objects} } ) {
             $obj->expire_summary($summary_key);
         }
     }
     return 1;
-}
+} ## end sub expire_summary
 
 =head1 NAME
 

@@ -9,9 +9,7 @@ use strict;
 use Locale::Maketext;
 
 @MT::L10N::ISA = qw( Locale::Maketext );
-@MT::L10N::Lexicon = (
-    _AUTO => 1,
-);
+@MT::L10N::Lexicon = ( _AUTO => 1, );
 
 sub language_name {
     my $tag = $_[0]->language_tag;
@@ -19,8 +17,8 @@ sub language_name {
     return I18N::LangTags::List::name($tag);
 }
 
-sub encoding { 'iso-8859-1' }   ## Latin-1
-sub ascii_only { 0 }
+sub encoding   {'iso-8859-1'}    ## Latin-1
+sub ascii_only {0}
 
 sub lc {
     my $lh = shift;

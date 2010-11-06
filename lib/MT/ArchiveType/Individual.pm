@@ -21,11 +21,11 @@ sub archive_label {
 
 sub template_params {
     return {
-        entry_archive     => 1,
-        archive_template  => 1,
-        entry_template    => 1,
-        feedback_template => 1,
-        archive_class     => "entry-archive",
+             entry_archive     => 1,
+             archive_template  => 1,
+             entry_template    => 1,
+             feedback_template => 1,
+             archive_class     => "entry-archive",
     };
 }
 
@@ -47,10 +47,10 @@ sub archive_file {
         my $basename = $entry->basename();
         $basename ||= dirify( $entry->title() );
         $file = sprintf( "%04d/%02d/%s",
-            unpack( 'A4A2', $entry->authored_on ), $basename );
+                         unpack( 'A4A2', $entry->authored_on ), $basename );
     }
     $file;
-}
+} ## end sub archive_file
 
 sub archive_title {
     my $obj = shift;
@@ -61,21 +61,22 @@ sub archive_group_iter {
     my $obj = shift;
     my ( $ctx, $args ) = @_;
 
-    my $order =
-      ( $args->{sort_order} || '' ) eq 'ascend' ? 'ascend' : 'descend';
+    my $order
+      = ( $args->{sort_order} || '' ) eq 'ascend' ? 'ascend' : 'descend';
 
     my $blog_id = $ctx->stash('blog')->id;
     require MT::Entry;
-    my $iter = MT::Entry->load_iter(
-        {
-            blog_id => $blog_id,
-            status  => MT::Entry::RELEASE()
-        },
-        {
-            'sort'    => 'authored_on',
-            direction => $order,
-            $args->{lastn} ? ( limit => $args->{lastn} ) : ()
-        }
+    my $iter = MT::Entry->load_iter( {
+                                        blog_id => $blog_id,
+                                        status  => MT::Entry::RELEASE()
+                                     },
+                                     {
+                                        'sort'    => 'authored_on',
+                                        direction => $order,
+                                        $args->{lastn}
+                                        ? ( limit => $args->{lastn} )
+                                        : ()
+                                     }
     );
     return sub {
         while ( my $entry = $iter->() ) {
@@ -83,71 +84,70 @@ sub archive_group_iter {
         }
         undef;
       }
-}
+} ## end sub archive_group_iter
 
 sub dynamic_template {
     'entry/<$MTEntryID$>';
 }
 
 sub default_archive_templates {
-    return [
-        {
-            label    => MT->translate('yyyy/mm/entry-basename.html'),
-            template => '%y/%m/%-f',
-            default  => 1
-        },
-        {
-            label    => MT->translate('yyyy/mm/entry_basename.html'),
-            template => '%y/%m/%f'
-        },
-        {
-            label => MT->translate('yyyy/mm/entry-basename/index.html'),
-            template => '%y/%m/%-b/%i'
-        },
-        {
-            label => MT->translate('yyyy/mm/entry_basename/index.html'),
-            template => '%y/%m/%b/%i'
-        },
-        {
-            label    => MT->translate('yyyy/mm/dd/entry-basename.html'),
-            template => '%y/%m/%d/%-f'
-        },
-        {
-            label    => MT->translate('yyyy/mm/dd/entry_basename.html'),
-            template => '%y/%m/%d/%f'
-        },
-        {
-            label =>
-              MT->translate('yyyy/mm/dd/entry-basename/index.html'),
-            template => '%y/%m/%d/%-b/%i'
-        },
-        {
-            label =>
-              MT->translate('yyyy/mm/dd/entry_basename/index.html'),
-            template => '%y/%m/%d/%b/%i'
-        },
-        {
-            label => MT->translate(
-                'category/sub-category/entry-basename.html'),
-            template => '%-c/%-f'
-        },
-        {
-            label => MT->translate(
-                'category/sub-category/entry-basename/index.html'),
-            template => '%-c/%-b/%i'
-        },
-        {
-            label => MT->translate(
-                'category/sub_category/entry_basename.html'),
-            template => '%c/%f'
-        },
-        {
-            label => MT->translate(
-                'category/sub_category/entry_basename/index.html'),
-            template => '%c/%b/%i'
-        },
+    return [ {
+                label    => MT->translate('yyyy/mm/entry-basename.html'),
+                template => '%y/%m/%-f',
+                default  => 1
+             },
+             {
+                label    => MT->translate('yyyy/mm/entry_basename.html'),
+                template => '%y/%m/%f'
+             },
+             {
+                label => MT->translate('yyyy/mm/entry-basename/index.html'),
+                template => '%y/%m/%-b/%i'
+             },
+             {
+                label => MT->translate('yyyy/mm/entry_basename/index.html'),
+                template => '%y/%m/%b/%i'
+             },
+             {
+                label    => MT->translate('yyyy/mm/dd/entry-basename.html'),
+                template => '%y/%m/%d/%-f'
+             },
+             {
+                label    => MT->translate('yyyy/mm/dd/entry_basename.html'),
+                template => '%y/%m/%d/%f'
+             },
+             {
+                label =>
+                  MT->translate('yyyy/mm/dd/entry-basename/index.html'),
+                template => '%y/%m/%d/%-b/%i'
+             },
+             {
+                label =>
+                  MT->translate('yyyy/mm/dd/entry_basename/index.html'),
+                template => '%y/%m/%d/%b/%i'
+             },
+             {
+                label =>
+                  MT->translate('category/sub-category/entry-basename.html'),
+                template => '%-c/%-f'
+             },
+             {
+                label => MT->translate(
+                           'category/sub-category/entry-basename/index.html'),
+                template => '%-c/%-b/%i'
+             },
+             {
+                label =>
+                  MT->translate('category/sub_category/entry_basename.html'),
+                template => '%c/%f'
+             },
+             {
+                label => MT->translate(
+                           'category/sub_category/entry_basename/index.html'),
+                template => '%c/%b/%i'
+             },
     ];
-}
+} ## end sub default_archive_templates
 
 1;
 

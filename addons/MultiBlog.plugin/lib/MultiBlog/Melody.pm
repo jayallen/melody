@@ -5,35 +5,36 @@ use strict;
 sub search_blog_filter {
     my ( $cb, $app, $list, $processed ) = @_;
     my $plugin = MT->component('MultiBlog');
-    my $q = $app->query;
+    my $q      = $app->query;
 
     require MT::Template::Context;
     my $ctx = MT::Template::Context->new;
-    $ctx->stash('blog_id',$q->param('blog_id'));
+    $ctx->stash( 'blog_id', $q->param('blog_id') );
 
     my $args;
     $args->{'include_blogs'} = $q->param('IncludeBlogs')
-        if $q->param('IncludeBlogs');
+      if $q->param('IncludeBlogs');
     $args->{'exclude_blogs'} = $q->param('ExcludeBlogs')
-        if $q->param('ExcludeBlogs');
+      if $q->param('ExcludeBlogs');
 
     require MultiBlog;
-    MultiBlog::filter_blogs_from_args($plugin,$ctx,$args);
+    MultiBlog::filter_blogs_from_args( $plugin, $ctx, $args );
     my $key;
     my @blogs;
-    if ($args->{'exclude_blogs'}) {
+    if ( $args->{'exclude_blogs'} ) {
         $key = 'ExcludeBlogs';
-        @blogs = split(',',$args->{'exclude_blogs'});
-        $q->param('ExcludeBlogs',$args->{'exclude_blogs'});
-    } elsif ($args->{'include_blogs'}) {
+        @blogs = split( ',', $args->{'exclude_blogs'} );
+        $q->param( 'ExcludeBlogs', $args->{'exclude_blogs'} );
+    }
+    elsif ( $args->{'include_blogs'} ) {
         $key = 'IncludeBlogs';
-        @blogs = split(',',$args->{'include_blogs'});
+        @blogs = split( ',', $args->{'include_blogs'} );
     }
     my $list;
     foreach (@blogs) { $list->{$_} = 1; }
     $app->{searchparam}{$key} = $list;
     return 1;
-}
+} ## end sub search_blog_filter
 
 1;
 __END__

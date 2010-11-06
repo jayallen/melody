@@ -7,40 +7,36 @@ use Test::Deep::Cmp;
 
 use Scalar::Util qw( reftype );
 
-sub init
-{
-	my $self = shift;
+sub init {
+    my $self = shift;
 
-	$self->{val} = shift;
+    $self->{val} = shift;
 }
 
-sub descend
-{
-	my $self = shift;
+sub descend {
+    my $self = shift;
 
-	my $got = shift;
+    my $got = shift;
 
-	my $exp = $self->{val};
-	my $reftype = reftype($got);
+    my $exp     = $self->{val};
+    my $reftype = reftype($got);
 
-	return Test::Deep::descend($reftype, Test::Deep::shallow($exp));
+    return Test::Deep::descend( $reftype, Test::Deep::shallow($exp) );
 }
 
-sub render_stack
-{
-	my $self = shift;
-	my $var = shift;
+sub render_stack {
+    my $self = shift;
+    my $var  = shift;
 
-	return "reftype($var)";
+    return "reftype($var)";
 }
 
-sub renderGot
-{
-	my $self = shift;
+sub renderGot {
+    my $self = shift;
 
-	my $got = shift;
+    my $got = shift;
 
-	$self->SUPER::renderGot(reftype($got));
+    $self->SUPER::renderGot( reftype($got) );
 }
 
 1;

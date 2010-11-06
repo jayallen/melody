@@ -11,6 +11,7 @@
 MultiBlog::Tags - Template tags provided by the MultiBlog plugin
 
 =cut
+
 package MultiBlog::Tags;
 
 use strict;
@@ -79,64 +80,74 @@ last four entries for the blogs with IDs 1 through 6.
 An deprecated alias for the MultiBlog tag.
 
 =cut
+
 sub MultiBlog {
     my $plugin = MT->component('MultiBlog');
     my ( $ctx, $args, $cond ) = @_;
-	MT->log({message => $plugin});
-    return $ctx->error($plugin->translate('MTMultiBlog tags cannot be nested.'))
-        if $ctx->stash('multiblog_context');
+    MT->log( { message => $plugin } );
+    return $ctx->error(
+                    $plugin->translate('MTMultiBlog tags cannot be nested.') )
+      if $ctx->stash('multiblog_context');
 
     # Set default mode for backwards compatibility
     $args->{mode} ||= 'loop';
 
-    # If MTMultiBlog was called with no arguments, we check the 
+    # If MTMultiBlog was called with no arguments, we check the
     # blog-level settings for the default includes/excludes.
-    unless (   $args->{blog_ids} 
-            || $args->{include_blogs} 
-            || $args->{exclude_blogs} ) {
+    unless (    $args->{blog_ids}
+             || $args->{include_blogs}
+             || $args->{exclude_blogs} )
+    {
         my $id = $ctx->stash('blog_id');
-        my $is_include = $plugin->get_config_value( 
-                'default_mtmultiblog_action', "blog:$id" );
-        my $blogs = $plugin->get_config_value( 
-                'default_mtmulitblog_blogs', "blog:$id" );
+        my $is_include =
+          $plugin->get_config_value( 'default_mtmultiblog_action',
+                                     "blog:$id" );
+        my $blogs = $plugin->get_config_value( 'default_mtmulitblog_blogs',
+                                               "blog:$id" );
 
-        if ($blogs && defined($is_include)) {
-            $args->{$is_include ? 'include_blogs' : 'exclude_blogs'} = $blogs;
-        } 
+        if ( $blogs && defined($is_include) ) {
+            $args->{ $is_include ? 'include_blogs' : 'exclude_blogs' }
+              = $blogs;
+        }
+
         # No blog-level config set
         # Set mode to context as this will mimic no MTMultiBlog tag
         else {
-            $args->{'mode'} = 'context';  # Override 'loop' mode
+            $args->{'mode'} = 'context';    # Override 'loop' mode
         }
-    }
+    } ## end unless ( $args->{blog_ids}...)
 
     # Filter MultiBlog args through access controls
     require MultiBlog;
-    if ( ! MultiBlog::filter_blogs_from_args($plugin, $ctx, $args) ) {
-        return $ctx->errstr ? $ctx->error($ctx->errstr) : '';
+    if ( !MultiBlog::filter_blogs_from_args( $plugin, $ctx, $args ) ) {
+        return $ctx->errstr ? $ctx->error( $ctx->errstr ) : '';
     }
 
     # Run MultiBlog in specified mode
     my $res;
-    if ( $args->{mode} eq 'loop') {
-        $res = loop($plugin, @_);
-    } elsif ( $args->{mode} eq 'context') {
-        $res = context($plugin, @_);
-    } else {
+    if ( $args->{mode} eq 'loop' ) {
+        $res = loop( $plugin, @_ );
+    }
+    elsif ( $args->{mode} eq 'context' ) {
+        $res = context( $plugin, @_ );
+    }
+    else {
+
         # Throw error if mode is unknown
         $res = $ctx->error(
-                $plugin->translate(
-                    'Unknown "mode" attribute value: [_1]. '
-                      . 'Valid values are "loop" and "context".',
-                    $args->{mode}
-                )
-            );
+                            $plugin->translate(
+                                 'Unknown "mode" attribute value: [_1]. '
+                                   . 'Valid values are "loop" and "context".',
+                                 $args->{mode}
+                            )
+        );
     }
+
     # Remove multiblog_context and blog_ids
-    $ctx->stash('multiblog_context', '');
-    $ctx->stash('multiblog_blog_ids', '');
-    return defined($res) ? $res : $ctx->error($ctx->errstr);
-}
+    $ctx->stash( 'multiblog_context',  '' );
+    $ctx->stash( 'multiblog_blog_ids', '' );
+    return defined($res) ? $res : $ctx->error( $ctx->errstr );
+} ## end sub MultiBlog
 
 ###########################################################################
 
@@ -178,7 +189,7 @@ right after the list.
 
 sub MultiBlogLocalBlog {
     my $plugin = MT->component('MultiBlog');
-    MT->log({message => $plugin});
+    MT->log( { message => $plugin } );
     my ( $ctx, $args, $cond ) = @_;
 
     require MT::Blog;
@@ -202,7 +213,7 @@ sub MultiBlogLocalBlog {
     }
 
     $out;
-}
+} ## end sub MultiBlogLocalBlog
 
 ###########################################################################
 
@@ -248,13 +259,11 @@ that corresponds to the local blog.
 
 sub MultiBlogIfLocalBlog {
     my $plugin = MT->component('MultiBlog');
-    MT->log({message => $plugin});
-    my $ctx = shift;
-    my $local = $ctx->stash('local_blog_id');
+    MT->log( { message => $plugin } );
+    my $ctx     = shift;
+    my $local   = $ctx->stash('local_blog_id');
     my $blog_id = $ctx->stash('blog_id');
-    defined( $local ) 
-        and defined( $blog_id ) 
-        and $blog_id == $local;
+    defined($local) and defined($blog_id) and $blog_id == $local;
 }
 
 ## Supporting functions for 'MultiBlog' tag:
@@ -266,18 +275,18 @@ sub context {
     my ( $ctx, $args, $cond ) = @_;
 
     # Assuming multiblog context, set it.
-    if ($args->{include_blogs} || $args->{exclude_blogs}) {
-        my $mode = $args->{include_blogs} ? 'include_blogs' 
-                                          : 'exclude_blogs';
-        $ctx->stash('multiblog_context', $mode);
-        $ctx->stash('multiblog_blog_ids', join ( ',', $args->{$mode} ));
-    } 
+    if ( $args->{include_blogs} || $args->{exclude_blogs} ) {
+        my $mode = $args->{include_blogs} ? 'include_blogs' : 'exclude_blogs';
+        $ctx->stash( 'multiblog_context', $mode );
+        $ctx->stash( 'multiblog_blog_ids', join( ',', $args->{$mode} ) );
+    }
 
     # Evaluate container contents and return output
     my $builder = $ctx->stash('builder');
-    my $tokens = $ctx->stash('tokens');
-    my $out = $builder->build( $ctx, $tokens, $cond);
-    return defined($out) ? $out : $ctx->error($ctx->stash('builder')->errstr);
+    my $tokens  = $ctx->stash('tokens');
+    my $out     = $builder->build( $ctx, $tokens, $cond );
+    return
+      defined($out) ? $out : $ctx->error( $ctx->stash('builder')->errstr );
 
 }
 
@@ -286,41 +295,40 @@ sub context {
 sub loop {
     my $plugin = shift;
     my ( $ctx, $args, $cond ) = @_;
-    my (%terms, %args);
+    my ( %terms, %args );
 
     # Set the context for blog loading
-    $ctx->set_blog_load_context($args, \%terms, \%args, 'id')
-        or return $ctx->error($ctx->errstr);
+    $ctx->set_blog_load_context( $args, \%terms, \%args, 'id' )
+      or return $ctx->error( $ctx->errstr );
 
     my $builder = $ctx->stash('builder');
     my $tokens  = $ctx->stash('tokens');
 
-    local $ctx->{__stash}{entries} = undef
-        if $args->{ignore_archive_context};
+    local $ctx->{__stash}{entries} = undef if $args->{ignore_archive_context};
     local $ctx->{current_timestamp} = undef
-        if $args->{ignore_archive_context};
+      if $args->{ignore_archive_context};
     local $ctx->{current_timestamp_end} = undef
-        if $args->{ignore_archive_context};
+      if $args->{ignore_archive_context};
     local $ctx->{__stash}{category} = undef
-        if $args->{ignore_archive_context};
+      if $args->{ignore_archive_context};
     local $ctx->{__stash}{archive_category} = undef
-        if $args->{ignore_archive_context};
+      if $args->{ignore_archive_context};
 
     require MT::Blog;
     $args{'sort'} = 'name';
     $args{direction} = 'ascend';
-    my $iter    = MT::Blog->load_iter(\%terms, \%args);
-    my $res     = '';
-    while (my $blog = $iter->()) {
-        local $ctx->{__stash}{blog} = $blog;
+    my $iter = MT::Blog->load_iter( \%terms, \%args );
+    my $res = '';
+    while ( my $blog = $iter->() ) {
+        local $ctx->{__stash}{blog}    = $blog;
         local $ctx->{__stash}{blog_id} = $blog->id;
-        $ctx->stash('multiblog_context', 'include_blogs');
-        $ctx->stash('multiblog_blog_ids', $blog->id);
-        defined(my $out = $builder->build($ctx, $tokens, $cond))
-            or return $ctx->error($builder->errstr);
+        $ctx->stash( 'multiblog_context',  'include_blogs' );
+        $ctx->stash( 'multiblog_blog_ids', $blog->id );
+        defined( my $out = $builder->build( $ctx, $tokens, $cond ) )
+          or return $ctx->error( $builder->errstr );
         $res .= $out;
     }
     $res;
-}
+} ## end sub loop
 
 1;

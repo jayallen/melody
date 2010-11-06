@@ -9,32 +9,29 @@ use strict;
 
 use MT::Object;
 @MT::Session::ISA = qw( MT::Object );
-__PACKAGE__->install_properties({
-    column_defs => {
-        'id' => 'string(80) not null',
-        'data' => 'blob',
-        'email' => 'string(255)',
-        'name' => 'string(255)',
-        'kind' => 'string(2)',
-        'start' => 'integer not null',
-    },
-    indexes => {
-        'start' => 1,
-        'name' => 1,
-        'kind' => 1,
-    },
-    datasource => 'session',
-    primary_key => 'id',
-});
+__PACKAGE__->install_properties( {
+                      column_defs => {
+                                       'id'    => 'string(80) not null',
+                                       'data'  => 'blob',
+                                       'email' => 'string(255)',
+                                       'name'  => 'string(255)',
+                                       'kind'  => 'string(2)',
+                                       'start' => 'integer not null',
+                      },
+                      indexes => { 'start' => 1, 'name' => 1, 'kind' => 1, },
+                      datasource  => 'session',
+                      primary_key => 'id',
+                    }
+);
 
 sub class_label {
     MT->translate("Session");
 }
 
 sub get_unexpired_value {
-    my $timeout = shift;
+    my $timeout   = shift;
     my $candidate = __PACKAGE__->load(@_);
-    if ($candidate && $candidate->start() < time - $timeout) {
+    if ( $candidate && $candidate->start() < time - $timeout ) {
         $candidate->remove();
         $candidate = undef;
     }
@@ -43,9 +40,9 @@ sub get_unexpired_value {
 
 sub save {
     my $sess = shift;
-    if (my $data = $sess->{__data}) {
+    if ( my $data = $sess->{__data} ) {
         require MT::Serialize;
-        my $ser = MT::Serialize->serialize(\$data);
+        my $ser = MT::Serialize->serialize( \$data );
         $sess->data($ser);
     }
     $sess->{__dirty} = 0;
@@ -64,9 +61,10 @@ sub thaw_data {
     $data = '' unless $data;
     require MT::Serialize;
     my $out = MT::Serialize->unserialize($data);
-    if (ref $out eq 'REF') {
+    if ( ref $out eq 'REF' ) {
         $sess->{__data} = $$out;
-    } else {
+    }
+    else {
         $sess->{__data} = {};
     }
     $sess->{__dirty} = 0;
@@ -74,15 +72,15 @@ sub thaw_data {
 }
 
 sub get {
-    my $sess = shift;
+    my $sess  = shift;
     my ($var) = @_;
-    my $data = $sess->thaw_data;
+    my $data  = $sess->thaw_data;
     $data->{$var};
 }
 
 sub set {
     my $sess = shift;
-    my ($var, $val) = @_;
+    my ( $var, $val ) = @_;
     if ( $sess->kind eq q{US} and $var eq q{US} ) {
         $sess->name($val);
     }

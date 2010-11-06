@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
+
 # use Test::More tests => 20;
 
 use Test::More skip_all => <<REASON;
@@ -11,7 +12,7 @@ REASON
 
 
 BEGIN {
-        $ENV{MT_APP} = 'MT::App::Comments';
+    $ENV{MT_APP} = 'MT::App::Comments';
 }
 
 use MT;
@@ -24,14 +25,9 @@ use MT::Test qw( :app :db :data );
 my @blogs = MT::Blog->load();
 foreach my $blog (@blogs) {
     my $tmpl = MT::Template->load(
-        {   
-            name    => 'Comment Listing',
-            blog_id => $blog->id,
-        }
-    );
+                       { name => 'Comment Listing', blog_id => $blog->id, } );
     unless ($tmpl) {
-        my $text = 
-<<TEXT;
+        my $text = <<TEXT;
 {
 	"direction": "<mt:Var name="commentDirection">",
 	"comments": "<mt:Comments sort_order="\$commentDirection"><mt:Include module="Comment Detail" replace="\","\\" replace='"','\"' strip_linefeeds="1"></mt:Comments>"
@@ -39,7 +35,7 @@ foreach my $blog (@blogs) {
 TEXT
 
         $tmpl = MT::Template->new;
-        $tmpl->blog_id($blog->id);
+        $tmpl->blog_id( $blog->id );
         $tmpl->name('Comment Listing');
         $tmpl->text($text);
         $tmpl->save;
@@ -48,13 +44,19 @@ TEXT
 
 my @entries = MT::Entry->load();
 foreach my $entry (@entries) {
-    my $app = _run_app( 'MT::App::Comments', { __mode => 'comment_listing', entry_id => $entry->id } );
+    my $app = _run_app(
+                        'MT::App::Comments',
+                        {
+                           __mode   => 'comment_listing',
+                           entry_id => $entry->id
+                        }
+    );
     my $output = delete $app->{__test_output};
-    ok ($output, "comment_listing ran and returned something");
-    my @comments = MT::Comment->load({ entry_id => $entry->id });
+    ok( $output, "comment_listing ran and returned something" );
+    my @comments = MT::Comment->load( { entry_id => $entry->id } );
     next unless (@comments);
     foreach my $comment (@comments) {
         my $id = $comment->id;
-        ok ($output =~ /comment-$id/, "Comment was found: $output");
+        ok( $output =~ /comment-$id/, "Comment was found: $output" );
     }
 }

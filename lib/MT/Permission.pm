@@ -12,39 +12,30 @@ use MT::Blog;
 use MT::Object;
 @MT::Permission::ISA = qw(MT::Object);
 
-__PACKAGE__->install_properties(
-    {
-        column_defs => {
-            'id'        => 'integer not null auto_increment',
-            'author_id' => 'integer not null',
-            'blog_id'   => 'integer not null',
-            'role_mask' => 'integer',
+__PACKAGE__->install_properties( {
+       column_defs => {
+           'id'        => 'integer not null auto_increment',
+           'author_id' => 'integer not null',
+           'blog_id'   => 'integer not null',
+           'role_mask' => 'integer',
 
-            # These were only declared for MTE 1.5x; dropping them
-            # has no ill effect since they were never actually used.
-            # 'role_mask2'      => 'integer',  # for upgrades...
-            # 'role_mask3'      => 'integer',
-            # 'role_mask4'      => 'integer',
-            'permissions'    => 'text',
-            'entry_prefs'    => 'text',
-            'blog_prefs'     => 'string(255)',
-            'template_prefs' => 'string(255)',
-            'restrictions'   => 'text',
-        },
-        child_of => 'MT::Blog',
-        indexes  => {
-            blog_id   => 1,
-            author_id => 1,
-            role_mask => 1,
-        },
-        defaults => {
-            author_id => 0,
-            blog_id   => 0,
-            role_mask => 0,
-        },
-        audit       => 1,
-        datasource  => 'permission',
-        primary_key => 'id',
+           # These were only declared for MTE 1.5x; dropping them
+           # has no ill effect since they were never actually used.
+           # 'role_mask2'      => 'integer',  # for upgrades...
+           # 'role_mask3'      => 'integer',
+           # 'role_mask4'      => 'integer',
+           'permissions'    => 'text',
+           'entry_prefs'    => 'text',
+           'blog_prefs'     => 'string(255)',
+           'template_prefs' => 'string(255)',
+           'restrictions'   => 'text',
+       },
+       child_of    => 'MT::Blog',
+       indexes     => { blog_id => 1, author_id => 1, role_mask => 1, },
+       defaults    => { author_id => 0, blog_id => 0, role_mask => 0, },
+       audit       => 1,
+       datasource  => 'permission',
+       primary_key => 'id',
     }
 );
 
@@ -81,7 +72,8 @@ sub global_perms {
     $perm->cache_property(
         'global_perms',
         sub {
-            __PACKAGE__->load( { author_id => $perm->author_id, blog_id => 0 });
+            __PACKAGE__->load(
+                            { author_id => $perm->author_id, blog_id => 0 } );
         }
     );
 }
@@ -137,7 +129,7 @@ sub global_perms {
             $newperm = "$cur_perm,$newperm" if $cur_perm;
             $perms->permissions($newperm);
         }
-    }
+    } ## end sub add_permissions
 
     sub add_restrictions {
         my $perms = shift;
@@ -158,7 +150,7 @@ sub global_perms {
             $newperm = "$cur_perm,$newperm" if $cur_perm;
             $perms->restrictions($newperm);
         }
-    }
+    } ## end sub add_restrictions
 
     # Sets permissions of those in a particular set
     sub set_full_permissions {
@@ -236,8 +228,8 @@ sub global_perms {
                 foreach my $pk (%$perms) {
                     my ( $scope, $name ) = split /\./, $pk;
                     next unless $scope && $name;
-                    my $label =
-                      'CODE' eq ref( $perms->{$pk}{label} )
+                    my $label
+                      = 'CODE' eq ref( $perms->{$pk}{label} )
                       ? $perms->{$pk}{label}->()
                       : $perms->{$pk}{label};
                     push @Perms, [ $name, $label || '', $scope ];
@@ -253,7 +245,7 @@ sub global_perms {
         else {
             \@Perms;
         }
-    }
+    } ## end sub perms
 
     my %Perms;
 
@@ -288,26 +280,29 @@ sub global_perms {
                 if ( my $author = $_[0]->author ) {
                     return 1
                       if ( ( $meth ne 'can_administer' )
-                        && $author->is_superuser );
+                           && $author->is_superuser );
                     return 1
                       if ( ( $_[0]->blog_id )
-                        && $_[0]->has('administer_blog') );
+                           && $_[0]->has('administer_blog') );
                 }
             }
+
             # return negative if a restriction is present
             return undef
               if $_[0]->restrictions && $_[0]->restrictions =~ /'$perm'/i;
+
             # return positive if permission is set in this permission set
             return 1 if defined($cur_perm) && $cur_perm =~ /'$perm'/i;
+
             # test for global-level permission
             return 1
               if $_[0]->author_id
-              && $_[0]->blog_id
-              && $_[0]->global_perms
-              && $_[0]->global_perms->has($perm);
+                  && $_[0]->blog_id
+                  && $_[0]->global_perms
+                  && $_[0]->global_perms->has($perm);
             return undef;
         };
-    }
+    } ## end sub __mk_perm
 
     sub set_these_permissions {
         my $perms = shift;
@@ -329,7 +324,7 @@ sub global_perms {
         foreach (@list) {
             my $ref = $Perms{$_};
             die "invalid permission" unless $ref;
-            next if $pkg->_check_if($perms, $column, $_);
+            next if $pkg->_check_if( $perms, $column, $_ );
             my $val = $perms->$column || '';
             $val .= ',' if $val ne '';
             $val .= "'" . $ref->[0] . "'";
@@ -399,8 +394,7 @@ sub can_edit_entry {
     return 1 if $author->is_superuser();
     unless ( ref $entry ) {
         require MT::Entry;
-        $entry = MT::Entry->load($entry)
-            or die;
+        $entry = MT::Entry->load($entry) or die;
     }
     die unless $entry->isa('MT::Entry');
     if ( 'page' eq $entry->class ) {
@@ -408,18 +402,18 @@ sub can_edit_entry {
     }
     return $perms->can_edit_all_posts
       || (
-        defined $status
-        ? ( $perms->can_publish_post && $entry->author_id == $author->id )
-        : ( $perms->can_create_post && $entry->author_id == $author->id )
-      );
+          defined $status
+          ? ( $perms->can_publish_post && $entry->author_id == $author->id )
+          : ( $perms->can_create_post && $entry->author_id == $author->id ) );
 }
 
 sub can_upload {
     my $perms = shift;
     if (@_) {
-        if (my $can = shift) {
+        if ( my $can = shift ) {
             $perms->set_these_permissions('upload');
-        } else {
+        }
+        else {
             $perms->clear_permissions('upload');
         }
     }
@@ -450,26 +444,22 @@ sub _static_rebuild {
                 my $grp = $assoc->group or return;
                 my $iter = $grp->user_iter;
                 while ( my $user = $iter->() ) {
-                    my $perm = MT::Permission->get_by_key(
-                        {
-                            author_id => $user->id,
-                            blog_id   => $assoc->blog_id
-                        }
-                    );
+                    my $perm =
+                      MT::Permission->get_by_key( {
+                                                   author_id => $user->id,
+                                                   blog_id => $assoc->blog_id
+                                                 }
+                      );
                     $perm->rebuild;
                 }
             }
             elsif ( $assoc->author_id ) {
                 my $user = $assoc->user or return;
                 my $perm = MT::Permission->get_by_key(
-                    {
-                        author_id => $user->id,
-                        blog_id   => $assoc->blog_id
-                    }
-                );
+                     { author_id => $user->id, blog_id => $assoc->blog_id } );
                 $perm->rebuild;
             }
-        }
+        } ## end if ( $assoc->role_id &&...)
         elsif ( $assoc->author_id && $assoc->group_id ) {
 
             # rebuild permissions for author
@@ -483,19 +473,19 @@ sub _static_rebuild {
             }
             if (@blogs) {
                 foreach my $blog_id (@blogs) {
-                    my $perm = MT::Permission->get_by_key(
-                        {
-                            author_id => $assoc->author_id,
-                            blog_id   => $blog_id,
-                        }
-                    );
+                    my $perm =
+                      MT::Permission->get_by_key( {
+                                              author_id => $assoc->author_id,
+                                              blog_id   => $blog_id,
+                                            }
+                      );
                     $perm->rebuild;
                 }
             }
-        }
-    }
+        } ## end elsif ( $assoc->author_id...)
+    } ## end if ( $obj->isa('MT::Association'...))
     1;
-}
+} ## end sub _static_rebuild
 
 sub rebuild {
     my $perm = shift;
@@ -539,7 +529,7 @@ sub rebuild {
     else {
         $perm->remove if $perm->id;
     }
-}
+} ## end sub rebuild
 
 sub load_same {
     my $pkg = shift;
@@ -575,7 +565,7 @@ sub load_same {
         @roles = grep { length( $_->permissions ) == $base_len } @roles;
     }
     return wantarray ? @roles : ( ( scalar @roles ) ? $roles[0] : undef );
-}
+} ## end sub load_same
 
 sub to_hash {
     my $perms     = shift;

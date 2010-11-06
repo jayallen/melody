@@ -2,18 +2,20 @@ package MT::CMS::Log;
 
 use strict;
 
-use MT::Util qw( format_ts epoch2ts ts2epoch relative_date offset_time encode_url dirify encode_url );
+use MT::Util
+  qw( format_ts epoch2ts ts2epoch relative_date offset_time encode_url dirify encode_url );
 use MT::I18N qw( const break_up_text encode_text );
 
 sub view {
     my $app     = shift;
-	my $q		= $app->query;
+    my $q       = $app->query;
     my $user    = $app->user;
     my $blog_id = $q->param('blog_id');
     my $perms   = $app->permissions;
     if ($blog_id) {
         return $app->error( $app->translate("Permission denied.") )
-          unless ( $perms && $perms->can_view_blog_log ) || $user->can_view_log;
+          unless ( $perms && $perms->can_view_blog_log )
+          || $user->can_view_log;
     }
     else {
         return $app->error( $app->translate("Permission denied.") )
@@ -30,14 +32,18 @@ sub view {
     my ( $filter_col, $val );
     $param{filter_args} = "";
 
-    if (   ( $filter_col = $q->param('filter') )
-        && ( $val = $q->param('filter_val') ) )
+    if (    ( $filter_col = $q->param('filter') )
+         && ( $val = $q->param('filter_val') ) )
     {
         $param{filter}     = $filter_col;
         $param{filter_val} = $val;
         my %filter_arg = %{ apply_log_filter( $app, \%param ) };
         $terms->{$_} = $filter_arg{$_} foreach keys %filter_arg;
-        $param{filter_args} = "&filter=" . encode_url($filter_col) . "&filter_val=" . encode_url($val);
+        $param{filter_args}
+          = "&filter="
+          . encode_url($filter_col)
+          . "&filter_val="
+          . encode_url($val);
     }
 
     # all classes of log objects
@@ -46,13 +52,13 @@ sub view {
     }
 
     my $iter = $log_class->load_iter(
-        $terms,
-        {
-            'sort'      => 'id',
-            'direction' => 'descend',
-            'offset'    => $offset,
-            'limit'     => $limit
-        }
+                                      $terms,
+                                      {
+                                         'sort'      => 'id',
+                                         'direction' => 'descend',
+                                         'offset'    => $offset,
+                                         'limit'     => $limit
+                                      }
     );
 
     my @class_loop;
@@ -63,25 +69,20 @@ sub view {
         $name =~ s/log\.(\w)/$1/;
         next unless $name;
         push @class_loop,
-          {
-            class_name  => $name,
-            class_label => $labels->{$_},
-          };
+          { class_name => $name, class_label => $labels->{$_}, };
     }
     push @class_loop,
       {
         class_name  => 'comment,ping',
         class_label => $app->translate("All Feedback"),
       },
-      {
-        class_name  => 'search',
-        class_label => $app->translate("Search"),
-      },
+      { class_name => 'search', class_label => $app->translate("Search"), },
       {
         class_name  => 'publish',
         class_label => $app->translate("Publishing"),
       };
-    @class_loop = sort { $a->{class_label} cmp $b->{class_label} } @class_loop;
+    @class_loop
+      = sort { $a->{class_label} cmp $b->{class_label} } @class_loop;
     $param{class_loop} = \@class_loop;
 
     my $log = build_log_table( $app, iter => $iter, param => \%param );
@@ -96,8 +97,8 @@ sub view {
     if ($so) {
         my $partial_hour_offset = 60 * abs( $so - int($so) );
         my $tz                  = sprintf( "%s%02d:%02d",
-            $so < 0 ? '-' : '+',
-            abs($so), $partial_hour_offset );
+                          $so < 0 ? '-' : '+',
+                          abs($so), $partial_hour_offset );
         $param{time_offset} = $tz;
     }
     $param{object_type}     = 'log';
@@ -107,24 +108,26 @@ sub view {
     $param{list_end}        = $offset + ( scalar @$log );
     $param{offset}          = $offset;
     $param{next_offset_val} = $offset + ( scalar @$log );
-    $param{next_offset} = $param{next_offset_val} < $param{list_total} ? 1 : 0;
-    $param{next_max}    = $param{list_total} - $limit;
-    $param{next_max}    = 0 if ( $param{next_max} || 0 ) < $offset + 1;
+    $param{next_offset}
+      = $param{next_offset_val} < $param{list_total} ? 1 : 0;
+    $param{next_max} = $param{list_total} - $limit;
+    $param{next_max} = 0 if ( $param{next_max} || 0 ) < $offset + 1;
 
     if ( $offset > 0 ) {
         $param{prev_offset}     = 1;
         $param{prev_offset_val} = $offset - $limit;
         $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
     }
-    $param{'reset'}      = $q->param('reset');
-    $param{nav_log}      = 1;
-    $param{feed_name}    = $app->translate("System Activity Feed");
-    $param{screen_class} = "list-log";
-    $param{screen_id} = "list-log";
+    $param{'reset'}        = $q->param('reset');
+    $param{nav_log}        = 1;
+    $param{feed_name}      = $app->translate("System Activity Feed");
+    $param{screen_class}   = "list-log";
+    $param{screen_id}      = "list-log";
     $param{listing_screen} = 1;
     $param{feed_url} =
       $app->make_feed_link( 'system',
-        $blog_id ? { blog_id => $blog_id } : undef );
+                            $blog_id ? { blog_id => $blog_id } : undef );
+
     if ( $param{feed_url} && $param{filter_args} ) {
         $param{feed_url} .= $param{filter_args};
     }
@@ -133,7 +136,7 @@ sub view {
         $param{system_overview_nav} = 1;
     }
     $app->load_tmpl( 'view_log.tmpl', \%param );
-}
+} ## end sub view
 
 sub build_log_table {
     my $app = shift;
@@ -158,41 +161,54 @@ sub build_log_table {
     return [] unless $iter;
     my $param = $args{param};
     my %blogs;
+
     # reusing comment length constant for log view
     my $break_len = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_SHORT');
     while ( my $log = $iter->() ) {
         my $msg = $log->message;
-        $msg =
-          break_up_text( $msg, $break_len )
-          ;    # break up really long strings
+        $msg
+          = break_up_text( $msg, $break_len );  # break up really long strings
         my $row = {
-            log_message => $msg,
-            log_ip      => $log->ip,
-            id          => $log->id,
-            blog_id     => $log->blog_id
+                    log_message => $msg,
+                    log_ip      => $log->ip,
+                    id          => $log->id,
+                    blog_id     => $log->blog_id
         };
         if ( my $ts = $log->created_on ) {
             if ($blog_view) {
-                $row->{created_on_formatted} =
-                  format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(),
-                    epoch2ts( $blog, ts2epoch( undef, $ts ) ), $blog, $app->user ? $app->user->preferred_language : undef );
+                $row->{created_on_formatted}
+                  = format_ts(
+                           MT::App::CMS::LISTING_DATETIME_FORMAT(),
+                           epoch2ts( $blog, ts2epoch( undef, $ts ) ),
+                           $blog,
+                           $app->user ? $app->user->preferred_language : undef
+                  );
             }
             else {
-                $row->{created_on_formatted} =
-                  format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(),
-                    epoch2ts( undef, offset_time( ts2epoch( undef, $ts ) ) ), undef, $app->user ? $app->user->preferred_language : undef );
+                $row->{created_on_formatted}
+                  = format_ts(
+                              MT::App::CMS::LISTING_DATETIME_FORMAT(),
+                              epoch2ts(
+                                  undef, offset_time( ts2epoch( undef, $ts ) )
+                              ),
+                              undef,
+                              $app->user
+                              ? $app->user->preferred_language
+                              : undef
+                  );
                 if ( $log->blog_id ) {
-                    $blog = $blogs{ $log->blog_id } ||=
-                      $blog_class->load( $log->blog_id, { cache_ok => 1 } );
+                    $blog = $blogs{ $log->blog_id }
+                      ||= $blog_class->load( $log->blog_id,
+                                             { cache_ok => 1 } );
                     $row->{weblog_name} = $blog ? $blog->name : '';
                 }
                 else {
                     $row->{weblog_name} = '';
                 }
-            }
+            } ## end else [ if ($blog_view) ]
             $row->{created_on_relative} = relative_date( $ts, time );
             $row->{log_detail} = $log->description;
-        }
+        } ## end if ( my $ts = $log->created_on)
         if ( my $uid = $log->author_id ) {
             my $user_class = $app->model('author');
             my $user       = $user_class->load($uid);
@@ -200,60 +216,60 @@ sub build_log_table {
         }
         $row->{object} = $log;
         push @log, $row;
-    }
+    } ## end while ( my $log = $iter->...)
     return [] unless @log;
     $param->{object_loop} = $param->{log_table}[0]{object_loop} = \@log;
     \@log;
-}
+} ## end sub build_log_table
 
 sub reset {
-    my $app    = shift;
+    my $app = shift;
     $app->validate_magic() or return;
-    my $author = $app->user;
+    my $author    = $app->user;
     my $log_class = $app->model('log');
-    my $args = { 'reset' => 1 };
+    my $args      = { 'reset' => 1 };
     if ( my $blog_id = $app->query->param('blog_id') ) {
         my $perms = $app->permissions;
         return $app->error( $app->translate("Permission denied.") )
           unless $perms && $perms->can_view_log;
         my $blog_class = $app->model('blog');
-        my $blog = $blog_class->load( $blog_id )
-            or return $app->errtrans("Invalid request.");
+        my $blog       = $blog_class->load($blog_id)
+          or return $app->errtrans("Invalid request.");
         if ( $log_class->remove( { blog_id => $blog_id, class => '*' } ) ) {
-            $app->log(
-                {
-                    message => $app->translate(
-"Activity log for blog '[_1]' (ID:[_2]) reset by '[_3]'",
-                        $blog->name, $blog_id, $author->name
-                    ),
-                    level    => MT::Log::INFO(),
-                    class    => 'system',
-                    category => 'reset_log'
+            $app->log( {
+                   message =>
+                     $app->translate(
+                       "Activity log for blog '[_1]' (ID:[_2]) reset by '[_3]'",
+                       $blog->name, $blog_id, $author->name
+                     ),
+                   level    => MT::Log::INFO(),
+                   class    => 'system',
+                   category => 'reset_log'
                 }
             );
         }
-        $args->{ 'blog_id' } = $blog_id;
-    }
+        $args->{'blog_id'} = $blog_id;
+    } ## end if ( my $blog_id = $app...)
     else {
         return $app->error( $app->translate("Permission denied.") )
           unless $author->can_view_log;
         if ( $log_class->remove( { class => '*' } ) ) {
-            $app->log(
-                {
-                    message => $app->translate(
-                        "Activity log reset by '[_1]'",
-                        $author->name
-                    ),
-                    level    => MT::Log::INFO(),
-                    class    => 'system',
-                    category => 'reset_log'
-                }
+            $app->log( {
+                         message =>
+                           $app->translate(
+                                            "Activity log reset by '[_1]'",
+                                            $author->name
+                           ),
+                         level    => MT::Log::INFO(),
+                         class    => 'system',
+                         category => 'reset_log'
+                       }
             );
         }
     }
     my $log_url = $app->uri( mode => 'view_log', args => $args );
-    $app->redirect( $log_url );
-}
+    $app->redirect($log_url);
+} ## end sub reset
 
 sub export {
     my $app       = shift;
@@ -263,7 +279,8 @@ sub export {
     my $blog_view = $blog ? 1 : 0;
     if ($blog_view) {
         return $app->error( $app->translate("Permission denied.") )
-          unless $user->can_view_log || ( $perms && $perms->can_view_blog_log );
+          unless $user->can_view_log
+              || ( $perms && $perms->can_view_blog_log );
     }
     else {
         return $app->error( $app->translate("Permission denied.") )
@@ -282,14 +299,16 @@ sub export {
     if ($filter_args) {
         $q->parse_params($filter_args) if $filter_args;
         %terms = %{
-            apply_log_filter( $app,
-                {
-                    filter     => $q->param('filter'),
-                    filter_val => $q->param('filter_val')
-                }
+            apply_log_filter(
+                              $app,
+                              {
+                                         filter     => $q->param('filter'),
+                                         filter_val => $q->param('filter_val')
+                              }
             )
           };
-    } else {
+    }
+    else {
         %terms = ( class => '*' );
     }
     if ($blog) {
@@ -297,25 +316,25 @@ sub export {
     }
     my $log_class  = $app->model('log');
     my $blog_class = $app->model('blog');
-    my $iter =
-      $log_class->load_iter( \%terms,
-        { 'sort' => 'created_on', 'direction' => 'ascend' } );
+    my $iter = $log_class->load_iter(
+                                      \%terms,
+                                      {
+                                         'sort'      => 'created_on',
+                                         'direction' => 'ascend'
+                                      }
+    );
     my %blogs;
 
     my $file = '';
     $file = dirify( $blog->name ) . '-' if $blog;
     $file = "Blog-" . $blog->id . '-' if $file eq '-';
     my @ts = gmtime(time);
-    my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d", $ts[5] + 1900, $ts[4] + 1,
-      @ts[ 3, 2, 1, 0 ];
+    my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d", $ts[5] + 1900,
+      $ts[4] + 1, @ts[ 3, 2, 1, 0 ];
     $file .= "log_$ts.csv";
     $app->{no_print_body} = 1;
     $app->set_header( "Content-Disposition" => "attachment; filename=$file" );
-    $app->send_http_header(
-        $enc
-        ? "text/csv; charset=$enc"
-        : 'text/csv'
-    );
+    $app->send_http_header( $enc ? "text/csv; charset=$enc" : 'text/csv' );
 
     my $csv = "timestamp,ip,weblog,message\n";
     while ( my $log = $iter->() ) {
@@ -326,19 +345,26 @@ sub export {
         my $ts = $log->created_on;
         if ($blog_view) {
             push @col,
-              format_ts( "%Y-%m-%d %H:%M:%S",
-                epoch2ts( $blog, ts2epoch( undef, $ts ) ), $blog, $app->user ? $app->user->preferred_language : undef );
+              format_ts(
+                         "%Y-%m-%d %H:%M:%S",
+                         epoch2ts( $blog, ts2epoch( undef, $ts ) ),
+                         $blog,
+                         $app->user ? $app->user->preferred_language : undef
+              );
         }
         else {
-            push @col, format_ts( "%Y-%m-%d %H:%M:%S", $log->created_on, undef, $app->user ? $app->user->preferred_language : undef );
+            push @col,
+              format_ts( "%Y-%m-%d %H:%M:%S",
+                        $log->created_on, undef,
+                        $app->user ? $app->user->preferred_language : undef );
         }
         push @col, $log->ip;
         my $blog;
         if ( $log->blog_id ) {
-            $blog = $blogs{ $log->blog_id } ||=
-              $blog_class->load( $log->blog_id );
+            $blog = $blogs{ $log->blog_id }
+              ||= $blog_class->load( $log->blog_id );
         }
-        if ( $blog ) {
+        if ($blog) {
             my $name = $blog->name;
             $name =~ s/"/\\"/gs;
             $name =~ s/[\r\n]+/ /gs;
@@ -356,8 +382,8 @@ sub export {
         $csv .= ( join ',', @col ) . "\n";
         $app->print($csv);
         $csv = '';
-    }
-}
+    } ## end while ( my $log = $iter->...)
+} ## end sub export
 
 sub apply_log_filter {
     my $app = shift;
@@ -377,23 +403,23 @@ sub apply_log_filter {
                 }
             }
             elsif ( $filter_col eq 'class' ) {
-                if ($val eq 'publish') {
+                if ( $val eq 'publish' ) {
                     $arg{category} = 'publish';
                 }
                 else {
-                    if ($val =~ m/,/) {
+                    if ( $val =~ m/,/ ) {
                         $arg{class} = [ split /,/, $val ];
-                    } else {
+                    }
+                    else {
                         $arg{class} = $val;
                     }
                 }
             }
-        }
-        $arg{blog_id} = [ split /,/, $param->{blog_id} ]
-          if $param->{blog_id};
-    }
+        } ## end if ( $filter_col && $val)
+        $arg{blog_id} = [ split /,/, $param->{blog_id} ] if $param->{blog_id};
+    } ## end if ($param)
     \%arg;
-}
+} ## end sub apply_log_filter
 
 1;
 

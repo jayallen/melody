@@ -10,19 +10,20 @@ use strict;
 use MT;
 
 # constants that force an action or determination. these are all non-numeric
-sub ABSTAIN () { 'ABSTAIN' }
-sub HAM ()     { 'HAM' }
-sub SPAM ()    { 'SPAM' }
-sub APPROVE () { 'APPROVE' }
-sub JUNK ()    { 'JUNK' }
+sub ABSTAIN () {'ABSTAIN'}
+sub HAM ()     {'HAM'}
+sub SPAM ()    {'SPAM'}
+sub APPROVE () {'APPROVE'}
+sub JUNK ()    {'JUNK'}
 
 use Exporter;
 *import = \&Exporter::import;
-our (@EXPORT_OK, %EXPORT_TAGS);
+our ( @EXPORT_OK, %EXPORT_TAGS );
 @EXPORT_OK = qw(ABSTAIN HAM SPAM APPROVE JUNK);
 %EXPORT_TAGS = ( constants => [qw(ABSTAIN HAM SPAM APPROVE JUNK)] );
 
 sub core_filters {
+
     # MT Registry style list of core filters
     return {};
 }
@@ -55,11 +56,11 @@ sub filter {
             return if ( $obj->is_moderated );
 
             $obj->junk_log( $obj->junk_log
-                  . "\n---> "
-                  . MT->translate("Action: Published (default action)") );
+                      . "\n---> "
+                      . MT->translate("Action: Published (default action)") );
         }
     }
-}
+} ## end sub filter
 
 {
     my @junk_filters;
@@ -87,26 +88,23 @@ sub score {
     foreach my $filter ( $pkg->all_filters ) {
         my $hdlr = $filter->{code} || $filter->{handler};
         next unless defined $hdlr;
-        unless (ref $hdlr eq 'CODE') {
+        unless ( ref $hdlr eq 'CODE' ) {
             $hdlr = $filter->{code} = MT->handler_to_coderef($hdlr);
             next unless $hdlr;
         }
         my ( $score, $log ) = eval { $hdlr->($obj) };
         if ($@) {
-            my $err = $@;
-            my $name  = $filter->{name};
+            my $err  = $@;
+            my $name = $filter->{name};
             if ( my $plugin = $filter->{plugin} ) {
                 $name ||= $plugin->name;
             }
             MT->instance->log(
-                MT->translate(
-                    "Junk Filter [_1] died with: [_2]",
-                    (
-                        $name
-                          || ( MT->translate("Unnamed Junk Filter") )
-                    ),
-                    $err
-                )
+                    MT->translate(
+                        "Junk Filter [_1] died with: [_2]",
+                        ( $name || ( MT->translate("Unnamed Junk Filter") ) ),
+                        $err
+                    )
             );
             next;
         }
@@ -126,21 +124,22 @@ sub score {
                 $name ||= $plugin->name;
             }
             push @log,
-              (     ( $name || MT->translate('Unnamed Junk Filter') ) . " ("
-                  . $score . "): "
-                  . $line1 );
+              (   ( $name || MT->translate('Unnamed Junk Filter') ) . " ("
+                . $score . "): "
+                . $line1 );
             push @log, "\t" . $_ foreach @$log;
         }
-    }
+    } ## end foreach my $filter ( $pkg->all_filters)
 
     if ($total) {
         $total = $total / $count if $count > 0;
         $total = sprintf( "%.2f", $total );
-        push @log, "\n---> " . MT->translate( 'Composite score: [_1]', $total );
+        push @log,
+          "\n---> " . MT->translate( 'Composite score: [_1]', $total );
     }
     return undef if !$count;
     ( $total, \@log );
-}
+} ## end sub score
 
 sub task_expire_junk {
     my $pkg = shift;
@@ -157,25 +156,26 @@ sub task_expire_junk {
     require MT::TBPing;
     require MT::Entry;
     foreach $blog (@blogs) {
-        my ( $blog_id, $expiry_age ) =
-          ( $blog->id, 86400 * $blog->junk_folder_expiry );
+        my ( $blog_id, $expiry_age )
+          = ( $blog->id, 86400 * $blog->junk_folder_expiry );
         my @ts = MT::Util::offset_time_list( time() - $expiry_age, $blog_id );
-        my $ts = sprintf(
-            "%04d%02d%02d%02d%02d%02d",
-            $ts[5] + 1900,
-            $ts[4] + 1,
-            @ts[ 3, 2, 1, 0 ]
-        );
+        my $ts = sprintf( "%04d%02d%02d%02d%02d%02d",
+                          $ts[5] + 1900,
+                          $ts[4] + 1,
+                          @ts[ 3, 2, 1, 0 ] );
         for my $class (qw(MT::Comment MT::TBPing)) {
             while (
-                my @junk = $class->load(
-                    {
-                        last_moved_on => [ '19700101000000', $ts ],
-                        junk_status   => -1,
-                        blog_id       => $blog_id
-                    },
-                    { range => { last_moved_on => 1 }, limit => 1000 }
-                )
+                  my @junk =
+                  $class->load( {
+                                  last_moved_on => [ '19700101000000', $ts ],
+                                  junk_status   => -1,
+                                  blog_id       => $blog_id
+                                },
+                                {
+                                  range => { last_moved_on => 1 },
+                                  limit => 1000
+                                }
+                  )
               )
             {
                 $removed++, $_->remove for @junk;
@@ -183,34 +183,34 @@ sub task_expire_junk {
         }
 
         while (
-            my @junk = MT::Entry->load(
-                {   status     => MT::Entry->JUNK(),
-                    blog_id    => $blog_id,
-                    created_on => [ '19700101000000', $ts ],
-                },
-                {   range => {
-                        created_on => 1,
-                        limit      => 1000
-                    }
-                }
-            )
-            )
+              my @junk =
+              MT::Entry->load( {
+                                 status     => MT::Entry->JUNK(),
+                                 blog_id    => $blog_id,
+                                 created_on => [ '19700101000000', $ts ],
+                               },
+                               { range => { created_on => 1, limit => 1000 } }
+              )
+          )
         {
             $removed++, $_->remove for @junk;
         }
-    }
+    } ## end foreach $blog (@blogs)
     $pkg->_expire_commenter_registration;
     $removed ? 1 : 0;
-}
+} ## end sub task_expire_junk
 
 sub _expire_commenter_registration {
     my $pkg = shift;
     require MT::Session;
 
     # remove commenter registration which has already expired (24 hrs)
-    MT::Session->remove(
-        { kind => 'CR', start => [ undef, time - 60 * 60 * 24 ] },
-        { range => { start => 1 } } );
+    MT::Session->remove( {
+                            kind  => 'CR',
+                            start => [ undef, time - 60 * 60 * 24 ]
+                         },
+                         { range => { start => 1 } }
+    );
     1;
 }
 

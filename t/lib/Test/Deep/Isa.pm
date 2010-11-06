@@ -5,29 +5,26 @@ package Test::Deep::Isa;
 
 use Test::Deep::Cmp;
 
-sub init
-{
-	my $self = shift;
+sub init {
+    my $self = shift;
 
-	my $val = shift;
-	$self->{val} = $val;
+    my $val = shift;
+    $self->{val} = $val;
 }
 
-sub descend
-{
-	my $self = shift;
-	my $got = shift;
+sub descend {
+    my $self = shift;
+    my $got  = shift;
 
-	return UNIVERSAL::isa($got, $self->{val});
+    return UNIVERSAL::isa( $got, $self->{val} );
 }
 
-sub diag_message
-{
-	my $self = shift;
+sub diag_message {
+    my $self = shift;
 
-	my $where = shift;
+    my $where = shift;
 
-	return "Checking class of $where with isa()";
+    return "Checking class of $where with isa()";
 }
 
 1;

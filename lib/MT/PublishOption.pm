@@ -9,12 +9,12 @@ package MT::PublishOption;
 use strict;
 
 # build type
-sub DISABLED ()  { 0 }
-sub ONDEMAND ()  { 1 }
-sub MANUALLY ()  { 2 }
-sub DYNAMIC ()   { 3 }
-sub ASYNC ()     { 4 }
-sub SCHEDULED () { 5 }
+sub DISABLED ()  {0}
+sub ONDEMAND ()  {1}
+sub MANUALLY ()  {2}
+sub DYNAMIC ()   {3}
+sub ASYNC ()     {4}
+sub SCHEDULED () {5}
 
 sub get_throttle {
     my $finfo = shift;
@@ -37,9 +37,8 @@ sub get_throttle {
 sub archive_build_type {
     my ( $blog_id, $at ) = @_;
     require MT::TemplateMap;
-    my $map = MT::TemplateMap->load(
-        { blog_id => $blog_id, archive_type => $at }
-    );
+    my $map
+      = MT::TemplateMap->load( { blog_id => $blog_id, archive_type => $at } );
     $map && $map->build_type;
 }
 
