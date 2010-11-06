@@ -5,7 +5,7 @@ use MT::Util qw( remove_html );
 
 sub list_plugins {
     my $app   = shift;
-    my $q     = $app->param;
+    my $q     = $app->query;
     my $cfg   = $app->config;
     my %param = (
         can_config   => _can_config_plugins($app),
@@ -13,7 +13,7 @@ sub list_plugins {
         nav_config   => 1,
         nav_settings => 1,
         nav_plugins  => 1,
-        switched     => $app->param('switched') || 0,
+        switched     => $q->param('switched') || 0,
         needs_restart     => ( $ENV{MOD_PERL} || $ENV{FAST_CGI} ),
         screen_id    => 'list-plugins',
         screen_class => 'plugin-settings',
@@ -56,18 +56,18 @@ sub find_plugin_by_id {
 
 sub cfg_plugin_dialog {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my %param;
 
-    my $profile = find_plugin_by_id($app->param('plugin'));
+    my $profile = find_plugin_by_id($q->param('plugin'));
     my $plugin  = $profile->{object};
-    my $scope   = $app->param('scope') eq 'system' ? 'system' : 'blog:' . $app->blog->id;
+    my $scope   = $q->param('scope') eq 'system' ? 'system' : 'blog:' . $app->blog->id;
 
     my $cfg = $app->config;
     $param{can_config}  = _can_config_plugins($app),
     $param{use_plugins} = $cfg->UsePlugins;
     $param{needs_restart}     = ( $ENV{MOD_PERL} || $ENV{FAST_CGI} );
-    $param{plugin}       = $app->param('plugin');
+    $param{plugin}       = $q->param('plugin');
     $param{plugin_name}  = $plugin->name;
     $param{plugin_sig}   = $plugin->{plugin_sig};
     $param{scope}        = $scope;
@@ -109,7 +109,7 @@ sub save_config {
             return $app->error("Error saving plugin settings: " . $plugin->errstr);
         }
     }
-    if ($app->param('dialog')) {
+    if ($q->param('dialog')) {
     my $tmpl = $app->load_tmpl('dialog/cfg_plugin.tmpl');
     $tmpl->param( finish => 1 );
     $tmpl->param( plugin_config_saved => 1 );
@@ -305,7 +305,8 @@ sub build_plugin_table {
                   $app->static_path . $plugin->envelope . '/' . $doc_link;
             }
 
-            my $config_html = build_plugin_config_html($app, $plugin,$scope);
+            my $config_html
+                = build_plugin_config_html($app, $plugin,$scope) || '';
 
 # Removed for Melody - obsolete
 #            if ( $last_fld ne $fld ) {

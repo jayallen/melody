@@ -70,7 +70,7 @@ ok(!defined $author->favorite_blogs, "Author's favorite blogs are undefined by d
           { param => { tab => 'entry' }, order => 1, set => 'main' },
         'this_is_you-1' => { order => 1, set => 'sidebar' },
         'mt_shortcuts'  => { order => 2, set => 'sidebar' },
-        'mt_news'       => { order => 3, set => 'sidebar' },
+        'melody_news'   => { order => 3, set => 'sidebar' },
     };
 
 my $fav_blogs = [1, 7];  # not actually a blog #7, but meh
