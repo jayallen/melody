@@ -1,0 +1,116 @@
+            body {
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                font-size: 13px;
+                margin: 0;
+                padding: 0;
+                background-color: #fff;
+            }
+            
+            body.has-static {
+                background: #fff url('$mt_static_path/images/chromeless/chromeless_top_bg.gif') repeat-x;
+            }
+            
+            body.has-static #header {
+                background: url('$mt_static_path/melody/melody-logo-white-banner.png') no-repeat 25px 10px;
+                height: 55px;
+            }
+            
+            #content {
+                margin: 20px 20px 100px;
+            }
+            
+            h1 {
+                margin: 0;
+                padding: 10px;
+                text-align: center;
+                font-size: 22px;
+                color: #fff;
+                background: #000;
+            }
+            body.has-static #header h1 {
+                display: none;
+            }
+            
+            h2 {
+                margin-top: 2em;
+                margin-bottom: .5em;
+                font-size: 24px;
+                font-weight: normal;
+            }
+            h2#system-info {
+                margin-top: 1em;
+            }
+            
+            h3 {
+                color: #333;
+                font-size: 16px;
+                margin-bottom: 0px;
+            }
+    
+            p, ul {
+                margin: 0 0 .75em 0;
+                padding: 0;
+            }
+            
+            ul {
+                padding-left: 20px;
+            }
+            
+            .msg {
+                margin: 0 0 10px 0;
+                padding: 16px 10px 16px 46px;
+                background-repeat: no-repeat;
+            }
+            .msg-info {
+                background-color: #eaf2ff;
+                background-image: url('$mt_static_path/images/icon_info.gif');
+                background-position: 12px center;
+                border: 1px solid #999;
+            }
+
+			.ready {
+				color: #fff;
+				background-color: #9C6;
+                border: 0;
+                padding-left: 5px;
+			}
+
+            .msg-success {
+                background-color: #CFC;
+                background-image: url('$mt_static_path/images/icon_success.png');
+                background-position: 12px .75em;
+                font-size: 24px;
+            }
+            .msg-success h2 {
+                margin-top: 0;
+            }
+            .msg-success p {
+                font-size: 13px;
+            }
+
+            .info {
+                margin-left: 60px;
+                margin-right: 60px;
+                padding: 20px;
+                border: 1px solid #eaf2ff;
+                background: #eaf2ff;
+                color: #000;
+            }
+
+            .installed {
+                color: #93b06b;
+                padding-top: 0px;
+                margin-top: 0px;
+            }
+
+            .warning {
+                padding-top: 0px;
+                margin-top: 4px;
+                border-left: 1px solid red;
+                padding-left: 10px;
+                margin-left: 20px;
+            }
+            
+            ul.version {
+                margin-bottom: 0;
+            }
