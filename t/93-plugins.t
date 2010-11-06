@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 13;
+use Test::More tests => 16;
 
 use MT;
 use MT::Test qw( :app :db );
@@ -25,7 +25,7 @@ for my $sig ( keys %MT::Plugins ) {
     my $profile = $MT::Plugins{$sig};
     if ( my $plugin = $profile->{object} ) {
 
-        # print STDERR "  name: " . $plugin->name . "\n";
+        # print STDERR "  name: " . $plugin->name . "($sig,".ref($profile->{object}).")\n";
         $plugins->{ $plugin->name }++;
     }
 }
@@ -35,9 +35,8 @@ for my $sig ( keys %MT::Plugins ) {
 ###########################################################
 
 # plguins that really exist with the build
-ok( exists $plugins->{"MultiBlog"},               "MultiBlog exists" );
-ok( exists $plugins->{"Markdown"},                "Markdown exists" );
-ok( exists $plugins->{"SmartyPants"},             "SmartyPants exists" );
+ok( exists $plugins->{"MultiBlog"},                "MultiBlog exists" );
+ok( exists $plugins->{"Markdown and SmartyPants"}, "Markdown exists" );
 ok( exists $plugins->{"Configuration Assistant"}, "Config Assistant exists" );
 ok( exists $plugins->{"Theme Exporter"},          "Theme Exporter exists" );
 ok( exists $plugins->{"Theme Manager"},           "Theme Manager exists" );
@@ -48,6 +47,14 @@ ok( exists $plugins->{"Open Melody Community Feedback"},
     "Open Melody Community Feedback exists" );
 ok( exists $plugins->{"WXR Importer"},     "WXR Importer exists" );
 ok( exists $plugins->{"TypePad AntiSpam"}, "TypePad AntiSpam exists" );
+
+ok( exists $plugins->{"Rebless Me"}, "Rebless Me Test Plugin exists" );
+is( ref( $MT::Plugins{'Rebless/config.yaml'}->{'object'} ),
+    'Rebless::Plugin', 'Rebless Plugin is Rebless::Plugin' );
+is( ref( $MT::Plugins{'ConfigAssistant.pack/config.yaml'}->{'object'} ),
+    'MT::Component', 'Config Assistant is MT::Component' );
+is( ref( $MT::Plugins{'ThemeManager.plugin/config.yaml'}->{'object'} ),
+    'MT::Plugin', 'Theme Manager is MT::Plugin' );
 
 SKIP: {
 
