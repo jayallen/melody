@@ -177,7 +177,7 @@ sub mt_news_widget {
     my ( $tmpl, $param ) = @_;
 
     $param->{news_html} = get_newsbox_content($app) || '';
-    $param->{learning_mt_news_html} = get_lmt_content($app) || '';
+    #$param->{learning_mt_news_html} = get_lmt_content($app) || '';
 }
 
 sub get_newsbox_content {

@@ -289,7 +289,7 @@ sub core_widgets {
             set      => 'sidebar',
         },
         mt_news => {
-            label    => 'Movable Type News',
+            label    => 'Melody News',
             template => 'widget/mt_news.tmpl',
             handler  => "${pkg}Dashboard::mt_news_widget",
             singular => 1,
