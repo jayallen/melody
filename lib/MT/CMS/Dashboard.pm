@@ -36,7 +36,7 @@ sub dashboard {
           { param => { tab => 'entry' }, order => 1, set => 'main' },
         'this_is_you-1' => { order => 1, set => 'sidebar' },
         'mt_shortcuts'  => { order => 2, set => 'sidebar' },
-        'mt_news'       => { order => 3, set => 'sidebar' },
+        'melody_news'   => { order => 3, set => 'sidebar' },
     };
 
     require MT::FileMgr;
@@ -172,12 +172,12 @@ sub this_is_you_widget {
     $param->{author_userpic_height} = 50;
 }
 
-sub mt_news_widget {
+sub melody_news_widget {
     my $app = shift;
     my ( $tmpl, $param ) = @_;
 
     $param->{news_html} = get_newsbox_content($app) || '';
-    $param->{learning_mt_news_html} = get_lmt_content($app) || '';
+    # $param->{learning_mt_news_html} = get_lmt_content($app) || '';
 }
 
 sub get_newsbox_content {
@@ -631,7 +631,7 @@ MT::CMS::Dashboard
 
 =head2 mt_blog_stats_widget_entry_tab
 
-=head2 mt_news_widget
+=head2 melody_news_widget
 
 =head2 new_version_widget
 

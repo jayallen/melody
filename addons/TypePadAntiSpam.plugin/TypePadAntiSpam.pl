@@ -181,7 +181,7 @@ sub default_widgets {
           { param => { tab => 'entry' }, order => 1, set => 'main' },
         'this_is_you-1' => { order => 1, set => 'sidebar' },
         'mt_shortcuts'  => { order => 2, set => 'sidebar' },
-        'mt_news'       => { order => 3, set => 'sidebar' },
+        'melody_news'   => { order => 3, set => 'sidebar' },
     };
 }
 
