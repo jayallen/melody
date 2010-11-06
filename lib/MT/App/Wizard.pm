@@ -23,11 +23,13 @@ sub init {
     $app->init_core_registry();
     $cfg->UsePlugins(0);
     $app->SUPER::init(@_);
+
     $app->{mt_dir} ||= $ENV{MT_HOME} || $param{Directory};
     $app->{is_admin} = 1;
     $app->{plugin_template_path} = '';
     $app->add_methods(
         pre_start => \&pre_start,
+        upgrade_from_mt => \&upgrade_from_mt,
         run_step  => \&run_step,
     );
     $app->{template_dir} = 'wizard';
@@ -49,6 +51,11 @@ sub init_request {
     
     my $default_lang = $q->param('default_language') || browser_language(); 
     $app->set_language($default_lang);
+
+    if ($app->is_mtconfig_exists || $q->param('step') eq 'upgrade_from_mt') {
+        $app->mode('upgrade_from_mt');
+        return;
+    }
 
     my $mode = $app->mode;
     return
@@ -303,7 +310,7 @@ sub init_core_registry {
 
 sub run_step {
     my $app       = shift;
-	my $q = $app->query;
+	my $q         = $app->query;
     my $steps     = $app->registry("wizard_steps");
     my $next_step = $q->param('next_step');
     my $curr_step = $q->param('step');
@@ -409,6 +416,62 @@ sub build_page {
     $param->{'default_language'} ||= $app->query->param('default_language');
 
     return $app->SUPER::build_page( $tmpl, $param );
+}
+
+sub directories_to_remove {
+    my $app = shift;
+
+    $app->SUPER::init_config();
+
+    my $dirs;
+
+    my @PluginPaths;
+    my $cfg = MT->config;
+    unshift @PluginPaths, File::Spec->catdir( $app->{'mt_dir'}, 'addons' );
+    unshift @PluginPaths, $cfg->PluginPath;
+    foreach my $PluginPath (@PluginPaths) {
+        if ( opendir DH, $PluginPath ) {
+            my @p = readdir DH;
+            for my $plugin_dir (@p) {
+                next if ( $plugin_dir =~ /^\.\.?$/ || $plugin_dir =~ /~$/ );
+                my $plugin_full_path = File::Spec->catfile( $PluginPath, $plugin_dir );
+                if ($plugin_dir =~ /([^\/\\]*)\.pl$/) {
+                    push @{$dirs->{rename}}, {
+                        full_path => $plugin_full_path,
+                        rename_to => File::Spec->catfile( $PluginPath, $1, "$1.pl" )
+                    }
+                } elsif ($plugin_dir =~ /^(Textile|Cloner|spamlookup|StyleCatcher|feeds-app-lite|mixiComment)$/) {
+                    push @{$dirs->{optional}}, $plugin_full_path;
+                } elsif ($plugin_dir =~ /^(WidgetManager|ThemeExport|ThemeManager|FullScreen|AjaxPublish|SearchMenuOption|WidgetSystemMenuOption|AutoPrefs|ConfigAssistant.plugin|ConfigAssistant|Markdown|MultiBlog|TypePadAntiSpam|WXRImporter)$/) {
+                    push @{$dirs->{remove}}, $plugin_full_path;
+                } 
+            }
+        }      
+    }
+    return $dirs;
+}
+
+sub upgrade_from_mt {
+    my $app   = shift;
+	my $q = $app->query;
+    my %param = @_;
+
+    $app->{cfg_file} = File::Spec->catfile($app->{'mt_dir'} , 'mt-config.cgi');
+    unless (-e $app->{cfg_file}) {
+        $app->{cfg_file} = File::Spec->catfile($app->{'mt_dir'} , 'config.cgi');
+    }
+
+    my $dirs = $app->directories_to_remove();
+    $param{remove_loop} = $dirs->{remove};
+    $param{rename_loop} = $dirs->{rename};
+    my $cfg = $app->{cfg_file};
+    $cfg =~ s/mt-config/config/;
+
+    $param{cfg_file}     = $app->{cfg_file};
+    $param{new_cfg_file} = $cfg;
+    $param{rename_cfg}   = ($app->{cfg_file} =~ /mt-config/);
+    $param{ready}        = !$param{remove_loop} && !$param{rename_loop} && !$param{rename_cfg};
+    return $app->build_page( "upgrade_from_mt.tmpl", \%param );
 }
 
 sub start {
@@ -1129,6 +1192,18 @@ sub is_config_exists {
     my ( $cfg, $cfg_exists, $static_file_path );
     if ( !$@ ) {
         $cfg = File::Spec->catfile( $app->{mt_dir}, 'config.cgi' );
+        $cfg_exists |= 1 if -f $cfg;
+    }
+    return $cfg_exists;
+}
+
+sub is_mtconfig_exists {
+    my $app = shift;
+
+    eval { use File::Spec; };
+    my ( $cfg, $cfg_exists, $static_file_path );
+    if ( !$@ ) {
+        $cfg = File::Spec->catfile( $app->{mt_dir}, 'mt-config.cgi' );
         $cfg_exists |= 1 if -f $cfg;
     }
     return $cfg_exists;
