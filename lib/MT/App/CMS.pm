@@ -288,10 +288,10 @@ sub core_widgets {
             singular => 1,
             set      => 'sidebar',
         },
-        mt_news => {
+        melody_news => {
             label    => 'Melody News',
-            template => 'widget/mt_news.tmpl',
-            handler  => "${pkg}Dashboard::mt_news_widget",
+            template => 'widget/melody_news.tmpl',
+            handler  => "${pkg}Dashboard::melody_news_widget",
             singular => 1,
             set      => 'sidebar',
         },
@@ -1762,8 +1762,8 @@ sub set_default_tmpl_params {
     $param->{athena_nav}       = 1;
 
     $param->{"auth_mode_$pref"} = 1;
-    $param->{mt_news}           = $app->config('NewsURL');
-    $param->{mt_support}        = $app->config('SupportURL');
+    $param->{melody_news} = $param->{mt_news} = $app->config('NewsURL');
+    $param->{mt_support}  = $app->config('SupportURL');
     my $lang = lc MT->current_language || 'en_us';
     $param->{language_id} = ( $lang !~ /en[_-]us/ ) ? $lang : '';
     $param->{mode} = $app->mode;

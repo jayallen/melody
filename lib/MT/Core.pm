@@ -457,12 +457,19 @@ BEGIN {
             'NewsURL' => {
                 default => 'http://openmelody.org/blog/',
             },
+            ### TODO The following should consume feeds instead of custom HTML
             'NewsboxURL' => {
                 default => 'http://openmelody.org/blog/melody_news_widget.html',
             },
+            # 'MTNewsURL' => {
+            #     default => 'http://www.sixapart.com/movabletype/news/mt4_news_widget.html',
+            # },
             'LearningNewsURL' => {
-                default => 'http://learning.movabletype.org/newsbox.html',
+                default => 'disable',
             },
+            # 'HackingNewsURL' => {
+            #     default => 'http://hacking.movabletype.org/newsbox.html',
+            # },
             'EmailAddressMain'      => undef,
             'EmailReplyTo'          => undef,
             'EmailNotificationBcc'  => { default => 1, },

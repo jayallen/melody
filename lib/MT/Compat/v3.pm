@@ -41,7 +41,7 @@ BEGIN {
         Category => [ qw( category_add js_add_category move_category category_do_add ) ],
         Comment => [ qw( trust_commenter_by_comment unapprove_item set_item_visible not_junk reply_preview do_reply map_comment_to_commenter handle_junk cfg_spam untrust_commenter build_comment_table trust_commenter cfg_system_feedback cfg_comments approve_item list_commenter unban_commenter empty_junk build_junk_table cfg_registration dialog_post_comment untrust_commenter_by_comment build_commenter_table ban_commenter_by_comment save_commenter_perm ban_commenter save_cfg_system_feedback unban_commenter_by_comment reply ) ], # _prepare_reply
         Common => [ qw( delete ) ],
-        Dashboard => [ qw( mt_blog_stats_widget mt_blog_stats_widget_entry_tab new_version_widget get_lmt_content mt_blog_stats_widget_comment_tab generate_dashboard_stats get_newsbox_content dashboard mt_news_widget generate_dashboard_stats_comment_tab this_is_you_widget create_dashboard_stats_file generate_dashboard_stats_entry_tab ) ],
+        Dashboard => [ qw( mt_blog_stats_widget mt_blog_stats_widget_entry_tab new_version_widget get_lmt_content mt_blog_stats_widget_comment_tab generate_dashboard_stats get_newsbox_content dashboard melody_news_widget generate_dashboard_stats_comment_tab this_is_you_widget create_dashboard_stats_file generate_dashboard_stats_entry_tab ) ],
         Entry => [ qw( cfg_entry draft_entries save_entries build_entry_table send_pings ping_continuation pinged_urls quickpost_js save_entry_prefs open_batch_editor update_entry_status publish_entries ) ], # _finish_rebuild_ping
         Export => [ qw( start_export ) ],
         Import => [ qw( do_import start_import ) ],
