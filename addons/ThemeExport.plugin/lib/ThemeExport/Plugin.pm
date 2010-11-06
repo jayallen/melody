@@ -7,7 +7,7 @@ use MT::Util qw( format_ts epoch2ts caturl );
 
 sub export {
     my $app  = shift;
-    my $q    = $app->{query};
+    my $q    = $app->query;
     my $blog = $app->blog;
 
     $| = 1;
@@ -69,7 +69,7 @@ sub export {
 
 sub export_start {
     my $app  = shift;
-    my $q    = $app->{query};
+    my $q    = $app->query;
     my $blog = $app->blog;
     my $tmpl = $app->load_tmpl('dialog_export.tmpl');
     $tmpl->param( blog_id    => $blog->id );
