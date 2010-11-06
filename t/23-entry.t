@@ -5,7 +5,7 @@ use warnings;
 
 use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 
-use Test::More tests => 48;
+use Test::More tests => 47;
 
 use MT;
 use MT::Blog;
@@ -103,9 +103,6 @@ is($entry->get_excerpt, $entry->text . '...', 'get_excerpt');
 $blog->words_in_excerpt(3);
 $entry->cache_property('blog', undef, $blog);
 is($entry->get_excerpt, 'On a drizzly...', 'get_excerpt');
-$entry->convert_breaks('textile_2');
-$entry->text("Foo _bar_ baz");
-is($entry->get_excerpt, 'Foo bar baz...', 'get_excerpt');
 
 ## Test TrackBack object generation
 $entry->allow_pings(1);
