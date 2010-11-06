@@ -1,0 +1,4 @@
+id: 'ReblessMe-Plugin'
+name: 'Rebless Me'
+plugin_class: 'Rebless::Plugin'
+
