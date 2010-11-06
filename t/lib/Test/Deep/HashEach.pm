@@ -5,25 +5,23 @@ package Test::Deep::HashEach;
 
 use Test::Deep::Cmp;
 
-sub init
-{
-	my $self = shift;
+sub init {
+    my $self = shift;
 
-	my $val = shift;
+    my $val = shift;
 
-	$self->{val} = $val;
+    $self->{val} = $val;
 }
 
-sub descend
-{
-	my $self = shift;
-	my $got = shift;
+sub descend {
+    my $self = shift;
+    my $got  = shift;
 
-	my %exp;
+    my %exp;
 
-	@exp{keys %$got} = ($self->{val}) x (keys %$got);
+    @exp{ keys %$got } = ( $self->{val} ) x ( keys %$got );
 
-	return Test::Deep::descend($got, \%exp);
+    return Test::Deep::descend( $got, \%exp );
 }
 
 1;

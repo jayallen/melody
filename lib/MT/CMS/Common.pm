@@ -9,8 +9,7 @@ sub save {
     my $q    = $app->query;
     my $type = $q->param('_type');
 
-    return $app->errtrans("Invalid request.")
-      unless $type;
+    return $app->errtrans("Invalid request.") unless $type;
 
     # being a general-purpose method, lets look for a mode handler
     # that is specifically for editing this type. if we find it,
@@ -32,15 +31,15 @@ sub save {
     my $perms = $app->permissions;
 
     if ( !$author->is_superuser ) {
-        if ( ($type ne 'author') && ($type ne 'template') )
+        if ( ( $type ne 'author' ) && ( $type ne 'template' ) )
         {    # for authors, blog-ctx $perms is not relevant
-            return $app->errtrans("Permisison denied.")
-              if !$perms && $id;
+            return $app->errtrans("Permisison denied.") if !$perms && $id;
         }
 
-        $app->run_callbacks( 'cms_save_permission_filter.' . $type, $app, $id )
+        $app->run_callbacks( 'cms_save_permission_filter.' . $type,
+                             $app, $id )
           || return $app->error(
-            $app->translate( "Permission denied: [_1]", $app->errstr() ) );
+               $app->translate( "Permission denied: [_1]", $app->errstr() ) );
     }
 
     my $param = {};
@@ -49,11 +48,11 @@ sub save {
             $param->{ 'auth_pref_tag_delim_' . $delim } = 1;
             $param->{'auth_pref_tag_delim'} = $delim;
         }
-        $param->{languages} =
-          $app->languages_list( $q->param('preferred_language') )
+        $param->{languages}
+          = $app->languages_list( $q->param('preferred_language') )
           if $q->param('preferred_language');
-        $param->{create_personal_weblog} =
-          $q->param('create_personal_weblog') ? 1 : 0;
+        $param->{create_personal_weblog}
+          = $q->param('create_personal_weblog') ? 1 : 0;
         require MT::Permission;
         my $sys_perms = MT::Permission->perms('system');
         foreach (@$sys_perms) {
@@ -62,7 +61,8 @@ sub save {
         }
     }
 
-    my $filter_result = $app->run_callbacks( 'cms_save_filter.' . $type, $app );
+    my $filter_result
+      = $app->run_callbacks( 'cms_save_filter.' . $type, $app );
 
     if ( !$filter_result ) {
         my %param = (%$param);
@@ -85,9 +85,9 @@ sub save {
 
     if ( $type eq 'template' ) {
 
-	return $app->errtrans(
-	    'The Template Name and Output File fields are required.')
-	    if !$q->param('name') && !$q->param('outfile');
+        return $app->errtrans(
+                     'The Template Name and Output File fields are required.')
+          if !$q->param('name') && !$q->param('outfile');
 
         # check for autosave
         if ( $q->param('_autosave') ) {
@@ -100,7 +100,7 @@ sub save {
     my ($obj);
     if ($id) {
         $obj = $class->load($id)
-            or return $app->error($app->translate("Invalid ID [_1]", $id));
+          or return $app->error( $app->translate( "Invalid ID [_1]", $id ) );
     }
     else {
         $obj = $class->new;
@@ -113,26 +113,30 @@ sub save {
     if ( $type eq 'author' ) {
 
         #FIXME: Legacy columns - remove them
-        my @cols = qw(is_superuser can_create_blog can_view_log can_edit_templates);
+        my @cols
+          = qw(is_superuser can_create_blog can_view_log can_edit_templates);
         if ( !$author->is_superuser ) {
             delete $values{$_} for @cols;
         }
         else {
             if ( !$id || ( $author->id != $id ) ) {
+
                 # Assign the auth_type unless it was assigned
                 # through the form.
-                $obj->auth_type($app->config->AuthenticationModule)
-                    unless $obj->auth_type;
+                $obj->auth_type( $app->config->AuthenticationModule )
+                  unless $obj->auth_type;
                 if ( $values{'status'} == MT::Author::ACTIVE() ) {
                     my $sys_perms = MT::Permission->perms('system');
-                    if ( defined($q->param('is_superuser'))
-                      && $q->param('is_superuser')) {
+                    if ( defined( $q->param('is_superuser') )
+                         && $q->param('is_superuser') )
+                    {
                         $obj->is_superuser(1);
                     }
                     else {
                         foreach (@$sys_perms) {
                             my $name = 'can_' . $_->[0];
-                            $name = 'is_superuser' if $name eq 'can_administer';
+                            $name = 'is_superuser'
+                              if $name eq 'can_administer';
                             if ( defined $q->param($name) ) {
                                 $obj->$name( $q->param($name) );
                                 delete $values{$name};
@@ -142,11 +146,11 @@ sub save {
                             }
                         }
                     }
-                }
-            }
-        }
+                } ## end if ( $values{'status'}...)
+            } ## end if ( !$id || ( $author...))
+        } ## end else [ if ( !$author->is_superuser)]
         delete $values{'password'};
-    }
+    } ## end if ( $type eq 'author')
 
     if ( $type eq 'entry' || $type eq 'page' ) {
 
@@ -158,9 +162,7 @@ sub save {
     }
 
     if ( $type eq 'template' ) {
-        if (   $q->param('type') eq 'archive'
-            && $q->param('archive_type') )
-        {
+        if ( $q->param('type') eq 'archive' && $q->param('archive_type') ) {
             $values{type} = $q->param('archive_type');
         }
     }
@@ -174,22 +176,26 @@ sub save {
     }
 
     unless (
-        $app->run_callbacks( 'cms_pre_save.' . $type, $app, $obj, $original ) )
+         $app->run_callbacks( 'cms_pre_save.' . $type, $app, $obj, $original )
+      )
     {
         $param->{return_args} = $q->param('return_args');
-        return edit( $app,
-            {
-                %$param,
-                error => $app->translate( "Save failed: [_1]", $app->errstr )
-            }
-        );
+        return
+          edit(
+                $app,
+                {
+                   %$param,
+                   error =>
+                     $app->translate( "Save failed: [_1]", $app->errstr )
+                }
+          );
     }
 
     # Done pre-processing the record-to-be-saved; now save it.
 
     $obj->save
       or return $app->error(
-        $app->translate( "Saving object failed: [_1]", $obj->errstr ) );
+              $app->translate( "Saving object failed: [_1]", $obj->errstr ) );
 
     # Now post-process it.
     $app->run_callbacks( 'cms_post_save.' . $type, $app, $obj, $original )
@@ -200,34 +206,46 @@ sub save {
 
     # if we are saving/publishing a template, make sure to log on activity log
     if ( $type eq 'template' ) {
-        my $blog = $app->model('blog')->load($obj->blog_id);
+        my $blog = $app->model('blog')->load( $obj->blog_id );
         if ($blog) {
-            $app->log({
-                message => $app->translate("'[_1]' edited the template '[_2]' in the blog '[_3]'",  $app->user->name, $obj->name, $blog->name),
-                level   => MT::Log::INFO(),
-                blog_id => $blog->id,
-            });
-        } else {
-            $app->log({
-                message => $app->translate("'[_1]' edited the global template '[_2]'", $app->user->name, $obj->name),
-                level   => MT::Log::INFO(),
-            });
+            $app->log( {
+                   message =>
+                     $app->translate(
+                       "'[_1]' edited the template '[_2]' in the blog '[_3]'",
+                       $app->user->name, $obj->name, $blog->name
+                     ),
+                   level   => MT::Log::INFO(),
+                   blog_id => $blog->id,
+                }
+            );
         }
-    }
+        else {
+            $app->log( {
+                         message =>
+                           $app->translate(
+                                   "'[_1]' edited the global template '[_2]'",
+                                   $app->user->name, $obj->name
+                           ),
+                         level => MT::Log::INFO(),
+                       }
+            );
+        }
+    } ## end if ( $type eq 'template')
 
     # TODO: convert this to use $app->call_return();
     # then templates can determine the page flow.
     if ( $type eq 'notification' ) {
-        return $app->redirect(
-            $app->uri(
-                'mode' => 'list',
-                args   => {
-                    '_type' => 'notification',
-                    blog_id => $blog_id,
-                    saved   => $obj->email
-                }
-            )
-        );
+        return
+          $app->redirect(
+                          $app->uri(
+                                     'mode' => 'list',
+                                     args   => {
+                                               '_type' => 'notification',
+                                               blog_id => $blog_id,
+                                               saved   => $obj->email
+                                     }
+                          )
+          );
     }
     elsif ( my $cfg_screen = $q->param('cfg_screen') ) {
         if ( $cfg_screen eq 'cfg_publish_profile' ) {
@@ -236,12 +254,13 @@ sub save {
                 require MT::CMS::Blog;
                 my %param = ();
                 MT::CMS::Blog::_create_build_order( $app, $obj, \%param );
-                $q->param( 'single_template', 1 ); # to show tmpl full-screen
+                $q->param( 'single_template', 1 );  # to show tmpl full-screen
                 if ( $dcty eq 'all' ) {
                     $q->param( 'type', $param{build_order} );
                 }
                 elsif ( $dcty eq 'archives' ) {
-                    my @ats = map { $_->{archive_type} } @{ $param{archive_type_loop} };
+                    my @ats = map { $_->{archive_type} }
+                      @{ $param{archive_type_loop} };
                     $q->param( 'type', join( ',', @ats ) );
                 }
                 return MT::CMS::Blog::start_rebuild_pages($app);
@@ -257,21 +276,23 @@ sub save {
         }
         $app->add_return_arg( no_writedir => 1 )
           unless $fmgr->exists($site_path) && $fmgr->can_write($site_path);
-    }
+    } ## end elsif ( my $cfg_screen = ...)
     elsif ( $type eq 'banlist' ) {
-        return $app->redirect(
-            $app->uri(
-                'mode' => 'list',
-                args   => {
-                    '_type' => 'banlist',
-                    blog_id => $blog_id,
-                    saved   => $obj->ip
-                }
-            )
-        );
+        return
+          $app->redirect(
+                          $app->uri(
+                                     'mode' => 'list',
+                                     args   => {
+                                               '_type' => 'banlist',
+                                               blog_id => $blog_id,
+                                               saved   => $obj->ip
+                                     }
+                          )
+          );
     }
     elsif ( $type eq 'template' && $q->param('rebuild') ) {
         if ( !$id ) {
+
             # add return argument for newly created templates
             $app->add_return_arg( id => $obj->id );
         }
@@ -280,20 +301,22 @@ sub save {
                 $q->param( 'type',            'index-' . $obj->id );
                 $q->param( 'tmpl_id',         $obj->id );
                 $q->param( 'single_template', 1 );
-                return $app->forward( 'start_rebuild' );
-            } else {
+                return $app->forward('start_rebuild');
+            }
+            else {
+
                 # archive rebuild support
-                $q->param( 'id', $obj->id );
+                $q->param( 'id',     $obj->id );
                 $q->param( 'reedit', $obj->id );
-                return $app->forward( 'publish_archive_templates' );
+                return $app->forward('publish_archive_templates');
             }
         }
-    }
+    } ## end elsif ( $type eq 'template'...)
     elsif ( $type eq 'template' ) {
-        if (   $obj->type eq 'archive'
-            || $obj->type eq 'category'
-            || $obj->type eq 'page'
-            || $obj->type eq 'individual' )
+        if (    $obj->type eq 'archive'
+             || $obj->type eq 'category'
+             || $obj->type eq 'page'
+             || $obj->type eq 'individual' )
         {
             my $static_maps = delete $app->{static_dynamic_maps};
             require MT::TemplateMap;
@@ -302,30 +325,32 @@ sub save {
                 $terms->{id} = $static_maps;
             }
             else {
+
                 # all existing maps have been dynamic
                 # do nothing
             }
-            if ( %$terms ) {
+            if (%$terms) {
                 my @maps = MT::TemplateMap->load($terms);
                 my @ats = map { $_->archive_type } @maps;
-                if ($#ats >= 0) {
+                if ( $#ats >= 0 ) {
                     $q->param( 'type', join( ',', @ats ) );
-                    $q->param( 'with_indexes', 1 );
-                    $q->param( 'no_static', 1 );
-                    $q->param( 'template_id', $obj->id );
+                    $q->param( 'with_indexes',    1 );
+                    $q->param( 'no_static',       1 );
+                    $q->param( 'template_id',     $obj->id );
                     $q->param( 'single_template', 1 );
                     require MT::CMS::Blog;
                     return MT::CMS::Blog::start_rebuild_pages($app);
                 }
             }
-        }
-    }
+        } ## end if ( $obj->type eq 'archive'...)
+    } ## end elsif ( $type eq 'template')
     elsif ( $type eq 'author' ) {
+
         # Delete the author's userpic thumb (if any); it'll be regenerated.
-        if ($original->userpic_asset_id != $obj->userpic_asset_id) {
+        if ( $original->userpic_asset_id != $obj->userpic_asset_id ) {
             my $thumb_file = $original->userpic_file();
-            my $fmgr = MT::FileMgr->new('Local');
-            if ($fmgr->exists($thumb_file)) {
+            my $fmgr       = MT::FileMgr->new('Local');
+            if ( $fmgr->exists($thumb_file) ) {
                 $fmgr->delete($thumb_file);
             }
         }
@@ -334,15 +359,14 @@ sub save {
     $app->add_return_arg( 'id' => $obj->id ) if !$original->id;
     $app->add_return_arg( 'saved' => 1 );
     $app->call_return;
-}
+} ## end sub save
 
 sub edit {
     my $app  = shift;
     my $q    = $app->query;
     my $type = $q->param('_type');
 
-    return $app->errtrans("Invalid request.")
-      unless $type;
+    return $app->errtrans("Invalid request.") unless $type;
 
     # being a general-purpose method, lets look for a mode handler
     # that is specifically for editing this type. if we find it,
@@ -350,7 +374,7 @@ sub edit {
 
     my $edit_mode = $app->mode . '_' . $type;
     if ( my $hdlrs = $app->handlers_for_mode($edit_mode) ) {
-        return $app->forward($edit_mode, @_);
+        return $app->forward( $edit_mode, @_ );
     }
 
     my %param = eval { $_[0] ? %{ $_[0] } : (); };
@@ -404,11 +428,17 @@ sub edit {
         }
     }
     else {
-        if ( ( !$perms || !$blog_id )
-            && ( $type eq 'entry' || $type eq 'page'
-                 || $type eq 'category' || $type eq 'folder'
-                 || $type eq 'comment'  || $type eq 'commenter'
-                 || $type eq 'ping' ) ) {
+        if (
+             ( !$perms || !$blog_id )
+             && (    $type eq 'entry'
+                  || $type eq 'page'
+                  || $type eq 'category'
+                  || $type eq 'folder'
+                  || $type eq 'comment'
+                  || $type eq 'commenter'
+                  || $type eq 'ping' )
+          )
+        {
             return $app->return_to_dashboard( redirect => 1 );
         }
     }
@@ -423,9 +453,9 @@ sub edit {
 
     if ( !$author->is_superuser ) {
         $app->run_callbacks( 'cms_view_permission_filter.' . $type,
-            $app, $id, $obj_promise )
+                             $app, $id, $obj_promise )
           || return $app->error(
-            $app->translate( "Permission denied: [_1]", $app->errstr() ) );
+               $app->translate( "Permission denied: [_1]", $app->errstr() ) );
     }
     my $obj;
     my $blog;
@@ -438,55 +468,48 @@ sub edit {
     }
 
     if ($id) {    # object exists, we're just editing it.
-          # Stash the object itself so we don't have to keep forcing the promise
+         # Stash the object itself so we don't have to keep forcing the promise
         $obj = $obj_promise->force()
-          or return $app->error(
-            $app->translate(
-                "Load failed: [_1]",
-                $class->errstr || $app->translate("(no reason given)")
-            )
+          or return
+          $app->error(
+                    $app->translate(
+                        "Load failed: [_1]",
+                        $class->errstr || $app->translate("(no reason given)")
+                    )
           );
 
         # Populate the param hash with the object's own values
         for my $col (@$cols) {
-            $param{$col} =
-              defined $q->param($col) ? $q->param($col) : $obj->$col();
+            $param{$col}
+              = defined $q->param($col) ? $q->param($col) : $obj->$col();
         }
 
         # Populate meta data into template params
         # See http://bugs.movabletype.org/?86639
         my @meta_columns = MT::Meta->metadata_by_class( ref $obj );
         foreach (@meta_columns) {
-            if ($_->{name} !~ /^field\.(.*)/) {
-                $param{'meta_' . $_->{name}} = $obj->meta($_->{name});
+            if ( $_->{name} !~ /^field\.(.*)/ ) {
+                $param{ 'meta_' . $_->{name} } = $obj->meta( $_->{name} );
             }
         }
 
         # Make certain any blog-specific element matches the blog we're
         # dealing with. If not, call shenanigans.
-        if (   ( exists $param{blog_id} )
-            && ( $blog_id != ($obj->blog_id || 0) ) )
+        if (    ( exists $param{blog_id} )
+             && ( $blog_id != ( $obj->blog_id || 0 ) ) )
         {
             return $app->return_to_dashboard( redirect => 1 );
         }
 
         if ( $class->properties->{audit} ) {
             my $creator = MT::Author->load(
-                {
-                    id   => $obj->created_by(),
-                    type => MT::Author::AUTHOR()
-                }
-            );
+                 { id => $obj->created_by(), type => MT::Author::AUTHOR() } );
             if ($creator) {
                 $param{created_by} = $creator->name;
             }
             if ( my $mod_by = $obj->modified_by() ) {
                 my $modified = MT::Author->load(
-                    {
-                        id   => $mod_by,
-                        type => MT::Author::AUTHOR()
-                    }
-                );
+                            { id => $mod_by, type => MT::Author::AUTHOR() } );
                 if ($modified) {
                     $param{modified_by} = $modified->name;
                 }
@@ -501,19 +524,29 @@ sub edit {
                 # date IF there is also a modified_by value.
                 if ( my $ts = $obj->modified_on ) {
                     $param{modified_on_ts} = $ts;
-                    $param{modified_on_formatted} =
-                      format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, undef, $app->user ? $app->user->preferred_language : undef );
+                    $param{modified_on_formatted}
+                      = format_ts(
+                           MT::App::CMS::LISTING_DATETIME_FORMAT(),
+                           $ts,
+                           undef,
+                           $app->user ? $app->user->preferred_language : undef
+                      );
                 }
-            }
+            } ## end if ( my $mod_by = $obj...)
             if ( my $ts = $obj->created_on ) {
                 $param{created_on_ts} = $ts;
-                $param{created_on_formatted} =
-                  format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, undef, $app->user ? $app->user->preferred_language : undef );
+                $param{created_on_formatted}
+                  = format_ts(
+                           MT::App::CMS::LISTING_DATETIME_FORMAT(),
+                           $ts,
+                           undef,
+                           $app->user ? $app->user->preferred_language : undef
+                  );
             }
-        }
+        } ## end if ( $class->properties...)
 
         $param{new_object} = 0;
-    }
+    } ## end if ($id)
     else {    # object is new
         $param{new_object} = 1;
         for my $col (@$cols) {
@@ -521,19 +554,21 @@ sub edit {
         }
     }
 
-    my $res = $app->run_callbacks('cms_edit.' . $type, $app, $id, $obj, \%param);
-    if (!$res) {
-        return $app->error($app->callback_errstr());
+    my $res
+      = $app->run_callbacks( 'cms_edit.' . $type, $app, $id, $obj, \%param );
+    if ( !$res ) {
+        return $app->error( $app->callback_errstr() );
     }
 
-    if ($param{autosave_support}) {
+    if ( $param{autosave_support} ) {
+
         # autosave support, but don't bother if we're reediting
         if ( !$q->param('reedit') ) {
             my $sess_obj = $app->autosave_session_obj;
             if ($sess_obj) {
                 $param{autosaved_object_exists} = 1;
-                $param{autosaved_object_ts} =
-                  MT::Util::epoch2ts( $blog, $sess_obj->start );
+                $param{autosaved_object_ts}
+                  = MT::Util::epoch2ts( $blog, $sess_obj->start );
             }
         }
     }
@@ -544,7 +579,7 @@ sub edit {
     for my $p ( $q->param ) {
         $param{$p} = $q->param($p) if $p =~ /^saved/;
     }
-    $param{page_actions} = $app->page_actions($type, $obj);
+    $param{page_actions} = $app->page_actions( $type, $obj );
     if ( $class->can('class_label') ) {
         $param{object_label} = $class->class_label;
     }
@@ -554,18 +589,17 @@ sub edit {
 
     my $tmpl_file = $param{output} || "edit_${type}.tmpl";
     $param{object_type} ||= $type;
-    $param{screen_id} ||= "edit-$type";
+    $param{screen_id}   ||= "edit-$type";
     $param{screen_class} .= " edit-$type";
     return $app->load_tmpl( $tmpl_file, \%param );
-}
+} ## end sub edit
 
 sub list {
     my $app  = shift;
     my $q    = $app->query;
     my $type = $q->param('_type');
 
-    return $app->errtrans("Invalid request.")
-      unless $type;
+    return $app->errtrans("Invalid request.") unless $type;
 
     # being a general-purpose method, lets look for a mode handler
     # that is specifically for editing this type. if we find it,
@@ -579,19 +613,18 @@ sub list {
     my %param = $_[0] ? %{ $_[0] } : ();
 
     my $perms = $app->permissions;
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $perms;
-      
+    return $app->return_to_dashboard( redirect => 1 ) unless $perms;
+
     #
     #   In order for a user to see the IP Address banlist, they must have
     #   can_manage_feedback on the current blog.
     #
     if (
-        $perms
-        && (   ( $type eq 'blog' && !$perms->can_edit_config )
-            || ( $type eq 'template'     && !$perms->can_edit_templates )
-            || ( $type eq 'notification' && !$perms->can_edit_notifications )
-            || ( $type eq 'banlist' && !$perms->can_manage_feedback ) )
+         $perms
+         && (   ( $type eq 'blog' && !$perms->can_edit_config )
+             || ( $type eq 'template'     && !$perms->can_edit_templates )
+             || ( $type eq 'notification' && !$perms->can_edit_notifications )
+             || ( $type eq 'banlist'      && !$perms->can_manage_feedback ) )
       )
     {
         return $app->return_to_dashboard( permission => 1 );
@@ -607,8 +640,7 @@ sub list {
     my $offset = $q->param('offset') || 0;
 
     for my $name (@$cols) {
-        $terms{blog_id} = $blog_id, last
-          if $name eq 'blog_id';
+        $terms{blog_id} = $blog_id, last if $name eq 'blog_id';
     }
     if ( $type eq 'notification' ) {
         $args{direction} = 'descend';
@@ -622,8 +654,8 @@ sub list {
     my $iter = $class->load_iter( \%terms, \%args );
 
     my (
-        @data,         @index_data,  @custom_data,
-        @archive_data, @system_data, @widget_data
+         @data,         @index_data,  @custom_data,
+         @archive_data, @system_data, @widget_data
     );
     my (%authors);
     my $blog_class = $app->model('blog');
@@ -636,10 +668,17 @@ sub list {
     while ( my $obj = $iter->() ) {
         my $row = $obj->get_values;
         if ( my $ts = $obj->created_on ) {
-            $row->{created_on_formatted} =
-              format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
-            $row->{created_on_time_formatted} =
-              format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
+            $row->{created_on_formatted}
+              = format_ts( MT::App::CMS::LISTING_DATE_FORMAT(),
+                        $ts, $blog,
+                        $app->user ? $app->user->preferred_language : undef );
+            $row->{created_on_time_formatted}
+              = format_ts(
+                           MT::App::CMS::LISTING_DATETIME_FORMAT(),
+                           $ts,
+                           $blog,
+                           $app->user ? $app->user->preferred_language : undef
+              );
             $row->{created_on_relative} = relative_date( $ts, time, $blog );
         }
         if ( $type eq 'template' ) {
@@ -650,8 +689,8 @@ sub list {
 
             if ( $obj->type eq 'index' ) {
                 push @index_data, $row;
-                $row->{rebuild_me} =
-                  defined $row->{rebuild_me} ? $row->{rebuild_me} : 1;
+                $row->{rebuild_me}
+                  = defined $row->{rebuild_me} ? $row->{rebuild_me} : 1;
                 my $published_url = $obj->published_url;
                 $row->{published_url} = $published_url if $published_url;
             }
@@ -661,10 +700,10 @@ sub list {
             elsif ( $obj->type eq 'widget' ) {
                 push @widget_data, $row;
             }
-            elsif ($obj->type eq 'archive'
-                || $obj->type eq 'category'
-                || $obj->type eq 'page'
-                || $obj->type eq 'individual' )
+            elsif (    $obj->type eq 'archive'
+                    || $obj->type eq 'category'
+                    || $obj->type eq 'page'
+                    || $obj->type eq 'individual' )
             {
 
                 # FIXME: enumeration of types
@@ -684,7 +723,7 @@ sub list {
                 push @system_data, $row;
             }
             $param{search_label} = $app->translate('Templates');
-        }
+        } ## end if ( $type eq 'template')
         else {
             if ( $limit && ( scalar @data == $limit ) ) {
                 $param{next_offset} = 1;
@@ -698,14 +737,25 @@ sub list {
             require MT::Entry;
             my $tb_center = MT::Trackback->load( $obj->tb_id );
             my $entry     = MT::Entry->load( $tb_center->entry_id )
-                or return $app->error($app->translate('Can\'t load entry #[_1].', $tb_center->entry_id));
+              or return
+              $app->error(
+                           $app->translate(
+                                            'Can\'t load entry #[_1].',
+                                            $tb_center->entry_id
+                           )
+              );
             if ( my $ts = $obj->created_on ) {
-                $row->{created_on_time_formatted} =
-                  format_ts( MT::App::CMS::LISTING_DATETIME_FORMAT(), $ts, $blog, $app->user ? $app->user->preferred_language : undef );
+                $row->{created_on_time_formatted}
+                  = format_ts(
+                           MT::App::CMS::LISTING_DATETIME_FORMAT(),
+                           $ts,
+                           $blog,
+                           $app->user ? $app->user->preferred_language : undef
+                  );
                 $row->{has_edit_access} = $perms->can_edit_all_posts
                   || $app->user->id == $entry->author_id;
             }
-        }
+        } ## end if ( $type eq 'ping' )
     }    # end loop over the set of objects;
          # NOW transform the @data array
     if ( $type eq 'notification' ) {
@@ -716,7 +766,7 @@ sub list {
         $param{object_type}        = 'notification';
         $param{list_noncron}       = 1;
         $param{notification_count} = scalar @data;
-        $param{search_type} = 'entry';
+        $param{search_type}        = 'entry';
     }
     if ( $type eq 'template' ) {
         $app->add_breadcrumb( $app->translate('Templates') );
@@ -745,7 +795,7 @@ sub list {
         $param{object_type}                      = 'banlist';
         $param{show_ip_info}                     = 1;
         $param{list_noncron}                     = 1;
-        $param{search_type} = 'entry';
+        $param{search_type}                      = 'entry';
         $param{can_edit_config_or_publish_paths} = $perms->can_edit_config
           || $perms->can_set_publish_paths;
     }
@@ -765,7 +815,7 @@ sub list {
         $param{list_end}        = $offset + ( scalar @data );
         $param{next_offset_val} = $offset + ( scalar @data );
 
-    #$param{next_offset} = $param{next_offset_val} < $param{list_total} ? 1 : 0;
+        #$param{next_offset} = $param{next_offset_val} < $param{list_total} ? 1 : 0;
         $param{next_max} = $param{list_total} - $limit;
         $param{next_max} = 0 if ( $param{next_max} || 0 ) < $offset + 1;
         if ( $offset > 0 ) {
@@ -781,18 +831,17 @@ sub list {
     $param{saved_deleted} = $q->param('saved_deleted');
     $param{page_actions}  = $app->page_actions( 'list_' . $type );
     $param{screen_class} ||= "list-$type";
-    $param{screen_id} ||= "list-$type";
+    $param{screen_id}    ||= "list-$type";
     $param{listing_screen} = 1;
     $app->load_tmpl( "list_${type}.tmpl", \%param );
-}
+} ## end sub list
 
 sub delete {
     my $app  = shift;
     my $q    = $app->query;
     my $type = $q->param('_type');
 
-    return $app->errtrans("Invalid request.")
-      unless $type;
+    return $app->errtrans("Invalid request.") unless $type;
 
     return $app->error( $app->translate("Invalid request.") )
       if $app->request_method() ne 'POST';
@@ -822,16 +871,16 @@ sub delete {
         next unless $id;    # avoid 'empty' ids
         if ( ( $type eq 'association' ) && ( $id =~ /PSEUDO-/ ) ) {
             require MT::CMS::User;
-            MT::CMS::User::_delete_pseudo_association($app, $id);
+            MT::CMS::User::_delete_pseudo_association( $app, $id );
             next;
         }
 
         my $obj = $class->load($id);
         next unless $obj;
         $app->run_callbacks( 'cms_delete_permission_filter.' . $type,
-            $app, $obj )
+                             $app, $obj )
           || return $app->error(
-            $app->translate( "Permission denied: [_1]", $app->errstr() ) );
+               $app->translate( "Permission denied: [_1]", $app->errstr() ) );
 
         if ( $type eq 'comment' ) {
             $entry_id = $obj->entry_id;
@@ -856,26 +905,27 @@ sub delete {
                 my $ot_class  = $app->model('objecttag');
                 my $obj_type  = $q->param('__type') || 'entry';
                 my $obj_class = $app->model($obj_type);
-                my $iter      = $ot_class->load_iter(
-                    {
-                        blog_id           => $blog_id,
-                        object_datasource => $obj_class->datasource,
-                        tag_id            => $id
-                    },
-                    {
-                        'join' => $obj_class->join_on(
-                            undef,
+                my $iter =
+                  $ot_class->load_iter( {
+                              blog_id           => $blog_id,
+                              object_datasource => $obj_class->datasource,
+                              tag_id            => $id
+                            },
                             {
-                                id => \'= objecttag_object_id',
-                                (
-                                    $obj_class =~ m/asset/i
-                                    ? ()
-                                    : ( class => $obj_class->class_type )
+                              'join' =>
+                                $obj_class->join_on(
+                                   undef,
+                                   {
+                                     id => \'= objecttag_object_id',
+                                     (
+                                       $obj_class =~ m/asset/i
+                                       ? ()
+                                       : ( class => $obj_class->class_type )
+                                     )
+                                   }
                                 )
                             }
-                        )
-                    }
-                );
+                  );
 
                 if ($iter) {
                     my @ot;
@@ -886,24 +936,26 @@ sub delete {
                         my $obj = $ot_class->load($_);
                         next unless $obj;
                         $obj->remove
-                          or return $app->errtrans( 'Removing tag failed: [_1]',
-                            $obj->errstr );
+                          or return
+                          $app->errtrans( 'Removing tag failed: [_1]',
+                                          $obj->errstr );
                     }
                 }
 
                 $app->run_callbacks( 'cms_post_delete.' . $type, $app, $obj );
                 next;
 
-            }
-        }
+            } ## end if ($blog_id)
+        } ## end elsif ( $type eq 'tag' )
         elsif ( $type eq 'category' ) {
             if ( $app->config('DeleteFilesAtRebuild') ) {
                 require MT::Blog;
                 require MT::Entry;
                 require MT::Placement;
                 my $blog = MT::Blog->load($blog_id)
-                    or return $app->error($app->translate('Can\'t load blog #[_1].', $blog_id));
-                my $at   = $blog->archive_type;
+                  or return $app->error(
+                     $app->translate( 'Can\'t load blog #[_1].', $blog_id ) );
+                my $at = $blog->archive_type;
                 if ( $at && $at ne 'None' ) {
                     my @at = split /,/, $at;
                     for my $target (@at) {
@@ -911,40 +963,43 @@ sub delete {
                         next unless $archiver;
                         if ( $archiver->category_based ) {
                             if ( $archiver->date_based ) {
-                                my @entries = MT::Entry->load(
-                                    { status => MT::Entry::RELEASE() },
-                                    {
-                                        join => MT::Placement->join_on(
-                                            'entry_id',
-                                            { category_id => $id },
-                                            { unique      => 1 }
-                                        )
-                                    }
-                                );
+                                my @entries
+                                  = MT::Entry->load(
+                                           { status => MT::Entry::RELEASE() },
+                                           {
+                                             join =>
+                                               MT::Placement->join_on(
+                                                       'entry_id',
+                                                       { category_id => $id },
+                                                       { unique      => 1 }
+                                               )
+                                           }
+                                  );
                                 for (@entries) {
-                                    $app->publisher->remove_entry_archive_file(
-                                        Category    => $obj,
-                                        ArchiveType => $target,
-                                        Entry       => $_
-                                    );
+                                    $app->publisher
+                                      ->remove_entry_archive_file(
+                                                       Category    => $obj,
+                                                       ArchiveType => $target,
+                                                       Entry       => $_
+                                      );
                                 }
-                            }
+                            } ## end if ( $archiver->date_based)
                             else {
                                 $app->publisher->remove_entry_archive_file(
-                                    Category    => $obj,
-                                    ArchiveType => $target
+                                                        Category    => $obj,
+                                                        ArchiveType => $target
                                 );
                             }
-                        }
-                    }
-                }
-            }
-        }
+                        } ## end if ( $archiver->category_based)
+                    } ## end for my $target (@at)
+                } ## end if ( $at && $at ne 'None')
+            } ## end if ( $app->config('DeleteFilesAtRebuild'...))
+        } ## end elsif ( $type eq 'category')
         elsif ( $type eq 'page' ) {
             if ( $app->config('DeleteFilesAtRebuild') ) {
                 $app->publisher->remove_entry_archive_file(
-                    Entry       => $obj,
-                    ArchiveType => 'Page'
+                                                         Entry       => $obj,
+                                                         ArchiveType => 'Page'
                 );
             }
         }
@@ -952,11 +1007,12 @@ sub delete {
             if ( $app->config->ExternalUserManagement ) {
                 require MT::LDAP;
                 my $ldap = MT::LDAP->new
-                  or return $app->error(
-                    MT->translate(
-                        "Loading MT::LDAP failed: [_1].",
-                        MT::LDAP->errstr
-                    )
+                  or return
+                  $app->error(
+                               MT->translate(
+                                             "Loading MT::LDAP failed: [_1].",
+                                             MT::LDAP->errstr
+                               )
                   );
                 my $dn = $ldap->get_dn( $obj->name );
                 if ($dn) {
@@ -967,26 +1023,26 @@ sub delete {
 
         # FIXME: enumeration of types
         if (   $type eq 'template'
-            && $obj->type !~
-            /(custom|index|archive|page|individual|category|widget|backup)/o )
+            && $obj->type
+            !~ /(custom|index|archive|page|individual|category|widget|backup)/o
+          )
         {
             $required_items++;
         }
         else {
             $obj->remove
-              or return $app->errtrans(
-                'Removing [_1] failed: [_2]',
-                $app->translate($type),
-                $obj->errstr
-              );
+              or return
+              $app->errtrans( 'Removing [_1] failed: [_2]',
+                              $app->translate($type),
+                              $obj->errstr );
             $app->run_callbacks( 'cms_post_delete.' . $type, $app, $obj );
         }
-    }
+    } ## end for my $id ( $q->param(...))
     require MT::Entry;
     for my $entry_id ( keys %rebuild_entries ) {
         my $entry = MT::Entry->load($entry_id);
         $app->rebuild_entry( Entry => $entry, BuildDependencies => 1 )
-            or return $app->publish_error();
+          or return $app->publish_error();
     }
     for my $cat_id (@rebuild_cats) {
 
@@ -994,156 +1050,203 @@ sub delete {
         # What if user is not publishing category archives?
         my $cat = MT::Category->load($cat_id);
         $app->rebuild(
-            Category    => $cat,
-            BlogID      => $blog_id,
-            ArchiveType => 'Category'
+                       Category    => $cat,
+                       BlogID      => $blog_id,
+                       ArchiveType => 'Category'
         ) or return $app->publish_error();
     }
     $app->run_callbacks( 'rebuild', MT::Blog->load($blog_id) );
-    $app->add_return_arg(
-        $type eq 'ping'
-        ? ( saved_deleted_ping => 1 )
-        : ( saved_deleted => 1 )
-    );
+    $app->add_return_arg( $type eq 'ping'
+                          ? ( saved_deleted_ping => 1 )
+                          : ( saved_deleted => 1 ) );
     if ( $q->param('is_power_edit') ) {
         $app->add_return_arg( is_power_edit => 1 );
     }
     if ($required_items) {
         $app->add_return_arg(
-            error => $app->translate("System templates can not be deleted.") );
+              error => $app->translate("System templates can not be deleted.")
+        );
     }
     $app->call_return;
-}
+} ## end sub delete
 
 sub clone_blog {
-  my $app = shift;
-  my $q = $app->query;
-  my($param) = {};
-  my $user = $app->user;
-  
-  return $app->error($app->translate("Permission denied.")) unless $user->is_superuser;
+    my $app     = shift;
+    my $q       = $app->query;
+    my ($param) = {};
+    my $user    = $app->user;
 
-  my @id = $q->param('blog_id') || $q->param('id');
-  
-  if (!@id) {
-    return $app->error($app->translate("No blog was selected to clone."));
-  }
-  
-  if (scalar @id > 1) {
-    return $app->error($app->translate("This action can only be run on a single blog at a time."));
-  }
-  
-  # Get blog_id from params and validate
-  require MT::Blog;
-  my $blog_id = shift @id;
-  my $blog = MT::Blog->load($blog_id)
-    or return $app->error($app->translate("Invalid blog_id"));
-  
-  my $base = $blog->site_url || $app->config('DefaultSiteURL') || $app->base;
-  $base =~ s/\/$//;
-  
-  $param->{'blog_id'} = $blog->id;
-  $param->{'new_blog_name'} = $q->param('new_blog_name') || 'Clone of ' . MT::Util::encode_html($blog->name);
-  $param->{'site_url'} =  $q->param('site_url') || $base . '_clone';
-  $param->{'site_path'} = $q->param('site_path') || $blog->site_path . '_clone';
-  
-  if($q->param('clone_prefs_entries_pages')) {
-    $param->{'clone_prefs_entries_pages'} = $q->param('clone_prefs_entries_pages');
-  }
-  
-  if($q->param('clone_prefs_comments')) {
-    $param->{'clone_prefs_comments'} = $q->param('clone_prefs_comments');
-  }
-  
-  if($q->param('clone_prefs_trackbacks')) {
-    $param->{'clone_prefs_trackbacks'} = $q->param('clone_prefs_trackbacks');
-  }
-  
-  if($q->param('clone_prefs_categories')) {
-    $param->{'clone_prefs_categories'} = $q->param('clone_prefs_categories');
-  }
-  
-  my $clone = $q->param('back_to_form') ? 0 : $q->param('clone');
-  $param = _has_valid_form($app,$blog,$param);
-  
-  if ($blog_id && $clone && $param->{'isValidForm'}) {
-    print_status_page($app,$blog,$param);
-    return;
-  } elsif ($q->param('verify')) {
-    # build form
-    $param->{'verify'} = 1;
-    $param->{'system_msg'} = 1;
-  }
-    
-  my $tmpl = $app->load_tmpl( "dialog/clone_blog.tmpl", $param );
-  
-  return $tmpl;
-}
+    return $app->error( $app->translate("Permission denied.") )
+      unless $user->is_superuser;
+
+    my @id = $q->param('blog_id') || $q->param('id');
+
+    if ( !@id ) {
+        return $app->error(
+                          $app->translate("No blog was selected to clone.") );
+    }
+
+    if ( scalar @id > 1 ) {
+        return
+          $app->error(
+                $app->translate(
+                    "This action can only be run on a single blog at a time.")
+          );
+    }
+
+    # Get blog_id from params and validate
+    require MT::Blog;
+    my $blog_id = shift @id;
+    my $blog    = MT::Blog->load($blog_id)
+      or return $app->error( $app->translate("Invalid blog_id") );
+
+    my $base 
+      = $blog->site_url
+      || $app->config('DefaultSiteURL')
+      || $app->base;
+    $base =~ s/\/$//;
+
+    $param->{'blog_id'}       = $blog->id;
+    $param->{'new_blog_name'} = $q->param('new_blog_name')
+      || 'Clone of ' . MT::Util::encode_html( $blog->name );
+    $param->{'site_url'} = $q->param('site_url') || $base . '_clone';
+    $param->{'site_path'} = $q->param('site_path')
+      || $blog->site_path . '_clone';
+
+    if ( $q->param('clone_prefs_entries_pages') ) {
+        $param->{'clone_prefs_entries_pages'}
+          = $q->param('clone_prefs_entries_pages');
+    }
+
+    if ( $q->param('clone_prefs_comments') ) {
+        $param->{'clone_prefs_comments'} = $q->param('clone_prefs_comments');
+    }
+
+    if ( $q->param('clone_prefs_trackbacks') ) {
+        $param->{'clone_prefs_trackbacks'}
+          = $q->param('clone_prefs_trackbacks');
+    }
+
+    if ( $q->param('clone_prefs_categories') ) {
+        $param->{'clone_prefs_categories'}
+          = $q->param('clone_prefs_categories');
+    }
+
+    my $clone = $q->param('back_to_form') ? 0 : $q->param('clone');
+    $param = _has_valid_form( $app, $blog, $param );
+
+    if ( $blog_id && $clone && $param->{'isValidForm'} ) {
+        print_status_page( $app, $blog, $param );
+        return;
+    }
+    elsif ( $q->param('verify') ) {
+
+        # build form
+        $param->{'verify'}     = 1;
+        $param->{'system_msg'} = 1;
+    }
+
+    my $tmpl = $app->load_tmpl( "dialog/clone_blog.tmpl", $param );
+
+    return $tmpl;
+} ## end sub clone_blog
 
 sub _has_valid_form {
-  my($app) = $_[0];
-  my($blog) = $_[1];
-  my($param) = $_[2];
-  
-  if($blog->site_url eq $param->{'site_url'}) {
-    $param->{'site_url_warning'} = 1;
-  } elsif(!$param->{'site_url'}) {
-    push(@{$param->{'errors'}},$app->translate("You need to specify a Site URL"));
-  }
-  
-  if($blog->site_path eq $param->{'site_path'}) {
-    $param->{'site_path_warning'} = 1;
-  } elsif(!$param->{'site_path'}) {
-    push(@{$param->{'errors'}},$app->translate("You need to specify a Site Path"));
-  }
-  
-  if((!$param->{'clone_prefs_comments'} || !$param->{'clone_prefs_trackbacks'}) && $param->{'clone_prefs_entries_pages'}) {
-    if(!$param->{'clone_prefs_comments'} && !$param->{'clone_prefs_trackbacks'}) {
-      push(@{$param->{'errors'}},$app->translate("Entries must be cloned if comments and trackbacks are cloned"));
-    } elsif($param->{'clone_prefs_comments'}) {
-      push(@{$param->{'errors'}},$app->translate("Entries must be cloned if comments are cloned"));
-    } elsif($param->{'clone_prefs_trackbacks'}) {
-      push(@{$param->{'errors'}},$app->translate("Entries must be cloned if trackbacks are cloned"));
-    }
-  }
-   
-  $param->{'isValidForm'} = $param->{'errors'} ? 0 : 1;
+    my ($app)   = $_[0];
+    my ($blog)  = $_[1];
+    my ($param) = $_[2];
 
-  return $param;
-}
+    if ( $blog->site_url eq $param->{'site_url'} ) {
+        $param->{'site_url_warning'} = 1;
+    }
+    elsif ( !$param->{'site_url'} ) {
+        push(
+              @{ $param->{'errors'} },
+              $app->translate("You need to specify a Site URL")
+        );
+    }
+
+    if ( $blog->site_path eq $param->{'site_path'} ) {
+        $param->{'site_path_warning'} = 1;
+    }
+    elsif ( !$param->{'site_path'} ) {
+        push(
+              @{ $param->{'errors'} },
+              $app->translate("You need to specify a Site Path")
+        );
+    }
+
+    if ( (
+              !$param->{'clone_prefs_comments'}
+           || !$param->{'clone_prefs_trackbacks'}
+         )
+         && $param->{'clone_prefs_entries_pages'}
+      )
+    {
+        if (    !$param->{'clone_prefs_comments'}
+             && !$param->{'clone_prefs_trackbacks'} )
+        {
+            push(
+                  @{ $param->{'errors'} },
+                  $app->translate(
+                      "Entries must be cloned if comments and trackbacks are cloned"
+                  )
+            );
+        }
+        elsif ( $param->{'clone_prefs_comments'} ) {
+            push(
+                  @{ $param->{'errors'} },
+                  $app->translate(
+                              "Entries must be cloned if comments are cloned")
+            );
+        }
+        elsif ( $param->{'clone_prefs_trackbacks'} ) {
+            push(
+                  @{ $param->{'errors'} },
+                  $app->translate(
+                            "Entries must be cloned if trackbacks are cloned")
+            );
+        }
+    } ## end if ( ( !$param->{'clone_prefs_comments'...}))
+
+    $param->{'isValidForm'} = $param->{'errors'} ? 0 : 1;
+
+    return $param;
+} ## end sub _has_valid_form
 
 sub print_status_page {
-  my($app) = $_[0];
-  my($blog) = $_[1];
-  my($param) = $_[2];
-  my($cloning_prefs) = {};
-  $| = 1;
-  my $q = $app->query;
+    my ($app)           = $_[0];
+    my ($blog)          = $_[1];
+    my ($param)         = $_[2];
+    my ($cloning_prefs) = {};
+    $| = 1;
+    my $q = $app->query;
 
-  if($q->param('clone_prefs_comments')) {
-    $cloning_prefs->{'MT::Comment'} = 0;
-  }
-  
-  if($q->param('clone_prefs_trackbacks')) {
-    # need to exclude both Trackbacks and Pings
-    $cloning_prefs->{'MT::Trackback'} = 0;
-    $cloning_prefs->{'MT::TBPing'} = 0;
-  }
-  
-  if($q->param('clone_prefs_categories')) {
-    $cloning_prefs->{'MT::Category'} = 0;
-  }
-  
-  if($q->param('clone_prefs_entries_pages')) {
-    $cloning_prefs->{'MT::Entry'} = 0;
-  }
+    if ( $q->param('clone_prefs_comments') ) {
+        $cloning_prefs->{'MT::Comment'} = 0;
+    }
 
-  my $blog_name = $param->{'new_blog_name'};
-  
-  # Set up and commence app output
-  $app->{no_print_body} = 1;
-  $app->send_http_header;
-  my $html_head = <<'SCRIPT';
+    if ( $q->param('clone_prefs_trackbacks') ) {
+
+        # need to exclude both Trackbacks and Pings
+        $cloning_prefs->{'MT::Trackback'} = 0;
+        $cloning_prefs->{'MT::TBPing'}    = 0;
+    }
+
+    if ( $q->param('clone_prefs_categories') ) {
+        $cloning_prefs->{'MT::Category'} = 0;
+    }
+
+    if ( $q->param('clone_prefs_entries_pages') ) {
+        $cloning_prefs->{'MT::Entry'} = 0;
+    }
+
+    my $blog_name = $param->{'new_blog_name'};
+
+    # Set up and commence app output
+    $app->{no_print_body} = 1;
+    $app->send_http_header;
+    my $html_head = <<'SCRIPT';
 <script type="text/javascript">
 function progress(str, id) {
     var el = getByID(id);
@@ -1152,8 +1255,16 @@ function progress(str, id) {
 </script>
 SCRIPT
 
-  $app->print($app->build_page('dialog/header.tmpl', { page_title => $app->translate("Clone Blog"), html_head => $html_head }));
-  $app->print($app->translate_templatized(<<"HTML"));
+    $app->print(
+             $app->build_page(
+                               'dialog/header.tmpl',
+                               {
+                                 page_title => $app->translate("Clone Blog"),
+                                 html_head  => $html_head
+                               }
+             )
+    );
+    $app->print( $app->translate_templatized(<<"HTML") );
 <h2><__trans phrase="Cloning blog '[_1]'..." params="$blog_name"></h2>
 
 <div class="modal_width" id="dialog-clone-weblog">
@@ -1162,35 +1273,43 @@ SCRIPT
 <ul>
 HTML
 
-  my $new_blog;
-  eval {
-    $new_blog = $blog->clone({
-      BlogName => ($blog_name),
-      Children => 1,
-      Except => ({ site_path => 1, site_url => 1 }),
-      Callback => sub { _progress($app, @_) },
-      Classes => ($cloning_prefs)
-    });
-    
-    $new_blog->site_path($param->{'site_path'});
-    $new_blog->site_url($param->{'site_url'});
-    $new_blog->save();
-  };
-  if (my $err = $@) {
-    $app->print($app->translate_templatized(qq{<p class="error-message"><MT_TRANS phrase="Error">: $err</p>}));
-  } else {
-  	$app->add_return_arg('__mode' => 'list_blog');
-    my $return_url = $app->return_uri;
-    my $blog_url = $app->uri(mode => 'dashboard', args => {
-      blog_id => $new_blog->id
-    });
-    my $setting_url = $app->uri(mode => 'view', args => {
-      blog_id => $new_blog->id,
-      _type => 'blog',
-      id => $new_blog->id
-    });
+    my $new_blog;
+    eval {
+        $new_blog = $blog->clone( {
+                             BlogName => ($blog_name),
+                             Children => 1,
+                             Except => ( { site_path => 1, site_url => 1 } ),
+                             Callback => sub { _progress( $app, @_ ) },
+                             Classes => ($cloning_prefs)
+                           }
+        );
 
-    $app->print($app->translate_templatized(<<"HTML"));
+        $new_blog->site_path( $param->{'site_path'} );
+        $new_blog->site_url( $param->{'site_url'} );
+        $new_blog->save();
+    };
+    if ( my $err = $@ ) {
+        $app->print(
+            $app->translate_templatized(
+                qq{<p class="error-message"><MT_TRANS phrase="Error">: $err</p>}
+            )
+        );
+    }
+    else {
+        $app->add_return_arg( '__mode' => 'list_blog' );
+        my $return_url = $app->return_uri;
+        my $blog_url = $app->uri( mode => 'dashboard',
+                                  args => { blog_id => $new_blog->id } );
+        my $setting_url = $app->uri(
+                                     mode => 'view',
+                                     args => {
+                                               blog_id => $new_blog->id,
+                                               _type   => 'blog',
+                                               id      => $new_blog->id
+                                     }
+        );
+
+        $app->print( $app->translate_templatized(<<"HTML") );
 </ul>
 </div>
 
@@ -1212,29 +1331,33 @@ HTML
 </div>
 
 HTML
-  }
+    } ## end else [ if ( my $err = $@ ) ]
 
-  $app->print($app->build_page('dialog/footer.tmpl'));
-}
+    $app->print( $app->build_page('dialog/footer.tmpl') );
+} ## end sub print_status_page
 
 sub _progress {
     my $app = shift;
     my $ids = $app->request('progress_ids') || {};
 
-    my ($str, $id) = @_;
-    if ($id && $ids->{$id}) {
+    my ( $str, $id ) = @_;
+    if ( $id && $ids->{$id} ) {
         require MT::Util;
         my $str_js = MT::Util::encode_js($str);
-        $app->print(qq{<script type="text/javascript">progress('$str_js', '$id');</script>\n});
-    } elsif ($id) {
+        $app->print(
+            qq{<script type="text/javascript">progress('$str_js', '$id');</script>\n}
+        );
+    }
+    elsif ($id) {
         $ids->{$id} = 1;
         $app->print(qq{<li id="$id">$str</li>\n});
-    } else {
+    }
+    else {
         $app->print("<li>$str</li>");
     }
 
-    $app->request('progress_ids', $ids);
-}
+    $app->request( 'progress_ids', $ids );
+} ## end sub _progress
 
 sub not_junk_test {
     my ( $eh, $app, $obj ) = @_;
@@ -1247,20 +1370,21 @@ sub build_revision_table {
     my $app = shift;
     my (%args) = @_;
 
-    my $q = $app->query;
-    my $type = $q->param('_type');
+    my $q     = $app->query;
+    my $type  = $q->param('_type');
     my $class = $app->model($type);
     my $param = $args{param};
     my $obj   = $args{object};
-    my $blog = $obj->blog || MT->model('blog')->load( $q->param('blog_id') ) || undef;
+    my $blog 
+      = $obj->blog
+      || MT->model('blog')->load( $q->param('blog_id') )
+      || undef;
     my $lang = $app->user ? $app->user->preferred_language : undef;
 
     my $js = $param->{rev_js};
-    unless ( $js ) {
-        $js = "location.href='"
-          . $app->uri
-          . '?__mode=view&amp;_type='
-          . $type;
+    unless ($js) {
+        $js
+          = "location.href='" . $app->uri . '?__mode=view&amp;_type=' . $type;
         if ( my $id = $obj->id ) {
             $js .= '&amp;id=' . $id;
         }
@@ -1272,16 +1396,17 @@ sub build_revision_table {
     my $hasher = sub {
         my ( $rev, $row ) = @_;
         if ( my $ts = $rev->created_on ) {
-            $row->{created_on_formatted} =
-              format_ts( MT::App::CMS::LISTING_DATE_FORMAT(), $ts, $blog, $lang );
-            $row->{created_on_time_formatted} =
-              format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(), $ts, $blog, $lang );
-            $row->{created_on_relative} =
-              relative_date( $ts, time, $blog );
+            $row->{created_on_formatted}
+              = format_ts( MT::App::CMS::LISTING_DATE_FORMAT(),
+                           $ts, $blog, $lang );
+            $row->{created_on_time_formatted}
+              = format_ts( MT::App::CMS::LISTING_TIMESTAMP_FORMAT(),
+                           $ts, $blog, $lang );
+            $row->{created_on_relative} = relative_date( $ts, time, $blog );
         }
         if ( $row->{created_by} ) {
-            my $created_user = $users{ $row->{created_by} } ||=
-              MT::Author->load( $row->{created_by} );
+            my $created_user = $users{ $row->{created_by} }
+              ||= MT::Author->load( $row->{created_by} );
             if ($created_user) {
                 $row->{created_by} = $created_user->nickname;
             }
@@ -1289,8 +1414,9 @@ sub build_revision_table {
                 $row->{created_by} = $app->translate('(user deleted)');
             }
         }
-        my $revision = $obj->object_from_revision( $rev );
+        my $revision    = $obj->object_from_revision($rev);
         my $column_defs = $obj->column_defs;
+
         #my @changed = map {
         #    my $label = $column_defs->{$_}->{label};
         #    $label ||= $_;
@@ -1300,79 +1426,83 @@ sub build_revision_table {
         if ( ( 'entry' eq $type ) || ( 'page' eq $type ) ) {
             $row->{rev_status} = $revision->[0]->status;
         }
-        $row->{rev_js} = $js . '&amp;r=' . $row->{rev_number} . "'";
+        $row->{rev_js}     = $js . '&amp;r=' . $row->{rev_number} . "'";
         $row->{is_current} = $param->{revision} == $row->{rev_number};
     };
-    return $app->listing(
-        {
-            type   => "$type:revision",
-            code   => $hasher,
-            terms  => { $class->datasource . '_id' => $obj->id },
-            source => $type,
-            params => { dialog => $q->param('dialog'), },
-            %$param
-        }
-    );
-}
+    return
+      $app->listing( {
+                       type   => "$type:revision",
+                       code   => $hasher,
+                       terms  => { $class->datasource . '_id' => $obj->id },
+                       source => $type,
+                       params => { dialog => $q->param('dialog'), },
+                       %$param
+                     }
+      );
+} ## end sub build_revision_table
 
 sub list_revision {
-    my $app = shift;
-    my $q = $app->query;
-    my $type = $q->param('_type');
+    my $app   = shift;
+    my $q     = $app->query;
+    my $type  = $q->param('_type');
     my $class = $app->model($type);
-    my $id = $q->param('id');
-    my $rn = $q->param('r');
+    my $id    = $q->param('id');
+    my $rn    = $q->param('r');
     $id =~ s/\D//g;
-    my $obj = $class->load( $id )
-        or return $app->error($app->translate('Can\'t load [_1] #[_1].', $class->class_label, $id));
+    my $obj = $class->load($id)
+      or return
+      $app->error(
+          $app->translate(
+                           'Can\'t load [_1] #[_1].', $class->class_label, $id
+          )
+      );
     my $blog = $obj->blog || MT::Blog->load( $q->param('blog_id') ) || undef;
 
-    my $js = "parent.location.href='"
+    my $js
+      = "parent.location.href='"
       . $app->uri
       . '?__mode=view&amp;_type='
       . $type
-      . '&amp;id=' . $obj->id;
+      . '&amp;id='
+      . $obj->id;
     if ( defined $blog ) {
         $js .= '&amp;blog_id=' . $blog->id;
     }
     my $revision = $rn
-        || (
-          $obj->has_meta('revision')
-        ? $obj->revision || $obj->current_revision
-        : $obj->current_revision
-        || 0
-        );
-    return build_revision_table( $app,
-        object => $obj,
-        param  => {
-            template => 'dialog/list_revision.tmpl',
-            args     => {
-                sort_order => 'rev_number',
-                direction => 'descend',
-            },
-            rev_js => $js,
-            revision => $revision,
-        }
-    );
-}
+      || (   $obj->has_meta('revision')
+           ? $obj->revision || $obj->current_revision
+           : $obj->current_revision || 0 );
+    return
+      build_revision_table(
+          $app,
+          object => $obj,
+          param  => {
+              template => 'dialog/list_revision.tmpl',
+              args => { sort_order => 'rev_number', direction => 'descend', },
+              rev_js   => $js,
+              revision => $revision,
+          }
+      );
+} ## end sub list_revision
 
 sub save_snapshot {
-    my $app = shift;
-    my $q    = $app->query;
-    my $type = $q->param('_type');
-    my $id = $q->param('id');
+    my $app   = shift;
+    my $q     = $app->query;
+    my $type  = $q->param('_type');
+    my $id    = $q->param('id');
     my $param = {};
 
-    return $app->errtrans("Invalid request.")
-      unless $type;
+    return $app->errtrans("Invalid request.") unless $type;
 
     $app->validate_magic() or return;
 
-    $app->run_callbacks( 'cms_save_permission_filter.' . "$type:revision", $app, $id )
+    $app->run_callbacks( 'cms_save_permission_filter.' . "$type:revision",
+                         $app, $id )
       || return $app->error(
-        $app->translate( "Permission denied: [_1]", $app->errstr() ) );
+               $app->translate( "Permission denied: [_1]", $app->errstr() ) );
 
-    my $filter_result = $app->run_callbacks( 'cms_save_filter.' . "$type:revision", $app );
+    my $filter_result
+      = $app->run_callbacks( 'cms_save_filter.' . "$type:revision", $app );
     if ( !$filter_result ) {
         my %param = (%$param);
         $param{error}       = $app->errstr;
@@ -1389,15 +1519,15 @@ sub save_snapshot {
     my $obj;
     if ($id) {
         $obj = $class->load($id)
-            or return $app->error($app->translate("Invalid ID [_1]", $id));
+          or return $app->error( $app->translate( "Invalid ID [_1]", $id ) );
     }
     else {
         $obj = $class->new;
     }
 
     my $original = $obj->clone();
-    my $names  = $obj->column_names;
-    my %values = map { $_ => ( scalar $q->param($_) ) } @$names;
+    my $names    = $obj->column_names;
+    my %values   = map { $_ => ( scalar $q->param($_) ) } @$names;
 
     if ( ( 'entry' eq $type ) || ( 'page' eq $type ) ) {
         $app->_translate_naughty_words($obj);
@@ -1405,53 +1535,64 @@ sub save_snapshot {
     delete $values{'id'} if exists( $values{'id'} ) && !$values{'id'};
     $obj->set_values( \%values );
     unless (
-        $app->run_callbacks( 'cms_pre_save.' . "$type:revision", $app, $obj, undef ) )
+             $app->run_callbacks( 'cms_pre_save.' . "$type:revision", $app,
+                                  $obj,                               undef )
+      )
     {
         $param->{return_args} = $q->param('return_args');
-        return edit( $app,
-            {
-                %$param,
-                error => $app->translate( "Saving snapshot failed: [_1]", $app->errstr )
-            }
-        );
+        return
+          edit(
+                $app,
+                {
+                   %$param,
+                   error =>
+                     $app->translate(
+                                      "Saving snapshot failed: [_1]",
+                                      $app->errstr
+                     )
+                }
+          );
     }
     $obj->gather_changed_cols($original);
     if ( exists $obj->{changed_revisioned_cols} ) {
         my $col = 'max_revisions_' . $obj->datasource;
         if ( my $blog = $obj->blog ) {
             my $max = $blog->$col;
-            $obj->handle_max_revisions( $max );
+            $obj->handle_max_revisions($max);
         }
         my $revision = $obj->save_revision( $q->param('revision-note') );
         $app->add_return_arg( r => $revision );
-        if ( $id ) {
+        if ($id) {
             my $obj_revision = $original->revision || 0;
-            unless ( $obj_revision ) {
-                $original->revision($revision - 1);
+            unless ($obj_revision) {
+                $original->revision( $revision - 1 );
+
                 # hack to bypass instance save method
                 $original->{__meta}->save;
             }
             $original->current_revision($revision);
+
             # call update to bypass instance save method
-            $original->update or return $original->error($original->errstr);
+            $original->update or return $original->error( $original->errstr );
         }
 
-        $app->run_callbacks( 'cms_post_save.' . "$type:revision", $app, $obj, undef )
+        $app->run_callbacks( 'cms_post_save.' . "$type:revision",
+                             $app, $obj, undef )
           or return $app->error( $app->errstr() );
-    
+
         $app->add_return_arg( 'saved_snapshot' => 1 );
-    }
+    } ## end if ( exists $obj->{changed_revisioned_cols...})
     else {
         $app->add_return_arg( 'no_snapshot' => 1 );
     }
 
     $app->add_return_arg( 'id' => $obj->id ) if !$original->id;
     $app->call_return;
-}
+} ## end sub save_snapshot
 
 sub empty_dialog {
     my $app = shift;
-    $app->build_page( 'dialog/empty_dialog.tmpl' );
+    $app->build_page('dialog/empty_dialog.tmpl');
 }
 
 1;

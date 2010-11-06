@@ -53,10 +53,7 @@ sub _request_data {
     my @fields = split q{, }, $data;
     $info =~ m/\[(.+)\]\s*(.[^ ]+)\s*pt-times/;
     my ( $date, $hostname ) = ( $1, $2 );
-    my %request_data = (
-        date     => $date,
-        hostname => $hostname,
-    );
+    my %request_data = ( date => $date, hostname => $hostname, );
     my @mt_process;
 
     foreach my $field (@fields) {
@@ -73,13 +70,14 @@ sub _request_data {
     }
     $request_data{mt_process} = \@mt_process;
     \%request_data;
-}
+} ## end sub _request_data
 
 sub report {
-    my $self         = shift;
-    my %param        = @_;
-    my $sys_info     = $self->{system_info};
-    my $request_data = $self->_sort_data( $self->{request_data}, $param{sort} );
+    my $self     = shift;
+    my %param    = @_;
+    my $sys_info = $self->{system_info};
+    my $request_data
+      = $self->_sort_data( $self->{request_data}, $param{sort} );
 
     # temporary data dump
     use Data::Dumper;
@@ -91,10 +89,9 @@ sub _sort_data {
     my $self = shift;
     my ( $data, $sort_key ) = @_;
     return $data if !$sort_key;
-    my @sorted =
-      map  { $_->[0] }
-      sort { $b->[1] <=> $a->[1] }               # sort data in descending order
-      map  { [ $_, $_->{$sort_key} ] } @$data;
+    my @sorted = map { $_->[0] }
+      sort { $b->[1] <=> $a->[1] }    # sort data in descending order
+      map { [ $_, $_->{$sort_key} ] } @$data;
     \@sorted;
 }
 

@@ -24,10 +24,8 @@ sub post_remove_score {
     my $class = shift;
     my ($obj) = @_;
     require MT::ObjectScore;
-    MT::ObjectScore->remove({
-        object_ds => $obj->datasource,
-        object_id => $obj->id,
-    });
+    MT::ObjectScore->remove(
+                  { object_ds => $obj->datasource, object_id => $obj->id, } );
 }
 
 sub get_score {
@@ -35,10 +33,10 @@ sub get_score {
     my ( $namespace, $user ) = @_;
 
     my $term = {
-        namespace => $namespace,
-        object_id => $obj->id,
-        author_id => $user->id,
-        object_ds => $obj->datasource,
+                 namespace => $namespace,
+                 object_id => $obj->id,
+                 author_id => $user->id,
+                 object_ds => $obj->datasource,
     };
     my $s = @{ $obj->_load_score_data($term) }[0] or return undef;
     $s->score;
@@ -58,9 +56,9 @@ sub set_score {
     }
 
     my $term = {
-        namespace => $namespace,
-        object_id => $obj->id,
-        object_ds => $obj->datasource,
+                 namespace => $namespace,
+                 object_id => $obj->id,
+                 object_ds => $obj->datasource,
     };
     $term->{ip} = $ip if $ip && !$user;
     $term->{author_id} = $user->id if $user;
@@ -74,38 +72,39 @@ sub set_score {
         $s->set_values($term);
     }
     $s->{__orig_value}->{score} = $s->score
-        unless exists( $s->{__orig_value}->{score} );
+      unless exists( $s->{__orig_value}->{score} );
     $s->score($score);
     if ($blog) {
-		$blog = MT->model('blog')->load($blog) unless ref($blog);
-    	require MT::Util;
-        my $ts = MT::Util::epoch2ts($blog, time);
+        $blog = MT->model('blog')->load($blog) unless ref($blog);
+        require MT::Util;
+        my $ts = MT::Util::epoch2ts( $blog, time );
         $s->created_on($ts);
         $s->modified_on($ts);
     }
     $s->save
-      or return $obj->error(
-        MT->translate(
-            "Could not set score to the object '[_1]'(ID: [_2])",
-            $obj->datasource, $obj->id
-        )
+      or return
+      $obj->error(
+           MT->translate(
+                         "Could not set score to the object '[_1]'(ID: [_2])",
+                         $obj->datasource, $obj->id
+           )
       );
     $obj->_flush_score_cache($term);
     return $s;
-}
+} ## end sub set_score
 
 sub _get_objectscores {
-    my $obj         = shift;
+    my $obj = shift;
     my ($namespace) = @_;
-    my $scores      = $obj->_load_score_data(
-        {
-            namespace => $namespace,
-            object_id => $obj->id,
-            object_ds => $obj->datasource,
-        }
+    my $scores = $obj->_load_score_data( {
+                                           namespace => $namespace,
+                                           object_id => $obj->id,
+                                           object_ds => $obj->datasource,
+                                         }
     );
     my $req = MT::Request->instance();
-    $req->cache( $obj->datasource . '_scores_' . $obj->id . "_$namespace", $scores );
+    $req->cache( $obj->datasource . '_scores_' . $obj->id . "_$namespace",
+                 $scores );
     return $scores;
 }
 
@@ -113,8 +112,9 @@ sub score_for {
     my $obj = shift;
     my ($namespace) = @_;
 
-    my $req    = MT::Request->instance();
-    my $scores = $req->stash( $obj->datasource . '_scores_' . $obj->id . "_$namespace" );
+    my $req = MT::Request->instance();
+    my $scores = $req->stash(
+                   $obj->datasource . '_scores_' . $obj->id . "_$namespace" );
     unless ( $scores && @$scores ) {
         $scores = $obj->_get_objectscores($namespace);
     }
@@ -128,19 +128,21 @@ sub votes_for {
     my $obj         = shift;
     my ($namespace) = @_;
     my $req         = MT::Request->instance();
-    my $scores      = $req->stash( $obj->datasource . '_scores_' . $obj->id . "_$namespace" );
+    my $scores = $req->stash(
+                   $obj->datasource . '_scores_' . $obj->id . "_$namespace" );
     unless ($scores) {
         $scores = $obj->_get_objectscores($namespace);
     }
     return scalar @$scores;
 }
-*vote_for = \&votes_for; # backward-compatible mapping for typo
+*vote_for = \&votes_for;    # backward-compatible mapping for typo
 
 sub _score_top {
     my $obj = shift;
     my ( $namespace, $block ) = @_;
-    my $req    = MT::Request->instance();
-    my $scores = $req->stash( $obj->datasource . '_scores_' . $obj->id . "_$namespace" );
+    my $req = MT::Request->instance();
+    my $scores = $req->stash(
+                   $obj->datasource . '_scores_' . $obj->id . "_$namespace" );
     unless ($scores) {
         $scores = $obj->_get_objectscores($namespace);
     }
@@ -175,7 +177,8 @@ sub score_avg {
     my $obj         = shift;
     my ($namespace) = @_;
     my $req         = MT::Request->instance();
-    my $scores      = $req->stash( $obj->datasource . '_scores_' . $obj->id . "_$namespace" );
+    my $scores = $req->stash(
+                   $obj->datasource . '_scores_' . $obj->id . "_$namespace" );
     unless ($scores) {
         $scores = $obj->_get_objectscores($namespace);
     }
@@ -198,11 +201,10 @@ sub rank_for {
     my $high  = $req->stash( $obj->datasource . "_score_high_$namespace" );
     my $low   = $req->stash( $obj->datasource . "_score_low_$namespace" );
     unless ( $total && $high && $low ) {
-        my $term = {
-            'object_ds' => $obj->datasource,
-            'namespace' => $namespace,
-        };
-        ( $total, $high, $low ) = $obj->_load_rank_data( $term, $score, $dbd_args );
+        my $term
+          = { 'object_ds' => $obj->datasource, 'namespace' => $namespace, };
+        ( $total, $high, $low )
+          = $obj->_load_rank_data( $term, $score, $dbd_args );
         $req->cache( $obj->datasource . "_score_total_$namespace", $total );
         $req->cache( $obj->datasource . "_score_high_$namespace",  $high );
         $req->cache( $obj->datasource . "_score_low_$namespace",   $low );
@@ -224,7 +226,7 @@ sub rank_for {
 
     my $level = int( log( $score - $low + 1 ) * $factor );
     $max - $level;
-}
+} ## end sub rank_for
 
 sub _cache_key {
     my $obj = shift;
@@ -252,7 +254,7 @@ sub _load_score_data {
     my $scores;
     $scores = $cache->get($memkey);
     unless ( $scores = $cache->get($memkey) ) {
-        $scores = [ grep { defined } MT::ObjectScore->load($term) ];
+        $scores = [ grep {defined} MT::ObjectScore->load($term) ];
         $cache->set( $memkey, $scores, SCORE_CACHE_TIME );
     }
     return $scores;
@@ -267,14 +269,15 @@ sub _load_rank_data {
     my $high   = $cache->get( $memkey . "_high" );
     my $low    = $cache->get( $memkey . "_low" );
     unless ( $total && $high && $low ) {
-        my $sgb_iter = MT::ObjectScore->sum_group_by(
-            $term,
-            {
-                'sum' => 'score',
-                group => ['object_id'],
-                ( defined($dbd_args) && %$dbd_args ) ? (%$dbd_args) : (),
-            }
-        );
+        my $sgb_iter =
+          MT::ObjectScore->sum_group_by(
+                  $term,
+                  {
+                    'sum' => 'score',
+                    group => ['object_id'],
+                    ( defined($dbd_args) && %$dbd_args ) ? (%$dbd_args) : (),
+                  }
+          );
         $total = 0;
         $high  = 0;
         $low   = 0;
@@ -291,10 +294,10 @@ sub _load_rank_data {
         $cache->set( $memkey . "_total", $total, SCORE_CACHE_TIME );
         $cache->set( $memkey . "_high",  $high,  SCORE_CACHE_TIME );
         $cache->set( $memkey . "_low",   $high,  SCORE_CACHE_TIME );
-    }
+    } ## end unless ( $total && $high &&...)
 
     return ( $total, $high, $low );
-}
+} ## end sub _load_rank_data
 
 sub _flush_score_cache {
     my $obj    = shift;

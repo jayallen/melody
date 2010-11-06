@@ -29,30 +29,26 @@ sub can_delete {
 sub pre_save {
     my $eh = shift;
     my ( $app, $obj ) = @_;
-    my $pkg      = $app->model('folder');
-    my @siblings = $pkg->load(
-        {
-            parent  => $obj->parent,
-            blog_id => $obj->blog_id
-        }
-    );
+    my $pkg = $app->model('folder');
+    my @siblings
+      = $pkg->load( { parent => $obj->parent, blog_id => $obj->blog_id } );
     foreach (@siblings) {
         next if $obj->id && ( $_->id == $obj->id );
-        return $eh->error(
+        return
+          $eh->error(
             $app->translate(
-"The folder '[_1]' conflicts with another folder. Folders with the same parent must have unique basenames.",
+                "The folder '[_1]' conflicts with another folder. Folders with the same parent must have unique basenames.",
                 $_->label
             )
-        ) if $_->basename eq $obj->basename;
+          ) if $_->basename eq $obj->basename;
     }
 
     my $tags = $app->query->param('tags');
-    if ( defined $tags )
-    {
-        my $blog = $app->blog;
+    if ( defined $tags ) {
+        my $blog   = $app->blog;
         my $fields = $blog->smart_replace_fields;
         if ( $fields =~ m/tags/ig ) {
-            $tags = $app->_convert_word_chars( $tags );
+            $tags = $app->_convert_word_chars($tags);
         }
 
         require MT::Tag;
@@ -67,34 +63,34 @@ sub pre_save {
     }
 
     1;
-}
+} ## end sub pre_save
 
 sub post_save {
     my $eh = shift;
     my ( $app, $obj, $original ) = @_;
 
     if ( !$original->id ) {
-        $app->log(
-            {
-                message => $app->translate(
-                    "Folder '[_1]' created by '[_2]'", $obj->label,
-                    $app->user->name
-                ),
-                level    => MT::Log::INFO(),
-                class    => 'folder',
-                category => 'new',
-            }
+        $app->log( {
+                     message =>
+                       $app->translate(
+                               "Folder '[_1]' created by '[_2]'", $obj->label,
+                               $app->user->name
+                       ),
+                     level    => MT::Log::INFO(),
+                     class    => 'folder',
+                     category => 'new',
+                   }
         );
     }
     1;
 }
 
 sub save_filter {
-    my $eh = shift;
+    my $eh    = shift;
     my ($app) = @_;
-	my $q    = $app->query;
+    my $q     = $app->query;
     return $app->errtrans( "The name '[_1]' is too long!",
-        $q->param('label') )
+                           $q->param('label') )
       if ( length( $q->param('label') ) > 100 );
     return 1;
 }
@@ -102,16 +98,16 @@ sub save_filter {
 sub post_delete {
     my ( $eh, $app, $obj ) = @_;
 
-    $app->log(
-        {
-            message => $app->translate(
-                "Folder '[_1]' (ID:[_2]) deleted by '[_3]'",
-                $obj->label, $obj->id, $app->user->name
-            ),
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            category => 'delete'
-        }
+    $app->log( {
+                 message =>
+                   $app->translate(
+                                  "Folder '[_1]' (ID:[_2]) deleted by '[_3]'",
+                                  $obj->label, $obj->id, $app->user->name
+                   ),
+                 level    => MT::Log::INFO(),
+                 class    => 'system',
+                 category => 'delete'
+               }
     );
 }
 

@@ -5,7 +5,7 @@ use MT::Util qw( dirify );
 
 sub start_export {
     my $app = shift;
-	my $q    = $app->query;
+    my $q   = $app->query;
     my %param;
     my $blog_id = $q->param('blog_id');
 
@@ -18,21 +18,23 @@ sub start_export {
 }
 
 sub export {
-    my $app = shift;
-	my $q    = $app->query;
+    my $app     = shift;
+    my $q       = $app->query;
     my $charset = $app->charset;
     require MT::Blog;
     my $blog_id = $q->param('blog_id')
       or return $app->error( $app->translate("Please select a blog.") );
     my $blog = MT::Blog->load($blog_id)
-      or return $app->error(
-        $app->translate(
-            "Load of blog '[_1]' failed: [_2]",
-            $blog_id, MT::Blog->errstr
-        )
+      or return
+      $app->error(
+                $app->translate(
+                                 "Load of blog '[_1]' failed: [_2]", $blog_id,
+                                 MT::Blog->errstr
+                )
       );
     my $perms = $app->permissions;
-    return $app->error( $app->translate("You do not have export permissions") )
+    return $app->error(
+                       $app->translate("You do not have export permissions") )
       unless $perms && $perms->can_edit_config;
     $app->validate_magic() or return;
     my $file = dirify( $blog->name ) . ".txt";
@@ -48,15 +50,12 @@ sub export {
 
     $app->set_header( "Content-Disposition" => "attachment; filename=$file" );
     $app->send_http_header(
-        $charset
-        ? "text/plain; charset=$charset"
-        : 'text/plain'
-    );
+                   $charset ? "text/plain; charset=$charset" : 'text/plain' );
     require MT::ImportExport;
     MT::ImportExport->export( $blog, sub { $app->print(@_) } )
       or return $app->error( MT::ImportExport->errstr );
     1;
-}
+} ## end sub export
 
 1;
 

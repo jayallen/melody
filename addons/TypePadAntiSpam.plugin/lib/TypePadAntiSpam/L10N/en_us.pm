@@ -10,10 +10,10 @@ use strict;
 
 use base 'TypePadAntiSpam::L10N';
 use vars qw( %Lexicon );
-%Lexicon = ( 
+%Lexicon = (
 
-## plugins/TypePadAntiSpam/tmpl/stats_widget.tmpl 
-	'widget_label_width' => '57', 
-	'widget_totals_width' => '200', 
+## plugins/TypePadAntiSpam/tmpl/stats_widget.tmpl
+    'widget_label_width'  => '57',
+    'widget_totals_width' => '200',
 );
 1;

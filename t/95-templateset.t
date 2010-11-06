@@ -7,7 +7,7 @@ use lib 't/lib', 'lib', 'extlib';
 use Test::More tests => 2;
 
 BEGIN {
-        $ENV{MT_APP} = 'MT::App::CMS';
+    $ENV{MT_APP} = 'MT::App::CMS';
 }
 
 use MT;
@@ -19,5 +19,5 @@ my $app = MT::App::CMS->instance();
 
 # get the current list of template sets from registry
 my $sets = $app->registry("template_sets");
-ok ($sets, "Template sets exist");
-ok (exists $sets->{"mt_blog"}, "Blog template set exists");
+ok( $sets,                     "Template sets exist" );
+ok( exists $sets->{"mt_blog"}, "Blog template set exists" );

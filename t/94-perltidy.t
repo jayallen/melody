@@ -12,17 +12,16 @@ our $EXT = qr/(\.(cgi|pl|pm|PL|t)$)/;    # file extensions to look for
 
 sub manifest_files {
     my $manifest = maniread();
-    return grep {m/$EXT/}
-      grep      { !m/^extlib/ }          # ignore extlib
+    return grep {m/$EXT/} grep { !m/^extlib/ }    # ignore extlib
       keys %$manifest;
 }
 
 use Sub::Install;
 Sub::Install::reinstall_sub( {
-        code => \&manifest_files,
-        into => "Test::PerlTidy",
-        as   => 'list_files',
-    }
+                               code => \&manifest_files,
+                               into => "Test::PerlTidy",
+                               as   => 'list_files',
+                             }
 );
 
 # Now the moment we've been waiting for.

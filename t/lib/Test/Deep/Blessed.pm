@@ -7,41 +7,37 @@ use Test::Deep::Cmp;
 
 use Scalar::Util qw( blessed );
 
-sub init
-{
-	my $self = shift;
+sub init {
+    my $self = shift;
 
-	my $val = shift;
+    my $val = shift;
 
-	$self->{val} = $val;
+    $self->{val} = $val;
 }
 
-sub descend
-{
-	my $self = shift;
-	my $got = shift;
+sub descend {
+    my $self = shift;
+    my $got  = shift;
 
-	my $exp = $self->{val};
-	my $blessed = blessed($got);
+    my $exp     = $self->{val};
+    my $blessed = blessed($got);
 
-	return Test::Deep::descend($blessed, Test::Deep::shallow($exp));
+    return Test::Deep::descend( $blessed, Test::Deep::shallow($exp) );
 }
 
-sub render_stack
-{
-	my $self = shift;
-	my $var = shift;
+sub render_stack {
+    my $self = shift;
+    my $var  = shift;
 
-	return "blessed($var)"
+    return "blessed($var)";
 }
 
-sub renderGot
-{
-	my $self = shift;
+sub renderGot {
+    my $self = shift;
 
-	my $got = shift;
+    my $got = shift;
 
-	$self->SUPER::renderGot(blessed($got));
+    $self->SUPER::renderGot( blessed($got) );
 }
 
 1;

@@ -36,19 +36,19 @@ sub setup {
     # Blogs first since they don't depend on users/group3s/roles
     if ( $data_ref->{blogs} ) {
         $env_data_ref->{blogs}
-            = create_blogs( $data_ref->{blogs}, $env_data_ref );
+          = create_blogs( $data_ref->{blogs}, $env_data_ref );
     }
 
     # Roles next
     if ( $data_ref->{roles} ) {
         $env_data_ref->{roles}
-            = create_roles( $data_ref->{roles}, $env_data_ref );
+          = create_roles( $data_ref->{roles}, $env_data_ref );
     }
 
     # Groups next so that they can be linked to blogs and roles now if need be
     if ( MT->model('group') && $data_ref->{groups} ) {
         $env_data_ref->{groups}
-            = create_groups( $data_ref->{groups}, $env_data_ref );
+          = create_groups( $data_ref->{groups}, $env_data_ref );
 
     }
 
@@ -56,18 +56,18 @@ sub setup {
     # or groups.
     if ( $data_ref->{users} ) {
         $env_data_ref->{users}
-            = create_users( $data_ref->{users}, $env_data_ref );
+          = create_users( $data_ref->{users}, $env_data_ref );
     }
 
     # Entries
     # The Aptly Named Sir Not Appearing In This Module
     if ( $data_ref->{entries} ) {
         $env_data_ref->{entries}
-            = create_entries( $data_ref->{entries}, $env_data_ref );
+          = create_entries( $data_ref->{entries}, $env_data_ref );
     }
 
     return $env_data_ref;
-}
+} ## end sub setup
 
 sub create_role {
     my ( $role_data_ref, $env_data_ref ) = @_;
@@ -82,7 +82,7 @@ sub create_role {
         $role->is_system(1);
     }
     $role->role_mask( $role_data_ref->{role_mask} )
-        if exists $role_data_ref->{role_mask};
+      if exists $role_data_ref->{role_mask};
     $role->save or croak $role->errstr;
     return $role;
 }
@@ -99,53 +99,53 @@ sub create_roles {
 sub create_user {
     my ( $user_data_ref, $env_data_ref ) = @_;
     croak('No values for user') if ( !$user_data_ref->{values} );
-    my $v = $user_data_ref->{values};
+    my $v    = $user_data_ref->{values};
     my $user = MT->model('author')->get_by_key( { name => $v->{name} } );
-    my $pwd = delete $v->{password} || "password";
-    
+    my $pwd  = delete $v->{password} || "password";
+
     $user->set_values($v);
     $user->set_password($pwd);
-    
+
     $user->save or croak $user->errstr;
     if ( $user_data_ref->{roles} ) {
         foreach my $blog_key ( keys %{ $user_data_ref->{roles} } ) {
             my $blog = $env_data_ref->{blogs}->{$blog_key};
-            croak(    "Cannot setup user roles for user "
-                    . $user->name
-                    . ": cannot get blog "
-                    . $blog_key )
-                unless $blog;
+            croak(   "Cannot setup user roles for user "
+                   . $user->name
+                   . ": cannot get blog "
+                   . $blog_key )
+              unless $blog;
             foreach my $role_key ( @{ $user_data_ref->{roles}->{$blog_key} } )
             {
                 my $role = $env_data_ref->{roles}->{$role_key};
                 if ( !$role ) {
                     $role = MT->model('role')->load( { name => $role_key } );
                 }
-                croak(    "Cannot setup user roles for user "
-                        . $user->name
-                        . ": cannot get role "
-                        . $role_key )
-                    unless $role;
+                croak(   "Cannot setup user roles for user "
+                       . $user->name
+                       . ": cannot get role "
+                       . $role_key )
+                  unless $role;
                 if ( $user && $blog && $role ) {
                     require MT::Association;
                     my $assoc
-                        = MT::Association->link( $user => $blog => $role );
+                      = MT::Association->link( $user => $blog => $role );
                 }
                 else {
 
                 }
-            }
-        }
-    }
+            } ## end foreach my $role_key ( @{ $user_data_ref...})
+        } ## end foreach my $blog_key ( keys...)
+    } ## end if ( $user_data_ref->{...})
     return $user;
-}
+} ## end sub create_user
 
 sub create_users {
     my ( $users_data_ref, $env_data_ref ) = @_;
     my $users_ref = {};
     foreach my $user_key ( keys %{$users_data_ref} ) {
         $users_ref->{$user_key}
-            = create_user( $users_data_ref->{$user_key}, $env_data_ref );
+          = create_user( $users_data_ref->{$user_key}, $env_data_ref );
     }
     return $users_ref;
 }
@@ -165,7 +165,7 @@ sub create_blogs {
     my $blogs_ref = {};
     foreach my $blog_key ( keys %{$blogs_data_ref} ) {
         $blogs_ref->{$blog_key}
-            = create_blog( $blogs_data_ref->{$blog_key}, $env_data_ref );
+          = create_blog( $blogs_data_ref->{$blog_key}, $env_data_ref );
     }
     return $blogs_ref;
 }
@@ -189,7 +189,7 @@ sub create_groups {
 
     for my $group_key ( keys %{$groups_data_ref} ) {
         $groups_ref->{$group_key}
-            = create_group( $groups_data_ref->{$group_key}, $env_data_ref );
+          = create_group( $groups_data_ref->{$group_key}, $env_data_ref );
     }
     return $groups_ref;
 }
@@ -199,14 +199,14 @@ sub create_entry {
     croak('No values for entry') if ( !$entry_data_ref->{values} );
     my $v = $entry_data_ref->{values};
 
-    my $author_key = delete $v->{author}
-        or croak('No author key for entry!');
+    my $author_key = delete $v->{author} or croak('No author key for entry!');
     my $author = $env_data_ref->{users}->{$author_key}
-        or croak("Could not get author $author_key for entry!");
+      or croak("Could not get author $author_key for entry!");
     $v->{author_id} = $author->id;
 
     my $blog_key = delete $v->{blog} or croak('No blog key for entry!');
-    my $blog = $env_data_ref->{blogs}->{$blog_key} or croak ("Could not get blog $blog_key for entry!");
+    my $blog = $env_data_ref->{blogs}->{$blog_key}
+      or croak("Could not get blog $blog_key for entry!");
     $v->{blog_id} = $blog->id;
 
     require MT::Entry;
@@ -215,14 +215,14 @@ sub create_entry {
     $entry->status( MT::Entry::RELEASE() );
     $entry->save() or croak( $entry->errstr );
     return $entry;
-}
+} ## end sub create_entry
 
 sub create_entries {
     my ( $entries_data_ref, $env_data_ref ) = @_;
     my $entries_ref = {};
     for my $entry_key ( keys %{$entries_data_ref} ) {
         $entries_ref->{$entry_key}
-            = create_entry( $entries_data_ref->{$entry_key}, $env_data_ref );
+          = create_entry( $entries_data_ref->{$entry_key}, $env_data_ref );
     }
     return $entries_ref;
 }

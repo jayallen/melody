@@ -11,423 +11,397 @@ $VERSION = 0.71;
 
 $indent = qr/^(?:\t+|\s{4,})/;
 %tags = (
-	indent		=> qr/^(?:\t+|\s{4,})/,
-	newline		=> '<br />',
-	link		=> \&make_html_link,
-	strong		=> sub { "<strong>$_[0]</strong>" },
-	emphasized	=> sub { "<em>$_[0]</em>" },
-	strong_tag  => qr/'''(.+?)'''/,
-	emphasized_tag => qr/''(.+?)''/,
+    indent         => qr/^(?:\t+|\s{4,})/,
+    newline        => '<br />',
+    link           => \&make_html_link,
+    strong         => sub {"<strong>$_[0]</strong>"},
+    emphasized     => sub {"<em>$_[0]</em>"},
+    strong_tag     => qr/'''(.+?)'''/,
+    emphasized_tag => qr/''(.+?)''/,
 
-	code		=> [ '<pre><code>', "</code></pre>\n", '', "\n" ],
-	line		=> [ '', "\n", '<hr />',  "\n" ],
-	paragraph	=> [ '<p>', "</p>\n", '', "<br />\n", 1 ],
-	unordered	=> [ "<ul>\n", "</ul>\n", '<li>', "</li>\n" ],
-	ordered		=> [ "<ol>\n", "</ol>\n", 
-		sub { qq|<li value="$_[2]">|, $_[0], "</li>\n" } ],
-	header      => [ '', "\n", sub {
-		my $level = length $_[2];
-		return "<h$level>", format_line($_[3], @_[-2, -1]), "</h$level>\n" }
-	],
+    code => [ '<pre><code>', "</code></pre>\n", '',       "\n" ],
+    line => [ '',            "\n",              '<hr />', "\n" ],
+    paragraph => [ '<p>',    "</p>\n",  '',     "<br />\n", 1 ],
+    unordered => [ "<ul>\n", "</ul>\n", '<li>', "</li>\n" ],
+    ordered => [
+                 "<ol>\n", "</ol>\n",
+                 sub { qq|<li value="$_[2]">|, $_[0], "</li>\n" }
+    ],
+    header => [
+        '', "\n",
+        sub {
+            my $level = length $_[2];
+            return "<h$level>", format_line( $_[3], @_[ -2, -1 ] ),
+              "</h$level>\n";
+          }
+    ],
 
-	blocks		=> {
-		ordered		=> qr/^([\dA-Za-z]+)\.\s*/,
-		unordered	=> qr/^\*\s*/,
-		code		=> qr/  /,
-		header      => qr/^(=+) (.+) \1/,
-		paragraph   => qr/^/,
-		line        => qr/^-{4,}/,
-	},
+    blocks => {
+                ordered   => qr/^([\dA-Za-z]+)\.\s*/,
+                unordered => qr/^\*\s*/,
+                code      => qr/  /,
+                header    => qr/^(=+) (.+) \1/,
+                paragraph => qr/^/,
+                line      => qr/^-{4,}/,
+    },
 
-	indented    => { map { $_ => 1 } qw( ordered unordered code )},
-	nests       => { map { $_ => 1 } qw( ordered unordered ) },
+    indented => { map { $_ => 1 } qw( ordered unordered code ) },
+    nests    => { map { $_ => 1 } qw( ordered unordered ) },
 
-	blockorder               =>
-		[qw( header line ordered unordered code paragraph )],
-	extended_link_delimiters => [qw( [ ] )],
+    blockorder => [qw( header line ordered unordered code paragraph )],
+    extended_link_delimiters => [qw( [ ] )],
 );
 
-sub process_args
-{
-	my $self = shift;
-	my $name = @_ == 1 ? shift : 'wikiformat';
-	return ( as => $name, @_ );
+sub process_args {
+    my $self = shift;
+    my $name = @_ == 1 ? shift : 'wikiformat';
+    return ( as => $name, @_ );
 }
 
-sub default_opts
-{
-	my ($class, $args) = @_;
+sub default_opts {
+    my ( $class, $args ) = @_;
 
-	my %defopts = ( implicit_links => 1, map { $_ => delete $args->{ $_ } }
-		qw( prefix extended implicit_links) );
+    my %defopts = (
+          implicit_links => 1,
+          map { $_ => delete $args->{$_} } qw( prefix extended implicit_links)
+    );
 
-	return %defopts;
+    return %defopts;
 }
 
-sub merge_hash
-{
-	my ($from, $to) = @_;
-	while (my ($key, $value) = each %$from)
-	{
-		if (UNIVERSAL::isa( $value, 'HASH' ))
-		{
-			$to->{$key} = {} unless defined $to->{$key};
-			merge_hash( $value, $to->{$key} );
-		}
-		else
-		{
-			$to->{$key} = $value;
-		}
-	}
+sub merge_hash {
+    my ( $from, $to ) = @_;
+    while ( my ( $key, $value ) = each %$from ) {
+        if ( UNIVERSAL::isa( $value, 'HASH' ) ) {
+            $to->{$key} = {} unless defined $to->{$key};
+            merge_hash( $value, $to->{$key} );
+        }
+        else {
+            $to->{$key} = $value;
+        }
+    }
 }
 
-sub import
-{
-	my $class = shift;
-	return unless @_;
+sub import {
+    my $class = shift;
+    return unless @_;
 
-	my %args    = $class->process_args( @_ );
-	my %defopts = $class->default_opts( \%args );
+    my %args    = $class->process_args(@_);
+    my %defopts = $class->default_opts( \%args );
 
-	my $caller = caller();
-	my $name   = delete $args{as};
+    my $caller = caller();
+    my $name   = delete $args{as};
 
-	no strict 'refs';
-	*{ $caller . "::$name" } = sub {
-		my ($text, $tags, $opts) = @_;
+    no strict 'refs';
+    *{ $caller . "::$name" } = sub {
+        my ( $text, $tags, $opts ) = @_;
 
-		$tags ||= {};
-		$opts ||= {};
+        $tags ||= {};
+        $opts ||= {};
 
-		my %tags = %args;
-		merge_hash( $tags, \%tags );
-		my %opts = %defopts;
-		merge_hash( $opts, \%opts );
+        my %tags = %args;
+        merge_hash( $tags, \%tags );
+        my %opts = %defopts;
+        merge_hash( $opts, \%opts );
 
-		Text::WikiFormat::format( $text, \%tags, \%opts);
-	}
+        Text::WikiFormat::format( $text, \%tags, \%opts );
+      }
+} ## end sub import
+
+sub format {
+    my ( $text, $newtags, $opts ) = @_;
+    $opts ||= { prefix => '', extended => 0, implicit_links => 1 };
+    my %tags = %tags;
+
+    merge_hash( $newtags, \%tags )
+      if defined $newtags and UNIVERSAL::isa( $newtags, 'HASH' );
+    check_blocks( \%tags )
+      if exists $newtags->{blockorder}
+          or exists $newtags->{blocks};
+
+    my @blocks = find_blocks( $text, \%tags, $opts );
+    @blocks = merge_blocks( \@blocks, \%tags, $opts );
+    @blocks = nest_blocks( \@blocks, \%tags, $opts );
+    return process_blocks( \@blocks, \%tags, $opts );
 }
 
-sub format
-{
-	my ($text, $newtags, $opts) = @_;
-	$opts    ||= { prefix => '', extended => 0, implicit_links => 1 };
-	my %tags   = %tags;
-
-	merge_hash( $newtags, \%tags )
-		if defined $newtags and UNIVERSAL::isa( $newtags, 'HASH' );
-	check_blocks( \%tags )
-		if exists $newtags->{blockorder} or exists $newtags->{blocks};
-
-	my @blocks =  find_blocks( $text,     \%tags, $opts );
-	@blocks    = merge_blocks( \@blocks,  \%tags, $opts );
-	@blocks    =  nest_blocks( \@blocks,  \%tags, $opts );
-	return     process_blocks( \@blocks,  \%tags, $opts );
+sub check_blocks {
+    my $tags   = shift;
+    my %blocks = %{ $tags->{blocks} };
+    delete @blocks{ @{ $tags->{blockorder} } };
+    Carp::carp(   "No order specified for blocks '"
+                . join( ', ', keys %blocks )
+                . "'\n" )
+      if keys %blocks;
 }
 
-sub check_blocks
-{
-	my $tags   = shift;
-	my %blocks = %{ $tags->{blocks} };
-	delete @blocks{ @{ $tags->{blockorder} } };
-	Carp::carp(
-		"No order specified for blocks '" . join(', ', keys %blocks ) . "'\n")
-		if keys %blocks;
+sub find_blocks {
+    my ( $text, $tags, $opts ) = @_;
+
+    my @blocks;
+    for my $line ( split( /\n/, $text ) ) {
+        my $block = start_block( $line, $tags, $opts );
+        push @blocks, $block if $block;
+    }
+
+    return @blocks;
 }
 
-sub find_blocks
-{
-	my ($text, $tags, $opts) = @_;
+sub start_block {
+    my ( $text, $tags, $opts ) = @_;
+    return { type => 'end', level => 0 } unless $text;
 
-	my @blocks;
-	for my $line ( split(/\n/, $text) )
-	{
-		my $block = start_block( $line, $tags, $opts );
-		push @blocks, $block if $block;
-	}
+    for my $block ( @{ $tags->{blockorder} } ) {
+        my ( $line, $level ) = ( $text, 0 );
+        if ( $tags->{indented}{$block} ) {
+            ( $level, $line ) = get_indentation( $tags, $line );
+            next unless $level;
+        }
 
-	return @blocks;
+        next unless $line =~ /$tags->{blocks}{$block}/;
+        $level = 0 if $block eq 'code';
+
+        $line =~ s/$tags->{blocks}{$block}//;
+        return {
+                args => [ grep {defined} $1, $2, $3, $4, $5, $6, $7, $8, $9 ],
+                type => $block,
+                text => $block eq 'code'
+                ? $line
+                : format_line( $line, $tags, $opts ),
+                level => $level || 0,
+        };
+    } ## end for my $block ( @{ $tags...})
+} ## end sub start_block
+
+sub merge_blocks {
+    my ( $blocks, $tags, $opts ) = @_;
+
+    my @merged;
+    for my $block (@$blocks) {
+        if (     @merged
+             and $block->{type} eq $merged[-1]{type}
+             and $block->{level} == $merged[-1]{level} )
+        {
+            push @{ $merged[-1]{text} }, $block->{text};
+            push @{ $merged[-1]{args} }, $block->{args};
+            next;
+        }
+
+        push @merged,
+          {
+            text  => [ $block->{text} ],
+            type  => $block->{type},
+            level => $block->{level},
+            args  => [ $block->{args} ],
+          };
+    }
+
+    return @merged;
+} ## end sub merge_blocks
+
+sub nest_blocks {
+    my ( $blocks, $tags, $opts ) = @_;
+    my @merged;
+
+    for my $block (@$blocks) {
+        if (     @merged
+             and $tags->{nests}{ $block->{type} }
+             and $tags->{nests}{ $merged[-1]{type} }
+             and $block->{level} > $merged[-1]{level} )
+        {
+            push @{ $merged[-1]{text} }, $block;
+            next;
+        }
+        push @merged, $block;
+    }
+
+    return @merged;
 }
 
-sub start_block
-{
-	my ($text, $tags, $opts) = @_;
-	return { type => 'end', level => 0 } unless $text;
+sub process_blocks {
+    my ( $blocks, $tags, $opts ) = @_;
 
-	for my $block (@{ $tags->{blockorder} })
-	{
-		my ($line, $level) = ( $text, 0 );
-		if ($tags->{indented}{$block})
-		{
-			($level, $line) = get_indentation( $tags, $line );
-			next unless $level;
-		}
+    my @open;
+    for my $block (@$blocks) {
+        push @open, process_block( $block, $tags, $opts )
+          unless $block->{type} eq 'end';
+    }
 
-		next unless $line =~ /$tags->{blocks}{$block}/;
-		$level = 0 if $block eq 'code';
-		
-		$line =~ s/$tags->{blocks}{$block}//;
-		return {
-			args => [ grep { defined } $1, $2, $3, $4, $5, $6, $7, $8, $9 ],
-			type => $block,
-			text => $block eq 'code' ? $line : format_line($line, $tags, $opts),
-			level=> $level || 0,
-		};
-	}
+    return join( '', @open );
 }
 
-sub merge_blocks
-{
-	my ($blocks, $tags, $opts) = @_;
+sub process_block {
+    my ( $block, $tags, $opts ) = @_;
 
-	my @merged;
-	for my $block (@$blocks)
-	{
-		if (@merged and $block->{type} eq $merged[-1]{type}
-			and $block->{level} == $merged[-1]{level})
-		{
-			push @{ $merged[-1]{text} }, $block->{text};
-			push @{ $merged[-1]{args} }, $block->{args};
-			next;
-		}
+    my ( $start, $end, $start_line, $end_line, $between )
+      = @{ $tags->{ $block->{type} } };
 
-		push @merged, {
-			text  => [ $block->{text} ],
-			type  => $block->{type},
-			level => $block->{level},
-			args  => [ $block->{args} ],
-		};
-	}
+    my @text;
 
-	return @merged;
+    for my $line ( @{ $block->{text} } ) {
+        if ( UNIVERSAL::isa( $line, 'HASH' ) ) {
+            my $prev_end = pop @text || ();
+            push @text, process_block( $line, $tags, $opts ), $prev_end;
+            next;
+        }
+
+        if ( UNIVERSAL::isa( $start_line, 'CODE' ) ) {
+            ( my $start_line, $line, $end_line )
+              = $start_line->(
+                               $line, $block->{level},
+                               @{ shift @{ $block->{args} } },
+                               $tags, $opts
+              );
+            push @text, $start_line, $line, $end_line;
+        }
+        else {
+            push @text, $start_line, $line, $end_line;
+        }
+    } ## end for my $line ( @{ $block...})
+
+    pop @text if $between;
+    return join( '', $start, @text, $end );
+} ## end sub process_block
+
+sub get_block {
+    my ( $line, $tags, $opts ) = @_;
+
+    return 'header', $line if $line =~ /$tags->{blocks}{header}/;
+
+    if ( ( my $level, $line ) = get_indentation( $tags, $line ) ) {
+        return 'list', $line, $level;
+    }
+
+    return 'paragraph', $line;
 }
 
-sub nest_blocks
-{
-	my ($blocks, $tags, $opts) = @_;
-	my @merged;
+sub get_indentation {
+    my ( $tags, $text ) = @_;
 
-	for my $block (@$blocks)
-	{
-		if (@merged and $tags->{nests}{ $block->{type} }
-			and $tags->{nests}{ $merged[-1]{type} }
-			and $block->{level} > $merged[-1]{level})
-		{
-			push @{ $merged[-1]{text} }, $block;
-			next;
-		}
-		push @merged, $block;
-	}
-
-	return @merged;
+    return 0, $text unless $text =~ s/($tags->{indent})//;
+    return length($1) + 1, $text;
 }
 
-sub process_blocks
-{
-	my ($blocks, $tags, $opts) = @_;
+sub end_all_lists {
+    my ( $lists, $tags ) = @_;
+    my $parsed = '';
 
-	my @open;
-	for my $block (@$blocks)
-	{
-		push @open, process_block( $block, $tags, $opts )
-			unless $block->{type} eq 'end';
-	}
+    while ( @$lists and $lists->[0]{level} == 0 ) {
+        my $list = shift @$lists;
+        $parsed .= end_list( $list, $tags->{ $list->{list} } );
+    }
 
-	return join('', @open);
+    while ( my $list = pop @$lists ) {
+        $parsed .= end_list( $list, $tags->{ $list->{list} } );
+    }
+
+    return $parsed;
 }
 
-sub process_block
-{
-	my ($block, $tags, $opts) = @_;
+sub find_list {
+    my ( $line, $list_types, $tags, $opts ) = @_;
 
-	my ($start, $end, $start_line, $end_line, $between)
-		= @{ $tags->{ $block->{type} } };
+    for my $list (@$list_types) {
+        my $regex = $tags->{lists}{$list};
 
-	my @text;
+        next unless $line =~ s/^$regex//;
 
-	for my $line (@{ $block->{text} })
-	{
-		if (UNIVERSAL::isa( $line, 'HASH' ))
-		{
-			my $prev_end = pop @text || ();
-			push @text, process_block( $line, $tags, $opts ), $prev_end;
-			next;
-		}
+        my @captures = map { defined $_ ? $_ : () } $1, $2, $3, $4, $5, $6,
+          $7, $8, $9;
 
-		if (UNIVERSAL::isa( $start_line, 'CODE' ))
-		{
-			(my $start_line, $line, $end_line) = 
-				$start_line->( $line, $block->{level}, 
-				@{ shift @{ $block->{args} } }, $tags, $opts);
-			push @text, $start_line, $line, $end_line;
-		}
-		else
-		{
-			push @text, $start_line, $line, $end_line;
-		}
-	}
+        $line = format_line( $line, $tags, $opts ) unless $list eq 'code';
 
-	pop @text if $between;
-	return join('', $start, @text, $end);
+        return unless my $action = $tags->{$list};
+        my @formatted;
+
+        if ( @$action == 3 ) {
+            my $subref = $action->[2];
+            if ( defined $subref and defined &$subref ) {
+                @formatted = $subref->( $line, @captures );
+            }
+            else {
+                warn "Bad actions for list type '$list'\n";
+            }
+        }
+        else {
+            @formatted = ( $action->[2], $line, $action->[3] );
+        }
+        return $list, @formatted;
+    } ## end for my $list (@$list_types)
+} ## end sub find_list
+
+sub end_list {
+    my ( $list, $tags ) = @_;
+    return join( '', grep {defined} @{ $list->{lines} }, $tags->[1] );
 }
 
-sub get_block
-{
-	my ($line, $tags, $opts) = @_;
+sub format_line {
+    my ( $text, $tags, $opts ) = @_;
+    $opts ||= {};
 
-	return 'header', $line if $line =~ /$tags->{blocks}{header}/;
+    $text =~ s!$tags->{strong_tag}!$tags->{strong}->($1, $opts)!eg;
+    $text =~ s!$tags->{emphasized_tag}!$tags->{emphasized}->($1, $opts)!eg;
 
-	if ((my $level, $line) = get_indentation( $tags, $line ))
-	{
-		return 'list', $line, $level;
-	}
+    $text = find_extended_links( $text, $tags, $opts ) if $opts->{extended};
 
-	return 'paragraph', $line;
-}
-
-sub get_indentation
-{
-	my ($tags, $text) = @_;
-
-	return 0, $text unless $text =~ s/($tags->{indent})//;
-	return length( $1 ) + 1, $text;
-}
-
-sub end_all_lists
-{
-	my ($lists, $tags) = @_;
-	my $parsed = '';
-
-	while (@$lists and $lists->[0]{level} == 0)
-	{
-		my $list = shift @$lists;
-		$parsed .= end_list( $list, $tags->{ $list->{list} } );
-	}
-
-	while ( my $list = pop @$lists )
-	{
-		$parsed .= end_list( $list, $tags->{ $list->{list} } );
-	}
-
-	return $parsed;
-}
-
-sub find_list
-{
-	my ( $line, $list_types, $tags, $opts ) = @_;
-
-	for my $list (@$list_types) {
-		my $regex = $tags->{lists}{$list};
-
-		next unless $line =~ s/^$regex//;
-		
-		my @captures = map { defined $_ ? $_ : () }
-			$1, $2, $3, $4, $5, $6, $7, $8, $9;
-
-		$line = format_line($line, $tags, $opts) unless $list eq 'code';
-
-		return unless my $action = $tags->{$list};
-		my @formatted;
-
-		if (@$action == 3)
-		{
-			my $subref = $action->[2];
-			if (defined $subref and defined &$subref)
-			{
-				@formatted = $subref->($line, @captures);
-			}
-			else
-			{
-				warn "Bad actions for list type '$list'\n";
-			}
-		}
-		else
-		{
-			@formatted = ( $action->[2], $line, $action->[3] );
-		}
-		return $list, @formatted;
-	}
-}
-
-sub end_list
-{
-	my ($list, $tags) = @_;
-	return join('', grep { defined } @{ $list->{lines} }, $tags->[1]);
-}
-
-sub format_line
-{
-	my ($text, $tags, $opts) = @_;
-	$opts ||= {};
-
-	$text =~ s!$tags->{strong_tag}!$tags->{strong}->($1, $opts)!eg;
-	$text =~ s!$tags->{emphasized_tag}!$tags->{emphasized}->($1, $opts)!eg;
-
-	$text = find_extended_links( $text, $tags, $opts ) if $opts->{extended};
-
-	$text =~ s|(?<!["/>=])\b([A-Za-z]+(?:[A-Z]\w+)+)|
+    $text =~ s|(?<!["/>=])\b([A-Za-z]+(?:[A-Z]\w+)+)|
 			  $tags->{link}->($1, $opts)|egx
-			if !defined $opts->{implicit_links} or $opts->{implicit_links};
+      if !defined $opts->{implicit_links} or $opts->{implicit_links};
 
-	return $text;
+    return $text;
 }
 
-sub find_extended_links
-{
-	my ($text, $tags, $opts) = @_;
+sub find_extended_links {
+    my ( $text, $tags, $opts ) = @_;
 
-	my ($start, $end) = @{ $tags->{extended_link_delimiters} };
+    my ( $start, $end ) = @{ $tags->{extended_link_delimiters} };
 
-	my $position = 0;
-	while (1)
-	{
-		my $open       = index $text, $start, $position;
-		last if $open  == -1;
-		my $close      = index $text, $end, $open;
-		last if $close == -1;
+    my $position = 0;
+    while (1) {
+        my $open = index $text, $start, $position;
+        last if $open == -1;
+        my $close = index $text, $end, $open;
+        last if $close == -1;
 
-		my $text_start = $open + length $start;
-		my $extended   = substr $text, $text_start, $close - $text_start;
+        my $text_start = $open + length $start;
+        my $extended = substr $text, $text_start, $close - $text_start;
 
-		$extended  = $tags->{link}->( $extended, $opts );
-		substr $text, $open, $close - $open + length $end, $extended;
-		$position += length $extended;
-	};
+        $extended = $tags->{link}->( $extended, $opts );
+        substr $text, $open, $close - $open + length $end, $extended;
+        $position += length $extended;
+    }
 
-	return $text;
+    return $text;
+} ## end sub find_extended_links
+
+sub make_html_link {
+    my ( $link, $opts ) = @_;
+    $opts ||= {};
+    ( $link, my $title ) = find_link_title( $link, $opts );
+
+    $link = escape_link( $link, $opts );
+
+    my $prefix = defined $opts->{prefix} ? $opts->{prefix} : '';
+    return qq|<a href="$prefix$link">$title</a>|;
 }
 
-sub make_html_link
-{
-	my ($link, $opts) = @_;
-	$opts ||= {};
-	($link, my $title) = find_link_title( $link, $opts );
+sub escape_link {
+    my ( $link, $opts ) = @_;
+    return uri_escape($link) unless $opts->{absolute_links};
 
-	$link = escape_link( $link, $opts );
+    my $u = URI->new($link);
+    return $link if $u->scheme();
 
-	my $prefix = defined $opts->{prefix} ? $opts->{prefix} : '';
-	return qq|<a href="$prefix$link">$title</a>|;
+    return uri_escape($link);
 }
 
-sub escape_link
-{
-	my ($link, $opts) = @_;
-	return uri_escape( $link ) unless $opts->{absolute_links};
-		
-	my $u = URI->new( $link );
-	return $link if $u->scheme();
+sub find_link_title {
+    my ( $link, $opts ) = @_;
+    my $title;
+    ( $link, $title ) = split( /\|/, $link, 2 ) if $opts->{extended};
+    $title ||= $link;
 
-	return uri_escape( $link );
-}
-
-sub find_link_title
-{
-	my ($link, $opts)    = @_;
-	my $title;
-	($link, $title)      = split(/\|/, $link, 2) if $opts->{extended};
-	$title             ||= $link;
-
-	return $link, $title;
+    return $link, $title;
 }
 
 'shamelessly adapted from the Jellybean project';

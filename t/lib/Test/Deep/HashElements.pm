@@ -5,90 +5,82 @@ package Test::Deep::HashElements;
 
 use Test::Deep::Ref;
 
-sub init
-{
-	my $self = shift;
+sub init {
+    my $self = shift;
 
-	my $val = shift;
+    my $val = shift;
 
-	$self->{val} = $val;
+    $self->{val} = $val;
 }
 
-sub descend
-{
-	my $self = shift;
+sub descend {
+    my $self = shift;
 
-	my $got = shift;
+    my $got = shift;
 
-	my $exp = $self->{val};
+    my $exp = $self->{val};
 
-	my $data = $self->data;
+    my $data = $self->data;
 
-	my $master = $self->getMaster($got, $exp);
+    my $master = $self->getMaster( $got, $exp );
 
-	foreach my $key (keys %$master)
-	{
-		$data->{index} = $key;
+    foreach my $key ( keys %$master ) {
+        $data->{index} = $key;
 
-		my $got_elem = exists $got->{$key} ? $got->{$key} : $Test::Deep::DNE;
-		my $exp_elem = exists $exp->{$key} ? $exp->{$key} : $Test::Deep::DNE;
+        my $got_elem = exists $got->{$key} ? $got->{$key} : $Test::Deep::DNE;
+        my $exp_elem = exists $exp->{$key} ? $exp->{$key} : $Test::Deep::DNE;
 
-		next if Test::Deep::descend($got_elem, $exp_elem);
+        next if Test::Deep::descend( $got_elem, $exp_elem );
 
-		return 0;
-	}
+        return 0;
+    }
 
-	return 1;
+    return 1;
+} ## end sub descend
+
+sub getMaster {
+    my $self = shift;
+
+    my ( $got, $exp ) = @_;
+
+    return keys %$got > keys %$exp ? $got : $exp;
 }
 
-sub getMaster
-{
-	my $self = shift;
+sub render_stack {
+    my $self = shift;
+    my ( $var, $data ) = @_;
+    $var .= "->" unless $Test::Deep::Stack->incArrow;
+    $var .= '{"' . quotemeta( $data->{index} ) . '"}';
 
-	my ($got, $exp) = @_;
-
-	return keys %$got > keys %$exp ? $got : $exp;
+    return $var;
 }
 
-sub render_stack
-{
-	my $self = shift;
-	my ($var, $data) = @_;
-	$var .= "->" unless $Test::Deep::Stack->incArrow;
-	$var .= '{"'.quotemeta($data->{index}).'"}';
-
-	return $var;
-}
-
-sub reset_arrow
-{
-	return 0;
+sub reset_arrow {
+    return 0;
 }
 
 package Test::Deep::SuperHashElements;
 
 use base 'Test::Deep::HashElements';
 
-sub getMaster
-{
-	my $self = shift;
+sub getMaster {
+    my $self = shift;
 
-	my ($got, $exp) = @_;
+    my ( $got, $exp ) = @_;
 
-	return $exp;
+    return $exp;
 }
 
 package Test::Deep::SubHashElements;
 
 use base 'Test::Deep::HashElements';
 
-sub getMaster
-{
-	my $self = shift;
+sub getMaster {
+    my $self = shift;
 
-	my ($got, $exp) = @_;
+    my ( $got, $exp ) = @_;
 
-	return $got;
+    return $got;
 }
 
 1;

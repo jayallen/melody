@@ -12,7 +12,7 @@ use base qw( MT );
 use File::Spec;
 use MT::Request;
 use MT::Util qw( encode_html offset_time_list decode_html encode_url
-    is_valid_email is_url escape_unicode );
+  is_valid_email is_url escape_unicode );
 use MT::I18N qw( encode_text wrap_text );
 
 my $COOKIE_NAME = 'mt_user';
@@ -65,8 +65,7 @@ sub __massage_page_action {
         $page .= '/' unless $page =~ m!/$!;
         $page .= $envelope . '/' if $envelope;
         $page .= $link;
-        my $has_params = ( $page =~ m/\?/ )
-            && ( $page !~ m!(&|;|\?)$! );
+        my $has_params = ( $page =~ m/\?/ ) && ( $page !~ m!(&|;|\?)$! );
         $action->{page}            = $page;
         $action->{page_has_params} = $has_params;
     }
@@ -77,32 +76,30 @@ sub __massage_page_action {
         else {
             my $perms = $app->permissions;
             if ( my $p = $action->{permission} ) {
-                my @p = split(/,/, $p);
+                my @p = split( /,/, $p );
                 foreach my $p (@p) {
                     my $perm = 'can_' . $p;
                     $action->{allowed} = 1, last
-                        if ( $perms && $perms->$perm() );
+                      if ( $perms && $perms->$perm() );
                 }
             }
         }
         if ( $action->{mode} ) {
-            $action->{link} = $app->uri(
-                mode => $action->{mode},
-                args => $action->{args}
-            );
+            $action->{link}
+              = $app->uri( mode => $action->{mode}, args => $action->{args} );
         }
         elsif ( $action->{dialog} ) {
             if ( $action->{args} ) {
                 my @args = map { $_ . '=' . $action->{args}->{$_} }
-                    keys %{ $action->{args} };
+                  keys %{ $action->{args} };
                 $action->{dialog_args} .= join '&', @args;
             }
         }
-    }
+    } ## end elsif ( $action->{mode} ||...)
     else {
         $action->{page} = $app->uri(
-            mode => 'page_action',
-            args => { action_name => $action->{key}, '_type' => $type }
+                   mode => 'page_action',
+                   args => { action_name => $action->{key}, '_type' => $type }
         );
         $action->{page_has_params} = 1;
     }
@@ -120,7 +117,7 @@ sub __massage_page_action {
     }
 
     $action->{__massaged} = 1;
-}
+} ## end sub __massage_page_action
 
 sub filter_conditional_list {
     my ( $app, $list, @param ) = @_;
@@ -130,23 +127,21 @@ sub filter_conditional_list {
     my $perms = $app->permissions;
     my $user  = $app->user;
     my $admin = ( $user && $user->is_superuser() )
-        || ( $perms && $perms->blog_id && $perms->has('administer_blog') );
+      || ( $perms && $perms->blog_id && $perms->has('administer_blog') );
     my $system_perms = $user->permissions(0) unless $perms && $perms->blog_id;
 
     my $test = sub {
         my ($item) = @_;
-        if ( $system_perms
-            && ( my $sp = $item->{system_permission} ) )
-        {
+        if ( $system_perms && ( my $sp = $item->{system_permission} ) ) {
             my $allowed = 0;
             my @sp = split /,/, $sp;
             foreach my $sp (@sp) {
                 my $perm = 'can_' . $sp;
                 $allowed = 1, last
-                    if $admin
-                        || (   $system_perms
-                            && $system_perms->can($perm)
-                            && $system_perms->$perm() );
+                  if $admin
+                      || (    $system_perms
+                           && $system_perms->can($perm)
+                           && $system_perms->$perm() );
             }
             return 0 unless $allowed;
         }
@@ -156,10 +151,8 @@ sub filter_conditional_list {
             foreach my $p (@p) {
                 my $perm = 'can_' . $p;
                 $allowed = 1, last
-                    if $admin
-                        || (   $perms
-                            && $perms->can($perm)
-                            && $perms->$perm() );
+                  if $admin
+                      || ( $perms && $perms->can($perm) && $perms->$perm() );
             }
             return 0 unless $allowed;
         }
@@ -189,26 +182,32 @@ sub filter_conditional_list {
 
             # translate the link text here...
             foreach my $item ( keys %$list ) {
-                $list{$item} = $list->{$item}
-                    if $test->( $list->{$item} );
+                $list{$item} = $list->{$item} if $test->( $list->{$item} );
             }
         }
         return \%list;
     }
     return undef;
-}
+} ## end sub filter_conditional_list
 
 sub page_actions {
     my $app = shift;
     my ( $type, @param ) = @_;
     my $actions = $app->registry( "page_actions", $type ) or return;
     foreach my $a ( keys %$actions ) {
+
         # The change below relates to http://bugs.movabletype.org/?80960
-        if ('HASH' ne ref($actions->{$a})||'') {            
-            MT->log({     # Developer debug message...
-                message => MT->translate('Malformed page_action data found for mode "[_1]" (Key: [_2]). Skipping page_actions.', $type, $a),
-                level => MT::Log::ERROR(),
-            });
+        if ( 'HASH' ne ref( $actions->{$a} ) || '' ) {
+            MT->log( {    # Developer debug message...
+                   message =>
+                     MT->translate(
+                       'Malformed page_action data found for mode "[_1]" (Key: [_2]). Skipping page_actions.',
+                       $type,
+                       $a
+                     ),
+                   level => MT::Log::ERROR(),
+                }
+            );
             return;
         }
         $actions->{$a}{key} = $a;
@@ -219,7 +218,7 @@ sub page_actions {
     no warnings;
     @$actions = sort { $a->{order} <=> $b->{order} } @$actions;
     return $actions;
-}
+} ## end sub page_actions
 
 sub list_actions {
     my $app = shift;
@@ -230,12 +229,12 @@ sub list_actions {
     foreach my $a ( keys %$actions ) {
         $actions->{$a}{key}  = $a;
         $actions->{$a}{core} = 1
-            unless UNIVERSAL::isa( $actions->{$a}{plugin}, 'MT::Plugin' );
+          unless UNIVERSAL::isa( $actions->{$a}{plugin}, 'MT::Plugin' );
         if ( exists $actions->{$a}{continue_prompt_handler} ) {
             my $code = $app->handler_to_coderef(
-                $actions->{$a}{continue_prompt_handler} );
+                                    $actions->{$a}{continue_prompt_handler} );
             $actions->{$a}{continue_prompt} = $code->()
-                if 'CODE' eq ref($code);
+              if 'CODE' eq ref($code);
         }
         push @actions, $actions->{$a};
     }
@@ -243,7 +242,7 @@ sub list_actions {
     no warnings;
     @$actions = sort { $a->{order} <=> $b->{order} } @$actions;
     return $actions;
-}
+} ## end sub list_actions
 
 sub list_filters {
     my $app = shift;
@@ -272,7 +271,7 @@ sub search_apis {
         next if $apis->{$a}->{view} && $apis->{$a}->{view} ne $view;
         $apis->{$a}{key}  = $a;
         $apis->{$a}{core} = 1
-            unless UNIVERSAL::isa( $apis->{$a}{plugin}, 'MT::Plugin' );
+          unless UNIVERSAL::isa( $apis->{$a}{plugin}, 'MT::Plugin' );
         push @apis, $apis->{$a};
     }
     $apis = $app->filter_conditional_list( \@apis, @param );
@@ -282,20 +281,20 @@ sub search_apis {
 }
 
 sub listing {
-    my $app = shift;
-    my $q = $app->query;
+    my $app   = shift;
+    my $q     = $app->query;
     my ($opt) = @_;
 
     my $type = $opt->{type} || $opt->{Type} || $q->param('_type');
     my $tmpl 
-        = $opt->{template}
-        || $opt->{Template}
-        || 'list_' . $type . '.tmpl';
+      = $opt->{template}
+      || $opt->{Template}
+      || 'list_' . $type . '.tmpl';
     my $iter_method = $opt->{iterator} || $opt->{Iterator} || 'load_iter';
     my $param       = $opt->{params}   || $opt->{Params}   || {};
     $param->{listing_screen} = 1;
     my $add_pseudo_new_user = delete $param->{pseudo_new_user}
-        if exists $param->{pseudo_new_user};
+      if exists $param->{pseudo_new_user};
     my $hasher   = $opt->{code}     || $opt->{Code};
     my $terms    = $opt->{terms}    || $opt->{Terms} || {};
     my $args     = $opt->{args}     || $opt->{Args} || {};
@@ -350,7 +349,7 @@ sub listing {
                 if ( my $code = $filter->{code} || $filter->{handler} ) {
                     if ( ref($code) ne 'CODE' ) {
                         $code = $filter->{code}
-                            = $app->handler_to_coderef($code);
+                          = $app->handler_to_coderef($code);
                     }
                     if ( ref($code) eq 'CODE' ) {
                         $code->( $terms, $args );
@@ -361,14 +360,15 @@ sub listing {
                 }
             }
         }
-        if (   ( my $filter_col = $q->param('filter') )
-            && ( my $val = $q->param('filter_val') ) )
+        if (    ( my $filter_col = $q->param('filter') )
+             && ( my $val = $q->param('filter_val') ) )
         {
-            if ((      ( $filter_col eq 'normalizedtag' )
-                    || ( $filter_col eq 'exacttag' )
-                )
-                && ( $class->isa('MT::Taggable') )
-                )
+            if ( (
+                      ( $filter_col eq 'normalizedtag' )
+                   || ( $filter_col eq 'exacttag' )
+                 )
+                 && ( $class->isa('MT::Taggable') )
+              )
             {
                 my $normalize   = ( $filter_col eq 'normalizedtag' );
                 my $tag_class   = $app->model('tag');
@@ -378,33 +378,35 @@ sub listing {
                 my @filter_tags = @filter_vals;
                 if ($normalize) {
                     push @filter_tags, MT::Tag->normalize($_)
-                        foreach @filter_vals;
+                      foreach @filter_vals;
                 }
-                my @tags = $tag_class->load(
-                    { name   => [@filter_tags] },
-                    { binary => { name => 1 } }
-                );
+                my @tags = $tag_class->load( { name => [@filter_tags] },
+                                             { binary => { name => 1 } } );
                 my @tag_ids;
                 foreach (@tags) {
                     push @tag_ids, $_->id;
                     if ($normalize) {
                         my @more = $tag_class->load(
-                            { n8d_id => $_->n8d_id ? $_->n8d_id : $_->id } );
+                             { n8d_id => $_->n8d_id ? $_->n8d_id : $_->id } );
                         push @tag_ids, $_->id foreach @more;
                     }
                 }
                 @tag_ids = (0) unless @tags;
-                $args->{'join'} = $ot_class->join_on(
-                    'object_id',
-                    {   tag_id            => \@tag_ids,
-                        object_datasource => $class->datasource
-                    },
-                    { unique => 1 }
-                );
-            }
+                $args->{'join'} =
+                  $ot_class->join_on(
+                                    'object_id',
+                                    {
+                                      tag_id            => \@tag_ids,
+                                      object_datasource => $class->datasource
+                                    },
+                                    { unique => 1 }
+                  );
+            } ## end if ( ( ( $filter_col eq...)))
             elsif ( !exists( $terms->{$filter_col} ) ) {
                 if ( $class->is_meta_column($filter_col) ) {
-                    my @result = $class->search_by_meta( $filter_col, $val, {}, $args );
+                    my @result
+                      = $class->search_by_meta( $filter_col, $val, {},
+                                                $args );
                     $iter_method = sub {
                         return shift @result;
                     };
@@ -418,7 +420,7 @@ sub listing {
             my $url_val = encode_url($val);
             $param->{filter_args} = "&filter=$filter_col&filter_val=$url_val";
             $param->{"filter_col_$filter_col"} = 1;
-        }
+        } ## end if ( ( my $filter_col ...))
 
         # automagic blog scoping
         my $blog = $app->blog;
@@ -432,16 +434,16 @@ sub listing {
         }
 
         $args->{sort} = 'id'
-            unless exists $args->{sort};    # must always provide sort column
+          unless exists $args->{sort};    # must always provide sort column
 
         $app->run_callbacks( 'app_pre_listing_' . $app->mode,
-            $app, $terms, $args, $param, \$hasher );
+                             $app, $terms, $args, $param, \$hasher );
 
         my $iter
-            = ref($iter_method) eq 'CODE'
-            ? $iter_method
-            : ( $class->$iter_method( $terms, $args )
-                or return $app->error( $class->errstr ) );
+          = ref($iter_method) eq 'CODE'
+          ? $iter_method
+          : ( $class->$iter_method( $terms, $args )
+              or return $app->error( $class->errstr ) );
         my @data;
         while ( my $obj = $iter->() ) {
             my $row = $obj->get_values();
@@ -456,25 +458,25 @@ sub listing {
         $param->{object_loop} = \@data;
 
         # handle pagination
-$limit += 0;
-$offset += 0;
+        $limit  += 0;
+        $offset += 0;
         my $pager = {
-            offset        => $offset,
-            limit         => $limit,
-            rows          => scalar @data,
-            listTotal     => $class->count( $terms, $args ) || 0,
-            chronological => $param->{list_noncron} ? 0 : 1,
-            return_args   => encode_html( $app->make_return_args ),
-            method        => $app->request_method,
+                      offset        => $offset,
+                      limit         => $limit,
+                      rows          => scalar @data,
+                      listTotal     => $class->count( $terms, $args ) || 0,
+                      chronological => $param->{list_noncron} ? 0 : 1,
+                      return_args   => encode_html( $app->make_return_args ),
+                      method        => $app->request_method,
         };
         $param->{object_type} ||= $type;
         $param->{pager_json} = $json ? $pager : MT::Util::to_json($pager);
 
-  # pager.rows (number of rows shown)
-  # pager.listTotal (total number of rows in datasource)
-  # pager.offset (offset currently used)
-  # pager.chronological (boolean, whether the listing is chronological or not)
-    }
+        # pager.rows (number of rows shown)
+        # pager.listTotal (total number of rows in datasource)
+        # pager.offset (offset currently used)
+        # pager.chronological (boolean, whether the listing is chronological or not)
+    } ## end else [ if ( my $search = $q->param...)]
 
     my $plural = $type;
 
@@ -493,10 +495,7 @@ $offset += 0;
     if ($json) {
         $pre_build->($param) if $pre_build;
         my $html = $app->build_page( $tmpl, $param );
-        my $data = {
-            html  => $html,
-            pager => $param->{pager_json},
-        };
+        my $data = { html => $html, pager => $param->{pager_json}, };
         $app->send_http_header("text/javascript+json");
         $app->print( MT::Util::to_json($data) );
         $app->{no_print_body} = 1;
@@ -515,7 +514,7 @@ $offset += 0;
             return $app->load_tmpl( $tmpl, $param );
         }
     }
-}
+} ## end sub listing
 
 sub json_result {
     my $app = shift;
@@ -565,17 +564,18 @@ sub send_http_header {
     $type ||= $app->{response_content_type} || 'text/html';
     if ( my $charset = $app->charset ) {
         $type .= "; charset=$charset"
-            if ( $type =~ m!^text/! || $type =~ m!\+xml$! )
-            && $type !~ /\bcharset\b/;
+          if ( $type =~ m!^text/! || $type =~ m!\+xml$! )
+          && $type !~ /\bcharset\b/;
     }
     if ( $ENV{MOD_PERL} ) {
         if ( $app->{response_message} ) {
             $app->{apache}->status_line(
-                ( $app->response_code || 200 )
-                . ( $app->{response_message}
-                    ? ' ' . $app->{response_message}
-                    : ''
-                )
+                                         ( $app->response_code || 200 )
+                                         . (
+                                             $app->{response_message}
+                                             ? ' ' . $app->{response_message}
+                                             : ''
+                                         )
             );
         }
         else {
@@ -584,23 +584,23 @@ sub send_http_header {
         $app->{apache}->send_http_header($type);
         if ( $MT::DebugMode & 128 ) {
             print "Status: "
-                . ( $app->response_code || 200 )
-                . ( $app->{response_message}
-                ? ' ' . $app->{response_message}
-                : '' )
-                . "\n";
+              . ( $app->response_code || 200 )
+              . ( $app->{response_message}
+                  ? ' ' . $app->{response_message}
+                  : '' )
+              . "\n";
             print "Content-Type: $type\n\n";
         }
-    }
+    } ## end if ( $ENV{MOD_PERL} )
     else {
         $app->{cgi_headers}{-status}
-            = ( $app->response_code || 200 )
-            . (
-            $app->{response_message} ? ' ' . $app->{response_message} : '' );
+          = ( $app->response_code || 200 )
+          . (
+             $app->{response_message} ? ' ' . $app->{response_message} : '' );
         $app->{cgi_headers}{-type} = $type;
         $app->print( $app->query->header( %{ $app->{cgi_headers} } ) );
     }
-}
+} ## end sub send_http_header
 
 sub print {
     my $app = shift;
@@ -624,13 +624,12 @@ sub handler ($$) {
     }
     my $config_file = $r->dir_config('MTConfig');
     my $mt_dir      = $r->dir_config('MTHome');
-    my %params      = (
-        Config       => $config_file,
-        ApacheObject => $r,
-        ( $mt_dir ? ( Directory => $mt_dir ) : () )
+    my %params = (
+                   Config       => $config_file,
+                   ApacheObject => $r,
+                   ( $mt_dir ? ( Directory => $mt_dir ) : () )
     );
-    my $app = $class->new(%params)
-        or die $class->errstr;
+    my $app = $class->new(%params) or die $class->errstr;
 
     MT->set_instance($app);
     $app->init_request(%params);
@@ -645,7 +644,7 @@ sub handler ($$) {
 
     $app->run;
     return Apache::Constants::OK();
-}
+} ## end sub handler ($$)
 
 sub init {
     my $app   = shift;
@@ -674,16 +673,15 @@ sub init {
     $app->{vtbl} = $app->registry("methods");
     $app->init_request(@_);
     return $app;
-}
+} ## end sub init
 
 sub pre_run_debug {
     my $app = shift;
-    my $q = $app->query;
+    my $q   = $app->query;
     if ( $MT::DebugMode & 128 ) {
         print STDERR "=====START: $$===========================\n";
         print STDERR "Package: " . ref($app) . "\n";
-        print STDERR "Session: " . $app->session->id . "\n"
-            if $app->session;
+        print STDERR "Session: " . $app->session->id . "\n" if $app->session;
         print STDERR "Request: " . $q->request_method . "\n";
         my @param = $app->query;
         if (@param) {
@@ -716,7 +714,7 @@ sub init_callbacks {
     MT->add_callback( 'MT::Blog::post_remove', 0, $app, \&_cb_unmark_blog );
     MT->add_callback( 'pre_build', 9, $app, sub { $app->touch_blogs() } );
     MT->add_callback( 'new_user_provisioning', 5, $app,
-        \&_cb_user_provisioning );
+                      \&_cb_user_provisioning );
 }
 
 sub init_request {
@@ -738,24 +736,28 @@ sub init_request {
     # @req_vars: members of the app object which are request-specific
     # and are cleared at the beginning of each request.
     my @req_vars = qw(mode __path_info _blog redirect login_again
-        no_print_body response_code response_content_type response_message
-        author cgi_headers breadcrumbs goback cache_templates warning_trace
-        cookies _errstr request_method requires_login __host );
+      no_print_body response_code response_content_type response_message
+      author cgi_headers breadcrumbs goback cache_templates warning_trace
+      cookies _errstr request_method requires_login __host );
     delete $app->{$_} foreach @req_vars;
     $app->user(undef);
     if ( $ENV{MOD_PERL} ) {
         require Apache::Request;
         $app->{apache} = $param{ApacheObject} || Apache->request;
-        $app->query(Apache::Request->instance( $app->{apache},
-            POST_MAX => $app->config->CGIMaxUpload ));
+        $app->query(
+                    Apache::Request->instance(
+                        $app->{apache}, POST_MAX => $app->config->CGIMaxUpload
+                    )
+        );
     }
     else {
+
         # Patched from http://bugs.movabletype.org/?81733
         require CGI;
         $CGI::POST_MAX = $app->config->CGIMaxUpload;
 
         if ( $param{CGIObject} ) {
-            $app->query($param{CGIObject});
+            $app->query( $param{CGIObject} );
         }
         else {
             if ( my $path_info = $ENV{PATH_INFO} ) {
@@ -767,9 +769,9 @@ sub init_request {
                     delete $ENV{PATH_INFO};
                 }
             }
-            $app->query( CGI->new( $app->{no_read_body} ? {} : ()) );
+            $app->query( CGI->new( $app->{no_read_body} ? {} : () ) );
         }
-    }
+    } ## end else [ if ( $ENV{MOD_PERL} ) ]
     $app->init_query();
 
     $app->{return_args} = $app->query->param('return_args');
@@ -782,7 +784,7 @@ sub init_request {
     $app->run_callbacks( ref($app) . '::init_request', $app, @_ );
 
     $app->{init_request} = 1;
-}
+} ## end sub init_request
 
 sub init_query {
     my $app = shift;
@@ -793,9 +795,9 @@ sub init_query {
     if ( $app->request_method eq 'POST' ) {
         if ( !$ENV{MOD_PERL} ) {
             my $query_string = $ENV{'QUERY_STRING'}
-                if defined $ENV{'QUERY_STRING'};
+              if defined $ENV{'QUERY_STRING'};
             $query_string ||= $ENV{'REDIRECT_QUERY_STRING'}
-                if defined $ENV{'REDIRECT_QUERY_STRING'};
+              if defined $ENV{'REDIRECT_QUERY_STRING'};
             if ( defined($query_string) and $query_string ne '' ) {
                 $q->parse_params($query_string);
             }
@@ -808,9 +810,9 @@ sub init_query {
 
     sub validate_request_params {
         my $app = shift;
-        my $q = $app->query;
+        my $q   = $app->query;
         $has_encode = eval { require Encode; 1 } ? 1 : 0
-            unless defined $has_encode;
+          unless defined $has_encode;
         return 1 unless $has_encode;
 
         # validate all parameter data matches the expected character set.
@@ -838,35 +840,38 @@ sub init_query {
             my @d = $q->param($p);
             my @param;
             foreach my $d (@d) {
-                if ( ( !defined $d )
-                  || ( $d eq '' )
-                  || ( $d !~ m/[^\x20-\x7E]/ ) )
+                if (    ( !defined $d )
+                     || ( $d eq '' )
+                     || ( $d !~ m/[^\x20-\x7E]/ ) )
                 {
                     push @param, $d if $transcode;
                     next;
                 }
-                $d = MT::I18N::default->encode_text_encode( $d, $request_charset, $charset )
-                    if $transcode;
+                $d =
+                  MT::I18N::default->encode_text_encode( $d, $request_charset,
+                                                         $charset )
+                  if $transcode;
                 my $saved = $d;
                 eval { Encode::decode( $charset, $d, 1 ); };
-                return $app->errtrans(
+                return
+                  $app->errtrans(
                     "Invalid request: corrupt character data for character set [_1]",
                     $charset
-                ) if $@;
+                  ) if $@;
                 push @param, $saved if $transcode;
-            }
+            } ## end foreach my $d (@d)
             if ( $transcode && @param ) {
                 if ( 1 == scalar(@param) ) {
-                    $params{ $p } = $param[0];
+                    $params{$p} = $param[0];
                 }
                 else {
-                    $params{ $p } = [ @param ];
+                    $params{$p} = [@param];
                 }
             }
-        }
+        } ## end foreach my $p (@p)
         while ( my ( $key, $val ) = each %params ) {
             if ( ref $val ) {
-                $q->param( $key, @{ $params{ $key } } ) ;
+                $q->param( $key, @{ $params{$key} } );
             }
             else {
                 $q->param( $key, $val );
@@ -874,7 +879,7 @@ sub init_query {
         }
 
         return 1;
-    }
+    } ## end sub validate_request_params
 }
 
 sub registry {
@@ -908,10 +913,10 @@ sub _cb_mark_blog {
     }
 
     return
-        if ( $obj_type eq 'MT::Log'
-        || $obj_type eq 'MT::Session'
-        || $obj_type eq 'MT::Touch'
-        || ( ( $obj_type ne 'MT::Blog' ) && !$obj->has_column('blog_id') ) );
+      if (  $obj_type eq 'MT::Log'
+         || $obj_type eq 'MT::Session'
+         || $obj_type eq 'MT::Touch'
+         || ( ( $obj_type ne 'MT::Blog' ) && !$obj->has_column('blog_id') ) );
     my $mt_req = MT->instance->request;
     my $blogs_touched = $mt_req->stash('blogs_touched') || {};
 
@@ -922,7 +927,7 @@ sub _cb_mark_blog {
     }
     if ( $type
         !~ m/^(entry|comment|page|folder|category|tbping|asset|author|template)$/
-        )
+      )
     {
         undef $type;
     }
@@ -937,7 +942,7 @@ sub _cb_mark_blog {
         }
     }
     $mt_req->stash( 'blogs_touched', $blogs_touched );
-}
+} ## end sub _cb_mark_blog
 
 sub _cb_user_provisioning {
     my ( $cb, $user ) = @_;
@@ -951,35 +956,37 @@ sub _cb_user_provisioning {
     if ( my $blog_id = MT->config('NewUserTemplateBlogId') ) {
         my $blog = MT::Blog->load($blog_id);
         if ( !$blog ) {
-            MT->log(
-                {   message => MT->translate(
-                        "Error loading blog #[_1] for user provisioning. Check your NewUserTemplateBlogId setting.",
-                        $blog_id
-                    ),
-                    level => MT::Log::ERROR(),
+            MT->log( {
+                   message =>
+                     MT->translate(
+                       "Error loading blog #[_1] for user provisioning. Check your NewUserTemplateBlogId setting.",
+                       $blog_id
+                     ),
+                   level => MT::Log::ERROR(),
                 }
             );
             return;
         }
-        $new_blog = $blog->clone(
-            {   Children => 1,
+        $new_blog = $blog->clone( {
+                Children => 1,
                 Classes  => { 'MT::Permission' => 0, 'MT::Association' => 0 },
                 BlogName => $blog_name,
-            }
+              }
         );
         if ( !$new_blog ) {
-            MT->log(
-                {   message => MT->translate(
-                        "Error provisioning blog for new user '[_1]' using template blog #[_2].",
-                        $user->id,
-                        $blog->id
-                    ),
-                    level => MT::Log::ERROR(),
+            MT->log( {
+                   message =>
+                     MT->translate(
+                       "Error provisioning blog for new user '[_1]' using template blog #[_2].",
+                       $user->id,
+                       $blog->id
+                     ),
+                   level => MT::Log::ERROR(),
                 }
             );
             return;
         }
-    }
+    } ## end if ( my $blog_id = MT->config...)
     else {
         $new_blog = MT::Blog->create_default_blog($blog_name);
     }
@@ -994,30 +1001,31 @@ sub _cb_user_provisioning {
             my $sfx = 0;
             while (1) {
                 $path = File::Spec->catdir( $root,
-                    $dir_name . ( $sfx ? $sfx : '' ) );
+                                           $dir_name . ( $sfx ? $sfx : '' ) );
                 $path =~ s/(.+)\-$/$1/;
                 if ( !-d $path ) {
                     $fmgr->mkpath($path);
                     if ( !-d $path ) {
-                        MT->log(
-                            {   message => MT->translate(
-                                    "Error creating directory [_1] for blog #[_2].",
-                                    $path,
-                                    $new_blog->id
-                                ),
-                                level => MT::Log::ERROR(),
+                        MT->log( {
+                               message =>
+                                 MT->translate(
+                                   "Error creating directory [_1] for blog #[_2].",
+                                   $path,
+                                   $new_blog->id
+                                 ),
+                               level => MT::Log::ERROR(),
                             }
                         );
                     }
                     last;
                 }
                 $sfx++;
-            }
+            } ## end while (1)
             $dir_name .= $sfx ? $sfx : '';
             $dir_name =~ s/(.+)\-$/$1/;
             $new_blog->site_path($path);
-        }
-    }
+        } ## end if ( -d $root )
+    } ## end if ( my $root = MT->config...)
     if ( my $url = MT->config('DefaultSiteURL') ) {
         $url .= '/' unless $url =~ m!/$!;
         $url .= $dir_name ? $dir_name : MT::Util::dirify( $new_blog->name );
@@ -1029,23 +1037,25 @@ sub _cb_user_provisioning {
         $new_blog->server_offset($offset);
     }
     $new_blog->save
-        or MT->log(
-        {   message => MT->translate(
-                "Error provisioning blog for new user '[_1] (ID: [_2])'.",
-                $user->id, $user->name
-            ),
-            level => MT::Log::ERROR(),
-        }
-        ),
-        return;
-    MT->log(
-        {   message => MT->translate(
-                "Blog '[_1] (ID: [_2])' for user '[_3] (ID: [_4])' has been created.",
-                $new_blog->name, $new_blog->id, $user->name, $user->id
-            ),
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            category => 'new'
+      or MT->log( {
+               message =>
+                 MT->translate(
+                    "Error provisioning blog for new user '[_1] (ID: [_2])'.",
+                    $user->id, $user->name
+                 ),
+               level => MT::Log::ERROR(),
+             }
+      ),
+      return;
+    MT->log( {
+           message =>
+             MT->translate(
+               "Blog '[_1] (ID: [_2])' for user '[_3] (ID: [_4])' has been created.",
+               $new_blog->name, $new_blog->id, $user->name, $user->id
+             ),
+           level    => MT::Log::INFO(),
+           class    => 'system',
+           category => 'new'
         }
     );
 
@@ -1056,20 +1066,20 @@ sub _cb_user_provisioning {
         MT::Association->link( $user => $role => $new_blog );
     }
     else {
-        MT->log(
-            {   message => MT->translate(
-                    "Error assigning blog administration rights to user '[_1] (ID: [_2])' for blog '[_3] (ID: [_4])'. No suitable blog administrator role was found.",
-                    $user->name,     $user->id,
-                    $new_blog->name, $new_blog->id,
-                ),
-                level    => MT::Log::ERROR(),
-                class    => 'system',
-                category => 'new'
+        MT->log( {
+               message =>
+                 MT->translate(
+                   "Error assigning blog administration rights to user '[_1] (ID: [_2])' for blog '[_3] (ID: [_4])'. No suitable blog administrator role was found.",
+                   $user->name, $user->id, $new_blog->name, $new_blog->id,
+                 ),
+               level    => MT::Log::ERROR(),
+               class    => 'system',
+               category => 'new'
             }
         );
     }
     1;
-}
+} ## end sub _cb_user_provisioning
 
 # Along with _cb_unmark_blog and _cb_mark_blog, this is an elaborate
 # scheme to cause MT::Blog objects that are affected as a result of a
@@ -1092,11 +1102,7 @@ sub touch_blogs {
 
 sub add_breadcrumb {
     my $app = shift;
-    push @{ $app->{breadcrumbs} },
-        {
-        bc_name => $_[0],
-        bc_uri  => $_[1],
-        };
+    push @{ $app->{breadcrumbs} }, { bc_name => $_[0], bc_uri => $_[1], };
 }
 
 sub is_authorized {1}
@@ -1126,20 +1132,20 @@ sub session_state {
     ( my $sessobj, $commenter ) = $app->get_commenter_session();
     if ( $sessobj && $commenter ) {
         $c = {
-            sid     => $sessobj->id,
-            name    => $commenter->nickname || $app->translate('(Display Name not set)'),
+            sid  => $sessobj->id,
+            name => $commenter->nickname
+              || $app->translate('(Display Name not set)'),
             url     => $commenter->url,
             email   => $commenter->email,
             userpic => scalar $commenter->userpic_url,
-            profile => "",                              # profile link url
+            profile => "",                               # profile link url
             is_authenticated => 1,
-            is_author =>
-                ( $commenter->type == MT::Author::AUTHOR() ? 1 : 0 ),
-            is_trusted       => 0,
-            is_anonymous     => 0,
-            can_post         => 0,
-            can_comment      => 0,
-            is_banned        => 0,
+            is_author => ( $commenter->type == MT::Author::AUTHOR() ? 1 : 0 ),
+            is_trusted   => 0,
+            is_anonymous => 0,
+            can_post     => 0,
+            can_comment  => 0,
+            is_banned    => 0,
         };
         if ( $blog_id && $blog ) {
             my $blog_perms = $commenter->blog_perm($blog_id);
@@ -1154,37 +1160,35 @@ sub session_state {
             }
             else {
                 $sessobj->start( time + $app->config->CommentSessionTimeout )
-                    ;    # extend by timeout
+                  ;    # extend by timeout
                 $sessobj->save();
             }
 
             # FIXME: These may not be accurate in 'SingleCommunity' mode...
             my $can_comment = $banned ? 0 : 1;
             $can_comment = 0
-                unless $blog->allow_unreg_comments
-                    || $blog->allow_reg_comments;
+              unless $blog->allow_unreg_comments || $blog->allow_reg_comments;
             $c->{can_comment} = $can_comment;
             $c->{can_post}
-                = ( $blog_perms && $blog_perms->can_create_post ) ? 1 : 0;
-            $c->{is_trusted} =
-                ( $commenter->is_trusted($blog_id) ? 1 : 0 ),
-        }
-    }
+              = ( $blog_perms && $blog_perms->can_create_post ) ? 1 : 0;
+            $c->{is_trusted} = ( $commenter->is_trusted($blog_id) ? 1 : 0 ),;
+        } ## end if ( $blog_id && $blog)
+    } ## end if ( $sessobj && $commenter)
 
     unless ($c) {
         my $can_comment = $blog && $blog->allow_anon_comments ? 1 : 0;
         $c = {
-            is_authenticated => 0,
-            is_trusted       => 0,
-            is_anonymous     => 1,
-            can_post         => 0,            # no anonymous posts
-            can_comment      => $can_comment,
-            is_banned        => 0,
+               is_authenticated => 0,
+               is_trusted       => 0,
+               is_anonymous     => 1,
+               can_post         => 0,              # no anonymous posts
+               can_comment      => $can_comment,
+               is_banned        => 0,
         };
     }
 
     return ( $c, $commenter );
-}
+} ## end sub session_state
 
 sub session {
     my $app  = shift;
@@ -1234,15 +1238,11 @@ sub session_user {
 
     require MT::Session;
     my $timeout
-        = $opt{permanent}
-        ? ( 360 * 24 * 365 * 10 )
-        : $app->config->UserSessionTimeout;
-    my $sess = MT::Session::get_unexpired_value(
-        $timeout,
-        {   id   => $session_id,
-            kind => 'US'
-        }
-    );
+      = $opt{permanent}
+      ? ( 360 * 24 * 365 * 10 )
+      : $app->config->UserSessionTimeout;
+    my $sess = MT::Session::get_unexpired_value( $timeout,
+                                        { id => $session_id, kind => 'US' } );
     $app->{session} = $sess;
 
     return undef if !$sess;
@@ -1252,7 +1252,7 @@ sub session_user {
     else {
         return undef;
     }
-}
+} ## end sub session_user
 
 sub get_commenter_session {
     my $app = shift;
@@ -1289,10 +1289,10 @@ sub get_commenter_session {
     my $user_id  = $sess_obj->get('author_id') if $sess_obj;
     my $user     = MT::Author->load($user_id) if $user_id;
 
-    if (   !$sess_obj
-        || ( $sess_obj->start() + $timeout < time )
-        || ( !$user_id )
-        || ( !$user ) )
+    if (    !$sess_obj
+         || ( $sess_obj->start() + $timeout < time )
+         || ( !$user_id )
+         || ( !$user ) )
     {
         $app->_invalidate_commenter_session( \%cookies );
         return ( undef, undef );
@@ -1300,68 +1300,70 @@ sub get_commenter_session {
 
     # session is valid!
     return ( $sess_obj, $user );
-}
+} ## end sub get_commenter_session
 
 sub make_commenter {
     my $app    = shift;
     my %params = @_;
 
     # Strip any angle brackets from input, just to be safe
-    foreach my $f ( qw( name email nickname url ) ) {
+    foreach my $f (qw( name email nickname url )) {
         $params{$f} =~ s/[<>]//g if exists $params{$f};
     }
 
     require MT::Author;
-    my $cmntr = MT::Author->load(
-        {   name      => $params{name},
-            type      => MT::Author::COMMENTER(),
-            auth_type => $params{auth_type},
-        }
+    my $cmntr = MT::Author->load( {
+                                    name      => $params{name},
+                                    type      => MT::Author::COMMENTER(),
+                                    auth_type => $params{auth_type},
+                                  }
     );
     if ( !$cmntr ) {
         $cmntr = $app->model('author')->new();
-        $cmntr->set_values(
-            {   email     => $params{email},
-                name      => $params{name},
-                nickname  => $params{nickname},
-                password  => "(none)",
-                type      => MT::Author::COMMENTER(),
-                url       => $params{url},
-                auth_type => $params{auth_type},
-                (   $params{external_id}
-                    ? ( external_id => $params{external_id} )
-                    : ()
-                ),
-                (   $params{remote_auth_username}
-                    ? ( remote_auth_username =>
-                            $params{remote_auth_username} )
-                    : ()
-                ),
-            }
+        $cmntr->set_values( {
+               email     => $params{email},
+               name      => $params{name},
+               nickname  => $params{nickname},
+               password  => "(none)",
+               type      => MT::Author::COMMENTER(),
+               url       => $params{url},
+               auth_type => $params{auth_type},
+               (
+                  $params{external_id}
+                  ? ( external_id => $params{external_id} )
+                  : ()
+               ),
+               (
+                  $params{remote_auth_username}
+                  ? ( remote_auth_username => $params{remote_auth_username} )
+                  : ()
+               ),
+             }
         );
         $cmntr->save();
-    }
+    } ## end if ( !$cmntr )
     else {
-        $cmntr->set_values(
-            {   email    => $params{email},
-                nickname => $params{nickname},
-                password => "(none)",
-                type     => MT::Author::COMMENTER(),
-                url      => $params{url},
-                (   $params{external_id}
-                    ? ( external_id => $params{external_id} )
-                    : ()
-                ),
-            }
+        $cmntr->set_values( {
+                              email    => $params{email},
+                              nickname => $params{nickname},
+                              password => "(none)",
+                              type     => MT::Author::COMMENTER(),
+                              url      => $params{url},
+                              (
+                                $params{external_id}
+                                ? ( external_id => $params{external_id} )
+                                : ()
+                              ),
+                            }
         );
         $cmntr->save();
     }
     return $cmntr;
-}
+} ## end sub make_commenter
 
 sub make_commenter_session {
     my $app = shift;
-    my $q = $app->query;
+    my $q   = $app->query;
     my ( $session_key, $email, $name, $nick, $id, $url ) = @_;
     my $user;
 
@@ -1388,12 +1390,13 @@ sub make_commenter_session {
     $sess_obj->kind("SI");
     $sess_obj->set( 'author_id', $user->id ) if $user;
     $sess_obj->save()
-        or return $app->error(
+      or return
+      $app->error(
         $app->translate(
             "The login could not be confirmed because of a database error ([_1])",
             $sess_obj->errstr
         )
-        );
+      );
 
     my $enc = $app->charset;
     $nick = encode_text( $nick, $enc, 'utf-8' );
@@ -1415,32 +1418,31 @@ sub make_commenter_session {
     }
 
     my %kookee = (
-        -name  => COMMENTER_COOKIE_NAME(),
-        -value => $session_key,
-        -path  => '/',
-        ( $timeout ? ( -expires => $timeout ) : () )
+                   -name  => COMMENTER_COOKIE_NAME(),
+                   -value => $session_key,
+                   -path  => '/',
+                   ( $timeout ? ( -expires => $timeout ) : () )
     );
     $app->bake_cookie(%kookee);
     my %name_kookee = (
-        -name  => "commenter_name",
-        -value => $nick_escaped,
-        -path  => '/',
-        ( $timeout ? ( -expires => $timeout ) : () )
+                        -name  => "commenter_name",
+                        -value => $nick_escaped,
+                        -path  => '/',
+                        ( $timeout ? ( -expires => $timeout ) : () )
     );
     $app->bake_cookie(%name_kookee);
 
     return $session_key;
-}
+} ## end sub make_commenter_session
 
 sub _invalidate_commenter_session {
     my $app = shift;
     my ($cookies) = @_;
 
-    my $cookie_val = (
-          $cookies->{ COMMENTER_COOKIE_NAME() }
-        ? $cookies->{ COMMENTER_COOKIE_NAME() }->value()
-        : ""
-    );
+    my $cookie_val
+      = (   $cookies->{ COMMENTER_COOKIE_NAME() }
+          ? $cookies->{ COMMENTER_COOKIE_NAME() }->value()
+          : "" );
     my $session = $cookie_val;
     require MT::Session;
     my $sess_obj = MT::Session->load( { id => $session } );
@@ -1449,27 +1451,27 @@ sub _invalidate_commenter_session {
     my $timeout = $app->{cfg}->CommentSessionTimeout;
 
     my %kookee = (
-        -name    => COMMENTER_COOKIE_NAME(),
-        -value   => '',
-        -path    => '/',
-        -expires => "+${timeout}s"
+                   -name    => COMMENTER_COOKIE_NAME(),
+                   -value   => '',
+                   -path    => '/',
+                   -expires => "+${timeout}s"
     );
     $app->bake_cookie(%kookee);
     my %name_kookee = (
-        -name    => 'commenter_name',
-        -value   => '',
-        -path    => '/',
-        -expires => "+${timeout}s"
+                        -name    => 'commenter_name',
+                        -value   => '',
+                        -path    => '/',
+                        -expires => "+${timeout}s"
     );
     $app->bake_cookie(%name_kookee);
     my %id_kookee = (
-        -name    => 'commenter_id',
-        -value   => '',
-        -path    => '/',
-        -expires => "+${timeout}s"
+                      -name    => 'commenter_id',
+                      -value   => '',
+                      -path    => '/',
+                      -expires => "+${timeout}s"
     );
     $app->bake_cookie(%id_kookee);
-}
+} ## end sub _invalidate_commenter_session
 
 sub start_session {
     my $app = shift;
@@ -1478,19 +1480,19 @@ sub start_session {
         $author = $app->user;
         my ( $x, $y );
         ( $x, $y, $remember )
-            = split( /::/, $app->cookie_val( $app->user_cookie ) );
+          = split( /::/, $app->cookie_val( $app->user_cookie ) );
     }
     my $session = make_session( $author, $remember );
     my %arg = (
-        -name  => $app->user_cookie,
-        -value => join( '::', $author->name, $session->id, $remember ),
-        -path => $app->config->CookiePath || $app->mt_path
+               -name  => $app->user_cookie,
+               -value => join( '::', $author->name, $session->id, $remember ),
+               -path => $app->config->CookiePath || $app->mt_path
     );
     $arg{-expires} = '+10y' if $remember;
     $app->{session} = $session;
     $app->bake_cookie(%arg);
     \%arg;
-}
+} ## end sub start_session
 
 sub _get_options_tmpl {
     my $self = shift;
@@ -1514,7 +1516,7 @@ sub _get_options_tmpl {
 
 sub _get_options_html {
     my $app           = shift;
-    my $q = $app->query;
+    my $q             = $app->query;
     my ($key)         = @_;
     my $authenticator = MT->commenter_authenticator($key);
     return q() unless $authenticator;
@@ -1526,8 +1528,8 @@ sub _get_options_html {
     my $tmpl;
     if ( ref $snip_tmpl ne 'MT::Template' ) {
         $tmpl = MT::Template->new(
-            type   => 'scalarref',
-            source => ref $snip_tmpl ? $snip_tmpl : \$snip_tmpl
+                           type   => 'scalarref',
+                           source => ref $snip_tmpl ? $snip_tmpl : \$snip_tmpl
         );
     }
     else {
@@ -1540,27 +1542,27 @@ sub _get_options_html {
     my $blog_id = $q->param('blog_id') || '';
     $blog_id =~ s/\D//g;
     my $static = MT::Util::remove_html(
-        $q->param('static') 
-            || encode_url(
-            $q->param('return_to') || $q->param('return_url') || ''
-            )
-            || ''
+                   $q->param('static')
+                     || encode_url(
+                       $q->param('return_to') || $q->param('return_url') || ''
+                     )
+                     || ''
     );
     if ( my $p = $authenticator->{login_form_params} ) {
         $p = $app->handler_to_coderef($p);
-        if ( $p ) {
+        if ($p) {
             my $params = $p->( $key, $blog_id, $entry_id || undef, $static, );
             $tmpl->param($params) if $params;
         }
     }
     my $html = $tmpl->output();
     if ( UNIVERSAL::isa( $authenticator, 'MT::Plugin' )
-        && ( $html =~ m/<__trans / ) )
+         && ( $html =~ m/<__trans / ) )
     {
         $html = $authenticator->translate_templatized($html);
     }
     $html;
-}
+} ## end sub _get_options_html
 
 sub external_authenticators {
     my $app = shift;
@@ -1583,7 +1585,7 @@ sub external_authenticators {
             if ( my $registration = $cfg->CommenterRegistration ) {
                 if ( $cfg->AuthenticationModule eq 'MT' ) {
                     $param->{registration_allowed} = $registration->{Allow}
-                        && $blog->allow_commenter_regist ? 1 : 0;
+                      && $blog->allow_commenter_regist ? 1 : 0;
                 }
             }
             require MT::Auth;
@@ -1593,40 +1595,40 @@ sub external_authenticators {
 
         my $auth = $cas{$key} or next;
 
-        if (   $key ne 'TypeKey'
-            && $key ne 'OpenID'
-            && $key ne 'Vox'
-            && $key ne 'LiveJournal' )
+        if (    $key ne 'TypeKey'
+             && $key ne 'OpenID'
+             && $key ne 'Vox'
+             && $key ne 'LiveJournal' )
         {
             push @external_authenticators,
-                {
+              {
                 name       => $auth->{label},
                 key        => $auth->{key},
                 login_form => $app->_get_options_html($key),
                 exists( $auth->{logo} ) ? ( logo => $auth->{logo} ) : (),
-                };
+              };
         }
         else {
             $otherauths{$key} = {
-                name       => $auth->{label},
-                key        => $auth->{key},
-                login_form => $app->_get_options_html($key),
-                exists( $auth->{logo} ) ? ( logo => $auth->{logo} ) : (),
+                     name       => $auth->{label},
+                     key        => $auth->{key},
+                     login_form => $app->_get_options_html($key),
+                     exists( $auth->{logo} ) ? ( logo => $auth->{logo} ) : (),
             };
         }
-    }
+    } ## end foreach my $key (@auths)
 
     unshift @external_authenticators, $otherauths{'TypeKey'}
-        if exists $otherauths{'TypeKey'};
+      if exists $otherauths{'TypeKey'};
     unshift @external_authenticators, $otherauths{'Vox'}
-        if exists $otherauths{'Vox'};
+      if exists $otherauths{'Vox'};
     unshift @external_authenticators, $otherauths{'LiveJournal'}
-        if exists $otherauths{'LiveJournal'};
+      if exists $otherauths{'LiveJournal'};
     unshift @external_authenticators, $otherauths{'OpenID'}
-        if exists $otherauths{'OpenID'};
+      if exists $otherauths{'OpenID'};
 
     \@external_authenticators;
-}
+} ## end sub external_authenticators
 
 sub _is_commenter {
     my $app = shift;
@@ -1634,11 +1636,11 @@ sub _is_commenter {
 
     return 0 if $author->is_superuser;
 
-   # Check if the user is a commenter and keep them from logging in to the app
+    # Check if the user is a commenter and keep them from logging in to the app
     my @author_perms
-        = $app->model('permission')
-        ->load( { author_id => $author->id, blog_id => '0' },
-        { not => { blog_id => 1 } } );
+      = $app->model('permission')
+      ->load( { author_id => $author->id, blog_id => '0' },
+              { not => { blog_id => 1 } } );
     my $commenter = -1;
     my $commenter_blog_id;
     for my $perm (@author_perms) {
@@ -1663,15 +1665,16 @@ sub _is_commenter {
                 last;
             }
         }
-        return $app->error(
+        return
+          $app->error(
             $app->translate(
                 'Our apologies, but you do not have permission to access any blogs within this installation. If you feel you have reached this message in error, please contact your Movable Type system administrator.'
             )
-        ) unless $has_system_permission;
+          ) unless $has_system_permission;
         return -1;
-    }
+    } ## end if ( -1 == $commenter )
     return $commenter_blog_id;
-}
+} ## end sub _is_commenter
 
 # virutal method overridden when pending user has special treatment
 sub login_pending {q()}
@@ -1681,8 +1684,8 @@ sub commenter_loggedin {
     my $app = shift;
     my ( $commenter, $commenter_blog_id ) = @_;
     my $blog = $app->model('blog')->load($commenter_blog_id)
-        or return $app->error(
-        $app->translate( "Can\'t load blog #[_1].", $commenter_blog_id ) );
+      or return $app->error(
+           $app->translate( "Can\'t load blog #[_1].", $commenter_blog_id ) );
     my $path = $app->config('CGIPath');
     $path .= '/' unless $path =~ m!/$!;
     my $url = $path . $app->config('CommentScript');
@@ -1704,8 +1707,8 @@ sub commenter_loggedin {
 #   and session management was done by the calling code.
 
 sub login {
-    my $app = shift;
-    my $q = $app->query;
+    my $app       = shift;
+    my $q         = $app->query;
     my $new_login = 0;
 
     require MT::Auth;
@@ -1723,13 +1726,14 @@ sub login {
     if ( $res == MT::Auth::UNKNOWN() ) {
 
         # Login invalid; auth layer knows nothing of user
-        $app->log(
-            {   message => $app->translate(
-                    "Failed login attempt by unknown user '[_1]'", $user
-                ),
-                level    => MT::Log::WARNING(),
-                category => 'login_user',
-            }
+        $app->log( {
+                     message =>
+                       $app->translate(
+                          "Failed login attempt by unknown user '[_1]'", $user
+                       ),
+                     level    => MT::Log::WARNING(),
+                     category => 'login_user',
+                   }
         ) if defined $user;
         MT::Auth->invalidate_credentials( { app => $app } );
         return $app->error( $app->translate('Invalid login.') );
@@ -1737,19 +1741,21 @@ sub login {
     elsif ( $res == MT::Auth::INACTIVE() ) {
 
         # Login invalid; auth layer reports user was disabled
-        $app->log(
-            {   message => $app->translate(
-                    "Failed login attempt by disabled user '[_1]'", $user
-                ),
-                level    => MT::Log::WARNING(),
-                category => 'login_user',
-            }
+        $app->log( {
+                    message =>
+                      $app->translate(
+                         "Failed login attempt by disabled user '[_1]'", $user
+                      ),
+                    level    => MT::Log::WARNING(),
+                    category => 'login_user',
+                  }
         );
-        return $app->error(
+        return
+          $app->error(
             $app->translate(
                 'This account has been disabled. Please see your system administrator for access.'
             )
-        );
+          );
     }
     elsif ( $res == MT::Auth::PENDING() ) {
 
@@ -1762,20 +1768,21 @@ sub login {
             }
         }
         $message
-            ||= $app->translate(
+          ||= $app->translate(
             'This account has been disabled. Please see your system administrator for access.'
-            );
+          );
         $app->user(undef);
-        $app->log(
-            {   message => $app->translate(
-                    "Failed login attempt by pending user '[_1]'", $user
-                ),
-                level    => MT::Log::WARNING(),
-                category => 'login_user',
-            }
+        $app->log( {
+                     message =>
+                       $app->translate(
+                          "Failed login attempt by pending user '[_1]'", $user
+                       ),
+                     level    => MT::Log::WARNING(),
+                     category => 'login_user',
+                   }
         );
         return $app->error($message);
-    }
+    } ## end elsif ( $res == MT::Auth::PENDING...)
     elsif ( $res == MT::Auth::INVALID_PASSWORD() ) {
 
         # Login invlaid (password error, etc...)
@@ -1784,11 +1791,12 @@ sub login {
     elsif ( $res == MT::Auth::DELETED() ) {
 
         # Login invalid; auth layer says user record has been removed
-        return $app->error(
+        return
+          $app->error(
             $app->translate(
                 'This account has been deleted. Please see your system administrator for access.'
             )
-        );
+          );
     }
     elsif ( $res == MT::Auth::REDIRECT_NEEDED() ) {
 
@@ -1799,13 +1807,13 @@ sub login {
             $app->redirect($url);
         }
         return
-            0
-            ; # Return undefined so the redirect (set by the Auth Driver) will be
-              # followed by MT.
+          0
+          ; # Return undefined so the redirect (set by the Auth Driver) will be
+            # followed by MT.
     }
     elsif ( $res == MT::Auth::NEW_LOGIN() ) {
 
- # auth layer reports valid user and that this is a new login. act accordingly
+        # auth layer reports valid user and that this is a new login. act accordingly
         my $author = $app->user;
         MT::Auth->new_login( $app, $author );
         $new_login = 1;
@@ -1824,34 +1832,36 @@ sub login {
         $saved = $author->save unless $saved;
 
         unless ($saved) {
-            $app->log(
-                {   message => MT->translate(
-                        "User cannot be created: [_1].",
-                        $author->errstr
-                    ),
-                    level    => MT::Log::ERROR(),
-                    class    => 'system',
-                    category => 'create_user'
-                }
-                ),
-                $app->error(
-                MT->translate(
-                    "User cannot be created: [_1].",
-                    $author->errstr
-                )
-                ),
-                return undef;
-        }
+            $app->log( {
+                         message =>
+                           MT->translate(
+                                          "User cannot be created: [_1].",
+                                          $author->errstr
+                           ),
+                         level    => MT::Log::ERROR(),
+                         class    => 'system',
+                         category => 'create_user'
+                       }
+              ),
+              $app->error(
+                           MT->translate(
+                                          "User cannot be created: [_1].",
+                                          $author->errstr
+                           )
+              ),
+              return undef;
+        } ## end unless ($saved)
 
-        $app->log(
-            {   message => MT->translate(
-                    "User '[_1]' has been created.",
-                    $author->name
-                ),
-                level    => MT::Log::INFO(),
-                class    => 'system',
-                category => 'create_user'
-            }
+        $app->log( {
+                     message =>
+                       MT->translate(
+                                      "User '[_1]' has been created.",
+                                      $author->name
+                       ),
+                     level    => MT::Log::INFO(),
+                     class    => 'system',
+                     category => 'create_user'
+                   }
         );
 
         # provision user if configured to do so
@@ -1859,7 +1869,7 @@ sub login {
             MT->run_callbacks( 'new_user_provisioning', $author );
         }
         $new_login = 1;
-    }
+    } ## end elsif ( $res == MT::Auth::NEW_USER...)
     my $author = $app->user;
 
 # At this point the MT::Auth module should have initialized an author object. If
@@ -1888,7 +1898,7 @@ sub login {
 
                 if ($commenter_blog_id) {
                     my $url = $app->commenter_loggedin( $author,
-                        $commenter_blog_id );
+                                                        $commenter_blog_id );
                     return $app->redirect($url);
                 }
             }
@@ -1897,15 +1907,15 @@ sub login {
             $app->start_session( $author, $ctx->{permanent} ? 1 : 0 );
             $app->request( 'fresh_login', 1 );
             $app->log(
-                $app->translate(
-                    "User '[_1]' (ID:[_2]) logged in successfully",
-                    $author->name, $author->id
-                )
+                       $app->translate(
+                               "User '[_1]' (ID:[_2]) logged in successfully",
+                               $author->name, $author->id
+                       )
             );
-        }
+        } ## end if ($new_login)
         else {
             $author = $app->session_user( $author, $ctx->{session_id},
-                permanent => $ctx->{permanent} );
+                                          permanent => $ctx->{permanent} );
             if ( !defined($author) ) {
                 $app->user(undef);
                 $app->{login_again} = 1;
@@ -1919,7 +1929,7 @@ sub login {
         ## update session so the user will be counted as active
         require MT::Session;
         my $sess_active
-            = MT::Session->load( { kind => 'UA', name => $author->id } );
+          = MT::Session->load( { kind => 'UA', name => $author->id } );
         if ( !$sess_active ) {
             $sess_active = MT::Session->new;
             $sess_active->id( make_magic_token() );
@@ -1930,27 +1940,28 @@ sub login {
         $sess_active->save;
 
         return ( $author, $new_login );
-    }
+    } ## end if ($author)
     else {
         MT::Auth->invalidate_credentials( { app => $app } );
         if ( !defined($author) ) {
             require MT::Log;
 
             # undef indicates *invalid* login as opposed to no login at all.
-            $app->log(
-                {   message => $app->translate(
-                        "Invalid login attempt from user '[_1]'", $user
-                    ),
-                    level => MT::Log::WARNING(),
-                }
+            $app->log( {
+                         message =>
+                           $app->translate(
+                               "Invalid login attempt from user '[_1]'", $user
+                           ),
+                         level => MT::Log::WARNING(),
+                       }
             );
             return $app->error( $app->translate('Invalid login.') );
         }
         else {
             return undef;
         }
-    }
-}
+    } ## end else [ if ($author) ]
+} ## end sub login
 
 sub logout {
     my $app = shift;
@@ -1960,15 +1971,15 @@ sub logout {
     my $ctx = MT::Auth->fetch_credentials( { app => $app } );
     if ( $ctx && $ctx->{username} ) {
         my $user_class = $app->user_class;
-        my $user       = $user_class->load(
-            { name => $ctx->{username}, type => MT::Author::AUTHOR() } );
+        my $user = $user_class->load(
+                 { name => $ctx->{username}, type => MT::Author::AUTHOR() } );
         if ($user) {
             $app->user($user);
             $app->log(
-                $app->translate(
-                    "User '[_1]' (ID:[_2]) logged out", $user->name,
-                    $user->id
-                )
+                       $app->translate(
+                              "User '[_1]' (ID:[_2]) logged out", $user->name,
+                              $user->id
+                       )
             );
         }
     }
@@ -1977,8 +1988,8 @@ sub logout {
     my %cookies = $app->cookies();
     $app->_invalidate_commenter_session( \%cookies );
 
-   # The login box should only be displayed in the event of non-delegated auth
-   # right?
+    # The login box should only be displayed in the event of non-delegated auth
+    # right?
     my $delegate = MT::Auth->delegate_auth();
     if ($delegate) {
         my $url = $app->config->AuthLogoutURL;
@@ -1994,15 +2005,16 @@ sub logout {
 
     # Displaying the login box
     $app->load_tmpl(
-        'login.tmpl',
-        {   logged_out           => 1,
-            no_breadcrumbs       => 1,
-            login_fields         => MT::Auth->login_form($app) || '',
-            can_recover_password => MT::Auth->can_recover_password,
-            delegate_auth        => $delegate || 0,
-        }
+                    'login.tmpl',
+                    {
+                      logged_out     => 1,
+                      no_breadcrumbs => 1,
+                      login_fields   => MT::Auth->login_form($app) || '',
+                      can_recover_password => MT::Auth->can_recover_password,
+                      delegate_auth        => $delegate || 0,
+                    }
     );
-}
+} ## end sub logout
 
 sub create_user_pending {
     my $app     = shift;
@@ -2016,8 +2028,8 @@ sub create_user_pending {
     my $blog;
     if ( exists $param->{blog_id} ) {
         $blog = $app->model('blog')->load( $param->{blog_id} )
-            or return $app->error(
-                $app->translate( "Can\'t load blog #[_1].", $param->{blog_id} ) );
+          or return $app->error(
+            $app->translate( "Can\'t load blog #[_1].", $param->{blog_id} ) );
     }
 
     my ( $password, $url );
@@ -2032,24 +2044,24 @@ sub create_user_pending {
         }
 
         $url = $q->param('url');
-        if ( $url && (!is_url($url) || ($url =~ m/[<>]/)) ) {
+        if ( $url && ( !is_url($url) || ( $url =~ m/[<>]/ ) ) ) {
             return $app->error( $app->translate("URL is invalid.") );
         }
     }
 
     my $nickname = $q->param('nickname');
-    if ( !$nickname && !($q->param('external_auth')) ) {
-        return $app->error(
-            $app->translate("User requires display name.") );
+    if ( !$nickname && !( $q->param('external_auth') ) ) {
+        return $app->error( $app->translate("User requires display name.") );
     }
     if ( $nickname && $nickname =~ m/([<>])/ ) {
-        return $app->error(
-            $app->translate(
-                "[_1] contains an invalid character: [_2]",
-                $app->translate("Display Name"),
-                encode_html($1)
-            )
-        );
+        return
+          $app->error(
+                       $app->translate(
+                                   "[_1] contains an invalid character: [_2]",
+                                   $app->translate("Display Name"),
+                                   encode_html($1)
+                       )
+          );
     }
 
     my $email = $q->param('email');
@@ -2057,24 +2069,26 @@ sub create_user_pending {
         unless ( is_valid_email($email) ) {
             delete $param->{email};
             return $app->error(
-                $app->translate("Email Address is invalid.") );
+                               $app->translate("Email Address is invalid.") );
         }
         if ( $email =~ m/([<>])/ ) {
-            return $app->error(
-                $app->translate(
-                    "[_1] contains an invalid character: [_2]",
-                    $app->translate("Email Address"),
-                    encode_html($1)
-                )
-            );
+            return
+              $app->error(
+                           $app->translate(
+                                   "[_1] contains an invalid character: [_2]",
+                                   $app->translate("Email Address"),
+                                   encode_html($1)
+                           )
+              );
         }
     }
-    elsif ( !($q->param('external_auth')) ) {
+    elsif ( !( $q->param('external_auth') ) ) {
         delete $param->{email};
-        return $app->error(
-            $app->translate(
-                "Email Address is required for password recovery.")
-        );
+        return
+          $app->error(
+                       $app->translate(
+                           "Email Address is required for password recovery.")
+          );
     }
 
     my $name = $q->param('username');
@@ -2084,29 +2098,46 @@ sub create_user_pending {
     }
     unless ( defined($name) && $name ) {
         return $app->error( $app->translate("User requires username.") );
-    } elsif ( $name =~ m/([<>])/) {
-        return $app->error( $app->translate("[_1] contains an invalid character: [_2]", $app->translate("Username"), encode_html( $1 ) ) );
     }
-    if ( $name =~ m/([<>])/) {
-        return $app->error( $app->translate("[_1] contains an invalid character: [_2]", $app->translate("Username"), encode_html( $1 ) ) );
+    elsif ( $name =~ m/([<>])/ ) {
+        return
+          $app->error(
+                       $app->translate(
+                                   "[_1] contains an invalid character: [_2]",
+                                   $app->translate("Username"),
+                                   encode_html($1)
+                       )
+          );
+    }
+    if ( $name =~ m/([<>])/ ) {
+        return
+          $app->error(
+                       $app->translate(
+                                   "[_1] contains an invalid character: [_2]",
+                                   $app->translate("Username"),
+                                   encode_html($1)
+                       )
+          );
     }
 
     my $existing = MT::Author->exist( { name => $name } );
     return $app->error(
-        $app->translate("A user with the same name already exists.") )
-        if $existing;
+                $app->translate("A user with the same name already exists.") )
+      if $existing;
 
-    if ( $url && (!is_url($url) || ($url =~ m/[<>]/)) ) {
+    if ( $url && ( !is_url($url) || ( $url =~ m/[<>]/ ) ) ) {
         return $app->error( $app->translate("URL is invalid.") );
     }
 
-    if ( $blog
-      && ( my $provider
-        = MT->effective_captcha_provider( $blog->captcha_provider ) ) )
+    if (
+         $blog
+         && ( my $provider
+              = MT->effective_captcha_provider( $blog->captcha_provider ) )
+      )
     {
         unless ( $provider->validate_captcha($app) ) {
             return $app->error(
-                $app->translate("Text entered was wrong.  Try again.") );
+                     $app->translate("Text entered was wrong.  Try again.") );
         }
     }
 
@@ -2116,7 +2147,7 @@ sub create_user_pending {
     $user->email($email);
     unless ( $q->param('external_auth') ) {
         $user->set_password( $q->param('password') );
-        $user->url($url)   if $url;
+        $user->url($url) if $url;
     }
     else {
         $user->password('(none)');
@@ -2126,16 +2157,17 @@ sub create_user_pending {
     $user->auth_type( $app->config->AuthenticationModule );
 
     unless ( $user->save ) {
-        return $app->error(
+        return
+          $app->error(
             $app->translate(
                 "Something wrong happened when trying to process signup: [_1]",
                 $user->errstr
             )
-        );
+          );
     }
     return $user;
 
-}
+} ## end sub create_user_pending
 
 sub _send_comment_notification {
     my $app = shift;
@@ -2153,7 +2185,7 @@ sub _send_comment_notification {
     require MT::Mail;
     my $author = $entry->author;
     $app->set_language( $author->preferred_language )
-        if $author && $author->preferred_language;
+      if $author && $author->preferred_language;
     my $from_addr;
     my $reply_to;
     if ( $cfg->EmailReplyTo ) {
@@ -2169,19 +2201,17 @@ sub _send_comment_notification {
         if ( !$from_addr ) {
             $from_addr = $cfg->EmailAddressMain || $author->email;
             $from_addr = $comment->author . ' <' . $from_addr . '>'
-                if $comment->author;
+              if $comment->author;
         }
         my %head = (
-            id => 'new_comment',
-            To => $author->email,
-            $from_addr ? ( From       => $from_addr ) : (),
-            $reply_to  ? ( 'Reply-To' => $reply_to )  : (),
-            Subject => '[' 
-                . $blog->name . '] '
-                . $app->translate(
-                "New Comment Added to '[_1]'",
-                $entry->title
-                )
+                     id => 'new_comment',
+                     To => $author->email,
+                     $from_addr ? ( From       => $from_addr ) : (),
+                     $reply_to  ? ( 'Reply-To' => $reply_to )  : (),
+                     Subject => '['
+                       . $blog->name . '] '
+                       . $app->translate( "New Comment Added to '[_1]'",
+                                          $entry->title )
         );
         my $charset = $cfg->MailEncoding || $cfg->PublishCharset;
         $head{'Content-Type'} = qq(text/plain; charset="$charset");
@@ -2195,70 +2225,69 @@ sub _send_comment_notification {
             $base = $blog_domain . $base;
         }
         my $nonce
-            = MT::Util::perl_sha1_digest_hex( $comment->id
-                . $comment->created_on
-                . $blog->id
-                . $cfg->SecretToken );
+          = MT::Util::perl_sha1_digest_hex(   $comment->id
+                                            . $comment->created_on
+                                            . $blog->id
+                                            . $cfg->SecretToken );
         my $approve_link = $base
-            . $app->uri_params(
-            'mode' => 'approve_item',
-            args   => {
-                blog_id => $blog->id,
-                '_type' => 'comment',
-                id      => $comment->id,
-                nonce   => $nonce
-            }
-            );
+          . $app->uri_params(
+                              'mode' => 'approve_item',
+                              args   => {
+                                        blog_id => $blog->id,
+                                        '_type' => 'comment',
+                                        id      => $comment->id,
+                                        nonce   => $nonce
+                              }
+          );
         my $spam_link = $base
-            . $app->uri_params(
-            'mode' => 'handle_junk',
-            args   => {
-                blog_id => $blog->id,
-                '_type' => 'comment',
-                id      => $comment->id,
-                nonce   => $nonce
-            }
-            );
+          . $app->uri_params(
+                              'mode' => 'handle_junk',
+                              args   => {
+                                        blog_id => $blog->id,
+                                        '_type' => 'comment',
+                                        id      => $comment->id,
+                                        nonce   => $nonce
+                              }
+          );
         my $edit_link = $base
-            . $app->uri_params(
-            'mode' => 'view',
-            args   => {
-                blog_id => $blog->id,
-                '_type' => 'comment',
-                id      => $comment->id
-            }
-            );
+          . $app->uri_params(
+                              'mode' => 'view',
+                              args   => {
+                                        blog_id => $blog->id,
+                                        '_type' => 'comment',
+                                        id      => $comment->id
+                              }
+          );
         my $ban_link = $base
-            . $app->uri_params(
-            'mode' => 'save',
-            args   => {
-                '_type' => 'banlist',
-                blog_id => $blog->id,
-                ip      => $comment->ip
-            }
-            );
+          . $app->uri_params(
+                              'mode' => 'save',
+                              args   => {
+                                        '_type' => 'banlist',
+                                        blog_id => $blog->id,
+                                        ip      => $comment->ip
+                              }
+          );
         my %param = (
-            blog           => $blog,
-            entry          => $entry,
-            view_url       => $comment_link,
-            approve_url    => $approve_link,
-            spam_url       => $spam_link,
-            edit_url       => $edit_link,
-            ban_url        => $ban_link,
-            comment        => $comment,
-            unapproved     => !$comment->visible(),
-            state_editable => (
-                $author->is_superuser()
-                    || (
-                       $author->permissions( $blog->id )->can_manage_feedback
-                    || $author->permissions( $blog->id )->can_publish_post )
-                ) ? 1 : 0,
+             blog           => $blog,
+             entry          => $entry,
+             view_url       => $comment_link,
+             approve_url    => $approve_link,
+             spam_url       => $spam_link,
+             edit_url       => $edit_link,
+             ban_url        => $ban_link,
+             comment        => $comment,
+             unapproved     => !$comment->visible(),
+             state_editable => (
+                 $author->is_superuser()
+                   || ( $author->permissions( $blog->id )->can_manage_feedback
+                      || $author->permissions( $blog->id )->can_publish_post )
+               ) ? 1 : 0,
         );
         my $body = MT->build_email( 'new-comment.tmpl', \%param );
         MT::Mail->send( \%head, $body )
-            or return $app->error( MT::Mail->errstr() );
-    }
-}
+          or return $app->error( MT::Mail->errstr() );
+    } ## end if ( $author && $author...)
+} ## end sub _send_comment_notification
 
 sub _send_sysadmins_email {
     my $app = shift;
@@ -2267,17 +2296,18 @@ sub _send_sysadmins_email {
 
     my @ids = split ',', $ids;
     my @sysadmins = MT::Author->load(
-        {   id   => \@ids,
-            type => MT::Author::AUTHOR()
-        },
-        {   join => MT::Permission->join_on(
-                'author_id',
-                {   permissions => "\%'administer'\%",
-                    blog_id     => '0',
-                },
-                { 'like' => { 'permissions' => 1 } }
-            )
-        }
+                                { id => \@ids, type => MT::Author::AUTHOR() },
+                                {
+                                  join =>
+                                    MT::Permission->join_on(
+                                         'author_id',
+                                         {
+                                           permissions => "\%'administer'\%",
+                                           blog_id     => '0',
+                                         },
+                                         { 'like' => { 'permissions' => 1 } }
+                                    )
+                                }
     );
 
     require MT::Mail;
@@ -2294,13 +2324,13 @@ sub _send_sysadmins_email {
     $reply_to  = undef if $reply_to  && !is_valid_email($reply_to);
 
     unless ( $from_addr || $reply_to ) {
-        $app->log(
-            {   message =>
+        $app->log( {
+                  message =>
                     MT->translate("System Email Address is not configured."),
-                level    => MT::Log::ERROR(),
-                class    => 'system',
-                category => 'email'
-            }
+                  level    => MT::Log::ERROR(),
+                  class    => 'system',
+                  category => 'email'
+                }
         );
         return;
     }
@@ -2310,23 +2340,22 @@ sub _send_sysadmins_email {
         my %head = (
             id => $email_id,
             To => $a->email,
-            $from_addr ? ( From       => $from_addr ) : (),
-            $reply_to  ? ( 'Reply-To' => $reply_to )  : (),
-            Subject => $subject,
+            $from_addr ? ( From => $from_addr ) : (),
+            $reply_to ? ( 'Reply-To' => $reply_to ) : (), Subject => $subject,
         );
         my $charset = $cfg->MailEncoding || $cfg->PublishCharset;
         $head{'Content-Type'} = qq(text/plain; charset="$charset");
         MT::Mail->send( \%head, $body );
     }
-}
+} ## end sub _send_sysadmins_email
 
 sub clear_login_cookie {
     my $app = shift;
     $app->bake_cookie(
-        -name    => $app->user_cookie,
-        -value   => '',
-        -expires => '-1y',
-        -path    => $app->config->CookiePath || $app->mt_path
+                       -name    => $app->user_cookie,
+                       -value   => '',
+                       -expires => '-1y',
+                       -path    => $app->config->CookiePath || $app->mt_path
     );
 }
 
@@ -2416,13 +2445,13 @@ sub upload_info {
         $info = $q->uploadInfo($fh);
     }
     else {
-        warn "upload failed: ".$q->cgi_error;
+        warn "upload failed: " . $q->cgi_error;
         $no_upload = 1;
     }
 
     return if $no_upload;
     return ( $fh, $info );
-}
+} ## end sub upload_info
 
 sub cookie_val {
     my $app     = shift;
@@ -2454,7 +2483,7 @@ sub bake_cookie {
             # Fix for oddball Apache::Cookie error reported on Windows.
             require CGI::Util;
             $cookie->expires(
-                CGI::Util::expires( $param{-expires}, 'cookie' ) );
+                           CGI::Util::expires( $param{-expires}, 'cookie' ) );
         }
         $cookie->bake;
     }
@@ -2463,7 +2492,7 @@ sub bake_cookie {
         my $cookie = CGI::Cookie->new(%param);
         $app->set_header( '-cookie', $cookie );
     }
-}
+} ## end sub bake_cookie
 
 sub cookies {
     my $app = shift;
@@ -2481,8 +2510,8 @@ sub cookies {
 }
 
 sub show_error {
-    my $app = shift;
-    my $q = $app->query;
+    my $app     = shift;
+    my $q       = $app->query;
     my ($param) = @_;
     my $tmpl;
     my $mode    = $app->mode;
@@ -2490,72 +2519,79 @@ sub show_error {
     my $blog_id = $q->param('blog_id');
 
     if ( ref $param ne 'HASH' ) {
+
         # old scalar signature
         $param = { error => $param };
     }
 
     my $error = $param->{error};
-   
+
     # Only remove unnecessary paths when we aren't in DebugMode.
 
-    if (!$MT::DebugMode) {
-        if ($error =~ m/^(.+?)( at .+? line \d+)(.*)$/s) {
-           # Hide any module path info from perl error message
-           # Information could be revealing info about where MT app
-           # resides on server, and what version is being used, which
-           # may be helpful forensics to an attacker.
-           $error = $1;
-        }        
+    if ( !$MT::DebugMode ) {
+        if ( $error =~ m/^(.+?)( at .+? line \d+)(.*)$/s ) {
+
+            # Hide any module path info from perl error message
+            # Information could be revealing info about where MT app
+            # resides on server, and what version is being used, which
+            # may be helpful forensics to an attacker.
+            $error = $1;
+        }
         $error =~ s!(https?://\S+)!<a href="$1" target="_blank">$1</a>!g;
-    } 
+    }
+
     # $error = encode_html($error);
     $tmpl = $app->load_tmpl('error.tmpl');
-    if (!$tmpl) {
+    if ( !$tmpl ) {
         $error = '<pre>' . $error . '</pre>' unless $error =~ m/<pre>/;
-        return "Can't load error template; got error '"
-            . encode_html( $app->errstr )
-            . "'. Giving up. Original error was: $error";
+        return
+            "Can't load error template; got error '"
+          . encode_html( $app->errstr )
+          . "'. Giving up. Original error was: $error";
     }
     my $type = $q->param('__type') || '';
     if ( $type eq 'dialog' ) {
-        $param->{name}   ||= $app->{name}   || 'dialog';
-        $param->{goback} ||= $app->{goback}
+        $param->{name} ||= $app->{name} || 'dialog';
+        $param->{goback}
+          ||= $app->{goback}
           ? "window.location='" . $app->{goback} . "'"
           : 'closeDialog()';
-        $param->{value}  ||= $app->{value}  || $app->translate("Close");
+        $param->{value} ||= $app->{value} || $app->translate("Close");
         $param->{dialog} = 1;
     }
     else {
-        $param->{goback} ||= $app->{goback}
-            ? "window.location='" . $app->{goback} . "'"
-            : 'history.back()';
-        $param->{value}  ||= $app->{value}  || $app->translate("Go Back");
+        $param->{goback}
+          ||= $app->{goback}
+          ? "window.location='" . $app->{goback} . "'"
+          : 'history.back()';
+        $param->{value} ||= $app->{value} || $app->translate("Go Back");
     }
     local $param->{error} = $error;
     $tmpl->param($param);
-    $app->run_callbacks('template_param.error', $app, $tmpl->param, $tmpl);
+    $app->run_callbacks( 'template_param.error', $app, $tmpl->param, $tmpl );
     my $out = $tmpl->output;
     if ( !defined $out ) {
         $error = '<pre>' . $error . '</pre>' unless $error =~ m/<pre>/;
         return
-              "Can't build error template; got error '"
-            . encode_html( $tmpl->errstr )
-            . "'. Giving up. Original error was: $error";
+            "Can't build error template; got error '"
+          . encode_html( $tmpl->errstr )
+          . "'. Giving up. Original error was: $error";
     }
-    $app->run_callbacks('template_output.error', $app, \$out, $tmpl->param, $tmpl);
+    $app->run_callbacks( 'template_output.error', $app, \$out, $tmpl->param,
+                         $tmpl );
     return $app->l10n_filter($out);
-}
+} ## end sub show_error
 
 sub pre_run {
     my $app = shift;
-    my $q = $app->query;
+    my $q   = $app->query;
     if ( my $auth = $app->user ) {
         if ( my $lang = $q->param('__lang') ) {
             $app->set_language($lang);
         }
         else {
             $app->set_language( $auth->preferred_language )
-                if $auth->has_column('preferred_language');
+              if $auth->has_column('preferred_language');
         }
     }
 
@@ -2573,7 +2609,7 @@ sub pre_run {
     $app->{breadcrumbs} = [];
     MT->run_callbacks( ( ref $app ) . '::pre_run', $app );
     1;
-}
+} ## end sub pre_run
 
 sub post_run { MT->run_callbacks( ( ref $_[0] ) . '::post_run', $_[0] ); 1 }
 
@@ -2600,7 +2636,7 @@ sub run {
                 my $status = $q->parse;
                 unless ( $status == Apache::Constants::OK() ) {
                     die $app->translate('The file you uploaded is too large.')
-                        . "\n<!--$status-->";
+                      . "\n<!--$status-->";
                 }
             }
         }
@@ -2610,14 +2646,14 @@ sub run {
             unless ($@) {
                 if ( $err && $err =~ /^413/ ) {
                     die $app->translate('The file you uploaded is too large.')
-                        . "\n";
+                      . "\n";
                 }
             }
         }
 
         my $mode = $app->mode || 'default';
 
-    REQUEST:
+      REQUEST:
         {
 
             # for Perl 5.6.x BugId:79755
@@ -2628,14 +2664,14 @@ sub run {
             my $code = $app->handlers_for_mode($mode);
 
             my @handlers = ref($code) eq 'ARRAY' ? @$code : ($code)
-                if defined $code;
+              if defined $code;
 
             foreach my $code (@handlers) {
                 if ( ref $code eq 'HASH' ) {
                     my $meth_info = $code;
                     $requires_login
-                        = $requires_login & $meth_info->{requires_login}
-                        if exists $meth_info->{requires_login};
+                      = $requires_login & $meth_info->{requires_login}
+                      if exists $meth_info->{requires_login};
                 }
             }
 
@@ -2643,22 +2679,22 @@ sub run {
                 my ($author) = $app->login;
                 if ( !$author || !$app->is_authorized ) {
                     $body
-                        = ref($author) eq $app->user_class
-                        ? $app->show_error( { error => $app->errstr } )
-                        : $app->build_page(
+                      = ref($author) eq $app->user_class
+                      ? $app->show_error( { error => $app->errstr } )
+                      : $app->build_page(
                         'login.tmpl',
-                        {   error          => $app->errstr,
-                            no_breadcrumbs => 1,
-                            login_fields =>
-                                sub { MT::Auth->login_form($app) },
-                            can_recover_password =>
-                                sub { MT::Auth->can_recover_password },
-                            delegate_auth => sub { MT::Auth->delegate_auth },
+                        {
+                           error          => $app->errstr,
+                           no_breadcrumbs => 1,
+                           login_fields => sub { MT::Auth->login_form($app) },
+                           can_recover_password =>
+                             sub { MT::Auth->can_recover_password },
+                           delegate_auth => sub { MT::Auth->delegate_auth },
                         }
-                        );
+                      );
                     last REQUEST;
                 }
-            }
+            } ## end if ($requires_login)
 
             unless (@handlers) {
                 my $meth = "mode_$mode";
@@ -2671,7 +2707,7 @@ sub run {
 
             if ( !@handlers ) {
                 $app->error(
-                    $app->translate( 'Unknown action [_1]', $mode ) );
+                            $app->translate( 'Unknown action [_1]', $mode ) );
                 last REQUEST;
             }
 
@@ -2693,25 +2729,25 @@ sub run {
                         my $allowed = 0;
                         if ($user) {
                             my $admin = $user->is_superuser()
-                                || ( $blog
-                                && $perms
-                                && $perms->can_administer_blog() );
+                              || (    $blog
+                                   && $perms
+                                   && $perms->can_administer_blog() );
                             my @p = split /,/, $set;
                             foreach my $p (@p) {
                                 my $perm = 'can_' . $p;
                                 $allowed = 1, last
-                                    if $admin
-                                        || $perms
-                                        && (   $perms->can($perm)
-                                            && $perms->$perm() );
+                                  if $admin
+                                      || $perms
+                                      && (    $perms->can($perm)
+                                           && $perms->$perm() );
                             }
                         }
                         unless ($allowed) {
                             $app->errtrans("Permission denied.");
                             last REQUEST;
                         }
-                    }
-                }
+                    } ## end if ( my $set = $meth_info...)
+                } ## end if ( ref $code eq 'HASH')
 
                 if ( ref $code ne 'CODE' ) {
                     $code = $app->handler_to_coderef($code);
@@ -2719,13 +2755,12 @@ sub run {
 
                 if ($code) {
                     my @forward_params = @{ $app->{forward_params} }
-                        if $app->{forward_params};
+                      if $app->{forward_params};
                     $app->{forward_params} = undef;
                     my $content = $code->( $app, @forward_params );
-                    $app->response_content($content)
-                        if defined $content;
+                    $app->response_content($content) if defined $content;
                 }
-            }
+            } ## end foreach my $code (@handlers)
 
             $app->post_run;
 
@@ -2738,7 +2773,7 @@ sub run {
 
             if ( ref($body) && ( $body->isa('MT::Template') ) ) {
                 defined( my $out = $app->build_page($body) )
-                    or die $body->errstr;
+                  or die $body->errstr;
                 $body = $out;
             }
 
@@ -2746,15 +2781,15 @@ sub run {
             # up front.
             $body =~ s/^\s+(<!DOCTYPE)/$1/s if defined $body;
 
-            unless ( defined $body
-                || $app->{redirect}
-                || $app->{login_again}
-                || $app->{no_print_body} )
+            unless (    defined $body
+                     || $app->{redirect}
+                     || $app->{login_again}
+                     || $app->{no_print_body} )
             {
                 $body = $app->show_error( { error => $app->errstr } );
             }
             $app->error(undef);
-        } ## end REQUEST block
+        } ## end REQUEST:
     };
 
     if ( ( !defined $body ) && $app->{login_again} ) {
@@ -2762,13 +2797,14 @@ sub run {
         # login again!
         require MT::Auth;
         $body = $app->build_page(
-            'login.tmpl',
-            {   error                => $app->errstr,
-                no_breadcrumbs       => 1,
-                login_fields         => MT::Auth->login_form($app),
-                can_recover_password => MT::Auth->can_recover_password,
-                delegate_auth        => MT::Auth->delegate_auth,
-            }
+                    'login.tmpl',
+                    {
+                      error                => $app->errstr,
+                      no_breadcrumbs       => 1,
+                      login_fields         => MT::Auth->login_form($app),
+                      can_recover_password => MT::Auth->can_recover_password,
+                      delegate_auth        => MT::Auth->delegate_auth,
+                    }
         ) or $body = $app->show_error( { error => $app->errstr } );
     }
     elsif ( !defined $body ) {
@@ -2783,9 +2819,9 @@ sub run {
     if ( my $url = $app->{redirect} ) {
         if ( $app->{redirect_use_meta} ) {
             $app->send_http_header();
-            $app->print( '<meta http-equiv="refresh" content="0;url='
-                    . $app->{redirect}
-                    . '">' );
+            $app->print(   '<meta http-equiv="refresh" content="0;url='
+                         . $app->{redirect}
+                         . '">' );
         }
         else {
             if ( $ENV{MOD_PERL} ) {
@@ -2795,7 +2831,7 @@ sub run {
             }
             else {
                 $app->print(
-                    $q->redirect( -uri => $url, %{ $app->{cgi_headers} } ) );
+                     $q->redirect( -uri => $url, %{ $app->{cgi_headers} } ) );
             }
         }
     }
@@ -2813,33 +2849,34 @@ sub run {
                         }
                     }
                     $trace = "<li>"
-                        . sprintf( "Request completed in %.3f seconds.",
-                        Time::HiRes::time() - $app->{start_request_time} )
-                        . "</li>\n"
-                        . $trace;
+                      . sprintf( "Request completed in %.3f seconds.",
+                                 Time::HiRes::time()
+                                   - $app->{start_request_time} )
+                      . "</li>\n"
+                      . $trace;
                     if ( $trace ne '' ) {
                         $trace = '<ul>' . $trace . '</ul>';
                         my $panel
-                            = "<div class=\"debug-panel\">" . "<h3>"
-                            . $app->translate("Warnings and Log Messages")
-                            . "</h3>"
-                            . "<div class=\"debug-panel-inner\">"
-                            . $trace
-                            . "</div></div>";
+                          = "<div class=\"debug-panel\">" . "<h3>"
+                          . $app->translate("Warnings and Log Messages")
+                          . "</h3>"
+                          . "<div class=\"debug-panel-inner\">"
+                          . $trace
+                          . "</div></div>";
                         $body =~ s!(</body>)!$panel$1!i;
                     }
-                }
-            }
+                } ## end if ( $body =~ m!</body>!i)
+            } ## end if ( $MT::DebugMode &&...)
             $app->print($body);
-        }
-    }
+        } ## end unless ( $app->{no_print_body...})
+    } ## end else [ if ( my $url = $app->{...})]
 
     if ($timer) {
         $timer->mark( ref($app) . '::run' );
     }
 
     $app->takedown();
-}
+} ## end sub run
 
 sub forward {
     my $app = shift;
@@ -2856,7 +2893,7 @@ sub handlers_for_mode {
     my $code;
 
     if ( my $meths = $Global_actions{ ref($app) }
-        || $Global_actions{ $app->id } )
+         || $Global_actions{ $app->id } )
     {
         $code = $meths->{$mode} if exists $meths->{$mode};
     }
@@ -2892,7 +2929,7 @@ sub takedown {
     my $cfg = $app->config;
 
     MT->run_callbacks( ref($app) . '::take_down', $app )
-        ;    # arg is the app object
+      ;    # arg is the app object
 
     $app->touch_blogs;
 
@@ -2901,8 +2938,8 @@ sub takedown {
 
     $app->user(undef);
     delete $app->{$_}
-        for qw( cookies perms session trace response_content _blog
-        WeblogPublisher init_request );
+      for qw( cookies perms session trace response_content _blog
+      WeblogPublisher init_request );
 
     my $driver = $MT::Object::DRIVER;
     $driver->clear_cache if $driver && $driver->can('clear_cache');
@@ -2918,7 +2955,7 @@ sub takedown {
     if ( UNIVERSAL::isa( $app, 'MT::App::Upgrader' ) ) {
 
         # mt_config table doesn't exist during installation
-        if (my $cfg_pkg = $app->model('config')) {
+        if ( my $cfg_pkg = $app->model('config') ) {
             my $driver = $cfg_pkg->driver;
             if ( $driver->table_exists($cfg_pkg) ) {
                 $cfg->save_config();
@@ -2932,7 +2969,7 @@ sub takedown {
     $app->request->finish;
     delete $app->{request};
 
-}
+} ## end sub takedown
 
 sub l10n_filter { $_[0]->translate_templatized( $_[1] ) }
 
@@ -2972,16 +3009,16 @@ sub load_widgets {
                     $widgets->{new_user} = { order => -2, set => 'main' };
                 }
 
-           # Do not show new_version widget for users without specific widgets
-           #$widgets->{new_version} = { order => -1, set => 'main' }
-           #    unless $app->query->param('installed');
+                # Do not show new_version widget for users without specific widgets
+                #$widgets->{new_version} = { order => -1, set => 'main' }
+                #    unless $app->query->param('installed');
             }
         }
-    }
+    } ## end unless ($widgets)
 
     my $all_widgets = $app->registry("widgets");
     $all_widgets
-        = $app->filter_conditional_list( $all_widgets, $page, $scope );
+      = $app->filter_conditional_list( $all_widgets, $page, $scope );
 
     my @loop;
     my @ordered_list;
@@ -3002,11 +3039,11 @@ sub load_widgets {
     @ordered_list = sort { $orders{$a} <=> $orders{$b} } @ordered_list;
 
     $app->build_widgets(
-        set         => $widget_set,
-        param       => $param,
-        widgets     => $all_widgets,
-        widget_cfgs => $widgets,
-        order       => \@ordered_list,
+                         set         => $widget_set,
+                         param       => $param,
+                         widgets     => $all_widgets,
+                         widget_cfgs => $widgets,
+                         order       => \@ordered_list,
     ) or return;
 
     if ($resave_widgets) {
@@ -3016,14 +3053,14 @@ sub load_widgets {
         $user->save;
     }
     return $param;
-}
+} ## end sub load_widgets
 
 sub build_widgets {
     my $app    = shift;
     my %params = @_;
     my ( $widget_set, $param, $widgets, $widget_cfgs, $order,
-        $passthru_param )
-        = @params{qw( set param widgets widget_cfgs order passthru_param )};
+         $passthru_param )
+      = @params{qw( set param widgets widget_cfgs order passthru_param )};
     $widget_cfgs    ||= {};
     $order          ||= [ keys %$widgets ];
     $passthru_param ||= [qw( html_head js_include )];
@@ -3086,18 +3123,18 @@ sub build_widgets {
         }
 
         $app->run_callbacks( 'template_param' . $tmpl_name,
-            $app, $tmpl->param, $tmpl );
+                             $app, $tmpl->param, $tmpl );
 
-        my $content = $app->build_page($tmpl, $widget_param);
+        my $content = $app->build_page( $tmpl, $widget_param );
 
         if ( !defined $content ) {
             return $app->error(
-                "Error processing template for widget $widget_id: "
-                    . $tmpl->errstr );
+                           "Error processing template for widget $widget_id: "
+                             . $tmpl->errstr );
         }
 
         $app->run_callbacks( 'template_output' . $tmpl_name,
-            $app, \$content, $tmpl->param, $tmpl );
+                             $app, \$content, $tmpl->param, $tmpl );
 
         $param->{$set} ||= '';
         $param->{$set} .= $content;
@@ -3111,14 +3148,14 @@ sub build_widgets {
         foreach (@$passthru_param) {
             $param->{$_} = ( $param->{$_} || '' ) . "\n" . $tmpl->param($_);
         }
-    }
+    } ## end foreach my $widget_inst (@$order)
 
     return $param;
-}
+} ## end sub build_widgets
 
 sub update_widget_prefs {
     my $app  = shift;
-    my $q = $app->query;
+    my $q    = $app->query;
     my $user = $app->user;
     $app->validate_magic or return;
 
@@ -3158,11 +3195,11 @@ sub update_widget_prefs {
         my %all_params = $q->param;
         my $refresh = $all_params{widget_refresh} ? 1 : 0;
         delete $all_params{$_}
-            for
-            qw( json widget_id widget_action __mode widget_set widget_singular widget_refresh magic_token widget_scope return_args );
+          for
+          qw( json widget_id widget_action __mode widget_set widget_singular widget_refresh magic_token widget_scope return_args );
         $these_widgets->{$widget_id}{param} = {};
         $these_widgets->{$widget_id}{param}{$_} = $all_params{$_}
-            for keys %all_params;
+          for keys %all_params;
         $widgets->{$widget_scope} = $these_widgets;
         $resave_widgets = 1;
         if ($refresh) {
@@ -3180,7 +3217,7 @@ sub update_widget_prefs {
         $app->add_return_arg( 'saved' => 1 );
         $app->call_return;
     }
-}
+} ## end sub update_widget_prefs
 
 sub load_widget_list {
     my $app = shift;
@@ -3227,17 +3264,17 @@ sub load_widget_list {
         $label = $label->() if ref($label) eq 'CODE';
         next unless $label;
         push @widget_loop,
-            {
+          {
             widget_id => $w->{id},
             ( $w->{set} ? ( widget_set => $w->{set} ) : () ),
             widget_label => $label,
-            };
+          };
     }
     @widget_loop
-        = sort { $a->{widget_label} cmp $b->{widget_label} } @widget_loop;
+      = sort { $a->{widget_label} cmp $b->{widget_label} } @widget_loop;
     $param->{widget_scope}    = $scope;
     $param->{all_widget_loop} = \@widget_loop;
-}
+} ## end sub load_widget_list
 
 sub load_list_actions {
     my $app = shift;
@@ -3257,12 +3294,12 @@ sub load_list_actions {
         $param->{more_list_actions} = \@plugin_actions;
         $param->{list_actions}      = \@core_actions;
         $param->{has_list_actions}
-            = ( @plugin_actions || @core_actions ) ? 1 : 0;
+          = ( @plugin_actions || @core_actions ) ? 1 : 0;
     }
     my $filters = $app->list_filters( $type, @p );
     $param->{list_filters} = $filters if $filters;
     return $param;
-}
+} ## end sub load_list_actions
 
 sub current_magic {
     my $app  = shift;
@@ -3272,14 +3309,14 @@ sub current_magic {
 
 sub validate_magic {
     my $app = shift;
-    my $q = $app->query;
+    my $q   = $app->query;
     return 1
-        if $q->param('username')
-            && $q->param('password')
-            && $app->request('fresh_login');
+      if $q->param('username')
+          && $q->param('password')
+          && $app->request('fresh_login');
     $app->{login_again} = 1, return undef
-        unless ( $app->current_magic || '' ) eq
-        ( $q->param('magic_token') || '' );
+      unless ( $app->current_magic || '' ) eq
+      ( $q->param('magic_token') || '' );
     1;
 }
 
@@ -3338,8 +3375,8 @@ sub state_params {
 # Creates a query string that refers to the same view as the one we're
 # already rendering.
 sub make_return_args {
-    my $app = shift;
-    my $q     = $app->query;
+    my $app  = shift;
+    my $q    = $app->query;
     my @vars = $app->state_params;
     my %args;
     foreach my $v (@vars) {
@@ -3369,23 +3406,23 @@ sub add_return_arg {
             $app->{return_args} .= '&' if $app->{return_args};
             if ( ref $args{$a} eq 'ARRAY' ) {
                 $app->{return_args} .= $a . '=' . encode_url($_)
-                    foreach @{ $args{$a} };
+                  foreach @{ $args{$a} };
             }
             else {
                 $app->{return_args} .= $a . '=' . encode_url( $args{$a} );
             }
         }
     }
-}
+} ## end sub add_return_arg
 
 sub base {
     my $app = shift;
     return $app->{__host} if exists $app->{__host};
     my $cfg = $app->config;
     my $path
-        = $app->{is_admin}
-        ? ( $cfg->AdminCGIPath || $cfg->CGIPath )
-        : $cfg->CGIPath;
+      = $app->{is_admin}
+      ? ( $cfg->AdminCGIPath || $cfg->CGIPath )
+      : $cfg->CGIPath;
     if ( $path =~ m!^(https?://[^/]+)!i ) {
         ( my $host = $1 ) =~ s!/$!!;
         return $app->{__host} = $host;
@@ -3394,10 +3431,10 @@ sub base {
     # determine hostname from environment (supports relative CGI paths)
     if ( my $host = $ENV{HTTP_HOST} ) {
         return $app->{__host}
-            = 'http' . ( $app->is_secure ? 's' : '' ) . '://' . $host;
+          = 'http' . ( $app->is_secure ? 's' : '' ) . '://' . $host;
     }
     '';
-}
+} ## end sub base
 
 *path = \&mt_path;
 
@@ -3408,9 +3445,9 @@ sub mt_path {
     my $cfg = $app->config;
     my $path;
     $path
-        = $app->{is_admin}
-        ? ( $cfg->AdminCGIPath || $cfg->CGIPath )
-        : $cfg->CGIPath;
+      = $app->{is_admin}
+      ? ( $cfg->AdminCGIPath || $cfg->CGIPath )
+      : $cfg->CGIPath;
     if ( $path =~ m!^https?://[^/]+(/?.*)$!i ) {
         $path = $1;
     }
@@ -3448,7 +3485,7 @@ sub app_path {
     }
     $path .= '/' unless substr( $path, -1, 1 ) eq '/';
     $app->{__path} = $path;
-}
+} ## end sub app_path
 
 sub envelope {''}
 
@@ -3492,11 +3529,11 @@ sub uri_params {
         foreach my $p ( keys %{ $param{args} } ) {
             if ( ref $param{args}{$p} eq 'ARRAY' ) {
                 push @params, ( $p . '=' . encode_url($_) )
-                    foreach @{ $param{args}{$p} };
+                  foreach @{ $param{args}{$p} };
             }
             else {
                 push @params, ( $p . '=' . encode_url( $param{args}{$p} ) )
-                    if defined $param{args}{$p};
+                  if defined $param{args}{$p};
             }
         }
     }
@@ -3526,8 +3563,8 @@ sub path_info {
 sub is_secure {
     my $app = shift;
     $ENV{MOD_PERL}
-        ? $app->{apache}->subprocess_env('https')
-        : $app->query->protocol() eq 'https';
+      ? $app->{apache}->subprocess_env('https')
+      : $app->query->protocol() eq 'https';
 }
 
 sub redirect {
@@ -3547,13 +3584,13 @@ sub redirect {
 ###############################################
 sub param {
     my $app = shift;
-    my $q   = $app->query or return;     # Hapless if not harmless...
+    my $q = $app->query or return;    # Hapless if not harmless...
     if (@_) {
         Melody::DeprecatedParamUsage->warn( $app, 'get_set' );
         return $q->param(@_);
     }
     else {
-        if ( wantarray ) {
+        if (wantarray) {
             Melody::DeprecatedParamUsage->warn( $app, 'param_hash' );
             return ( map { $_ => $q->param($_) } $q->param );
         }
@@ -3576,8 +3613,7 @@ sub param {
 sub query {
     my $app = shift;
     my ($query) = @_;
-    return defined $query ? $app->{__query} = $query
-                          : $app->{__query};
+    return defined $query ? $app->{__query} = $query : $app->{__query};
 }
 
 sub blog {
@@ -3587,7 +3623,7 @@ sub blog {
     return undef unless $app->query;
     my $blog_id = $app->query->param('blog_id');
     if ($blog_id) {
-        $app->{_blog} = MT->model('blog')->load( $blog_id );
+        $app->{_blog} = MT->model('blog')->load($blog_id);
     }
     return $app->{_blog};
 }
@@ -3622,12 +3658,10 @@ sub log {
     if ( my $user = $app->user ) {
         $log->author_id( $user->id );
     }
-    $log->level( MT::Log::INFO() )
-        unless defined $log->level;
-    $log->class('system')
-        unless defined $log->class;
+    $log->level( MT::Log::INFO() ) unless defined $log->level;
+    $log->class('system') unless defined $log->class;
     $log->save;
-}
+} ## end sub log
 
 sub trace {
     my $app = shift;
@@ -3645,64 +3679,68 @@ sub trace {
     if ( $MT::DebugMode & 128 ) {
         my @caller = caller(1);
         my $place
-            = $caller[0] . '::'
-            . $caller[3] . ' in '
-            . $caller[1]
-            . ', line '
-            . $caller[2];
+          = $caller[0] . '::'
+          . $caller[3] . ' in '
+          . $caller[1]
+          . ', line '
+          . $caller[2];
         if ( $MT::DebugMode & 2 ) {
             local $Carp::CarpLevel = 1;
             my $msg = "@_";
             chomp $msg;
             print STDERR Carp::longmess("(warn from $place) $msg");
-        } else {
+        }
+        else {
             print STDERR "(warn from $place) @_\n";
         }
     }
-}
+} ## end sub trace
 
 sub remote_ip {
     my $app = shift;
 
     my $trusted = $app->config->TransparentProxyIPs || 0;
-    my $remote_ip = ($ENV{MOD_PERL}
-      ? $app->{apache}->connection->remote_ip
-      : $ENV{REMOTE_ADDR});
+    my $remote_ip
+      = (   $ENV{MOD_PERL}
+          ? $app->{apache}->connection->remote_ip
+          : $ENV{REMOTE_ADDR} );
     $remote_ip ||= '127.0.0.1';
-    my $ip = $trusted
-        ? $app->get_header('X-Forwarded-For')
-        : $remote_ip;
-    if ( $trusted ) {
+    my $ip = $trusted ? $app->get_header('X-Forwarded-For') : $remote_ip;
+    if ($trusted) {
         if ( $trusted =~ m/^\d+$/ ) {
+
             # TransparentProxyIPs of 1, means to use the
             # right-most IP from X-Forwarded-For (remote_ip is the proxy)
             # TransparentProxyIPs of 2, means to use the
             # next-to-last IP from X-Forwarded-For.
-            $trusted--;  # assumes numeric value
+            $trusted--;    # assumes numeric value
             my @iplist = reverse split /\s*,\s*/, $ip;
-            if ( @iplist ) {
+            if (@iplist) {
                 do {
-                    $ip = $iplist[$trusted--];
+                    $ip = $iplist[ $trusted-- ];
                 } while ( $trusted >= 0 && !$ip );
                 $ip ||= $remote_ip;
-            } else {
+            }
+            else {
                 $ip = $remote_ip;
             }
-        } elsif ($trusted =~ m/^\d+\./) { # looks IP-ish
-            # In this form, TransparentProxyIPs can be a list of
-            # IP or subnet addresses to exclude as trusted IPs
-            # TransparentProxyIPs 10.1.1., 12.34.56.78
+        }
+        elsif ( $trusted =~ m/^\d+\./ ) {    # looks IP-ish
+                # In this form, TransparentProxyIPs can be a list of
+                # IP or subnet addresses to exclude as trusted IPs
+                # TransparentProxyIPs 10.1.1., 12.34.56.78
             my @trusted = split /\s*,\s*/, $trusted;
             my @iplist = reverse split /\s*,\s*/, $ip;
-            while ( @iplist && grep( { $iplist[0] =~ m/^\Q$_\E/ } @trusted) ) {
+            while ( @iplist && grep( { $iplist[0] =~ m/^\Q$_\E/ } @trusted ) )
+            {
                 shift @iplist;
             }
             $ip = @iplist ? $iplist[0] : $remote_ip;
         }
-    }
+    } ## end if ($trusted)
 
     return $ip;
-}
+} ## end sub remote_ip
 
 sub document_root {
     my $app = shift;
@@ -3754,34 +3792,33 @@ sub warn {
 
     my %usage = $self->usage();
     my $msg   = 'DEPRECATION WARNING: Use of $app->param to [_1] in [_2] '
-              . 'at line [_3] will break in the future. Use [_4] instead.';
-    
-    my $transmsg = $app->translate(
-        $msg,  $usage{$type}{description}, $package,
-        $line, $usage{$type}{replacement}
-    );
-    print STDERR $transmsg."\n";
-    warn $transmsg."\n";
+      . 'at line [_3] will break in the future. Use [_4] instead.';
+
+    my $transmsg = $app->translate( $msg, $usage{$type}{description},
+                                    $package, $line,
+                                    $usage{$type}{replacement} );
+    print STDERR $transmsg . "\n";
+    warn $transmsg . "\n";
 }
 
 # Mapping of each type of deprecated $app->param usage
 # to an expanded description and replacement method.
-# This is a separate method so that the warnings can be 
+# This is a separate method so that the warnings can be
 # programmatically tested for.
 sub usage {
     return (
-        get_set         => {
-            description => 'get/set query object properties',
-            replacement => '$app->query->param()',
-        },
-        param_hash      => {
-            description => 'fetch a hash of query parameters',
-            replacement => '$app->query->Vars',
-        },
-        query_object    => {
-            description => 'fetch the CGI query object',
-            replacement => '$app->query',
-        },
+             get_set => {
+                          description => 'get/set query object properties',
+                          replacement => '$app->query->param()',
+             },
+             param_hash => {
+                            description => 'fetch a hash of query parameters',
+                            replacement => '$app->query->Vars',
+             },
+             query_object => {
+                               description => 'fetch the CGI query object',
+                               replacement => '$app->query',
+             },
     );
 }
 
@@ -3791,10 +3828,11 @@ sub TIESCALAR { return bless {}, $_[0]; }
 
 sub FETCH {
     my $self = shift;
-    my ($package, $filename, $line) = caller(1);
-    my $msg = 'DEPRECATION WARNING: Direct access to $app->{query} '
-            . "in $package at line $line will break in the near future. "
-            . "Use \$app->query instead. See MT::App POD for details.\n";
+    my ( $package, $filename, $line ) = caller(1);
+    my $msg
+      = 'DEPRECATION WARNING: Direct access to $app->{query} '
+      . "in $package at line $line will break in the near future. "
+      . "Use \$app->query instead. See MT::App POD for details.\n";
     print STDERR $msg;
     warn $msg;
     my $app = MT->instance;
@@ -3803,14 +3841,15 @@ sub FETCH {
 
 sub STORE {
     my $self = shift;
-    my ($package, $filename, $line) = caller(1);
-    my $msg = 'DEPRECATION WARNING: Direct assignment to $app->{query} in '
-            . "$package at line $line will break in the near future. Use "
-            . "\$app->query( OBJ ) instead. See MT::App POD for details.\n";
+    my ( $package, $filename, $line ) = caller(1);
+    my $msg
+      = 'DEPRECATION WARNING: Direct assignment to $app->{query} in '
+      . "$package at line $line will break in the near future. Use "
+      . "\$app->query( OBJ ) instead. See MT::App POD for details.\n";
     print STDERR $msg;
     warn $msg;
     my $app = MT->instance;
-    return $app->query( @_ );
+    return $app->query(@_);
 }
 
 1;

@@ -13,125 +13,135 @@ use strict;
 our $MAX_REVISIONS = 20;
 
 {
-my $driver;
-sub _driver {
-    my $driver_name = 'MT::Revisable::' . MT->config->RevisioningDriver;
-    eval 'require ' . $driver_name;
-    if (my $err = $@) {
-        die (MT->translate("Bad RevisioningDriver config '[_1]': [_2]", $driver_name, $err));
+    my $driver;
+
+    sub _driver {
+        my $driver_name = 'MT::Revisable::' . MT->config->RevisioningDriver;
+        eval 'require ' . $driver_name;
+        if ( my $err = $@ ) {
+            die(
+                 MT->translate(
+                                "Bad RevisioningDriver config '[_1]': [_2]",
+                                $driver_name, $err
+                 )
+            );
+        }
+        my $driver = $driver_name->new;
+        die $driver_name->errstr
+          if ( !$driver || ( ref( \$driver ) eq 'SCALAR' ) );
+        return $driver;
     }
-    my $driver = $driver_name->new;
-    die $driver_name->errstr
-        if (!$driver || (ref(\$driver) eq 'SCALAR'));
-    return $driver;
-}
 
-sub _handle {
-    my $method = ( caller(1) )[3];
-    $method =~ s/.*:://;
-    my $driver = $driver ||= _driver();
-    return undef unless $driver->can($method);
-    $driver->$method(@_);
-}
+    sub _handle {
+        my $method = ( caller(1) )[3];
+        $method =~ s/.*:://;
+        my $driver = $driver ||= _driver();
+        return undef unless $driver->can($method);
+        $driver->$method(@_);
+    }
 
-sub release {
-    undef $driver;
-}
+    sub release {
+        undef $driver;
+    }
 }
 
 sub install_properties {
-    my $pkg = shift;
-    my ($class) = @_;
-    my $props = $class->properties;
+    my $pkg        = shift;
+    my ($class)    = @_;
+    my $props      = $class->properties;
     my $datasource = $class->datasource;
-    
-    $props->{column_defs}{current_revision} = {
-        label => 'Revision Number',
-        type  => 'integer',
-        not_null => 1        
-    };
+
+    $props->{column_defs}{current_revision}
+      = { label => 'Revision Number', type => 'integer', not_null => 1 };
     $class->install_column('current_revision');
     $props->{defaults}{current_revision} = 0;
 
-    $class->install_meta( { column_defs => {                                                                                                       
-        'revision' => 'integer',
-    } });
-    
+    $class->install_meta( { column_defs => { 'revision' => 'integer', } } );
+
     # Callbacks: clean list of changed columns to only
     # include versioned columns
-    MT->add_callback( 'api_pre_save.' . $datasource, 9, undef, \&mt_presave_obj );
-    MT->add_callback( 'cms_pre_save.' . $datasource, 9, undef, \&mt_presave_obj );
-               
-    # Callbacks: object-level callbacks could not be 
+    MT->add_callback( 'api_pre_save.' . $datasource,
+                      9, undef, \&mt_presave_obj );
+    MT->add_callback( 'cms_pre_save.' . $datasource,
+                      9, undef, \&mt_presave_obj );
+
+    # Callbacks: object-level callbacks could not be
     # prioritized and thus caused problems with plugins
-    # registering a post_save and saving     
-    MT->add_callback( 'api_post_save.' . $datasource, 9, undef, \&mt_postsave_obj );
-    MT->add_callback( 'cms_post_save.' . $datasource, 9, undef, \&mt_postsave_obj );               
+    # registering a post_save and saving
+    MT->add_callback( 'api_post_save.' . $datasource,
+                      9, undef, \&mt_postsave_obj );
+    MT->add_callback( 'cms_post_save.' . $datasource,
+                      9, undef, \&mt_postsave_obj );
 
-    $class->add_callback( 'post_remove', 0, MT->component('core'), \&mt_postremove_obj );
-}
+    $class->add_callback( 'post_remove', 0, MT->component('core'),
+                          \&mt_postremove_obj );
+} ## end sub install_properties
 
-sub revision_pkg { _handle(@_); }
-sub revision_props { _handle(@_); }
-sub init_revisioning { _handle(@_); }
+sub revision_pkg         { _handle(@_); }
+sub revision_props       { _handle(@_); }
+sub init_revisioning     { _handle(@_); }
 sub handle_max_revisions { _handle(@_); }
 
 sub revisioned_columns {
-    my $obj = shift;
+    my $obj  = shift;
     my $defs = $obj->column_defs;
-    
+
     my @cols;
-    foreach my $col (keys %$defs) {
-        push @cols, $col
-            if $defs->{$col} && exists $defs->{$col}{revisioned};
+    foreach my $col ( keys %$defs ) {
+        push @cols, $col if $defs->{$col} && exists $defs->{$col}{revisioned};
     }
-    
+
     return \@cols;
 }
 
 sub is_revisioned_column {
-    my $obj = shift;
+    my $obj   = shift;
     my ($col) = @_;
-    my $defs = $obj->column_defs;
-    
+    my $defs  = $obj->column_defs;
+
     return 1 if $defs->{$col} && exists $defs->{$col}{revisioned};
 }
 
 # TODO Review mt_presave_obj to determine if misplaced (MT::CMS::Common?)
 sub mt_presave_obj {
-    my ($cb, $app, $obj, $orig) = @_;
+    my ( $cb, $app, $obj, $orig ) = @_;
 
     return 1 unless $app->isa('MT::App');
     return 1 unless $app->query->param('save_revision');
-    
-    $obj->gather_changed_cols($orig, $app);
+
+    $obj->gather_changed_cols( $orig, $app );
     return 1 unless exists $obj->{changed_revisioned_cols};
-    
+
     # Collision Checking
     my $changed_cols = $obj->{changed_revisioned_cols};
-    my $modified_by = $obj->can('author') ? $obj->author : $app->user;;
-    
-    if(scalar @$changed_cols) {
-        if($app->isa('MT::App::CMS') 
-                && $app->query->param('current_revision') # not submitted if a user saves again on collision
-                    && $app->query->param('current_revision') != $obj->current_revision) {
+    my $modified_by = $obj->can('author') ? $obj->author : $app->user;
+
+    if ( scalar @$changed_cols ) {
+        if (
+            $app->isa('MT::App::CMS')
+            && $app->query->param( 'current_revision'
+            )    # not submitted if a user saves again on collision
+            && $app->query->param('current_revision')
+            != $obj->current_revision
+          )
+        {
             my %param = (
-                collision   => 1,
-                return_args => $app->query->param('return_args'),
-                modified_by_nickname => $modified_by->nickname
+                          collision   => 1,
+                          return_args => $app->query->param('return_args'),
+                          modified_by_nickname => $modified_by->nickname
             );
             return $app->forward( "view", \%param );
         }
     }
     return 1;
-}
+} ## end sub mt_presave_obj
 
-# TODO Review mt_postsave_obj to determine if misnamed/misplaced (MT::CMS::Common?). 
+# TODO Review mt_postsave_obj to determine if misnamed/misplaced (MT::CMS::Common?).
 # TODO Is this *really* specific to MT::App subclasses? Do you need an MT::App $app to have MT track your revisions?
 # Also what is line 136 doing with that alternation? Useless...
 sub mt_postsave_obj {
-    my ($cb, $app, $obj, $orig) = @_;
-    
+    my ( $cb, $app, $obj, $orig ) = @_;
+
     return 1 unless $app->isa('MT::App');
     return 1 unless $app || $app->param('save_revision');
 
@@ -139,23 +149,25 @@ sub mt_postsave_obj {
         my $col = 'max_revisions_' . $obj->datasource;
         if ( my $blog = $obj->blog ) {
             my $max = $blog->$col;
-            $obj->handle_max_revisions( $max );
+            $obj->handle_max_revisions($max);
         }
         my $revision = $obj->save_revision( $app->param('revision-note') );
         $obj->current_revision($revision);
+
         # call update to bypass instance save method
         # TODO: Review this.  We usually do $obj->SUPER::save no?
-        $obj->update or return $obj->error($obj->errstr);
+        $obj->update or return $obj->error( $obj->errstr );
         if ( $obj->has_meta('revision') ) {
-            $obj->revision( $revision );
+            $obj->revision($revision);
+
             # hack to bypass instance save method
             $obj->{__meta}->set_primary_keys($obj);
             $obj->{__meta}->save;
         }
-    }
-    
+    } ## end if ( exists $obj->{changed_revisioned_cols...})
+
     return 1;
-}
+} ## end sub mt_postsave_obj
 
 sub mt_postremove_obj {
     my ( $cb, $obj, $original ) = @_;
@@ -167,170 +179,171 @@ sub mt_postremove_obj {
 sub gather_changed_cols {
     my $obj = shift;
     my ($orig) = @_;
-    
+
     my @changed_cols;
     my $revisioned_cols = $obj->revisioned_columns;
-    
-    my %date_cols = map { $_ => 1 }
-        @{$obj->columns_of_type('datetime', 'timestamp')};
-    
+
+    my %date_cols
+      = map { $_ => 1 } @{ $obj->columns_of_type( 'datetime', 'timestamp' ) };
+
     foreach my $col (@$revisioned_cols) {
         next if $orig && $obj->$col eq $orig->$col;
-        next if $orig && exists $date_cols{$col} 
-                        && $orig->$col eq MT::Object::_db2ts($obj->$col);
-        
+        next
+          if $orig
+              && exists $date_cols{$col}
+              && $orig->$col eq MT::Object::_db2ts( $obj->$col );
+
         push @changed_cols, $col;
-    }    
-    
-    $obj->{changed_revisioned_cols} = \@changed_cols
-        if @changed_cols;
+    }
+
+    $obj->{changed_revisioned_cols} = \@changed_cols if @changed_cols;
 
     my $class = ref $obj || $obj;
-    MT->run_callbacks($class . '::gather_changed_cols', $obj, @_);
+    MT->run_callbacks( $class . '::gather_changed_cols', $obj, @_ );
 
     1;
-}
+} ## end sub gather_changed_cols
 
 sub pack_revision {
-    my $obj = shift;
-    my $class = ref $obj || $obj;
+    my $obj    = shift;
+    my $class  = ref $obj || $obj;
     my $values = $obj->column_values;
 
     my $meta_values = $obj->meta;
-    foreach my $key (keys %$meta_values) {
+    foreach my $key ( keys %$meta_values ) {
         next if $key eq 'current_revision';
         $values->{$key} = $meta_values->{$key};
     }
 
-    MT->run_callbacks($class . '::pack_revision', $obj, $values);
-    
+    MT->run_callbacks( $class . '::pack_revision', $obj, $values );
+
     return $values;
 }
 
 sub unpack_revision {
-    my $obj = shift;
+    my $obj          = shift;
     my ($packed_obj) = @_;
-    my $class = ref $obj || $obj;
+    my $class        = ref $obj || $obj;
 
     delete $packed_obj->{current_revision}
-        if exists $packed_obj->{current_revision};
+      if exists $packed_obj->{current_revision};
 
     $obj->set_values($packed_obj);
 
-    MT->run_callbacks($class . '::unpack_revision', $obj, $packed_obj);
+    MT->run_callbacks( $class . '::unpack_revision', $obj, $packed_obj );
 }
 
-sub save_revision { 
+sub save_revision {
     my $obj = shift;
     my $class = ref $obj || $obj;
 
-    my $filter_result = MT->run_callbacks( $class . '::save_revision_filter', $obj );
+    my $filter_result
+      = MT->run_callbacks( $class . '::save_revision_filter', $obj );
     return if !$filter_result;
-    
-    MT->run_callbacks( $class . '::pre_save_revision', $obj, @_ );
-    
-    my $current_revision = _handle($obj, @_);    
 
-    MT->run_callbacks( $class . '::post_save_revision', $obj, $current_revision );
-    
+    MT->run_callbacks( $class . '::pre_save_revision', $obj, @_ );
+
+    my $current_revision = _handle( $obj, @_ );
+
+    MT->run_callbacks( $class . '::post_save_revision',
+                       $obj, $current_revision );
+
     return $current_revision;
 }
-    
+
 sub object_from_revision { _handle(@_); }
-sub load_revision { _handle(@_); }
-sub remove_revisions { _handle(@_); }
+sub load_revision        { _handle(@_); }
+sub remove_revisions     { _handle(@_); }
 
 sub apply_revision {
     my $obj = shift;
-    my ($terms, $args) = @_;
+    my ( $terms, $args ) = @_;
 
-    my $rev = $obj->load_revision($terms, $args)
-        or return $obj->error(
-            MT->translate('Revision not found: [_1]', $obj->errstr));
+    my $rev = $obj->load_revision( $terms, $args )
+      or return $obj->error(
+                  MT->translate( 'Revision not found: [_1]', $obj->errstr ) );
     my $rev_object = $rev->[0];
-    $obj->set_values($rev_object->column_values);
-    $obj->save
-        or return $obj->error($obj->errstr);
+    $obj->set_values( $rev_object->column_values );
+    $obj->save or return $obj->error( $obj->errstr );
     return $obj;
 }
 
 sub diff_object {
     my $obj_a = shift;
-    my ($obj_b, $diff_args) = @_;
-    
-    return $obj_a->error(MT->translate("There aren't the same types of objects, expecting two [_1]",
-                                            lc $obj_a->class_label_plural))
-        if ref $obj_a ne ref $obj_b;
-        
-    my %diff;    
+    my ( $obj_b, $diff_args ) = @_;
+
+    return
+      $obj_a->error(
+           MT->translate(
+                 "There aren't the same types of objects, expecting two [_1]",
+                 lc $obj_a->class_label_plural
+           )
+      ) if ref $obj_a ne ref $obj_b;
+
+    my %diff;
     my $cols = $obj_a->revisioned_columns();
     foreach my $col (@$cols) {
-        $diff{$col} = _diff_string($obj_a->$col, $obj_b->$col, $diff_args);
-    }    
+        $diff{$col} = _diff_string( $obj_a->$col, $obj_b->$col, $diff_args );
+    }
 
-    return \%diff;    
-}
+    return \%diff;
+} ## end sub diff_object
 
 sub diff_revision {
     my $obj = shift;
-    my ($terms, $diff_args) = @_;
+    my ( $terms, $diff_args ) = @_;
+
     # Only specified a rev_number so diff with current
-    if(defined $terms && ref $terms ne 'HASH') { 
-        $terms = { rev_number => [$_[0], $obj->current_revision] };         
+    if ( defined $terms && ref $terms ne 'HASH' ) {
+        $terms = { rev_number => [ $_[0], $obj->current_revision ] };
     }
-    my $args = {
-        limit => 2,
-        sort_by => 'created_on',
-        direction => 'ascend'
-    };
-    
-    my @revisions = $obj->load_revision($terms, $args);
-    my $obj_a = $revisions[0]->[0];
-    my $obj_b = $revisions[1]->[0];
-    
-    return $obj->error(MT->translate("Did not get two [_1]", lc $obj->class_label_plural))
-        if ref $obj_a ne ref $obj || ref $obj_b ne ref $obj;
-    
-    my %diff;    
+    my $args = { limit => 2, sort_by => 'created_on', direction => 'ascend' };
+
+    my @revisions = $obj->load_revision( $terms, $args );
+    my $obj_a     = $revisions[0]->[0];
+    my $obj_b     = $revisions[1]->[0];
+
+    return $obj->error(
+        MT->translate( "Did not get two [_1]", lc $obj->class_label_plural ) )
+      if ref $obj_a ne ref $obj || ref $obj_b ne ref $obj;
+
+    my %diff;
     my $cols = $obj->revisioned_columns();
     foreach my $col (@$cols) {
-        $diff{$col} = _diff_string($obj_a->$col, $obj_b->$col, $diff_args);
-    }    
-    
+        $diff{$col} = _diff_string( $obj_a->$col, $obj_b->$col, $diff_args );
+    }
+
     return \%diff;
-}
+} ## end sub diff_revision
 
 sub _diff_string {
-    my ($str_a, $str_b, $diff_args) = @_;
+    my ( $str_a, $str_b, $diff_args ) = @_;
     $diff_args ||= {};
     my $diff_method = $diff_args->{method} || 'html_word_diff';
     my $limit_unchanged = $diff_args->{limit_unchanged};
 
     require HTML::Diff;
-    Carp::croak(MT->translate("Unknown method [_1]", 'HTML::Diff::' . $diff_method))
-        unless HTML::Diff->can($diff_method);
+    Carp::croak(
+         MT->translate( "Unknown method [_1]", 'HTML::Diff::' . $diff_method )
+    ) unless HTML::Diff->can($diff_method);
 
     my $diff_result = eval "HTML::Diff::$diff_method(\$str_a, \$str_b)";
     my @result;
-    foreach my $diff (@$diff_result) {        
-        unless($diff->[0] eq 'c') { # changed has adds and removes
-            push @result, {
+    foreach my $diff (@$diff_result) {
+        unless ( $diff->[0] eq 'c' ) {    # changed has adds and removes
+            push @result,
+              {
                 flag => $diff->[0],
-                text => ($diff->[0] eq '+') ? $diff->[2] : $diff->[1]
-            };
-        } else {
-            push @result, {
-                flag => '-',
-                text => $diff->[1]
-            };
-            push @result, {
-                flag => '+',
-                text => $diff->[2]
-            };
+                text => ( $diff->[0] eq '+' ) ? $diff->[2] : $diff->[1]
+              };
+        }
+        else {
+            push @result, { flag => '-', text => $diff->[1] };
+            push @result, { flag => '+', text => $diff->[2] };
         }
     }
     return \@result;
-}
+} ## end sub _diff_string
 
 1;
 

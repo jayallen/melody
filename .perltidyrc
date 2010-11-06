@@ -98,7 +98,7 @@
 --closing-side-comments
 --closing-side-comment-interval=20
 # --closing-side-comment-list-string="sub : BEGIN END"
---closing-side-comment-warnings     # Only needed on first run with -csc
+
 
 # Non-indented ## comments get no additional indentation or vertical spacing
 # This is the default

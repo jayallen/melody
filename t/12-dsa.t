@@ -18,44 +18,50 @@ use lib 't';
 
 my $msg = 'nina@blues.org::Nina Simone::1072216494';
 my $sig = {
-    r => "527791435593304577725339030118988880225606145248",
-    s => "856186764515774026930421996711007369328400857333",
+            r => "527791435593304577725339030118988880225606145248",
+            s => "856186764515774026930421996711007369328400857333",
 };
 my $dsa_key = {
-    p => '11671236708387678327224206536086899180337891539414163231548040398520841845883184000627860280911468857014406210406182985401875818712804278750455023001090753',
-    g => '8390523802553664927497849579280285206671739131891639945934584937465879937204060160958306281843225586442674344146773393578506632957361175802992793531760152',
+    p =>
+      '11671236708387678327224206536086899180337891539414163231548040398520841845883184000627860280911468857014406210406182985401875818712804278750455023001090753',
+    g =>
+      '8390523802553664927497849579280285206671739131891639945934584937465879937204060160958306281843225586442674344146773393578506632957361175802992793531760152',
     q => '1096416736263180470838402356096058638299098593011',
-    pub_key => '10172504425160158571454141863297493878195176114077274329624884017831109225358009830193460871698707783589128269392033962133593624636454152482919340057145639'
+    pub_key =>
+      '10172504425160158571454141863297493878195176114077274329624884017831109225358009830193460871698707783589128269392033962133593624636454152482919340057145639'
 };
 
-is(perl_sha1_digest_hex("abc"),
+is( perl_sha1_digest_hex("abc"),
     'a9993e364706816aba3e25717850c26c9cd0d89d',
-    'perl_sha1_digest_hex(abc)'
-);
-is(perl_sha1_digest_hex('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq'),
+    'perl_sha1_digest_hex(abc)' );
+is(
+    perl_sha1_digest_hex(
+                  'abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq'),
     '84983e441c3bd26ebaae4aa1f95129e5e54670f1',
     'perl_sha1_digest_hex(abcd...)'
 );
-is(perl_sha1_digest_hex("This is a ::long string:\"\nincluding some f^nk3 ch\rcts\]\n"),
+is(
+    perl_sha1_digest_hex(
+              "This is a ::long string:\"\nincluding some f^nk3 ch\rcts\]\n"),
     'a691f6e0777123f70fb8613b0cbd98c0d62dce6b',
     'perl_sha1_digest_hex(This is a ::long string...}'
 );
-is(perl_sha1_digest_hex(''),
+is( perl_sha1_digest_hex(''),
     'da39a3ee5e6b4b0d3255bfef95601890afd80709',
-    'perl_sha1_digest_hex()'
-);
+    'perl_sha1_digest_hex()' );
 
-ok(dsa_verify(Message => $msg, Signature => $sig, Key => $dsa_key),
-    'dsa_verify()'
-);
+ok( dsa_verify( Message => $msg, Signature => $sig, Key => $dsa_key ),
+    'dsa_verify()' );
 
 if ($@) {
-    skip(1, "ERROR: $@");
-} else {
-    ok(dsa_verify(
-            Message => $msg,
-            Signature => bless($sig, 'Crypt::DSA::Signature'),
-            Key => bless($dsa_key, 'Crypt::DSA::Key')
+    skip( 1, "ERROR: $@" );
+}
+else {
+    ok(
+        dsa_verify(
+                    Message   => $msg,
+                    Signature => bless( $sig, 'Crypt::DSA::Signature' ),
+                    Key       => bless( $dsa_key, 'Crypt::DSA::Key' )
         ),
         'blessed dsa_verify()'
     );
@@ -63,10 +69,11 @@ if ($@) {
 
 $dsa_key->{g} = 1;
 
-ok(!dsa_verify(
-        Message => $msg,
-        Signature => bless($sig,'Crypt::DSA::Signature'),
-        Key => bless($dsa_key, 'Crypt::DSA::Key')
+ok(
+    !dsa_verify(
+                 Message   => $msg,
+                 Signature => bless( $sig, 'Crypt::DSA::Signature' ),
+                 Key       => bless( $dsa_key, 'Crypt::DSA::Key' )
     ),
     'not(dsa_verify)'
 );
@@ -90,7 +97,7 @@ ok(!dsa_verify(
 # sub verify {
 #     my %param = @_;
 #     my($key, $dgst, $sig);
-#     #croak __PACKAGE__, "->verify: Need a Key" unless 
+#     #croak __PACKAGE__, "->verify: Need a Key" unless
 #     $key = $param{Key};
 #     unless ($dgst = $param{Digest}) {
 # #        croak __PACKAGE__, "->verify: Need either Message or Digest"
@@ -127,28 +134,29 @@ ok(!dsa_verify(
 SKIP: {
     my $package = 'Math::Pari';
     eval { require $package };
-    skip("$package not installed", 1);
+    skip( "$package not installed", 1 );
 
     sub mp2bin {
-        my($p) = @_;
+        my ($p) = @_;
         $p = PARI($p);
-        my $base = PARI(1) << PARI(4*8);
-        my $res = '';
-        while ($p != 0) {
+        my $base = PARI(1) << PARI( 4 * 8 );
+        my $res  = '';
+        while ( $p != 0 ) {
             my $r = $p % $base;
-            $p = ($p-$r) / $base;
+            $p = ( $p - $r ) / $base;
             my $buf = pack 'N', $r;
-            if ($p == 0) {
-                $buf = $r >= 16777216 ? $buf :
-                    $r >= 65536 ? substr($buf, -3, 3) :
-                    $r >= 256   ? substr($buf, -2, 2) :
-                    substr($buf, -1, 1);
+            if ( $p == 0 ) {
+                $buf
+                  = $r >= 16777216 ? $buf
+                  : $r >= 65536 ? substr( $buf, -3, 3 )
+                  : $r >= 256   ? substr( $buf, -2, 2 )
+                  :               substr( $buf, -1, 1 );
             }
             $res = $buf . $res;
         }
         $res;
-    }
+    } ## end sub mp2bin
 
     my $test = "45625656646468483212118818097681354668381384573545315";
-    is(dec2bin($test), mp2bin($test), 'dec2bin');
-}
+    is( dec2bin($test), mp2bin($test), 'dec2bin' );
+} ## end SKIP:

@@ -5,54 +5,49 @@ package Test::Deep::Code;
 
 use Test::Deep::Cmp;
 
-sub init
-{
-	my $self = shift;
+sub init {
+    my $self = shift;
 
-	my $code = shift || die "No coderef supplied";
+    my $code = shift || die "No coderef supplied";
 
-	$self->{code} = $code;
+    $self->{code} = $code;
 }
 
-sub descend
-{
-	my $self = shift;
-	my $got = shift;
+sub descend {
+    my $self = shift;
+    my $got  = shift;
 
-	my ($ok, $diag) = &{$self->{code}}($got);
+    my ( $ok, $diag ) = &{ $self->{code} }($got);
 
-	$self->data->{diag} = $diag;
+    $self->data->{diag} = $diag;
 
-	return $ok;
+    return $ok;
 }
 
-sub diagnostics
-{
-	my $self = shift;
-	my ($where, $last) = @_;
+sub diagnostics {
+    my $self = shift;
+    my ( $where, $last ) = @_;
 
-	my $error = $last->{diag};
-	my $data = Test::Deep::render_val($last->{got});
-	my $diag = <<EOM;
+    my $error = $last->{diag};
+    my $data  = Test::Deep::render_val( $last->{got} );
+    my $diag  = <<EOM;
 Ran coderef at $where on
 
 $data
 EOM
-  if (defined($error))
-  {
-    $diag .= <<EOM;
+    if ( defined($error) ) {
+        $diag .= <<EOM;
 and it said
 $error
 EOM
-  }
-  else
-  {
-    $diag .= <<EOM;
+    }
+    else {
+        $diag .= <<EOM;
 it failed but it didn't say why.
 EOM
-  }
+    }
 
-	return $diag;
-}
+    return $diag;
+} ## end sub diagnostics
 
 1;

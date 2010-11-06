@@ -21,18 +21,18 @@ use DateTime;
 __PACKAGE__->mk_accessors(qw( sample debug logdir day file_pattern ));
 
 my %months = (
-    Jan => 0,
-    Feb => 1,
-    Mar => 2,
-    Apr => 3,
-    May => 4,
-    Jun => 5,
-    Jul => 6,
-    Aug => 7,
-    Sep => 8,
-    Oct => 9,
-    Nov => 10,
-    Dec => 11
+               Jan => 0,
+               Feb => 1,
+               Mar => 2,
+               Apr => 3,
+               May => 4,
+               Jun => 5,
+               Jul => 6,
+               Aug => 7,
+               Sep => 8,
+               Oct => 9,
+               Nov => 10,
+               Dec => 11
 );
 
 sub range {
@@ -48,7 +48,8 @@ sub process_log_files {
     $start_ts = $start_ts->epoch;
     $end_ts   = $end_ts->epoch;
 
-    my $log_files = $proc->find_log_files_covering_range( $start_ts, $end_ts );
+    my $log_files
+      = $proc->find_log_files_covering_range( $start_ts, $end_ts );
 
     my $record_count = 0;
     my $sample       = $proc->{sample};
@@ -88,7 +89,7 @@ sub process_log_files {
     }
 
     return ( $record_count, time - $begin );
-}
+} ## end sub process_log_files
 
 # XXX for now
 sub _parse_date {
@@ -97,38 +98,38 @@ sub _parse_date {
     if ( $date =~ /^\d{14}$/ ) {
         ( $y, $mo, $d, $h, $m, $s ) = unpack 'A4A2A2A2A2A2', $date;
     }
-    elsif ( $date =~
-/^(\d{4})(?:-?(\d{2})(?:-?(\d\d?)(?:T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})?)?)?)?/
+    elsif ( $date
+        =~ /^(\d{4})(?:-?(\d{2})(?:-?(\d\d?)(?:T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})?)?)?)?/
       )
     {
-        ( $y, $mo, $d, $h, $m, $s, $tz ) =
-          ( $1, $2 || 1, $3 || 1, $4 || 0, $5 || 0, $6 || 0, $7 );
+        ( $y, $mo, $d, $h, $m, $s, $tz )
+          = ( $1, $2 || 1, $3 || 1, $4 || 0, $5 || 0, $6 || 0, $7 );
     }
     else {
         Carp::croak('Invalid date');
     }
 
     my $default_tz = 'UTC';
-    my $dt         = DateTime->new(
-        year      => $y,
-        month     => $mo,
-        day       => $d,
-        hour      => $h || 0,
-        minute    => $m || 0,
-        second    => $s || 0,
-        time_zone => $default_tz,
+    my $dt = DateTime->new(
+                            year      => $y,
+                            month     => $mo,
+                            day       => $d,
+                            hour      => $h || 0,
+                            minute    => $m || 0,
+                            second    => $s || 0,
+                            time_zone => $default_tz,
     );
 
     ## In case TZ flag in the string and user's timezone is different
     if ( defined $tz ) {
-        my $secs = $tz eq 'Z' ? 0 : DateTime::TimeZone::offset_as_seconds($tz);
-        my $offset =
-          DateTime::TimeZone->new( name => $default_tz || 'UTC' )
+        my $secs
+          = $tz eq 'Z' ? 0 : DateTime::TimeZone::offset_as_seconds($tz);
+        my $offset = DateTime::TimeZone->new( name => $default_tz || 'UTC' )
           ->offset_for_datetime($dt);
         $dt->subtract( seconds => $secs - $offset );
     }
     return $dt;
-}
+} ## end sub _parse_date
 
 # XXX for now
 sub _start_end_day {
@@ -162,9 +163,9 @@ sub parse_day_arg_into_range {
     # my ( $start_ts, $end_ts ) = MT::DateTime->start_end_day();
     my ( $start_ts, $end_ts ) = _start_end_day($dt);
     $proc->debug( sprintf "For day=%s, start_ts is %s and end_ts is %s",
-        $arg_day, $start_ts, $end_ts );
+                  $arg_day, $start_ts, $end_ts );
     return ( $start_ts, $end_ts );
-}
+} ## end sub parse_day_arg_into_range
 
 sub debug {
     my $proc = shift;
@@ -183,8 +184,8 @@ sub find_log_files_covering_range {
 
     # $pat = quotemeta $pat;
     while ( my $file = $dir->next ) {
-        if (   $file->isa('Path::Class::File')
-            && $file->basename =~ /^$pat(?:\.[0-9]+(\.gz))?$/o )
+        if (    $file->isa('Path::Class::File')
+             && $file->basename =~ /^$pat(?:\.[0-9]+(\.gz))?$/o )
         {
             my ($is_gz) = ( $1, $2 );
             $proc->debug("Log file '$file'");
@@ -210,12 +211,9 @@ sub find_log_files_covering_range {
                 $rec = _parse_single_record( \$line );
             }
             push @start_times,
-              {
-                start_ts => $rec->{ts},
-                filename => $file->stringify,
-              };
-        }
-    }
+              { start_ts => $rec->{ts}, filename => $file->stringify, };
+        } ## end if ( $file->isa('Path::Class::File'...))
+    } ## end while ( my $file = $dir->next)
 
     @start_times = sort { $a->{start_ts} <=> $b->{start_ts} }
       grep { defined $_ } @start_times;
@@ -234,9 +232,10 @@ sub find_log_files_covering_range {
             }
         }
     }
-    $proc->debug( "Files in our date range are : " . Dumper( \@found_files ) );
+    $proc->debug(
+                 "Files in our date range are : " . Dumper( \@found_files ) );
     return \@found_files;
-}
+} ## end sub find_log_files_covering_range
 
 sub _parse_single_record {
     my ($line_ref) = @_;
@@ -251,22 +250,24 @@ sub _parse_single_record {
     /x
       )
     {
-        my ( $mon, $mday, $h, $m, $s, $year, $server, $uri, $times ) =
-          ( $1, $2, $3, $4, $5, $6, $7, $8, $9 );
+        my ( $mon, $mday, $h, $m, $s, $year, $server, $uri, $times )
+          = ( $1, $2, $3, $4, $5, $6, $7, $8, $9 );
         my $domain = '';
         $mon = $months{$mon};
         my $rec = {
-            url    => $uri,
-            domain => $domain,
-            server => $server,
-            ts =>
-              Time::Local::timelocal_nocheck( $s, $m, $h, $mday, $mon, $year ),
-            mday   => int $mday,
-            month  => $mon + 1,
-            year   => $year,
-            hour   => int $h,
-            minute => int $m,
-            second => int $s,
+                    url    => $uri,
+                    domain => $domain,
+                    server => $server,
+                    ts =>
+                      Time::Local::timelocal_nocheck(
+                                                $s, $m, $h, $mday, $mon, $year
+                      ),
+                    mday   => int $mday,
+                    month  => $mon + 1,
+                    year   => $year,
+                    hour   => int $h,
+                    minute => int $m,
+                    second => int $s,
         };
 
         foreach my $time ( split q{, }, $times ) {
@@ -278,8 +279,8 @@ sub _parse_single_record {
         }
 
         return $rec;
-    }
-}
+    } ## end if ( $$line_ref =~ / )
+} ## end sub _parse_single_record
 
 1;
 __END__

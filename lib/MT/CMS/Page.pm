@@ -7,10 +7,11 @@ sub edit {
     require MT::CMS::Entry;
     MT::CMS::Entry::edit(@_);
 }
+
 sub list {
     my $app = shift;
     $app->query->param( 'type', 'page' );
-    return $app->forward('list_entry', { type => 'page' } );
+    return $app->forward( 'list_entry', { type => 'page' } );
 }
 
 sub save_pages {

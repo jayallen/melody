@@ -26,12 +26,12 @@ sub init {
     my $app = shift;
     $app->SUPER::init(@_) or return;
     $app->add_methods(
-        'main'        => \&main,
-        'install'     => \&upgrade,
-        'upgrade'     => \&upgrade,
-        'run_actions' => \&run_actions,
-        'init_user'   => \&init_user,
-        'init_blog'   => \&init_blog,
+                       'main'        => \&main,
+                       'install'     => \&upgrade,
+                       'upgrade'     => \&upgrade,
+                       'run_actions' => \&run_actions,
+                       'init_user'   => \&init_user,
+                       'init_blog'   => \&init_blog,
     );
     $app->{user_class}           = 'MT::BasicAuthor';
     $app->{template_dir}         = 'cms';
@@ -56,14 +56,14 @@ sub login {
     my $first_time  = 0;
     my $cookie_name = $app->user_cookie;
     if ( $cookies->{$cookie_name}
-        && ( defined $cookies->{$cookie_name}->value ) )
+         && ( defined $cookies->{$cookie_name}->value ) )
     {
         ( $user, $cookie_middle, $remember ) = split /::/,
-            $cookies->{$cookie_name}->value;
+          $cookies->{$cookie_name}->value;
     }
     elsif ( $cookies->{'user'} ) {    # 1.1 - 2.661
         ( $user, $cookie_middle, $remember ) = split /::/,
-            $cookies->{'user'}->value;
+          $cookies->{'user'}->value;
     }
     else {
         $cookie_middle = '';
@@ -97,8 +97,8 @@ sub login {
                 # try checking old-style cookie using crypt'd password
                 # then try the magic token if user is using new cookie
                 # format...
-                if (   ( 'MT' eq $app->config->AuthenticationModule )
-                    && ( $author->is_valid_password( $cookie_middle, 1 ) ) )
+                if (    ( 'MT' eq $app->config->AuthenticationModule )
+                     && ( $author->is_valid_password( $cookie_middle, 1 ) ) )
                 {
                     $valid = 1;
                 }
@@ -110,20 +110,18 @@ sub login {
                         require MT::BasicSession;
                         MT::BasicSession->load($cookie_middle);
                     }
-                    )
+                  )
                 {
                     $valid = 1;
                 }
-            }
+            } ## end elsif ($cookie_middle)
             if ($valid) {
                 $app->{author} = $author;
                 if ( $cookie_middle ne $author->magic_token ) {
                     my %arg = (
                         -name  => $cookie_name,
                         -value => join(
-                            '::',
-                            $author->name,
-                            $author->magic_token,
+                            '::', $author->name, $author->magic_token,
 
                             # note this is BasicAuthor::magic_token
                             $remember
@@ -137,18 +135,18 @@ sub login {
             else {
                 return undef;    # error message?
             }
-        }
-    }
+        } ## end foreach my $author (@author)
+    } ## end if ( my @author = MT::BasicAuthor...)
     ## Login invalid, so get rid of cookie (if it exists) and let the
     ## user know.
     $app->bake_cookie(
-        -name    => $cookie_name,
-        -value   => '',
-        -expires => '-1y',
-        -path    => $app->config('CookiePath') || $app->mt_path
+                       -name    => $cookie_name,
+                       -value   => '',
+                       -expires => '-1y',
+                       -path    => $app->config('CookiePath') || $app->mt_path
     ) unless $first_time;
     return $app->error( $app->translate('Invalid login.') );
-}
+} ## end sub login
 
 # build_page needs to know what to use as the magic token
 sub current_magic {
@@ -212,14 +210,14 @@ sub upgrade {
     $param{initial_steps} = $json_steps;
 
     return $app->build_page( 'upgrade_runner.tmpl', \%param );
-}
+} ## end sub upgrade
 
 my @keys
-    = qw( admin_email preferred_language admin_nickname admin_username initial_user initial_password initial_nickname initial_email initial_hint initial_lang initial_external_id use_system_email );
+  = qw( admin_email preferred_language admin_nickname admin_username initial_user initial_password initial_nickname initial_email initial_hint initial_lang initial_external_id use_system_email );
 
 sub init_user {
-    my $app = shift;
-    my $q = $app->query;
+    my $app     = shift;
+    my $q       = $app->query;
     my ($param) = @_;
 
     my $method = $app->request_method;
@@ -272,19 +270,18 @@ sub init_user {
                 $initial_email    = $q->param('email')    || '';
                 $initial_nickname = $q->param('nickname') || '';
                 $initial_external_id
-                    = MT::Author->unpack_external_id(
-                    $q->param('external_id') )
-                    if $q->param('external_id');
+                  = MT::Author->unpack_external_id( $q->param('external_id') )
+                  if $q->param('external_id');
             }
         }
         else {
-            $param{error}
-                = $app->translate(
-                "Failed to authenticate using given credentials: [_1].",
-                $err );
+            $param{error} =
+              $app->translate(
+                      "Failed to authenticate using given credentials: [_1].",
+                      $err );
             return $app->build_page( 'install.tmpl', \%param );
         }
-    }
+    } ## end if ( !MT::Auth->password_exists)
     else {
         my $pass  = $q->param('admin_password');
         my $pass2 = $q->param('admin_password_confirm');
@@ -295,27 +292,26 @@ sub init_user {
                 $initial_password = $pass;
             }
             else {
-                $param{error} = $app->translate(
-                    "You failed to validate your password.");
+                $param{error}
+                  = $app->translate("You failed to validate your password.");
                 return $app->build_page( 'install.tmpl', \%param );
             }
         }
         else {
             $param{error}
-                = $app->translate("You failed to supply a password.");
+              = $app->translate("You failed to supply a password.");
             return $app->build_page( 'install.tmpl', \%param );
         }
-    }
+    } ## end else [ if ( !MT::Auth->password_exists)]
     if ( $mode eq 'MT' ) {
         if ( !MT::Util::is_valid_email($initial_email) ) {
             $param{error}
-                = $app->translate("The e-mail address is required.");
+              = $app->translate("The e-mail address is required.");
             return $app->build_page( 'install.tmpl', \%param );
         }
     }
 
-    $initial_use_system = 1
-        if $param{use_system_email};
+    $initial_use_system = 1 if $param{use_system_email};
 
     $param{initial_user}        = $initial_user;
     $param{initial_password}    = $initial_password;
@@ -326,11 +322,11 @@ sub init_user {
     $param{initial_use_system}  = $initial_use_system;
     $param{config}              = $app->serialize_config(%param);
     $app->init_blog( \%param );
-}
+} ## end sub init_user
 
 sub init_blog {
-    my $app = shift;
-	my $q = $app->query;
+    my $app     = shift;
+    my $q       = $app->query;
     my ($param) = @_;
     my %param;
 
@@ -392,8 +388,8 @@ sub init_blog {
     }
     if ( !-w $site_path ) {
         $param{error}
-            = $app->translate( "The path provided below is not writable.",
-            $param{blog_path} );
+          = $app->translate( "The path provided below is not writable.",
+                             $param{blog_path} );
         return $app->build_page( 'setup_initial_blog.tmpl', \%param );
     }
 
@@ -406,22 +402,24 @@ sub init_blog {
     my $new_blog;
     use URI::Escape;
     $new_user = {
-        user_name        => uri_escape( $param{initial_user} ),
-        user_nickname    => uri_escape( $param{initial_nickname} ),
-        user_password    => uri_escape( $param{initial_password} ),
-        user_email       => uri_escape( $param{initial_email} ),
-        user_lang        => $param{initial_lang},
-        user_external_id => $param{initial_external_id},
+                  user_name        => uri_escape( $param{initial_user} ),
+                  user_nickname    => uri_escape( $param{initial_nickname} ),
+                  user_password    => uri_escape( $param{initial_password} ),
+                  user_email       => uri_escape( $param{initial_email} ),
+                  user_lang        => $param{initial_lang},
+                  user_external_id => $param{initial_external_id},
     };
-    if ( my $email_system = $param{initial_use_system} || $param{use_system_email} ) {
+    if ( my $email_system = $param{initial_use_system}
+         || $param{use_system_email} )
+    {
         $new_user->{'use_system_email'} = $email_system;
     }
     $new_blog = {
-        blog_name         => uri_escape( $param{blog_name} ),
-        blog_url          => uri_escape( $param{blog_url} ),
-        blog_path         => uri_escape( $param{blog_path} ),
-        blog_timezone     => $param{blog_timezone},
-        blog_template_set => $param{blog_template_set} || 'mt_blog',
+                  blog_name         => uri_escape( $param{blog_name} ),
+                  blog_url          => uri_escape( $param{blog_url} ),
+                  blog_path         => uri_escape( $param{blog_path} ),
+                  blog_timezone     => $param{blog_timezone},
+                  blog_template_set => $param{blog_template_set} || 'mt_blog',
     };
 
     my $steps;
@@ -430,10 +428,10 @@ sub init_blog {
         local $app->{upgrading} = 1;
         require MT::Upgrade;
         MT::Upgrade->do_upgrade(
-            Install => $install_mode,
-            DryRun  => 1,
-            App     => $app,
-            ( $install_mode ? ( User => $new_user, Blog => $new_blog ) : () )
+             Install => $install_mode,
+             DryRun  => 1,
+             App     => $app,
+             ( $install_mode ? ( User => $new_user, Blog => $new_blog ) : () )
         );
         my $steps = $app->response->{steps};
         my $fn    = \%MT::Upgrade::functions;
@@ -455,7 +453,7 @@ sub init_blog {
     $param{initial_steps} = $json_steps;
 
     return $app->build_page( 'upgrade_runner.tmpl', \%param );
-}
+} ## end sub init_blog
 
 sub finish {
     my $app = shift;
@@ -466,13 +464,13 @@ sub finish {
         my $cookie_obj = $app->start_session($author);
         my $response   = $app->response;
         $response->{cookie}
-            = { map { $_ => $cookie_obj->{$_} } ( keys %$cookie_obj ) };
+          = { map { $_ => $cookie_obj->{$_} } ( keys %$cookie_obj ) };
     }
 }
 
 sub run_actions {
     my $app = shift;
-    my $q = $app->query;
+    my $q   = $app->query;
     $| = 1;
 
     $app->{no_print_body} = 1;
@@ -517,7 +515,7 @@ sub run_actions {
                 push @steps, @$new_steps;
                 @steps = sort {
                     $fn->{ $a->[0] }->{priority} <=> $fn->{ $b->[0] }
-                        ->{priority}
+                      ->{priority}
                 } @steps;
                 $app->response->{steps} = [];
             }
@@ -544,7 +542,7 @@ sub run_actions {
     }
 
     $app->json_response;
-}
+} ## end sub run_actions
 
 sub json_response {
     my $app = shift;
@@ -622,7 +620,7 @@ sub unserialize_config {
         }
     }
     %config;
-}
+} ## end sub unserialize_config
 
 sub main {
     my $app = shift;
@@ -641,7 +639,8 @@ sub main {
     if ( !$driver || !$driver->table_exists($author_class) ) {
         my $method = $app->request_method;
         if ( $param || ( $method ne 'POST' ) ) {
-            $param->{admin_username} ||= $app->query->param('admin_username') || '';
+            $param->{admin_username} ||= $app->query->param('admin_username')
+              || '';
             return $app->build_page( "install.tmpl", $param );
         }
         $app->validate_magic or return;
@@ -674,10 +673,10 @@ sub main {
     elsif ( $app->config->NotifyUpgrade && ( $cur_version > $version ) ) {
         $param->{mt_version_incremented} = 1;
         MT->log(
-            MT->translate(
-                "Movable Type has been upgraded to version [_1].",
-                $cur_version
-            )
+                 MT->translate(
+                            "Movable Type has been upgraded to version [_1].",
+                            $cur_version
+                 )
         );
         $app->config->MTVersion( $cur_version, 1 );
         $app->config->save_config;
@@ -693,17 +692,14 @@ sub main {
     foreach my $plugin (@MT::Components) {
         if ( $plugin->needs_upgrade ) {
             push @plugins,
-                {
-                name    => $plugin->label,
-                version => $plugin->version
-                };
+              { name => $plugin->label, version => $plugin->version };
         }
     }
     $param->{plugin_upgrades} = \@plugins if @plugins;
     $param->{needs_upgrade} = $param->{mt_upgrade} || ( @plugins > 0 );
 
     $app->build_page( 'upgrade.tmpl', $param );
-}
+} ## end sub main
 
 sub build_page {
     my $app = shift;
@@ -735,7 +731,7 @@ sub build_page {
     $param->{languages} = [ sort { $a->{l_name} cmp $b->{l_name} } @data ];
 
     $app->SUPER::build_page( $tmpl, $param );
-}
+} ## end sub build_page
 
 1;
 __END__

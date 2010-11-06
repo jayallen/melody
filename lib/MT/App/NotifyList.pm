@@ -18,9 +18,9 @@ sub init {
     my $app = shift;
     $app->SUPER::init(@_) or return;
     $app->add_methods(
-        'subscribe'   => \&subscribe,
-        'confirm'     => \&confirm,
-        'unsubscribe' => \&unsubscribe
+                       'subscribe'   => \&subscribe,
+                       'confirm'     => \&confirm,
+                       'unsubscribe' => \&unsubscribe
     );
     $app->{default_mode} = 'subscribe';
 }
@@ -31,7 +31,7 @@ sub subscribe {
     my $subscr_addr = lc $q->param('email');
     $subscr_addr =~ s/(^\s+|\s+$)//gs;
     return $app->errtrans("Please enter a valid email address.")
-        unless ( $subscr_addr && MT::Util::is_valid_email($subscr_addr) );
+      unless ( $subscr_addr && MT::Util::is_valid_email($subscr_addr) );
     unless ( $q->param('blog_id') ) {
         return $app->errtrans(
             "Missing required parameter: blog_id. Please consult the user manual to configure notifications."
@@ -40,19 +40,19 @@ sub subscribe {
 
     my $secret           = $app->config->SecretToken;
     my $admin_email_addr = $app->config->EmailAddressMain
-        || die "You need to set the EmailAddressMain configuration value "
-        . "to your own email address in order to use notifications";
+      || die "You need to set the EmailAddressMain configuration value "
+      . "to your own email address in order to use notifications";
     my $blog = MT::Blog->load( $q->param('blog_id') )
-        || die "No blog found with the given blog_id.";
+      || die "No blog found with the given blog_id.";
     my $entry_id = $q->param('entry_id');
     my $entry;
     if ($entry_id) {
         require MT::Entry;
-        $entry = MT::Entry->load(
-            {   id      => $entry_id,
-                blog_id => $blog->id,
-                status  => MT::Entry::RELEASE()
-            }
+        $entry = MT::Entry->load( {
+                                    id      => $entry_id,
+                                    blog_id => $blog->id,
+                                    status  => MT::Entry::RELEASE()
+                                  }
         ) || die "No entry found with the given entry_id.";
     }
 
@@ -65,22 +65,23 @@ sub subscribe {
     }
 
     if ( $app->lookup( $blog->id, $subscr_addr ) ) {
-        return $app->error(
+        return
+          $app->error(
             $app->translate(
                 "The email address '[_1]' is already in the notification list for this weblog.",
                 $subscr_addr
             )
-        );
+          );
     }
 
     my %head = (
-        id      => 'verify_subscribe',
-        From    => $admin_email_addr,
-        To      => $subscr_addr,
-        Subject => $app->translate("Please verify your email to subscribe")
+           id      => 'verify_subscribe',
+           From    => $admin_email_addr,
+           To      => $subscr_addr,
+           Subject => $app->translate("Please verify your email to subscribe")
     );
     my $charset = $app->config('MailEncoding')
-        || $app->config('PublishCharset');
+      || $app->config('PublishCharset');
     $head{'Content-Type'} = qq(text/plain; charset="$charset");
 
     my @pool = ( 'A' .. 'Z', 'a' .. 'z', '0' .. '9' );
@@ -95,19 +96,20 @@ sub subscribe {
     }
     $cgipath .= '/' unless $cgipath =~ m!/$!;
     my $body = MT->build_email(
-        'verify-subscribe.tmpl',
-        {   script_path  => $cgipath . 'add-notify.cgi',
-            blog         => $blog,
-            entry        => $entry,
-            redirect_url => $redirect_url,
-            magic        => $magic,
-            email        => $subscr_addr
-        }
+                                'verify-subscribe.tmpl',
+                                {
+                                   script_path => $cgipath . 'add-notify.cgi',
+                                   blog        => $blog,
+                                   entry       => $entry,
+                                   redirect_url => $redirect_url,
+                                   magic        => $magic,
+                                   email        => $subscr_addr
+                                }
     );
     use MT::Mail;
     MT::Mail->send( \%head, $body );
     my $message
-        = $app->translate( '_NOTIFY_REQUIRE_CONFIRMATION', $subscr_addr );
+      = $app->translate( '_NOTIFY_REQUIRE_CONFIRMATION', $subscr_addr );
     $charset = $app->charset;
     <<HTML;
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -123,7 +125,7 @@ $message
 </body>
 </html>
 HTML
-}
+} ## end sub subscribe
 
 sub lookup {
     my $app = shift;
@@ -144,10 +146,7 @@ sub confirm {
     # email confirmed
 
     my $blog_id = $q->param('blog_id');
-    unless ( $blog_id
-        && $q->param('email')
-        && $q->param('magic') )
-    {
+    unless ( $blog_id && $q->param('email') && $q->param('magic') ) {
         print $q->header;
         print "Missing required parameters\n";
         exit;
@@ -180,12 +179,13 @@ sub confirm {
         else {
             if ($entry_id) {
                 require MT::Entry;
-                my $entry = MT::Entry->load(
-                    {   id      => $entry_id,
-                        blog_id => $blog_id,
-                        status  => MT::Entry::RELEASE()
-                    }
-                );
+                my $entry =
+                  MT::Entry->load( {
+                                     id      => $entry_id,
+                                     blog_id => $blog_id,
+                                     status  => MT::Entry::RELEASE()
+                                   }
+                  );
                 if ($entry) {
                     $url = $entry->permalink;
                 }
@@ -194,7 +194,7 @@ sub confirm {
                 }
             }
         }
-    }
+    } ## end if ($blog)
     else {
         $failed = 1;
     }
@@ -213,7 +213,7 @@ sub confirm {
         $note->save;
     }
     print $q->redirect($url);
-}
+} ## end sub confirm
 
 sub unsubscribe {
     my $app = shift;
@@ -224,12 +224,12 @@ sub unsubscribe {
     require MT::Notification;
     my $notification = MT::Notification->load( { email => $email } );
     return $app->translate( "The address [_1] was not subscribed.", $email )
-        . "\n\n"
-        if !$notification;
+      . "\n\n"
+      if !$notification;
     $notification->remove();
     return $app->translate( "The address [_1] has been unsubscribed.",
-        $email )
-        . "\n\n";
+                            $email )
+      . "\n\n";
 }
 
 1;

@@ -23,24 +23,23 @@ sub dynamic_template {
 }
 
 sub default_archive_templates {
-    return [
-        {
-            label    => MT->translate('yyyy/index.html'),
-            template => '%y/%i',
-            default  => 1
-        }
+    return [ {
+               label    => MT->translate('yyyy/index.html'),
+               template => '%y/%i',
+               default  => 1
+             }
     ];
 }
 
 sub template_params {
     return {
-        datebased_only_archive   => 1,
-        datebased_yearly_archive => 1,
-        module_yearly_archives   => 1,
-        archive_template         => 1,
-        archive_listing          => 1,
-        archive_class            => "datebased-yearly-archive",
-        datebased_archive        => 1,
+             datebased_only_archive   => 1,
+             datebased_yearly_archive => 1,
+             module_yearly_archives   => 1,
+             archive_template         => 1,
+             archive_listing          => 1,
+             archive_class            => "datebased-yearly-archive",
+             datebased_archive        => 1,
     };
 }
 
@@ -53,17 +52,17 @@ sub archive_file {
 
     my $file;
     if ($file_tmpl) {
-        ( $ctx->{current_timestamp}, $ctx->{current_timestamp_end} ) =
-          start_end_year( $timestamp, $blog );
+        ( $ctx->{current_timestamp}, $ctx->{current_timestamp_end} )
+          = start_end_year( $timestamp, $blog );
     }
     else {
         my $start = start_end_year( $timestamp, $blog );
-        my ( $year ) = unpack 'A4', $start;
+        my ($year) = unpack 'A4', $start;
         $file = sprintf( "%04d/index", $year );
     }
 
     $file;
-}
+} ## end sub archive_file
 
 sub archive_title {
     my $obj = shift;
@@ -71,9 +70,8 @@ sub archive_title {
     my $stamp = ref $entry_or_ts ? $entry_or_ts->authored_on : $entry_or_ts;
     my $start = start_end_year( $stamp, $ctx->stash('blog') );
     require MT::Template::Context;
-    my $year =
-      MT::Template::Context::_hdlr_date( $ctx,
-        { ts => $start, 'format' => "%Y" } );
+    my $year = MT::Template::Context::_hdlr_date( $ctx,
+                                         { ts => $start, 'format' => "%Y" } );
     my $lang = lc MT->current_language || 'en_us';
     $lang = 'ja' if lc($lang) eq 'jp';
 
@@ -90,21 +88,24 @@ sub archive_group_iter {
     my ( $ctx, $args ) = @_;
     my $blog = $ctx->stash('blog');
     my $iter;
-    my $sort_order =
-      ( $args->{sort_order} || '' ) eq 'ascend' ? 'ascend' : 'descend';
+    my $sort_order
+      = ( $args->{sort_order} || '' ) eq 'ascend' ? 'ascend' : 'descend';
     my $order = ( $sort_order eq 'ascend' ) ? 'asc' : 'desc';
 
     require MT::Entry;
-    $iter = MT::Entry->count_group_by(
-        {
-            blog_id => $blog->id,
-            status  => MT::Entry::RELEASE()
-        },
-        {
-            group => ["extract(year from authored_on)"],
-            $args->{lastn} ? ( limit => $args->{lastn} ) : (),
-            sort => [ { column => "extract(year from authored_on)", desc => $order } ],
-        }
+    $iter = MT::Entry->count_group_by( {
+                           blog_id => $blog->id,
+                           status  => MT::Entry::RELEASE()
+                         },
+                         {
+                           group => ["extract(year from authored_on)"],
+                           $args->{lastn} ? ( limit => $args->{lastn} ) : (),
+                           sort => [ {
+                                  column => "extract(year from authored_on)",
+                                  desc   => $order
+                                }
+                           ],
+                         }
     ) or return $ctx->error("Couldn't get yearly archive list");
 
     return sub {
@@ -115,15 +116,15 @@ sub archive_group_iter {
         }
         undef;
     };
-}
+} ## end sub archive_group_iter
 
 sub archive_group_entries {
     my $obj = shift;
     my ( $ctx, %param ) = @_;
-    my $ts =
-        $param{year}
-    ? sprintf( "%04d%02d%02d000000", $param{year}, 1, 1 )
-        : undef;
+    my $ts
+      = $param{year}
+      ? sprintf( "%04d%02d%02d000000", $param{year}, 1, 1 )
+      : undef;
     my $limit = $param{limit};
     $obj->dated_group_entries( $ctx, 'Yearly', $ts, $limit );
 }
@@ -131,13 +132,13 @@ sub archive_group_entries {
 sub archive_entries_count {
     my $obj = shift;
     my ( $blog, $at, $entry ) = @_;
-    return $obj->SUPER::archive_entries_count(
-        {
-            Blog        => $blog,
-            ArchiveType => $at,
-            Timestamp   => $entry->authored_on
-        }
-    );
+    return
+      $obj->SUPER::archive_entries_count( {
+                                            Blog        => $blog,
+                                            ArchiveType => $at,
+                                            Timestamp   => $entry->authored_on
+                                          }
+      );
 }
 
 1;

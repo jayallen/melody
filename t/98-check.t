@@ -21,15 +21,15 @@ REASON
 
 # required modules in MT check
 use_ok('CGI::Cookie');
-use_ok('File::Spec', 0.8);
-use_ok('Image::Size', 2.93);
-use_ok('CGI', 2.80);
+use_ok( 'File::Spec',  0.8 );
+use_ok( 'Image::Size', 2.93 );
+use_ok( 'CGI',         2.80 );
 
 # data storage modules
-use_ok('DBI', 1.21);
+use_ok( 'DBI', 1.21 );
 use_ok('DBD::mysql');
 use_ok('DBD::SQLite');
-use_ok('DBD::Pg', 1.32);
+use_ok( 'DBD::Pg', 1.32 );
 use_ok('DBD::SQLite2');
 
 # optional modules
@@ -39,7 +39,7 @@ use_ok('XML::SAX');
 use_ok('IPC::Run');
 use_ok('Archive::Zip');
 use_ok('Storable');
-use_ok('SOAP::Lite', 0.5);
+use_ok( 'SOAP::Lite', 0.5 );
 use_ok('List::Util');
 use_ok('HTML::Entities');
 use_ok('Digest::MD5');
@@ -52,6 +52,7 @@ use_ok('IO::Socket::SSL');
 use_ok('IO::Uncompress::Gunzip');
 use_ok('Digest::SHA1');
 use_ok('IO::Compress::Gzip');
+
 # use_ok('XML::Atom');
 use_ok('Image::Magick');
 use_ok('LWP::UserAgent');
@@ -60,4 +61,5 @@ use_ok('Mail::Sendmail');
 use_ok('HTML::Parser');
 use_ok('File::Temp');
 use_ok('Net::LDAP');
+
 # use_ok('XML::Parser');

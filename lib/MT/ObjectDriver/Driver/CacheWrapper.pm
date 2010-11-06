@@ -10,32 +10,35 @@ use strict;
 use MT;
 
 my $CACHE_ENABLED;
+
 sub wrap {
     my $class = shift;
-    my($fallback, $object_class) = @_;
+    my ( $fallback, $object_class ) = @_;
 
     # prevent caching if so configured
-    unless (defined $CACHE_ENABLED) {
+    unless ( defined $CACHE_ENABLED ) {
         $CACHE_ENABLED = MT->config->DisableObjectCache ? 0 : 1;
     }
     my $use_caching = 1;
-    if ($CACHE_ENABLED && $object_class) {
-        if (my $props = $object_class->properties) {
-            $use_caching = 0 if (defined $props->{cacheable}) && (!$props->{cacheable});
+    if ( $CACHE_ENABLED && $object_class ) {
+        if ( my $props = $object_class->properties ) {
+            $use_caching = 0
+              if ( defined $props->{cacheable} ) && ( !$props->{cacheable} );
         }
     }
-    elsif (!$CACHE_ENABLED) {
+    elsif ( !$CACHE_ENABLED ) {
         $use_caching = 0;
     }
 
-    if ( $use_caching ) {
+    if ($use_caching) {
         ## If running under mod_perl, using request->pnotes; otherwise,
         ## just use a hash.
         my $ram_cache;
-        if ($ENV{MOD_PERL}) {
+        if ( $ENV{MOD_PERL} ) {
             require Data::ObjectDriver::Driver::Cache::Apache;
             $ram_cache = 'Data::ObjectDriver::Driver::Cache::Apache';
-        } else {
+        }
+        else {
             require MT::ObjectDriver::Driver::Cache::RAM;
             $ram_cache = 'MT::ObjectDriver::Driver::Cache::RAM';
         }
@@ -43,31 +46,31 @@ sub wrap {
         my $driver;
 
         require MT::Memcached;
-        if (MT::Memcached->is_available) {
+        if ( MT::Memcached->is_available ) {
             $driver = sub {
                 ## Look first in mod_perl/memory; then in memcached; then fall back
                 ## to hitting the database.
                 require Data::ObjectDriver::Driver::Cache::Memcached;
                 $ram_cache->new(
-                    fallback =>
-                        Data::ObjectDriver::Driver::Cache::Memcached->new(
-                            cache    => MT::Memcached->instance,
-                            fallback => $fallback->(),
-                        )
-                );
-            };
-        } else {
-            $driver = sub {
-                return $ram_cache->new(
-                    fallback => $fallback->(),
+                          fallback =>
+                            Data::ObjectDriver::Driver::Cache::Memcached->new(
+                                             cache => MT::Memcached->instance,
+                                             fallback => $fallback->(),
+                            )
                 );
             };
         }
+        else {
+            $driver = sub {
+                return $ram_cache->new( fallback => $fallback->(), );
+            };
+        }
         return $driver;
-    } else {
+    } ## end if ($use_caching)
+    else {
         return $fallback;
     }
-}
+} ## end sub wrap
 
 1;
 __END__

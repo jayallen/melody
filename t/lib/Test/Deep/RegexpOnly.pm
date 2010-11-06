@@ -7,41 +7,37 @@ use Test::Deep::Cmp;
 
 use Scalar::Util qw( blessed );
 
-sub init
-{
-	my $self = shift;
+sub init {
+    my $self = shift;
 
-	my $val = shift;
+    my $val = shift;
 
-	$val = ref $val ? $val : qr/$val/;
+    $val = ref $val ? $val : qr/$val/;
 
-	$self->{val} = $val;
+    $self->{val} = $val;
 }
 
-sub descend
-{
-	my $self = shift;
-	my $got = shift;
+sub descend {
+    my $self = shift;
+    my $got  = shift;
 
-	my $re = $self->{val};
+    my $re = $self->{val};
 
-	return ($got =~ $self->{val} ? 1 : 0;
+    return ( $got =~ $self->{val} ? 1 : 0 );
 }
 
-sub diag_message
-{
-	my $self = shift;
+sub diag_message {
+    my $self = shift;
 
-	my $where = shift;
+    my $where = shift;
 
-	return "Using Regexp on $where";
+    return "Using Regexp on $where";
 }
 
-sub renderExp
-{
-	my $self = shift;
+sub renderExp {
+    my $self = shift;
 
-	return "$self->{val}";
+    return "$self->{val}";
 }
 
 1;

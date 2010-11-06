@@ -15,7 +15,7 @@ our $EXCLUDE_REGEX;
 our $INCLUDE_REGEX;
 
 sub cb_insert_tab {
-    my ($cb, $app, $out, $param, $tmpl) = @_;
+    my ( $cb, $app, $out, $param, $tmpl ) = @_;
     unless ($EXCLUDE) {    # initialize filter
         $EXCLUDE = join '|', qw(
           upgrade.tmpl
@@ -54,11 +54,11 @@ sub cb_insert_tab {
         );
         $HOOK       = reverse('</body>');
         $HOOK_REGEX = qr/$HOOK/i;
-    }
+    } ## end unless ($HOOK)
     my $rout = reverse($$out);
     my ($flag) = $rout =~ s{$HOOK_REGEX}{$HOOK$TAB_MARKUP};
     $$out = reverse($rout);
-}
+} ## end sub cb_insert_tab
 
 1;
 

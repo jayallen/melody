@@ -23,23 +23,22 @@ sub dynamic_template {
 }
 
 sub default_archive_templates {
-    return [
-        {
-            label    => MT->translate('yyyy/mm/dd/index.html'),
-            template => '%y/%m/%d/%f',
-            default  => 1
-        },
+    return [ {
+                label    => MT->translate('yyyy/mm/dd/index.html'),
+                template => '%y/%m/%d/%f',
+                default  => 1
+             },
     ];
 }
 
 sub template_params {
     return {
-        archive_class           => "datebased-daily-archive",
-        datebased_only_archive  => 1,
-        datebased_daily_archive => 1,
-        archive_template        => 1,
-        archive_listing         => 1,
-        datebased_archive       => 1,
+             archive_class           => "datebased-daily-archive",
+             datebased_only_archive  => 1,
+             datebased_daily_archive => 1,
+             archive_template        => 1,
+             archive_listing         => 1,
+             datebased_archive       => 1,
     };
 }
 
@@ -52,8 +51,8 @@ sub archive_file {
 
     my $file;
     if ($file_tmpl) {
-        ( $ctx->{current_timestamp}, $ctx->{current_timestamp_end} ) =
-          start_end_day($timestamp);
+        ( $ctx->{current_timestamp}, $ctx->{current_timestamp_end} )
+          = start_end_day($timestamp);
     }
     else {
         my $start = start_end_day($timestamp);
@@ -64,11 +63,11 @@ sub archive_file {
 }
 
 sub archive_title {
-    my $obj = shift;
+    my $obj   = shift;
     my $stamp = ref $_[1] ? $_[1]->authored_on : $_[1];
     my $start = start_end_day( $stamp, $_[0]->stash('blog') );
     MT::Template::Context::_hdlr_date( $_[0],
-        { ts => $start, 'format' => "%x" } );
+                                       { ts => $start, 'format' => "%x" } );
 }
 
 sub date_range {
@@ -81,62 +80,74 @@ sub archive_group_iter {
     my ( $ctx, $args ) = @_;
     my $blog = $ctx->stash('blog');
     my $iter;
-    my $sort_order =
-      ( $args->{sort_order} || '' ) eq 'ascend' ? 'ascend' : 'descend';
+    my $sort_order
+      = ( $args->{sort_order} || '' ) eq 'ascend' ? 'ascend' : 'descend';
     my $order = ( $sort_order eq 'ascend' ) ? 'asc' : 'desc';
 
     my $ts    = $ctx->{current_timestamp};
     my $tsend = $ctx->{current_timestamp_end};
 
     require MT::Entry;
-    $iter = MT::Entry->count_group_by(
-        {
-            blog_id => $blog->id,
-            status  => MT::Entry::RELEASE(),
-            ( $ts && $tsend ? ( authored_on => [ $ts, $tsend ] ) : () ),
-        },
-        {
-            ( $ts && $tsend ? ( range_incl => { authored_on => 1 } ) : () ),
-            group => [
-                "extract(year from authored_on)",
-                "extract(month from authored_on)",
-                "extract(day from authored_on)"
-            ],
-            $args->{lastn} ? ( limit => $args->{lastn} ) : (),
-            sort => [
-                { column => "extract(year from authored_on)", desc => $order },
-                { column => "extract(month from authored_on)", desc => $order },
-                { column => "extract(day from authored_on)", desc => $order }
-            ],
-        }
+    $iter = MT::Entry->count_group_by( {
+                        blog_id => $blog->id,
+                        status  => MT::Entry::RELEASE(),
+                        (
+                           $ts && $tsend ? ( authored_on => [ $ts, $tsend ] )
+                           : ()
+                        ),
+                      },
+                      { (
+                           $ts && $tsend
+                           ? ( range_incl => { authored_on => 1 } )
+                           : ()
+                        ),
+                        group => [
+                                   "extract(year from authored_on)",
+                                   "extract(month from authored_on)",
+                                   "extract(day from authored_on)"
+                        ],
+                        $args->{lastn} ? ( limit => $args->{lastn} ) : (),
+                        sort => [ {
+                                 column => "extract(year from authored_on)",
+                                 desc   => $order
+                               },
+                               {
+                                 column => "extract(month from authored_on)",
+                                 desc   => $order
+                               },
+                               {
+                                 column => "extract(day from authored_on)",
+                                 desc   => $order
+                               }
+                        ],
+                      }
     ) or return $ctx->error("Couldn't get daily archive list");
 
     return sub {
         while ( my @row = $iter->() ) {
-            my $date =
-              sprintf( "%04d%02d%02d000000", $row[1], $row[2], $row[3] );
+            my $date
+              = sprintf( "%04d%02d%02d000000", $row[1], $row[2], $row[3] );
             my ( $start, $end ) = start_end_day($date);
             return (
-                $row[0],
-                year  => $row[1],
-                month => $row[2],
-                day   => $row[3],
-                start => $start,
-                end   => $end
+                     $row[0],
+                     year  => $row[1],
+                     month => $row[2],
+                     day   => $row[3],
+                     start => $start,
+                     end   => $end
             );
         }
         undef;
     };
-}
+} ## end sub archive_group_iter
 
 sub archive_group_entries {
     my $obj = shift;
     my ( $ctx, %param ) = @_;
-    my $ts =
-        $param{year}
-    ? sprintf( "%04d%02d%02d000000", $param{year}, $param{month},
-               $param{day} )
-        : undef;
+    my $ts = $param{year}
+      ? sprintf( "%04d%02d%02d000000",
+                 $param{year}, $param{month}, $param{day} )
+      : undef;
     my $limit = $param{limit};
     $obj->dated_group_entries( $ctx, 'Daily', $ts, $limit );
 }
@@ -144,13 +155,13 @@ sub archive_group_entries {
 sub archive_entries_count {
     my $obj = shift;
     my ( $blog, $at, $entry ) = @_;
-    return $obj->SUPER::archive_entries_count(
-        {
-            Blog        => $blog,
-            ArchiveType => $at,
-            Timestamp   => $entry->authored_on
-        }
-    );
+    return
+      $obj->SUPER::archive_entries_count( {
+                                            Blog        => $blog,
+                                            ArchiveType => $at,
+                                            Timestamp   => $entry->authored_on
+                                          }
+      );
 }
 
 1;

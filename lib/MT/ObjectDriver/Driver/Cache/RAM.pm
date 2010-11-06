@@ -13,6 +13,7 @@ use base qw( Data::ObjectDriver::Driver::BaseCache );
 use Scalar::Util qw(weaken);
 
 my $cache_limit;
+
 sub MAX_CACHE_SIZE () {
     return $cache_limit if defined $cache_limit;
     return $cache_limit = MT->config->ObjectCacheLimit || 1000;
@@ -21,12 +22,13 @@ sub MAX_CACHE_SIZE () {
 my %Cache;
 
 my $trigger_installed;
+
 sub init {
     my $driver = shift;
     my %param  = @_;
-    $param{cache} ||= 1; # hack
+    $param{cache} ||= 1;    # hack
 
-    unless (defined $trigger_installed) {
+    unless ( defined $trigger_installed ) {
         MT->add_callback( 'takedown', 9, undef, \&_takedown );
         $trigger_installed = 1;
     }
@@ -41,46 +43,46 @@ sub takedown {
 sub get_from_cache {
     my $driver = shift;
 
-    $driver->start_query('RAMCACHE_GET ?', \@_);
+    $driver->start_query( 'RAMCACHE_GET ?', \@_ );
     $driver->end_query(undef);
 
-    return if !defined $Cache{$_[0]};
-    return $Cache{$_[0]};
+    return if !defined $Cache{ $_[0] };
+    return $Cache{ $_[0] };
 }
 
 sub add_to_cache {
     my $driver = shift;
 
-    if (scalar keys %Cache > MAX_CACHE_SIZE) {
+    if ( scalar keys %Cache > MAX_CACHE_SIZE ) {
         $driver->clear_cache();
     }
 
-    $driver->start_query('RAMCACHE_ADD ?', \@_);
-    $Cache{$_[0]} = $_[1];
-    weaken $Cache{$_[0]};
+    $driver->start_query( 'RAMCACHE_ADD ?', \@_ );
+    $Cache{ $_[0] } = $_[1];
+    weaken $Cache{ $_[0] };
     $driver->end_query(undef);
 
-    return if !defined $Cache{$_[0]};
-    return $Cache{$_[0]};
+    return if !defined $Cache{ $_[0] };
+    return $Cache{ $_[0] };
 }
 
 sub update_cache {
     my $driver = shift;
 
-    $driver->start_query('RAMCACHE_SET ?', \@_);
-    $Cache{$_[0]} = $_[1];
-    weaken $Cache{$_[0]};
+    $driver->start_query( 'RAMCACHE_SET ?', \@_ );
+    $Cache{ $_[0] } = $_[1];
+    weaken $Cache{ $_[0] };
     $driver->end_query(undef);
 
-    return if !defined $Cache{$_[0]};
-    return $Cache{$_[0]};
+    return if !defined $Cache{ $_[0] };
+    return $Cache{ $_[0] };
 }
 
 sub remove_from_cache {
     my $driver = shift;
 
-    $driver->start_query('RAMCACHE_DELETE ?', \@_);
-    my $ret = delete $Cache{$_[0]};
+    $driver->start_query( 'RAMCACHE_DELETE ?', \@_ );
+    my $ret = delete $Cache{ $_[0] };
     $driver->end_query(undef);
 
     return if !defined $ret;
