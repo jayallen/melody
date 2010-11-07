@@ -135,15 +135,15 @@ function setExtraPath(sel) {
             <!-- <$mt:var name="blog_url" escape="html"$> -->
             
             <select name="site_path" id="site_path" onchange="setExtraPath(this)">
-                <option value="1">&#60;<__trans phrase="Site Root">&#62;</option>
-            <mt:if name="enable_archive_paths">
-                <option value="0"<mt:if name="archive_path"> selected="selected"</mt:if>>&#60;<__trans phrase="Archive Root">&#62;</option>
-            </mt:if>
             <mt:if name="extra_paths">
                 <mt:loop name="extra_paths">
                 <option value="<mt:if name="enable_archive_paths">0<mt:else>1</mt:if>" middle_path="<mt:var name="path" escape="html">"<mt:if name="selected"> selected="selected"</mt:if>><mt:var name="label" escape="html"></option>
                 </mt:loop>
             </mt:if>
+            <mt:if name="enable_archive_paths">
+                <option value="0"<mt:if name="archive_path"> selected="selected"</mt:if>>&#60;<__trans phrase="Archive Root">&#62;</option>
+            </mt:if>
+                <option value="1">&#60;<__trans phrase="Site Root">&#62;</option>
             </select>
             / <input name="extra_path" id="extra_path" value="<mt:var name="extra_path" escape="html">" />
             &nbsp;<a href="javascript:void(0);" mt:command="open-folder-selector"><__trans phrase="Choose Folder"></a>
