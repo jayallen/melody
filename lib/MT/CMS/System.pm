@@ -161,6 +161,7 @@ sub cfg_system_settings {
     $param{system_performance_logging_path} = $cfg->PerformanceLoggingPath;
     $param{system_performance_logging_threshold}
       = $cfg->PerformanceLoggingThreshold;
+    $param{track_revisions}                 = $cfg->TrackRevisions;
     $param{saved}        = $q->param('saved');
     $param{error}        = $q->param('error');
     $param{screen_class} = "settings-screen system-general-settings";
