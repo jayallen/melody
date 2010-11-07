@@ -1,6 +1,6 @@
 package LWP;
 
-$VERSION = "5.829";
+$VERSION = "5.837";
 sub Version { $VERSION; }
 
 require 5.005;
@@ -554,9 +554,9 @@ The following modules provide various functions and definitions.
 =head1 MORE DOCUMENTATION
 
 All modules contain detailed information on the interfaces they
-provide.  The I<lwpcook> manpage is the libwww-perl cookbook that contain
+provide.  The L<lwpcook> manpage is the libwww-perl cookbook that contain
 examples of typical usage of the library.  You might want to take a
-look at how the scripts C<lwp-request>, C<lwp-rget> and C<lwp-mirror>
+look at how the scripts L<lwp-request>, L<lwp-rget> and L<lwp-mirror>
 are implemented.
 
 =head1 ENVIRONMENT
@@ -646,7 +646,7 @@ modify it under the same terms as Perl itself.
 The latest version of this library is likely to be available from CPAN
 as well as:
 
-  http://gitorious.org/projects/libwww-perl
+  http://github.com/gisle/libwww-perl
 
 The best place to discuss this code is on the <libwww@perl.org>
 mailing list.

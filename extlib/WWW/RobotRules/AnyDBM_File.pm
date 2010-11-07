@@ -2,7 +2,7 @@ package WWW::RobotRules::AnyDBM_File;
 
 require  WWW::RobotRules;
 @ISA = qw(WWW::RobotRules);
-$VERSION = "5.810";
+$VERSION = "5.835";
 
 use Carp ();
 use AnyDBM_File;
@@ -19,8 +19,8 @@ WWW::RobotRules::AnyDBM_File - Persistent RobotRules
  require LWP::RobotUA;
 
  # Create a robot useragent that uses a diskcaching RobotRules
- my $rules = new WWW::RobotRules::AnyDBM_File 'my-robot/1.0', 'cachefile';
- my $ua = new WWW::RobotUA 'my-robot/1.0', 'me@foo.com', $rules;
+ my $rules = WWW::RobotRules::AnyDBM_File->new( 'my-robot/1.0', 'cachefile' );
+ my $ua = WWW::RobotUA->new( 'my-robot/1.0', 'me@foo.com', $rules );
 
  # Then just use $ua as usual
  $res = $ua->request($req);

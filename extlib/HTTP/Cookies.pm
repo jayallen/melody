@@ -1,11 +1,11 @@
 package HTTP::Cookies;
 
 use strict;
-use HTTP::Date qw(str2time time2str);
+use HTTP::Date qw(str2time parse_date time2str);
 use HTTP::Headers::Util qw(_split_header_words join_header_words);
 
 use vars qw($VERSION $EPOCH_OFFSET);
-$VERSION = "5.827";
+$VERSION = "5.837";
 
 # Legacy: because "use "HTTP::Cookies" used be the ONLY way
 #  to load the class HTTP::Cookies::Netscape.
@@ -89,7 +89,7 @@ sub add_cookie_header
 		if ($port) {
 		    my $found;
 		    if ($port =~ s/^_//) {
-			# The correponding Set-Cookie attribute was empty
+			# The corresponding Set-Cookie attribute was empty
 			$found++ if $port eq $req_port;
 			$port = "";
 		    }
@@ -160,7 +160,12 @@ sub add_cookie_header
 	}
     }
 
-    $request->header(Cookie => join("; ", @cval)) if @cval;
+    if (@cval) {
+	if (my $old = $request->header("Cookie")) {
+	    unshift(@cval, $old);
+	}
+	$request->header(Cookie => join("; ", @cval));
+    }
 
     $request;
 }
@@ -186,7 +191,7 @@ sub extract_cookies
 
     if (@ns_set) {
 	# The old Netscape cookie format for Set-Cookie
-	# http://wp.netscape.com/newsref/std/cookie_spec.html
+	# http://curl.haxx.se/rfc/cookie_spec.html
 	# can for instance contain an unquoted "," in the expires
 	# field, so we have to use this ad-hoc parser.
 	my $now = time();
@@ -219,9 +224,26 @@ sub extract_cookies
 		}
 		if (!$first_param && lc($k) eq "expires") {
 		    my $etime = str2time($v);
-		    if ($etime) {
-			push(@cur, "Max-Age" => str2time($v) - $now);
+		    if (defined $etime) {
+			push(@cur, "Max-Age" => $etime - $now);
 			$expires++;
+		    }
+		    else {
+			# parse_date can deal with years outside the range of time_t,
+			my($year, $mon, $day, $hour, $min, $sec, $tz) = parse_date($v);
+			if ($year) {
+			    my $thisyear = (gmtime)[5] + 1900;
+			    if ($year < $thisyear) {
+				push(@cur, "Max-Age" => -1);  # any negative value will do
+				$expires++;
+			    }
+			    elsif ($year >= $thisyear + 10) {
+				# the date is at least 10 years into the future, just replace
+				# it with something approximate
+				push(@cur, "Max-Age" => 10 * 365 * 24 * 60 * 60);
+				$expires++;
+			    }
+			}
 		    }
 		}
                 elsif (!$first_param && lc($k) =~ /^(?:version|discard|ns-cookie)/) {
@@ -261,7 +283,7 @@ sub extract_cookies
 	    if ($k eq "discard" || $k eq "secure") {
 		$v = 1 unless defined $v;
 	    }
-	    next if exists $hash{$k};  # only first value is signigicant
+	    next if exists $hash{$k};  # only first value is significant
 	    $hash{$k} = $v;
 	};
 
@@ -588,7 +610,7 @@ HTTP::Cookies - HTTP cookie jars
 
   use HTTP::Cookies;
   $cookie_jar = HTTP::Cookies->new(
-    file => "$ENV{'HOME'}/lwp_cookies.dat',
+    file => "$ENV{'HOME'}/lwp_cookies.dat",
     autosave => 1,
   );
 
@@ -611,7 +633,7 @@ knows about.
 Cookies are a general mechanism which server side connections can use
 to both store and retrieve information on the client side of the
 connection.  For more information about cookies refer to
-<URL:http://wp.netscape.com/newsref/std/cookie_spec.html> and
+<URL:http://curl.haxx.se/rfc/cookie_spec.html> and
 <URL:http://www.cookiecentral.com/>.  This module also implements the
 new style cookies described in I<RFC 2965>.
 The two variants of cookies are supposed to be able to coexist happily.

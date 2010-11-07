@@ -3,7 +3,7 @@ package HTTP::Cookies::Netscape;
 use strict;
 use vars qw(@ISA $VERSION);
 
-$VERSION = "5.822";
+$VERSION = "5.832";
 
 require HTTP::Cookies;
 @ISA=qw(HTTP::Cookies);
@@ -43,6 +43,8 @@ sub save
     local(*FILE, $_);
     open(FILE, ">$file") || return;
 
+    # Use old, now broken link to the old cookie spec just in case something
+    # else (not us!) requires the comment block exactly this way.
     print FILE <<EOT;
 # Netscape HTTP Cookie File
 # http://www.netscape.com/newsref/std/cookie_spec.html

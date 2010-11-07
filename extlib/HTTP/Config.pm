@@ -4,7 +4,7 @@ use strict;
 use URI;
 use vars qw($VERSION);
 
-$VERSION = "5.815";
+$VERSION = "5.835";
 
 sub new {
     my $class = shift;
@@ -71,7 +71,7 @@ my %MATCH = (
     },
     m_secure => sub {
         my($v, $uri) = @_;
-        my $secure = $uri->_scheme eq "https";
+        my $secure = $uri->can("secure") ? $uri->secure : $uri->_scheme eq "https";
         return $secure == !!$v;
     },
     m_host_port => sub {
@@ -146,7 +146,7 @@ my %MATCH = (
         my $ct = $response->content_type;
         return 2, 1 if $v =~ s,/\*\z,, && $ct =~ m,^\Q$v\E/,;
         return 3, 1 if $v eq "html" && $response->content_is_html;
-        return 4, 1 if $v eq "html" && $response->content_is_xhtml;
+        return 4, 1 if $v eq "xhtml" && $response->content_is_xhtml;
         return 10, 1 if $v eq $ct;
         return 0;
     },
@@ -404,7 +404,7 @@ With a value of "xhtml" matches if $response->content_is_xhtml returns TRUE.
 
 =item m_uri__I<$method> => undef
 
-Matches if the URI object provide the method
+Matches if the URI object provides the method.
 
 =item m_uri__I<$method> => $string
 
@@ -418,7 +418,7 @@ Matches if either the request or the response have a header $field with the give
 
 =item m_response_attr__I<$key> => $string
 
-Matches if the response object has a that key; or the entry has the given value.
+Matches if the response object has that key, or the entry has the given value.
 
 =back
 

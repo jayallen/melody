@@ -70,6 +70,8 @@ compiler errors will be caught.  Example:
    }
 
 carpout() does not handle file locking on the log for you at this point.
+Also, note that carpout() does not work with in-memory file handles, although
+a patch would be welcome to address that.
 
 The real STDERR is not closed -- it is moved to CGI::Carp::SAVEERR.  Some
 servers, when dealing with CGI scripts, close their connection to the
@@ -77,7 +79,7 @@ browser when the script closes STDOUT and STDERR.  CGI::Carp::SAVEERR is there t
 prevent this from happening prematurely.
 
 You can pass filehandles to carpout() in a variety of ways.  The "correct"
-way according to Tom Christiansen is to pass a reference to a filehandle 
+way according to Tom Christiansen is to pass a reference to a filehandle
 GLOB:
 
     carpout(\*LOG);
@@ -300,10 +302,6 @@ Address bug reports and comments to: lstein@cshl.org
 
 Carp, CGI::Base, CGI::BasePlus, CGI::Request, CGI::MiniSvr, CGI::Form,
 CGI::Response
-    if (defined($CGI::Carp::PROGNAME)) 
-    {
-      $file = $CGI::Carp::PROGNAME;
-    }
 
 =cut
 
@@ -323,7 +321,7 @@ use File::Spec;
 
 $main::SIG{__WARN__}=\&CGI::Carp::warn;
 
-$CGI::Carp::VERSION     = '1.30_01';
+$CGI::Carp::VERSION     = '3.45';
 $CGI::Carp::CUSTOM_MSG  = undef;
 $CGI::Carp::DIE_HANDLER = undef;
 
@@ -425,35 +423,26 @@ sub ineval {
 sub die {
   my ($arg,@rest) = @_;
 
-  if ($DIE_HANDLER) {
-      &$DIE_HANDLER($arg,@rest);
-  }
+  &$DIE_HANDLER($arg,@rest) if $DIE_HANDLER;
 
-  if ( ineval() )  {
-    if (!ref($arg)) {
-      $arg = join("",($arg,@rest)) || "Died";
-      my($file,$line,$id) = id(1);
-      $arg .= " at $file line $line.\n" unless $arg=~/\n$/;
-      realdie($arg);
-    }
-    else {
-      realdie($arg,@rest);
-    }
-  }
+  # if called as die( $object, 'string' ),
+  # all is stringified, just like with
+  # the real 'die'
+  $arg = join '' => "$arg", @rest if @rest;
 
-  if (!ref($arg)) {
-    $arg = join("", ($arg,@rest));
-    my($file,$line,$id) = id(1);
-    $arg .= " at $file line $line." unless $arg=~/\n$/;
-    &fatalsToBrowser($arg) if $WRAP;
-    if (($arg =~ /\n$/) || !exists($ENV{MOD_PERL})) {
-      my $stamp = stamp;
-      $arg=~s/^/$stamp/gm;
-    }
-    if ($arg !~ /\n$/) {
-      $arg .= "\n";
-    }
-  }
+  $arg ||= 'Died';
+
+  my($file,$line,$id) = id(1);
+
+  $arg .= " at $file line $line.\n" unless ref $arg or $arg=~/\n$/;
+
+  realdie $arg           if ineval();
+  &fatalsToBrowser($arg) if $WRAP;
+
+  $arg=~s/^/ stamp() /gme if $arg =~ /\n$/ or not exists $ENV{MOD_PERL};
+
+  $arg .= "\n" unless $arg =~ /\n$/;
+
   realdie $arg;
 }
 
@@ -505,11 +494,15 @@ sub warningsToBrowser {
 
 # headers
 sub fatalsToBrowser {
-  my($msg) = @_;
+  my $msg = shift;
+
+  $msg = "$msg" if ref $msg;
+
   $msg=~s/&/&amp;/g;
   $msg=~s/>/&gt;/g;
   $msg=~s/</&lt;/g;
-  $msg=~s/\"/&quot;/g;
+  $msg=~s/"/&quot;/g;
+
   my($wm) = $ENV{SERVER_ADMIN} ? 
     qq[the webmaster (<a href="mailto:$ENV{SERVER_ADMIN}">$ENV{SERVER_ADMIN}</a>)] :
       "this site's webmaster";
@@ -524,7 +517,11 @@ END
     if (ref($CUSTOM_MSG) eq 'CODE') {
       print STDOUT "Content-type: text/html\n\n" 
         unless $mod_perl;
-      &$CUSTOM_MSG($msg); # nicer to perl 5.003 users
+        eval { 
+            &$CUSTOM_MSG($msg); # nicer to perl 5.003 users
+        };
+        if ($@) { print STDERR q(error while executing the error handler: $@); }
+
       return;
     } else {
       $outer_message = $CUSTOM_MSG;

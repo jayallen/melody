@@ -4,7 +4,7 @@ use strict;
 use Carp ();
 
 use vars qw($VERSION $TRANSLATE_UNDERSCORE);
-$VERSION = "5.827";
+$VERSION = "5.835";
 
 # The $TRANSLATE_UNDERSCORE variable controls whether '_' can be used
 # as a replacement for '-' in header field names.
@@ -199,16 +199,16 @@ sub _header
 sub _sorted_field_names
 {
     my $self = shift;
-    return sort {
+    return [ sort {
         ($header_order{$a} || 999) <=> ($header_order{$b} || 999) ||
          $a cmp $b
-    } keys %$self
+    } keys %$self ];
 }
 
 
 sub header_field_names {
     my $self = shift;
-    return map $standard_case{$_} || $_, $self->_sorted_field_names
+    return map $standard_case{$_} || $_, @{ $self->_sorted_field_names },
 	if wantarray;
     return keys %$self;
 }
@@ -218,17 +218,17 @@ sub scan
 {
     my($self, $sub) = @_;
     my $key;
-    foreach $key ($self->_sorted_field_names) {
-        next if $key =~ /^_/;
+    for $key (@{ $self->_sorted_field_names }) {
+	next if substr($key, 0, 1) eq '_';
 	my $vals = $self->{$key};
 	if (ref($vals) eq 'ARRAY') {
 	    my $val;
 	    for $val (@$vals) {
-		&$sub($standard_case{$key} || $key, $val);
+		$sub->($standard_case{$key} || $key, $val);
 	    }
 	}
 	else {
-	    &$sub($standard_case{$key} || $key, $vals);
+	    $sub->($standard_case{$key} || $key, $vals);
 	}
     }
 }
@@ -240,21 +240,43 @@ sub as_string
     $endl = "\n" unless defined $endl;
 
     my @result = ();
-    $self->scan(sub {
-	my($field, $val) = @_;
-	$field =~ s/^://;
-	if ($val =~ /\n/) {
-	    # must handle header values with embedded newlines with care
-	    $val =~ s/\s+$//;          # trailing newlines and space must go
-	    $val =~ s/\n\n+/\n/g;      # no empty lines
-	    $val =~ s/\n([^\040\t])/\n $1/g;  # intial space for continuation
-	    $val =~ s/\n/$endl/g;      # substitute with requested line ending
+    for my $key (@{ $self->_sorted_field_names }) {
+	next if index($key, '_') == 0;
+	my $vals = $self->{$key};
+	if ( ref($vals) eq 'ARRAY' ) {
+	    for my $val (@$vals) {
+		my $field = $standard_case{$key} || $key;
+		$field =~ s/^://;
+		if ( index($val, "\n") >= 0 ) {
+		    $val = _process_newline($val, $endl);
+		}
+		push @result, $field . ': ' . $val;
+	    }
 	}
-	push(@result, "$field: $val");
-    });
+	else {
+	    my $field = $standard_case{$key} || $key;
+	    $field =~ s/^://;
+	    if ( index($vals, "\n") >= 0 ) {
+		$vals = _process_newline($vals, $endl);
+	    }
+	    push @result, $field . ': ' . $vals;
+	}
+    }
 
     join($endl, @result, '');
 }
+
+sub _process_newline {
+    local $_ = shift;
+    my $endl = shift;
+    # must handle header values with embedded newlines with care
+    s/\s+$//;        # trailing newlines and space must go
+    s/\n(\x0d?\n)+/\n/g;     # no empty lines
+    s/\n([^\040\t])/\n $1/g; # intial space for continuation
+    s/\n/$endl/g;    # substitute with requested line ending
+    $_;
+}
+
 
 
 if (eval { require Storable; 1 }) {
@@ -262,7 +284,7 @@ if (eval { require Storable; 1 }) {
 } else {
     *clone = sub {
 	my $self = shift;
-	my $clone = new HTTP::Headers;
+	my $clone = HTTP::Headers->new;
 	$self->scan(sub { $clone->push_header(@_);} );
 	$clone;
     };
@@ -552,9 +574,9 @@ possible to tell which of the returned values belonged to which field.
 =item $h->remove_content_headers
 
 This will remove all the header fields used to describe the content of
-a message.  All header field names prefixed with C<Content-> falls
+a message.  All header field names prefixed with C<Content-> fall
 into this category, as well as C<Allow>, C<Expires> and
-C<Last-Modified>.  RFC 2616 denote these fields as I<Entity Header
+C<Last-Modified>.  RFC 2616 denotes these fields as I<Entity Header
 Fields>.
 
 The return value is a new C<HTTP::Headers> object that contains the
@@ -604,7 +626,7 @@ values will be substituted with this line ending sequence.
 =head1 CONVENIENCE METHODS
 
 The most frequently used headers can also be accessed through the
-following convenience Methods.  Most of these methods can both be used to read
+following convenience methods.  Most of these methods can both be used to read
 and to set the value of a header.  The header value is set if you pass
 an argument to the method.  The old header value is always returned.
 If the given header did not exist then C<undef> is returned.
