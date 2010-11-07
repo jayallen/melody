@@ -371,69 +371,6 @@ sub save_cfg_system {
 } ## end sub save_cfg_system
 
 1;
-__END__
-
-The following subroutines were removed by Byrne Reese for Melody.
-They are rendered obsolete by the new MT::CMS::Blog::cfg_blog_settings 
-handler.
-
-sub save_cfg_system_general {
-    my $app = shift;
-    $app->validate_magic or return;
-    return $app->errtrans("Permission denied.")
-      unless $app->user->is_superuser();
-    my $cfg = $app->config;
-
-    # construct the message to the activity log
-    my @meta_messages = (); 
-    push(@meta_messages, $app->translate('Email address is [_1]', $app->param('system_email_address'))) 
-        if ($app->param('system_email_address') =~ /\w+/);
-    push(@meta_messages, $app->translate('Debug mode is [_1]', $app->param('system_debug_mode')))
-        if ($app->param('system_debug_mode') =~ /\d+/);
-    if ($app->param('system_performance_logging')) {
-        push(@meta_messages, $app->translate('Performance logging is on'));
-    } else {
-        push(@meta_messages, $app->translate('Performance logging is off'));
-    }
-    push(@meta_messages, $app->translate('Performance log path is [_1]', $app->param('system_performance_logging_path')))
-        if ($app->param('system_performance_logging_path') =~ /\w+/);
-    push(@meta_messages, $app->translate('Performance log threshold is [_1]', $app->param('system_performance_logging_threshold')))
-        if ($app->param('system_performance_logging_threshold') =~ /\d+/);
-    
-    # throw the messages in the activity log
-    if (scalar(@meta_messages) > 0) {
-        my $message = join(', ', @meta_messages);
-        $app->log({
-            message  => $app->translate('System Settings Changes Took Place'),
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            metadata => $message,
-        });
-    }
-
-    # actually assign the changes
-    $app->config( 'EmailAddressMain', $app->param('system_email_address') || undef, 1 );
-    $app->config('DebugMode', $app->param('system_debug_mode'), 1)
-        if ($app->param('system_debug_mode') =~ /\d+/);
-    if ($app->param('system_performance_logging')) {
-        $app->config('PerformanceLogging', 1, 1);
-    } else {
-        $app->config('PerformanceLogging', 0, 1);
-    }
-    $app->config('PerformanceLoggingPath', $app->param('system_performance_logging_path'), 1)
-        if ($app->param('system_performance_logging_path') =~ /\w+/);
-    $app->config('PerformanceLoggingThreshold', $app->param('system_performance_logging_threshold'), 1)
-        if ($app->param('system_performance_logging_threshold') =~ /\d+/);
-    $cfg->save_config();
-    my $args = ();
-    $args->{saved} = 1;
-    $app->redirect(
-        $app->uri(
-            'mode' => 'cfg_system',
-            args   => $args
-        )
-    );
-}
 
 __END__
 
