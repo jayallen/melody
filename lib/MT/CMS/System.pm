@@ -9,8 +9,9 @@ use MT::Util
 
 sub cfg_system_settings {
     my $app = shift;
+    my $q = $app->query();
     my %param;
-    if ( $app->param('blog_id') ) {
+    if ( $q->param('blog_id') ) {
         return $app->return_to_dashboard( redirect => 1 );
     }
 
@@ -51,8 +52,8 @@ sub cfg_system_settings {
     }
 
     $param{system_email_address} = $cfg->EmailAddressMain;
-    $param{saved}                = $app->param('saved');
-    $param{error}                = $app->param('error');
+    $param{saved}                = $q->param('saved');
+    $param{error}                = $q->param('error');
     $param{screen_class}         = "settings-screen system-general-settings";
 
     my $registration = $cfg->CommenterRegistration;
@@ -102,15 +103,15 @@ sub cfg_system_settings {
     }
 
     # TODO - move this to its own handler and forward back here
-    if ( $app->param('to_email_address') ) {
+    if ( $q->param('to_email_address') ) {
         return $app->errtrans(
             "You don't have a system email address configured.  Please set this first, save it, then try the test email again."
         ) unless ( $cfg->EmailAddressMain );
         return $app->errtrans("Please enter a valid email address")
-          unless ( is_valid_email( $app->param('to_email_address') ) );
+          unless ( is_valid_email( $q->param('to_email_address') ) );
 
         my %head = (
-                    To      => $app->param('to_email_address'),
+                    To      => $q->param('to_email_address'),
                     From    => $cfg->EmailAddressMain,
                     Subject => $app->translate("Test email from Movable Type")
         );
@@ -129,14 +130,14 @@ sub cfg_system_settings {
                      message =>
                        $app->translate(
                                   'Test e-mail was successfully sent to [_1]',
-                                  $app->param('to_email_address')
+                                  $q->param('to_email_address')
                        ),
                      level => MT::Log::INFO(),
                      class => 'system',
                    }
         );
         $param{test_mail_sent} = 1;
-    } ## end if ( $app->param('to_email_address'...))
+    } ## end if ( $q->param('to_email_address'...))
 
     my @config_warnings;
     for my $config_directive (
@@ -160,14 +161,15 @@ sub cfg_system_settings {
     $param{system_performance_logging_path} = $cfg->PerformanceLoggingPath;
     $param{system_performance_logging_threshold}
       = $cfg->PerformanceLoggingThreshold;
-    $param{saved}        = $app->param('saved');
-    $param{error}        = $app->param('error');
+    $param{saved}        = $q->param('saved');
+    $param{error}        = $q->param('error');
     $param{screen_class} = "settings-screen system-general-settings";
     $app->load_tmpl( 'cfg_system_settings.tmpl', \%param );
 } ## end sub cfg_system_settings
 
 sub save_cfg_system {
     my $app = shift;
+    my $q = $app->query();
     $app->validate_magic or return;
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
@@ -182,17 +184,17 @@ sub save_cfg_system {
           @meta_messages,
           $app->translate(
                            'Email address is [_1]',
-                           $app->param('system_email_address')
+                           $q->param('system_email_address')
           )
-    ) if ( $app->param('system_email_address') =~ /\w+/ );
+    ) if ( $q->param('system_email_address') =~ /\w+/ );
     push(
           @meta_messages,
           $app->translate(
                            'Debug mode is [_1]',
-                           $app->param('system_debug_mode')
+                           $q->param('system_debug_mode')
           )
-    ) if ( $app->param('system_debug_mode') =~ /\d+/ );
-    if ( $app->param('system_performance_logging') ) {
+    ) if ( $q->param('system_debug_mode') =~ /\d+/ );
+    if ( $q->param('system_performance_logging') ) {
         push( @meta_messages, $app->translate('Performance logging is on') );
     }
     else {
@@ -202,76 +204,84 @@ sub save_cfg_system {
           @meta_messages,
           $app->translate(
                            'Performance log path is [_1]',
-                           $app->param('system_performance_logging_path')
+                           $q->param('system_performance_logging_path')
           )
-    ) if ( $app->param('system_performance_logging_path') =~ /\w+/ );
+    ) if ( $q->param('system_performance_logging_path') =~ /\w+/ );
     push(
           @meta_messages,
           $app->translate(
                            'Performance log threshold is [_1]',
-                           $app->param(
+                           $q->param(
                                        'system_performance_logging_threshold')
           )
-    ) if ( $app->param('system_performance_logging_threshold') =~ /\d+/ );
+    ) if ( $q->param('system_performance_logging_threshold') =~ /\d+/ );
 
     # actually assign the changes
     $app->config( 'EmailAddressMain',
-                  $app->param('system_email_address') || undef, 1 );
-    $app->config( 'DebugMode', $app->param('system_debug_mode'), 1 )
-      if ( $app->param('system_debug_mode') =~ /\d+/ );
-    if ( $app->param('system_performance_logging') ) {
+                  $q->param('system_email_address') || undef, 1 );
+    $app->config( 'DebugMode', $q->param('system_debug_mode'), 1 )
+      if ( $q->param('system_debug_mode') =~ /\d+/ );
+    if ( $q->param('system_performance_logging') ) {
         $app->config( 'PerformanceLogging', 1, 1 );
     }
     else {
         $app->config( 'PerformanceLogging', 0, 1 );
     }
     $app->config( 'PerformanceLoggingPath',
-                  $app->param('system_performance_logging_path'), 1 )
-      if ( $app->param('system_performance_logging_path') =~ /\w+/ );
+                  $q->param('system_performance_logging_path'), 1 )
+      if ( $q->param('system_performance_logging_path') =~ /\w+/ );
     $app->config( 'PerformanceLoggingThreshold',
-                  $app->param('system_performance_logging_threshold'), 1 )
-      if ( $app->param('system_performance_logging_threshold') =~ /\d+/ );
+                  $q->param('system_performance_logging_threshold'), 1 )
+      if ( $q->param('system_performance_logging_threshold') =~ /\d+/ );
+    if ($q->param('track_revisions')) {
+        push( @meta_messages, 'Revision histories are enabled.' );
+        $app->config('TrackRevisions', 1, 1);
+    } else {
+        push( @meta_messages, 'Revision histories will not be recorded.' );
+        $app->config('TrackRevisions', 0, 1);
+    }
+
 
     # END Save General Preferences
 
     # BEGIN Save Feedback Preferences
-    if ( $app->param('comment_disable') ) {
+    if ( $q->param('comment_disable') ) {
         push( @meta_messages, 'Allow comments is on' );
     }
     else {
         push( @meta_messages, 'Allow comments is off' );
     }
-    if ( $app->param('ping_disable') ) {
+    if ( $q->param('ping_disable') ) {
         push( @meta_messages, 'Allow trackbacks is on' );
     }
     else {
         push( @meta_messages, 'Allow trackbacks is off' );
     }
-    if ( $app->param('disable_notify_ping') ) {
+    if ( $q->param('disable_notify_ping') ) {
         push( @meta_messages, 'Allow outbound trackbacks is on' );
     }
     else {
         push( @meta_messages, 'Allow outbound trackbacks is off' );
     }
     push( @meta_messages,
-          'Outbound trackback limit is ' . $app->param('trackback_send') )
-      if ( $app->param('trackback_send') =~ /\w+/ );
+          'Outbound trackback limit is ' . $q->param('trackback_send') )
+      if ( $q->param('trackback_send') =~ /\w+/ );
 
     # actually assign the changes
-    $cfg->AllowComments( ( $app->param('comment_disable') ? 0 : 1 ), 1 );
-    $cfg->AllowPings( ( $app->param('ping_disable') ? 0 : 1 ), 1 );
+    $cfg->AllowComments( ( $q->param('comment_disable') ? 0 : 1 ), 1 );
+    $cfg->AllowPings( ( $q->param('ping_disable') ? 0 : 1 ), 1 );
     $cfg->DisableNotificationPings( (
-                                       $app->param('disable_notify_ping')
+                                       $q->param('disable_notify_ping')
                                        ? 1
                                        : 0
                                     ),
                                     1
     );
-    my $send = $app->param('trackback_send') || 'any';
+    my $send = $q->param('trackback_send') || 'any';
     if ( $send =~ m/^(any|off|selected|local)$/ ) {
         $cfg->OutboundTrackbackLimit( $send, 1 );
         if ( $send eq 'selected' ) {
-            my $domains = $app->param('trackback_send_domains') || '';
+            my $domains = $q->param('trackback_send_domains') || '';
             $domains =~ s/[\r\n]+/ /gs;
             $domains =~ s/\s{2,}/ /gs;
             my @domains = split /\s/, $domains;
@@ -282,7 +292,7 @@ sub save_cfg_system {
     # END Save Feedback Preferences
 
     # BEGIN Save User Preferences
-    my $tmpl_blog_id = $app->param('new_user_template_blog_id') || '';
+    my $tmpl_blog_id = $q->param('new_user_template_blog_id') || '';
     if ( $tmpl_blog_id =~ m/^\d+$/ ) {
         MT->model('blog')->load($tmpl_blog_id)
           or return
@@ -301,22 +311,22 @@ sub save_cfg_system {
         }
     }
 
-    my $tz = $app->param('default_time_zone') || undef;
+    my $tz = $q->param('default_time_zone') || undef;
     $cfg->DefaultTimezone($tz);
-    $cfg->DefaultSiteRoot( $app->param('default_site_root') || undef, 1 );
-    $cfg->DefaultSiteURL( $app->param('default_site_url') || undef, 1 );
-    $cfg->NewUserAutoProvisioning( $app->param('personal_weblog') ? 1 : 0,
+    $cfg->DefaultSiteRoot( $q->param('default_site_root') || undef, 1 );
+    $cfg->DefaultSiteURL( $q->param('default_site_url') || undef, 1 );
+    $cfg->NewUserAutoProvisioning( $q->param('personal_weblog') ? 1 : 0,
                                    1 );
     $cfg->NewUserTemplateBlogId( $tmpl_blog_id || undef, 1 );
-    $cfg->DefaultUserLanguage( $app->param('default_language'), 1 );
-    $cfg->DefaultUserTagDelimiter( $app->param('default_user_tag_delimiter')
+    $cfg->DefaultUserLanguage( $q->param('default_language'), 1 );
+    $cfg->DefaultUserTagDelimiter( $q->param('default_user_tag_delimiter')
                                                || undef,
                                    1 );
 
     my $registration = $cfg->CommenterRegistration;
-    if ( my $reg = $app->param('registration') ) {
+    if ( my $reg = $q->param('registration') ) {
         $registration->{Allow} = $reg ? 1 : 0;
-        $registration->{Notify} = $app->param('notify_user_id');
+        $registration->{Notify} = $q->param('notify_user_id');
         $cfg->CommenterRegistration( $registration, 1 );
     }
     elsif ( $registration->{Allow} ) {
@@ -343,7 +353,7 @@ sub save_cfg_system {
     my $args = ();
 
     if ( $cfg->NewUserAutoProvisioning() ne
-         ( $app->param('personal_weblog') ? 1 : 0 ) )
+         ( $q->param('personal_weblog') ? 1 : 0 ) )
     {
         $args->{error}
           = $app->translate(
