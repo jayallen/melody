@@ -114,6 +114,15 @@ template_sets:
                 type: text
                 fieldset: limits
                 default: 25
+                order: 1
+            number_of_entries_in_feeds:
+                label: Number of entires in Atom feeds
+                hint: This will limit the number of entries that are put into your news feeds.
+                tag: EntriesInFeeds
+                type: text
+                default: 20
+                order: 2 
+                fieldset: limits
             number_of_entries_on_main_index:
                 label: Number of entries on the main page
                 hint: This is the number of entries that will be displayed on the main page.
@@ -121,13 +130,7 @@ template_sets:
                 type: text
                 fieldset: limits
                 default: 20
-            number_of_entries_on_listings:
-                label: Number of entries on the listing pages
-                hint: This is the number of entries that will be displayed on the listing pages (Category, Monthly, Author, etc).
-                tag: EntriesOnListingPages2
-                type: text
-                fieldset: limits
-                default: 20
+                order: 3
             number_of_entries_in_search_results:
                 label: Number of entries in the search results
                 hint: This is the number of entries that will be displayed in the search results.
@@ -135,6 +138,15 @@ template_sets:
                 type: text
                 fieldset: limits
                 default: 20
+                order: 4
+            number_of_entries_on_listings:
+                label: Number of entries on the listing pages
+                hint: This is the number of entries that will be displayed on the listing pages (Category, Monthly, Author, etc).
+                tag: EntriesOnListingPages2
+                type: text
+                fieldset: limits
+                default: 20
+                order: 5
             metadata_about_option:
                 label: About You
                 tag: AboutYou
@@ -142,6 +154,7 @@ template_sets:
                 type: text
                 default: Your info here.
                 fieldset: metadata
+                order: 1
             metadata_contact_option:
                 label: Contact Information
                 tag: ContactInformation
@@ -149,12 +162,14 @@ template_sets:
                 type: text
                 default: Your info here.
                 fieldset: metadata
+                order: 2
             metadata_primary_author:
                 label: Primary Author
                 hint: Enter the username of the primary author to display <em>only</em> this users Action Stream profiles in the Other Profiles widget. (By default all author's profiles are displayed.)
                 tag: PrimaryAuthor
                 type: text
                 fieldset: metadata
+                order: 3
         templates:
             index:
                 archives:
@@ -180,11 +195,6 @@ template_sets:
                 rsd:
                     label: RSD
                     outfile: rsd.xml
-                    build_type: 4
-                    rebuild_me: 1
-                rss:
-                    label: RSS Feed
-                    outfile: rss.xml
                     build_type: 4
                     rebuild_me: 1
                 comments_rss:
