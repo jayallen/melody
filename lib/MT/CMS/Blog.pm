@@ -278,7 +278,7 @@ sub edit {
         $sets->{'mt_blog'}{selected} = 1;
         $sets = $app->filter_conditional_list( [ values %$sets ] );
         no warnings;
-        @$sets = sort { $a->{order} <=> $b->{order} } @$sets;
+        @$sets = sort { uc($a->{key}) cmp uc($b->{key}) } @$sets;
         $param->{'template_set_loop'}  = $sets;
         $param->{'template_set_index'} = $#$sets;
 
