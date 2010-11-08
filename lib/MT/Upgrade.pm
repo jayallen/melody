@@ -876,7 +876,7 @@ sub core_upgrade_functions {
                     !$_[0]->template_set;
                 },
                 code => sub {
-                    $_[0]->template_set('mt_blog');
+                    $_[0]->template_set('DePoClean_the');
                     MT->run_callbacks( 'blog_template_set_change',
                                        { blog => $_[0] } );
                 },
