@@ -843,6 +843,7 @@ sub list {
     }
     else {
         $param{has_expanded_mode} = 1;
+        $param{has_compact_mode} = 1;
     }
     my $data = build_entry_table(
                                   $app,
@@ -2161,6 +2162,14 @@ sub build_entry_table {
         $row->{status_text}
           = $app->translate( MT::Entry::status_text( $obj->status ) );
         $row->{ "status_" . MT::Entry::status_text( $obj->status ) } = 1;
+        my @tags = $obj->get_tags();
+        $row->{tag_loop} = \@tags;
+        $row->{comments_enabled} = $obj->allow_comments;
+        $row->{comment_count} = $obj->comment_count;
+        $row->{entry_permalink_relative} = $obj->permalink;
+        my $base = $obj->blog->site_url;
+        $row->{entry_permalink_relative} =~ s/$base//;
+
         $row->{has_edit_access} = $app_author->is_superuser
           || (    ( 'entry' eq $type )
                && $blog_perms

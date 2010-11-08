@@ -2223,7 +2223,7 @@ sub list_pref {
             $updated = 1;
         }
         if ( my $view = $q->param('verbosity') ) {
-            if ( $view =~ m!^compact|expanded$! ) {
+            if ( $view =~ m!^compact|expanded|minimal$! ) {
                 $list_pref->{view} = $view;
                 $updated = 1;
             }

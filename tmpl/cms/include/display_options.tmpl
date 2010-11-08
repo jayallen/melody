@@ -34,7 +34,10 @@
             label="<__trans phrase="View">"
             label_class="display-options">
             <ul>
-                <li><input type="radio" name="verbosity" value="compact" <mt:unless name="VIEW_EXPANDED">checked="checked"</mt:unless> id="view-compact" class="rb" /> <label for="view-compact"><__trans phrase="Compact"></label></li>
+                <li><input type="radio" name="verbosity" value="minimal" <mt:if name="VIEW_MINIMAL">checked="checked"</mt:if> id="view-minimal" class="rb" /> <label for="view-minimal"><__trans phrase="Minimal"></label></li>
+<mt:if name="HAS_COMPACT_MODE">
+                <li><input type="radio" name="verbosity" value="compact" <mt:if name="VIEW_COMPACT">checked="checked"</mt:if> id="view-compact" class="rb" /> <label for="view-compact"><__trans phrase="Compact"></label></li>
+</mt:if>
                 <li><input type="radio" name="verbosity" value="expanded" <mt:if name="VIEW_EXPANDED">checked="checked"</mt:if> id="view-expanded" class="rb" /> <label for="view-expanded"><__trans phrase="Expanded"></label></li>
             </ul>
         </mtapp:setting>
