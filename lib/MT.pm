@@ -570,19 +570,23 @@ sub add_plugin {
         if ( my $class = $plugin->{registry}{plugin_class} ) {
             eval "require $class;";
             if ($@) {
-                MT->log(
-                    {
-                        message => MT->translate( "Could not rebless '[_2]'. Could not find plugin class: [_1]", 
-                                                  $class, $plugin->name ),
-                        class   => 'system',
-                        level    => MT->model('log')->ERROR(),
+                MT->log( {
+                       message =>
+                         MT->translate(
+                           "Could not rebless '[_2]'. Could not find plugin class: [_1]",
+                           $class,
+                           $plugin->name
+                         ),
+                       class => 'system',
+                       level => MT->model('log')->ERROR(),
                     }
-                    );
-            } else {
+                );
+            }
+            else {
                 bless $plugin, $class;
             }
         }
-    }
+    } ## end if ( $plugin->{registry...})
     push @Components, $plugin;
     1;
 } ## end sub add_plugin
