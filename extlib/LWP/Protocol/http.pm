@@ -18,7 +18,7 @@ sub _new_socket
     my($self, $host, $port, $timeout) = @_;
     my $conn_cache = $self->{ua}{conn_cache};
     if ($conn_cache) {
-	if (my $sock = $conn_cache->withdraw("http", "$host:$port")) {
+	if (my $sock = $conn_cache->withdraw($self->socket_type, "$host:$port")) {
 	    return $sock if $sock && !$sock->can_read(0);
 	    # if the socket is readable, then either the peer has closed the
 	    # connection or there are some garbage bytes on it.  In either
@@ -30,6 +30,7 @@ sub _new_socket
     local($^W) = 0;  # IO::Socket::INET can be noisy
     my $sock = $self->socket_class->new(PeerAddr => $host,
 					PeerPort => $port,
+					LocalAddr => $self->{ua}{local_address},
 					Proto    => 'tcp',
 					Timeout  => $timeout,
 					KeepAlive => !!$conn_cache,
@@ -47,6 +48,11 @@ sub _new_socket
     eval { $sock->blocking(0); };
 
     $sock;
+}
+
+sub socket_type
+{
+    return "http";
 }
 
 sub socket_class
@@ -121,9 +127,9 @@ sub request
     # check method
     my $method = $request->method;
     unless ($method =~ /^[A-Za-z0-9_!\#\$%&\'*+\-.^\`|~]+$/) {  # HTTP token
-	return new HTTP::Response &HTTP::Status::RC_BAD_REQUEST,
+	return HTTP::Response->new( &HTTP::Status::RC_BAD_REQUEST,
 				  'Library does not allow method ' .
-				  "$method for 'http:' URLs";
+				  "$method for 'http:' URLs");
     }
 
     my $url = $request->uri;
@@ -269,7 +275,7 @@ sub request
           SELECT:
             {
                 my $nfound = select($rbits, $wbits, undef, $sel_timeout);
-                unless (defined $nfound) {
+                if ($nfound < 0) {
                     if ($!{EINTR} || $!{EAGAIN}) {
                         if ($time_before) {
                             $sel_timeout = $sel_timeout_before - (time - $time_before);
@@ -402,7 +408,7 @@ sub request
 	    if (($peer_http_version eq "1.1" && !$connection{close}) ||
 		$connection{"keep-alive"})
 	    {
-		$conn_cache->deposit("http", "$host:$port", $socket);
+		$conn_cache->deposit($self->socket_type, "$host:$port", $socket);
 	    }
 	}
     }
@@ -436,7 +442,7 @@ sub can_read {
         my $before;
         $before = time if $timeout;
         my $nfound = select($fbits, undef, undef, $timeout);
-        unless (defined $nfound) {
+        if ($nfound < 0) {
             if ($!{EINTR} || $!{EAGAIN}) {
                 # don't really think EAGAIN can happen here
                 if ($timeout) {

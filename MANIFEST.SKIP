@@ -5,6 +5,9 @@
 lib/MT/App/Viewer.pm
 view.cgi
 
+# Irrelavent tools
+testbg.cgi
+
 # Experimental FileMgr Drivers from MTOS code
 lib/MT/FileMgr/FTP.pm
 lib/MT/FileMgr/SFTP.pm

@@ -1,5 +1,8 @@
 package CGI::Cookie;
 
+use strict;
+use warnings;
+
 # See the bottom of this file for the POD documentation.  Search for the
 # string '=head'.
 
@@ -21,9 +24,14 @@ use overload '""' => \&as_string,
     'cmp' => \&compare,
     'fallback'=>1;
 
+my $PERLEX = 0;
+# Turn on special checking for ActiveState's PerlEx
+$PERLEX++ if defined($ENV{'GATEWAY_INTERFACE'}) && $ENV{'GATEWAY_INTERFACE'} =~ /^CGI-PerlEx/;
+
 # Turn on special checking for Doug MacEachern's modperl
+# PerlEx::DBI tries to fool DBI by setting MOD_PERL
 my $MOD_PERL = 0;
-if (exists $ENV{MOD_PERL}) {
+if (exists $ENV{MOD_PERL} && ! $PERLEX) {
   if (exists $ENV{MOD_PERL_API_VERSION} && $ENV{MOD_PERL_API_VERSION} == 2) {
       $MOD_PERL = 2;
       require Apache2::RequestUtil;
@@ -73,14 +81,13 @@ sub get_raw_cookie {
   $r ||= eval { $MOD_PERL == 2                    ? 
                   Apache2::RequestUtil->request() :
                   Apache->request } if $MOD_PERL;
-  if ($r) {
-    $raw_cookie = $r->headers_in->{'Cookie'};
-  } else {
-    if ($MOD_PERL && !exists $ENV{REQUEST_METHOD}) {
-      die "Run $r->subprocess_env; before calling fetch()";
-    }
-    $raw_cookie = $ENV{HTTP_COOKIE} || $ENV{COOKIE};
-  }
+
+  return $r->headers_in->{'Cookie'} if $r;
+
+  die "Run $r->subprocess_env; before calling fetch()" 
+    if $MOD_PERL and !exists $ENV{REQUEST_METHOD};
+    
+  return $ENV{HTTP_COOKIE} || $ENV{COOKIE};
 }
 
 
@@ -117,7 +124,8 @@ sub new {
   shift if ref $_[0]
         && eval { $_[0]->isa('Apache::Request::Req') || $_[0]->isa('Apache') };
   my($name,$value,$path,$domain,$secure,$expires,$httponly) =
-    rearrange([NAME,[VALUE,VALUES],PATH,DOMAIN,SECURE,EXPIRES,HTTPONLY],@_);
+    rearrange([ 'NAME', ['VALUE','VALUES'], qw/ PATH DOMAIN SECURE EXPIRES
+        HTTPONLY / ], @_);
   
   # Pull out our parameters.
   my @values;
@@ -358,7 +366,7 @@ MS Internet Explorer 6 Service Pack 1 and later.
 
 See this URL for more information:
 
-L<http://msdn.microsoft.com/workshop/author/dhtml/httponly_cookies.asp>
+L<http://msdn.microsoft.com/en-us/library/ms533046%28VS.85%29.aspx>
 
 =back
 

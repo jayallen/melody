@@ -3,7 +3,7 @@ package Net::HTTP;
 use strict;
 use vars qw($VERSION @ISA $SOCKET_CLASS);
 
-$VERSION = "5.819";
+$VERSION = "5.834";
 unless ($SOCKET_CLASS) {
     eval { require IO::Socket::INET } || require IO::Socket;
     $SOCKET_CLASS = "IO::Socket::INET";
@@ -57,7 +57,7 @@ Net::HTTP - Low-level HTTP connection (client)
 The C<Net::HTTP> class is a low-level HTTP client.  An instance of the
 C<Net::HTTP> class represents a connection to an HTTP server.  The
 HTTP protocol is described in RFC 2616.  The C<Net::HTTP> class
-support C<HTTP/1.0> and C<HTTP/1.1>.
+supports C<HTTP/1.0> and C<HTTP/1.1>.
 
 C<Net::HTTP> is a sub-class of C<IO::Socket::INET>.  You can mix the
 methods described below with reading and writing from the socket
@@ -110,9 +110,9 @@ and C<peer_http_version> attributes.
 
 Get/set the a value indicating if the request will be sent with a "TE"
 header to indicate the transfer encodings that the server can choose to
-use.  If the C<Compress::Zlib> module is installed then this will
-announce that this client accept both the I<deflate> and I<gzip>
-encodings.
+use.  The list of encodings announced as accepted by this client depends
+on availability of the following modules: C<Compress::Raw::Zlib> for
+I<deflate>, and C<IO::Compress::Gunzip> for I<gzip>.
 
 =item $s->http_version
 
@@ -128,11 +128,11 @@ read_response_headers() method call.
 =item $s->max_line_length
 
 Get/set a limit on the length of response line and response header
-lines.  The default is 4096.  A value of 0 means no limit.
+lines.  The default is 8192.  A value of 0 means no limit.
 
 =item $s->max_header_length
 
-Get/set a limit on the number of headers lines that a response can
+Get/set a limit on the number of header lines that a response can
 have.  The default is 128.  A value of 0 means no limit.
 
 =item $s->format_request($method, $uri, %headers, [$content])
