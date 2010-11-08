@@ -643,17 +643,6 @@ BEGIN {
         captcha_providers        => \&load_captcha_providers,
         tasks                    => \&load_core_tasks,
         default_templates        => \&load_default_templates,
-        template_sets            => {
-            mt_blog => {
-                label => "Classic Blog",
-                order => 100,
-
-                # means, load from 'default_templates' registry
-                # which we've established for core templates with
-                # the MT 4.0 registry
-                templates => '*',
-            },
-        },
         junk_filters => \&load_junk_filters,
         task_workers => {
                       'mt_rebuild' => {
