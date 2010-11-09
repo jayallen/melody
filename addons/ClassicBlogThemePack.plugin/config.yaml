@@ -1,0 +1,1419 @@
+name: 'Classic Blog Theme Pack'
+key: ClassicBlogThemePack
+id: ClassicBlogThemePack
+description: '&ldquo;Classic Blog&rdquo; was the original template set included with Movable Type 4.0. This Theme Pack combines the various styles available for the Classic Blog template set, and completely removes the need for the StyleCatcher.'
+author_name: 'Dan Wolfgang, uiNNOVATIONS'
+author_link: 'http://uinnovations.com'
+version: 1.0.6
+static_version: 4
+l10n_class: ClassicBlogThemePack::L10N
+
+template_sets:
+    classic_blog_minimalist:
+        base_path: templates
+        label: 'Classic Blog, Minimalist'
+        description: '&ldquo;Classic Blog&rdquo; was the original template set included with Movable Type 4.0. &ldquo;Minimalist&rdquo; comes in several colors (blue, brown, green, grey, light blue, light green, pink, purple, red, and white) and page layouts.'
+        author_name: 'Lilia Ahner'
+        author_link: 'http://lilia.vox.com'
+        documentation: docs.html
+        blog_preferences: classic_blog_preferences
+        preview: 'classic-blog-minimalist/preview.jpg'
+        thumbnail: 'classic-blog-minimalist/thumbnail.jpg'
+        options:
+            page_layout:
+                label: 'Page Layout'
+                hint: 'Select the page layout style.'
+                tag: PageLayout
+                type: select
+                values: 'layout-wtt,layout-twt,layout-wt,layout-tw,layout-mw,layout-wm'
+                default: 'layout-wtt'
+            theme_feature:
+                label: 'Theme Color'
+                hint: 'Select a color to be used with this theme.'
+                tag: ThemeFeature
+                type: select
+                values: 'Blue,Brown,Green,Grey,Light Blue,Light Green,Pink,Purple,Red,White'
+                default: 'Red'
+                republish: styles
+            primary_author:
+                label: 'Primary Author'
+                hint: "Enter the username of the primary author to display <em>only</em> this users Action Stream profiles in the Other Profiles widget. (By default all author's profiles are displayed. Be sure to install the Action Streams plugin to use this feature.)"
+                tag: PrimaryAuthor
+                type: text
+        templates:
+            archive:
+                category_entry_listing:
+                    label: 'Category Entry Listing'
+                    mappings:
+                        category:
+                            archive_type: Category
+                            preferred: 1
+                            build_type: 4
+                monthly_entry_listing:
+                    label: 'Monthly Entry Listing'
+                    mappings:
+                        monthly:
+                            archive_type: Monthly
+                            preferred: 1
+                            build_type: 4
+            index:
+                archive_index:
+                    label: 'Archive Index'
+                    outfile: archives.html
+                    rebuild_me: 1
+                    build_type: 4
+                feed_recent:
+                    label: 'Feed - Recent Entries'
+                    outfile: atom.xml
+                    rebuild_me: 1
+                    build_type: 4
+                javascript:
+                    label: JavaScript
+                    outfile: mt.js
+                    rebuild_me: 1
+                    build_type: 4
+                main_index:
+                    label: 'Main Index'
+                    outfile: index.html
+                    rebuild_me: 1
+                    build_type: 1
+                rsd:
+                    label: RSD
+                    outfile: rsd.xml
+                    rebuild_me: 1
+                    build_type: 4
+                styles:
+                    label: Stylesheet
+                    outfile: styles.css
+                    rebuild_me: 1
+                    build_type: 1
+            individual:
+                entry:
+                    label: Entry
+                    mappings:
+                        individual:
+                            archive_type: Individual
+                            preferred: 1
+                            build_type: 1
+            module:
+                banner_footer:
+                    label: 'Banner Footer'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                banner_header:
+                    label: 'Banner Header'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                comments:
+                    label: 'Comments'
+                comment_detail:
+                    label: 'Comment Detail'
+                entry_summary:
+                    label: 'Entry Summary'
+                html_head:
+                    label: 'HTML Head'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                sidebar:
+                    label: Sidebar
+                trackbacks:
+                    label: Trackbacks
+            page:
+                page:
+                    label: Page
+                    mappings:
+                        page:
+                            archive_type: Page
+                            preferred: 1
+                            built_type: 1
+            system:
+                comment_preview:
+                    label: 'Comment Preview'
+                comment_response:
+                    label: 'Comment Response'
+                dynamic_error:
+                    label: 'Dynamic Error'
+                popup_image:
+                    label: 'Popup Image'
+                search_results:
+                    label: 'Search Results'
+            widget:
+                about_this_page:
+                    label: 'About This Page'
+                action_streams:
+                    label: 'Action Streams'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 30
+                        include_with_ssi: 1
+                archive_widgets_group:
+                    label: 'Archive Widgets Group'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 30
+                        include_with_ssi: 1
+                author_archive_list:
+                    label: 'Author Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                        include_with_ssi: 1
+                calendar:
+                    label: Calendar
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                category_archive_list:
+                    label: 'Category Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                        include_with_ssi: 1
+                creative_commons:
+                    label: 'Creative Commons'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 60
+                        include_with_ssi: 1
+                current_author_monthly_archive_list:
+                    label: 'Current Author Monthly Archives'
+                current_category_monthly_archive_list:
+                    label: 'Current Category Monthly Archives'
+                date_based_author_archives:
+                    label: 'Date-Based Author Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                        include_with_ssi: 1
+                date_based_category_archives:
+                    label: 'Date-Based Category Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                        include_with_ssi: 1
+                main_index_widgets_group:
+                    label: 'Home Page Widgets Group'
+                monthly_archive_dropdown:
+                    label: 'Monthly Archives Dropdown'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                monthly_archive_list:
+                    label: 'Monthly Archives'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                openid:
+                    label: 'OpenID Accepted'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                other_profiles:
+                    label: 'Action Streams Profiles'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                        include_with_ssi: 1
+                pages_list:
+                    label: 'Page Listing'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                        include_with_ssi: 1
+                powered_by:
+                    label: 'Powered By'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                recent_assets:
+                    label: 'Recent Assets'
+                    cache:
+                        expire_type: 2
+                        expire_event: asset
+                        include_with_ssi: 1
+                recent_comments:
+                    label: 'Recent Comments'
+                    cache:
+                        expire_type: 2
+                        expire_event: comment
+                        include_with_ssi: 1
+                recent_entries:
+                    label: 'Recent Entries'
+                    cache:
+                        expire_type: 2
+                        expire_event: entry
+                        include_with_ssi: 1
+                search:
+                    label: Search
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                signin:
+                    label: 'Sign In'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                syndication:
+                    label: Syndication
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                tag_cloud:
+                    label: 'Tag Cloud'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 60
+                        include_with_ssi: 1
+                technorati_search:
+                    label: 'Technorati Search'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+            widgetset:
+                2-column_layout_-_sidebar:
+                    label: '2-column layout - Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'About This Page'
+                        - 'Home Page Widgets Group'
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                        - 'Syndication'
+                3-column_layout_-_primary_sidebar:
+                    label: '3-column layout - Primary Sidebar'
+                    widgets:
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                3-column_layout_-_secondary_sidebar:
+                    label: '3-column layout - Secondary Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'Home Page Widgets Group'
+                        - 'About This Page'
+                        - 'Syndication'
+    classic_blog_cityscape:
+        base_path: templates
+        label: 'Classic Blog, Cityscape'
+        description: '&ldquo;Classic Blog&rdquo; was the original template set included with Movable Type 4.0. &ldquo;Cityscape&rdquo; references many cities (Austin, Boston, Chicago, DC, Houston, Kiev, LA, London, Miami, Nashville, NYC, Philadelphia, Portland, Seattle, SF, Sydney, Tokyo, Toronto, and Vegas) and page layouts.'
+        author_name: 'Tiffany Chow'
+        author:link: 'http://tiffchow.typepad.com/'
+        documentation: docs.html
+        blog_preferences: classic_blog_preferences
+        preview: 'classic-blog-cityscape/preview.jpg'
+        thumbnail: 'classic-blog-cityscape/thumbnail.jpg'
+        options:
+            page_layout:
+                label: 'Page Layout'
+                hint: 'Select the page layout style.'
+                tag: PageLayout
+                type: select
+                values: 'layout-wtt,layout-twt,layout-wt,layout-tw,layout-mw,layout-wm'
+                default: 'layout-wtt'
+            theme_feature:
+                label: 'Theme City'
+                hint: 'Select a city to be used with this theme.'
+                tag: ThemeFeature
+                type: select
+                values: 'Austin,Boston,Chicago,DC,Houston,Kiev,LA,London,Miami,Nashville,NYC,Philadelphia,Portland,Seattle,SF,Sydney,Tokyo,Toronto,Vegas'
+                default: 'Austin'
+                republish: styles
+            primary_author:
+                label: 'Primary Author'
+                hint: "Enter the username of the primary author to display <em>only</em> this users Action Stream profiles in the Other Profiles widget. (By default all author's profiles are displayed. Be sure to install the Action Streams plugin to use this feature.)"
+                tag: PrimaryAuthor
+                type: text
+        templates:
+            archive:
+                category_entry_listing:
+                    label: 'Category Entry Listing'
+                    mappings:
+                        category:
+                            archive_type: Category
+                            preferred: 1
+                            build_type: 4
+                monthly_entry_listing:
+                    label: 'Monthly Entry Listing'
+                    mappings:
+                        monthly:
+                            archive_type: Monthly
+                            preferred: 1
+                            build_type: 4
+            index:
+                archive_index:
+                    label: 'Archive Index'
+                    outfile: archives.html
+                    rebuild_me: 1
+                    build_type: 4
+                feed_recent:
+                    label: 'Feed - Recent Entries'
+                    outfile: atom.xml
+                    rebuild_me: 1
+                    build_type: 4
+                javascript:
+                    label: JavaScript
+                    outfile: mt.js
+                    rebuild_me: 1
+                    build_type: 4
+                main_index:
+                    label: 'Main Index'
+                    outfile: index.html
+                    rebuild_me: 1
+                    build_type: 1
+                rsd:
+                    label: RSD
+                    outfile: rsd.xml
+                    rebuild_me: 1
+                    build_type: 4
+                styles:
+                    label: Stylesheet
+                    outfile: styles.css
+                    rebuild_me: 1
+                    build_type: 1
+            individual:
+                entry:
+                    label: Entry
+                    mappings:
+                        individual:
+                            archive_type: Individual
+                            preferred: 1
+                            build_type: 1
+            module:
+                banner_footer:
+                    label: 'Banner Footer'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                banner_header:
+                    label: 'Banner Header'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                comments:
+                    label: 'Comments'
+                comment_detail:
+                    label: 'Comment Detail'
+                entry_summary:
+                    label: 'Entry Summary'
+                html_head:
+                    label: 'HTML Head'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                sidebar:
+                    label: Sidebar
+                trackbacks:
+                    label: Trackbacks
+            page:
+                page:
+                    label: Page
+                    mappings:
+                        page:
+                            archive_type: Page
+                            preferred: 1
+                            built_type: 1
+            system:
+                comment_preview:
+                    label: 'Comment Preview'
+                comment_response:
+                    label: 'Comment Response'
+                dynamic_error:
+                    label: 'Dynamic Error'
+                popup_image:
+                    label: 'Popup Image'
+                search_results:
+                    label: 'Search Results'
+            widget:
+                about_this_page:
+                    label: 'About This Page'
+                action_streams:
+                    label: 'Action Streams'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 30
+                        include_with_ssi: 1
+                archive_widgets_group:
+                    label: 'Archive Widgets Group'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 30
+                        include_with_ssi: 1
+                author_archive_list:
+                    label: 'Author Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                        include_with_ssi: 1
+                calendar:
+                    label: Calendar
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                category_archive_list:
+                    label: 'Category Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                        include_with_ssi: 1
+                creative_commons:
+                    label: 'Creative Commons'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 60
+                        include_with_ssi: 1
+                current_author_monthly_archive_list:
+                    label: 'Current Author Monthly Archives'
+                current_category_monthly_archive_list:
+                    label: 'Current Category Monthly Archives'
+                date_based_author_archives:
+                    label: 'Date-Based Author Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                        include_with_ssi: 1
+                date_based_category_archives:
+                    label: 'Date-Based Category Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                        include_with_ssi: 1
+                main_index_widgets_group:
+                    label: 'Home Page Widgets Group'
+                monthly_archive_dropdown:
+                    label: 'Monthly Archives Dropdown'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                monthly_archive_list:
+                    label: 'Monthly Archives'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                openid:
+                    label: 'OpenID Accepted'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                other_profiles:
+                    label: 'Action Streams Profiles'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                        include_with_ssi: 1
+                pages_list:
+                    label: 'Page Listing'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                        include_with_ssi: 1
+                powered_by:
+                    label: 'Powered By'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                recent_assets:
+                    label: 'Recent Assets'
+                    cache:
+                        expire_type: 2
+                        expire_event: asset
+                        include_with_ssi: 1
+                recent_comments:
+                    label: 'Recent Comments'
+                    cache:
+                        expire_type: 2
+                        expire_event: comment
+                        include_with_ssi: 1
+                recent_entries:
+                    label: 'Recent Entries'
+                    cache:
+                        expire_type: 2
+                        expire_event: entry
+                        include_with_ssi: 1
+                search:
+                    label: Search
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                signin:
+                    label: 'Sign In'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                syndication:
+                    label: Syndication
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                tag_cloud:
+                    label: 'Tag Cloud'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 60
+                        include_with_ssi: 1
+                technorati_search:
+                    label: 'Technorati Search'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+            widgetset:
+                2-column_layout_-_sidebar:
+                    label: '2-column layout - Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'About This Page'
+                        - 'Home Page Widgets Group'
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                        - 'Syndication'
+                3-column_layout_-_primary_sidebar:
+                    label: '3-column layout - Primary Sidebar'
+                    widgets:
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                3-column_layout_-_secondary_sidebar:
+                    label: '3-column layout - Secondary Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'Home Page Widgets Group'
+                        - 'About This Page'
+                        - 'Syndication'
+    classic_blog_hills:
+        base_path: templates
+        label: 'Classic Blog, Hills'
+        description: '&ldquo;Classic Blog&rdquo; was the original template set included with Movable Type 4.0. &ldquo;Hills&rdquo; comes in four colors (dusk, green, midnight, and pink) and page layouts.'
+        author_name: 'Mena Trott'
+        author_link: 'http://mena.typepad.com/'
+        documentation: docs.html
+        blog_preferences: classic_blog_preferences
+        preview: 'classic-blog-hills/preview.jpg'
+        thumbnail: 'classic-blog-hills/thumbnail.jpg'
+        options:
+            page_layout:
+                label: 'Page Layout'
+                hint: 'Select the page layout style.'
+                tag: PageLayout
+                type: select
+                values: 'layout-wtt,layout-twt,layout-wt,layout-tw,layout-mw,layout-wm'
+                default: 'layout-wtt'
+            theme_feature:
+                label: 'Theme Hill Color'
+                hint: 'Select a hill color to be used with this theme.'
+                tag: ThemeFeature
+                type: select
+                values: 'Dusk,Green,Midnight,Pink'
+                default: 'Dusk'
+                republish: styles
+            primary_author:
+                label: 'Primary Author'
+                hint: "Enter the username of the primary author to display <em>only</em> this users Action Stream profiles in the Other Profiles widget. (By default all author's profiles are displayed. Be sure to install the Action Streams plugin to use this feature.)"
+                tag: PrimaryAuthor
+                type: text
+        templates:
+            archive:
+                category_entry_listing:
+                    label: 'Category Entry Listing'
+                    mappings:
+                        category:
+                            archive_type: Category
+                            preferred: 1
+                            build_type: 4
+                monthly_entry_listing:
+                    label: 'Monthly Entry Listing'
+                    mappings:
+                        monthly:
+                            archive_type: Monthly
+                            preferred: 1
+                            build_type: 4
+            index:
+                archive_index:
+                    label: 'Archive Index'
+                    outfile: archives.html
+                    rebuild_me: 1
+                    build_type: 4
+                feed_recent:
+                    label: 'Feed - Recent Entries'
+                    outfile: atom.xml
+                    rebuild_me: 1
+                    build_type: 4
+                javascript:
+                    label: JavaScript
+                    outfile: mt.js
+                    rebuild_me: 1
+                    build_type: 4
+                main_index:
+                    label: 'Main Index'
+                    outfile: index.html
+                    rebuild_me: 1
+                    build_type: 1
+                rsd:
+                    label: RSD
+                    outfile: rsd.xml
+                    rebuild_me: 1
+                    build_type: 4
+                styles:
+                    label: Stylesheet
+                    outfile: styles.css
+                    rebuild_me: 1
+                    build_type: 1
+            individual:
+                entry:
+                    label: Entry
+                    mappings:
+                        individual:
+                            archive_type: Individual
+                            preferred: 1
+                            build_type: 1
+            module:
+                banner_footer:
+                    label: 'Banner Footer'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                banner_header:
+                    label: 'Banner Header'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                comments:
+                    label: 'Comments'
+                comment_detail:
+                    label: 'Comment Detail'
+                entry_summary:
+                    label: 'Entry Summary'
+                html_head:
+                    label: 'HTML Head'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                sidebar:
+                    label: Sidebar
+                trackbacks:
+                    label: Trackbacks
+            page:
+                page:
+                    label: Page
+                    mappings:
+                        page:
+                            archive_type: Page
+                            preferred: 1
+                            built_type: 1
+            system:
+                comment_preview:
+                    label: 'Comment Preview'
+                comment_response:
+                    label: 'Comment Response'
+                dynamic_error:
+                    label: 'Dynamic Error'
+                popup_image:
+                    label: 'Popup Image'
+                search_results:
+                    label: 'Search Results'
+            widget:
+                about_this_page:
+                    label: 'About This Page'
+                action_streams:
+                    label: 'Action Streams'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 30
+                        include_with_ssi: 1
+                archive_widgets_group:
+                    label: 'Archive Widgets Group'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 30
+                        include_with_ssi: 1
+                author_archive_list:
+                    label: 'Author Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                        include_with_ssi: 1
+                calendar:
+                    label: Calendar
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                category_archive_list:
+                    label: 'Category Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                        include_with_ssi: 1
+                creative_commons:
+                    label: 'Creative Commons'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 60
+                        include_with_ssi: 1
+                current_author_monthly_archive_list:
+                    label: 'Current Author Monthly Archives'
+                current_category_monthly_archive_list:
+                    label: 'Current Category Monthly Archives'
+                date_based_author_archives:
+                    label: 'Date-Based Author Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                        include_with_ssi: 1
+                date_based_category_archives:
+                    label: 'Date-Based Category Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                        include_with_ssi: 1
+                main_index_widgets_group:
+                    label: 'Home Page Widgets Group'
+                monthly_archive_dropdown:
+                    label: 'Monthly Archives Dropdown'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                monthly_archive_list:
+                    label: 'Monthly Archives'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                openid:
+                    label: 'OpenID Accepted'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                other_profiles:
+                    label: 'Action Streams Profiles'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                        include_with_ssi: 1
+                pages_list:
+                    label: 'Page Listing'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                        include_with_ssi: 1
+                powered_by:
+                    label: 'Powered By'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                recent_assets:
+                    label: 'Recent Assets'
+                    cache:
+                        expire_type: 2
+                        expire_event: asset
+                        include_with_ssi: 1
+                recent_comments:
+                    label: 'Recent Comments'
+                    cache:
+                        expire_type: 2
+                        expire_event: comment
+                        include_with_ssi: 1
+                recent_entries:
+                    label: 'Recent Entries'
+                    cache:
+                        expire_type: 2
+                        expire_event: entry
+                        include_with_ssi: 1
+                search:
+                    label: Search
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                signin:
+                    label: 'Sign In'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                syndication:
+                    label: Syndication
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                tag_cloud:
+                    label: 'Tag Cloud'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 60
+                        include_with_ssi: 1
+                technorati_search:
+                    label: 'Technorati Search'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+            widgetset:
+                2-column_layout_-_sidebar:
+                    label: '2-column layout - Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'About This Page'
+                        - 'Home Page Widgets Group'
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                        - 'Syndication'
+                3-column_layout_-_primary_sidebar:
+                    label: '3-column layout - Primary Sidebar'
+                    widgets:
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                3-column_layout_-_secondary_sidebar:
+                    label: '3-column layout - Secondary Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'Home Page Widgets Group'
+                        - 'About This Page'
+                        - 'Syndication'
+    classic_blog_unity:
+        base_path: templates
+        label: 'Classic Blog, Unity'
+        description: '&ldquo;Classic Blog&rdquo; was the original template set included with Movable Type 4.0. &ldquo;Unity&rdquo; comes in four variations: blue, green, purple, and tricolor (an orange-blue-green combo).'
+        author_name: 'Lilia Ahner'
+        author_link: 'http://lilia.vox.com'
+        documentation: docs.html
+        blog_preferences: classic_blog_preferences
+        preview: 'classic-blog-unity/preview.jpg'
+        thumbnail: 'classic-blog-unity/thumbnail.jpg'
+        options:
+            page_layout:
+                label: 'Page Layout'
+                hint: 'Select the page layout style.'
+                tag: PageLayout
+                type: select
+                values: 'layout-wtt,layout-twt,layout-wt,layout-tw,layout-mw,layout-wm'
+                default: 'layout-wtt'
+            theme_feature:
+                label: 'Theme Color'
+                hint: 'Select a color to be used with this theme.'
+                tag: ThemeFeature
+                type: select
+                values: 'Blue,Green,Purple,Tricolor'
+                default: 'Blue'
+                republish: styles
+            primary_author:
+                label: 'Primary Author'
+                hint: "Enter the username of the primary author to display <em>only</em> this users Action Stream profiles in the Other Profiles widget. (By default all author's profiles are displayed. Be sure to install the Action Streams plugin to use this feature.)"
+                tag: PrimaryAuthor
+                type: text
+        templates:
+            archive:
+                category_entry_listing:
+                    label: 'Category Entry Listing'
+                    mappings:
+                        category:
+                            archive_type: Category
+                            preferred: 1
+                            build_type: 4
+                monthly_entry_listing:
+                    label: 'Monthly Entry Listing'
+                    mappings:
+                        monthly:
+                            archive_type: Monthly
+                            preferred: 1
+                            build_type: 4
+            index:
+                archive_index:
+                    label: 'Archive Index'
+                    outfile: archives.html
+                    rebuild_me: 1
+                    build_type: 4
+                feed_recent:
+                    label: 'Feed - Recent Entries'
+                    outfile: atom.xml
+                    rebuild_me: 1
+                    build_type: 4
+                javascript:
+                    label: JavaScript
+                    outfile: mt.js
+                    rebuild_me: 1
+                    build_type: 4
+                main_index:
+                    label: 'Main Index'
+                    outfile: index.html
+                    rebuild_me: 1
+                    build_type: 1
+                rsd:
+                    label: RSD
+                    outfile: rsd.xml
+                    rebuild_me: 1
+                    build_type: 4
+                styles:
+                    label: Stylesheet
+                    outfile: styles.css
+                    rebuild_me: 1
+                    build_type: 1
+            individual:
+                entry:
+                    label: Entry
+                    mappings:
+                        individual:
+                            archive_type: Individual
+                            preferred: 1
+                            build_type: 1
+            module:
+                banner_footer:
+                    label: 'Banner Footer'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                banner_header:
+                    label: 'Banner Header'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                comments:
+                    label: 'Comments'
+                comment_detail:
+                    label: 'Comment Detail'
+                entry_summary:
+                    label: 'Entry Summary'
+                html_head:
+                    label: 'HTML Head'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                sidebar:
+                    label: Sidebar
+                trackbacks:
+                    label: Trackbacks
+            page:
+                page:
+                    label: Page
+                    mappings:
+                        page:
+                            archive_type: Page
+                            preferred: 1
+                            built_type: 1
+            system:
+                comment_preview:
+                    label: 'Comment Preview'
+                comment_response:
+                    label: 'Comment Response'
+                dynamic_error:
+                    label: 'Dynamic Error'
+                popup_image:
+                    label: 'Popup Image'
+                search_results:
+                    label: 'Search Results'
+            widget:
+                about_this_page:
+                    label: 'About This Page'
+                action_streams:
+                    label: 'Action Streams'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 30
+                        include_with_ssi: 1
+                archive_widgets_group:
+                    label: 'Archive Widgets Group'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 30
+                        include_with_ssi: 1
+                author_archive_list:
+                    label: 'Author Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                        include_with_ssi: 1
+                calendar:
+                    label: Calendar
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                category_archive_list:
+                    label: 'Category Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                        include_with_ssi: 1
+                creative_commons:
+                    label: 'Creative Commons'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 60
+                        include_with_ssi: 1
+                current_author_monthly_archive_list:
+                    label: 'Current Author Monthly Archives'
+                current_category_monthly_archive_list:
+                    label: 'Current Category Monthly Archives'
+                date_based_author_archives:
+                    label: 'Date-Based Author Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: author
+                        include_with_ssi: 1
+                date_based_category_archives:
+                    label: 'Date-Based Category Archives'
+                    cache:
+                        expire_type: 2
+                        expire_event: category
+                        include_with_ssi: 1
+                main_index_widgets_group:
+                    label: 'Home Page Widgets Group'
+                monthly_archive_dropdown:
+                    label: 'Monthly Archives Dropdown'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                monthly_archive_list:
+                    label: 'Monthly Archives'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                openid:
+                    label: 'OpenID Accepted'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                other_profiles:
+                    label: 'Action Streams Profiles'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                        include_with_ssi: 1
+                pages_list:
+                    label: 'Page Listing'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 5
+                        include_with_ssi: 1
+                powered_by:
+                    label: 'Powered By'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                recent_assets:
+                    label: 'Recent Assets'
+                    cache:
+                        expire_type: 2
+                        expire_event: asset
+                        include_with_ssi: 1
+                recent_comments:
+                    label: 'Recent Comments'
+                    cache:
+                        expire_type: 2
+                        expire_event: comment
+                        include_with_ssi: 1
+                recent_entries:
+                    label: 'Recent Entries'
+                    cache:
+                        expire_type: 2
+                        expire_event: entry
+                        include_with_ssi: 1
+                search:
+                    label: Search
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                signin:
+                    label: 'Sign In'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                syndication:
+                    label: Syndication
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+                tag_cloud:
+                    label: 'Tag Cloud'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 60
+                        include_with_ssi: 1
+                technorati_search:
+                    label: 'Technorati Search'
+                    cache:
+                        expire_type: 1
+                        expire_interval: 360
+                        include_with_ssi: 1
+            widgetset:
+                2-column_layout_-_sidebar:
+                    label: '2-column layout - Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'About This Page'
+                        - 'Home Page Widgets Group'
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                        - 'Syndication'
+                3-column_layout_-_primary_sidebar:
+                    label: '3-column layout - Primary Sidebar'
+                    widgets:
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                3-column_layout_-_secondary_sidebar:
+                    label: '3-column layout - Secondary Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'Home Page Widgets Group'
+                        - 'About This Page'
+                        - 'Syndication'
+    mt_blog:
+        base_path: legacy_templates
+        label: 'Legacy Classic Blog (Deprecated)'
+        description: 'This is the original &ldquo;Classic Blog&rdquo; template set included with Movable Type 4.0. It is included with Melody only for legacy installs. If you like the Classic Blog design, it is recommended that you use &ldquo;Classic Blog, Cityscape,&rdquo; &ldquo;Classic Blog, Hills,&rdquo; &ldquo;Classic Blog, Minimalist,&rdquo; or &ldquo;Classic Blog, Unity&rdquo; instead.'
+        author_name: 'Six Apart'
+        blog_preferences: classic_blog_preferences
+        preview: 'classic-blog-minimalist/preview.jpg'
+        thumbnail: 'classic-blog-minimalist/thumbnail.jpg'
+        templates:
+            archive:
+                category_entry_listing:
+                    label: 'Category Entry Listing'
+                    mappings:
+                        category:
+                            archive_type: Category
+                            preferred: 1
+                monthly_entry_listing:
+                    label: 'Monthly Entry Listing'
+                    mappings:
+                        monthly:
+                            archive_type: Monthly
+                            preferred: 1
+            index:
+                archive_index:
+                    label: 'Archive Index'
+                    outfile: archives.html
+                    rebuild_me: 1
+                feed_recent:
+                    label: 'Feed - Recent Entries'
+                    outfile: atom.xml
+                    rebuild_me: 1
+                javascript:
+                    label: JavaScript
+                    outfile: mt.js
+                    rebuild_me: 1
+                main_index:
+                    label: 'Main Index'
+                    outfile: index.html
+                    rebuild_me: 1
+                rsd:
+                    label: RSD
+                    outfile: rsd.xml
+                    rebuild_me: 1
+                styles:
+                    label: Stylesheet
+                    outfile: styles.css
+                    rebuild_me: 1
+            individual:
+                entry:
+                    label: Entry
+                    mappings:
+                        individual:
+                            archive_type: Individual
+                            preferred: 1
+            module:
+                banner_footer:
+                    label: 'Banner Footer'
+                banner_header:
+                    label: 'Banner Header'
+                comments:
+                    label: 'Comments'
+                comment_detail:
+                    label: 'Comment Detail'
+                entry_summary:
+                    label: 'Entry Summary'
+                html_head:
+                    label: 'HTML Head'
+                sidebar:
+                    label: Sidebar
+                trackbacks:
+                    label: Trackbacks
+            page:
+                page:
+                    label: Page
+                    mappings:
+                        page:
+                            archive_type: Page
+                            preferred: 1
+            system:
+                comment_preview:
+                    label: 'Comment Preview'
+                comment_response:
+                    label: 'Comment Response'
+                dynamic_error:
+                    label: 'Dynamic Error'
+                popup_image:
+                    label: 'Popup Image'
+                search_results:
+                    label: 'Search Results'
+            widget:
+                about_this_page:
+                    label: 'About This Page'
+                archive_widgets_group:
+                    label: 'Archive Widgets Group'
+                author_archive_list:
+                    label: 'Author Archives'
+                calendar:
+                    label: Calendar
+                category_archive_list:
+                    label: 'Category Archives'
+                creative_commons:
+                    label: 'Creative Commons'
+                current_author_monthly_archive_list:
+                    label: 'Current Author Monthly Archives'
+                current_category_monthly_archive_list:
+                    label: 'Current Category Monthly Archives'
+                date_based_author_archives:
+                    label: 'Date-Based Author Archives'
+                date_based_category_archives:
+                    label: 'Date-Based Category Archives'
+                main_index_widgets_group:
+                    label: 'Home Page Widgets Group'
+                monthly_archive_dropdown:
+                    label: 'Monthly Archives Dropdown'
+                monthly_archive_list:
+                    label: 'Monthly Archives'
+                openid:
+                    label: 'OpenID Accepted'
+                pages_list:
+                    label: 'Page Listing'
+                powered_by:
+                    label: 'Powered By'
+                recent_assets:
+                    label: 'Recent Assets'
+                recent_comments:
+                    label: 'Recent Comments'
+                recent_entries:
+                    label: 'Recent Entries'
+                search:
+                    label: Search
+                signin:
+                    label: 'Sign In'
+                syndication:
+                    label: Syndication
+                tag_cloud:
+                    label: 'Tag Cloud'
+                technorati_search:
+                    label: 'Technorati Search'
+            widgetset:
+                2-column_layout_-_sidebar:
+                    label: '2-column layout - Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'About This Page'
+                        - 'Home Page Widgets Group'
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                        - 'Syndication'
+                3-column_layout_-_primary_sidebar:
+                    label: '3-column layout - Primary Sidebar'
+                    widgets:
+                        - 'Archive Widgets Group'
+                        - 'Page Listing'
+                3-column_layout_-_secondary_sidebar:
+                    label: '3-column layout - Secondary Sidebar'
+                    widgets:
+                        - 'Search'
+                        - 'Home Page Widgets Group'
+                        - 'About This Page'
+                        - 'Syndication'
+
+blog_preferences:
+    classic_blog_preferences:
+        label: 'Classic Blog Preferences'
+        description: 'Preferred preferences for the Classic Blog Theme Pack'
+        plugin_data:
+            ActionStreams:
+                rebuild_for_action_stream_events: 1
+        preferences:
+            allow_anon_comments: 1
+            allow_comment_html: 1
+            allow_commenter_regist: 1
+            allow_comments_default: 1
+            allow_pings: 1
+            allow_pings_default: 1
+            allow_reg_comments: 1
+            allow_unreg_comments: 1
+            #archive_type: 
+            archive_type_preferred: entry
+            autodiscover_links: 0
+            autolink_urls: 1
+            basename_limit: 100
+            captcha_provider: 
+            cc_license: 
+            commenter_authenticators: MovableType
+            convert_paras: 'Markdown with Smartypants'
+            convert_paras_comments: 1
+            custom_dynamic_templates: none
+            days_on_index: 0
+            email_new_comments: 1
+            email_new_pings: 1
+            entries_on_index: 10
+            file_extension: html
+            follow_auth_links: 1
+            image_default_align: right
+            image_default_constrain: 1
+            image_default_thumb: 1
+            image_default_width: 150
+            #image_default_popup: 0
+            #image_default_wrap_text: 
+            #image_default_wunits: 
+            include_cache: 1
+            include_system: 0
+            internal_autodiscovery: 0
+            is_dynamic: 0
+            junk_folder_expiry: 7
+            junk_score_threshold: 0
+            #language: 
+            manual_approve_commenters: 0
+            moderate_pings: 1
+            moderate_unreg_comments: 0
+            nofollow_urls: 0
+            #nwc_smart_replace: 
+            #nwc_replace_field: 
+            #ping_blogs: 
+            #ping_google: 
+            ping_others: http://rpc.pingomatic.com
+            #ping_technorati: 
+            #ping_weblogs: 
+            #remote_auth_token: 
+            require_comment_emails: 1
+            require_typekey_emails: 0
+            #sanitize_spec: 
+            #server_offset: 
+            sort_order_comments: ascend
+            sort_order_posts: descend
+            status_default: 2
+            #update_pings: 
+            use_comment_confirmation: 1
+            #welcome_msg: 
+            words_in_excerpt: 40
+

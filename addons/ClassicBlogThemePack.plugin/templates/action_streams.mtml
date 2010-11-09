@@ -1,0 +1,40 @@
+<mt:If tag="PrimaryAuthor">
+    <mt:PrimaryAuthor setvar="author">
+    <mt:ActionStreams authors="$author" lastn="10">
+        <mt:if name="__first__">
+<div class="widget-action-stream widget">
+    <h3 class="widget-header">Recent Activity</h3>
+    <div class="widget-content">
+        <div class="activity-stream hfeed">
+            <ul class="activity-stream-list">
+        </mt:if>
+                <li class="hentry service-icon service-<mt:var name="service_type">">
+                    <mt:StreamAction>
+                </li>
+        <mt:if name="__last__">
+            </ul>
+        </div>
+    </div>
+</div>
+        </mt:if>
+    </mt:ActionStreams>
+<mt:Else>
+    <mt:ActionStreams lastn="10">
+        <mt:if name="__first__">
+<div class="widget-action-stream widget">
+    <h3 class="widget-header">Recent Activity</h3>
+    <div class="widget-content">
+        <div class="activity-stream hfeed">
+            <ul class="activity-stream-list">
+        </mt:if>
+                <li class="hentry service-icon service-<mt:var name="service_type">">
+                    <mt:StreamAction>
+                </li>
+        <mt:if name="__last__">
+            </ul>
+        </div>
+    </div>
+</div>
+        </mt:if>
+    </mt:ActionStreams>
+</mt:If>

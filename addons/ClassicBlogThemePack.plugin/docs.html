@@ -1,0 +1,28 @@
+<h3>Using the Classic Blog Theme Pack</h3>
+
+<p>The Classic Blog Theme Pack was put together as a working example of how to build a theme for Melody and Movable Type with the help of <a href="http://github.com/endevver/mt-plugin-theme-manager">Theme Manager</a> and <a href="http://github.com/endevver/mt-plugin-configassistant">Config Assistant</a> (both core to Melody). Developers can poke at this plugin's <code>config.yaml</code> to see how it all fits together.</p>
+
+<p>But, being a "working example" means that the Classic Blog Theme Pack is also for users!</p>
+
+<h4>Features</h4>
+
+<p>The Classic Blog Theme Pack takes the original Classic Blog templates first included with Movable Type 4.0 and brings a little more flexibility and up-to-date features to the design:</p>
+
+<ul style="margin-left: 15px; list-style-type: disc;">
+    <li>Select design options through the Theme Options item in the Design menu.</li>
+    <li>Support for Action Streams and Other Profiles with Widgets (requires the Action Streams plugin to be installed).</li>
+    <li>AJAX-style commenting.</li>
+    <li>Code refactoring in a few places to create a more robust and capable blog.</li>
+</ul>
+
+<h4>Options</h4>
+
+<p>You've already applied a theme to this blog, and you may have explored the theme's capabilities already--but if not, here's an overview:</p>
+
+<ul style="margin-left: 15px; list-style-type: disc;">
+    <li>Visit <strong>Theme Options</strong> (in the Design menu) to set the page layout style for this blog. After selecting, you'll want to save and republish the blog, because this setting needs to be marked on all of the published pages of your site. You can also select a color palette or city to display on this blog; after saving this option your stylesheet is automatically republished and the change will be live on the site.</li>
+    <li>Manage the sidebars of this blog with <strong>Widgets and Widget Sets</strong>. In the Design menu you can visit Widgets, then select a Widget Set and edit its contents with drag-n-drop simplicity. Use any of the available Widgets to customize this blog, or create new Widgets to add to the sidebar.</li>
+    <li>Some Widgets and Template Modules are <strong>cached</strong> to make better use of server resources and publish more quickly.</li>
+    <li>Some Templates use the <strong>Publish Queue</strong> to publish less-frequently visited archives in the background, making this blog feel faster. Be sure that <code>run-periodic-tasks</code> has been properly set up with this Melody or Movable Type installation so that the Publish Queue can run.</li>
+    <li>Out-of-the-box, this theme does not use <strong>Server Side Includes (SSI)</strong>, a feature which can further improve publishing times. To enable SSI, visit the Preferences menu and choose Publishing. In addition to selecting a type of include to use, you'll also need to configure your server to recognize it (if it isn't already). Be sure to republish after setting or changing the SSI option. Configuring SSI is beyond the scope of this document.</li>
+</ul>

@@ -1,0 +1,42 @@
+<mt:EntryTrackbackData>
+<div id="entry-<mt:EntryID>" class="entry-asset asset hentry">
+    <div class="asset-header">
+        <h2 class="asset-name entry-title"><a href="<mt:EntryPermalink>" rel="bookmark"><mt:EntryTitle></a></h2>
+        <div class="asset-meta">
+            <span class="byline">
+    <mt:If tag="EntryAuthorDisplayName">
+                By <span class="vcard author"><mt:EntryAuthorLink show_hcard="1"></span> on <abbr class="published" title="<mt:EntryDate format_name="iso8601">"><mt:EntryDate format="%x %X"></abbr>
+    <mt:Else>
+                <abbr class="published" title="<mt:EntryDate format_name="iso8601">"><mt:EntryDate format="%x %X"></abbr>
+    </mt:If>
+            </span>
+<mt:Unless name="hide_counts" eq="1">
+            <mt:IfCommentsActive><span class="separator">|</span> <a href="<mt:EntryPermalink>#comments"><mt:EntryCommentCount singular="1 Comment" plural="# Comments" none="No Comments"></a></mt:IfCommentsActive>
+            <mt:IfPingsActive><span class="separator">|</span> <a href="<mt:EntryPermalink>#trackbacks"><mt:EntryTrackbackCount singular="1 TrackBack" plural="# TrackBacks" none="No TrackBacks"></a></mt:IfPingsActive>
+</mt:Unless>
+        </div>
+    </div>
+    <div class="asset-content entry-content">
+<mt:If tag="EntryBody">
+        <div class="asset-body">
+            <mt:EntryBody>
+        </div>
+</mt:If>
+<mt:If name="entry_archive">
+    <mt:EntryIfTagged>
+        <div class="entry-tags">
+            <h4>Tags<span class="delimiter">:</span></h4>
+            <ul>
+                <li><mt:EntryTags glue='<span class="delimiter">,</span></li> <li>'><a href="javascript:void(0)" onclick="location.href='<mt:TagSearchLink encode_js="1">';return false;" rel="tag"><mt:TagName></a></mt:EntryTags></li>
+            </ul>
+        </div>
+    </mt:EntryIfTagged>
+</mt:If>
+<mt:If tag="EntryMore" convert_breaks="0">
+        <div class="asset-more-link">
+            Continue reading <a href="<mt:EntryPermalink>#more" rel="bookmark"><mt:EntryTitle></a>.
+        </div>
+</mt:If>
+    </div>
+    <div class="asset-footer"></div>
+</div>
