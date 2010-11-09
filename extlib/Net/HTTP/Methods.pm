@@ -5,7 +5,7 @@ require 5.005;  # 4-arg substr
 use strict;
 use vars qw($VERSION);
 
-$VERSION = "5.824";
+$VERSION = "5.834";
 
 my $CRLF = "\015\012";   # "\r\n" is not portable
 
@@ -69,7 +69,7 @@ sub http_configure {
     $peer_http_version = "1.0" unless defined $peer_http_version;
     my $send_te = delete $cnf->{SendTE};
     my $max_line_length = delete $cnf->{MaxLineLength};
-    $max_line_length = 4*1024 unless defined $max_line_length;
+    $max_line_length = 8*1024 unless defined $max_line_length;
     my $max_header_lines = delete $cnf->{MaxHeaderLines};
     $max_header_lines = 128 unless defined $max_header_lines;
 
@@ -162,8 +162,8 @@ sub format_request {
     if ($given{te}) {
 	push(@connection, "TE") unless grep lc($_) eq "te", @connection;
     }
-    elsif ($self->send_te && zlib_ok()) {
-	# gzip is less wanted since the Compress::Zlib interface for
+    elsif ($self->send_te && gunzip_ok()) {
+	# gzip is less wanted since the IO::Uncompress::Gunzip interface for
 	# it does not really allow chunked decoding to take place easily.
 	push(@h2, "TE: deflate,gzip;q=0.3");
 	push(@connection, "TE");
@@ -241,6 +241,7 @@ sub my_read {
 
 sub my_readline {
     my $self = shift;
+    my $what = shift;
     for (${*$self}{'http_buf'}) {
 	my $max_line_length = ${*$self}{'http_max_line_length'};
 	my $pos;
@@ -248,7 +249,7 @@ sub my_readline {
 	    # find line ending
 	    $pos = index($_, "\012");
 	    last if $pos >= 0;
-	    die "Line too long (limit is $max_line_length)"
+	    die "$what line too long (limit is $max_line_length)"
 		if $max_line_length && length($_) > $max_line_length;
 
 	    # need to read more data to find a line ending
@@ -265,7 +266,7 @@ sub my_readline {
                     }
                     # if we have already accumulated some data let's at least
                     # return that as a line
-                    die "read failed: $!" unless length;
+                    die "$what read failed: $!" unless length;
                 }
                 unless ($n) {
                     return undef unless length;
@@ -273,7 +274,7 @@ sub my_readline {
                 }
             }
 	}
-	die "Line too long ($pos; limit is $max_line_length)"
+	die "$what line too long ($pos; limit is $max_line_length)"
 	    if $max_line_length && $pos > $max_line_length;
 
 	my $line = substr($_, 0, $pos+1, "");
@@ -311,7 +312,7 @@ sub _read_header_lines {
     my @headers;
     my $line_count = 0;
     my $max_header_lines = ${*$self}{'http_max_header_lines'};
-    while (my $line = my_readline($self)) {
+    while (my $line = my_readline($self, 'Header')) {
 	if ($line =~ /^(\S+?)\s*:\s*(.*)/s) {
 	    push(@headers, $1, $2);
 	}
@@ -339,7 +340,7 @@ sub read_response_headers {
     my($self, %opt) = @_;
     my $laxed = $opt{laxed};
 
-    my($status, $eol) = my_readline($self);
+    my($status, $eol) = my_readline($self, 'Status');
     unless (defined $status) {
 	die "Server closed connection without sending any data back";
     }
@@ -416,19 +417,23 @@ sub read_entity_body {
 		unless pop(@te) eq "chunked";
 
 	    for (@te) {
-		if ($_ eq "deflate" && zlib_ok()) {
-		    #require Compress::Zlib;
-		    my $i = Compress::Zlib::inflateInit();
-		    die "Can't make inflator" unless $i;
-		    $_ = sub { scalar($i->inflate($_[0])) }
+		if ($_ eq "deflate" && inflate_ok()) {
+		    #require Compress::Raw::Zlib;
+		    my ($i, $status) = Compress::Raw::Zlib::Inflate->new();
+		    die "Can't make inflator: $status" unless $i;
+		    $_ = sub { my $out; $i->inflate($_[0], \$out); $out }
 		}
-		elsif ($_ eq "gzip" && zlib_ok()) {
-		    #require Compress::Zlib;
+		elsif ($_ eq "gzip" && gunzip_ok()) {
+		    #require IO::Uncompress::Gunzip;
 		    my @buf;
 		    $_ = sub {
 			push(@buf, $_[0]);
-			return Compress::Zlib::memGunzip(join("", @buf)) if $_[1];
-			return "";
+			return "" unless $_[1];
+			my $input = join("", @buf);
+			my $output;
+			IO::Uncompress::Gunzip::gunzip(\$input, \$output, Transparent => 0)
+			    or die "Can't gunzip content: $IO::Uncompress::Gunzip::GunzipError";
+			return \$output;
 		    };
 		}
 		elsif ($_ eq "identity") {
@@ -471,11 +476,11 @@ sub read_entity_body {
 	#   $chunked > 0:    bytes left in current chunk to read
 
 	if ($chunked <= 0) {
-	    my $line = my_readline($self);
+	    my $line = my_readline($self, 'Entity body');
 	    if ($chunked == 0) {
 		die "Missing newline after chunk data: '$line'"
 		    if !defined($line) || $line ne "";
-		$line = my_readline($self);
+		$line = my_readline($self, 'Entity body');
 	    }
 	    die "EOF when chunk header expected" unless defined($line);
 	    my $chunk_len = $line;
@@ -548,23 +553,39 @@ sub get_trailers {
 }
 
 BEGIN {
-my $zlib_ok;
+my $gunzip_ok;
+my $inflate_ok;
 
-sub zlib_ok {
-    return $zlib_ok if defined $zlib_ok;
+sub gunzip_ok {
+    return $gunzip_ok if defined $gunzip_ok;
 
-    # Try to load Compress::Zlib.
+    # Try to load IO::Uncompress::Gunzip.
     local $@;
     local $SIG{__DIE__};
-    $zlib_ok = 0;
+    $gunzip_ok = 0;
 
     eval {
-	require Compress::Zlib;
-	Compress::Zlib->VERSION(1.10);
-	$zlib_ok++;
+	require IO::Uncompress::Gunzip;
+	$gunzip_ok++;
     };
 
-    return $zlib_ok;
+    return $gunzip_ok;
+}
+
+sub inflate_ok {
+    return $inflate_ok if defined $inflate_ok;
+
+    # Try to load Compress::Raw::Zlib.
+    local $@;
+    local $SIG{__DIE__};
+    $inflate_ok = 0;
+
+    eval {
+	require Compress::Raw::Zlib;
+	$inflate_ok++;
+    };
+
+    return $inflate_ok;
 }
 
 } # BEGIN

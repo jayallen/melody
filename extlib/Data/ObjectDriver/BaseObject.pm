@@ -1,4 +1,4 @@
-# $Id: BaseObject.pm 553 2009-01-07 22:20:44Z ykerherve $
+# $Id$
 
 package Data::ObjectDriver::BaseObject;
 use strict;
@@ -537,6 +537,7 @@ sub refresh {
     my $fields = $obj->fetch_data;
     $obj->set_values_internal($fields);
     $obj->call_trigger('post_load');
+    $obj->driver->cache_object($obj);
     return 1;
 }
 
@@ -616,8 +617,7 @@ sub inflate {
     my $class = shift;
     my($deflated) = @_;
     my $obj = $class->new;
-    $obj->set_values($deflated->{columns});
-    $obj->{changed_cols} = {};
+    $obj->set_values_internal($deflated->{columns});
     $obj->call_trigger('post_inflate');
     return $obj;
 }

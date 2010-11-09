@@ -1,4 +1,4 @@
-# $Id: Cache.pm 342 2007-04-02 18:50:11Z ykerherve $
+# $Id$
 
 package Data::ObjectDriver::Driver::Cache::Cache;
 use strict;

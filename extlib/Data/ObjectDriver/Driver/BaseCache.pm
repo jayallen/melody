@@ -1,4 +1,4 @@
-# $Id: BaseCache.pm 552 2008-12-24 02:15:57Z ykerherve $
+# $Id$
 
 package Data::ObjectDriver::Driver::BaseCache;
 use strict;
@@ -226,7 +226,7 @@ sub update {
     my $ret = $driver->fallback->update($obj);
     my $key = $driver->cache_key(ref($obj), $obj->primary_key);
     $driver->modify_cache(sub {
-        $driver->update_cache($key, $driver->deflate($obj));
+        $driver->uncache_object($obj);
     });
     return $ret;
 }

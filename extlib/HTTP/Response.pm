@@ -2,7 +2,7 @@ package HTTP::Response;
 
 require HTTP::Message;
 @ISA = qw(HTTP::Message);
-$VERSION = "5.824";
+$VERSION = "5.836";
 
 use strict;
 use HTTP::Status ();
@@ -76,9 +76,11 @@ sub status_line
 sub base
 {
     my $self = shift;
-    my $base = $self->header('Content-Base')     ||  # used to be HTTP/1.1
-               $self->header('Content-Location') ||  # HTTP/1.1
-               $self->header('Base');                # HTTP/1.0
+    my $base = (
+	$self->header('Content-Base'),        # used to be HTTP/1.1
+	$self->header('Content-Location'),    # HTTP/1.1
+	$self->header('Base'),                # HTTP/1.0
+    )[0];
     if ($base && $base =~ /^$URI::scheme_re:/o) {
 	# already absolute
 	return $HTTP::URI_CLASS->new($base);
@@ -155,8 +157,8 @@ sub filename
 	}
     }
 
-    my $uri;
     unless (defined($file) && length($file)) {
+	my $uri;
 	if (my $cl = $self->header('Content-Location')) {
 	    $uri = URI->new($cl);
 	}
@@ -349,7 +351,7 @@ Response objects are returned by the request() method of the C<LWP::UserAgent>:
     # ...
     $response = $ua->request($request)
     if ($response->is_success) {
-        print $response->content;
+        print $response->decoded_content;
     }
     else {
         print STDERR $response->status_line, "\n";

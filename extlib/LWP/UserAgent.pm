@@ -5,7 +5,7 @@ use vars qw(@ISA $VERSION);
 
 require LWP::MemberMixin;
 @ISA = qw(LWP::MemberMixin);
-$VERSION = "5.829";
+$VERSION = "5.835";
 
 use HTTP::Request ();
 use HTTP::Response ();
@@ -40,6 +40,7 @@ sub new
     my $def_headers = delete $cnf{default_headers};
     my $timeout = delete $cnf{timeout};
     $timeout = 3*60 unless defined $timeout;
+    my $local_address = delete $cnf{local_address};
     my $use_eval = delete $cnf{use_eval};
     $use_eval = 1 unless defined $use_eval;
     my $parse_head = delete $cnf{parse_head};
@@ -81,6 +82,7 @@ sub new
     my $self = bless {
 		      def_headers  => $def_headers,
 		      timeout      => $timeout,
+		      local_address => $local_address,
 		      use_eval     => $use_eval,
                       show_progress=> $show_progress,
 		      max_size     => $max_size,
@@ -92,7 +94,8 @@ sub new
                       requests_redirectable => $requests_redirectable,
 		     }, $class;
 
-    $self->agent($agent || $class->_agent);
+    $self->agent(defined($agent) ? $agent : $class->_agent)
+	if defined($agent) || !$def_headers || !$def_headers->header("User-Agent");
     $self->from($from) if $from;
     $self->cookie_jar($cookie_jar) if $cookie_jar;
     $self->parse_head($parse_head);
@@ -574,6 +577,7 @@ sub get_basic_credentials
 
 
 sub timeout      { shift->_elem('timeout',      @_); }
+sub local_address{ shift->_elem('local_address',@_); }
 sub max_size     { shift->_elem('max_size',     @_); }
 sub max_redirect { shift->_elem('max_redirect', @_); }
 sub show_progress{ shift->_elem('show_progress', @_); }
@@ -638,6 +642,8 @@ sub default_headers {
     my $self = shift;
     my $old = $self->{def_headers} ||= HTTP::Headers->new;
     if (@_) {
+	Carp::croak("default_headers not set to HTTP::Headers compatible object")
+	    unless @_ == 1 && $_[0]->can("header_field_names");
 	$self->{def_headers} = shift;
     }
     return $old;
@@ -834,12 +840,16 @@ sub mirror
     my $tmpfile = "$file-$$";
 
     my $response = $self->request($request, $tmpfile);
+    if ( $response->header('X-Died') ) {
+	die $response->header('X-Died');
+    }
 
     # Only fetching a fresh copy of the would be considered success.
     # If the file was not modified, "304" would returned, which 
     # is considered by HTTP::Status to be a "redirect", /not/ "success"
     if ( $response->is_success ) {
-        my $file_length = ( stat($tmpfile) )[7];
+        my @stat        = stat($tmpfile) or die "Could not stat tmpfile '$tmpfile': $!";
+        my $file_length = $stat[7];
         my ($content_length) = $response->header('Content-length');
 
         if ( defined $content_length and $file_length < $content_length ) {
@@ -932,6 +942,8 @@ sub env_proxy {
 	else {
             # Ignore random _proxy variables, allow only valid schemes
             next unless $k =~ /^$URI::scheme_re\z/;
+            # Ignore xxx_proxy variables if xxx isn't a supported protocol
+            next unless LWP::Protocol::implementor($k);
 	    $self->proxy($k, $v);
 	}
     }
@@ -1027,6 +1039,7 @@ The following options correspond to attribute methods described below:
    conn_cache              undef
    cookie_jar              undef
    default_headers         HTTP::Headers->new
+   local_address           undef
    max_size                undef
    max_redirect            7
    parse_head              1
@@ -1055,7 +1068,7 @@ The settings of the configuration attributes modify the behaviour of the
 C<LWP::UserAgent> when it dispatches requests.  Most of these can also
 be initialized by options passed to the constructor method.
 
-The following attributes methods are provided.  The attribute value is
+The following attribute methods are provided.  The attribute value is
 left unchanged if no argument is given.  The return value from each
 method is the old attribute value.
 
@@ -1163,6 +1176,14 @@ The $netloc is a string of the form "<host>:<port>".  The username and
 password will only be passed to this server.  Example:
 
   $ua->credentials("www.example.com:80", "Some Realm", "foo", "secret");
+
+=item $ua->local_address
+
+=item $ua->local_address( $address )
+
+Get/set the local interface to bind to for network connections.  The interface
+can be specified as a hostname or an IP address.  This value is passed as the
+C<LocalAddr> argument to L<IO::Socket::INET>.
 
 =item $ua->max_size
 
@@ -1372,8 +1393,7 @@ handlers for data and might croak to abort the request.
 The handler might set the $response->{default_add_content} value to
 control if any received data should be added to the response object
 directly.  This will initially be false if the $ua->request() method
-was called with a ':content_filename' or ':content_callbak' argument;
-otherwise true.
+was called with a $content_file or $content_cb argument; otherwise true.
 
 =item response_data => sub { my($response, $ua, $h, $data) = @_; ... }
 
@@ -1413,7 +1433,7 @@ The removed handlers are returned.
 =item $ua->set_my_handler( $phase, $cb, %matchspec )
 
 Set handlers private to the executing subroutine.  Works by defaulting
-an C<owner> field to the %matchhspec that holds the name of the called
+an C<owner> field to the %matchspec that holds the name of the called
 subroutine.  You might pass an explicit C<owner> to override this.
 
 If $cb is passed as C<undef>, remove the handler.

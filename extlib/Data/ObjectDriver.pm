@@ -1,8 +1,9 @@
-# $Id: ObjectDriver.pm 560 2009-01-28 18:37:28Z btrott $
+# $Id$
 
 package Data::ObjectDriver;
 use strict;
 use warnings;
+use 5.006_001;
 use Class::Accessor::Fast;
 
 use base qw( Class::Accessor::Fast );
@@ -10,7 +11,7 @@ use Data::ObjectDriver::Iterator;
 
 __PACKAGE__->mk_accessors(qw( pk_generator txn_active ));
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
 our $PROFILE = $ENV{DOD_PROFILE} || 0;
 our $PROFILER;
@@ -200,11 +201,6 @@ Six Apart's Movable Type and TypePad weblogging products. But it adds in
 caching and partitioning layers, allowing you to spread data across multiple
 physical databases, without your application code needing to know where the
 data is stored.
-
-It's currently considered ALPHA code. The API is largely fixed, but may seen
-some small changes in the future. For what it's worth, the likeliest area
-for changes are in the syntax for the I<search> method, and would most
-likely not break much in the way of backwards compatibility.
 
 =head1 METHODOLOGY
 
@@ -785,9 +781,12 @@ reporting bugs.
 
 L<http://code.sixapart.com/>
 
+Alternatively you can fork our git repositories. See the full list at:
+http://github.com/sixapart
+
 =head1 AUTHOR & COPYRIGHT
 
-Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
+Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2010
 Six Apart, cpan@sixapart.com. All rights reserved.
 
 =cut

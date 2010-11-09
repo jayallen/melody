@@ -1,4 +1,4 @@
-# $Id: DBD.pm 558 2009-01-22 21:20:09Z miyagawa $
+# $Id$
 
 package Data::ObjectDriver::Driver::DBD;
 use strict;
@@ -11,7 +11,7 @@ sub new {
     die "No Driver" unless $name;
     my $subclass = join '::', $class, $name;
     no strict 'refs';
-    unless (defined %{"${subclass}::"}) {
+    unless (%{"${subclass}::"}) {
         eval "use $subclass"; ## no critic
         die $@ if $@;
     }
