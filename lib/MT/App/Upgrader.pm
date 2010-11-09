@@ -346,7 +346,6 @@ sub init_blog {
 
     my $sets = $app->registry("template_sets");
     $sets->{$_}{key} = $_ for keys %$sets;
-    $sets->{'mt_blog'}{selected} = 1;
     $sets = [ values %$sets ];
     no warnings;
     @$sets = sort { uc($a->{key}) cmp uc($b->{key}) } @$sets;

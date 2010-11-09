@@ -545,7 +545,7 @@ BEGIN {
             'ProcessMemoryCommand' => { handler => \&ProcessMemoryCommand },
             'EnableAddressBook'    => { default => 0 },
             'SingleCommunity'      => { default => 1 },
-            'DefaultTemplateSet'   => { default => 'mt_blog' },
+            'DefaultTemplateSet'   => { default => 'DePoClean_theme' },
 
             'AssetFileTypes' => { type => 'HASH' },
 
