@@ -145,9 +145,9 @@ sub list {
           unless (
                       $app->user->is_superuser
                    || @blogs
-                   || (     $app->param('dialog_view') == 1
-                        and $app->param('filter') eq 'userpic'
-                        and $app->param('filter_val') eq $app->user->id )
+                   || (     $q->param('dialog_view') == 1
+                        and $q->param('filter') eq 'userpic'
+                        and $q->param('filter_val') eq $app->user->id )
           );
     } ## end else [ if ($blog_id) ]
 
@@ -1215,8 +1215,8 @@ sub _upload_file {
                         rename( $local_file, $target_file );
                         $local_file =~ s/$ext_old/$ext_temp/;
                         $real_fh    =~ s/$ext_old/$ext_temp/;
-                        $app->param( "changed_file_ext",
-                                     "$ext_old,$ext_temp" );
+                        $q->param( "changed_file_ext",
+                                   "$ext_old,$ext_temp" );
                     }
                 } ## end if ( length($ext) > 0 )
                 else {
@@ -1231,7 +1231,7 @@ sub _upload_file {
                     rename( $local_file, $target_file );
                     $local_file .= "." . $ext_temp;
                     $real_fh    .= "." . $ext_temp;
-                    $app->param( "changed_file_ext", "'',$ext_temp" );
+                    $q->param( "changed_file_ext", "'',$ext_temp" );
                 }
             } ## end if ( $w_temp && $h_temp...)
         } ## end unless ($has_overwrite)
