@@ -16,7 +16,7 @@ use constant PREFIX_MAP     => 1;
 use constant DECLARATIONS   => 2;
 
 use vars qw($VERSION $NS_XMLNS $NS_XML);
-$VERSION    = '1.09';
+$VERSION    = '1.11';
 $NS_XMLNS   = 'http://www.w3.org/2000/xmlns/';
 $NS_XML     = 'http://www.w3.org/XML/1998/namespace';
 

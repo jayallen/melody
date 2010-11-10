@@ -1,4 +1,4 @@
-# $Id: Errors.pm 270 2006-08-25 23:24:16Z mpaschal $
+# $Id$
 
 package Data::ObjectDriver::Errors;
 use strict;

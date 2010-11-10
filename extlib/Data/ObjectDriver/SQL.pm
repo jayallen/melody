@@ -1,4 +1,4 @@
-# $Id: SQL.pm 564 2009-02-05 00:27:19Z athomason $
+# $Id$
 
 package Data::ObjectDriver::SQL;
 use strict;

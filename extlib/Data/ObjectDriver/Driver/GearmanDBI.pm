@@ -10,7 +10,7 @@ use Data::Dumper;
 
 __PACKAGE__->mk_accessors(qw(
     dbi client func driver_arg enabled_cb uniqify_cb
-    on_exception_cb retry_count
+    on_exception_cb retry_count timeout
 ));
 
 sub init {
@@ -74,6 +74,8 @@ sub _gearman_search {
         if $driver->on_exception_cb;
     $options{retry_count}  = $driver->retry_count
         if $driver->retry_count;
+    $options{timeout}      = $driver->timeout
+        if $driver->timeout;
 
     my $res = $client->do_task( $func =>
         \Storable::nfreeze( {
@@ -110,6 +112,8 @@ sub fetch_data   { shift->dbi->fetch_data   (@_) }
 sub add_working_driver { shift->dbi->add_working_driver (@_) }
 sub commit             { shift->dbi->commit             (@_) }
 sub rollback           { shift->dbi->rollback           (@_) }
+sub rw_handle          { shift->dbi->rw_handle          (@_) }
+sub r_handle           { shift->dbi->r_handle           (@_) }
 
 ## safety AUTOLOAD for the rest of non-core methods
 sub DESTROY { }
