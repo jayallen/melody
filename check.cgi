@@ -173,7 +173,7 @@ my $is_good = 1;
 my (@REQ, @DATA, @OPT);
 
 my @CORE_REQ = (
-    [ 'CGI', 3.45, 1, translate('CGI is required for all Melody application functionality.') ],
+    [ 'CGI', 3.50, 1, translate('CGI is required for all Melody application functionality.') ],
     [ 'Class::Accessor', 0.22, 1, translate('Class::Accessor is required for all Melody application functionality.') ],
     [ 'Class::Trigger', '0.1001', 1, translate('Class::Trigger is required for all Melody application functionality.') ],
     [ 'Data::ObjectDriver', 0.06, 1, translate('Data::ObjectDriver is required for all Melody application functionality.') ],
