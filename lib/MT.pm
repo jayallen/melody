@@ -2426,7 +2426,7 @@ sub set_default_tmpl_params {
     $param->{language_tag}    = substr( $mt->current_language, 0, 2 );
     $param->{language_encoding} = $mt->charset;
 
-    if ( '__MAKE_ME__' eq '__MAKE_' . 'ME_' && !$MT::DebugMode ) {
+    if ( '__MAKE_ME__' eq '__MAKE_' . 'ME__' && !$MT::DebugMode ) {
 
         # Either DebugMode has been enabled or make hasn't been run
         # which means css/js files may not have been combined for optimization
