@@ -81,7 +81,7 @@ sub sanity_check {
 
 sub resources {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my %param;
     $param{screen_class} = 'settings-screen';
 

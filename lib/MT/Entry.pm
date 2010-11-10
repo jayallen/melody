@@ -920,6 +920,7 @@ sub to_hash {
 sub gather_changed_cols {
     my $obj = shift;
     my ( $orig, $app ) = @_;
+	my $q = $app->query;
 
     MT::Revisable::gather_changed_cols( $obj, @_ );
     my $changed_cols = $obj->{changed_revisioned_cols} || [];
@@ -968,7 +969,7 @@ sub gather_changed_cols {
     my @category_ids;
     eval {
         @category_ids = split /\s*,\s*/,
-          ( $app->param('category_ids') || '' );
+          ( $q->param('category_ids') || '' );
     };
     unless ($@) {
         my @placements
