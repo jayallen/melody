@@ -1,4 +1,4 @@
-# $Id: Pg.pm 550 2008-12-22 22:26:14Z ykerherve $
+# $Id$
 
 package Data::ObjectDriver::Driver::DBD::Pg;
 use strict;

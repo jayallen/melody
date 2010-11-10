@@ -1,4 +1,4 @@
-# $Id: Multiplexer.pm 552 2008-12-24 02:15:57Z ykerherve $
+# $Id$
 
 package Data::ObjectDriver::Driver::Multiplexer;
 use strict;

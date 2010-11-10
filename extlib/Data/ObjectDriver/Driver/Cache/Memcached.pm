@@ -1,4 +1,4 @@
-# $Id: Memcached.pm 449 2008-01-11 00:39:46Z mpaschal $
+# $Id$
 
 package Data::ObjectDriver::Driver::Cache::Memcached;
 use strict;

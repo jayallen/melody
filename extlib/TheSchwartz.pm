@@ -4,7 +4,7 @@ package TheSchwartz;
 use strict;
 use fields qw( databases retry_seconds dead_dsns retry_at funcmap_cache verbose all_abilities current_abilities current_job cached_drivers driver_cache_expiration scoreboard prioritize );
 
-our $VERSION = "1.07";
+our $VERSION = "1.10";
 
 use Carp qw( croak );
 use Data::ObjectDriver::Errors;
@@ -60,7 +60,17 @@ sub hash_databases {
     my TheSchwartz $client = shift;
     my($list) = @_;
     for my $ref (@$list) {
-        my $full = join '|', map { $ref->{$_} || '' } qw( dsn user pass );
+        my $var;
+        my @parts;
+        if ($ref->{driver}) {
+            my $dbh  = tied(%{$ref->{driver}->dbh});
+            my $dsn  = "dbd:".$dbh->{Driver}->{Name}.":".$dbh->{Name};
+            my $user = $dbh->{Username} || ''; 
+            @parts   = ($dsn, $user);   
+        } else {
+            @parts   = map { $ref->{$_} || '' } qw(dsn user);
+        }
+        my $full = join '|', @parts;
         $client->{databases}{ md5_hex($full) } = $ref;
     }
 }
@@ -74,13 +84,19 @@ sub driver_for {
     if ($cache_duration && $client->{cached_drivers}{$hashdsn}{create_ts} && $client->{cached_drivers}{$hashdsn}{create_ts} + $cache_duration > $t) {
         $driver = $client->{cached_drivers}{$hashdsn}{driver};
     } else {
-        my $db = $client->{databases}{$hashdsn};
-        $driver = Data::ObjectDriver::Driver::DBI->new(
-                dsn      => $db->{dsn},
-                username => $db->{user},
-                password => $db->{pass},
-                ($db->{prefix} ? (prefix   => $db->{prefix}) : ()),
-        );
+        my $db = $client->{databases}{$hashdsn}
+            or croak "Ouch, I don't know about a database whose hash is $hashdsn";
+        if ($db->{driver}) {
+            $driver = $db->{driver};
+        } else {
+            $driver = Data::ObjectDriver::Driver::DBI->new(
+                        dsn      => $db->{dsn},
+                        username => $db->{user},
+                        password => $db->{pass},
+                      );
+        }
+        $driver->prefix($db->{prefix}) if exists $db->{prefix};
+
         if ($cache_duration) {
             $client->{cached_drivers}{$hashdsn}{driver} = $driver;
             $client->{cached_drivers}{$hashdsn}{create_ts} = $t;
@@ -483,6 +499,25 @@ sub work_on {
     return $client->work_once($job);
 }
 
+sub grab_and_work_on {
+    my TheSchwartz $client = shift;
+    my $hstr = shift;  # Handle string
+    my $job = $client->lookup_job($hstr) or
+        return 0;
+    
+    ## check that the job is grabbable
+    my $hashdsn = $job->handle->dsn_hashed;
+    my $driver = $client->driver_for($hashdsn);
+    my $current_time = $client->get_server_time($driver);
+    return 0 if $current_time < $job->grabbed_until;
+    
+    ## grab the job the usual way
+    $job = $client->_grab_a_job($hashdsn, $job)
+        or return 0;
+
+    return $client->work_once($job);
+}
+
 sub work {
     my TheSchwartz $client = shift;
     my($delay) = @_;
@@ -807,7 +842,7 @@ An arrayref of database information. TheSchwartz workers can use multiple
 databases, such that if any of them are unavailable, the worker will search for
 appropriate jobs in the other databases automatically.
 
-Each member of the C<databases> value should be a hashref containing:
+Each member of the C<databases> value should be a hashref containing either:
 
 =over 4
 
@@ -822,6 +857,18 @@ The username to use when connecting to this database.
 =item * C<pass>
 
 The password to use when connecting to this database.
+
+=back
+
+or
+
+=over 4
+
+=item * C<driver>
+
+A C<Data::ObjectDriver::Driver::DBI> object.
+
+See note below.
 
 =back
 
@@ -922,6 +969,10 @@ Adds a new job with funcname C<$funcname> and arguments C<$arg> to the queue.
 Adds the given C<TheSchwartz::Job> objects to one of the client's job
 databases. All the given jobs are recorded in I<one> job database.
 
+=head2 C<$client-E<gt>set_prioritize( $prioritize )>
+
+Set the C<prioritize> value as described in the constructor.
+
 =head1 WORKING
 
 The methods of TheSchwartz clients for use in worker processes are:
@@ -951,6 +1002,15 @@ before looking again.
 
 Given a job handle (a scalar string) I<$handle>, runs the job, then returns.
 
+=head2 C<$client-E<gt>grab_and_work_on($handle)>
+
+Similar to L<$client-E<gt>work_on($handle)>, except that the job will be grabbed
+before being run. It guarantees that only one worker will work on it (at least
+in the C<grab_for> interval).
+
+Returns false if the worker couldn't grab the job, and true if the worker worked
+on it.
+
 =head2 C<$client-E<gt>find_job_for_workers( [$abilities] )>
 
 Returns a C<TheSchwartz::Job> for a random job that the client can do. If
@@ -974,6 +1034,59 @@ job databases.
 =head2 C<$client-E<gt>get_server_time( $driver )>
 
 Given an open driver I<$driver> to a database, gets the current server time from the database.
+
+=head1 THE SCOREBOARD
+
+The scoreboards can be used to monitor what the TheSchwartz::Worker subclasses are
+currently working on.  Once the scoreboard has been enabled in the workers with
+C<set_scoreboard> method the C<thetop> utility (shipped with TheSchwartz distribuition
+in the C<extras> directory) can be used to list all current jobs being worked on.
+
+=head2 C<< $client->set_scoreboard( $dir ) >>
+
+Enables the scoreboard.  Setting this to C<1> or C<on> will cause TheSchwartz to create
+a scoreboard file in a location it determines is optimal.
+
+Passing in any other option sets the directory the TheSchwartz scoreboard directory should
+be created in.  For example, if you set this to C</tmp> then this would create a directory
+called C</tmp/theschwartz> and a scoreboard file C</tmp/theschwartz/scoreboard.pid> in it
+(where pid is the current process pid.) 
+
+=head2 C<< $client->scoreboard() >>
+
+Returns the path to the current scoreboard file.
+
+=head2 C<< $client->start_scoreboard() >>
+
+Writes the current job information to the scoreboard file (called by the worker
+in work_safely before it actually starts working)
+
+=head2 C<< $client->end_scoreboard() >>
+
+Appends the current job duration to the end of the scoreboard file (called by
+the worker in work_safely once work has been completed)
+
+=head2 C<< $client->clean_scoreboard() >>
+
+Removes the scoreboard file (but not the scoreboard directory.)  Automatically
+called by TheSchwartz during object destruction (i.e. when the instance goes
+out of scope)
+
+=head1 PASSING IN AN EXISTING DRIVER
+
+You can pass in a existing C<Data::Object::Driver::DBI> object which also allows you
+to reuse exist Database handles like so:
+
+        my $dbh = DBI->connect( $dsn, "root", "", {
+                RaiseError => 1,
+                PrintError => 0,
+                AutoCommit => 1,
+            } ) or die $DBI::errstr;
+        my $driver = Data::ObjectDriver::Driver::DBI->new( dbh => $dbh);
+        return TheSchwartz->new(databases => [{ driver => $driver }]);
+
+B<Note>: it's important that the C<RaiseError> and C<AutoCommit> flags are 
+set on the handle for various bits of functionality to work.
 
 =head1 COPYRIGHT, LICENSE & WARRANTY
 

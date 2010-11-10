@@ -5,13 +5,13 @@ package JSON::PP;
 use 5.005;
 use strict;
 use base qw(Exporter);
-use overload;
+use overload ();
 
 use Carp ();
 use B ();
 #use Devel::Peek;
 
-$JSON::PP::VERSION = '2.22000';
+$JSON::PP::VERSION = '2.27008';
 
 @JSON::PP::EXPORT = qw(encode_json decode_json from_json to_json);
 
@@ -39,6 +39,8 @@ use constant P_ESCAPE_SLASH         => 16;
 use constant P_AS_NONBLESSED        => 17;
 
 use constant P_ALLOW_UNKNOWN        => 18;
+
+use constant OLD_PERL => $] < 5.008 ? 1 : 0;
 
 BEGIN {
     my @xs_compati_bit_properties = qw(
@@ -292,6 +294,8 @@ sub allow_bigint {
 
         my $str  = $self->object_to_json($obj);
 
+        $str .= "\n" if ( $indent ); # JSON::XS 2.26 compatible
+
         unless ($ascii or $latin1 or $utf8) {
             utf8::upgrade($str);
         }
@@ -321,12 +325,15 @@ sub allow_bigint {
 
                 if ( $convert_blessed and $obj->can('TO_JSON') ) {
                     my $result = $obj->TO_JSON();
-                    if ( defined $result and $obj eq $result ) {
-                        encode_error( sprintf(
-                            "%s::TO_JSON method returned same object as was passed instead of a new one",
-                            ref $obj
-                        ) );
+                    if ( defined $result and overload::Overloaded( $obj ) ) {
+                        if ( overload::StrVal( $obj ) eq $result ) {
+                            encode_error( sprintf(
+                                "%s::TO_JSON method returned same object as was passed instead of a new one",
+                                ref $obj
+                            ) );
+                        }
                     }
+
                     return $self->object_to_json( $result );
                 }
 
@@ -351,8 +358,7 @@ sub allow_bigint {
 
     sub hash_to_json {
         my ($self, $obj) = @_;
-        my ($k,$v);
-        my %res;
+        my @res;
 
         encode_error("json text or perl structure exceeds maximum nesting level (max_depth set too low?)")
                                          if (++$depth > $max_depth);
@@ -360,34 +366,17 @@ sub allow_bigint {
         my ($pre, $post) = $indent ? $self->_up_indent() : ('', '');
         my $del = ($space_before ? ' ' : '') . ':' . ($space_after ? ' ' : '');
 
-        if ( my $tie_class = tied %$obj ) {
-            if ( $tie_class->can('TIEHASH') ) {
-                $tie_class =~ s/=.+$//;
-                tie %res, $tie_class;
-            }
-        }
-
-        # In the old Perl verions, tied hashes in bool context didn't work.
-        # So, we can't use such a way (%res ? a : b)
-        my $has;
-
-        for my $k (keys %$obj) {
-            my $v = $obj->{$k};
-            $res{$k} = $self->object_to_json($v) || $self->value_to_json($v);
-            $has = 1 unless ( $has );
+        for my $k ( _sort( $obj ) ) {
+            if ( OLD_PERL ) { utf8::decode($k) } # key for Perl 5.6 / be optimized
+            push @res, string_to_json( $self, $k )
+                          .  $del
+                          . ( $self->object_to_json( $obj->{$k} ) || $self->value_to_json( $obj->{$k} ) );
         }
 
         --$depth;
         $self->_down_indent() if ($indent);
 
-        return '{' . ( $has ? $pre : '' )                                                   # indent
-                   . ( $has ? join(",$pre", map { utf8::decode($_) if ($] < 5.008);         # key for Perl 5.6
-                                                string_to_json($self, $_) . $del . $res{$_} # key : value
-                                            } _sort( $self, \%res )
-                             ) . $post                                                      # indent
-                           : ''
-                     )
-             . '}';
+        return   '{' . ( @res ? $pre : '' ) . ( @res ? join( ",$pre", @res ) . $post : '' )  . '}';
     }
 
 
@@ -399,13 +388,6 @@ sub allow_bigint {
                                          if (++$depth > $max_depth);
 
         my ($pre, $post) = $indent ? $self->_up_indent() : ('', '');
-
-        if (my $tie_class = tied @$obj) {
-            if ( $tie_class->can('TIEARRAY') ) {
-                $tie_class =~ s/=.+$//;
-                tie @res, $tie_class;
-            }
-        }
 
         for my $v (@$obj){
             push @res, $self->object_to_json($v) || $self->value_to_json($v);
@@ -427,10 +409,7 @@ sub allow_bigint {
         my $flags = $b_obj->FLAGS;
 
         return $value # as is 
-            if ( (    $flags & B::SVf_IOK or $flags & B::SVp_IOK
-                   or $flags & B::SVf_NOK or $flags & B::SVp_NOK
-                 ) and !($flags & B::SVf_POK )
-            ); # SvTYPE is IV or NV?
+            if $flags & ( B::SVp_IOK | B::SVp_NOK ) and !( $flags & B::SVp_POK ); # SvTYPE is IV or NV?
 
         my $type = ref($value);
 
@@ -489,7 +468,7 @@ sub allow_bigint {
     sub string_to_json {
         my ($self, $arg) = @_;
 
-        $arg =~ s/([\x22\x5c\n\r\t\f\b])/$esc{$1}/eg;
+        $arg =~ s/([\x22\x5c\n\r\t\f\b])/$esc{$1}/g;
         $arg =~ s/\//\\\//g if ($escape_slash);
         $arg =~ s/([\x00-\x08\x0b\x0e-\x1f])/'\\u00' . unpack('H2', $1)/eg;
 
@@ -510,11 +489,11 @@ sub allow_bigint {
 
 
     sub blessed_to_json {
-        my $b_obj = B::svref_2object($_[1]);
-        if ($b_obj->isa('B::HV')) {
+        my $reftype = reftype($_[1]) || '';
+        if ($reftype eq 'HASH') {
             return $_[0]->hash_to_json($_[1]);
         }
-        elsif ($b_obj->isa('B::AV')) {
+        elsif ($reftype eq 'ARRAY') {
             return $_[0]->array_to_json($_[1]);
         }
         else {
@@ -530,8 +509,7 @@ sub allow_bigint {
 
 
     sub _sort {
-        my ($self, $res) = @_;
-        defined $keysort ? (sort $keysort (keys %$res)) : keys %$res;
+        defined $keysort ? (sort $keysort (keys %{$_[0]})) : keys %{$_[0]};
     }
 
 
@@ -608,7 +586,7 @@ my $max_intsize;
 
 BEGIN {
     my $checkint = 1111;
-    for my $d (5..30) {
+    for my $d (5..64) {
         $checkint .= 1;
         my $int   = eval qq| $checkint |;
         if ($int =~ /[eE]/) {
@@ -636,7 +614,6 @@ BEGIN {
     my $ch;   # 1chracter
     my $len;  # text length (changed according to UTF8 or NON UTF8)
     # INTERNAL
-    my $is_utf8;        # must be with UTF8 flag
     my $depth;          # nest counter
     my $encoding;       # json text encoding
     my $is_valid_utf8;  # temp variable
@@ -658,6 +635,7 @@ BEGIN {
 
     # $opt flag
     # 0x00000001 .... decode_prefix
+    # 0x10000000 .... incr_parse
 
     sub PP_decode_json {
         my ($self, $opt); # $opt is an effective flag during this decode_json.
@@ -666,16 +644,14 @@ BEGIN {
 
         ($at, $ch, $depth) = (0, '', 0);
 
-        if (!defined $text or ref $text) {
-            decode_error("malformed text data.");
+        if ( !defined $text or ref $text ) {
+            decode_error("malformed JSON string, neither array, object, number, string or atom");
         }
 
         my $idx = $self->{PROPS};
 
         ($utf8, $relaxed, $loose, $allow_bigint, $allow_barekey, $singlequote)
             = @{$idx}[P_UTF8, P_RELAXED, P_LOOSE .. P_ALLOW_SINGLEQUOTE];
-
-        $is_utf8 = 1 if ( $utf8 or utf8::is_utf8( $text ) );
 
         if ( $utf8 ) {
             utf8::downgrade( $text, 1 ) or Carp::croak("Wide character in subroutine entry");
@@ -708,24 +684,34 @@ BEGIN {
                     : (!$octets[2]                ) ? 'UTF-32LE'
                     : 'unknown';
 
+        white(); # remove head white space
+
+        my $valid_start = defined $ch; # Is there a first character for JSON structure?
+
         my $result = value();
 
-        if (!$idx->[ P_ALLOW_NONREF ] and !ref $result) {
+        return undef if ( !$result && ( $opt & 0x10000000 ) ); # for incr_parse
+
+        decode_error("malformed JSON string, neither array, object, number, string or atom") unless $valid_start;
+
+        if ( !$idx->[ P_ALLOW_NONREF ] and !ref $result ) {
                 decode_error(
                 'JSON text must be an object or array (but found number, string, true, false or null,'
                        . ' use allow_nonref to allow this)', 1);
         }
 
-        if ($len >= $at) {
-            my $consumed = $at - 1;
-            white();
-            if ($ch) {
-                decode_error("garbage after JSON object") unless ($opt & 0x00000001);
-                return ($result, $consumed);
-            }
+        Carp::croak('something wrong.') if $len < $at; # we won't arrive here.
+
+        my $consumed = defined $ch ? $at - 1 : $at; # consumed JSON text length
+
+        white(); # remove tail white space
+
+        if ( $ch ) {
+            return ( $result, $consumed ) if ($opt & 0x00000001); # all right if decode_prefix
+            decode_error("garbage after JSON object");
         }
 
-        $result;
+        ( $opt & 0x00000001 ) ? ( $result, $consumed ) : $result;
     }
 
 
@@ -748,17 +734,18 @@ BEGIN {
     sub string {
         my ($i, $s, $t, $u);
         my $utf16;
+        my $is_utf8;
 
         ($is_valid_utf8, $utf8_len) = ('', 0);
 
         $s = ''; # basically UTF8 flag on
 
         if($ch eq '"' or ($singlequote and $ch eq "'")){
-            my $boundChar = $ch if ($singlequote);
+            my $boundChar = $ch;
 
             OUTER: while( defined(next_chr()) ){
 
-                if((!$singlequote and $ch eq '"') or ($singlequote and $ch eq $boundChar)){
+                if($ch eq $boundChar){
                     next_chr();
 
                     if ($utf16) {
@@ -801,7 +788,7 @@ BEGIN {
                                 decode_error("surrogate pair expected");
                             }
 
-                            if ((my $hex = hex( $u )) > 255) {
+                            if ( ( my $hex = hex( $u ) ) > 127 ) {
                                 $is_utf8 = 1;
                                 $s .= JSON_PP_decode_unicode($u) || next;
                             }
@@ -813,17 +800,29 @@ BEGIN {
                     }
                     else{
                         unless ($loose) {
+                            $at -= 2;
                             decode_error('illegal backslash escape sequence in string');
                         }
                         $s .= $ch;
                     }
                 }
                 else{
-                    if ($utf8) {
-                        if( !is_valid_utf8($ch) ) {
-                            $at -= $utf8_len;
-                            decode_error("malformed UTF-8 character in JSON string");
+
+                    if ( ord $ch  > 127 ) {
+                        if ( $utf8 ) {
+                            unless( $ch = is_valid_utf8($ch) ) {
+                                $at -= 1;
+                                decode_error("malformed UTF-8 character in JSON string");
+                            }
+                            else {
+                                $at += $utf8_len - 1;
+                            }
                         }
+                        else {
+                            utf8::encode( $ch );
+                        }
+
+                        $is_utf8 = 1;
                     }
 
                     if (!$loose) {
@@ -880,7 +879,7 @@ BEGIN {
             else{
                 if ($relaxed and $ch eq '#') { # correctly?
                     pos($text) = $at;
-                    $text =~ /\G([^\n]*(?:\r\n|\r|\n))/g;
+                    $text =~ /\G([^\n]*(?:\r\n|\r|\n|$))/g;
                     $at = pos($text);
                     next_chr;
                     next;
@@ -1155,20 +1154,19 @@ BEGIN {
 
 
     sub is_valid_utf8 {
-        unless ( $utf8_len ) {
-            $utf8_len = $_[0] =~ /[\x00-\x7F]/  ? 1
-                      : $_[0] =~ /[\xC2-\xDF]/  ? 2
-                      : $_[0] =~ /[\xE0-\xEF]/  ? 3
-                      : $_[0] =~ /[\xF0-\xF4]/  ? 4
-                      : 0
-                      ;
-        }
 
-        return !($utf8_len = 1) unless ( $utf8_len );
+        $utf8_len = $_[0] =~ /[\x00-\x7F]/  ? 1
+                  : $_[0] =~ /[\xC2-\xDF]/  ? 2
+                  : $_[0] =~ /[\xE0-\xEF]/  ? 3
+                  : $_[0] =~ /[\xF0-\xF4]/  ? 4
+                  : 0
+                  ;
 
-        return 1 if (length ($is_valid_utf8 .= $_[0] ) < $utf8_len); # continued
+        return unless $utf8_len;
 
-        return ( $is_valid_utf8 =~ s/^(?:
+        my $is_valid_utf8 = substr($text, $at - 1, $utf8_len);
+
+        return ( $is_valid_utf8 =~ /^(?:
              [\x00-\x7F]
             |[\xC2-\xDF][\x80-\xBF]
             |[\xE0][\xA0-\xBF][\x80-\xBF]
@@ -1178,8 +1176,7 @@ BEGIN {
             |[\xF0][\x90-\xBF][\x80-\xBF][\x80-\xBF]
             |[\xF1-\xF3][\x80-\xBF][\x80-\xBF][\x80-\xBF]
             |[\xF4][\x80-\x8F][\x80-\xBF][\x80-\xBF]
-        )$//x and !($utf8_len = 0) ); # if valid, make $is_valid_utf8 empty and rest $utf8_len.
-
+        )$/x )  ? $is_valid_utf8 : '';
     }
 
 
@@ -1201,6 +1198,7 @@ BEGIN {
                     : $c == 0x0d ? '\r'
                     : $c == 0x0c ? '\f'
                     : $c <  0x20 ? sprintf('\x{%x}', $c)
+                    : $c == 0x5c ? '\\\\'
                     : $c <  0x80 ? chr($c)
                     : sprintf('\x{%x}', $c)
                     ;
@@ -1215,8 +1213,9 @@ BEGIN {
         }
 
         Carp::croak (
-            $no_rep ? "$error" : "$error, at character offset $at [\"$mess\"]"
+            $no_rep ? "$error" : "$error, at character offset $at (before \"$mess\")"
         );
+
     }
 
 
@@ -1247,7 +1246,6 @@ BEGIN {
             at      => $at,
             ch      => $ch,
             len     => $len,
-            is_utf8 => $is_utf8,
             depth   => $depth,
             encoding      => $encoding,
             is_valid_utf8 => $is_valid_utf8,
@@ -1259,12 +1257,16 @@ BEGIN {
 
 sub _decode_surrogates { # from perlunicode
     my $uni = 0x10000 + (hex($_[0]) - 0xD800) * 0x400 + (hex($_[1]) - 0xDC00);
-    return pack('U*', $uni);
+    my $un  = pack('U*', $uni);
+    utf8::encode( $un );
+    return $un;
 }
 
 
 sub _decode_unicode {
-    return pack("U", hex shift);
+    my $un = pack('U', hex shift);
+    utf8::encode( $un );
+    return $un;
 }
 
 
@@ -1279,6 +1281,7 @@ BEGIN {
     eval 'require Scalar::Util';
     unless($@){
         *JSON::PP::blessed = \&Scalar::Util::blessed;
+        *JSON::PP::reftype = \&Scalar::Util::reftype;
     }
     else{ # This code is from Sclar::Util.
         # warn $@;
@@ -1286,6 +1289,27 @@ BEGIN {
         *JSON::PP::blessed = sub {
             local($@, $SIG{__DIE__}, $SIG{__WARN__});
             ref($_[0]) ? eval { $_[0]->a_sub_not_likely_to_be_here } : undef;
+        };
+        my %tmap = qw(
+            B::NULL   SCALAR
+            B::HV     HASH
+            B::AV     ARRAY
+            B::CV     CODE
+            B::IO     IO
+            B::GV     GLOB
+            B::REGEXP REGEXP
+        );
+        *JSON::PP::reftype = sub {
+            my $r = shift;
+
+            return undef unless length(ref($r));
+
+            my $t = ref(B::svref_2object($r));
+
+            return
+                exists $tmap{$t} ? $tmap{$t}
+              : length(ref($$r)) ? 'REF'
+              :                    'SCALAR';
         };
     }
 }
@@ -1325,6 +1349,8 @@ use constant INCR_M_WS   => 0; # initial whitespace skipping
 use constant INCR_M_STR  => 1; # inside string
 use constant INCR_M_BS   => 2; # inside backslash
 use constant INCR_M_JSON => 3; # outside anything, count nesting
+use constant INCR_M_C0   => 4;
+use constant INCR_M_C1   => 5;
 
 $JSON::PP::IncrParser::VERSION = '1.01';
 
@@ -1338,7 +1364,6 @@ sub new {
         incr_text    => undef,
         incr_parsing => 0,
         incr_p       => 0,
-        
     }, $class;
 }
 
@@ -1384,8 +1409,8 @@ sub incr_parse {
         else { # in scalar context
             $self->{incr_parsing} = 1;
             my $obj = $self->_incr_parse( $coder, $self->{incr_text} );
-            $self->{incr_parsing} = 0;
-            return $obj;
+            $self->{incr_parsing} = 0 if defined $obj; # pointed by Martin J. Evans
+            return $obj ? $obj : undef; # $obj is an empty string, parsing was completed.
         }
 
     }
@@ -1410,52 +1435,58 @@ sub _incr_parse {
        }
     }
 
-        while ( $len > $p ) {
-            my $s = substr( $text, $p++, 1 );
+    while ( $len > $p ) {
+        my $s = substr( $text, $p++, 1 );
 
-            if ( $s eq '"' ) {
-                if ( $self->{incr_mode} != INCR_M_STR  ) {
-                    $self->{incr_mode} = INCR_M_STR;
-                }
-                else {
-                    $self->{incr_mode} = INCR_M_JSON;
-                    unless ( $self->{incr_nest} ) {
-                        last;
-                    }
+        if ( $s eq '"' ) {
+            if ( $self->{incr_mode} != INCR_M_STR  ) {
+                $self->{incr_mode} = INCR_M_STR;
+            }
+            else {
+                $self->{incr_mode} = INCR_M_JSON;
+                unless ( $self->{incr_nest} ) {
+                    last;
                 }
             }
+        }
 
-            if ( $self->{incr_mode} == INCR_M_JSON ) {
+        if ( $self->{incr_mode} == INCR_M_JSON ) {
 
-                if ( $s eq '[' or $s eq '{' ) {
-                    if ( ++$self->{incr_nest} > $coder->get_max_depth ) {
-                        Carp::croak('json text or perl structure exceeds maximum nesting level (max_depth set too low?)');
-                    }
+            if ( $s eq '[' or $s eq '{' ) {
+                if ( ++$self->{incr_nest} > $coder->get_max_depth ) {
+                    Carp::croak('json text or perl structure exceeds maximum nesting level (max_depth set too low?)');
                 }
-                elsif ( $s eq ']' or $s eq '}' ) {
-                    last if ( --$self->{incr_nest} <= 0 );
+            }
+            elsif ( $s eq ']' or $s eq '}' ) {
+                last if ( --$self->{incr_nest} <= 0 );
+            }
+            elsif ( $s eq '#' ) {
+                while ( $len > $p ) {
+                    last if substr( $text, $p++, 1 ) eq "\n";
                 }
             }
 
         }
 
-        $self->{incr_p} = $p;
+    }
 
-        return if ( $self->{incr_mode} == INCR_M_JSON and $self->{incr_nest} > 0 );
+    $self->{incr_p} = $p;
 
-        return unless ( length substr( $self->{incr_text}, 0, $p ) );
+    return if ( $self->{incr_mode} == INCR_M_JSON and $self->{incr_nest} > 0 );
 
-        local $Carp::CarpLevel = 2;
+    return '' unless ( length substr( $self->{incr_text}, 0, $p ) );
 
-        $self->{incr_p} = $restore;
-        $self->{incr_c} = $p;
+    local $Carp::CarpLevel = 2;
 
-        my ( $obj, $tail ) = $coder->decode_prefix( substr( $self->{incr_text}, 0, $p ) );
+    $self->{incr_p} = $restore;
+    $self->{incr_c} = $p;
 
-        $self->{incr_text} = substr( $self->{incr_text}, $p );
-        $self->{incr_p} = 0;
+    my ( $obj, $tail ) = $coder->PP_decode_json( substr( $self->{incr_text}, 0, $p ), 0x10000001 );
 
-        return $obj;
+    $self->{incr_text} = substr( $self->{incr_text}, $p );
+    $self->{incr_p} = 0;
+
+    return $obj or '';
 }
 
 
@@ -1540,9 +1571,12 @@ See to L<JSON::XS/A FEW NOTES ON UNICODE AND PERL> and L<UNICODE HANDLING ON PER
 
 =item * round-trip integrity
 
-When you serialise a perl data structure using only datatypes supported by JSON,
-the deserialised data structure is identical on the Perl level.
-(e.g. the string "2.0" doesn't suddenly become "2" just because it looks like a number).
+When you serialise a perl data structure using only data types supported
+by JSON and Perl, the deserialised data structure is identical on the Perl
+level. (e.g. the string "2.0" doesn't suddenly become "2" just because
+it looks like a number). There I<are> minor exceptions to this, read the
+MAPPING section below to learn about those.
+
 
 =item * strict checking of JSON correctness
 
@@ -1672,7 +1706,7 @@ C<space_after> flags in one call to generate the most readable
     
     $enabled = $json->get_indent
 
-The default indent space lenght is three.
+The default indent space length is three.
 You can use C<indent_length> to change the length.
 
 =head2 space_before
@@ -1804,16 +1838,35 @@ See L<JSON::XS/SSECURITY CONSIDERATIONS> for more info on why this is useful.
     ($perl_scalar, $characters) = $json->decode_prefix($json_text)
 
 
-
 =head1 INCREMENTAL PARSING
 
-In JSON::XS 2.2, incremental parsing feature of JSON
-texts was experimentally implemented.
-Please check to L<JSON::XS/INCREMENTAL PARSING>.
+Most of this section are copied and modified from L<JSON::XS/INCREMENTAL PARSING>.
 
-=over 4
+In some cases, there is the need for incremental parsing of JSON texts.
+This module does allow you to parse a JSON stream incrementally.
+It does so by accumulating text until it has a full JSON object, which
+it then can decode. This process is similar to using C<decode_prefix>
+to see if a full JSON object is available, but is much more efficient
+(and can be implemented with a minimum of method calls).
 
-=item [void, scalar or list context] = $json->incr_parse ([$string])
+This module will only attempt to parse the JSON text once it is sure it
+has enough text to get a decisive result, using a very simple but
+truly incremental parser. This means that it sometimes won't stop as
+early as the full parser, for example, it doesn't detect parenthese
+mismatches. The only thing it guarantees is that it starts decoding as
+soon as a syntactically valid JSON text has been seen. This means you need
+to set resource limits (e.g. C<max_size>) to ensure the parser will stop
+parsing in the presence if syntax errors.
+
+The following methods implement this incremental parser.
+
+=head2 incr_parse
+
+    $json->incr_parse( [$string] ) # void context
+    
+    $obj_or_undef = $json->incr_parse( [$string] ) # scalar context
+    
+    @obj_or_empty = $json->incr_parse( [$string] ) # list context
 
 This is the central parsing function. It can both append new text and
 extract objects from the stream accumulated so far (both of these
@@ -1841,7 +1894,13 @@ an error occurs, an exception will be raised as in the scalar context
 case. Note that in this case, any previously-parsed JSON texts will be
 lost.
 
-=item $lvalue_string = $json->incr_text
+Example: Parse some JSON arrays/objects in a given string and return them.
+
+    my @objs = JSON->new->incr_parse ("[5][7][1,2]");
+
+=head2 incr_text
+
+    $lvalue_string = $json->incr_text
 
 This method returns the currently stored JSON fragment as an lvalue, that
 is, you can manipulate it. This I<only> works when a preceding call to
@@ -1855,6 +1914,8 @@ This function is useful in two cases: a) finding the trailing text after a
 JSON object or b) parsing multiple JSON objects separated by non-JSON text
 (such as commas).
 
+    $json->incr_text =~ s/\s*,\s*//;
+
 In Perl 5.005, C<lvalue> attribute is not available.
 You must write codes like the below:
 
@@ -1862,15 +1923,27 @@ You must write codes like the below:
     $string =~ s/\s*,\s*//;
     $json->incr_text( $string );
 
-=item $json->incr_skip
+=head2 incr_skip
+
+    $json->incr_skip
 
 This will reset the state of the incremental parser and will remove the
 parsed text from the input buffer. This is useful after C<incr_parse>
 died, in which case the input buffer and incremental parser state is left
 unchanged, to skip the text parsed so far and to reset the parse state.
 
-=back
+=head2 incr_reset
 
+    $json->incr_reset
+
+This completely resets the incremental parser, that is, after this call,
+it will be as if the parser had never parsed anything.
+
+This is useful if you want ot repeatedly parse JSON objects and want to
+ignore any trailing data, which means you have to reset the parser after
+each successful decode.
+
+See to L<JSON::XS/INCREMENTAL PARSING> for examples.
 
 
 =head1 JSON::PP OWN METHODS
@@ -2009,7 +2082,6 @@ Returns
             at      => $at,
             ch      => $ch,
             len     => $len,
-            is_utf8 => $is_utf8,
             depth   => $depth,
             encoding      => $encoding,
             is_valid_utf8 => $is_valid_utf8,
@@ -2111,7 +2183,7 @@ Makamaka Hannyaharamitu, E<lt>makamaka[at]cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2008 by Makamaka Hannyaharamitu
+Copyright 2007-2010 by Makamaka Hannyaharamitu
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself. 

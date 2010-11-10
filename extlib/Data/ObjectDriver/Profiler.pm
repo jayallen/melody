@@ -1,4 +1,4 @@
-# $Id: Profiler.pm 288 2006-10-04 23:06:00Z mpaschal $
+# $Id$
 
 package Data::ObjectDriver::Profiler;
 use strict;

@@ -1,33 +1,30 @@
-# Copyright (c) 2000-2004 Dave Rolsky
-# All rights reserved.
-# This program is free software; you can redistribute it and/or
-# modify it under the same terms as Perl itself.  See the LICENSE
-# file that comes with this distribution for more details.
-
 package Params::Validate;
 
 use strict;
 
-BEGIN
-{
+BEGIN {
     use Exporter;
-    use vars qw( $VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS %OPTIONS $options $NO_VALIDATION );
+    use vars qw( $VERSION @ISA @EXPORT @EXPORT_OK
+        %EXPORT_TAGS %OPTIONS $options $NO_VALIDATION );
 
     @ISA = 'Exporter';
 
-    $VERSION = '0.73';
+    $VERSION = '0.95';
 
-    my %tags =
-        ( types =>
-          [ qw( SCALAR ARRAYREF HASHREF CODEREF GLOB GLOBREF
-                SCALARREF HANDLE BOOLEAN UNDEF OBJECT ) ],
-        );
+    my %tags = (
+        types => [
+            qw( SCALAR ARRAYREF HASHREF CODEREF GLOB GLOBREF
+                SCALARREF HANDLE BOOLEAN UNDEF OBJECT )
+        ],
+    );
 
-    %EXPORT_TAGS =
-        ( 'all' => [ qw( validate validate_pos validation_options validate_with ),
-                     map { @{ $tags{$_} } } keys %tags ],
-          %tags,
-        );
+    %EXPORT_TAGS = (
+        'all' => [
+            qw( validate validate_pos validation_options validate_with ),
+            map { @{ $tags{$_} } } keys %tags
+        ],
+        %tags,
+    );
 
     @EXPORT_OK = ( @{ $EXPORT_TAGS{all} }, 'set_options' );
     @EXPORT = qw( validate validate_pos );
@@ -36,14 +33,10 @@ BEGIN
 
     eval { require Params::ValidateXS; } unless $ENV{PV_TEST_PERL};
 
-    if ( $@ || $ENV{PV_TEST_PERL} )
-    {
-        # suppress subroutine redefined warnings
-        local $^W = 0;
+    if ( $@ || $ENV{PV_TEST_PERL} ) {
         require Params::ValidatePP;
     }
 }
-
 
 1;
 
@@ -160,8 +153,8 @@ validation specification is given to the relevant subroutine.  The
 other difference is in the error messages produced when validation
 checks fail.
 
-When handling named parameters, the module is capable of handling
-either a hash or a hash reference transparently.
+When handling named parameters, the module will accept either a hash
+or a hash reference.
 
 Subroutines expecting named parameters should call the C<validate()>
 subroutine like this:
@@ -216,7 +209,7 @@ it is considered optional.
 =head2 Type Validation
 
 This module supports the following simple types, which can be
-L<exported as constants|EXPORT>:
+L<exported as constants|/EXPORT>:
 
 =over 4
 
@@ -233,7 +226,7 @@ An array reference such as C<[1, 2, 3]> or C<\@foo>.
 
 =item * HASHREF
 
-A hash reference such as C<{ a => 1, b => 2 }> or C<\%bar>.
+A hash reference such as C<< { a => 1, b => 2 } >> or C<\%bar>.
 
 =item * CODEREF
 
@@ -277,7 +270,7 @@ This is a special option, and is just a shortcut for C<UNDEF | SCALAR>.
 This option is also special, and is just a shortcut for C<GLOB |
 GLOBREF>.  However, it seems likely that most people interested in
 either globs or glob references are likely to really be interested in
-whether the parameter in questoin could be a valid file or directory
+whether the parameter in question could be a valid file or directory
 handle.
 
 =back
@@ -349,6 +342,10 @@ example:
 The value of the "regex" key may be either a string or a pre-compiled
 regex created via C<qr>.
 
+If the value being checked against a regex is undefined, the regex is
+explicitly checked against the empty string ('') instead, in order to
+avoid "Use of uninitialized value" warnings.
+
 The C<Regexp::Common> module on CPAN is an excellent source of regular
 expressions suitable for validating input.
 
@@ -364,15 +361,15 @@ reference, such as:
 
  validate( @_,
            { foo =>
-             callbacks =>
-             { 'smaller than a breadbox' => sub { shift() < $breadbox },
-               'green or blue' =>
-                sub { $_[0] eq 'green' || $_[0] eq 'blue' } } } );
+             { callbacks =>
+               { 'smaller than a breadbox' => sub { shift() < $breadbox },
+                 'green or blue' =>
+                  sub { $_[0] eq 'green' || $_[0] eq 'blue' } } } );
 
  validate( @_,
            { foo =>
-             callbacks =>
-             { 'bigger than baz' => sub { $_[0] > $_[1]->{baz} } } } );
+             { callbacks =>
+               { 'bigger than baz' => sub { $_[0] > $_[1]->{baz} } } } } );
 
 =head2 Untainting
 
@@ -497,9 +494,9 @@ something like this:
 
 =head1 "GLOBAL" OPTIONS
 
-Because the calling syntax for the C<validate()> and C<validate_pos()>
-functions does not make it possible to specify any options other than
-the the validation spec, it is possible to set some options as
+Because the API for the C<validate()> and C<validate_pos()> functions
+does not make it possible to specify any options other than the the
+validation spec, it is possible to set some options as
 pseudo-'globals'.  These allow you to specify such things as whether
 or not the validation of named parameters should be case sensitive,
 for one example.
@@ -509,8 +506,8 @@ B<only applied to calls originating from the package that set the
 options>.
 
 In other words, if I am in package C<Foo> and I call
-C<Params::Validate::validation_options()>, those options are only in
-effect when I call C<validate()> from package C<Foo>.
+C<validation_options()>, those options are only in effect when I call
+C<validate()> from package C<Foo>.
 
 While this is quite different from how most other modules operate, I
 feel that this is necessary in able to make it possible for one
@@ -520,8 +517,9 @@ options set.
 
 The downside to this is that if you are writing an app with a standard
 calling style for all functions, and your app has ten modules, B<each
-module must include a call to
-C<Params::Validate::validation_options()>>.
+module must include a call to C<validation_options()>>. You could of
+course write a module that all your modules use which uses various
+trickery to do this when imported.
 
 =head2 Options
 
@@ -697,19 +695,34 @@ figures out how to do this, please let me know.
 
 =head1 SUPPORT
 
-For now, support questions should be sent to Dave at autarch@urth.org.
-The CVS repository is on Savannah at
-https://savannah.nongnu.org/projects/p-v-perl/.
+Please submit bugs and patches to the CPAN RT system at
+http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Params%3A%3AValidate or
+via email at bug-params-validate@rt.cpan.org.
 
-=head1 SEE ALSO
+Support questions can be sent to Dave at autarch@urth.org.
 
-Getargs::Long - similar capabilities with a different interface.  If
-you like what Params::Validate does but not its 'feel' try this one
-instead.
+The code repository is at https://svn.urth.org/svn/Params-Validate/
 
-Carp::Assert and Class::Contract - other modules in the general spirit
-of validating that certain things are true before/while/after
-executing actual program code.
+=head1 DONATIONS
+
+If you'd like to thank me for the work I've done on this module,
+please consider making a "donation" to me via PayPal. I spend a lot of
+free time creating free software, and would appreciate any support
+you'd care to offer.
+
+Please note that B<I am not suggesting that you must do this> in order
+for me to continue working on this particular software. I will
+continue to do so, inasmuch as I have in the past, for as long as it
+interests me.
+
+Similarly, a donation made in this way will probably not make me work
+on this software much more, unless I get so many donations that I can
+consider working on free software full time, which seems unlikely at
+best.
+
+To donate, log into PayPal and send money to autarch@urth.org or use
+the button on this page:
+L<http://www.urth.org/~autarch/fs-donation.html>
 
 =head1 AUTHORS
 
@@ -717,8 +730,8 @@ Dave Rolsky, <autarch@urth.org> and Ilya Martynov <ilya@martynov.org>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 David Rolsky.  All rights reserved.  This program
-is free software; you can redistribute it and/or modify it under the
-same terms as Perl itself.
+Copyright (c) 2004-2007 David Rolsky.  All rights reserved.  This
+program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
 
 =cut

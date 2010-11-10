@@ -1,4 +1,4 @@
-# $Id: DBI.pm 559 2009-01-24 00:30:59Z ykerherve $
+# $Id$
 
 package Data::ObjectDriver::Driver::DBI;
 use strict;
