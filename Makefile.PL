@@ -5,15 +5,23 @@ use lib 'lib';
 use lib 'extlib';
 
 WriteMakefile(
+<<<<<<< HEAD
     'NAME'             => 'Melody',
     'VERSION_FROM'     => 'lib/MT.pm',
     'ABSTRACT'         => 'Melody is an open source content management, blogging and publishing platform, derived from the popular blogging tool Movable Type.',
+=======
+    'NAME'         => 'Melody',
+    'VERSION_FROM' => 'lib/MT.pm',
+    'ABSTRACT' =>
+      'Melody is an open source content management, blogging and publishing platform, derived from the popular blogging tool Movable Type.',
+>>>>>>> tima/lh-531-extlib-reset
     'MIN_PERL_VERSION' => '5.8.8',
     'LICENSE'          => 'gpl',
     'AUTHOR'           => 'Open Melody Software Group <admin@openmelody.org>',
     'PREREQ_PM'        => {
 <<<<<<< HEAD
         # From Bundle::Melody::extlib (please keep in sync)
+        'Archive::Extract'            => 0.08,
         'Attribute::Params::Validate' => 1.07,
         'bignum'                      => 0.23,
         'Cache'                       => 0,

@@ -132,6 +132,7 @@ sub merge_params {
 local( *CSS ) ;
 open( CSS, $ENV{MT_HOME}.'/check.css' );
 my $css = do { local( $/ ) ; <CSS> } ;
+close(CSS);
 
 print "Content-Type: text/html; charset=utf-8\n\n";
 if (!$view) {
@@ -148,7 +149,6 @@ if (!$view) {
     
     <style type=\"text/css\">
         <!--
-        
 $css        
         //-->
     </style>
@@ -173,12 +173,41 @@ my $is_good = 1;
 my (@REQ, @DATA, @OPT);
 
 my @CORE_REQ = (
+<<<<<<< HEAD
     [ 'CGI', 3.50, 1, translate('CGI is required for all Melody application functionality.') ],
     [ 'Class::Accessor', 0.22, 1, translate('Class::Accessor is required for all Melody application functionality.') ],
     [ 'Class::Trigger', '0.1001', 1, translate('Class::Trigger is required for all Melody application functionality.') ],
     [ 'Data::ObjectDriver', 0.06, 1, translate('Data::ObjectDriver is required for all Melody application functionality.') ],
     [ 'Image::Size', 2.93, 1, translate('Image::Size is required for file uploads (to determine the size of uploaded images in many different formats).') ],
     [ 'YAML::Tiny', 1.12, 1, translate('YAML::Tiny is required for all Melody application functionality.') ],
+=======
+    [ 'Algorithm::Diff', 1.1902, 1],
+    [ 'Cache', 2.04, 1],
+    [ 'CGI', 3.45, 1 ],
+    [ 'Class::Accessor', 0.22, 1 ],
+    [ 'Class::Data::Inheritable', 0.06, 1],
+    [ 'Class::Trigger', '0.1001', 1 ],
+    [ 'Data::ObjectDriver', 0.06, 1 ],
+    [ 'Digest::SHA1', 0.06, 1 ],
+    [ 'File::Copy::Recursive', 0.23, 1],
+    [ 'Heap::Fibonacci', 0.71, 1],
+    [ 'HTML::Diff', 0.561, 1],
+    [ 'HTML::Parser', 3.66, 0 ],
+    [ 'Image::Size', 2.93, 1 ],
+    [ 'JSON', 2.12, 1],
+    [ 'Jcode', 0.88, 1],
+    [ 'Locale::Maketext', 1.13, 1],
+    [ 'Log::Dispatch', 2.26, 1],
+    [ 'Log::Log4Perl', 1.30, 1],
+    [ 'Lucene::QueryParser', 1.04, 1],
+    [ 'LWP', 5.831, 1 ],
+    [ 'Params::Validate', 0.73, 1],
+    [ 'Sub::Install', 0.925, 1],
+    [ 'TheSchwartz', 1.07, 0],
+    [ 'URI', 1.36, 0],
+    [ 'version', 0.76, 0],
+    [ 'YAML::Tiny', 1.12, 1 ],
+>>>>>>> tima/lh534-lh532-required-cpan-changes
 );
 
 my @CORE_DATA = (
@@ -190,39 +219,24 @@ my @CORE_DATA = (
 );
 
 my @CORE_OPT = (
-   
-    [ 'Archive::Extract', 0.08, 0, translate('Archive::Tar is required in order to archive files in backup/restore operation.')],  # Part of the HTML::Parser package in CPAN
-    [ 'Archive::Tar', 0, 0, translate('Archive::Tar is required in order to archive files in backup/restore operation.')],
-    [ 'Archive::Zip', 0, 0, translate('Archive::Zip is required in order to archive files in backup/restore operation.')],
-    [ 'Attribute::Params::Validate', 1.7, 0, translate('')],
-    [ 'Cache', 2.04, 0, translate('')],
-    [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is required in order to use memcached as caching mechanism used by Melody.')],
-    [ 'Class::Data::Inheritable', 0.06, 0, translate('')],
-    [ 'Class::ErrorHandler', 0.01, 0, translate('')],
-    [ 'Crypt::DH', 0.96, 0, translate('')],
+    [ 'Archive::Tar', 0, 0, translate('Archive::Tar is needed in order to archive files in backup/restore operation.')],
+    [ 'Archive::Zip', 0, 0, translate('Archive::Zip is needed in order to archive files in backup/restore operation.')],
+    [ 'Attribute::Params::Validate', 1.7, 0, ''],
+    [ 'bignum', 0.23, 0, ''], 
+    [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is needed in order to use memcached as caching mechanism used by Melody.')],
+    [ 'Crypt::DH', 0.96, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ')],
     [ 'Crypt::DSA', 0, 0, translate('Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.')],
-    [ 'Crypt::SSLeay', 0, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers such as AOL and Yahoo! which require SSL support.')],
-    [ 'Digest::SHA1', 0, 0, translate('Digest::SHA1 and its dependencies are required in order to allow commenters to be authenticated by OpenID providers including Vox and LiveJournal.')],
-    [ 'File::Copy::Recursive', 0.23, 0, translate('')],
+    [ 'Crypt::SSLeay', 0, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers that require SSL support.')],
     [ 'GD', 0, 0, translate('This module is needed if you would like to be able to create thumbnails of uploaded images.')],
-    [ 'HTML::Entities', 0, 0, translate('HTML::Entities is needed to encode some characters, but this feature can be turned off using the NoHTMLEntities option in the configuration file.') ],
-    [ 'HTML::Parser', 0, 0, translate('HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the Melody Recently Updated ping.') ],
-    [ 'HTML::Template', 2.8, 0, translate('')],
-    [ 'Heap::Fibonacci', 0.71, 0, translate('')],
-    [ 'IO::Compress::Gzip', 0, 0, translate('IO::Compress::Gzip is required in order to compress files in backup/restore operation.')],
-    [ 'IO::Scalar', 2.110, 0, translate('')],
+    [ 'IO::Compress::Gzip', 0, 0, translate('IO::Compress::Gzip is needed in order to compress files in backup/restore operation.')],
+    [ 'IO::Scalar', 2.110, 0, translate('IO::Scalar is needed in order to archive files in backup/restore operation.')],
     [ 'IO::Uncompress::Gunzip', 0, 0, translate('IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.')],
-    [ 'IPC::Cmd', 0.24, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for Melody.')],
     [ 'IPC::Run', 0, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for Melody.')],
     [ 'Image::Magick', 0, 0, translate('Image::Magick is optional; It is needed if you would like to be able to create thumbnails of uploaded images.') ],
-    [ 'JSON', 2.12, 0, translate('')],
-    [ 'Jcode', 0.88, 0, translate('')],
-    [ 'LWP', 5.831, 0, translate('LWP is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the Melody Recently Updated ping.') ],
-    [ 'Locale::Maketext', 1.13, 0, translate('')],
-    [ 'Lucene::QueryParser', 1.04, 0, translate('')],
-    [ 'MIME::Charset', 0.044, 0, translate('')],
-    [ 'MIME::EncWords', 0.96, 0, translate('')],
+    [ 'MIME::Charset', 0.044, 0, translate('MIME::Charset is required for sending mail via SMTP Server.')],
+    [ 'MIME::EncWords', 0.96, 0, translate('MIME::EncWords is required for sending mail via SMTP Server.')],
     [ 'Mail::Sendmail', 0, 0, translate('Mail::Sendmail is required for sending mail via SMTP Server.')],
+<<<<<<< HEAD
     [ 'Math::BigInt', 1.63, 0, translate('')],
     [ 'Module::Load', 0.10, 0, translate('')],
     [ 'Module::Load::Conditional', 0.08, 0, translate('')],
@@ -235,15 +249,18 @@ my @CORE_OPT = (
     [ 'TheSchwartz', 1.07, 0, translate('')],
     [ 'URI', 1.36, 0, translate('')],
     [ 'URI::Fetch', 0.08, 0, translate('')],
+=======
+    [ 'Net::OpenID::Consumer', 1.03, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ')],
+    [ 'Path::Class', 0, 0, ''],
+    [ 'SOAP::Lite', '0.710.08', 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.') ],
+>>>>>>> tima/lh534-lh532-required-cpan-changes
     [ 'XML::Atom', 0, 0, translate('XML::Atom is required in order to use the Atom API.')],
-    [ 'XML::Elemental', 2.1, 0, translate('')],
     [ 'XML::LibXML', 0, 0, translate('XML::LibXML is required in order to use the Atom API.')],
-    [ 'XML::NamespaceSupport', 1.09, 0, translate('')],
-    [ 'XML::SAX', 0.96, 0, translate('XML::SAX and/or its dependencies is required in order to restore.')],
-    [ 'XML::Simple', 2.14, 0, translate('')],
-    [ 'bignum', 0.23, 0, translate('')],
-    [ 'version', 0.76, 0, translate('')],
-    # [ 'XML::Parser', 0, 0, translate('This module required for action streams.')],
+    [ 'XML::NamespaceSupport', 1.09, 0, translate('XML::NamespaceSupport is needed in order to archive files in backup/restore operation.')],
+    [ 'XML::Parser', 2.23, 0, ''],
+    [ 'XML::SAX', 0.96, 0, translate('XML::SAX is needed in order to archive files in backup/restore operation.')],
+    [ 'XML::Simple', 2.14, 0, translate('XML::Simple is needed in order to archive files in backup/restore operation.')],
+    [ 'XML::XPath', 0, 0, ''],
 );
 
 use Cwd;
@@ -264,7 +281,7 @@ my $ver = ref($^V) eq 'version' ? $^V->normal : ( $^V ? join('.', unpack 'C*', $
 my $perl_ver_check = '';
 if ($] < 5.008008) {  # our minimal requirement for support
     $perl_ver_check = <<EOT;
-<p class="warning"><MT_TRANS phrase="The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]). Please upgrade to at least Perl [_2]." params="$ver%%5.6.1"></p>
+<p class="warning"><MT_TRANS phrase="The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]). Please upgrade to at least Perl [_2]." params="$ver%%5.8.8"></p>
 EOT
 }
 my $config_check = '';
@@ -318,31 +335,31 @@ print "\n\n</ul>\n";
 
 exit if $ENV{QUERY_STRING} && $ENV{QUERY_STRING} eq 'sys-check';
 
-if ($mt) {
-    my $req = $mt->registry("required_packages");
-    foreach my $key (keys %$req) {
-        next if $key eq 'DBI';
-        my $pkg = $req->{$key};
-        push @REQ, [ $key, $pkg->{version} || 0, 1, $pkg->{label}, $key, $pkg->{link} ];
-    }
-    my $drivers = $mt->object_drivers;
-    foreach my $key (keys %$drivers) {
-        my $driver = $drivers->{$key};
-        my $label = $driver->{label};
-        my $link = 'http://search.cpan.org/dist/' . $driver->{dbd_package};
-        $link =~ s/::/-/g;
-        push @DATA, [ $driver->{dbd_package}, $driver->{dbd_version}, 0,
-            $mt->translate("The [_1] database driver is required to use [_2].", $driver->{dbd_package}, $label),
-            $label, $link ];
-    }
-    unshift @DATA, [ 'DBI', 1.21, 0, translate('DBI is required to store data in database.') ]
-        if @DATA;
-    my $opt = $mt->registry("optional_packages");
-    foreach my $key (keys %$opt) {
-        my $pkg = $opt->{$key};
-        push @OPT, [ $key, $pkg->{version} || 0, 0, $pkg->{label}, $key, $pkg->{link} ];
-    }
-}
+#if ($mt) {
+#    my $req = $mt->registry("required_packages");
+#    foreach my $key (keys %$req) {
+#        next if $key eq 'DBI';
+#        my $pkg = $req->{$key};
+#        push @REQ, [ $key, $pkg->{version} || 0, 1, $pkg->{label}, $key, $pkg->{link} ];
+#    }
+#    my $drivers = $mt->object_drivers;
+#    foreach my $key (keys %$drivers) {
+#        my $driver = $drivers->{$key};
+#        my $label = $driver->{label};
+#        my $link = 'http://search.cpan.org/dist/' . $driver->{dbd_package};
+#        $link =~ s/::/-/g;
+#        push @DATA, [ $driver->{dbd_package}, $driver->{dbd_version}, 0,
+#            $mt->translate("The [_1] database driver is required to use [_2].", $driver->{dbd_package}, $label),
+#            $label, $link ];
+#    }
+#    unshift @DATA, [ 'DBI', 1.21, 0, translate('DBI is required to store data in database.') ]
+#        if @DATA;
+#    my $opt = $mt->registry("optional_packages");
+#    foreach my $key (keys %$opt) {
+#        my $pkg = $opt->{$key};
+#        push @OPT, [ $key, $pkg->{version} || 0, 0, $pkg->{label}, $key, $pkg->{link} ];
+#    }
+#}
 @REQ  = @CORE_REQ;  #unless @REQ;
 @DATA = @CORE_DATA; #unless @DATA;
 @OPT  = @CORE_OPT;  #unless @OPT;
@@ -352,7 +369,6 @@ for my $list (\@REQ, \@DATA, \@OPT) {
     my $req = ($list == \@REQ);
     my $type;
     my $phrase = translate("Checking for");
-
     if ($data) {
         $type = translate("Data Storage");
     } elsif ($req) {
@@ -377,8 +393,11 @@ MSG
     my $dbi_is_okay = 0;
     for my $ref (@$list) {
         my($mod, $ver, $req, $desc) = @$ref;
-        if ('CODE' eq ref($desc)) {
-            $desc = $desc->();
+#        if ('CODE' eq ref($desc)) {
+#            $desc = $desc->();
+#        }
+        if (!$desc && $req) {
+               $desc = trans_templ(qq{<MT_TRANS phrase="[_1] is required for standard Melody application functionality" params="$mod">});
         }
         print "<blockquote>\n" if $mod =~ m/^DBD::/;
         print "    <h3>$mod" .
