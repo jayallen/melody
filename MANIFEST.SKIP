@@ -7,6 +7,20 @@ view.cgi
 
 # Irrelavent tools
 testbg.cgi
+tools/convert-db
+tools/mt-tmpl-preview
+tools/remove-object
+tools/find-junk
+tools/mt-tmpl-test
+tools/plugin-config
+tools/rebuild-pages
+tools/pl-viewer
+tools/sig-validate
+tools/write-default-templates
+
+# performance testing tools to bring back eventually
+tools/report-slow-request
+tools/rebuild-benchmark
 
 # Experimental FileMgr Drivers from MTOS code
 lib/MT/FileMgr/FTP.pm
