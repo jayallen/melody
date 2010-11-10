@@ -141,9 +141,10 @@ sub mt_presave_obj {
 # Also what is line 136 doing with that alternation? Useless...
 sub mt_postsave_obj {
     my ( $cb, $app, $obj, $orig ) = @_;
-
+	my $q = $app->query;
+	
     return 1 unless $app->isa('MT::App');
-    return 1 unless $app || $app->param('save_revision');
+    return 1 unless $app || $q->param('save_revision');
 
     if ( exists $obj->{changed_revisioned_cols} ) {
         my $col = 'max_revisions_' . $obj->datasource;
@@ -151,7 +152,7 @@ sub mt_postsave_obj {
             my $max = $blog->$col;
             $obj->handle_max_revisions($max);
         }
-        my $revision = $obj->save_revision( $app->param('revision-note') );
+        my $revision = $obj->save_revision( $q->param('revision-note') );
         $obj->current_revision($revision);
 
         # call update to bypass instance save method

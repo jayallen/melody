@@ -330,7 +330,7 @@ sub edit {
 
 sub save {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
 
     my $id = $q->param('id');
 
@@ -353,7 +353,7 @@ sub save {
     if ( !$filter_result ) {
         my %param = (%$param);
         $param{error}       = $app->errstr;
-        $param{return_args} = $app->param('return_args');
+        $param{return_args} = $q->param('return_args');
 
         return edit( $app, \%param );
     }
@@ -413,7 +413,7 @@ sub save {
         $obj->commenter_authenticators( join ',', @authenticators );
 
         # TODO mt_blog should be turned into a constant or config param
-        my $set = $app->param('template_set') || 'mt_blog';
+        my $set = $q->param('template_set') || 'mt_blog';
         $obj->template_set($set);
     } ## end if ( !$obj->id )
 
@@ -450,7 +450,7 @@ sub save {
                        $app->translate( "Save failed: [_1]", $app->errstr ) );
             return $app->cfg_blog_settings;
         }
-        $param->{return_args} = $app->param('return_args');
+        $param->{return_args} = $q->param('return_args');
         return
           edit(
                 $app,
@@ -1494,7 +1494,7 @@ sub pre_save {
 
         # Process Login and Sign-up Preferences
         $obj->allow_commenter_regist( $q->param('allow_commenter_regist') );
-        $obj->allow_unreg_comments( $app->param('allow_unreg_comments') );
+        $obj->allow_unreg_comments( $q->param('allow_unreg_comments') );
         if ( $q->param('allow_unreg_comments') ) {
             $obj->require_comment_emails(
                                         $q->param('require_comment_emails') );
@@ -1696,7 +1696,7 @@ sub post_save {
         );
     }
 
-    my $screen = $app->param('cfg_screen') || '';
+    my $screen = $q->param('cfg_screen') || '';
 
     # TODO - blog publishing profile should not be bound to the blog->save process,
     #        it should be given its own handler.
@@ -1895,29 +1895,29 @@ sub save_filter {
 
     return $eh->error( MT->translate("You did not specify a blog name.") )
       if (!( $perms->can_edit_config )
-        && ( defined $app->param('name') && ( $app->param('name') eq '' ) ) );
+        && ( defined $q->param('name') && ( $q->param('name') eq '' ) ) );
 
     return $eh->error( MT->translate("Site URL must be an absolute URL.") )
       if $perms->can_set_publish_paths
-          && $app->param('site_url') !~ m.^https?://.;
+          && $q->param('site_url') !~ m.^https?://.;
 
     return $eh->error( MT->translate("Archive URL must be an absolute URL.") )
       if $perms->can_set_publish_paths
-          && $app->param('archive_url') !~ m.^https?://.
-          && $app->param('enable_archive_paths');
+          && $q->param('archive_url') !~ m.^https?://.
+          && $q->param('enable_archive_paths');
 
     return $eh->error( MT->translate("You did not specify an Archive Root.") )
-      if $app->param('archive_path') =~ m/^\s*$/
-          && $app->param('enable_archive_paths');
+      if $q->param('archive_path') =~ m/^\s*$/
+          && $q->param('enable_archive_paths');
 
     return 1 unless $q->param('id');
 
     # Only for existing blogs....
     my $err = 'The number of revisions to store must be a positive integer.';
     foreach my $type (qw( entry template )) {
-        warn $app->param( 'max_revisions_' . $type );
+        warn $q->param( 'max_revisions_' . $type );
         return $eh->error( MT->translate($err) )
-          unless int( $app->param( 'max_revisions_' . $type ) ) > 0;
+          unless int( $q->param( 'max_revisions_' . $type ) ) > 0;
     }
 
     return 1;
@@ -2141,12 +2141,12 @@ sub cfg_archives_save {
             _create_dynamiccache_dir( $blog, $blog->archive_path ) if $cache;
         }
     } ## end if ( ( $app->model('template'...)))
-    $blog->use_revision( $app->param('use_revision') ? 1 : 0 );
-    if ( $app->param('use_revision') ) {
-        $blog->max_revisions_entry( $app->param('max_revisions_entry') )
-          if $app->param('max_revisions_entry');
-        $blog->max_revisions_template( $app->param('max_revisions_template') )
-          if $app->param('max_revisions_template');
+    $blog->use_revision( $q->param('use_revision') ? 1 : 0 );
+    if ( $q->param('use_revision') ) {
+        $blog->max_revisions_entry( $q->param('max_revisions_entry') )
+          if $q->param('max_revisions_entry');
+        $blog->max_revisions_template( $q->param('max_revisions_template') )
+          if $q->param('max_revisions_template');
     }
 
 # Removed by Byrne in blog settings refactor. Saving now happens in the post_save callback

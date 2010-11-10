@@ -1289,10 +1289,10 @@ sub preview {
     $param{object_type}  = $type;
     $param{object_label} = $entry_class->class_label;
 
-    $param{diff_view} = $app->param('rev_numbers')
-      || $app->param('collision');
+    $param{diff_view} = $q->param('rev_numbers')
+      || $q->param('collision');
     $param{collision} = 1;
-    if ( my @rev_numbers = split( /,/, $app->param('rev_numbers') ) ) {
+    if ( my @rev_numbers = split( /,/, $q->param('rev_numbers') ) ) {
         $param{comparing_revisions} = 1;
         $param{rev_a}               = $rev_numbers[0];
         $param{rev_b}               = $rev_numbers[1];
@@ -2009,7 +2009,7 @@ sub draft_entries {
 
 sub open_batch_editor {
     my $app = shift;
-    my $q   = $app->param;
+    my $q   = $app->query;
     my @ids = $q->param('id');
 
     $q->param( 'is_power_edit', 1 );
