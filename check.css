@@ -1,3 +1,5 @@
+/* CSS file for mt-check.cgi */
+
             body {
                 font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
                 font-size: 13px;
@@ -10,8 +12,8 @@
                 background: #fff url('$mt_static_path/images/chromeless/chromeless_top_bg.gif') repeat-x;
             }
             
-            body.has-static #header {
-                background: url('$mt_static_path/melody/melody-logo-white-banner.png') no-repeat 25px 10px;
+            body.has-static #header {                
+background: #6B3081 url('$mt_static_path/melody/melody-logo-white-banner.png') no-repeat 25px 10px;
                 height: 55px;
             }
             
@@ -51,6 +53,8 @@
                 margin: 0 0 .75em 0;
                 padding: 0;
             }
+
+p a {color: #6B3081}
             
             ul {
                 padding-left: 20px;
@@ -62,10 +66,14 @@
                 background-repeat: no-repeat;
             }
             .msg-info {
-                background-color: #eaf2ff;
+               /* background-color: #eaf2ff;
                 background-image: url('$mt_static_path/images/icon_info.gif');
-                background-position: 12px center;
-                border: 1px solid #999;
+                background-position: 12px center; 
+                border: 1px solid #999;*/
+background-color: #E1D6E6;
+    color: #6B3081;
+ -moz-border-radius:4px;
+    -webkit-border-radius:4px;
             }
 
 			.ready {
@@ -98,7 +106,7 @@
             }
 
             .installed {
-                color: #93b06b;
+                color: ##6B3081;
                 padding-top: 0px;
                 margin-top: 0px;
             }
@@ -106,10 +114,13 @@
             .warning {
                 padding-top: 0px;
                 margin-top: 4px;
-                border-left: 1px solid red;
+                border-left: 1px solid #CC0000;
                 padding-left: 10px;
                 margin-left: 20px;
+color: #CC0000;
             }
+
+.warning a {color:#CC0000;}
             
             ul.version {
                 margin-bottom: 0;
