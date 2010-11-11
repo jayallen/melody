@@ -1697,43 +1697,6 @@ sub post_save {
     }
 
     my $screen = $q->param('cfg_screen') || '';
-
-    # TODO - blog publishing profile should not be bound to the blog->save process,
-    #        it should be given its own handler.
-    if ( $screen eq 'cfg_publish_profile' ) {
-        if ( my $dcty = $q->param('dynamicity') ) {
-
-            # Apply publishing rules for templates based on
-            # publishing method selected:
-            #     none (0% publish queue, all static)
-            #     async_all (100% publish queue)
-            #     async_partial (high-priority templates publish synchronously (main index, preferred indiv. archives, feed templates))
-            #     all (100% dynamic)
-            #     archives (archives dynamic, static indexes)
-            #     custom (custom configuration)
-
-            update_publishing_profile( $app, $obj );
-
-            if ( ( $dcty eq 'none' ) || ( $dcty =~ m/^async/ ) ) {
-                _update_finfos( $app, 0 );
-            }
-            elsif ( $dcty eq 'all' ) {
-                _update_finfos( $app, 1 );
-            }
-            elsif ( $dcty eq 'archives' ) {
-
-                # Only archives have template maps.
-                my $is_not_null = 'is not null';
-                my $is_null     = 'is null';
-                _update_finfos( $app, 1,
-                                { templatemap_id => \$is_not_null } );
-                _update_finfos( $app, 0, { templatemap_id => \$is_null } );
-            }
-        } ## end if ( my $dcty = $q->param...)
-
-        cfg_publish_profile_save( $app, $obj ) or return;
-    } ## end if ( $screen eq 'cfg_publish_profile')
-
     # The following only gets invoked for existing blogs
     if ( $original->id ) {
 
