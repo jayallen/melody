@@ -277,7 +277,7 @@ sub edit {
         $sets->{$_}{key} = $_ for keys %$sets;
         $sets = $app->filter_conditional_list( [ values %$sets ] );
         no warnings;
-        @$sets = sort { uc($a->{key}) cmp uc($b->{key}) } @$sets;
+        @$sets = sort { uc( $a->{key} ) cmp uc( $b->{key} ) } @$sets;
         $param->{'template_set_loop'}  = $sets;
         $param->{'template_set_index'} = $#$sets;
 
@@ -1894,8 +1894,8 @@ sub save_filter {
     my $perms = $app->user->permissions;
 
     return $eh->error( MT->translate("You did not specify a blog name.") )
-      if (!( $perms->can_edit_config )
-        && ( defined $q->param('name') && ( $q->param('name') eq '' ) ) );
+      if (   !( $perms->can_edit_config )
+           && ( defined $q->param('name') && ( $q->param('name') eq '' ) ) );
 
     return $eh->error( MT->translate("Site URL must be an absolute URL.") )
       if $perms->can_set_publish_paths

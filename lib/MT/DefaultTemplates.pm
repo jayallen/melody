@@ -28,7 +28,8 @@ my $loaded = 0;
 my $templates;
 
 BEGIN {
-    # These global templates are used by the system for email notifications 
+
+    # These global templates are used by the system for email notifications
     # and other updates. They are automatically installed when when Melody
     # is first installed.
     $templates = {
@@ -44,7 +45,7 @@ BEGIN {
                      'verify-subscribe'  => { label => 'Subscribe Verify', },
         },
     };
-} ## end BEGIN
+}
 
 sub core_default_templates {
     return $templates;

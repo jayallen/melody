@@ -48,6 +48,7 @@ sub _typepadantispam {
     my ( $class, $meth, $is_true, $sig, $key ) = @_;
     unless ($key) {
         my $plugin = MT->component('TypePadAntiSpam');
+
         # print STDERR "DEBUG: processing\n" if MT->config->DebugMode;
         return $class->error(
                      $plugin->translate("API key is a required parameter.") );

@@ -141,8 +141,8 @@ sub mt_presave_obj {
 # Also what is line 136 doing with that alternation? Useless...
 sub mt_postsave_obj {
     my ( $cb, $app, $obj, $orig ) = @_;
-	my $q = $app->query;
-	
+    my $q = $app->query;
+
     return 1 unless $app->isa('MT::App');
     return 1 unless $app || $q->param('save_revision');
 

@@ -643,8 +643,8 @@ BEGIN {
         captcha_providers        => \&load_captcha_providers,
         tasks                    => \&load_core_tasks,
         default_templates        => \&load_default_templates,
-        junk_filters => \&load_junk_filters,
-        task_workers => {
+        junk_filters             => \&load_junk_filters,
+        task_workers             => {
                       'mt_rebuild' => {
                                         label => "Publishes content.",
                                         class => 'MT::Worker::Publish',

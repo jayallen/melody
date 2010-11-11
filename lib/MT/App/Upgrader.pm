@@ -348,7 +348,7 @@ sub init_blog {
     $sets->{$_}{key} = $_ for keys %$sets;
     $sets = [ values %$sets ];
     no warnings;
-    @$sets = sort { uc($a->{key}) cmp uc($b->{key}) } @$sets;
+    @$sets = sort { uc( $a->{key} ) cmp uc( $b->{key} ) } @$sets;
     $param{'template_set_loop'}  = $sets;
     $param{'template_set_index'} = $#$sets;
 

@@ -1215,8 +1215,7 @@ sub _upload_file {
                         rename( $local_file, $target_file );
                         $local_file =~ s/$ext_old/$ext_temp/;
                         $real_fh    =~ s/$ext_old/$ext_temp/;
-                        $q->param( "changed_file_ext",
-                                   "$ext_old,$ext_temp" );
+                        $q->param( "changed_file_ext", "$ext_old,$ext_temp" );
                     }
                 } ## end if ( length($ext) > 0 )
                 else {

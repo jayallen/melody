@@ -6,25 +6,26 @@ sub stats_widget {
     my $app = shift;
     my ( $tmpl, $param ) = @_;
     my $plugin = MT->component('TypePadAntiSpam');
-    my $blog = $app->blog;
+    my $blog   = $app->blog;
     if ($blog) {
         $param->{'blog_blocked'} = $plugin->blocked($blog) || 0;
     }
     $param->{'system_blocked'} = $plugin->blocked();
     $param->{'language'} = lc substr( MT->instance->current_language, 0, 2 );
-    $param->{'use_ssl'} = $app->is_secure;
-    $param->{'api_key'} = $plugin->api_key;
+    $param->{'use_ssl'}  = $app->is_secure;
+    $param->{'api_key'}  = $plugin->api_key;
     return;
 }
 
 sub default_widgets {
+
     # FIXME: This should come from the app
     return {
-        'blog_stats' =>
-          { param => { tab => 'entry' }, order => 1, set => 'main' },
-        'this_is_you-1' => { order => 1, set => 'sidebar' },
-        'mt_shortcuts'  => { order => 2, set => 'sidebar' },
-        'mt_news'       => { order => 3, set => 'sidebar' },
+             'blog_stats' =>
+               { param => { tab => 'entry' }, order => 1, set => 'main' },
+             'this_is_you-1' => { order => 1, set => 'sidebar' },
+             'mt_shortcuts'  => { order => 2, set => 'sidebar' },
+             'mt_news'       => { order => 3, set => 'sidebar' },
     };
 }
 
@@ -105,7 +106,7 @@ sub save_config {
 } ## end sub save_config
 
 sub typepadantispam_score {
-    my $thing = shift;
+    my $thing  = shift;
     my $plugin = MT->component('TypePadAntiSpam');
     $plugin->require_tpas;
     my $key = is_valid_key($thing) or return MT::JunkFilter::ABSTAIN();
@@ -134,30 +135,43 @@ sub typepadantispam_score {
 
 sub description {
     my $plugin = shift;
-    my $app = MT->instance;
+    my $app    = MT->instance;
     my $blog;
-    if ($app->isa('MT::App::CMS')) {
+    if ( $app->isa('MT::App::CMS') ) {
         $blog = $app->blog;
     }
     my $sys_blocked = $plugin->blocked();
-    my $desc = '<p>' . $plugin->translate('TypePad AntiSpam is a free service from Six Apart that helps protect your blog from comment and TrackBack spam. The TypePad AntiSpam plugin will send every comment or TrackBack submitted to your blog to the service for evaluation, and Movable Type will filter items if TypePad AntiSpam determines it is spam. If you discover that TypePad AntiSpam incorrectly classifies an item, simply change its classification by marking it as "Spam" or "Not Spam" from the Manage Comments screen, and TypePad AntiSpam will learn from your actions. Over time the service will improve based on reports from its users, so take care when marking items as "Spam" or "Not Spam."') . '</p>';
+    my $desc
+      = '<p>'
+      . $plugin->translate(
+        'TypePad AntiSpam is a free service from Six Apart that helps protect your blog from comment and TrackBack spam. The TypePad AntiSpam plugin will send every comment or TrackBack submitted to your blog to the service for evaluation, and Movable Type will filter items if TypePad AntiSpam determines it is spam. If you discover that TypePad AntiSpam incorrectly classifies an item, simply change its classification by marking it as "Spam" or "Not Spam" from the Manage Comments screen, and TypePad AntiSpam will learn from your actions. Over time the service will improve based on reports from its users, so take care when marking items as "Spam" or "Not Spam."'
+      ) . '</p>';
 
     if ($blog) {
         my $blog_blocked = $blog ? $plugin->blocked($blog) : 0;
-        $desc .= '<p>' . $plugin->translate('So far, TypePad AntiSpam has blocked [quant,_1,message,messages] for this blog, and [quant,_2,message,messages] system-wide.', $blog_blocked, $sys_blocked) . '</p>';
-    } else {
-        $desc .= '<p>' . $plugin->translate('So far, TypePad AntiSpam has blocked [quant,_1,message,messages] system-wide.', $sys_blocked) . '</p>';
+        $desc .= '<p>'
+          . $plugin->translate(
+            'So far, TypePad AntiSpam has blocked [quant,_1,message,messages] for this blog, and [quant,_2,message,messages] system-wide.',
+            $blog_blocked, $sys_blocked
+          ) . '</p>';
+    }
+    else {
+        $desc .= '<p>'
+          . $plugin->translate(
+            'So far, TypePad AntiSpam has blocked [quant,_1,message,messages] system-wide.',
+            $sys_blocked
+          ) . '</p>';
     }
     return $desc;
-}
+} ## end sub description
 
 #--- utility
 
 sub is_valid_key {
-    my $thing = shift;
-    my $r     = MT->request;
+    my $thing  = shift;
+    my $r      = MT->request;
     my $plugin = MT->component('TypePadAntiSpam');
-    unless ($r->stash('MT::Plugin::TypePadAntiSpam::api_key')) {
+    unless ( $r->stash('MT::Plugin::TypePadAntiSpam::api_key') ) {
         my $key = $plugin->api_key || return;
         $r->stash( 'MT::Plugin::TypePadAntiSpam::api_key', $key );
     }
@@ -175,26 +189,27 @@ sub require_tpas {
 }
 
 
-
 sub cache {
     my $id    = shift;
     my $cache = MT->request->stash('MT::Plugin::TypePadAntiSpam::permalinks');
     unless ($cache) {
         $cache = {};
-        MT->request->stash('MT::Plugin::TypePadAntiSpam::permalinks', $cache);
+        MT->request->stash( 'MT::Plugin::TypePadAntiSpam::permalinks',
+                            $cache );
     }
-    unless ($cache->{$id}) {
-        if ($id =~ /^B/) {
-            my $b = MT::Blog->load(substr($id, 1)) or return;
+    unless ( $cache->{$id} ) {
+        if ( $id =~ /^B/ ) {
+            my $b = MT::Blog->load( substr( $id, 1 ) ) or return;
             $cache->{$id} = $b->site_url;
-        } else {
+        }
+        else {
             require MT::Entry;
             my $e = MT::Entry->load($id) or return;
             $cache->{$id} = $e->permalink;
         }
     }
     $cache->{$id};
-}
+} ## end sub cache
 
 
 sub package_signature {

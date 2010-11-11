@@ -1289,8 +1289,7 @@ sub preview {
     $param{object_type}  = $type;
     $param{object_label} = $entry_class->class_label;
 
-    $param{diff_view} = $q->param('rev_numbers')
-      || $q->param('collision');
+    $param{diff_view} = $q->param('rev_numbers') || $q->param('collision');
     $param{collision} = 1;
     if ( my @rev_numbers = split( /,/, $q->param('rev_numbers') ) ) {
         $param{comparing_revisions} = 1;

@@ -9,7 +9,7 @@ use MT::Util
 
 sub cfg_system_settings {
     my $app = shift;
-    my $q = $app->query();
+    my $q   = $app->query();
     my %param;
     if ( $q->param('blog_id') ) {
         return $app->return_to_dashboard( redirect => 1 );
@@ -161,16 +161,16 @@ sub cfg_system_settings {
     $param{system_performance_logging_path} = $cfg->PerformanceLoggingPath;
     $param{system_performance_logging_threshold}
       = $cfg->PerformanceLoggingThreshold;
-    $param{track_revisions}                 = $cfg->TrackRevisions;
-    $param{saved}        = $q->param('saved');
-    $param{error}        = $q->param('error');
-    $param{screen_class} = "settings-screen system-general-settings";
+    $param{track_revisions} = $cfg->TrackRevisions;
+    $param{saved}           = $q->param('saved');
+    $param{error}           = $q->param('error');
+    $param{screen_class}    = "settings-screen system-general-settings";
     $app->load_tmpl( 'cfg_system_settings.tmpl', \%param );
 } ## end sub cfg_system_settings
 
 sub save_cfg_system {
     my $app = shift;
-    my $q = $app->query();
+    my $q   = $app->query();
     $app->validate_magic or return;
     return $app->errtrans("Permission denied.")
       unless $app->user->is_superuser();
@@ -212,8 +212,7 @@ sub save_cfg_system {
           @meta_messages,
           $app->translate(
                            'Performance log threshold is [_1]',
-                           $q->param(
-                                       'system_performance_logging_threshold')
+                           $q->param('system_performance_logging_threshold')
           )
     ) if ( $q->param('system_performance_logging_threshold') =~ /\d+/ );
 
@@ -234,12 +233,13 @@ sub save_cfg_system {
     $app->config( 'PerformanceLoggingThreshold',
                   $q->param('system_performance_logging_threshold'), 1 )
       if ( $q->param('system_performance_logging_threshold') =~ /\d+/ );
-    if ($q->param('track_revisions')) {
+    if ( $q->param('track_revisions') ) {
         push( @meta_messages, 'Revision histories are enabled.' );
-        $app->config('TrackRevisions', 1, 1);
-    } else {
+        $app->config( 'TrackRevisions', 1, 1 );
+    }
+    else {
         push( @meta_messages, 'Revision histories will not be recorded.' );
-        $app->config('TrackRevisions', 0, 1);
+        $app->config( 'TrackRevisions', 0, 1 );
     }
 
 
@@ -316,12 +316,11 @@ sub save_cfg_system {
     $cfg->DefaultTimezone($tz);
     $cfg->DefaultSiteRoot( $q->param('default_site_root') || undef, 1 );
     $cfg->DefaultSiteURL( $q->param('default_site_url') || undef, 1 );
-    $cfg->NewUserAutoProvisioning( $q->param('personal_weblog') ? 1 : 0,
-                                   1 );
+    $cfg->NewUserAutoProvisioning( $q->param('personal_weblog') ? 1 : 0, 1 );
     $cfg->NewUserTemplateBlogId( $tmpl_blog_id || undef, 1 );
     $cfg->DefaultUserLanguage( $q->param('default_language'), 1 );
     $cfg->DefaultUserTagDelimiter( $q->param('default_user_tag_delimiter')
-                                               || undef,
+                                             || undef,
                                    1 );
 
     my $registration = $cfg->CommenterRegistration;
