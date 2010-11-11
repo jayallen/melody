@@ -24,8 +24,8 @@ sub BEGIN {
 }
 
 my $cfg_exist;
-my $mt_static_path = q();
-my $mt_cgi_path;
+my $static_path = q();
+my $cgi_path;
 if ((-f File::Spec->catfile($ENV{MT_HOME}, 'config.cgi')) ||
     (-f File::Spec->catfile($ENV{MT_HOME}, 'mt.cfg'))) {
     $cfg_exist = 1;
@@ -34,17 +34,17 @@ if ((-f File::Spec->catfile($ENV{MT_HOME}, 'config.cgi')) ||
     while ($line = <CFG>) {
         next if $line !~ /\S/ || $line =~ /^#/;
         if ($line =~ s/StaticWebPath[\s]*([^\n]*)/$1/) {
-            $mt_static_path = $line;
-            chomp($mt_static_path);
+            $static_path = $line;
+            chomp($static_path);
         }
         elsif ($line =~ s/CGIPath[\s]*([^\n]*)/$1/) {
-            $mt_cgi_path = $line;
-            chomp($mt_cgi_path);
+            $cgi_path = $line;
+            chomp($cgi_path);
         }
     }
-    if ( !$mt_static_path && $mt_cgi_path ) {
-        $mt_cgi_path .= '/' if $mt_cgi_path !~ m|/$|;
-        $mt_static_path = $mt_cgi_path . 'mt-static/';
+    if ( !$static_path && $cgi_path ) {
+        $cgi_path .= '/' if $cgi_path !~ m|/$|;
+        $static_path = $cgi_path . 'mt-static/';
     }
 }
 
@@ -134,6 +134,8 @@ open( CSS, $ENV{MT_HOME}.'/check.css' );
 my $css = do { local( $/ ) ; <CSS> } ;
 close(CSS);
 
+$css =~ s{\$static_path}{$static_path}gi;
+
 print "Content-Type: text/html; charset=utf-8\n\n";
 if (!$view) {
     print trans_templ(<<HTML);
@@ -156,7 +158,7 @@ $css
 </head>
 
 HTML
-    if ($mt_static_path) {
+    if ($static_path) {
         print "<body class=\"has-static\">\n";
     } else {
         print "<body>\n";

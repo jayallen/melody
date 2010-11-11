@@ -7,11 +7,11 @@
             }
             
             body.has-static {
-                background: #fff url('$mt_static_path/images/chromeless/chromeless_top_bg.gif') repeat-x;
+                background: #fff url('$static_path/images/chromeless/chromeless_top_bg.gif') repeat-x;
             }
             
             body.has-static #header {
-                background: url('$mt_static_path/melody/melody-logo-white-banner.png') no-repeat 25px 10px;
+                background: url('$static_path/melody/melody-logo-white-banner.png') no-repeat 25px 10px;
                 height: 55px;
             }
             
@@ -63,7 +63,7 @@
             }
             .msg-info {
                 background-color: #eaf2ff;
-                background-image: url('$mt_static_path/images/icon_info.gif');
+                background-image: url('$static_path/images/icon_info.gif');
                 background-position: 12px center;
                 border: 1px solid #999;
             }
@@ -77,7 +77,7 @@
 
             .msg-success {
                 background-color: #CFC;
-                background-image: url('$mt_static_path/images/icon_success.png');
+                background-image: url('$static_path/images/icon_success.png');
                 background-position: 12px .75em;
                 font-size: 24px;
             }
