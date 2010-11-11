@@ -1,0 +1,53 @@
+name: TypePad AntiSpam
+id: typepadantispam
+key: typepadantispam
+author_name: Six Apart Ltd.
+author_link: http://www.sixapart.com/
+version: 1.0.1
+blog_config_template: config.tmpl
+system_config_template: system.tmpl
+
+init: sub { my $p = shift; require TypePadAntiSpam::Plugin; bless $p, 'TypePadAntiSpam::Plugin'; }
+
+settings:
+    api_key:
+        scope: system
+        default: ''
+    weight:
+        scope: blog
+        default: ''
+    service_host:
+        scope: system
+        default: api.antispam.typepad.com
+
+
+
+callbacks:
+    handle_spam: $TypePadAntiSpam::TypePadAntiSpam::Callbacks::handle_junk
+    handle_ham: $TypePadAntiSpam::TypePadAntiSpam::Callbacks::handle_not_junk
+    MT::Comment::pre_save: $TypePadAntiSpam::TypePadAntiSpam::Callbacks::pre_save_obj
+    MT::TBPing::pre_save: $TypePadAntiSpam::TypePadAntiSpam::Callbacks::pre_save_obj
+
+junk_filters:
+    TypePadAntiSpam:
+        label: TypePad AntiSpam
+        code: $TypePadAntiSpam::TypePadAntiSpam::Plugin::typepadantispam_score
+
+tags:
+    function:
+        TypePadAntiSpamCounter: $TypePadAntiSpam::TypePadAntiSpam::_hdlr_tpas_counter
+
+widgets:
+    typepadantispam:
+        label: TypePad AntiSpam
+        template: stats_widget.tmpl
+        handler: $TypePadAntiSpam::TypePadAntiSpam::Plugin::stats_widget
+        set: sidebar
+        singular: 1
+        order: 2.1
+        condition: >
+            sub {
+                my $plugin = MT->component('TypePadAntiSpam');
+                return $plugin->api_key ? 1 : 0;
+            }
+
