@@ -173,17 +173,9 @@ my $is_good = 1;
 my (@REQ, @DATA, @OPT);
 
 my @CORE_REQ = (
-<<<<<<< HEAD
-    [ 'CGI', 3.50, 1, translate('CGI is required for all Melody application functionality.') ],
-    [ 'Class::Accessor', 0.22, 1, translate('Class::Accessor is required for all Melody application functionality.') ],
-    [ 'Class::Trigger', '0.1001', 1, translate('Class::Trigger is required for all Melody application functionality.') ],
-    [ 'Data::ObjectDriver', 0.06, 1, translate('Data::ObjectDriver is required for all Melody application functionality.') ],
-    [ 'Image::Size', 2.93, 1, translate('Image::Size is required for file uploads (to determine the size of uploaded images in many different formats).') ],
-    [ 'YAML::Tiny', 1.12, 1, translate('YAML::Tiny is required for all Melody application functionality.') ],
-=======
     [ 'Algorithm::Diff', 1.1902, 1],
     [ 'Cache', 2.04, 1],
-    [ 'CGI', 3.45, 1 ],
+    [ 'CGI', 3.50, 1 ],
     [ 'Class::Accessor', 0.22, 1 ],
     [ 'Class::Data::Inheritable', 0.06, 1],
     [ 'Class::Trigger', '0.1001', 1 ],
@@ -207,7 +199,6 @@ my @CORE_REQ = (
     [ 'URI', 1.36, 0],
     [ 'version', 0.76, 0],
     [ 'YAML::Tiny', 1.12, 1 ],
->>>>>>> tima/lh534-lh532-required-cpan-changes
 );
 
 my @CORE_DATA = (
@@ -236,24 +227,9 @@ my @CORE_OPT = (
     [ 'MIME::Charset', 0.044, 0, translate('MIME::Charset is required for sending mail via SMTP Server.')],
     [ 'MIME::EncWords', 0.96, 0, translate('MIME::EncWords is required for sending mail via SMTP Server.')],
     [ 'Mail::Sendmail', 0, 0, translate('Mail::Sendmail is required for sending mail via SMTP Server.')],
-<<<<<<< HEAD
-    [ 'Math::BigInt', 1.63, 0, translate('')],
-    [ 'Module::Load', 0.10, 0, translate('')],
-    [ 'Module::Load::Conditional', 0.08, 0, translate('')],
-    [ 'Net::OAuth', 0.11, 0, translate('')],
-    [ 'Net::OpenID::Consumer', 1.03, 0, translate('')],
-    [ 'Params::Check', 0.24, 0, translate('')],
-    [ 'Params::Validate', 0.73, 0, translate('')],
-    [ 'SOAP::Lite', '0.710.08', 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.') ],
-    [ 'Sub::Install', 0, 0, translate('')],
-    [ 'TheSchwartz', 1.07, 0, translate('')],
-    [ 'URI', 1.36, 0, translate('')],
-    [ 'URI::Fetch', 0.08, 0, translate('')],
-=======
     [ 'Net::OpenID::Consumer', 1.03, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ')],
     [ 'Path::Class', 0, 0, ''],
     [ 'SOAP::Lite', '0.710.08', 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.') ],
->>>>>>> tima/lh534-lh532-required-cpan-changes
     [ 'XML::Atom', 0, 0, translate('XML::Atom is required in order to use the Atom API.')],
     [ 'XML::LibXML', 0, 0, translate('XML::LibXML is required in order to use the Atom API.')],
     [ 'XML::NamespaceSupport', 1.09, 0, translate('XML::NamespaceSupport is needed in order to archive files in backup/restore operation.')],
