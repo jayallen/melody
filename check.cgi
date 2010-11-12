@@ -129,8 +129,12 @@ sub merge_params {
     $msg;
 }
 
+# This script needs to be updated to assume File::Spec is
+# available since its been in Perl 5 since Perl 5.6. A special
+# in sufficient perl version should be displayed alone and no
+# more.
 local( *CSS ) ;
-open( CSS, $ENV{MT_HOME}.'/check.css' );
+open( CSS, $ENV{MT_HOME}.'/check/check.css' );
 my $css = do { local( $/ ) ; <CSS> } ;
 close(CSS);
 

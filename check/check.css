@@ -13,10 +13,6 @@ body.has-static {
 }
 
 body.has-static #header {
-    /* FIXME Tim/Matt is the line below correct?
-             I had a merge conflict and it's not clear
-             to me what the final state should look like here.
-    */
     background: #6B3081 url('$static_path/melody/melody-logo-white-banner.png') no-repeat 25px 10px;
     height: 55px;
 }
@@ -70,19 +66,6 @@ ul {
     background-repeat: no-repeat;
 }
 .msg-info {
-   /*
-   FIXME Matt/Tim: Which of the following (or some mix of them)
-         is correct?  I had a merge conflict and it's not clear
-         to me what the final state should look like here.
-
-    VERSION 1:
-    background-color: #eaf2ff;
-    background-image: url('$static_path/images/icon_info.gif');
-    background-position: 12px center;
-    border: 1px solid #999;
-
-    VERSION 2:
-    */
     background-color: #E1D6E6;
     color: #6B3081;
     -moz-border-radius:4px;
