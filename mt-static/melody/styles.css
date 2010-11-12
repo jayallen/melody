@@ -63,18 +63,4 @@
   background-image: url(../images/status_icons/user-enabled-sysadmin.png);
 }
 
-#container-inner {
-  background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0.02, #8DC3CB), color-stop(0.37, rgb(255,255,255)) );
-  background-image: -moz-linear-gradient( center top, #8DC3CB 2%, rgb(255,255,255) 37% );
-}
-#content-header {
-  background: transparent;
-}
-.system #container-inner {
-  background-image: -webkit-gradient( linear, left top, left bottom, color-stop(0.02, #BA66F6), color-stop(0.37, rgb(255,255,255)) );
-  background-image: -moz-linear-gradient( center top, #BA66F6 2%, rgb(255,255,255) 37% );
-}
-.system #content-header {
-  background: transparent;
-}
 
