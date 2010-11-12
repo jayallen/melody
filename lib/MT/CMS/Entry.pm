@@ -1924,6 +1924,41 @@ sub save_entries {
     $app->call_return;
 } ## end sub save_entries
 
+sub rebuild_entry {
+    my $app = shift;
+    my $blog = $app->blog;
+    my $return_val = {
+        success => 0
+    };
+    my $entries = MT->model('entry')->lookup_multi([ $app->param('id') ]);
+  ENTRY: for my $entry (@$entries) {
+      next ENTRY if !defined $entry;
+      next ENTRY if $entry->blog_id != $blog->id;
+      
+      MT->log({ blog_id => $blog->id,
+                message => "Republishing '".$entry->title."' via AJAX" });
+      $return_val->{success} = $app->rebuild_entry(
+          Blog     => $blog,
+          Entry    => $entry,
+          Force    => 1,
+      );
+      unless ($return_val->{success}) {
+          $return_val->{errstr} = $app->errstr;
+      }
+    }
+    return _send_json_response( $app, $return_val );
+}
+
+sub _send_json_response {
+    my ( $app, $result ) = @_;
+    require JSON;
+    my $json = JSON::objToJson($result);
+    $app->send_http_header("");
+    $app->print($json);
+    return $app->{no_print_body} = 1;
+    return undef;
+}
+
 sub send_pings {
     my $app = shift;
     my $q   = $app->query;
