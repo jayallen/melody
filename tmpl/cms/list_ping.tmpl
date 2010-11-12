@@ -113,13 +113,6 @@ function setFilterCol(choice) {
             fld.options[fld.selectedIndex].text + '</strong>';
 }
 
-function doBanIP (ip) {
-  window.location = ("<mt:var name="script_url">"
-    + "?__mode=save&amp;_type=banlist"
-    + "&amp;blog_id=<mt:var name="blog_id">" 
-    + "&amp;magic_token=<mt:var name="magic_token">&amp;ip=" + ip);
-}
-
 var tableSelect;
 function init() {
     // setup

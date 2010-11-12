@@ -28,11 +28,6 @@
             title="<__trans phrase="Deletes all [_1] reported as Spam" params="<$mt:var name="object_label_plural"$>">"
             ><__trans phrase="Empty"></a></mt:if>
     </mt:unless>
-    <mt:if name="is_ip_filter">
-        <a href="javascript:void(0)"
-            onclick="doBanIP('<mt:var name="filter_val" escape="js">'); return false;"
-            ><__trans phrase="Ban This IP"></a>
-    </mt:if>
 </mt:setvarblock>
 <mtapp:listing>
     <mt:if __first__>

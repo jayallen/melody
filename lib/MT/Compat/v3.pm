@@ -146,7 +146,6 @@ BEGIN {
     # $MT::CallbackAlias{'AppTemplateOutput'}   = 'template_output';
     my @names = qw(
       CMSSavePermissionFilter_notification CMSSaveFilter_notification
-      CMSSavePermissionFilter_banlist CMSSaveFilter_banlist
       CMSViewPermissionFilter_author CMSSavePermissionFilter_author
       CMSDeletePermissionFilter_author CMSSaveFilter_author
       CMSPreSave_author CMSPostSave_author CMSViewPermissionFilter_blog

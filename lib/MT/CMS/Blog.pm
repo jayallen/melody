@@ -16,7 +16,6 @@ sub edit {
 #        my $output = $param->{output} ||= 'cfg_prefs.tmpl';
         $param->{need_full_rebuild}  = 1 if $q->param('need_full_rebuild');
         $param->{need_index_rebuild} = 1 if $q->param('need_index_rebuild');
-        $param->{show_ip_info} = $cfg->ShowIPInformation;
         $param->{use_plugins}  = $cfg->UsePlugins;
 
         my $entries_on_index = ( $obj->entries_on_index || 0 );

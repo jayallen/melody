@@ -716,78 +716,6 @@ sub _builtin_throttle {
         return 0;    # Put a collar on that puppy.
     }
 
-    return 1 unless $cfg->ShowIPInformation;
-
-    # If IP banning is enabled, check for lots of comments from
-    # the user's IP within the throttle period * 10; if they
-    # exceed 8 comments within that period, ban the IP.
-
-    @ts = MT::Util::offset_time_list( time - $throttle_period * 10 - 1,
-                                      $entry->blog_id );
-    $from = sprintf( "%04d%02d%02d%02d%02d%02d",
-                     $ts[5] + 1900,
-                     $ts[4] + 1,
-                     @ts[ 3, 2, 1, 0 ] );
-    my $count = MT::Comment->count( {
-                                       ip         => $user_ip,
-                                       created_on => [$from],
-                                       blog_id    => $entry->blog_id
-                                    },
-                                    { range => { created_on => 1 } }
-    );
-    if ( $count >= 8 ) {
-        require MT::IPBanList;
-        my $ipban = MT::IPBanList->new();
-        $ipban->blog_id( $entry->blog_id );
-        $ipban->ip($user_ip);
-        $ipban->save();
-        $app->log( {
-               message =>
-                 $app->translate(
-                   "IP [_1] banned because comment rate exceeded 8 comments in [_2] seconds.",
-                   $user_ip,
-                   10 * $throttle_period
-                 ),
-               class    => 'comment',
-               category => 'ip_ban',
-               blog_id  => $entry->blog_id,
-               level    => MT::Log::INFO(),
-               metadata => $user_ip,
-            }
-        );
-        require MT::Mail;
-        my $author = $entry->author;
-        $app->set_language( $author->preferred_language )
-          if $author && $author->preferred_language;
-
-        my $blog = MT::Blog->load( $entry->blog_id )
-          or return $app->error(
-              $app->translate( 'Can\'t load blog #[_1].', $entry->blog_id ) );
-        if ( $author && $author->email ) {
-            my %head = (
-                    id      => 'comment_throttle',
-                    To      => $author->email,
-                    From    => $cfg->EmailAddressMain,
-                    Subject => '['
-                      . $blog->name . '] '
-                      . $app->translate("IP Banned Due to Excessive Comments")
-            );
-            my $charset = $cfg->MailEncoding || $cfg->PublishCharset;
-            $head{'Content-Type'} = qq(text/plain; charset="$charset");
-            my $body =
-              $app->build_email(
-                                 'comment_throttle.tmpl',
-                                 {
-                                   blog             => $blog,
-                                   throttled_ip     => $user_ip,
-                                   throttle_seconds => 10 * $throttle_period,
-                                 }
-              );
-            $body = wrap_text( $body, 72 );
-            MT::Mail->send( \%head, $body );
-        } ## end if ( $author && $author...)
-        return 0;
-    } ## end if ( $count >= 8 )
     return 1;
 } ## end sub _builtin_throttle
 
@@ -816,15 +744,6 @@ sub post {
                                     scalar $q->param('entry_id')
                    )
       ) if $entry->status != RELEASE;
-
-    require MT::IPBanList;
-    my $iter = MT::IPBanList->load_iter( { blog_id => $entry->blog_id } );
-    while ( my $ban = $iter->() ) {
-        my $banned_ip = $ban->ip;
-        if ( $app->remote_ip =~ /$banned_ip/ ) {
-            return $app->handle_error( $app->translate("Invalid request") );
-        }
-    }
 
     my $blog = $app->model('blog')->load( $entry->blog_id )
       or return $app->error(

@@ -245,7 +245,6 @@ sub list {
         $param{filter}     ||= $filter_col;
         $param{filter_val} ||= $val;
         $param{is_filtered} = 1;
-        $param{is_ip_filter} = $filter_col eq "ip";
     } ## end if ( $filter_col && ( ...))
     elsif ($filter_key) {
         my $filters = $app->registry( "list_filters", "ping" ) || {};

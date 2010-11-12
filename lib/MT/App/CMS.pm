@@ -1401,17 +1401,6 @@ sub core_menus {
                              mode       => "cfg_plugins",
                              permission => "manage_plugins",
         },
-        'prefs:ip_info' => {
-            label      => "IP Banning",
-            mode       => 'list',
-            args       => { _type => 'banlist' },
-            order      => 180,
-            permission => 'manage_feedback',
-            condition  => sub {
-                $app->config->ShowIPInformation;
-            },
-            view => "blog",
-        },
 
         'tools:activity_log' => {
                                   label             => "Activity Log",
@@ -1527,11 +1516,6 @@ sub init_core_callbacks {
             $pkg
               . 'post_delete.notification' =>
               "${pfx}AddressBook::post_delete",
-
-            # banlist callbacks
-            $pkg
-              . 'save_permission_filter.banlist' => "${pfx}BanList::can_save",
-            $pkg . 'save_filter.banlist' => "${pfx}BanList::save_filter",
 
             # associations
             $pkg
@@ -1781,8 +1765,7 @@ sub set_default_tmpl_params {
           || $param->{can_edit_categories}
           || $param->{can_edit_config}
           || $param->{can_edit_tags}
-          || $param->{can_set_publish_paths}
-          || $param->{show_ip_info};
+          || $param->{can_set_publish_paths};
         $param->{has_posting_label} 
           = $param->{can_create_post}
           || $param->{can_edit_entries}
@@ -1796,14 +1779,11 @@ sub set_default_tmpl_params {
         $param->{can_view_log}     = $param->{can_view_blog_log};
         $param->{can_publish_post} = $param->{can_publish_post}
           || $param->{can_edit_all_posts};
-        $param->{show_ip_info}
-          = $app->config->ShowIPInformation && $param->{can_manage_feedback};
     } ## end if ( my $perms = $app->permissions)
 
     my $static_app_url = $app->static_path;
     $param->{help_url} = $app->help_url() || $static_app_url . 'docs/';
 
-    $param->{show_ip_info} ||= $app->config('ShowIPInformation');
     my $type = $q->param('_type') || '';
 
     $param->{ "mode_$mode" . ( $type ? "_$type" : '' ) } = 1;

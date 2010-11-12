@@ -61,6 +61,7 @@ my @word_pool = qw(
 srand(1);
 
 # these are all the numbers that control how many of what are generated
+<<<<<<< HEAD
 my $blog_count          = sub { $blogs * $weight_factor };
 my $authors_per_blog    = sub { $authors * $weight_factor };
 my $categories_per_blog = sub { $cats + int( rand(10) ) * $weight_factor };
@@ -70,17 +71,25 @@ my $bans_per_blog          = sub { 2 + int( rand(10) ) };
 my $comments_per_entry     = sub { int( rand(10) ) * $weight_factor };
 my $tags_per_entry         = sub { int( rand(5) ) * $weight_factor };
 my $pings_per_trackback    = sub { int( rand(10) ) * $weight_factor };
+=======
+my $blog_count             = sub { $blogs              * $weight_factor };
+my $authors_per_blog       = sub { $authors            * $weight_factor };
+my $categories_per_blog    = sub { $cats + int(rand(10)) * $weight_factor };
+my $entries_per_blog       = sub { $entries + int(rand(30)) * $weight_factor };
+my $notifications_per_blog = sub { 3   + int(rand(20))                  };
+my $comments_per_entry     = sub {       int(rand(10)) * $weight_factor };
+my $tags_per_entry         = sub {       int(rand(5))  * $weight_factor };
+my $pings_per_trackback    = sub {       int(rand(10)) * $weight_factor };
 my %defs = (
     'MT::Blog' => {
         table => 'blog',
         as_of => 1.0,
         needs => [
-                   'MT::Author'       => $authors_per_blog,
-                   'MT::Category'     => $categories_per_blog,
-                   'MT::Entry'        => $entries_per_blog,
-                   'MT::Template'     => \&template_loader,
-                   'MT::Notification' => $notifications_per_blog,
-                   'MT::IPBanList'    => $bans_per_blog,
+            'MT::Author'       => $authors_per_blog,
+            'MT::Category'     => $categories_per_blog,
+            'MT::Entry'        => $entries_per_blog,
+            'MT::Template'     => \&template_loader,
+            'MT::Notification' => $notifications_per_blog
         ],
         fields => [
             field( 'name', \&random_blog_name ),
@@ -394,14 +403,9 @@ my %defs = (
 #            field('build_dynamic', [], 3.1),
 #        ],
     },
-    'MT::TemplateMap' => { table => 'templatemap', as_of => 2.0, },
-    'MT::IPBanList'   => {
-        table => 'ipbanlist',
-        as_of => 1.4,           # ??
-        fields => [
-                    field( 'blog_id', sub { $this_parent->id } ),
-                    field( 'ip',      \&random_ip ),
-        ],
+    'MT::TemplateMap' => {
+        table => 'templatemap',
+        as_of => 2.0,
     },
     'MT::Log' => {
         table => 'log',

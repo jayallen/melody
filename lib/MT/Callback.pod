@@ -402,7 +402,6 @@ registered datatypes for the CMS. The available types are:
     notification => MT::Notification
     templatemap  => MT::TemplateMap
     category     => MT::Category
-    banlist      => MT::IPBanList
     ping         => MT::TBPing
     ping_cat     => MT::TBPing
     group        => MT::Group

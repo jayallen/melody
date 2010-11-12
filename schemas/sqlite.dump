@@ -143,18 +143,6 @@ create index mt_entry_author_id on mt_entry (entry_author_id);
 create index mt_entry_created_on on mt_entry (entry_created_on);
 create index mt_entry_basename on mt_entry (entry_basename);
 
-create table mt_ipbanlist (
-    ipbanlist_id integer not null primary key,
-    ipbanlist_blog_id integer not null,
-    ipbanlist_ip varchar(15) not null,
-    ipbanlist_created_on timestamp not null,
-    ipbanlist_modified_on timestamp not null,
-    ipbanlist_created_by integer,
-    ipbanlist_modified_by integer
-);
-create index mt_ipbanlist_blog_id on mt_ipbanlist (ipbanlist_blog_id);
-create index mt_ipbanlist_ip on mt_ipbanlist (ipbanlist_ip);
-
 create table mt_log (
     log_id integer not null primary key,
     log_message varchar(255),

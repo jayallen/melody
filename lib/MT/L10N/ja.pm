@@ -1516,12 +1516,6 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
     '<' => '<',
     '/' => '/',
 
-## lib/MT/CMS/BanList.pm
-    'You did not enter an IP address to ban.' =>
-      '禁止するIPアドレスを指定してください。',
-    'The IP you entered is already banned for this blog.' =>
-      'このIPアドレスはすでに禁止されています。',
-
 ## lib/MT/CMS/Blog.pm
     'General Settings'    => '全般',
     'Publishing Settings' => '公開設定',
@@ -2346,10 +2340,6 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
       'エクスポートに失敗しました。ブログ記事\'[_1]\': [_2]',
     'Invalid date format \'[_1]\'; must be \'MM/DD/YYYY HH:MM:SS AM|PM\' (AM|PM is optional)'
       => '日付の形式が正しくありません。\'MM/DD/YYYY HH:MM:SS AM|PM\' (AM|PMは任意)でなければなりません。',
-
-## lib/MT/IPBanList.pm
-    'IP Ban'  => 'IP禁止リスト',
-    'IP Bans' => 'IP禁止リスト',
 
 ## lib/MT/JunkFilter.pm
     'Action: Junked (score below threshold)' =>
@@ -5024,18 +5014,6 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
       '選択したユーザーを無効化 (d)',
     '_USER_DISABLE'     => '無効',
     'Showing All Users' => 'すべてのユーザーを表示',
-
-## tmpl/cms/list_banlist.tmpl
-    'IP Banning Settings' => '禁止IPアドレス設定',
-    'IP addresses'        => 'IPアドレス',
-    'Delete selected IP Address (x)' =>
-      '選択されたIPアドレスを削除 (x)',
-    'You have added [_1] to your list of banned IP addresses.' =>
-      '禁止IPアドレスリストに[_1]を追加しました。',
-    'You have successfully deleted the selected IP addresses from the list.'
-      => 'リストから選択したIPアドレスを削除しました。',
-    'Ban IP Address' => 'IPアドレスの禁止',
-    'Date Banned'    => '禁止した日付',
 
 ## tmpl/cms/list_blog.tmpl
     'You have successfully deleted the blogs from the Melody system.' =>

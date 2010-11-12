@@ -5036,11 +5036,7 @@ background: #C9E1EE;
 .list-notification .create-inline,
 .edit-template .create-inline,
 .list-category .create-inline,
-.list-banlist .create-inline {
-    padding: 8px 10px;
-    background-color: #cfc !important;
-    display: none;
-}
+
 .list-tag .create-inline {
     display: table-row;
 }
