@@ -150,6 +150,7 @@ sub fetch {
     $driver->start_query($sql, $stmt->{bind});
 
     my $sth = $orig_args->{no_cached_prepare} ? $dbh->prepare($sql) : $driver->_prepare_cached($dbh, $sql);
+use Carp; defined $sth or die $sql.' '.Carp::longmess();
     $sth->execute(@{ $stmt->{bind} });
     $sth->bind_columns(undef, @bind);
 

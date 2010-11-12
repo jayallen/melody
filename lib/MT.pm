@@ -7,6 +7,7 @@
 package MT;
 
 use strict;
+# use MT::ErrorHandler;
 use base qw( MT::ErrorHandler );
 use File::Spec;
 use File::Basename;
@@ -21,7 +22,7 @@ our ( $MT_DIR, $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
 our (
       $plugin_sig, $plugin_envelope, $plugin_registry,
       %Plugins,    @Components,      %Components,
-      $DebugMode,  $mt_inst,         %mt_inst
+      $DebugMode,  $mt_inst,         %mt_inst,      $logger
 );
 my %Text_filters;
 
@@ -569,6 +570,8 @@ sub run_tasks {
 sub add_plugin {
     my $class = shift;
     my ($plugin) = @_;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
+    ###l4p $logger->debug('$plugin in add_plugin: ', l4mtdump($plugin));
 
     if ( ref $plugin eq 'HASH' ) {
         require MT::Plugin;
@@ -583,6 +586,8 @@ sub add_plugin {
           "MT->add_plugin improperly called outside of MT plugin load loop.";
         return;
     }
+    ###l4p $logger->debug('Setting plugin_envelope to $plugin_envelope');
+
     $plugin->envelope($plugin_envelope);
     Carp::confess(
         "You cannot register multiple plugin objects from a single script. $plugin_sig"
@@ -1317,6 +1322,10 @@ sub init {
 
     $mt->init_callbacks();
 
+    require MT::Log::Log4perl;
+    import MT::Log::Log4perl qw( l4mtdump );
+    use Log::Log4perl qw( :resurrect );
+
     ## Initialize the language to the default in case any
     ## errors occur in the rest of the initialization process.
     $mt->init_config( \%param ) or return;
@@ -1421,14 +1430,16 @@ sub upload_file_to_sync {
 # use Data::Dumper;
 sub init_addons {
     my $mt     = shift;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     my $cfg    = $mt->config;
     my $addons = $mt->find_addons('pack');
-
+    ###l4p $logger->debug('After find_addons("pack"): ', l4mtdump($addons));
     return $mt->_init_plugins_core( {}, 1, $addons );
 }
 
 sub init_plugins {
     my $mt = shift;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     # Load compatibility module for prior version
     # This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
@@ -1437,14 +1448,17 @@ sub init_plugins {
     my $cfg          = $mt->config;
     my $use_plugins  = $cfg->UsePlugins;
     my $PluginSwitch = $cfg->PluginSwitch || {};
-    my $plugins      = $mt->find_addons('plugin');
+    ###l4p $logger->debug('$PluginSwitch: ', l4mtdump($PluginSwitch));
 
+    my $plugins      = $mt->find_addons('plugin');
+    ###l4p $logger->debug('After find_addons("plugin"): ', l4mtdump($plugins));
     return $mt->_init_plugins_core( $PluginSwitch, $use_plugins, $plugins );
 }
 
 sub _init_plugins_core {
     my $mt = shift;
     my ( $PluginSwitch, $use_plugins, $plugins ) = @_;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     my $timer;
     if ( $mt->config->PerformanceLogging ) {
@@ -1459,6 +1473,8 @@ sub _init_plugins_core {
         die "Bad plugin filename '$plugin'"
           if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
         local $plugin_sig      = $plugin->{sig};
+        # local $plugin_sig      = $sig;
+        ###l4p $logger->debug('$plugin_sig: '.$plugin_sig);
         local $plugin_registry = {};
         $plugin = $1;
         if (
@@ -1518,6 +1534,7 @@ sub _init_plugins_core {
             push( @deprecated_perl_init, $plugin );
             $plugin_envelope  = $plugin->{envelope};
             $plugin_full_path = $plugin->{path};
+            ###l4p $logger->debug('Loading deprecated plugin: ',l4mtdump($plugin));
             $load_plugin->( $plugin->{path}, $plugin->{file} );
         }
         else {
@@ -1547,6 +1564,7 @@ sub _init_plugins_core {
             #        id declared in the yaml.
             # See http://bugs.movabletype.org/?79933
             local $plugin_sig = $plugin->{dir} . '/' . $plugin->{file};
+            ###l4p $logger->debug('coco plugin_sig: ', $plugin_sig);
             next if exists $Plugins{$plugin_sig};
 
             # TODO - the id needs to be yaml specific, not directory
@@ -1554,15 +1572,16 @@ sub _init_plugins_core {
             my $id = lc $plugin->{dir};
             $id =~ s/\.\w+$//;
 
-            my $p = $pclass->new( {
-                                    id       => $id,
-                                    path     => $plugin->{base},
-                                    config   => $plugin->{file},
-                                    envelope => $plugin->{envelope}
-                                  }
-            );
+            my $plugin_init = {
+                id       => $id,
+                path     => $plugin->{base},
+                config   => $plugin->{file},
+                envelope => $plugin->{envelope}
+            };
+            ###l4p $logger->info("Initializing $pclass: ",l4mtdump($plugin_init));
+            my $p = $pclass->new( $plugin_init);
+            ###l4p $logger->debug("Blessed $pclass: ", l4mtdump($p));
 
-            # rebless? based on config?
             $Plugins{$plugin_sig}{enabled} = 1;
             $plugin_envelope               = $plugin->{envelope};
             $plugin_full_path              = $plugin->{path};
@@ -1610,9 +1629,10 @@ sub _perl_init_plugin_warnings {
     my $warn_msg = sub {
         return
           $mt->translate(
-                          "You are using a plugin ([_1]) that uses a "
-                            . "deprecated plugin file format (.pl)",
-                          (shift)->{file}
+                        "DEPRECATION WARNING: One of your plugins ([_1]) "
+                     .  "uses a deprecated plugin file format (.pl) that "
+                     .  "will not be supported in the future.",
+                     (shift)->{file}
           );
     };
 
@@ -1677,12 +1697,14 @@ my %addons;
 sub find_addons {
     my $mt = shift;
     my ($type) = @_;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     unless (%addons) {
         my @PluginPaths;
         my $cfg = $mt->config;
         unshift @PluginPaths, File::Spec->catdir( $MT_DIR, 'addons' );
         unshift @PluginPaths, $cfg->PluginPath;
         foreach my $PluginPath (@PluginPaths) {
+            ###l4p $logger->info("Looking for plugins in $PluginPath");
             __merge_hash( \%addons,
                           $mt->scan_directory_for_addons($PluginPath) );
         }
@@ -1697,6 +1719,7 @@ sub find_addons {
 sub scan_directory_for_addons {
     my $mt             = shift;
     my ($PluginPath)   = @_;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     my $plugin_lastdir = $PluginPath;
     $plugin_lastdir =~ s![\\/]$!!;
     $plugin_lastdir =~ s!.*[\\/]!!;
@@ -1715,13 +1738,13 @@ sub scan_directory_for_addons {
             if ( -f $plugin_full_path ) {
                 if ( $plugin_full_path =~ /\.pl$/ ) {
 
-                    my $err = $mt->translate("The plugin [_1] was not "
-                            . "loaded because Melody does not support "
-                            . "plugins placed directly in a plugin "
-                            . "directory without an enclosing folder.",
+                    my $err = $mt->translate("The plugin [_1] "
+                            . "was not loaded because it resides in the "
+                            . "top level of a plugin directory, a legacy MT "
+                            . "plugin practice Melody does not support.",
                               $plugin_full_path);
-                    print STDERR $err."\n";
-                    ###l4p $logger->warn($err);
+                    print STDERR "ERROR: $err\n";
+                    ###l4p $logger->error($err);
                     $mt->log( {
                                 message => $err,
                                 class   => 'system',
@@ -1798,8 +1821,15 @@ sub scan_directory_for_addons {
                       = File::Spec->catfile( $plugin_full_path, $file );
                     if ( -f $plugin_file ) {
                         my $sig = File::Spec->catfile( $plugin_dir, $file );
-use Data::Dumper;
-print STDERR "Adding $plugin_file".Dumper({dir => $plugin_dir, base => $plugin_full_path, envelope => "$plugin_lastdir/" . $plugin_dir, sig => $sig});
+                        ###l4p $logger->debug("Adding $plugin_file ", l4mtdump({
+                        ###l4p     dir      => $plugin_dir,
+                        ###l4p     base     => $plugin_full_path,
+                        ###l4p     envelope => "$plugin_lastdir/" . $plugin_dir,
+                        ###l4p     path     => $plugin_full_path,
+                        ###l4p     file     => $file,
+                        ###l4p     sig     => $sig,
+                        ###l4p }));
+
                         # Plugin is a file, add it to list for processing
                         push @{ $plugins{$type} }, {
                             label => $label,              # used only by packs

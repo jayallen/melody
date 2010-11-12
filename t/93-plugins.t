@@ -111,8 +111,24 @@ subtest $test->{sig} => sub {
 # get the list of plugins and place them in a hash
 foreach my $test ( @tests ) {
 
+    subtest $test->{sig} => sub {
+        plan tests => 2;
 
-    # test plugins created by MT::Test
-    ok( exists $plugins->{"Awesome"},     "Awesome exists" );
-    ok( exists $plugins->{"testplug.pl"}, "testplug.pl exists" );
+        $test->{base_class} ||= 'MT::Plugin';
+        $test->{message}    ||= " exists";
+        my $loaded = $test->{not_loaded} ? 0 : 1;
+        is(
+            ($test->{sig} && exists $MT::Plugins{$test->{sig}}) ? 1 : 0,
+            $loaded,
+            $test->{sig} . $test->{message}
+        );
+        SKIP: {
+            skip "Plugin not loaded", 1 unless $loaded;
+            is(
+                ref( $MT::Plugins{$test->{sig}}->{'object'} ),
+                $test->{base_class},
+                $test->{name}.' base class is '.$test->{base_class}
+            );
+        }
+    };
 }
