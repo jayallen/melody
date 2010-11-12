@@ -6,8 +6,7 @@ author_link: http://www.sixapart.com/
 version: 1.0.1
 blog_config_template: config.tmpl
 system_config_template: system.tmpl
-
-init: sub { my $p = shift; require TypePadAntiSpam::Plugin; bless $p, 'TypePadAntiSpam::Plugin'; }
+plugin_class: "TypePadAntiSpam::Plugin"
 
 settings:
     api_key:
