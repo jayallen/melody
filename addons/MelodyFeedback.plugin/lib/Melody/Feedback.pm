@@ -10,14 +10,14 @@ use warnings;
 our $TAB_MARKUP;
 our $HOOK;
 our $HOOK_REGEX;
-our $EXCLUDE;
 our $EXCLUDE_REGEX;
+our $FILTER_REGEX;
 our $INCLUDE_REGEX;
 
 sub cb_insert_tab {
     my ( $cb, $app, $out, $param, $tmpl ) = @_;
-    unless ($EXCLUDE) {    # initialize filter
-        $EXCLUDE = join '|', qw(
+    unless ($EXCLUDE_REGEX) {    # initialize filter
+        my $exclude = join '|', qw(
           upgrade.tmpl
           upgrade_runner.tmpl
           rebuilding.tmpl
@@ -26,12 +26,19 @@ sub cb_insert_tab {
           \bdialog\b
           \binclude\b
         );
-        $EXCLUDE_REGEX = qr/$EXCLUDE/;
+        $EXCLUDE_REGEX = qr/$exclude/;
     }
     my $file = $tmpl->{__file} or return;
     return unless $app->id eq 'cms';    # Precautionary. CMS app only.
     return if $file =~ m{$EXCLUDE_REGEX};
-    unless ($HOOK) {                    # initialize script injection
+    unless ($FILTER_REGEX) {    # last ditch attempt to filter out any dialogs
+        my $filter = reverse('<div id="bootstrapper" class="hidden"></div>')
+          ;                     # not in footer_popup.tmpl
+        $FILTER_REGEX = qr/$filter/i;
+    }
+    my $rout = reverse($$out);
+    return unless $rout =~ m{$FILTER_REGEX};
+    unless ($HOOK) {            # initialize script injection
         $TAB_MARKUP = reverse(
             qq{
 <script type="text/javascript" charset="utf-8">
@@ -55,7 +62,6 @@ sub cb_insert_tab {
         $HOOK       = reverse('</body>');
         $HOOK_REGEX = qr/$HOOK/i;
     } ## end unless ($HOOK)
-    my $rout = reverse($$out);
     my ($flag) = $rout =~ s{$HOOK_REGEX}{$HOOK$TAB_MARKUP};
     $$out = reverse($rout);
 } ## end sub cb_insert_tab
