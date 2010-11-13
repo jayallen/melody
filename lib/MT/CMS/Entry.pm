@@ -1926,22 +1926,30 @@ sub save_entries {
 
 sub rebuild_entry {
     my $app = shift;
+    my $q = $app->query;
+    # TODO - always in a blog context?
+    # TODO - permission check?
     my $blog = $app->blog;
     my $return_val = {
         success => 0
     };
-    my $entries = MT->model('entry')->lookup_multi([ $app->param('id') ]);
+    my $entries = MT->model('entry')->lookup_multi([ $q->param('id') ]);
   ENTRY: for my $entry (@$entries) {
       next ENTRY if !defined $entry;
       next ENTRY if $entry->blog_id != $blog->id;
-      
-      MT->log({ blog_id => $blog->id,
-                message => "Republishing '".$entry->title."' via AJAX" });
+      if ($entry->status == MT::Entry::HOLD()) {
+          $entry->status(MT::Entry::RELEASE());
+          $entry->save;
+      }
       $return_val->{success} = $app->rebuild_entry(
           Blog     => $blog,
           Entry    => $entry,
           Force    => 1,
       );
+      $return_val->{permalink} = $entry->permalink;
+      $return_val->{permalink_rel} = $entry->permalink;
+      my $base = $entry->blog->site_url;
+      $return_val->{permalink_rel} =~ s/$base//;
       unless ($return_val->{success}) {
           $return_val->{errstr} = $app->errstr;
       }

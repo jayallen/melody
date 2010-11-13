@@ -87,9 +87,9 @@
         </thead>
         <tbody>
     </mt:if>
-            <tr mt:entryid="<mt:var name="id">" class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> master <mt:unless name="status_publish">un</mt:unless>published">
+            <tr class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> master <mt:unless name="status_publish">un</mt:unless>published">
         <mt:unless name="is_power_edit">
-                <td class="publish tl"><a href=""><span><__trans phrase="Publish"></span></a></td>
+                <td class="publish tl"><a href="javascript:void(0)"><span><__trans phrase="Publish"></span></a></td>
                 <td class="cb">
             <mt:if name="has_edit_access">
                     <input type="checkbox" name="id" value="<$mt:var name="id"$>" class="select" />
@@ -205,20 +205,22 @@
                 </td>
             </tr>
         <mt:if name="view_compact">
-            <tr mt:entryid="<mt:var name="id">" class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> slave">
+            <tr class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> slave">
                 <td class="bl">&#160;</td>
                 <td>&#160;</td>
                 <td>&#160;</td>
                 <td colspan="99" class="extra br last">
+                  <div class="url">
             <mt:if name="entry_permalink">
-                  <div class="url"><a href="<$mt:var name="entry_permalink"$>" target="<__trans phrase="_external_link_target">" title="<mt:if name="object_type" eq="entry"><__trans phrase="View entry"><mt:else><__trans phrase="View page"></mt:if>"><mt:if name="system_overview_nav"><$mt:var name="entry_permalink"$><mt:else><$mt:var name="entry_permalink_relative"$></mt:if></a></div>
+                    <a href="<$mt:var name="entry_permalink"$>" target="<__trans phrase="_external_link_target">" title="<mt:if name="object_type" eq="entry"><__trans phrase="View entry"><mt:else><__trans phrase="View page"></mt:if>"><mt:if name="system_overview_nav"><$mt:var name="entry_permalink"$><mt:else><$mt:var name="entry_permalink_relative"$></mt:if></a>
             </mt:if>
+                  </div>
                   <div class="actions">
                     <ul>
-                      <li><a href="">Publish</a></li>
-                      <li><a href="">Edit</a></li>
-                      <li><a href="">Delete</a></li>
-                      <li class="last"><a href="">Flag</a></li>
+                      <li class="publish_entry"><a href="javascript:void(0)">Publish</a></li>
+                      <li class="edit_entry"><a href="<$mt:var name="script_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;id=<$mt:var name="id"$>&amp;blog_id=<$mt:var name="blog_id"$>">Edit</a></li>
+                      <li class="delete_entry"><a href="">Delete</a></li>
+                      <li class="flag_entry last"><a href="">Flag</a></li>
                     </ul>
                   </div>
                 </td>
