@@ -1,3 +1,5 @@
+<mt:ignore>
+<!-- This was the markup that inserted the Flash stats display. -->
 <mt:setvarblock name="html_head" append="1">
     <mt:if name="stat_url">
 <script type="text/javascript">
@@ -13,12 +15,15 @@
 </script>
     </mt:if>
 </mt:setvarblock>
+</mt:ignore>
 
 <mt:setvarblock name="tabs" append="1">
         <li id="comment-tab" class="tab <mt:if name="tab" eq="comment">selected-tab</mt:if>" mt:tab="comment" mt:command="select-tab" onclick="blogStatsTabSelect('comment')"><a  href="javascript:void(0)"><span><__trans phrase="Comments"></span></a></li>
 </mt:setvarblock>
 
     <div id="comment-panel" class="<mt:unless name="tab" eq="comment">hidden</mt:unless>" mt:tab-content="comment">
+<mt:ignore>
+<!-- This was the markup that inserted the Flash stats display. -->
         <mt:if name="stat_url">
         <script type="text/javascript">
         /* <![CDATA[ */
@@ -27,7 +32,7 @@
         </script>
         <div class="stats-summary" id="stats-summary-comment">&nbsp;</div>
         </mt:if>
-
+</mt:ignore>
         <h4 class="tab-panel-header"><__trans phrase="Most Recent Comments"></h4>
 
         <MTComments sort_order="descend">

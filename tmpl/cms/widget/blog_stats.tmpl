@@ -49,6 +49,7 @@
         f['tab'].value = activeStatsPanel;
         updateWidget('blog_stats');
     }
+<mt:ignore>
     <mt:if name="has_stat_urls">
         var lcId = new Date().getTime();
         var flashProxy = new FlashProxy(lcId, "<mt:var name="static_uri">flash/JavaScriptFlashGateway.swf");
@@ -109,6 +110,7 @@
             getByID("stats-summary-"+activeStatsPanel).innerHTML = str;
         }
         </mt:if>
+</mt:ignore>
         blogStatsTabs = new Array('comment','entry'<mt:if name="tag_cloud">,'tag'</mt:if>);
         /* ]]> */
     </script>
