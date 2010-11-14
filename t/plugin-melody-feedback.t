@@ -27,7 +27,7 @@ my $tmpl2 = { '__file' => 'popup/rebuilt.tmpl' };
 my $tmpl3 = { '__file' => 'login.tmpl' };
 my $out;
 my $html
-  = "<html>\n\n<body>\nwhatever\n<br/></p>body copy\t\t<br />\tbody copy\t\rbody copy\n</BOdY></html>";
+  = "<html>\n\n<body>\nwhatever\n<br/></p>body copy\t\t<br />\tbody copy\t\rbody copy\n<div id=\"bootstrapper\" class=\"hidden\"></div></BOdY></html>";
 my $cb = MT::Callback->new( 'name' => 'MT::App::CMS::template_output',
                             'code' => \&Melody::Feedback::cb_insert_tab,
 );    # not sure this is necessary for our purposes here but...
