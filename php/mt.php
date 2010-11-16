@@ -536,7 +536,7 @@ class MT {
             $this->doConditionalGet($last_modified);
         }
 
-        $cache_id = $blog_id.';'.$fi_path;
+        $cache_id = $blog_id.';'.$fi_path . ';'.$_SERVER['QUERY_STRING'];
         if (!$ctx->is_cached('mt:'.$tpl_id, $cache_id)) {
             if (isset($at) && ($at != 'Category')) {
                 global $_archivers;
