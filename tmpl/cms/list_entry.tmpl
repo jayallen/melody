@@ -64,11 +64,22 @@
     </mtapp:widget>
     <$mtapp:PageActions from="$mode"$>
 </mt:setvarblock>
-<mt:setvarblock name="html_body_footer">
+<mt:setvarblock name="html_body_footer" append="1">
+    <mt:include name="include/dialogs/quicklook.tmpl">
     <$mt:include name="include/display_options.tmpl"$>
 </mt:setvarblock>
 </mt:unless>
 <mt:setvarblock name="html_head" append="1">
+
+<link rel="stylesheet" href="<mt:var name="static_uri">melody/mt.dialog.css" type="text/css">
+<link rel="stylesheet" href="<mt:var name="static_uri">css/jquery/ui.core.css" type="text/css">
+<link rel="stylesheet" href="<mt:var name="static_uri">css/jquery/ui.dialog.css" type="text/css">
+<link rel="stylesheet" href="<mt:var name="static_uri">melody/quicklook.css" type="text/css">
+<script type="text/javascript" src="<mt:var name="static_uri">jquery/jquery.js"></script>
+<script type="text/javascript" src="<mt:var name="static_uri">jquery/ui/ui.core.js"></script>
+<script type="text/javascript" src="<mt:var name="static_uri">jquery/ui/ui.dialog.js"></script>
+<script type="text/javascript" src="<mt:var name="static_uri">jquery/ui/ui.resizable.js"></script>
+<script type="text/javascript" src="<mt:var name="static_uri">jquery/ui/ui.draggable.js"></script>
 <script type="text/javascript" src="<mt:var name="static_uri">jquery/jquery.qtip-1.0.min.js"></script>
 <script type="text/javascript" src="<mt:var name="static_uri">js/melody/list_entry.js"></script>
 <script type="text/javascript">

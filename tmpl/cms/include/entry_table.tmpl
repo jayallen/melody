@@ -87,7 +87,7 @@
         </thead>
         <tbody>
     </mt:if>
-            <tr class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> master <mt:unless name="status_publish">un</mt:unless>published">
+            <tr id="obj-<mt:var name="id">" class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> master <mt:unless name="status_publish">un</mt:unless>published">
         <mt:unless name="is_power_edit">
                 <td class="publish tl"><a href="javascript:void(0)"><span><__trans phrase="Publish"></span></a></td>
                 <td class="cb">
@@ -154,7 +154,7 @@
                 </mt:unless>
         <mt:if name="view_expanded">
             </tr>
-            <tr mt:entryid="<mt:var name="id">" class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> slave">
+            <tr class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> slave">
                 <td>&#160;</td>
                 <td>&#160;</td>
                 <td><mt:if name="has_edit_access"><a href="<$mt:var name="script_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;id=<$mt:var name="id"$>&amp;blog_id=<$mt:var name="blog_id"$>"><mt:if name="object_type" ne="page"><__trans phrase="Edit Entry"><mt:else><__trans phrase="Edit Page"></mt:if></a><mt:else>&#160;</mt:if></td>
@@ -218,9 +218,9 @@
                   <div class="actions">
                     <ul>
                       <li class="publish_entry"><a href="javascript:void(0)">Publish</a></li>
-                      <li class="edit_entry"><a href="<$mt:var name="script_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;id=<$mt:var name="id"$>&amp;blog_id=<$mt:var name="blog_id"$>">Edit</a></li>
-                      <li class="delete_entry"><a href="">Delete</a></li>
-                      <li class="flag_entry last"><a href="">Flag</a></li>
+                      <li class="edit_entry"><a href="<$mt:var name="script_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;id=<$mt:var name="id"$>&amp;blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Edit"></a></li>
+                      <li class="quick_look last"><a href="javascript:void(0)"><__trans phrase="Quick Look"></a></li>
+<!--                      <li class="flag_entry last"><a href="javascript:void(0)"><__trans phrase="Flag"></a></li> -->
                     </ul>
                   </div>
                 </td>

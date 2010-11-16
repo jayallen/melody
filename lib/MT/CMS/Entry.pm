@@ -1957,6 +1957,27 @@ sub rebuild_entry {
     return _send_json_response( $app, $return_val );
 }
 
+sub get_entry {
+    my $app = shift;
+    my $q = $app->query;
+    my $blog = $app->blog;
+    my $return_val = {
+        success => 0
+    };
+    my $e = MT->model('entry')->load($q->param('id'));
+    my $hash = $e->to_hash();
+    foreach my $key (keys %$hash) {
+        my $newkey = $key; 
+        $newkey =~ s/\./_/g;
+        if (ref $hash->{$key} eq 'CODE') {
+            $return_val->{entry}->{$newkey} = &{$hash->{$key}};
+        } else {
+            $return_val->{entry}->{$newkey} = $hash->{$key};
+        }
+    }
+    return _send_json_response( $app, $return_val );
+}
+
 sub _send_json_response {
     my ( $app, $result ) = @_;
     require JSON;

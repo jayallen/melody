@@ -226,6 +226,7 @@ sub core_methods {
         'js_add_category'   => "${pkg}Category::js_add_category",
         'remove_userpic'    => "${pkg}User::remove_userpic",
         'rebuild_entry'     => "${pkg}Entry::rebuild_entry",
+        'get_entry'         => "${pkg}Entry::get_entry",
 
         # declared in MT::App
         'update_widget_prefs' =>
