@@ -1,0 +1,46 @@
+#quicklookDialog {
+  text-align: left;
+  overflow: hidden;
+}
+#quicklookDialog h1 {
+  font-size: 2.5em;
+}
+#quicklookDialog h2 {
+  font-size: 2em;
+}
+#quicklookDialog h3 {
+  font-size: 1.8em;
+}
+#quicklookDialog h4 {
+  font-size: 1.6em;
+}
+#quicklookDialog h5 {
+  font-size: 1.2em;
+}
+#quicklookDialog ul li {
+  list-style-type: disc;
+  padding-left: 5px;
+}
+#quicklookDialog ul {
+  padding-left: 25px;
+}
+#quicklookDialog #content-preview {
+  height: 350px;
+  position: relative;
+  z-index: 99;
+}
+#quicklookDialog #content-preview #text {
+  overflow: hidden;
+}
+#quicklookDialog #content-preview #bottom-fade {
+  position: absolute;
+  z-index: 99;
+  bottom: -70px;
+  background: url("bottom-fade.png") repeat-x bottom left;
+  display: block;
+  width: 100%;
+  height: 100px;
+}
+#quicklookDialog #content-preview #text.thinking {
+  background: url(../images/indicator.gif) no-repeat center center;
+}
