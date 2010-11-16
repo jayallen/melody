@@ -3,6 +3,7 @@ package MT::Tool::StaticCopy;
 use strict;
 use warnings;
 use lib qw( lib extlib );
+use File::Basename qw( basename dirname );
 use base qw( MT::Tool );
 use MT;
 # use Data::Dumper;
@@ -104,7 +105,7 @@ sub _traverse_hash {
                                        'plugins',              $plugin->id,
                                        $dir,                   $cur_item
                   );
-
+                
                 _write_file( $src, $dest );
             }
         } ## end else [ if ( $subfolders ne '')]
@@ -124,7 +125,6 @@ sub _make_dir {
     if ( $fmgr->mkpath($dir) ) {
 
         # Success!
-        my $app              = MT->instance;
         my $static_file_path = $app->static_file_path;
         $dir =~ s!$static_file_path/support/plugins/(.*)!$1!;
         print "Created folder $dir/\n";
@@ -149,6 +149,7 @@ sub _write_file {
 
     # Write the file to its new home, but only if some data was read.
     if ($src_data) {
+        $fmgr->mkpath( dirname( $dest ));
         my $bytes = $fmgr->put_data( $src_data, $dest )
           or die $fmgr->errstr . "\n";
 
