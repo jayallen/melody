@@ -1,3 +1,5 @@
+<mt:ignore>
+<!-- This was the markup that inserted the Flash stats display. -->
 <mt:setvarblock name="html_head" append="1" id="html_head">
     <mt:if name="stat_url">
 <script type="text/javascript">
@@ -13,12 +15,15 @@
 </script>
     </mt:if>
 </mt:setvarblock>
+</mt:ignore>
 
 <mt:setvarblock name="tabs" append="1">
         <li id="entry-tab" class="tab <mt:if name="tab" eq="entry">selected-tab</mt:if>" mt:tab="entry" mt:command="select-tab" onclick="return blogStatsTabSelect('entry');"><a href="javascript:void(0)" ><span><__trans phrase="Entries"></span></a></li>
 </mt:setvarblock>
 
     <div id="entry-panel" class="<mt:unless name="tab" eq="entry">hidden</mt:unless>" mt:tab-content="entry">
+<mt:ignore>
+<!-- This was the markup that inserted the Flash stats display. -->
         <mt:if name="stat_url">
         <script type="text/javascript">
         /* <![CDATA[ */
@@ -28,6 +33,7 @@
 
         <div class="stats-summary" id="stats-summary-entry">&nbsp;</div>
         </mt:if>
+</mt:ignore>
 
         <h4 class="tab-panel-header"><__trans phrase="Most Recent Entries"></h4>
 
