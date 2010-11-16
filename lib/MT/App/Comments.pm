@@ -323,7 +323,7 @@ sub signup {
     my $q     = $app->query;
     my %opt   = @_;
     my $param = {};
-    $param->{$_} = $app->query($_)
+    $param->{$_} = $q->param($_)
       foreach qw(blog_id entry_id static username return_url );
     my $blog = $app->model('blog')->load( $param->{blog_id} || 0 )
       or return $app->error(
