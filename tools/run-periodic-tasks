@@ -21,13 +21,13 @@ my $trace_objects  = 0;
 
 require Getopt::Long;
 Getopt::Long::GetOptions(
-    "daemon"       => \$daemonize,
-    "sleep=i"      => \$sleep,
-    "load=i"       => \$load,
-    "scoreboard=s" => \$scoreboard,
-    "randomly"     => \$randomize_jobs,
-    "verbose"      => \$verbose,
-    "leak"         => \$trace_objects,
+                          "daemon"       => \$daemonize,
+                          "sleep=i"      => \$sleep,
+                          "load=i"       => \$load,
+                          "scoreboard=s" => \$scoreboard,
+                          "randomly"     => \$randomize_jobs,
+                          "verbose"      => \$verbose,
+                          "leak"         => \$trace_objects,
 );
 require MT::TheSchwartz;
 
@@ -53,7 +53,7 @@ require MT::Bootstrap;
 require MT;
 
 my $mt = MT->new() or die MT->errstr;
-if ( defined(MT->config('RPTProcessCap')) && $proc_process_table ) {
+if ( defined( MT->config('RPTProcessCap') ) && $proc_process_table ) {
     my $t = new Proc::ProcessTable;
     my $rpt_count;
     foreach my $p ( @{ $t->table } ) {
@@ -70,16 +70,14 @@ if ( defined(MT->config('RPTProcessCap')) && $proc_process_table ) {
 
 if ( MT->config('RPTFreeMemoryLimit') ) {
     my $limit = MT->config('RPTFreeMemoryLimit');
-    if ( $limit and ! MT::TheSchwartz::_has_enough_swap($limit) ) {
-        die
-            "Free memory below RPT limit; cancelling RPT launch\n";
+    if ( $limit and !MT::TheSchwartz::_has_enough_swap($limit) ) {
+        die "Free memory below RPT limit; cancelling RPT launch\n";
     }
 }
 if ( MT->config('RPTFreeSwapLimit') ) {
     my $swaplimit = MT->config('RPTSwapMemoryLimit');
-    if ( $swaplimit and ! MT::TheSchwartz::_has_enough_swap($swaplimit) ) {
-        die
-            "Free swap memory below RPT limit; cancelling RPT launch\n";
+    if ( $swaplimit and !MT::TheSchwartz::_has_enough_swap($swaplimit) ) {
+        die "Free swap memory below RPT limit; cancelling RPT launch\n";
     }
 }
 

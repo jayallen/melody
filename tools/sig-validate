@@ -23,14 +23,16 @@ $ARGV[1] or usage();
 $ARGV[0] =~ s/^[(.*)]$/$1/;
 $ARGV[1] =~ s/^[(.*)]$/$1/;
 
-my ($email, $name, $nick, $ts, $token) = split '::', $ARGV[0];
+my ( $email, $name, $nick, $ts, $token ) = split '::', $ARGV[0];
 
-my $validation = MT::App::Comments::_validate_signature($mt, 
-                                                        $ARGV[1],
-                                                        email => $email,
-                                                        name => $name,
-                                                        nick => $nick,
-                                                        ts => $ts,
-                                                        token => $token);
+my $validation =
+  MT::App::Comments::_validate_signature(
+                                          $mt, $ARGV[1],
+                                          email => $email,
+                                          name  => $name,
+                                          nick  => $nick,
+                                          ts    => $ts,
+                                          token => $token
+  );
 print "The signature with timestamp together are: ",
-    $validation ? "VALID" : "invalid", "\n";
+  $validation ? "VALID" : "invalid", "\n";

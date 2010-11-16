@@ -18,7 +18,7 @@ use MT;
 use MT::Util::LogProcessor;
 use Data::Dumper;
 
-my ($arg_day, $arg_logdir, $arg_sample, $arg_slow, $arg_debug, $arg_dump);
+my ( $arg_day, $arg_logdir, $arg_sample, $arg_slow, $arg_debug, $arg_dump );
 
 sub help {
     return q{
@@ -40,12 +40,12 @@ sub usage {
 
 sub options {
     return (
-        'logdir=s' => \$arg_logdir,
-        'sample=i' => \$arg_sample,
-        'slow=i'   => \$arg_slow,
-        'day=s'    => \$arg_day,
-        'debug'    => \$arg_debug,
-        'dump'     => \$arg_dump,
+             'logdir=s' => \$arg_logdir,
+             'sample=i' => \$arg_sample,
+             'slow=i'   => \$arg_slow,
+             'day=s'    => \$arg_day,
+             'debug'    => \$arg_debug,
+             'dump'     => \$arg_dump,
     );
 }
 
@@ -55,15 +55,15 @@ sub main {
 
     $arg_slow ||= 2;
 
-    my $proc = MT::Util::LogProcessor->new(
-        {
-            debug        => $arg_debug,
-            logdir       => $arg_logdir || '.',
-            sample       => $arg_sample,
-            day          => $arg_day || 'yesterday',
-            file_pattern => 'pl-\d{8}.log',
-        }
-    );
+    my $proc =
+      MT::Util::LogProcessor->new( {
+                                     debug        => $arg_debug,
+                                     logdir       => $arg_logdir || '.',
+                                     sample       => $arg_sample,
+                                     day          => $arg_day || 'yesterday',
+                                     file_pattern => 'pl-\d{8}.log',
+                                   }
+      );
 
     my %stash = ( today => $proc->day );
     my ( $total_records, $elapsed ) = $proc->process_log_files(
@@ -89,27 +89,29 @@ sub main {
 
     for my $bucket ( 0 .. $#{ $stash{by_seconds} } ) {
         my $count = $stash{by_seconds}[$bucket] || 0;
-        $stash{restime_histogram}[$bucket] = {
-            count => $count,
-            range => $bucket == 10
-            ? '10+ sec'
-            : $bucket . '-' . ( $bucket + 1 ) . 's',
-            percent => int( $count / $stash{total_requests} * 100 ) || 1,
-        };
+        $stash{restime_histogram}[$bucket]
+          = {
+              count => $count,
+              range => $bucket == 10
+              ? '10+ sec'
+              : $bucket . '-' . ( $bucket + 1 ) . 's',
+              percent => int( $count / $stash{total_requests} * 100 ) || 1,
+          };
     }
 
-    $stash{slow} =
-      [ sort { $b->{time_total} <=> $a->{time_total} } @{ $stash{slow} || [] } ];
+    $stash{slow} = [ sort { $b->{time_total} <=> $a->{time_total} }
+                     @{ $stash{slow} || [] } ];
 
     report( \%stash );
-}
+} ## end sub main
 
 sub report {
     my ($stash) = @_;
 
     print "Response time histogram:\n";
     for my $row ( @{ $stash->{restime_histogram} } ) {
-        printf "%s: %s (%s%%)\n", $row->{range}, $row->{count}, $row->{percent};
+        printf "%s: %s (%s%%)\n", $row->{range}, $row->{count},
+          $row->{percent};
     }
 
     print "Slowest requests:\n";
@@ -120,13 +122,13 @@ sub report {
             my $secs = $row->{$key};
             next
               if $key eq 'time_mem_start'
-              || $key eq 'time_mem_end'
-              || $key eq 'time_total'
-              || $secs < 0.01;
+                  || $key eq 'time_mem_end'
+                  || $key eq 'time_total'
+                  || $secs < 0.01;
             printf "%s: %s\n", $key, $secs;
         }
     }
-}
+} ## end sub report
 
 __PACKAGE__->main() unless caller;
 

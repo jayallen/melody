@@ -15,49 +15,44 @@ use MT::Blog;
 # Set default option value
 my @blog_ids;
 my @templates;
-my $entry_id  = 0;
-my $count     = 1;
-my $mt_url    = '';
-my $username  = 'Melody';
-my $password  = 'Nelson';
-my $silent    = 0;
-my $usage     = 0;
+my $entry_id = 0;
+my $count    = 1;
+my $mt_url   = '';
+my $username = 'Melody';
+my $password = 'Nelson';
+my $silent   = 0;
+my $usage    = 0;
 
 GetOptions(
-    'blog_id=s'  => \@blog_ids,
-    'template=s' => \@templates,
-    'count=i'    => \$count,
-    'mt_url=s'   => \$mt_url,
-    'user=s'     => \$username,
-    'pass=s'     => \$password,
-    'silent'     => \$silent,
-    'uaage'      => \$usage,
+            'blog_id=s'  => \@blog_ids,
+            'template=s' => \@templates,
+            'count=i'    => \$count,
+            'mt_url=s'   => \$mt_url,
+            'user=s'     => \$username,
+            'pass=s'     => \$password,
+            'silent'     => \$silent,
+            'uaage'      => \$usage,
 );
 
 # Construct MT object
-my $mt = new MT
-  or die "Not MT object " . MT->errstr();
+my $mt = new MT or die "Not MT object " . MT->errstr();
 
 # Validation of required options
-if (   $usage
-    || ( !$mt_url )
-    || ( !$username )
-    || ( !$password ) )
-{
+if ( $usage || ( !$mt_url ) || ( !$username ) || ( !$password ) ) {
     usage();
     exit;
 }
 
 # Parse and load blog
 if (@blog_ids) {
-    @blog_ids = split(/,/, join(',', @blog_ids));
+    @blog_ids = split( /,/, join( ',', @blog_ids ) );
 }
 my @blogs = MT::Blog->load( { ( @blog_ids ? ( id => @blog_ids ) : () ), } )
-    or die "Couldn't load blogs. [" . Dumper(@blog_ids) . "]\n";
+  or die "Couldn't load blogs. [" . Dumper(@blog_ids) . "]\n";
 
 # Parse template option
 if (@templates) {
-    @templates = split(/,/, join(',', @templates));
+    @templates = split( /,/, join( ',', @templates ) );
 }
 
 # Construct UserAgent object
@@ -73,9 +68,12 @@ my $scraper = scraper {
 };
 
 # call rebuild
-for ( my $count_i = 0 ; $count_i < $count ; $count_i++ ) {
+for ( my $count_i = 0; $count_i < $count; $count_i++ ) {
     foreach my $blog (@blogs) {
-        logging( "rebuilding (" . ($count_i + 1) . ") " . $blog->name . " ...\n" );
+        logging(   "rebuilding ("
+                 . ( $count_i + 1 ) . ") "
+                 . $blog->name
+                 . " ...\n" );
         run_rebuild($blog);
     }
 }
@@ -101,22 +99,22 @@ sub run_rebuild {
         my $total = 0;
         if ($archiver) {
             if ( ( $archiver->entry_based || $archiver->date_based )
-                && !$entry_id )
+                 && !$entry_id )
             {
                 my $entry_class = $archiver->entry_class || 'entry';
                 require MT::Entry;
                 my $terms = {
-                    class   => $entry_class,
-                    status  => MT::Entry::RELEASE(),
-                    blog_id => $blog->id,
+                              class   => $entry_class,
+                              status  => MT::Entry::RELEASE(),
+                              blog_id => $blog->id,
                 };
                 $total = MT::Entry->count($terms);
             }
             elsif ( $archiver->category_based ) {
                 require MT::Category;
                 my $terms = {
-                    blog_id => $blog->id,
-                    class   => $archiver->category_class,
+                              blog_id => $blog->id,
+                              class   => $archiver->category_class,
                 };
                 $total = MT::Category->count($terms);
             }
@@ -124,24 +122,27 @@ sub run_rebuild {
                 require MT::Author;
                 require MT::Entry;
                 my $terms = {
-                    blog_id => $blog->id,
-                    status  => MT::Entry::RELEASE(),
-                    class   => 'entry',
+                              blog_id => $blog->id,
+                              status  => MT::Entry::RELEASE(),
+                              class   => 'entry',
                 };
-                $total = MT::Author->count(
-                    undef,
-                    {
-                        join => MT::Entry->join_on(
-                            'author_id', $terms, { unique => 1 }
-                        ),
-                        unique => 1,
-                    }
-                );
-            }
-        }
+                $total =
+                  MT::Author->count(
+                                     undef,
+                                     {
+                                        join =>
+                                          MT::Entry->join_on(
+                                            'author_id', $terms,
+                                            { unique => 1 }
+                                          ),
+                                        unique => 1,
+                                     }
+                  );
+            } ## end elsif ( $archiver->author_based)
+        } ## end if ($archiver)
 
-        my $url =
-            $mt_url
+        my $url
+          = $mt_url
           . "?__mode=rebuild"
           . "&blog_id="
           . $blog->id
@@ -165,8 +166,8 @@ sub run_rebuild {
             if ( $resp->is_success ) {
                 my $res = $scraper->scrape( $resp->content() );
                 if ( $res->{status_publishing} ) {
-                    ( undef, $url ) =
-                      $resp->content() =~ /window.location='(.*)\?(.*)'/;
+                    ( undef, $url )
+                      = $resp->content() =~ /window.location='(.*)\?(.*)'/;
                     $url = $mt_url . "?" . $url;
                 }
                 elsif ( $res->{status_success} ) {
@@ -174,32 +175,34 @@ sub run_rebuild {
                     $url = undef;
                 }
                 elsif ( $res->{status_error} ) {
-                    logging("\t" 
-                          . $at
-                          . " built failed. "
-                          . $res->{status_error}
-                          . "\n" );
+                    logging(   "\t" 
+                             . $at
+                             . " built failed. "
+                             . $res->{status_error}
+                             . "\n" );
                     $url = undef;
                 }
                 else {
-                    logging("\t" 
-                          . $at
-                          . " built failed.\n"
-                          . $resp->content()
-                          . "\n" );
+                    logging(   "\t" 
+                             . $at
+                             . " built failed.\n"
+                             . $resp->content()
+                             . "\n" );
                     $url = undef;
                 }
-            }
+            } ## end if ( $resp->is_success)
             else {
                 logging(
-                    "\t" . $at . " request failed (" . $resp->code . ")\n" );
+                     "\t" . $at . " request failed (" . $resp->code . ")\n" );
                 $url = undef;
             }
         } while ($url);
 
-        logging( "\t  total build time:" . ( Time::HiRes::time() - $start ) . "\n" );
-    }
-}
+        logging(   "\t  total build time:"
+                 . ( Time::HiRes::time() - $start )
+                 . "\n" );
+    } ## end foreach (@at)
+} ## end sub run_rebuild
 
 sub logging {
     my ($msg) = @_;

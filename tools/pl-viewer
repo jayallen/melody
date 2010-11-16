@@ -6,9 +6,9 @@ use lib qw( lib extlib );
 use MT::Util::PerformanceData;
 
 GetOptions(
-    'path=s' => \my ($logs_path),
-    'file=s' => \my ($log_file),
-    'sort=s' => \my ($sort_key),
+            'path=s' => \my ($logs_path),
+            'file=s' => \my ($log_file),
+            'sort=s' => \my ($sort_key),
 );
 
 if ( !$logs_path ) {
@@ -23,10 +23,8 @@ closedir DIRH;
 foreach my $file (@dir) {
     next if $file eq '.' or $file eq '..';
     next if $log_file && $file ne $log_file;
-    my $data = MT::Util::PerformanceData->new(
-        path => $logs_path,
-        file => $file,
-    );
+    my $data
+      = MT::Util::PerformanceData->new( path => $logs_path, file => $file, );
     $data->report( sort => $sort_key, );
 }
 
