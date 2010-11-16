@@ -42,10 +42,8 @@ mt-static/mt_es.js
 mt-static/mt_fr.js
 mt-static/mt_ja.js
 mt-static/mt_nl.js
-# Temporarily commented out for case #563
-# https://openmelody.lighthouseapp.com/projects/26604/tickets/563
-# mt-static/css/main.css
-# mt-static/css/simple.css
+mt-static/css/main.css
+mt-static/css/simple.css
 mt-static/js/mt_core_compact.js
 
 #####################################################
