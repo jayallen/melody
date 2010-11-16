@@ -1,16 +1,17 @@
 #!/usr/bin/perl -w
-
 package MT::Tool::StaticCopy;
-
 use strict;
 use warnings;
-
 use lib qw( lib extlib );
 use base qw( MT::Tool );
 use MT;
+# use Data::Dumper;
+# use MT::Log::Log4perl qw( l4mtdump );
+# use Log::Log4perl qw( :resurrect );
+# our $logger;
 
 sub main {
-
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     # The manual run is something that the admin may need to use if they
     # haven't correctly set permissions on the support folder.
     my $app = MT->instance;
@@ -45,6 +46,7 @@ sub main {
 
 sub _build_file_hash {
     my $dir = shift;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     return unless ( defined $dir && -d $dir );
     $dir =~ s#\\#/#g;    # Win32 :-(
     my $dirth = {};
@@ -66,6 +68,7 @@ sub _traverse_hash {
     my $dir      = shift;
     my @skip     = @_;
     my $app      = MT->instance;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     while ( my ( $cur_item, $subfolders ) = each(%$dir_hash) ) {
         if ( $subfolders ne '' ) {
@@ -114,6 +117,7 @@ sub _make_dir {
     my $dir  = shift;
     my $fmgr = MT::FileMgr->new('Local') or return MT::FileMgr->errstr;
     my $app  = MT->instance;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     $dir = File::Spec->catfile( $app->static_file_path, 'support', 'plugins',
                                 $dir );
@@ -136,6 +140,7 @@ sub _write_file {
     # Actually copy the file from plugins/static/ to the mt-static/support/plugins/ area.
     my ( $src, $dest ) = @_;
     my $fmgr = MT::FileMgr->new('Local') or return MT::FileMgr->errstr;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     # Grab the file specified.
     my $src_data = $fmgr->get_data($src)
