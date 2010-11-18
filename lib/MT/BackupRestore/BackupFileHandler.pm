@@ -42,10 +42,8 @@ sub start_element {
         die MT->translate(
             'Uploaded file was not a valid Movable Type backup manifest file.'
           )
-          if !(
-                    ( 'movabletype' eq $name )
-                 && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns )
-          );
+          if !(    ( 'movabletype' eq $name )
+                && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) );
 
         #unless ($self->{ignore_schema_conflicts}) {
         my $schema = $attrs->{'{}schema_version'}->{Value};

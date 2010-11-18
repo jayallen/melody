@@ -193,10 +193,9 @@ sub core_methods {
         'dialog_clone_blog' => "${pkg}Common::clone_blog",
         'dialog_publishing_profile' =>
           "${pkg}Template::dialog_publishing_profile",
-        'update_publish_profile' =>
-          "${pkg}Blog::update_publish_profile",
-        'refresh_all_templates' => "${pkg}Template::refresh_all_templates",
-        'preview_template'      => "${pkg}Template::preview",
+        'update_publish_profile' => "${pkg}Blog::update_publish_profile",
+        'refresh_all_templates'  => "${pkg}Template::refresh_all_templates",
+        'preview_template'       => "${pkg}Template::preview",
         'publish_index_templates' =>
           "${pkg}Template::publish_index_templates",
         'publish_archive_templates' =>

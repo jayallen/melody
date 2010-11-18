@@ -843,7 +843,7 @@ sub list {
     }
     else {
         $param{has_expanded_mode} = 1;
-        $param{has_compact_mode} = 1;
+        $param{has_compact_mode}  = 1;
     }
     my $data = build_entry_table(
                                   $app,
@@ -1926,52 +1926,48 @@ sub save_entries {
 
 sub rebuild_entry {
     my $app = shift;
-    my $q = $app->query;
+    my $q   = $app->query;
+
     # TODO - always in a blog context?
     # TODO - permission check?
-    my $blog = $app->blog;
-    my $return_val = {
-        success => 0
-    };
-    my $entries = MT->model('entry')->lookup_multi([ $q->param('id') ]);
+    my $blog       = $app->blog;
+    my $return_val = { success => 0 };
+    my $entries    = MT->model('entry')->lookup_multi( [ $q->param('id') ] );
   ENTRY: for my $entry (@$entries) {
-      next ENTRY if !defined $entry;
-      next ENTRY if $entry->blog_id != $blog->id;
-      if ($entry->status == MT::Entry::HOLD()) {
-          $entry->status(MT::Entry::RELEASE());
-          $entry->save;
-      }
-      $return_val->{success} = $app->rebuild_entry(
-          Blog     => $blog,
-          Entry    => $entry,
-          Force    => 1,
-      );
-      $return_val->{permalink} = $entry->permalink;
-      $return_val->{permalink_rel} = $entry->permalink;
-      my $base = $entry->blog->site_url;
-      $return_val->{permalink_rel} =~ s/$base//;
-      unless ($return_val->{success}) {
-          $return_val->{errstr} = $app->errstr;
-      }
+        next ENTRY if !defined $entry;
+        next ENTRY if $entry->blog_id != $blog->id;
+        if ( $entry->status == MT::Entry::HOLD() ) {
+            $entry->status( MT::Entry::RELEASE() );
+            $entry->save;
+        }
+        $return_val->{success}
+          = $app->rebuild_entry( Blog => $blog, Entry => $entry, Force => 1,
+          );
+        $return_val->{permalink}     = $entry->permalink;
+        $return_val->{permalink_rel} = $entry->permalink;
+        my $base = $entry->blog->site_url;
+        $return_val->{permalink_rel} =~ s/$base//;
+        unless ( $return_val->{success} ) {
+            $return_val->{errstr} = $app->errstr;
+        }
     }
     return _send_json_response( $app, $return_val );
-}
+} ## end sub rebuild_entry
 
 sub get_entry {
-    my $app = shift;
-    my $q = $app->query;
-    my $blog = $app->blog;
-    my $return_val = {
-        success => 0
-    };
-    my $e = MT->model('entry')->load($q->param('id'));
-    my $hash = $e->to_hash();
-    foreach my $key (keys %$hash) {
-        my $newkey = $key; 
+    my $app        = shift;
+    my $q          = $app->query;
+    my $blog       = $app->blog;
+    my $return_val = { success => 0 };
+    my $e          = MT->model('entry')->load( $q->param('id') );
+    my $hash       = $e->to_hash();
+    foreach my $key ( keys %$hash ) {
+        my $newkey = $key;
         $newkey =~ s/\./_/g;
-        if (ref $hash->{$key} eq 'CODE') {
-            $return_val->{entry}->{$newkey} = &{$hash->{$key}};
-        } else {
+        if ( ref $hash->{$key} eq 'CODE' ) {
+            $return_val->{entry}->{$newkey} = &{ $hash->{$key} };
+        }
+        else {
             $return_val->{entry}->{$newkey} = $hash->{$key};
         }
     }
@@ -2227,9 +2223,9 @@ sub build_entry_table {
           = $app->translate( MT::Entry::status_text( $obj->status ) );
         $row->{ "status_" . MT::Entry::status_text( $obj->status ) } = 1;
         my @tags = $obj->get_tags();
-        $row->{tag_loop} = \@tags;
-        $row->{comments_enabled} = $obj->allow_comments;
-        $row->{comment_count} = $obj->comment_count;
+        $row->{tag_loop}                 = \@tags;
+        $row->{comments_enabled}         = $obj->allow_comments;
+        $row->{comment_count}            = $obj->comment_count;
         $row->{entry_permalink_relative} = $obj->permalink;
         my $base = $obj->blog->site_url;
         $row->{entry_permalink_relative} =~ s/$base//;

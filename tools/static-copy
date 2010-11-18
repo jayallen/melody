@@ -6,6 +6,7 @@ use lib qw( lib extlib );
 use File::Basename qw( basename dirname );
 use base qw( MT::Tool );
 use MT;
+
 # use Data::Dumper;
 # use MT::Log::Log4perl qw( l4mtdump );
 # use Log::Log4perl qw( :resurrect );
@@ -105,7 +106,7 @@ sub _traverse_hash {
                                        'plugins',              $plugin->id,
                                        $dir,                   $cur_item
                   );
-                
+
                 _write_file( $src, $dest );
             }
         } ## end else [ if ( $subfolders ne '')]
@@ -149,7 +150,7 @@ sub _write_file {
 
     # Write the file to its new home, but only if some data was read.
     if ($src_data) {
-        $fmgr->mkpath( dirname( $dest ));
+        $fmgr->mkpath( dirname($dest) );
         my $bytes = $fmgr->put_data( $src_data, $dest )
           or die $fmgr->errstr . "\n";
 

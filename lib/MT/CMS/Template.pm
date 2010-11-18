@@ -766,16 +766,16 @@ sub list {
     $params->{listing_screen} = 1;
 
     $app->load_list_actions( 'template', $params );
-    $params->{page_actions}  = $app->page_actions('list_templates');
-    $params->{search_label}  = $app->translate("Templates");
-    $params->{object_type}   = 'template';
-    $params->{blog_view}     = 1;
-    $params->{refreshed}     = $q->param('refreshed');
-    $params->{published}     = $q->param('published');
-    $params->{saved_copied}  = $q->param('saved_copied');
-    $params->{saved_deleted} = $q->param('saved_deleted');
+    $params->{page_actions}    = $app->page_actions('list_templates');
+    $params->{search_label}    = $app->translate("Templates");
+    $params->{object_type}     = 'template';
+    $params->{blog_view}       = 1;
+    $params->{refreshed}       = $q->param('refreshed');
+    $params->{published}       = $q->param('published');
+    $params->{saved_copied}    = $q->param('saved_copied');
+    $params->{saved_deleted}   = $q->param('saved_deleted');
     $params->{profile_updated} = $q->param('profile_updated');
-    $params->{saved}         = $q->param('saved');
+    $params->{saved}           = $q->param('saved');
 
     # determine list of system template types:
     my $scope;

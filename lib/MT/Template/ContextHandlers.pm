@@ -1818,7 +1818,10 @@ sub _hdlr_app_listing {
         defined( $insides = _hdlr_loop( $ctx, $args, $cond ) ) or return;
     }
     my $listing_header = $ctx->var('listing_header') || '';
-    my $view = $ctx->var('view_expanded') ? ' expanded' : $ctx->var('view_minimal') ? ' minimal' : ' compact';
+    my $view
+      = $ctx->var('view_expanded') ? ' expanded'
+      : $ctx->var('view_minimal')  ? ' minimal'
+      :                              ' compact';
 
     my $table = <<TABLE;
         <table id="$id-table" class="$id-table$view" cellspacing="0">

@@ -1697,6 +1697,7 @@ sub post_save {
     }
 
     my $screen = $q->param('cfg_screen') || '';
+
     # The following only gets invoked for existing blogs
     if ( $original->id ) {
 
@@ -2132,9 +2133,9 @@ sub RegistrationAffectsArchives {
 }
 
 sub update_publish_profile {
-    my $app = shift;
-    my $q = $app->query;
-    my $blog = $app->blog;;
+    my $app  = shift;
+    my $q    = $app->query;
+    my $blog = $app->blog;
 
     my $dcty = $q->param('dynamicity');
 
@@ -2146,30 +2147,30 @@ sub update_publish_profile {
     #     all (100% dynamic)
     #     archives (archives dynamic, static indexes)
     #     custom (custom configuration)
-    
+
     require MT::PublishOption;
     require MT::TemplateMap;
-    
+
     if ( ( $dcty eq 'none' ) || ( $dcty =~ m/^async/ ) ) {
         my @templates = MT->model('template')->load( {
-            blog_id => $blog->id,
-            
-            # FIXME: enumeration of types
-            type =>
-                [ 'index', 'archive', 'individual', 'page', 'category' ],
-                                            }
-            );
+               blog_id => $blog->id,
+
+               # FIXME: enumeration of types
+               type =>
+                 [ 'index', 'archive', 'individual', 'page', 'category' ],
+            }
+        );
         for my $tmpl (@templates) {
             my $bt = $tmpl->build_type || 0;
-            
+
             # Do not make automatic modifications to templates with these
             # manually configured build types
             next if $bt == MT::PublishOption::DISABLED();
             next if $bt == MT::PublishOption::MANUALLY();
             next if $bt == MT::PublishOption::SCHEDULED();
-            
+
             if ( $dcty eq 'async_partial' ) {
-                
+
                 # these should be build synchronously
                 if ( ( $tmpl->identifier || '' )
                      =~ m/^(main_index|feed_recent)$/ )
@@ -2178,20 +2179,20 @@ sub update_publish_profile {
                 }
                 else {
                     if (    ( $tmpl->type eq 'individual' )
-                            || ( $tmpl->type eq 'page' ) )
+                         || ( $tmpl->type eq 'page' ) )
                     {
-                        my @tmpl_maps = MT->model('templatemap')->load(
-                            { template_id => $tmpl->id } );
+                        my @tmpl_maps = MT->model('templatemap')
+                          ->load( { template_id => $tmpl->id } );
                         foreach my $tmpl_map (@tmpl_maps) {
                             if ( (
-                                     $tmpl_map->archive_type
-                                     =~ m/^(Individual|Page)$/
+                                   $tmpl_map->archive_type
+                                   =~ m/^(Individual|Page)$/
                                  )
                                  && ( $tmpl_map->is_preferred )
-                                )
+                              )
                             {
                                 $tmpl_map->build_type(
-                                    MT::PublishOption::ONDEMAND() );
+                                              MT::PublishOption::ONDEMAND() );
                                 $tmpl_map->save;
                                 next;
                             }
@@ -2199,13 +2200,13 @@ sub update_publish_profile {
                                  != MT::PublishOption::ASYNC() )
                             {
                                 $tmpl_map->build_type(
-                                    MT::PublishOption::ASYNC() );
+                                                 MT::PublishOption::ASYNC() );
                                 $tmpl_map->save;
                             }
                         } ## end foreach my $tmpl_map (@tmpl_maps)
                     } ## end if ( ( $tmpl->type eq ...))
                     else {
-                        
+
                         # updates all template maps too
                         $tmpl->build_type( MT::PublishOption::ASYNC() );
                     }
@@ -2222,19 +2223,19 @@ sub update_publish_profile {
     } ## end if ( ( $dcty eq 'none'...))
     elsif ( $dcty eq 'archives' ) {
         my @templates = MT->model('template')->load( {
-            blog_id => $blog->id,
-            
-            # FIXME: enumeration of types
-            type =>
-                [ 'index', 'archive', 'individual', 'page', 'category' ],
-                                            }
-            );
+               blog_id => $blog->id,
+
+               # FIXME: enumeration of types
+               type =>
+                 [ 'index', 'archive', 'individual', 'page', 'category' ],
+            }
+        );
         for my $tmpl (@templates) {
             my $bt = $tmpl->build_type || 0;
             next if $bt == MT::PublishOption::DISABLED();
             next if $bt == MT::PublishOption::MANUALLY();
             next if $bt == MT::PublishOption::SCHEDULED();
-            
+
             $tmpl->build_type( $tmpl->type ne 'index'
                                ? MT::PublishOption::DYNAMIC()
                                : MT::PublishOption::ONDEMAND() );
@@ -2243,24 +2244,24 @@ sub update_publish_profile {
     } ## end elsif ( $dcty eq 'archives')
     elsif ( $dcty eq 'all' ) {
         my @templates = MT->model('template')->load( {
-            blog_id => $blog->id,
-            
-            # FIXME: enumeration of types
-            type =>
-                [ 'index', 'archive', 'individual', 'page', 'category' ],
-                                            }
-            );
+               blog_id => $blog->id,
+
+               # FIXME: enumeration of types
+               type =>
+                 [ 'index', 'archive', 'individual', 'page', 'category' ],
+            }
+        );
         for my $tmpl (@templates) {
             my $bt = $tmpl->build_type || 0;
             next if $bt == MT::PublishOption::DISABLED();
             next if $bt == MT::PublishOption::MANUALLY();
             next if $bt == MT::PublishOption::SCHEDULED();
-            
+
             $tmpl->build_type( MT::PublishOption::DYNAMIC() );
             $tmpl->save();
         }
     }
-    
+
     if ( ( $dcty eq 'none' ) || ( $dcty =~ m/^async/ ) ) {
         _update_finfos( $app, 0 );
     }
@@ -2268,27 +2269,26 @@ sub update_publish_profile {
         _update_finfos( $app, 1 );
     }
     elsif ( $dcty eq 'archives' ) {
-        
+
         # Only archives have template maps.
         my $is_not_null = 'is not null';
         my $is_null     = 'is null';
-        _update_finfos( $app, 1,
-                        { templatemap_id => \$is_not_null } );
+        _update_finfos( $app, 1, { templatemap_id => \$is_not_null } );
         _update_finfos( $app, 0, { templatemap_id => \$is_null } );
     }
-    
-    my $pq     = $dcty =~ m/^async/ ? 1 : 0;
+
+    my $pq = $dcty =~ m/^async/ ? 1 : 0;
     $blog->publish_queue($pq);
     if ( $dcty eq 'all' || $dcty eq 'archives' ) {
 
         # update the dynamic publishing options if they changed
         update_dynamicity( $app, $blog );
     }
-    
+
     $blog->save
-        or return $app->error(
-            $app->translate( "Saving blog failed: [_1]", $blog->errstr ) );
-    
+      or return $app->error(
+               $app->translate( "Saving blog failed: [_1]", $blog->errstr ) );
+
     $app->add_return_arg( profile_updated => 1 );
 
     return $app->call_return;
