@@ -1714,17 +1714,30 @@ sub scan_directory_for_addons {
               = File::Spec->catfile( $PluginPath, $plugin_dir );
             if ( -f $plugin_full_path ) {
                 if ( $plugin_full_path =~ /\.pl$/ ) {
-                    push @{ $plugins{'plugin'} },
-                      {
-                        dir      => $PluginPath,
-                        file     => $plugin_dir,
-                        path     => $plugin_full_path,
-                        envelope => $plugin_lastdir,
-                      };
+
+                    my $err = $mt->translate("The plugin [_1] was not "
+                            . "loaded because Melody does not support "
+                            . "plugins placed directly in a plugin "
+                            . "directory without an enclosing folder.",
+                              $plugin_full_path);
+                    print STDERR $err."\n";
+                    ###l4p $logger->warn($err);
+                    $mt->log( {
+                                message => $err,
+                                class   => 'system',
+                                level   => MT->model('log')->ERROR()
+                              }
+                    );
+                    # push @{ $plugins{'plugin'} },
+                    #   {
+                    #     dir      => $PluginPath,
+                    #     file     => $plugin_dir,
+                    #     path     => $plugin_full_path,
+                    #     envelope => $plugin_lastdir,
+                    #   };
                 }
             }
             else {
-
                 # open and scan the directory for plugin files,
                 # save them to load later. Report errors in
                 # the activity log
@@ -1785,6 +1798,8 @@ sub scan_directory_for_addons {
                       = File::Spec->catfile( $plugin_full_path, $file );
                     if ( -f $plugin_file ) {
                         my $sig = File::Spec->catfile( $plugin_dir, $file );
+use Data::Dumper;
+print STDERR "Adding $plugin_file".Dumper({dir => $plugin_dir, base => $plugin_full_path, envelope => "$plugin_lastdir/" . $plugin_dir, sig => $sig});
                         # Plugin is a file, add it to list for processing
                         push @{ $plugins{$type} }, {
                             label => $label,              # used only by packs
