@@ -1,16 +1,19 @@
 package ConfigAssistant::Util;
 
 use strict;
+use warnings;
 use base 'Exporter';
+our @EXPORT_OK
+  = qw( find_theme_plugin   find_template_def   find_option_def
+        find_option_plugin  process_file_upload 
+        ERROR SUCCESS OVERWRITE NO_UPLOAD );
+
 use MT::Util qw( encode_url );
 
 sub ERROR ()     {0}
 sub SUCCESS ()   {1}
 sub OVERWRITE () {2}
 sub NO_UPLOAD () {3}
-
-our @EXPORT_OK
-  = qw( find_theme_plugin find_template_def find_option_def find_option_plugin process_file_upload ERROR SUCCESS OVERWRITE NO_UPLOAD );
 
 sub process_file_upload {
     my $app = shift;
@@ -195,7 +198,7 @@ sub process_file_upload {
           };
     }
 
-    # The relative path and URL will be relative to the base path and url respectively
+    # The relative path/URL will be relative to the base path/url respectively
     $relative_url = File::Spec->catfile( $extra_path, encode_url($basename) );
     $relative_path
       = $extra_path
@@ -205,7 +208,7 @@ sub process_file_upload {
     $asset_file = File::Spec->catfile( $format, $relative_path );
     $local_file = File::Spec->catfile( $path,   $basename );
 
-    ## Untaint. We have already tested $basename and $relative_path for security
+    ## Untaint. We already tested $basename and $relative_path for security
     ## issues above, and we have to assume that we can trust the user's
     ## Local Archive Path setting. So we should be safe.
     ($local_file) = $local_file =~ /(.+)/s;
@@ -244,7 +247,7 @@ sub process_file_upload {
     ## Close up the filehandle.
     close $fh;
 
-    ## We are going to use $relative_path as the filename and as the url passed
+    ## We'll use $relative_path as the filename and as the url passed
     ## in to the templates. So, we want to replace all of the '\' characters
     ## with '/' characters so that it won't look like backslashed characters.
     ## Also, get rid of a slash at the front, if present.
@@ -284,8 +287,7 @@ sub process_file_upload {
     $asset->url($asset_url);
     $asset->mime_type($mimetype) if $mimetype;
 
-    # TODO - this should be abstracted into a callback so these fields are populated
-    #        more programmatically
+    # TODO - Abstract into a callback for more programmatically populated fields
     if ($is_image) {
         $asset->image_width($w);
         $asset->image_height($h);

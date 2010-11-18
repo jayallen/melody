@@ -1,15 +1,15 @@
 package ConfigAssistant::Plugin;
 
 use strict;
-
+use warnings;
 use Carp qw( croak );
 use MT::Util
-  qw( relative_date offset_time offset_time_list epoch2ts ts2epoch format_ts
-  encode_html decode_html dirify );
+  qw( relative_date      offset_time    offset_time_list    epoch2ts
+      ts2epoch format_ts encode_html    decode_html         dirify );
 use ConfigAssistant::Util
-  qw( find_theme_plugin find_template_def find_option_def find_option_plugin process_file_upload );
+  qw( find_theme_plugin     find_template_def   find_option_def
+      find_option_plugin    process_file_upload );
 use JSON;
-
 # use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
 our $logger;
 
@@ -21,7 +21,8 @@ sub tag_plugin_static_web_path {
         return
           $ctx->error(
             MT->translate(
-                "The plugin you specified '[_2]' in '[_1]' could not be found.",
+                  "The plugin you specified '[_2]' in '[_1]' "
+                . "could not be found.",
                 $ctx->stash('tag'),
                 $sig
             )
@@ -39,7 +40,9 @@ sub tag_plugin_static_web_path {
         return
           $ctx->error(
             MT->translate(
-                "The plugin you specified '[_2]' in '[_1]' has not registered a static directory. Please use <mt:StaticWebPath> instead.",
+                  "The plugin you specified '[_2]' in '[_1]' has not"
+                . "registered a static directory. Please use "
+                . "<mt:StaticWebPath> instead.",
                 $ctx->stash('tag'),
                 $sig
             )
@@ -55,7 +58,8 @@ sub tag_plugin_static_file_path {
         return
           $ctx->error(
             MT->translate(
-                "The plugin you specified '[_2]' in '[_1]' could not be found.",
+                 "The plugin you specified '[_2]' in '[_1]' "
+                . "could not be found.",
                 $ctx->stash('tag'),
                 $sig
             )
@@ -70,7 +74,9 @@ sub tag_plugin_static_file_path {
         return
           $ctx->error(
             MT->translate(
-                "The plugin you specified in '[_1]' has not registered a static directory. Please use <mt:StaticFilePath> instead.",
+                  "The plugin you specified in '[_1]' has not "
+                . "registered a static directory. Please use "
+                . "<mt:StaticFilePath> instead.",
                 $_[0]->stash('tag')
             )
           );
@@ -299,12 +305,10 @@ sub save_config {
     my $plugin_sig = $q->param('plugin_sig');
     my $profile    = $MT::Plugins{$plugin_sig};
     my $blog_id    = $q->param('blog_id');
-
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
 
     # this should not break out anymore, except for theme settings
-    #return unless $blog_id; # this works one within the context of a blog, no system plugin settings
-
+    #return unless $blog_id; # this works in blog-context, no sys. plugin cfg
     $app->blog( MT->model('blog')->load($blog_id) ) if $blog_id;
 
     $app->validate_magic or return;
@@ -346,6 +350,8 @@ sub save_config {
         my @vars = $plugin->config_vars($scope);
         foreach my $var (@vars) {
             my $opt = find_option_def( $app, $var );
+            ###l4p $logger->debug( '$opt and var: ',
+            ###l4p                 l4mtdump( { opt => $opt, var => $var } ) );
 
             # TODO - this should be pluggable. Field types should register a pre_save handler
             #        or something
@@ -375,8 +381,8 @@ sub save_config {
             my $new = $param->{$var};
             my $has_changed 
               = ( defined $new and !defined $old )
-              || ( defined $new and $old ne $new )
-              || ( defined $old && !defined $new );
+              || ( defined $old && !defined $new )
+              || ( defined $new and $old ne $new );
             ###l4p $logger->debug('$has_changed: '.$has_changed);
 
             if ( $has_changed && $opt && $opt->{'republish'} ) {
@@ -397,7 +403,7 @@ sub save_config {
         } ## end foreach my $var (@vars)
         if ($plugin_changed) {
 
-            #MT->log("Triggering: " . 'options_change.plugin.' . $plugin->id );
+            #MT->log("Triggering: ".'options_change.plugin.' . $plugin->id );
             $app->run_callbacks( 'options_change.plugin.' . $plugin->id,
                                  $app, $plugin );
         }
@@ -890,8 +896,8 @@ sub type_folder_list {
 sub type_category_list {
     my $app = shift;
     my ( $ctx, $field_id, $field, $value ) = @_;
-    $value = defined($value) ? $value : 0;
-    my @values = ref $value eq 'ARRAY' ? @$value : (0);
+    $value = 0 unless defined $value;
+    my @values = ref $value eq 'ARRAY' ? @$value : ($value);
     my $out;
     my $obj_class = $ctx->stash('object_class') || 'category';
 
@@ -982,9 +988,12 @@ sub _hdlr_field_array_loop {
 sub _hdlr_field_array_contains {
     my $plugin = shift;
     my ( $ctx, $args, $cond ) = @_;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     my $field = $ctx->stash('field') or return _no_field($ctx);
     my $value = $args->{'value'};
     my $array = _get_field_value($ctx);
+    use Carp;
+    ###l4p (ref $array eq 'ARRAY') or $logger->warn('_get_field_value did not return an array reference: '.($array||'')." ".Carp::longmess());
     foreach (@$array) {
 
         #MT->log("Does array contain $value? (currently checking $_)");
@@ -1001,7 +1010,7 @@ sub _hdlr_field_category_list {
     my ( $ctx, $args, $cond ) = @_;
     my $field = $ctx->stash('field') or return _no_field($ctx);
     my $value = _get_field_value($ctx);
-    my @ids   = split( /,/, $value );
+    my @ids = ref($value) eq 'ARRAY' ? @$value : ($value);
     my $class = $ctx->stash('obj_class');
 
     my @categories = MT->model($class)->load( { id => \@ids } );
@@ -1026,10 +1035,11 @@ sub _hdlr_field_category_list {
 
 sub _get_field_value {
     my ($ctx) = @_;
+    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     my $plugin_ns = $ctx->stash('plugin_ns');
-    my $scope  = $ctx->stash('scope') || 'blog';
-    my $field  = $ctx->stash('field');
-    my $plugin = MT->component($plugin_ns);        # is this necessary?
+    my $scope     = $ctx->stash('scope') || 'blog';
+    my $field     = $ctx->stash('field');
+    my $plugin    = MT->component($plugin_ns);        # is this necessary?
     my $value;
     my $blog = $ctx->stash('blog');
     if ( !$blog ) {
@@ -1042,9 +1052,7 @@ sub _get_field_value {
     else {
         $value = $plugin->get_config_value($field);
     }
-    if ( ref $value eq 'ARRAY' ) {
-        $value = join( ',', @$value );
-    }
+    ###l4p $logger->debug('$value: ', l4mtdump($value||''));
     return $value;
 } ## end sub _get_field_value
 

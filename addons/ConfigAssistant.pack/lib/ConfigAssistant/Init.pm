@@ -5,6 +5,9 @@ use ConfigAssistant::Util qw( find_theme_plugin find_option_plugin );
 use File::Spec;
 use Sub::Install;
 
+# use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
+our $logger;
+
 sub plugin {
     return MT->component('ConfigAssistant');
 }
@@ -84,9 +87,10 @@ sub init_options {
                     my $option
                       = $r->{'template_sets'}->{$set}->{'options'}->{$opt};
 
-# To avoid option names that may collide with other options in other template sets
-# settings are derived by combining the name of the template set and the option's
-# key.
+                    # To avoid option names that may collide with other 
+                    # options in other template sets settings are derived 
+                    # by combining the name of the template set and the 
+                    # option's key.
                     my $optname = $set . '_' . $opt;
                     if ( _option_exists( $sig, $optname ) ) {
 
@@ -94,12 +98,16 @@ sub init_options {
                     }
                     else {
 
-#                        if ( my $default = $option->{default} ) {
-#                            if ( !ref($default) && ($default =~ /^\s*sub/ || $default =~ /^\$/)) {
-#                                $default = $app->handler_to_coderef($default);
-#                                $option->{default} = sub { my $app = MT->instance; return $default->($app) };
-#                            }
-#                        }
+                        # if ( my $default = $option->{default} ) {
+                        #     if (   !ref($default) 
+                        #         && (   $default =~ /^\s*sub/
+                        #             || $default =~ /^\$/)) {
+                        #         $default
+                        #           = $app->handler_to_coderef($default);
+                        #         $option->{default} = sub {
+                        #               return $default->(MT->instance) };
+                        #     }
+                        # }
                         if ( ref $obj->{'registry'}->{'settings'} eq 'ARRAY' )
                         {
                             push @{ $obj->{'registry'}->{'settings'} },
@@ -115,7 +123,7 @@ sub init_options {
             } ## end if ( $r->{'template_sets'...})
         }    # end foreach (@sets)
 
-        # Now register settings for each plugin option, and register a plugin_config_form
+        # Now register settings for each plugin option and a plugin_config_form
         my @options = keys %{ $r->{'options'} };
         foreach my $opt (@options) {
             next if ( $opt eq 'fieldsets' );
@@ -169,8 +177,8 @@ sub load_tags {
     my $app  = shift;
     my $tags = {};
 
-# First load tags that correspond with Plugin Settings
-# TODO: this struct needs to be abstracted out to be similar to template set options
+    # First load tags that correspond with Plugin Settings
+    # TODO: this struct needs to be abstracted out to be similar to template set options
     my $cfg = $app->registry('plugin_config');
     foreach my $plugin_id ( keys %$cfg ) {
         my $plugin_cfg = $cfg->{$plugin_id};
@@ -178,7 +186,9 @@ sub load_tags {
         foreach my $key ( keys %$plugin_cfg ) {
             MT->log( {
                    message => $p->name
-                     . " is using a Config Assistant syntax that is no longer supported. plugin_config needs to be updated to 'options'. Please consult documentation.",
+                     . " is using a Config Assistant syntax that is no "
+                     . "longer supported. plugin_config needs to be "
+                     . "updated to 'options'. Please consult documentation.",
                    class    => 'system',
                    category => 'plugin',
                    level    => MT::Log::ERROR(),
@@ -210,11 +220,11 @@ sub load_tags {
                     next if ( !defined( $option->{tag} ) );
                     my $tag = $option->{tag};
 
-                    # TODO - there is the remote possibility that a template set
-                    # will attempt to register a duplicate tag. This case needs to be
-                    # handled properly. Or does it?
-                    # Note: the tag handler takes into consideration the blog_id, the
-                    # template set id and the option/setting name.
+                    # TODO - there is the remote possibility that a template
+                    # set will attempt to register a duplicate tag. This
+                    # case needs to be handled properly. Or does it? Note:
+                    # the tag handler takes into consideration the blog_id,
+                    # the template set id and the option/setting name.
                     if ( $tag =~ s/\?$// ) {
                         $tags->{block}->{$tag} = sub {
                             my $blog = $_[0]->stash('blog');
@@ -250,12 +260,15 @@ sub load_tags {
                                         'ConfigAssistant::Plugin', @_ );
                             };
                             $tags->{block}->{ $tag . 'Contains' } = sub {
+                                ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
                                 my $blog = $_[0]->stash('blog');
                                 my $bset = $blog->template_set;
                                 $_[0]->stash( 'field', $bset . '_' . $opt );
                                 $_[0]->stash( 'plugin_ns',
                                               find_theme_plugin($bset)->id );
                                 $_[0]->stash( 'scope', 'blog' );
+                                ###l4p $logger->debug('Contains: ', l4mtdump({ bset => $bset, opt => $opt, plugin_ns => $_[0]->stash('plugin_ns'), tag => $tag}));
+
                                 runner( '_hdlr_field_array_contains',
                                         'ConfigAssistant::Plugin', @_ );
                             };

@@ -1,7 +1,7 @@
 package ConfigAssistant::Static;
 
 use strict;
-
+use warnings;
 use MT;
 use MT::FileMgr;
 use File::Spec;
@@ -21,20 +21,19 @@ sub upgrade {
             my $plugin   = $MT::Plugins{$sig}{object};
             my $registry = $plugin->{registry};
 
-            # Grab the plugin's static_version, and check if it's newer than the
-            # version currently installed. If it is, then we want to install
-            # the static files.
+            # Grab the plugin's static_version, and check if it's newer than
+            # the version currently installed. If it is, then we want to
+            # install the static files.
             my $static_version = $registry->{'static_version'} || '0';
 
             # The saved version
             my $ver = MT->config('PluginStaticVersion');
-
             # $ver = undef;  ### UNCOMMENT TO TEST STATIC UPGRADE ###
 
-            # Check to see if $plugin->id is valid. If it's not, we need to undef
-            # $ver so that we don't try to grab the static_version variable.
-            # $plugin->id seems to throw an error for some Six Apart-originated
-            # plugins. I don't know why.
+            # Check to see if $plugin->id is valid. If it's not, we need to
+            # undef $ver so that we don't try to grab the static_version
+            # variable. $plugin->id seems to throw an error for some Six
+            # Apart-originated plugins. I don't know why.
             my $plugin_id = eval { $plugin->id } ? $plugin->id : undef $ver;
             my $saved_version;
             $saved_version = $ver->{$plugin_id} if $ver;
@@ -70,7 +69,8 @@ sub upgrade {
                            $plugin_id . '=' . $static_version, 1 );
                 $self->progress(
                     $self->translate_escape(
-                        "Plugin '[_1]' upgraded successfully to version [_2] (static version [_3]).",
+                          "Plugin '[_1]' upgraded successfully to "
+                        . "version [_2] (static version [_3]).",
                         $plugin->label,
                         $plugin->version || '-',
                         $static_version
@@ -186,7 +186,8 @@ sub _make_dir {
 
 sub _write_file {
 
-    # Actually copy the file from plugins/static/ to the mt-static/support/plugins/ area.
+    # Actually copy the file from plugins/static/
+    # to the mt-static/support/plugins/ area.
     my ( $src, $dest, $self ) = @_;
     my $fmgr = MT::FileMgr->new('Local') or return MT::FileMgr->errstr;
 
@@ -199,7 +200,7 @@ sub _write_file {
         my $bytes = $fmgr->put_data( $src_data, $dest, 'upload' )
           or return $self->error( $fmgr->errstr );
 
-        # Only provide a "copied" message if the file was successfully written.
+        # Only provide a "copied" message if the file was actually written.
         if ($bytes) {
             my $app              = MT->instance;
             my $static_file_path = $app->static_file_path;
