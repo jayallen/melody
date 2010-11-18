@@ -1,6 +1,8 @@
-name: Awesome
-key:  awesome
-id:   awesome
+name: "Oh Awesome"
+key:  Awesome
+id:   Awesome
+description: 'A plugin to test plugin initialization and data object extension'
+version: '1.0'
 
 object_types:
     awesome:       MT::Awesome

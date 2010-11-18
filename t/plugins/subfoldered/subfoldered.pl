@@ -1,10 +1,10 @@
+#!/usr/bin/perl
 package MT::Plugin::Subfoldered;
 
 use strict;
 use warnings;
 use base 'MT::Plugin';
 our $VERSION = '0.1';
-use MT;
 
 my $plugin;
 MT->add_plugin($plugin = __PACKAGE__->new({
