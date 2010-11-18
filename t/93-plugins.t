@@ -11,74 +11,45 @@ use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
 
 our ( $app );
 
-###########################################################
-# Test for the existence of at least these plugins
-###########################################################
-
 my %test_info = (
 
     'Markdown.plugin/config.yaml' => {
-        name         => 'Markdown and SmartyPants',
-        base_class   => 'MT::Plugin'   # DEFAULT
+        name        => 'Markdown and SmartyPants',
+        base_class  => 'MT::Plugin',  #     <----- DEFAULT
+        plugin_path => 'addons',      #     <----- DEFAULT
+        enabled     => 1,             #     <----- DEFAULT
     },
-
+    'Awesome/config.yaml'             => { name => 'Awesome'            },
+    'ThemeExport.plugin/config.yaml'  => { name => 'Theme Exporter'     },
+    'ThemeManager.plugin/config.yaml' => { name => 'Theme Manager'      },
+    'DePoClean.plugin/config.yaml'    => { name => 'DePoClean'          },
+    'WXRImporter.plugin/config.yaml'  => { name => 'WXR Importer'       },
+    'ClassicBlogThemePack.plugin/config.yaml' 
+                                => { name => 'Classic Blog Theme Pack'      },
+    'SimpleEditor.plugin/config.yaml'
+                                => { name => 'Six Apart Rich Text Editor'   },
+    'MelodyFeedback.plugin/config.yaml'
+                                => { name => 'Open Melody Community Feedback' },
     'MultiBlog.plugin/config.yaml' => {
         name         => 'MultiBlog',
         base_class   => 'MultiBlog::Plugin',
     },
-
-    'ThemeExport.plugin/config.yaml' => {
-        name         => 'Theme Exporter',
-    },
-
-    'ThemeManager.plugin/config.yaml' => {
-        name         => 'Theme Manager',
-    },
-
-    'ClassicBlogThemePack.plugin/config.yaml' => {
-        name         => 'Classic Blog Theme Pack',
-    },
-
-    'SimpleEditor.plugin/config.yaml' => {
-        name         => 'Six Apart Rich Text Editor',
-    },
-
-    'DePoClean.plugin/config.yaml' => {
-        name         => 'DePoClean',
-    },
-
-    'MelodyFeedback.plugin/config.yaml' => {
-        name         => 'Open Melody Community Feedback',
-    },
-
-    'WXRImporter.plugin/config.yaml' => {
-        name         => 'WXR Importer',
-    },
-
     'TypePadAntiSpam.plugin/config.yaml' => {
         name         => 'TypePad AntiSpam',
         base_class   => 'TypePadAntiSpam::Plugin',
     },
-
     'ConfigAssistant.pack/config.yaml' => {
         name         => 'Configuration Assistant',
         base_class   => 'MT::Component',
     },
-
     'Rebless/config.yaml' => {
         name         => 'Rebless Me',
         base_class   => 'Rebless::Plugin',
     },
-
-    'Awesome/config.yaml' => {
-        name         => 'Awesome',
-    },
-
     'testplug.pl' => {
         message      => ': Non-folder plugin not loaded',
         not_loaded   => 1,
     },
-
     'subfoldered/subfolderedplug.pl' => {
         name        => 'Subfoldered legacy format plugin',
         # message    => ': Non-folder plugin not loaded',
