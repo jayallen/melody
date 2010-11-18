@@ -38,7 +38,9 @@ lib/MT/Util/LogProcessor
 ^schemas
 ^t/
 .*/t/
-
+^\.prove
+\.DS_Store$
+\.ERR$
 # Revision files.
 \.gitignore
 \.git
@@ -52,6 +54,7 @@ lib/MT/Util/LogProcessor
 \.tmp$
 ^\.DS_Store$
 ^\._
+^000
 
 # Build process and distribution files
 ^MANIFEST
@@ -66,12 +69,18 @@ Makefile.PL
 ^MT.*\.zip
 ^MT.*\.gz
 ^config.cgi$
+^dev/
+^\.htaccess
+^\.perltidyrc
+cover_db
+shipit
 
 # Plugins that aren't to be in the general release
 plugins/mixiComment
 plugins/Revolution
 plugins/CustomCSS
-mt-static/plugins/CustomCSS
+mt-static/plugins/
+mt-static/support/plugins
 
 # Themes that aren't to be in the general release
 mt-static/themes/cityscape-austin
@@ -112,3 +121,15 @@ mt-static/themes/mt-static/themes/cityscape-portland
 mt-static/themes/unity-green
 mt-static/themes/unity-purple
 mt-static/themes/unity-tricolor
+
+# Jay's stuff
+[Cc]onvio
+^extlib/MT/
+log4mt.conf
+logs/melody.log
+^mt-static/support/dashboard
+^mt-static/support/logs
+\.tmproj$
+plugins/DevTester
+^tools/new-branch
+RESTORE_THESE.txt
