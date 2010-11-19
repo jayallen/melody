@@ -373,9 +373,16 @@ in the plugin's slug on the MT front page.
 
 =item * version
 
-The version number for the release of the plugin. Will be displayed
-next to the plugin's name wherever listed. This information is not
-required, but recommended.
+The version number of the plugin which is displayed next to the plugin's name
+wherever listed and is also used to determine if newer versions of the plugin
+exist. While the field currently accepts any valid floating point number, we
+strongly recommend that you use the 3-part, "dotted-decimal" format that
+Melody uses which breaks down into "Major version", "Minor version", "Build or
+bugfix version", as in "2.1.4".
+
+B<NOTE:> You should not include any letters or special characters in your
+version, as in "v1.2.2" or "1.0-beta". To communicate beta designations, you
+should use the plugin's name field instead.
 
 =item * schema_version
 
@@ -842,7 +849,8 @@ done by the plugin:
         l10n_class => "l10nplugin::L10N",
     });
 
-Then, you should have a file like this in C<MT_DIR/plugins/l10nplugin/lib/l10nplugin>:
+Then, you should have a file like this in
+C<MT_DIR/plugins/l10nplugin/lib/l10nplugin>:
 
     # file L10N.pm, in MT_DIR/plugins/l10nplugin/lib/l10nplugin
 
@@ -850,7 +858,8 @@ Then, you should have a file like this in C<MT_DIR/plugins/l10nplugin/lib/l10npl
     use base 'MT::Plugin::L10N';
     1;
 
-And then your actual localization modules in C<MT_DIR/plugins/l10nplugin/lib/l10nplugin/L10N>:
+And then your actual localization modules in
+C<MT_DIR/plugins/l10nplugin/lib/l10nplugin/L10N>:
 
     # file en_us.pm, in MT_DIR/plugins/l10nplugin/lib/l10nplugin/L10N
 

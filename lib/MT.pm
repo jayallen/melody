@@ -3545,10 +3545,10 @@ L<ERROR HANDLING> for more information.
 Constructs a new I<MT> instance and returns that object. Returns C<undef>
 on failure.
 
-I<new> will also read your MT configuration file (provided that it can find it--if
-you find that it can't, take a look at the I<Config> directive, below). It
-will also initialize the chosen object driver; the default is the C<DBM>
-object driver.
+I<new> will also read your MT configuration file (provided that it can
+find it--if you find that it can't, take a look at the I<Config> directive,
+below). It will also initialize the chosen object driver; the default is the
+C<DBM> object driver.
 
 I<%args> can contain:
 
@@ -3558,8 +3558,8 @@ I<%args> can contain:
 
 Path to the MT configuration file.
 
-If you do not specify a path, I<MT> will try to find your MT configuration file
-in the current working directory.
+If you do not specify a path, I<MT> will try to find your MT configuration
+file in the current working directory.
 
 =item * Directory
 
@@ -3685,7 +3685,7 @@ to, and configures Data::Dumper with these settings:
 
 =head2 $mt->init_lang_defaults(%param)
 
-Sets the default language to english if none specified and initializes the 
+Sets the default language to english if none specified and initializes the
 following config directives based upon the current language setting:
 
     NewsboxURL, LearningNewsURL, SupportURL, NewsURL, DefaultTimezone,
@@ -3778,7 +3778,8 @@ See the L<MT::Request> package for more information.
 =head2 MT->new_ua
 
 Returns a new L<LWP::UserAgent> instance that is configured according to the
-Movable Type configuration settings (specifically C<HTTPInterface>, C<HTTPTimeout>, C<HTTPProxy> and C<HTTPNoProxy>). The agent string is set
+Movable Type configuration settings (specifically C<HTTPInterface>,
+C<HTTPTimeout>, C<HTTPProxy> and C<HTTPNoProxy>). The agent string is set
 to "MovableType/(version)" and is also limited to receiving a response of
 100,000 bytes by default (you can override this by using the 'max_size'
 method on the returned instance). Using this method is recommended for
@@ -3987,7 +3988,7 @@ Removes a callback that was previously registered.
 =head2 MT->register_callbacks([...])
 
 Registers several callbacks simultaneously. Each element in the array
-parameter given should be a hashref containing these elements: C<name>, 
+parameter given should be a hashref containing these elements: C<name>,
 C<priority>, C<plugin> and C<code>.
 
 =head2 MT->run_callbacks($meth[, $arg1, $arg2, ...])
@@ -4072,6 +4073,8 @@ hashes and returns them. See L<MT::Component> for further details.
 =head2 MT->component( $id )
 
 Returns a loaded L<MT::Component> based on the requested C<$id> parameter.
+See  L<MT::Component> and L<MT::Plugin> for details specific to each class.
+
 For example:
 
     # Returns the MT 'core' component
@@ -4079,14 +4082,26 @@ For example:
 
 =head2 MT->model( $id )
 
-Returns a Perl package name for the MT object type identified by C<$id>.
-For example:
+Returns the Perl package name listed in the registry as being the class of
+record for a particular object type identified by C<$id>.  For example:
 
     # Assigns (by default) 'MT::Blog' to $blog_class
     my $blog_class = MT->model('blog');
 
-It is a recommended practice to utilize the model method to derive the
-implementation package name, instead of hardcoding Perl package names.
+Additionally, for your convenience, the system does an eval'd require on the
+module before returning making the following familiar algorithm obsolete:
+
+    require MT::Entry;
+    my $entry_iter = MT::Entry->load_iter( $terms, $args );
+
+With C<model()>, you do it this way:
+
+    my $entry_iter = $app->model('entry')->load_iter( $terms, $args );
+
+It is B<highly> recommended that unless you have a reason to call for a
+specific class, you should rely on C<model()> to derive the implementation
+package name as this allows for dynamic modification of object type classes
+by plugins and even core code.
 
 =head2 MT->models( $id )
 
@@ -4099,27 +4114,38 @@ with it:
 
 =head2 MT->product_code
 
-The product code identifying the Movable Type product that is installed.
-This is either 'MTE' for Movable Type Enterprise or 'MT' for the
-non-Enterprise product.
+A short two- or three-letter code indicating the specific product you are
+using. For example, Melody uses C<OM>, Movable Type uses C<MT> and Movable
+Type Enterprise uses C<MTE>. These generally do not change once in use.
 
 =head2 MT->product_name
 
-The name of the Movable Type product that is installed. This is either
-'Movable Type Enterprise' or 'Movable Type Publishing Platform'.
+The name of the Movable Type-family product that is installed. Examples:
+"Melody", 'Movable Type Enterprise' and 'Movable Type Publishing Platform'.
 
 =head2 MT->product_version
 
-The version number of the product. This is different from the C<version_id>
-and C<version_number> methods as they report the API version information.
+The official version number of the product as represented by a "dotted decimal
+version string" like "v1.0.2".
+
+This is a special format defined and recognized by the L<version> module which
+assists in translating between the many different historical version number
+formats Perl modules have used in the past.
 
 =head2 MT->VERSION
 
-Returns the API version of MT. When using the MT module with the version
-requirement, this method will also load the suitable API 'compatibility'
-module, if available. For instance, if your plugin declares:
+=head2 MT->version_number
 
-    use MT 4;
+Both of these methods return the API version of product which indicates the
+API compatibility level between different Movable Type-related products. All
+products with the same VERSION should offer a seamless plugin compatibility
+experience when switching from one to the other.
+
+When using the MT module with the version requirement, this method will also
+load the suitable API 'compatibility' module, if available. For instance, if
+your plugin declares:
+
+    use MT 4.2;
 
 Then, once MT 5 is available, that statement will cause the C<VERSION> method
 to attempt to load a module named "MT::Compat::v4". This module would contain
@@ -4127,13 +4153,10 @@ compatibility support for MT 4-based plugins.
 
 =head2 MT->version_id
 
-Returns the API version of MT (including any beta/alpha designations).
-
-=head2 MT->version_number
-
-Returns the numeric API version of MT (without any beta/alpha designations).
-For example, if I<version_id> returned C<2.5b1>, I<version_number> would
-return C<2.5>.
+Returns the "display version" for the specific release of an MT product
+(including any beta/alpha designations). This is the version shown in the
+footer of the application with some additions based on the components you
+have installed.
 
 =head2 MT->schema_version
 
@@ -4141,9 +4164,9 @@ Returns the version of the MT database schema.
 
 =head2 MT->portal_url
 
-Returns the URL to the product's homepage. 
+Returns the URL to the product's homepage.
 
-I<Historical note: The term "portal" emerged from TypePad in an era in which 
+I<Historical note: The term "portal" emerged from TypePad in an era in which
 TypePad was whitelabeled for numerous sites. Each one of these whitelabeled
 sites was called a "portal" and each portal had a unique homepage which was
 NOT typepad.com. The term persists within Movable Type and Melody today.>
@@ -4205,10 +4228,10 @@ constructor.
 
 =head2 $app->load_global_tmpl($args, [, $blog_id])
 
-Loads a L<MT::Template> template using the arguments specified for the 
+Loads a L<MT::Template> template using the arguments specified for the
 specified blog, or the current blog (if an explicit blog has not been
 specified). This method will first check for the specified template among
-the templates belonging to the blog, and if one is not found will fall 
+the templates belonging to the blog, and if one is not found will fall
 back and search the global templates. In other words, "please give me this
 template, and if you can't find it, look for it in the global templates,
 thank you."
@@ -4227,10 +4250,10 @@ configuration setting or the encoding of the active language
 
 =head2 $app->build_page($tmpl_name, \%param)
 
-Builds an application page to be sent to the client; the page name is specified
-in C<$tmpl_name>, which should be the name of a template containing valid
-L<MT::Template> markup. C<\%param> is a hash ref whose keys and values will
-be passed to L<MT::Template::param> for use in the template.
+Builds an application page to be sent to the client; the page name is
+specified in C<$tmpl_name>, which should be the name of a template containing
+valid L<MT::Template> markup. C<\%param> is a hash ref whose keys and values
+will be passed to L<MT::Template::param> for use in the template.
 
 On success, returns a scalar containing the page to be sent to the client. On
 failure, returns C<undef>, and the error message can be obtained from
@@ -4393,9 +4416,9 @@ return a value ending in a /
 
 =head2 $app->support_directory_path()
 
-Returns the file path to the static support directory. This can 
-be set in the mt-config.cgi with the SupportDirectoryPath directive. This method will always
-return a value ending in a /
+Returns the file path to the static support directory. This can
+be set in the mt-config.cgi with the SupportDirectoryPath directive. This
+method will always return a value ending in a /
 
 =head2 MT::core_upload_file_to_sync
 
