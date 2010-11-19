@@ -10,6 +10,7 @@ use strict;
 use base qw( MT );
 
 use File::Spec;
+use Scalar::Util qw( blessed );
 use MT::Request;
 use MT::Util qw( encode_html offset_time_list decode_html encode_url
   is_valid_email is_url escape_unicode );
@@ -198,14 +199,14 @@ sub page_actions {
 
         # The change below relates to http://bugs.movabletype.org/?80960
         if ( 'HASH' ne ref( $actions->{$a} ) || '' ) {
-            MT->log( {    # Developer debug message...
+            $app->log( {    # Developer debug message...
                    message =>
-                     MT->translate(
+                     $app->translate(
                        'Malformed page_action data found for mode "[_1]" (Key: [_2]). Skipping page_actions.',
                        $type,
                        $a
                      ),
-                   level => MT::Log::ERROR(),
+                   level => 'ERROR',
                 }
             );
             return;
@@ -952,18 +953,20 @@ sub _cb_user_provisioning {
     require MT::Blog;
     require MT::Util;
     my $new_blog;
-    my $blog_name = $user->nickname || MT->translate("First Weblog");
-    if ( my $blog_id = MT->config('NewUserTemplateBlogId') ) {
+    my $app = MT->instance;
+    my $blog_name = $user->nickname || $app->translate("First Weblog");
+    if ( my $blog_id = $app->config('NewUserTemplateBlogId') ) {
         my $blog = MT::Blog->load($blog_id);
         if ( !$blog ) {
-            MT->log( {
-                   message =>
-                     MT->translate(
-                       "Error loading blog #[_1] for user provisioning. Check your NewUserTemplateBlogId setting.",
-                       $blog_id
-                     ),
-                   level => MT::Log::ERROR(),
-                }
+            $app->log( {
+                       message =>
+                         $app->translate(
+                            "Error loading blog #[_1] for user provisioning. "
+                              . "Check your NewUserTemplateBlogId setting.",
+                            $blog_id
+                         ),
+                       level => 'ERROR',
+                     }
             );
             return;
         }
@@ -974,25 +977,25 @@ sub _cb_user_provisioning {
               }
         );
         if ( !$new_blog ) {
-            MT->log( {
+            $app->log( {
                    message =>
-                     MT->translate(
+                     $app->translate(
                        "Error provisioning blog for new user '[_1]' using template blog #[_2].",
                        $user->id,
                        $blog->id
                      ),
-                   level => MT::Log::ERROR(),
+                   level => 'ERROR',
                 }
             );
             return;
         }
-    } ## end if ( my $blog_id = MT->config...)
+    } ## end if ( my $blog_id = $app...)
     else {
         $new_blog = MT::Blog->create_default_blog($blog_name);
     }
 
     my $dir_name;
-    if ( my $root = MT->config('DefaultSiteRoot') ) {
+    if ( my $root = $app->config('DefaultSiteRoot') ) {
         my $fmgr = $new_blog->file_mgr;
         if ( -d $root ) {
             my $path;
@@ -1006,14 +1009,14 @@ sub _cb_user_provisioning {
                 if ( !-d $path ) {
                     $fmgr->mkpath($path);
                     if ( !-d $path ) {
-                        MT->log( {
+                        $app->log( {
                                message =>
-                                 MT->translate(
+                                 $app->translate(
                                    "Error creating directory [_1] for blog #[_2].",
                                    $path,
                                    $new_blog->id
                                  ),
-                               level => MT::Log::ERROR(),
+                               level => 'ERROR',
                             }
                         );
                     }
@@ -1025,35 +1028,35 @@ sub _cb_user_provisioning {
             $dir_name =~ s/(.+)\-$/$1/;
             $new_blog->site_path($path);
         } ## end if ( -d $root )
-    } ## end if ( my $root = MT->config...)
-    if ( my $url = MT->config('DefaultSiteURL') ) {
+    } ## end if ( my $root = $app->config...)
+    if ( my $url = $app->config('DefaultSiteURL') ) {
         $url .= '/' unless $url =~ m!/$!;
         $url .= $dir_name ? $dir_name : MT::Util::dirify( $new_blog->name );
         $url .= '/';
         $new_blog->site_url($url);
     }
-    my $offset = MT->config('DefaultTimezone');
+    my $offset = $app->config('DefaultTimezone');
     if ( defined $offset ) {
         $new_blog->server_offset($offset);
     }
     $new_blog->save
-      or MT->log( {
+      or $app->log( {
                message =>
-                 MT->translate(
+                 $app->translate(
                     "Error provisioning blog for new user '[_1] (ID: [_2])'.",
                     $user->id, $user->name
                  ),
-               level => MT::Log::ERROR(),
+               level => 'ERROR',
              }
       ),
       return;
-    MT->log( {
+    $app->log( {
            message =>
-             MT->translate(
+             $app->translate(
                "Blog '[_1] (ID: [_2])' for user '[_3] (ID: [_4])' has been created.",
                $new_blog->name, $new_blog->id, $user->name, $user->id
              ),
-           level    => MT::Log::INFO(),
+           level    => 'INFO',
            class    => 'system',
            category => 'new'
         }
@@ -1066,13 +1069,13 @@ sub _cb_user_provisioning {
         MT::Association->link( $user => $role => $new_blog );
     }
     else {
-        MT->log( {
+        $app->log( {
                message =>
-                 MT->translate(
+                 $app->translate(
                    "Error assigning blog administration rights to user '[_1] (ID: [_2])' for blog '[_3] (ID: [_4])'. No suitable blog administrator role was found.",
                    $user->name, $user->id, $new_blog->name, $new_blog->id,
                  ),
-               level    => MT::Log::ERROR(),
+               level    => 'ERROR',
                class    => 'system',
                category => 'new'
             }
@@ -1731,7 +1734,7 @@ sub login {
                        $app->translate(
                           "Failed login attempt by unknown user '[_1]'", $user
                        ),
-                     level    => MT::Log::WARNING(),
+                     level    => 'WARNING',
                      category => 'login_user',
                    }
         ) if defined $user;
@@ -1746,7 +1749,7 @@ sub login {
                       $app->translate(
                          "Failed login attempt by disabled user '[_1]'", $user
                       ),
-                    level    => MT::Log::WARNING(),
+                    level    => 'WARNING',
                     category => 'login_user',
                   }
         );
@@ -1777,7 +1780,7 @@ sub login {
                        $app->translate(
                           "Failed login attempt by pending user '[_1]'", $user
                        ),
-                     level    => MT::Log::WARNING(),
+                     level    => 'WARNING',
                      category => 'login_user',
                    }
         );
@@ -1834,19 +1837,19 @@ sub login {
         unless ($saved) {
             $app->log( {
                          message =>
-                           MT->translate(
-                                          "User cannot be created: [_1].",
-                                          $author->errstr
+                           $app->translate(
+                                            "User cannot be created: [_1].",
+                                            $author->errstr
                            ),
-                         level    => MT::Log::ERROR(),
+                         level    => 'ERROR',
                          class    => 'system',
                          category => 'create_user'
                        }
               ),
               $app->error(
-                           MT->translate(
-                                          "User cannot be created: [_1].",
-                                          $author->errstr
+                           $app->translate(
+                                            "User cannot be created: [_1].",
+                                            $author->errstr
                            )
               ),
               return undef;
@@ -1854,11 +1857,11 @@ sub login {
 
         $app->log( {
                      message =>
-                       MT->translate(
-                                      "User '[_1]' has been created.",
-                                      $author->name
+                       $app->translate(
+                                        "User '[_1]' has been created.",
+                                        $author->name
                        ),
-                     level    => MT::Log::INFO(),
+                     level    => 'INFO',
                      class    => 'system',
                      category => 'create_user'
                    }
@@ -1944,7 +1947,6 @@ sub login {
     else {
         MT::Auth->invalidate_credentials( { app => $app } );
         if ( !defined($author) ) {
-            require MT::Log;
 
             # undef indicates *invalid* login as opposed to no login at all.
             $app->log( {
@@ -1952,15 +1954,15 @@ sub login {
                            $app->translate(
                                "Invalid login attempt from user '[_1]'", $user
                            ),
-                         level => MT::Log::WARNING(),
+                         level => 'WARNING',
                        }
             );
-            return $app->error( $app->translate('Invalid login.') );
+            return $app->errtrans('Invalid login.');
         }
         else {
             return undef;
         }
-    } ## end else [ if ($author) ]
+    }
 } ## end sub login
 
 sub logout {
@@ -2325,12 +2327,12 @@ sub _send_sysadmins_email {
 
     unless ( $from_addr || $reply_to ) {
         $app->log( {
-                  message =>
-                    MT->translate("System Email Address is not configured."),
-                  level    => MT::Log::ERROR(),
-                  class    => 'system',
-                  category => 'email'
-                }
+                message =>
+                  $app->translate("System Email Address is not configured."),
+                level    => 'ERROR',
+                class    => 'system',
+                category => 'email'
+              }
         );
         return;
     }
@@ -3631,36 +3633,43 @@ sub blog {
 ## Logging/tracing
 
 sub log {
-    my $app = shift;
-    unless ($MT::plugins_installed) {
-
-        # finish init_schema here since we have to log something
-        # to the database.
-        $app->init_schema();
-    }
+    my $app   = shift;
     my ($msg) = @_;
-    require MT::Log;
-    my $log = MT::Log->new;
+    my $blog  = $app->blog;
+    my $user  = $app->user;
+    my %defaults = (
+                     message => '',
+                     ip      => $app->remote_ip,
+                     $blog ? ( blog_id   => $blog->id ) : (),
+                     $user ? ( author_id => $user->id ) : (),
+    );
+
+    # If we are given a hash reference, simply assign the
+    # default value to any key with an undefined value.
     if ( ref $msg eq 'HASH' ) {
-        $log->set_values($msg);
-        $msg = $msg->{'message'} || '';
+
+        $msg->{$_} = $defaults{$_}
+          foreach grep { !defined $msg->{$_} } keys %defaults;
     }
-    elsif ( ( ref $msg ) && ( UNIVERSAL::isa( $msg, 'MT::Log' ) ) ) {
-        $log = $msg;
+
+    # If we are given a log object, do the same but using
+    # the normal MT::Object accessor/mutator syntax
+    elsif ( blessed $msg and $msg->isa('MT::Log') ) {
+
+        $msg->$_( $defaults{$_} )
+          foreach grep { !defined $msg->$_ } keys %defaults;
     }
+
+    # Otherwise, we've been given a simple string which
+    # we will turn into a hash reference filling in the
+    # defaults for undefined values
     else {
-        $log->message($msg);
+        $msg = { message => $msg, %defaults };
     }
-    $log->ip( $app->remote_ip );
-    if ( my $blog = $app->blog ) {
-        $log->blog_id( $blog->id );
-    }
-    if ( my $user = $app->user ) {
-        $log->author_id( $user->id );
-    }
-    $log->level( MT::Log::INFO() ) unless defined $log->level;
-    $log->class('system') unless defined $log->class;
-    $log->save;
+
+    # Now, send it on up to the SUPER class
+    $app->SUPER::log($msg);
+
 } ## end sub log
 
 sub trace {
@@ -4508,6 +4517,7 @@ which are cross-compatible with Movable Type, you should add the following in
 an C<init_app> callback:
 
     sub init_app {
+        my $cb  = shift;
         my $app = shift;
         return unless $app->isa('MT::App');
         unless ( $app->can('query') ) {

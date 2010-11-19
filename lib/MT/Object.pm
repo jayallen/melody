@@ -11,6 +11,9 @@ use base qw( Data::ObjectDriver::BaseObject MT::ErrorHandler );
 
 use MT;
 use MT::Util qw(offset_time_list);
+# use MT::Log::Log4perl qw( l4mtdump );
+# use Log::Log4perl qw( :resurrect );
+# our $logger;
 
 my ( @PRE_INIT_PROPS, @PRE_INIT_META );
 
@@ -1024,7 +1027,18 @@ sub init {
 }
 
 sub set_defaults {
-    my $obj      = shift;
+    my $obj = shift;
+    if ( !defined $obj->properties ) {
+
+        # This will only happen if the schema is forced to
+        # initialize before all of the components are loaded
+        # With the fix to ticket #591 in place, that's less likely
+        # but it could still happen, so we'll leave this nice big
+        # error here as a breadcrumb.
+        # https://openmelody.lighthouseapp.com/projects/26604/tickets/591
+        die "ERROR: set_defaults encountered a class with no properties"
+          . Carp::longmess();
+    }
     my $defaults = $obj->properties->{'defaults'};
     $obj->{'column_values'} = $defaults ? {%$defaults} : {};
 }

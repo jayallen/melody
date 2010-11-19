@@ -12,6 +12,7 @@ use File::Spec;
 use File::Basename;
 use MT::Util qw( weaken );
 use MT::I18N qw( encode_text );
+use Scalar::Util qw( blessed looks_like_number );
 
 our ( $VERSION, $SCHEMA_VERSION );
 our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,
@@ -490,38 +491,65 @@ sub request {
 }
 
 sub log {
-    my $mt = shift;
-    unless ($plugins_installed) {
+    my $mt = shift;           # VARIABLE ARGUMENT ALERT
+    my $msg = shift || $mt;   # If there's only 1 argument, it's a log message
+    $mt = MT->instance;       # Reset $mt just in case
 
-        # finish init_schema here since we have to log something
-        # to the database.
-        $mt->init_schema();
-    }
-    my $msg;
-    if ( !@_ ) {    # single parameter to log, so $mt must be message
-        $msg = $mt;
-        $mt  = MT->instance;
-    }
-    else {          # multiple parameters to log; second one is message
-        $msg = shift;
-    }
-    my $log_class = $mt->model('log');
-    my $log       = $log_class->new();
-    if ( ref $msg eq 'HASH' ) {
-        $log->set_values($msg);
-    }
-    elsif ( ( ref $msg ) && ( UNIVERSAL::isa( $msg, 'MT::Log' ) ) ) {
-        $log = $msg;
-    }
-    else {
-        $log->message($msg);
-    }
-    $log->level( MT::Log::INFO() ) unless defined $log->level;
-    $log->class('system') unless defined $log->class;
-    $log->save();
-    print STDERR MT->translate( "Message: [_1]", $log->message ) . "\n"
-      if $MT::DebugMode;
+    # We may need to belay this order if the plugins aren't finished being
+    # initialized since the schema would be incomplete, later crippling
+    # parts of the app which rely on the incomplete parts of the schema
+    my $delayed_logger = sub {
+        my $cb = shift;
+        my ( $app, $param ) = @_;    # $app so as to not step on $mt above
+
+        # Instantiate the MT::Log object
+        my $log_class = $mt->model('log');
+        my $log       = $log_class->new();
+
+        # Our $msg argument is either a hash reference
+        if ( ref $msg eq 'HASH' ) {
+            $log->set_values($msg);
+        }
+
+        # Or it could be a blessed MT::Log object
+        elsif ( blessed $msg and $msg->isa('MT::Log') ) {
+            $log = $msg;
+        }
+        else {
+            $log->message($msg);    # A string argument is the message
+        }
+
+        # Now that we have a $log object, set defaults for undef values
+        $log->level( $log_class->INFO() ) unless defined $log->level;
+        $log->class('system') unless defined $log->class;
+
+        # CONVERSION OF STRINGIFIED LOG LEVELS
+        # This method automatically converts the string version of the log
+        # level constants (e.g. "INFO", "ERROR", etc) to the integer values
+        # (e.g. MT::Log::INFO()). So if the level doesn'tlook like a number,
+        # it most likely the stringified version and needs conversion.
+        if ( !looks_like_number( $log->level ) ) {
+            $log->level( $log_class->can( $log->level )->() );
+        }
+
+        # Save the log message but capture the return value
+        my $saved = $log->save();
+
+        # Output to standard error if DebugMode is enabled *OR* if the
+        # message didn't get saved in the database for some reason
+        print STDERR $mt->translate( "Message: [_1]", $log->message ) . "\n"
+          if $MT::DebugMode
+              or !$saved;
+    };
+
+    # If plugins are installed, execute the order immediately
+    return $delayed_logger->() if $plugins_installed;
+
+    # Otherwise, we phone it in via the post_init callback
+    MT->add_callback( 'post_init', 1, MT->instance, $delayed_logger );
+
 } ## end sub log
+
 my $plugin_full_path;
 
 sub run_tasks {
@@ -701,6 +729,7 @@ sub callback_errstr {$CB_ERR}
 sub run_callback {
     my $class = shift;
     my ( $cb, @args ) = @_;
+    my $mt = MT->instance;
 
     $cb->error();    # reset the error string
     my $result = eval {
@@ -716,19 +745,18 @@ sub run_callback {
             $name = "Internal callback";
         }
         elsif ( UNIVERSAL::isa( $plugin, 'MT::Plugin' ) ) {
-            $name = $plugin->name() || MT->translate("Unnamed plugin");
+            $name = $plugin->name() || $mt->translate("Unnamed plugin");
         }
         else {
-            $name = MT->translate("Unnamed plugin");
+            $name = $mt->translate("Unnamed plugin");
         }
-        require MT::Log;
-        MT->log( {
-                   message =>
-                     MT->translate( "[_1] died with: [_2]", $name, $err ),
-                   class    => 'system',
-                   category => 'callback',
-                   level    => MT::Log::ERROR(),
-                 }
+        $mt->log( {
+                    message =>
+                      $mt->translate( "[_1] died with: [_2]", $name, $err ),
+                    class    => 'system',
+                    category => 'callback',
+                    level    => 'ERROR',
+                  }
         );
         return 0;
     } ## end if ( my $err = $@ )
@@ -862,9 +890,26 @@ sub find_config {
 } ## end sub find_config
 
 sub init_schema {
-    require MT::Object;
-    MT::Object->install_pre_init_properties();
-}
+    my $mt = shift;
+
+    # We only install the pre-init properties if we're *actually* done
+    # with the initialization, otherwise they represent an incomplete set.
+    if ($plugins_installed) {
+        require MT::Object;
+        MT::Object->install_pre_init_properties();
+    }
+    else {
+
+        # If the plugins aren't loaded, we throw a hard error to ensure
+        # that the developer realizes that they've committed a no-no.
+        require Carp;
+        return $mt->error(
+                      "An attempt was detected to prematurely initialize the "
+                    . "schema, before all of the plugins had finished loading"
+                    . Carp::longmess() );
+    }
+    return $plugins_installed;
+} ## end sub init_schema
 
 sub init_permissions {
     require MT::Permission;
@@ -1266,18 +1311,25 @@ sub init {
 
     $mt->init_callbacks();
 
-    ## Initialize the language to the default in case any errors occur in
-    ## the rest of the initialization process.
+    ## Initialize the language to the default in case any
+    ## errors occur in the rest of the initialization process.
     $mt->init_config( \%param ) or return;
     $mt->init_lang_defaults(@_) or return;
+
+    # Find and initialize all non-core components
     require MT::Plugin;
     $mt->find_addons()                  or return;
     $mt->init_addons(@_)                or return;
     $mt->init_config_from_db( \%param ) or return;
     $mt->init_debug_mode;
     $mt->init_plugins(@_) or return;
+
+    # Set the plugins_installed flag signalling that it's
+    # okay to initialize the schema and use the database.
     $plugins_installed = 1;
-    $mt->init_schema();
+
+    # Initialize the database!
+    $mt->init_schema() or return;
     $mt->init_permissions();
 
     # Load MT::Log so constants are available
@@ -1422,31 +1474,20 @@ sub _init_plugins_core {
           . __LINE__ . " " 
           . __FILE__
           . "\nrequire '"
-          . File::Spec->catdir( $plugin_full_path, $sig ) . "';";
+          . $plugin_full_path . "';";
         $timer->mark( "Loaded plugin " . $sig ) if $timer;
         if ($@) {
             $Plugins{$plugin_sig}{error} = $@;
 
-            # Issue MT log within another eval block in the
-            # event that the plugin error is happening before
-            # the database has been initialized...
-            eval {
-
-                # line __LINE__ __FILE__
-                require MT::Log;
-                $mt->log( {
-                            message =>
-                              $mt->translate(
-                                           "Plugin error: [_1] [_2]", $plugin,
-                                           $Plugins{$plugin_sig}{error}
-                              ),
-                            class => 'system',
-                            level => MT::Log::ERROR()
-                          }
-                );
-            };
+            # Log the issue but do it in a post_init callback so
+            # that we won't prematurely initialize the schema before
+            # all plugins are finished loading
+            my $msg = $mt->translate( "Plugin error: [_1] [_2]",
+                                      $plugin, $Plugins{$plugin_sig}{error} );
+            $mt->log(
+                  { message => $msg, class => 'system', level => 'ERROR', } );
             return 0;
-        } ## end if ($@)
+        }
         else {
             if ( my $obj = $Plugins{$plugin_sig}{object} ) {
                 $obj->init_callbacks();
@@ -1561,12 +1602,13 @@ sub _init_plugins_core {
 sub _perl_init_plugin_warnings {
     my $cb       = shift;
     my @deps     = @_;
+    my $mt       = MT->instance;
     my $warn_msg = sub {
         return
-          MT->translate(
-                         "You are using a plugin ([_1]) that uses a "
-                           . "deprecated plugin file format (.pl)",
-                         (shift)->{file}
+          $mt->translate(
+                          "You are using a plugin ([_1]) that uses a "
+                            . "deprecated plugin file format (.pl)",
+                          (shift)->{file}
           );
     };
 
@@ -1600,13 +1642,12 @@ sub _perl_init_plugin_warnings {
 
     if ($needs_warning) {
         my $dep_plugin_log_warn = sub {
-            require MT::Log;
-            MT->log( {
-                       message  => $warn_msg->(shift),
-                       class    => 'system',
-                       category => 'deprecation',
-                       level    => MT::Log::WARNING(),
-                     }
+            $mt->log( {
+                        message  => $warn_msg->(shift),
+                        class    => 'system',
+                        category => 'deprecation',
+                        level    => 'WARNING',
+                      }
             );
         };
 
@@ -1692,7 +1733,7 @@ sub scan_directory_for_addons {
                     $mt->log( {
                                 message => $msg,
                                 class   => 'system',
-                                level   => MT->model('log')->ERROR()
+                                level   => 'ERROR',
                               }
                     );
                     next;
@@ -1834,7 +1875,7 @@ sub ping {
         }
     }
 
-    if ( $send_updates && !( MT->config->DisableNotificationPings ) ) {
+    if ( $send_updates && !( $mt->config->DisableNotificationPings ) ) {
         ## Send update pings.
         my @updates = $mt->update_ping_list($blog);
         for my $url (@updates) {
@@ -1917,7 +1958,7 @@ sub ping {
             push @$pings, grep !$pinged{$_}, @{ $cat->ping_url_list };
         }
 
-        my $ua = MT->new_ua;
+        my $ua = $mt->new_ua;
 
         ## Build query string to be sent on each ping.
         my @qs;
@@ -2012,7 +2053,7 @@ sub needs_ping {
     ## If this is a new entry (!$old_status) OR the status was previously
     ## set to draft, and is now set to publish, send the update pings.
     if ( ( !$old_status || $old_status ne MT::Entry::RELEASE() )
-         && !( MT->config->DisableNotificationPings ) )
+         && !( $mt->config->DisableNotificationPings ) )
     {
         my @updates = $mt->update_ping_list($blog);
         @list{@updates} = (1) x @updates;
@@ -2036,7 +2077,7 @@ sub update_ping_list {
     my ($blog) = @_;
 
     my @updates;
-    if ( my $pings = MT->registry('ping_servers') ) {
+    if ( my $pings = $mt->registry('ping_servers') ) {
         my $up = $blog->update_pings;
         if ($up) {
             foreach ( split ',', $up ) {
