@@ -4196,7 +4196,7 @@ upgrade process on how to proceed:
 
 =over 4
 
-=item * 0
+=item * "0"
 
 The upgrade function completed successfully.
 
