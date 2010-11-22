@@ -39,7 +39,15 @@ BEGIN {
         # the Melody version for the dist name and other variables while
         # still maintaining the API version ($VERSION) for plugins to
         # test against for compatibility (i.e. "use MT 4.33;")
-        use version; our $VERSION = qv('0.9.28');    # MakeMaker stops here
+        # See the L<MT> POD documentation for more details on the
+        # different version and their uses and the version module POD
+        # for details about the next line and its semantics:
+        # http://search.cpan.org/~jpeacock/version-0.85/lib/version.pod
+        use version 0.77; our $VERSION = version->declare("v0.9.28");
+
+        # MakeMaker stops at the line above, so NOW, we swap the $VERSION
+        # to $PRODUCT_VERSION and assign $VERSION
+
         $PRODUCT_VERSION = $VERSION;    # The rightful resting place
         $VERSION         = '4.34';      # The true API version
         $SCHEMA_VERSION  = '4.0077';
@@ -47,7 +55,7 @@ BEGIN {
         $PRODUCT_CODE    = 'OM';
         $VERSION_ID = '1.0-beta 1 (build 28)';
         $PORTAL_URL = 'http://openmelody.org';
-    }
+    } ## end if ( '__MAKE_ME__' eq ...)
     else {
 
         # This section is run if the distro was built by make
