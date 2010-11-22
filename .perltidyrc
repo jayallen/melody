@@ -44,6 +44,8 @@
 # file instead of creating a backup (.bak) for each file
 --backup-and-modify-in-place
 
+-backup-file-extension=tdybak
+
 # Causes warnings to be treated like errors (think 'use strict')
 --warning-output
 
