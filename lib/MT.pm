@@ -2466,7 +2466,8 @@ sub set_default_tmpl_params {
     my ($tmpl) = @_;
     my $param  = {};
     $param->{mt_debug}        = $MT::DebugMode;
-    $param->{mt_beta}         = 1 if MT->version_id =~ m/^\d+\.\d+(?:a|b|rc)/;
+    $param->{mt_beta}         = 1 
+        if MT->version_id =~ m/^\d+\.\d+\.\d+\s?(?:a(?:lpha)?|b(?:eta)?|rc)/i;
     $param->{static_uri}      = $mt->static_path;
     $param->{mt_version}      = MT->version_number;
     $param->{mt_version_id}   = MT->version_id;
