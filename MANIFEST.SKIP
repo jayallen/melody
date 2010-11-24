@@ -5,7 +5,7 @@
 lib/MT/App/Viewer.pm
 view.cgi
 
-# Irrelavent tools
+# Currently non-shipping tools
 testbg.cgi
 tools/convert-db
 tools/mt-tmpl-preview
@@ -26,9 +26,6 @@ tools/rebuild-benchmark
 lib/MT/FileMgr/FTP.pm
 lib/MT/FileMgr/SFTP.pm
 lib/MT/FileMgr/DAV.pm
-
-# Propritary Oracle Driver
-Oracle.pm$
 
 # Performance Log Processing
 # Removing until DateTime dependency can be reviewed
@@ -133,3 +130,4 @@ logs/melody.log
 plugins/DevTester
 ^tools/new-branch
 RESTORE_THESE.txt
+addons/ThemeManager.plugin/lib/ThemeManager/DashboardWidget-refactor.pm
