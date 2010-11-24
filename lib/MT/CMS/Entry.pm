@@ -475,9 +475,11 @@ sub edit {
     my $rte      = lc( $app->config('RichTextEditor') );
     my $editors  = $app->registry("richtext_editors");
     my $edit_reg = $editors->{$rte};
-    if ( my $rte_tmpl = $edit_reg->{plugin}->load_tmpl( $edit_reg->{template} )) {
-            $param->{rich_editor}      = $rte;
-            $param->{rich_editor_tmpl} = $rte_tmpl;
+    if ( my $rte_tmpl
+         = $edit_reg->{plugin}->load_tmpl( $edit_reg->{template} ) )
+    {
+        $param->{rich_editor}      = $rte;
+        $param->{rich_editor_tmpl} = $rte_tmpl;
     }
 
     $param->{object_type}  = $type;

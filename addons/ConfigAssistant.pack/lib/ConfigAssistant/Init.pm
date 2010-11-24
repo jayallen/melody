@@ -87,9 +87,9 @@ sub init_options {
                     my $option
                       = $r->{'template_sets'}->{$set}->{'options'}->{$opt};
 
-                    # To avoid option names that may collide with other 
-                    # options in other template sets settings are derived 
-                    # by combining the name of the template set and the 
+                    # To avoid option names that may collide with other
+                    # options in other template sets settings are derived
+                    # by combining the name of the template set and the
                     # option's key.
                     my $optname = $set . '_' . $opt;
                     if ( _option_exists( $sig, $optname ) ) {
@@ -99,7 +99,7 @@ sub init_options {
                     else {
 
                         # if ( my $default = $option->{default} ) {
-                        #     if (   !ref($default) 
+                        #     if (   !ref($default)
                         #         && (   $default =~ /^\s*sub/
                         #             || $default =~ /^\$/)) {
                         #         $default
@@ -118,7 +118,7 @@ sub init_options {
                             $obj->{'registry'}->{'settings'}->{$optname}
                               = { scope => 'blog', %$option, };
                         }
-                    }
+                    } ## end else [ if ( _option_exists( $sig...))]
                 } ## end foreach my $opt ( keys %{ $r...})
             } ## end if ( $r->{'template_sets'...})
         }    # end foreach (@sets)
@@ -192,7 +192,7 @@ sub load_tags {
                    class    => 'system',
                    category => 'plugin',
                    level    => MT::Log::ERROR(),
-                }
+                 }
             );
         }
     }

@@ -3,10 +3,9 @@ package ConfigAssistant::Util;
 use strict;
 use warnings;
 use base 'Exporter';
-our @EXPORT_OK
-  = qw( find_theme_plugin   find_template_def   find_option_def
-        find_option_plugin  process_file_upload 
-        ERROR SUCCESS OVERWRITE NO_UPLOAD );
+our @EXPORT_OK = qw( find_theme_plugin   find_template_def   find_option_def
+  find_option_plugin  process_file_upload
+  ERROR SUCCESS OVERWRITE NO_UPLOAD );
 
 use MT::Util qw( encode_url );
 

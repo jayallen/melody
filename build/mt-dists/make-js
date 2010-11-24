@@ -26,7 +26,7 @@ $js .= `cat tmpl/cms/list_tag.tmpl`;
 $js .= `cat tmpl/cms/include/calendar.tmpl`;
 $js .= `cat tmpl/cms/include/category_selector.tmpl`;
 
-my $addon_path = File::Spec->catdir( 'addons' );
+my $addon_path = File::Spec->catdir('addons');
 local *DH;
 my @files;
 my @addons;
@@ -41,7 +41,10 @@ if ( opendir DH, $addon_path ) {
                 my $id    = lc $1;
                 my $type  = $2;
                 next if $type ne 'pack';
-                if ( open my $fh, '<', File::Spec->catfile($full_path, 'make_js_templates') ) {
+                if ( open my $fh,
+                     '<',
+                     File::Spec->catfile( $full_path, 'make_js_templates' ) )
+                {
                     while (<$fh>) {
                         chomp $_;
                         push @files, $_;
@@ -51,15 +54,15 @@ if ( opendir DH, $addon_path ) {
                 }
             }
         }
-    }
+    } ## end foreach my $p (@p)
     closedir DH;
-}
+} ## end if ( opendir DH, $addon_path)
 
 $js .= `cat $_` foreach @files;
 
 foreach my $lang (qw(ja de nl fr es ru)) {
     eval 'require MT::L10N::' . $lang
-        or die "failed to find package MT::L10N::$lang";
+      or die "failed to find package MT::L10N::$lang";
 
     my $lex = eval '\%{ %MT::L10N::' . $lang . '::Lexicon }' || {};
 
@@ -70,35 +73,34 @@ foreach my $lang (qw(ja de nl fr es ru)) {
         };
         my $conv;
         unless ($@) {
-            $conv = eval '\%{MT::' . $addon . '::L10N::' . $lang . '::Lexicon}';
+            $conv
+              = eval '\%{MT::' . $addon . '::L10N::' . $lang . '::Lexicon}';
         }
-        if ( %$conv ) {
-            $lex = {
-                %$lex,
-                %$conv,
-            };
+        if (%$conv) {
+            $lex = { %$lex, %$conv, };
         }
     }
 
     $js =~ s/\\'/\t\t/g;
     my %lexicon;
-    while ($js =~ m/trans\(\s?(["'])([^\1|\\\1]+?)\1/g) {
+    while ( $js =~ m/trans\(\s?(["'])([^\1|\\\1]+?)\1/g ) {
         my $str = $2;
         $str =~ s/\t\t/'/g;
         my $local = $lex->{$str} || $str;
-        $str = encode_js($str);
+        $str   = encode_js($str);
         $local = encode_js($local);
         next if $str eq $local;
         $lexicon{$str} = $local;
     }
 
-    open(FOUT, ">./mt-static/mt_$lang.js")
-        or die "failed to open mt-static/mt_$lang.js for writing";
+    open( FOUT, ">./mt-static/mt_$lang.js" )
+      or die "failed to open mt-static/mt_$lang.js for writing";
 
-    print FOUT "/* Movable Type language lexicon for $lang localization. */\n\n";
+    print FOUT
+      "/* Movable Type language lexicon for $lang localization. */\n\n";
 
     for my $text ( keys %lexicon ) {
         print FOUT "Lexicon['$text'] = '$lexicon{$text}';\n";
     }
     close(FOUT);
-}
+} ## end foreach my $lang (qw(ja de nl fr es ru))

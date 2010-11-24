@@ -26,14 +26,18 @@ my $orig_verid = $ENV{BUILD_VERSION_ID};
 $build->usage() if $build->help();
 
 foreach my $lang ( $build->languages() ) {
-    local $build->{'stamp=s'}    = $orig_stamp;
+    local $build->{'stamp=s'} = $orig_stamp;
     local $ENV{BUILD_VERSION_ID} = $orig_verid;
     $build->setup( language => $lang );
 
     # Summarize what we are about to do.
-    $build->verbose( sprintf '* Debug mode is %s and system calls %s be made.',
-        $build->debug() ? 'ON' : 'OFF', $build->debug() ? "WON'T" : 'WILL' );
-    $build->verbose( sprintf 'Run options: %s', Dumper $build ) if $build->debug();
+    $build->verbose(
+                    sprintf '* Debug mode is %s and system calls %s be made.',
+                    $build->debug() ? 'ON'    : 'OFF',
+                    $build->debug() ? "WON'T" : 'WILL'
+    );
+    $build->verbose( sprintf 'Run options: %s', Dumper $build )
+      if $build->debug();
 
     # Get any existing distro with the same path name, out of the way.
     $build->remove_copy();
@@ -57,14 +61,14 @@ foreach my $lang ( $build->languages() ) {
     my $distros = $build->create_distro_list();
 
     # Deploy the distributions.
-    $build->deploy_distros( $distros );
+    $build->deploy_distros($distros);
 
     # Cleanup the exported files.
     $build->cleanup();
 
     # TODO Factor out the (rarely used) email notification.
-    $build->notify( $distros );
-}
+    $build->notify($distros);
+} ## end foreach my $lang ( $build->languages...)
 
 __END__
 

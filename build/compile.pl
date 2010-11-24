@@ -34,15 +34,16 @@ open my $fh, '<', $jsfile or die "$jsfile: $!";
 my $code = do { local $/; <$fh> };
 close $fh;
 
-my $ua       = LWP::UserAgent->new;
+my $ua = LWP::UserAgent->new;
 my $response = $ua->post(
-    'http://closure-compiler.appspot.com/compile',
-    {   'js_code'           => $code,
-        'compilation_level' => 'SIMPLE_OPTIMIZATIONS',
-        'output_format'     => 'text',
-        'output_info'       => 'compiled_code',
-    },
-    'Content-Type' => 'application/x-www-form-urlencoded',
+                        'http://closure-compiler.appspot.com/compile',
+                        {
+                          'js_code'           => $code,
+                          'compilation_level' => 'SIMPLE_OPTIMIZATIONS',
+                          'output_format'     => 'text',
+                          'output_info'       => 'compiled_code',
+                        },
+                        'Content-Type' => 'application/x-www-form-urlencoded',
 );
 
 my $year     = ( localtime(time) )[5] + 1900;

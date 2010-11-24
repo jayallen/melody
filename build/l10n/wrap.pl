@@ -6,11 +6,11 @@
 #
 # $Id$
 
-my $wc =0; # New: count the number of words left to translate!
+my $wc = 0;    # New: count the number of words left to translate!
 
 BEGIN {
     my $LANG = $ARGV[0];
-    shift @ARGV unless (-e $LANG);
+    shift @ARGV unless ( -e $LANG );
     print <<EOF;
 # Movable Type (r) Open Source (C) 2005-2010 Six Apart, Ltd.
 # This program is distributed under the terms of the
@@ -30,7 +30,7 @@ use vars qw( \@ISA \%Lexicon );
 
 \%Lexicon = (
 EOF
-}
+} ## end BEGIN
 
 my $tmpl;
 my $plugin = q();
@@ -40,8 +40,7 @@ my %pgconv;
 while (<>) {
     if (/^\s*##\s*(.*)$/) {
         $tmpl = $1;
-        if ( $tmpl =~ m!^plugins!
-          || $tmpl =~ m!^addons! ) {
+        if ( $tmpl =~ m!^plugins! || $tmpl =~ m!^addons! ) {
             my ($pg) = $tmpl =~ m!^(?:plugins|addons)/(.+?)/.+!;
             %pgconv = () unless $pg eq $plugin;
             $plugin = $pg;
@@ -52,28 +51,29 @@ while (<>) {
         my $l = $_;
         last if eof();
         $_ = <>;
-        next if ($_ =~ /^\s*$/);
+        next if ( $_ =~ /^\s*$/ );
         print $l;
     }
-    if (/^[#\s]+'(.+)' => '(.*)',($|\s*\#)/) { # Now also reads empty/to be translated strings
-        my $base = $1; 
+    if (/^[#\s]+'(.+)' => '(.*)',($|\s*\#)/)
+    {    # Now also reads empty/to be translated strings
+        my $base  = $1;
         my $trans = $2;
-        if ( !exists($conv{$base}) && !exists($pgconv{$base}) ) {
+        if ( !exists( $conv{$base} ) && !exists( $pgconv{$base} ) ) {
             print $_;
             $words = wordcount($base);
             $wc += $words unless ($trans);
         }
-        if ( $plugin ) {
+        if ($plugin) {
             $pgconv{$base} = 1;
         }
         else {
             $conv{$base} = 1;
         }
     }
-    else{
+    else {
         print $_;
     }
-}
+} ## end while (<>)
 
 END {
     print <<EOF
@@ -86,11 +86,12 @@ END {
 EOF
 
 }
+
 sub wordcount {
-        my $l = shift;
-    $l =~ s/[`!"$%^&*()_+={[}\];:@~#,.<>?\\\/]/ /g; #`
+    my $l = shift;
+    $l =~ s/[`!"$%^&*()_+={[}\];:@~#,.<>?\\\/]/ /g;    #`
     $l =~ s/\ ([ei])\ ([ge])\ / $1.$2./g;
-    my @words = split(/\W*\s+\W*/, $l);         # see the Camel book p.39
-        return ($#words + 1);
+    my @words = split( /\W*\s+\W*/, $l );    # see the Camel book p.39
+    return ( $#words + 1 );
 }
 

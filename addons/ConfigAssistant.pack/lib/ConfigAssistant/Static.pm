@@ -28,6 +28,7 @@ sub upgrade {
 
             # The saved version
             my $ver = MT->config('PluginStaticVersion');
+
             # $ver = undef;  ### UNCOMMENT TO TEST STATIC UPGRADE ###
 
             # Check to see if $plugin->id is valid. If it's not, we need to
@@ -68,13 +69,13 @@ sub upgrade {
                 $cfg->set( 'PluginStaticVersion',
                            $plugin_id . '=' . $static_version, 1 );
                 $self->progress(
-                    $self->translate_escape(
-                          "Plugin '[_1]' upgraded successfully to "
-                        . "version [_2] (static version [_3]).",
-                        $plugin->label,
-                        $plugin->version || '-',
-                        $static_version
-                    )
+                                $self->translate_escape(
+                                    "Plugin '[_1]' upgraded successfully to "
+                                      . "version [_2] (static version [_3]).",
+                                    $plugin->label,
+                                    $plugin->version || '-',
+                                    $static_version
+                                )
                 );
             } ## end if ( $static_version >...)
         } ## end for my $sig ( keys %MT::Plugins)

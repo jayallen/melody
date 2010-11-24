@@ -43,11 +43,11 @@ sub main {
             }
 
             # Create mt-static/support/plugins/[plugin_id].
-            _make_dir( File::Spec->catfile($plugin->id) );
+            _make_dir( File::Spec->catfile( $plugin->id ) );
 
             # Copy static content.
-            _traverse_hash($dir_hash, $plugin, '', @skip_files);
-        }
+            _traverse_hash( $dir_hash, $plugin, '', @skip_files );
+        } ## end if ( $registry->{'static_version'...})
     } ## end for my $sig ( keys %MT::Plugins)
 } ## end sub main
 
@@ -97,6 +97,7 @@ sub _traverse_hash {
             my $process_file = 1;
             foreach my $to_skip (@skip) {
                 if ( $cur_item =~ m/$to_skip/i ) {
+
                     # This file is in the skip list, so don't copy.
                     $process_file = 0;
                 }

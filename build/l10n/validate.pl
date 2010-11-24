@@ -9,14 +9,14 @@ use Encode;
 ## options
 my ( @components, @langs, $themes, $help, $verbose );
 GetOptions(
-    'components=s' => \@components,
-    'langs=s'      => \@langs,
-    'themes'       => \$themes,
-    'help'         => \$help,
-    'verbose'      => \$verbose,
+            'components=s' => \@components,
+            'langs=s'      => \@langs,
+            'themes'       => \$themes,
+            'help'         => \$help,
+            'verbose'      => \$verbose,
 );
 
-if ( $help ) {
+if ($help) {
     print <<'HELP';
 DESCRIPTION:
     check all l10n Lexicons has valid syntax for translation.
@@ -37,33 +37,34 @@ HELP
 }
 
 my $mt = MT->new;
-if ( $themes ) {
+if ($themes) {
     require MT::Theme;
     MT::Theme->load_all_themes;
 }
 
-@components = split(/,/, join(',', @components));
+@components = split( /,/, join( ',', @components ) );
 @components = map { $_->id } @MT::Components unless scalar @components;
 
-@langs      = split(/,/, join(',', @langs ));
+@langs = split( /,/, join( ',', @langs ) );
 @langs = qw( en_us ja es fr de nl ) unless scalar @langs;
 
-my $total_errors = 0;
+my $total_errors  = 0;
 my $total_phrases = 0;
 COMPONENT:
-for my $c_id ( @components ) {
+for my $c_id (@components) {
     print "Component: $c_id\n";
     my $c = MT->component($c_id);
     if ( !$c ) {
         print "skipped component $c_id: Can't find component\n";
         next COMPONENT;
     }
- LANG:
-    for my $lang_tag ( @langs ) {
+  LANG:
+    for my $lang_tag (@langs) {
         my $handle;
         eval { $handle = $c->_init_l10n_handle($lang_tag) };
         if ( $@ || !$handle ) {
-            print "Skipped lang $lang_tag for component $c_id: Can't find language handle\n";
+            print
+              "Skipped lang $lang_tag for component $c_id: Can't find language handle\n";
             next LANG;
         }
         my $mod = ref $handle;
@@ -72,10 +73,10 @@ for my $c_id ( @components ) {
         my $lexicon;
         {
             no strict 'refs';
-            $lexicon = \%{$mod.'::Lexicon'};
+            $lexicon = \%{ $mod . '::Lexicon' };
         }
-        my $i = 0;
-        my $e = 0;
+        my $i   = 0;
+        my $e   = 0;
         my $msg = "\n";
         for my $key ( keys %$lexicon ) {
             local $!;
@@ -84,7 +85,10 @@ for my $c_id ( @components ) {
             $val = Encode::encode_utf8($val) if Encode::is_utf8($val);
             my $res;
             $c->error();
-            eval { $res = $c->translate( $key, qw( 111 222 333 444 555 666 777 888 999 )) };
+            eval {
+                $res = $c->translate( $key,
+                                  qw( 111 222 333 444 555 666 777 888 999 ) );
+            };
             if ( $@ || !defined $res ) {
                 $e++;
                 $total_errors++;
@@ -96,12 +100,13 @@ for my $c_id ( @components ) {
     |  trans: $val
 ERROR
                 $msg .= sprintf "    |   died: %s\n", $@ if $@;
-                $msg .= sprintf "    |  error: %s\n", $c->errstr if $c->errstr;
+                $msg .= sprintf "    |  error: %s\n", $c->errstr
+                  if $c->errstr;
             }
             $i++;
             $total_phrases++;
-        }
-        if ( $e ) {
+        } ## end for my $key ( keys %$lexicon)
+        if ($e) {
             print "$msg    +------------\n    " if $verbose;
             print "    Found $e errors in $i phrases...\n";
             print "\n" if $verbose;
@@ -109,6 +114,6 @@ ERROR
         else {
             print "    $i phrases. --- OK\n";
         }
-    }
-}
+    } ## end for my $lang_tag (@langs)
+} ## end for my $c_id (@components)
 print "TOTAL: $total_errors errors in $total_phrases phrases...\n";
