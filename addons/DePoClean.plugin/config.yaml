@@ -175,12 +175,12 @@ template_sets:
                 archives:
                     label: Archives
                     outfile: archives/index.html
-                    build_type: 4
+                    build_type: 1
                     rebuild_me: 1
                 atom_feed:
                     label: Atom Feed
                     outfile: atom.xml
-                    build_type: 4
+                    build_type: 1
                     rebuild_me: 1
                 main_index:
                     label: Main Index
@@ -190,22 +190,22 @@ template_sets:
                 mt_jquery_data:
                     label: MT jQuery Data
                     outfile: jquery.mt.js
-                    build_type: 4
+                    build_type: 1
                     rebuild_me: 1
                 rsd:
                     label: RSD
                     outfile: rsd.xml
-                    build_type: 4
+                    build_type: 1
                     rebuild_me: 1
                 comments_rss:
                     label: RSS Feed (comments)
                     outfile: comments_rss.xml
-                    build_type: 4
+                    build_type: 1
                     rebuild_me: 1
                 sitemap:
                     label: Sitemap
                     outfile: sitemap.xml
-                    build_type: 4
+                    build_type: 1
                     rebuild_me: 1
             archive:
                 entry_listing:
@@ -214,15 +214,15 @@ template_sets:
                         monthly:
                             archive_type: Monthly
                             file_template: %y/%m/%i
-                            build_type: 4
+                            build_type: 1
                         category:
                             archive_type: Category
                             file_template: %-c/%i
-                            build_type: 4
+                            build_type: 1
                         author:
                             archive_type: Author
                             file_type: author/%-a/%f
-                            build_type: 4
+                            build_type: 1
             individual:
                 entry:
                     label: Entry
@@ -241,11 +241,11 @@ template_sets:
                             archive_type: Individual
                             file_template: %y/%m/%-b/comments.xml
                             preferred: 0
-                            build_type: 4
+                            build_type: 1
                         page_archive:
                             archive_type: Page
                             file_template: %-c/%-b/comments.xml
-                            build_type: 4
+                            build_type: 1
                             preferred: 0
             module:
                 entry_details:
