@@ -472,24 +472,16 @@ sub edit {
         $param->{blog_file_extension} = $ext;
     }
 
-    my $rte;
-    if ( $param->{convert_breaks} =~ m/richtext/ ) {
-        ## Rich Text editor
-        $rte = lc( $app->config('RichTextEditor') );
-    }
-
-    my $editors = $app->registry("richtext_editors");
-    my $edit_reg = $editors->{$rte} if $rte;
-    if ($edit_reg) {
-        if ( my $rich_editor_tmpl
-             = $edit_reg->{plugin}->load_tmpl( $edit_reg->{template} ) )
-        {
+    my $rte      = lc( $app->config('RichTextEditor') );
+    my $editors  = $app->registry("richtext_editors");
+    my $edit_reg = $editors->{$rte};
+    if ( my $rte_tmpl = $edit_reg->{plugin}->load_tmpl( $edit_reg->{template} )) {
             $param->{rich_editor}      = $rte;
-            $param->{rich_editor_tmpl} = $rich_editor_tmpl;
-        }
+            $param->{rich_editor_tmpl} = $rte_tmpl;
     }
 
-    $param->{object_type} = $type;
+    $param->{object_type}  = $type;
+    $param->{object_label} = $class->class_label;
     $param->{field_loop} ||= [
         map { {
                field_name => $_,
