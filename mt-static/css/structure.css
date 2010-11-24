@@ -187,7 +187,7 @@ body.system #header {background: #6B3081 url('../images/header-inner.gif') repea
     background: url('../melody/melody-logo-white-banner.png') no-repeat;
 }
 .system #brand a {
-    background-image: url('../melody/melody-logo-white-banner.png');
+    background-image: url('../images/melody-logo-white-banner.png');
 }
 #brand span {
     position: relative;
@@ -2457,12 +2457,16 @@ optgroup option {
 
 /* list entry */
 
+.page-listing-table .author,
+.page-listing-table .date,
+.page-listing-table .category,
 .entry-listing-table .author,
 .entry-listing-table .date,
 .entry-listing-table .category {
     white-space: nowrap;
     width: 1%;
 }
+.page-listing-table,
 .entry-listing-table {
     margin-left: -28px !important;
     width: 730px !important;
@@ -2473,30 +2477,39 @@ optgroup option {
 .listing thead tr th {
   background: white url(../images/listing/column-label-bg.gif) repeat-x 0% 100%;
 }
+.page-listing-table thead tr th.nostyle,
 .entry-listing-table thead tr th.nostyle {
     background: white;
     border-bottom: none;
 }
+.page-listing-table .extra,
 .entry-listing-table .extra {
     font-size: .85em;
     color: #777;
 }
+.page-listing-table .extra a,
 .entry-listing-table .extra a {
     color: #777;
 }
 
+.page-listing-table .extra .actions,
+.page-listing-table .extra .url,
+.page-listing-table .extra .tags,
 .entry-listing-table .extra .actions,
 .entry-listing-table .extra .url,
 .entry-listing-table .extra .tags {
     display: inline-block;
 }
+.page-listing-table .extra .url,
 .entry-listing-table .extra .url {
     width: auto;
     overflow: hidden;
 }
+.page-listing-table .date,
 .entry-listing-table .date {
     text-align: right;
 }
+.page-listing-table .extra .actions,
 .entry-listing-table .extra .actions {
     font-size: 1.2em;
     float: right;
@@ -2504,19 +2517,26 @@ optgroup option {
     position: relative;
     white-space: nowrap;
 }
+.page-listing-table .extra .actions a,
 .entry-listing-table .extra .actions a {
     color: #CCC;
 }
 
+.page-listing-table .extra .tags span,
 .entry-listing-table .extra .tags span { width: 220px;  }
+
+.page-listing-table .extra .tags label,
 .entry-listing-table .extra .tags label { width: 30px; text-align: right;}
 
+.page-listing-table .extra .tags span,
+.page-listing-table .extra .tags label,
 .entry-listing-table .extra .tags span,
 .entry-listing-table .extra .tags label { 
     display: block; 
     float: left;
 }
 
+.page-listing-table .actions ul,
 .entry-listing-table .actions ul { 
   padding: 0; 
   margin: 0; 
@@ -2524,70 +2544,83 @@ optgroup option {
   right: 0; 
   top: 0;
 }
+.page-listing-table .actions li,
 .entry-listing-table .actions li { 
   float: left;
   list-style: none;
   margin: 0 10px 0 0;
   font-size: 90%;
 }
+.page-listing-table .actions li.last,
 .entry-listing-table .actions li.last { 
   margin-right: 0;
 }
+.page-listing-table.compact tr.master.published td,
 .entry-listing-table.compact tr.master.published td {
     padding-bottom: 0;
 }
+.page-listing-table tr.unpublished a,
+.page-listing-table tr.unpublished,
 .entry-listing-table tr.unpublished a,
 .entry-listing-table tr.unpublished {
     color: #999;
 }
+.page-listing-table td.comments,
 .entry-listing-table td.comments {
     text-align: center;
 }
+.page-listing-table tr.has_published td.publish a,
+.page-listing-table tr.has_error td.publish a,
+.page-listing-table tr.publishing td.publish a,
+.page-listing-table tr.hovered td.publish a,
 .entry-listing-table tr.has_published td.publish a,
 .entry-listing-table tr.has_error td.publish a,
 .entry-listing-table tr.publishing td.publish a,
 .entry-listing-table tr.hovered td.publish a {
     visibility: visible;
 }
+.page-listing-table tr.hovered .actions a,
 .entry-listing-table tr.hovered .actions a {
     color: #036;
 }
+.page-listing-table td,
 .entry-listing-table td {
     border: 0;
 }
+.page-listing-table tr.last,
 .entry-listing-table tr.last {
     border-bottom: 1px solid #F3F6F0;
     padding-bottom: 3px;
 }
+.page-listing-table tr.even,
+.page-listing-table tr.odd,
 .entry-listing-table tr.even,
 .entry-listing-table tr.odd {
     background: white;
 }
+.page-listing-table tr.hovered,
 .entry-listing-table tr.hovered {
     background-color: #f3f6f0;
 }
+.page-listing-table tr.hovered td.tl,
 .entry-listing-table tr.hovered td.tl {
     -moz-border-radius-topleft: 5px;
     -webkit-border-top-left-radius: 5px;
 }
+.page-listing-table.minimal tr.hovered td.tl,
+.page-listing-table tr.hovered td.bl,
 .entry-listing-table.minimal tr.hovered td.tl,
 .entry-listing-table tr.hovered td.bl {
     -moz-border-radius-bottomleft: 5px;
     -webkit-border-bottom-left-radius: 5px;
 }
-/*
-.entry-listing-table tr.hovered td.tr {
-    -moz-border-radius-topright: 5px;
-    -webkit-border-top-right-radius: 5px;
-}
-.entry-listing-table.minimal tr.hovered td.tr,
-.entry-listing-table tr.hovered td.br {
-    -moz-border-radius-bottomright: 5px;
-    -webkit-border-bottom-right-radius: 5px;
-}
-*/
+.page-listing-table tr td.publish,
 .entry-listing-table tr td.publish { width: 20px; padding: 2px 0px 0px 2px; margin: 0; }
+
+.page-listing-table tr td.publish span,
 .entry-listing-table tr td.publish span { display: none; }
+
+.page-listing-table tr td.publish a,
 .entry-listing-table tr td.publish a {
     width: 16px;
     height: 14px;

@@ -1,5 +1,5 @@
 $(document).ready( function() {
-    $('#list-entry li.quick_look a').click( function() {
+    $('.list-entry li.quick_look a').click( function() {
         var id = $(this).parents('tr').prev().find('.cb input').val();
         var url = ScriptURI + '?__mode=get_entry&amp;blog_id='+BlogID+'&amp;id=' + id;
         $('#quicklookDialog #content-preview #text').html('').addClass('thinking');
@@ -46,11 +46,11 @@ $(document).ready( function() {
         }
         $('.listing tr.obj-'+id).removeClass('hovered');
     });
-    $('#list-entry td.publish a').click( function() {
+    $('.list-entry td.publish a').click( function() {
         var id = $(this).parents('tr').find('.cb input').val();
         ajax_publish( id );
     });    
-    $('#list-entry td .actions li.publish_entry a').click( function() {
+    $('.list-entry td .actions li.publish_entry a').click( function() {
         var id = $(this).parents('tr').prev().find('.cb input').val();
         ajax_publish( id );
     });
