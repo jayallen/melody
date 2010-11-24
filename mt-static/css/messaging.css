@@ -102,13 +102,16 @@ body#system-check .msg-info {
     margin-top: 5px;
 /*    background-color: #daa;*/
     text-align: left;
+    background-color: transparent;
+    color: #999;
 }
 .debug-panel h3 {
     padding: 5px;
     font-size: 12px;
     margin: 0;
 /*    background-color: #f55;*/
-    color: #fff;
+    background-color: transparent;
+    color: #999;
 }
 
 .debug-panel-inner li {
@@ -116,7 +119,9 @@ body#system-check .msg-info {
 }
 
 .debug-panel-inner li:hover {
-    background-color: #eaa;
+/*    background-color: #eaa;*/
+    background-color: #ccc;
+    color: #000;
 }
 
 .debug-panel-inner {
