@@ -314,6 +314,8 @@ BEGIN {
             'PluginPath' =>
               { default => 'plugins', path => 1, type => 'ARRAY', },
             'EnableArchivePaths' => { default => 0, },
+            'EnableAssetAutoDirify' => { default => 1 },
+            'AssetAutoDirifyDelimiter' => { default => '-' },
             'SearchTemplatePath' =>
               { default => 'search_templates', path => 1, },
             'ObjectDriver'        => undef,
