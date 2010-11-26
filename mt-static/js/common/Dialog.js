@@ -3,6 +3,7 @@ Dialog Library
 $Id: Dialog.js 159 2007-04-24 01:05:37Z ydnar $
 
 Copyright (c) 2006, Six Apart, Ltd.
+Copyright © 2009-2010 Open Melody Software Group.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

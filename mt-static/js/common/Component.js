@@ -3,6 +3,7 @@ DOM Component Library - Copyright 2005 Six Apart
 $Id: Component.js 212 2007-06-11 17:08:49Z ddavis $
 
 Copyright (c) 2005, Six Apart, Ltd.
+Copyright © 2009-2010 Open Melody Software Group.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

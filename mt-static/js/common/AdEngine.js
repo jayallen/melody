@@ -3,6 +3,7 @@ AdEngine
 $Id: AdEngine.js 226 2007-09-18 18:20:57Z janine $
 
 Copyright (c) 2006, Six Apart, Ltd.
+Copyright © 2009-2010 Open Melody Software Group.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

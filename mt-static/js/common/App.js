@@ -1,5 +1,6 @@
 /**
  * App Library - Copyright (c) 2006 Six Apart
+ * Copyright © 2009-2010 Open Melody Software Group.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without

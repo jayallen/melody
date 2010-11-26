@@ -4469,7 +4469,8 @@ Movable Type.
 
 =head1 AUTHOR & COPYRIGHT
 
-Except where otherwise noted, MT is Copyright 2001-2009 Six Apart.
+Portions Copyright Six Apart.
+Copyright © 2009-2010 Open Melody Software Group.
 All rights reserved.
 
 =cut

@@ -8,11 +8,11 @@ my $year = ( localtime(time) )[5] + 1900;
 
 if ( ( $ENV{BUILD_PACKAGE} || 'MTOS' ) ne 'MTOS' ) {
     $copyright
-      = "Movable Type (r) (C) 2001-$year Six Apart, Ltd. All Rights Reserved";
+      = "Movable Type (r) (C) 2001-$year Six Apart, Ltd. All Rights Reserved\nCopyright (C) 2009-$year Open Melody Software Group. All Rights Reserved.";
 }
 else {
     $copyright
-      = "Movable Type (r) Open Source (C) 2001-$year Six Apart, Ltd.";
+      = "Movable Type (r) Open Source (C) 2001-$year Six Apart, Ltd.\nCopyright (C) 2009-$year Open Melody Software Group. All Rights Reserved.";
 }
 
 my %types = ( css => 'CSS::Minifier', js => 'JavaScript::Minifier', );

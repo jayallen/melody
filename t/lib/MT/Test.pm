@@ -1,5 +1,6 @@
 #############################################################################
 # Copyright © 2008-2010 Six Apart Ltd.
+# Copyright © 2009-2010 Open Melody Software Group.
 # $Id$
 
 package MT::Test;
