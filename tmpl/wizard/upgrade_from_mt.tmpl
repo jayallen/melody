@@ -1,0 +1,75 @@
+<mt:setvarblock name="page_title"><__trans phrase="Welcome to Melody"></mt:setvarblock>
+<mt:setvarblock name="html_head" append="1">
+  <mt:include name="inline_styles.tmpl">
+  <script type="text/javascript">
+    /* <![CDATA[ */
+    function js_check() {
+      if (! openManual ) {
+        // mt.js not loading properly; static path incorrect
+        var c = getByID("container");
+        c.className = "bad-static-path";
+      }
+    }
+    window.onload = js_check;
+    /* ]]> */
+  </script>
+</mt:setvarblock>
+
+<mt:include name="include/chromeless_header.tmpl">
+
+    <noscript>
+        <p><__trans phrase="Melody requires that you enable JavaScript in your browser. Please enable it and refresh this page to proceed."></p>
+    </noscript>
+
+<mt:if name="ready">
+
+<form method="post" action="index.cgi">
+    <p><__trans phrase="">Congratulations, you are ready to upgrade to Melody!</p>
+    <div class="action-buttons">
+        <div class="right"><input type="submit" class="sb" value="<__trans phrase="Begin Upgrade">" /></div>
+    </div>
+</form>
+
+<mt:else>
+
+<form method="post">
+    <input type="hidden" name="__mode" value="test" />
+    <input type="hidden" name="step" value="upgrade_from_mt" />
+    <input type="hidden" name="config" value="<mt:var name="config" escape="html">" />
+
+    <p class="intro"><__trans phrase="It appears that are upgrading to Melody from Movable Type. Thank you for choosing Meloy. Before you proceed, there are a few things you need to do first. Listed below is your upgrade checklist."></p>
+
+    <mt:if name="remove_loop">
+    <h3><__trans phrase="Remove obsolete plugins"></h3>
+    <p><__trans phrase="Melody has moved or incorporated the features from numerous plugins, making them obselete. Please remove the following directories:"></p>
+    <mt:Loop name="remove_loop">
+    <mt:if name="__first__"><ul></mt:if>
+        <li><mt:var name="__value__"></li>
+    <mt:if name="__last__"></ul></mt:if>
+    </mt:Loop>
+
+    <mt:else name="rename_loop">
+    <h3><__trans phrase="Place all plugins in their own folder"></h3>
+    <p><__trans phrase="Melody requires all plugins to be contained by their own directory. The following plugins need to be moved:"></p>
+    <mt:Loop name="rename_loop">
+    <mt:if name="__first__"><ul></mt:if>
+        <li>Move <mt:var name="full_path"> to <mt:var name="rename_to"></li>
+    <mt:if name="__last__"></ul></mt:if>
+    </mt:Loop>
+
+    <mt:else name="rename_cfg">
+    <h3><__trans phrase="Rename your config file"></h3>
+    <p><__trans phrase="Almost there! The last thing you need to do is rename your mt-config.cgi file:"></p>
+    <ul>
+      <li>Rename <mt:var name="cfg_file"> to <mt:var name="new_cfg_file">.</li>
+    </ul>
+
+    </mt:if>
+
+    <div class="action-buttons">
+        <div class="right"><input type="submit" class="sb" value="<__trans phrase="Am I Ready Yet?">" /></div>
+    </div>
+</form>
+</mt:if>
+
+<mt:include name="include/chromeless_footer.tmpl">
