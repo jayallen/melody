@@ -3,6 +3,7 @@ Cookie JavaScript Library
 $Id: Cookie.js 247 2007-11-26 18:57:32Z ydnar $
 
 Copyright (c) 2007, Six Apart, Ltd.
+Copyright © 2009-2010 Open Melody Software Group.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

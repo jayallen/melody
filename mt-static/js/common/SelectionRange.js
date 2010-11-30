@@ -1,5 +1,6 @@
 /*
 SelectionRange Class - Copyright 2005 Six Apart
+Copyright © 2009-2010 Open Melody Software Group.
 $Id: SelectionRange.js 164 2007-04-25 20:41:19Z ydnar $
 */
 

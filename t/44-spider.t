@@ -53,7 +53,7 @@ my $skip_pattern    = qr{logout|export|magic_token};
 my $must_match      = qr{(/cgi-bin/|^\?).*mt\.cgi};
 my $warning_pattern = qr{Uninitialized};
 my $good_pattern
-  = qr{Copyright .* 2001-\d+ Six Apart\. All Rights Reserved\.};
+  = qr{Copyright .* 2009-\d+ Open Melody Software Group\. All Rights Reserved\. };
 my $bad_pattern
   = qr{<input\s+type="submit"\s+value="Log In" />|time\s+to\s+upgrade!}i;
 
