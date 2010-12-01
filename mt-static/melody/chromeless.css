@@ -27,7 +27,7 @@ body.dialog #container-inner .field-header label { font-size:13px; }
 body.dialog #container-inner .field input { border:2px solid #6B3081; font-family:Arial; font-size:14px; padding:8px; width:300px; }
 body.dialog #container-inner .field input:focus { border-color:#D8224F; }
 body.dialog #container-inner button { background:#D8224F; color:#fff; border:2px solid #D8224F; }
-body.dialog #container-inner button:hover {  }
+body.dialog #container-inner button:hover {  } 
 
 .dialog .actions-bar { margin:0 0 5px; }
 .dialog .actions-bar .actions a {background:none!important; background-color:#E1D6E6!important; color:#fff!important; -moz-border-radius:4px;-webkit-border-radius:4px;}
@@ -36,7 +36,12 @@ body.dialog #container-inner button:hover {  }
 body.dialog #container-inner div#ctl, body.dialog #container-inner div#ctr, body.dialog #container-inner div#cbl, body.dialog #container-inner div#cbr {background:none;}
 
 body.chromeless { background:#6B3081; }
-body.chromeless-wide { background:#6B3081; }
+body.chromeless-wide { background:#33789c;}
+	body.chromeless-wide #container {background:#33789c;}
+	body.chromeless-wide #container-inner {background:#C9E1EE; border:none;padding:5px; color:#33789c;}
+		body.chromeless-wide #container-inner button {background:#33789c; border:#33789c;}
+		body.chromeless-wide #container-inner .msg-success {background:#33789c;}
+			body.chromeless-wide #container-inner .msg-success a {color: #fff;}
 
 p.login {background:none!important;}
 

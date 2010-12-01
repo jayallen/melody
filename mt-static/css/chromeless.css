@@ -1,4 +1,5 @@
-/* Chromeless ------------------------------------------------------------ */
+/* @override http://melody.studiolift.com/melody/mt-static/css/chromeless.css?v=1.0.0b2%20%28build%2030%29 */
+  /* Chromeless ------------------------------------------------------------ */
 
 body{
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -330,7 +331,7 @@ table.show-admin td {
     margin: 0;
 }
 .chromeless-wide #footer .inner {
-    border-top: 1px solid #ccc;
+ /*   border-top: 1px solid #ccc; */
     padding-top: 10px;
     margin: 0 18px;
 }
