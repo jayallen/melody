@@ -21,7 +21,7 @@ body.dialog #container-inner input.pw { -moz-border-radius:4px; -webkit-border-r
 body.dialog #container-inner { background:#89599A; color:#fff; border:2px solid #89599A; }
 body.dialog #container-inner #page-title { font-weight:bold; }
 body.dialog #container-inner a { color:#E1D6E6; }
-body.dialog #container-inner a:hover { color:#89599A; }
+body.dialog #container-inner a:hover { color:#ffffff; }
 body.dialog #container-inner .field-header { margin:0 0 5px; }
 body.dialog #container-inner .field-header label { font-size:13px; }
 body.dialog #container-inner .field input { border:2px solid #6B3081; font-family:Arial; font-size:14px; padding:8px; width:300px; }
