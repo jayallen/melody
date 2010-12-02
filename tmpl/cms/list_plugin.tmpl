@@ -161,7 +161,7 @@
 
 <mt:setvarblock name="action_buttons">
   <a href="javascript:void(0)"
-     onclick="doForMarkedInThisWindow(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'disable_item', {}, '<__trans phrase="to publish" escape="js">'); return false;"
+     onclick="doForMarkedInThisWindow(getByID('enabled-plugins-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'disable_item', {}, '<__trans phrase="to publish" escape="js">'); return false;"
      accesskey="a"
      title="<__trans phrase="Disable selected plugins (a)">"
   ><__trans phrase="Disable"></a></mt:if>
@@ -171,7 +171,7 @@
 
 <mt:setvarblock name="action_buttons">
   <a href="javascript:void(0)"
-     onclick="doForMarkedInThisWindow(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'enable_item', {}, '<__trans phrase="to publish" escape="js">'); return false;"
+     onclick="doForMarkedInThisWindow(getByID('disabled-plugins-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'enable_item', {}, '<__trans phrase="to publish" escape="js">'); return false;"
      accesskey="a"
      title="<__trans phrase="Enable selected plugins (a)">"
   ><__trans phrase="Enable"></a></mt:if>
