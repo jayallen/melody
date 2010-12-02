@@ -218,7 +218,7 @@ my @CORE_DATA = (
 my @CORE_OPT = (
     [ 'Archive::Tar', 0, 0, translate('Archive::Tar is needed in order to archive files in backup/restore operation.')],
     [ 'Archive::Zip', 0, 0, translate('Archive::Zip is needed in order to archive files in backup/restore operation.')],
-    [ 'Attribute::Params::Validate', 1.7, 0, ''],
+    [ 'Attribute::Params::Validate', 1.07, 0, ''],
     [ 'bignum', 0.23, 0, ''], 
     [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is needed in order to use memcached as caching mechanism used by Melody.')],
     [ 'Crypt::DH', 0.06, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ')],
