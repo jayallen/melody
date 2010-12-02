@@ -221,7 +221,7 @@ my @CORE_OPT = (
     [ 'Attribute::Params::Validate', 1.7, 0, ''],
     [ 'bignum', 0.23, 0, ''], 
     [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is needed in order to use memcached as caching mechanism used by Melody.')],
-    [ 'Crypt::DH', 0.96, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ')],
+    [ 'Crypt::DH', 0.06, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ')],
     [ 'Crypt::DSA', 0, 0, translate('Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.')],
     [ 'Crypt::SSLeay', 0, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers that require SSL support.')],
     [ 'GD', 0, 0, translate('This module is needed if you would like to be able to create thumbnails of uploaded images.')],
