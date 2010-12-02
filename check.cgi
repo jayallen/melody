@@ -196,7 +196,7 @@ my @CORE_REQ = (
     [ 'Jcode', 0.88, 1],
     [ 'Locale::Maketext', 1.13, 1],
     [ 'Log::Dispatch', 2.26, 1],
-    [ 'Log::Log4Perl', 1.30, 1],
+    [ 'Log::Log4perl', 1.30, 1],
     [ 'Lucene::QueryParser', 1.04, 1],
     [ 'LWP', 5.831, 1 ],
     [ 'Params::Validate', 0.73, 1],
