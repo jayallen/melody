@@ -81,7 +81,7 @@ eval {
 sub trans_templ {
     my($text) = @_;
     return $mt->translate_templatized($text) if $mt;
-    $text =~ s!(<MT_TRANS(?:\s+((?:\w+)\s*=\s*(["'])(?:<[^>]+?>|[^\3]+?)+?\3))+?\s*/?>)!
+    $text =~ s!(<__trans(?:\s+((?:\w+)\s*=\s*(["'])(?:<[^>]+?>|[^\3]+?)+?\3))+?\s*/?>)!
         my($msg, %args) = ($1);
         #print $msg;
         while ($msg =~ /\b(\w+)\s*=\s*(["'])((?:<[^>]+?>|[^\2])*?)\2/g) {  #"
@@ -151,7 +151,7 @@ if (!$view) {
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta http-equiv="content-language" content="$lang" />
     
-    <title><MT_TRANS phrase="Melody System Check"> [check.cgi]</title>
+    <title><__trans phrase="Melody System Check"> [check.cgi]</title>
     
     <style type=\"text/css\">
         <!--
@@ -168,10 +168,10 @@ HTML
         print "<body>\n";
     }
     print trans_templ(<<HTML);
-<div id="header"><h1><MT_TRANS phrase="Melody System Check"> [check.cgi]</h1></div>
+<div id="header"><h1><__trans phrase="Melody System Check"> [check.cgi]</h1></div>
 
 <div id="content">
-<p class="msg msg-info"><MT_TRANS phrase="The check.cgi script provides you with information on your system's configuration and determines whether you have all of the components you need to run Melody."></p>
+<p class="msg msg-info"><__trans phrase="The check.cgi script provides you with information on your system's configuration and determines whether you have all of the components you need to run Melody."></p>
 HTML
 }
 
@@ -263,19 +263,19 @@ my $ver = ref($^V) eq 'version' ? $^V->normal : ( $^V ? join('.', unpack 'C*', $
 my $perl_ver_check = '';
 if ($] < 5.008008) {  # our minimal requirement for support
     $perl_ver_check = <<EOT;
-<p class="warning"><MT_TRANS phrase="The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]). Please upgrade to at least Perl [_2]." params="$ver%%5.8.8"></p>
+<p class="warning"><__trans phrase="The version of Perl installed on your server ([_1]) is lower than the minimum supported version ([_2]). Please upgrade to at least Perl [_2]." params="$ver%%5.8.8"></p>
 EOT
 }
 my $config_check = '';
 if (!$cfg_exist) {
     $config_check = <<CONFIG;
-<p class="warning"><MT_TRANS phrase="Melody configuration file was not found."></p>
+<p class="warning"><__trans phrase="Melody configuration file was not found."></p>
 CONFIG
 }
 my $server = $ENV{SERVER_SOFTWARE};
 my $inc_path = join "<br />\n", @INC;
 print trans_templ(<<INFO);
-<h2 id="system-info"><MT_TRANS phrase="System Information"></h2>
+<h2 id="system-info"><__trans phrase="System Information"></h2>
 $perl_ver_check
 $config_check
 INFO
@@ -284,21 +284,21 @@ if ($version) {
     $version =~ s/[^a-zA-Z0-9\-\.]//g;
 print trans_templ(<<INFO);
 <ul class="version">
-    <li><strong><MT_TRANS phrase="Melody version:"></strong> <code>$version</code></li>
+    <li><strong><__trans phrase="Melody version:"></strong> <code>$version</code></li>
 </ul>
 INFO
 }
 print trans_templ(<<INFO);
 <ul>
-	<li><strong><MT_TRANS phrase="Current working directory:"></strong> <code>$cwd</code></li>
-	<li><strong><MT_TRANS phrase="Melody home directory:"></strong> <code>$ENV{MT_HOME}</code></li>
-	<li><strong><MT_TRANS phrase="Operating system:"></strong> $^O</li>
-	<li><strong><MT_TRANS phrase="Perl version:"></strong> <code>$ver</code></li>
-	<li><strong><MT_TRANS phrase="Perl include path:"></strong><br /> <code>$inc_path</code></li>
+	<li><strong><__trans phrase="Current working directory:"></strong> <code>$cwd</code></li>
+	<li><strong><__trans phrase="Melody home directory:"></strong> <code>$ENV{MT_HOME}</code></li>
+	<li><strong><__trans phrase="Operating system:"></strong> $^O</li>
+	<li><strong><__trans phrase="Perl version:"></strong> <code>$ver</code></li>
+	<li><strong><__trans phrase="Perl include path:"></strong><br /> <code>$inc_path</code></li>
 INFO
 if ($server) {
 print trans_templ(<<INFO);
-    <li><strong><MT_TRANS phrase="Web server:"></strong> <code>$server</code></li>
+    <li><strong><__trans phrase="Web server:"></strong> <code>$server</code></li>
 INFO
 }
 
@@ -310,7 +310,7 @@ local *FH;
 if (open(FH, ">$TMP")) {
     close FH;
     unlink($TMP);
-    print trans_templ('    <li><MT_TRANS phrase="(Probably) Running under cgiwrap or suexec"></li>' . "\n");
+    print trans_templ('    <li><__trans phrase="(Probably) Running under cgiwrap or suexec"></li>' . "\n");
 }
 
 print "\n\n</ul>\n";
@@ -358,16 +358,16 @@ for my $list (\@REQ, \@DATA, \@OPT) {
     } else {
         $type = translate("Optional");
     }
-    print trans_templ(qq{<h2><MT_TRANS phrase="[_1] [_2] Modules" params="$phrase%%$type"></h2>\n\t<div>\n});
+    print trans_templ(qq{<h2><__trans phrase="[_1] [_2] Modules" params="$phrase%%$type"></h2>\n\t<div>\n});
     if (!$req && !$data) {
         print trans_templ(<<MSG);
-    <p class="msg msg-info"><MT_TRANS phrase="The following modules are <strong>optional</strong>. If your server does not have these modules installed, you only need to install them if you require the functionality that the module provides."></p>
+    <p class="msg msg-info"><__trans phrase="The following modules are <strong>optional</strong>. If your server does not have these modules installed, you only need to install them if you require the functionality that the module provides."></p>
 
 MSG
     }
     if ($data) {
         print trans_templ(<<MSG);
-        <p class="msg msg-info"><MT_TRANS phrase="Some of the following modules are required by the various data storage options in Melody. In order run the system, your server needs to have DBI and at least one of the other modules installed."></p>
+        <p class="msg msg-info"><__trans phrase="Some of the following modules are required by the various data storage options in Melody. In order run the system, your server needs to have DBI and at least one of the other modules installed."></p>
 
 MSG
     }
@@ -379,7 +379,7 @@ MSG
 #            $desc = $desc->();
 #        }
         if (!$desc && $req) {
-               $desc = trans_templ(qq{<MT_TRANS phrase="[_1] is required for standard Melody application functionality" params="$mod">});
+               $desc = trans_templ(qq{<__trans phrase="[_1] is required for standard Melody application functionality" params="$mod">});
         }
         print "<blockquote>\n" if $mod =~ m/^DBD::/;
         print "    <h3>$mod" .
@@ -389,26 +389,26 @@ MSG
             $is_good = 0 if $req;
             my $link = 'http://search.cpan.org/perldoc?' . $mod;
             my $msg = $ver ?
-                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Either your server does not have <a href="[_2]">[_1]</a> installed, the version that is installed is too old, or [_1] requires another module that is not installed." params="$mod%%$link"> }) :
-                      trans_templ(qq{<p class="warning"><MT_TRANS phrase="Your server does not have <a href="[_2]">[_1]</a> installed, or [_1] requires another module that is not installed." params="$mod%%$link"> });
+                      trans_templ(qq{<p class="warning"><__trans phrase="Either your server does not have <a href="[_2]">[_1]</a> installed, the version that is installed is too old, or [_1] requires another module that is not installed." params="$mod%%$link"> }) :
+                      trans_templ(qq{<p class="warning"><__trans phrase="Your server does not have <a href="[_2]">[_1]</a> installed, or [_1] requires another module that is not installed." params="$mod%%$link"> });
             $msg   .= $desc .
-                      trans_templ(qq{ <MT_TRANS phrase="Please consult the installation instructions for help in installing [_1]." params="$mod"></p>\n\n});
+                      trans_templ(qq{ <__trans phrase="Please consult the installation instructions for help in installing [_1]." params="$mod"></p>\n\n});
             print $msg . "\n\n";
         } else {
             if ($data) {
                 $dbi_is_okay = 1 if $mod eq 'DBI';
                 if ($mod eq 'DBD::mysql') {
                     if ($DBD::mysql::VERSION == 3.0000) {
-                        print trans_templ(qq{<p class="warning"><MT_TRANS phrase="The DBD::mysql version you have installed is known to be incompatible with Melody. Please install the current release available from CPAN."></p>});
+                        print trans_templ(qq{<p class="warning"><__trans phrase="The DBD::mysql version you have installed is known to be incompatible with Melody. Please install the current release available from CPAN."></p>});
                     }
                 }
                 if (!$dbi_is_okay) {
-                    print trans_templ(qq{<p class="warning"><MT_TRANS phrase="The $mod is installed properly, but requires an updated DBI module. Please see note above regarding the DBI module requirements."></p>});
+                    print trans_templ(qq{<p class="warning"><__trans phrase="The $mod is installed properly, but requires an updated DBI module. Please see note above regarding the DBI module requirements."></p>});
                 } else {
                     $got_one_data = 1 if $mod ne 'DBI';
                 }
             }
-            print trans_templ(qq{<p class="installed"><MT_TRANS phrase="Your server has [_1] installed (version [_2])." params="$mod%%} . $mod->VERSION . qq{"></p>\n\n});
+            print trans_templ(qq{<p class="installed"><__trans phrase="Your server has [_1] installed (version [_2])." params="$mod%%} . $mod->VERSION . qq{"></p>\n\n});
         }
         print "</blockquote>\n" if $mod =~ m/^DBD::/;
     }
@@ -421,8 +421,8 @@ if ($is_good && $cfg_exist) {
     print trans_templ(<<HTML);
     
     <div class="msg msg-success">
-        <h2><MT_TRANS phrase="Melody System Check Successful"></h2>
-        <p><strong><MT_TRANS phrase="You're ready to go!"></strong> <MT_TRANS phrase="Your server has all of the required modules installed; you do not need to perform any additional module installations. Continue with the installation instructions."></p>
+        <h2><__trans phrase="Melody System Check Successful"></h2>
+        <p><strong><__trans phrase="You're ready to go!"></strong> <__trans phrase="Your server has all of the required modules installed; you do not need to perform any additional module installations. Continue with the installation instructions."></p>
     </div>
 
 </div>
