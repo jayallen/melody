@@ -243,9 +243,8 @@ sub import {
                  && ( $err =~ m/^(.+?)( at .+? line \d+)(.*)$/s ) )
             {
                 $err = $1;
-                $err .= '. '
-                  . $app->translate('Enable DebugMode for more details.');
-
+                my $dbmode = 'Enable DebugMode for more details.';
+                $err .= '. '.( $app ? $app->translate($dbmode) : $dbmode );
             }
             print "Content-Type: text/plain; charset=$charset\n\n";
             print $app
