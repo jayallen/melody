@@ -33,12 +33,12 @@ sub PORTAL_URL() {
 sub SUPPORT_URL()      {'http://getsatisfaction.com/openmelody/'}
 sub NEWS_URL()         {'http://openmelody.org/blog/'}
 sub NEWSBOX_URL()      {'http://openmelody.org/blog/melody_news_widget.html'}
-sub LEARNINGNEWS_URL() {'http://learning.movabletype.org/newsbox.html'}
+sub LEARNINGNEWS_URL() {'disable'}
 sub CATEGORY_NAME_NODASH() {0}
 sub DEFAULT_TIMEZONE()     {0}
 sub MAIL_ENCODING()        {'ISO-8859-1'}
-sub LOG_EXPORT_ENCODING()  {''}
-sub EXPORT_ENCODING()      {''}
+sub LOG_EXPORT_ENCODING()  {'UTF-8'}
+sub EXPORT_ENCODING()      {'UTF-8'}
 sub PUBLISH_CHARSET()      {'UTF-8'}
 
 my $ENCODING_NAMES = [
