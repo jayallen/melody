@@ -3564,8 +3564,8 @@ que la dirección provista es correcta y le pertenece.',
     'The email address used in the From: header of each email sent from the system.  The address is used in password recovery, commenter registration, comment, trackback notification and a few other minor events.'
       => 'La dirección de correo usada en el cabecera From: (remitente) de los mensajes enviados por el sistema. La dirección se usa en la recuperación de contraseña, en el registro de comentaristas, comentarios, notificaciones de TrackBack y otros eventos menores.',
     'Debug Mode' => 'Modo de depuración',
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
-      => 'Puede encontrar una explicación de los diferentes modos de depuración en la <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentación</a>',
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
+      => 'Puede encontrar una explicación de los diferentes modos de depuración en la <a href="http://openmelody.org/docs/ref-debug">documentación</a>',
     'Performance Logging' => 'Histórico de rendimiento',
     'Turns on or off performance logging.' =>
       'Activa o desactiva el histórico de rendimiento.',

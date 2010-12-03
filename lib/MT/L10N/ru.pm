@@ -5348,8 +5348,8 @@ sub numerate {
     'The email address used in the From: header of each email sent from the system.  The address is used in password recovery, commenter registration, comment, trackback notification and a few other minor events.'
       => 'Этот адрес будет использован в заголовке «От» в письмах, отправленных системой. Адрес также используется при восстановлении паролей, регистрации комментаторов, уведомлениях о комментариях, трекбэках и в некоторых других незначительных событиях.',
     'Debug Mode' => 'Режим отладки',
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
-      => 'Вы можете найти описание различных режимов отладки в <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">документации</a>.',
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
+      => 'Вы можете найти описание различных режимов отладки в <a href="http://openmelody.org/docs/ref-debug">документации</a>.',
     'Performance Logging' =>
       'Журналирование производительности',
     'Turns on or off performance logging.' =>

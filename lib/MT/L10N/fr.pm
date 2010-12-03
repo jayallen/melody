@@ -7948,8 +7948,8 @@ Base de recherche : [_2]",
     'System Settings Changes Took Place' =>
       'Les modifications des paramètres système ont été appliqués'
     ,                                                        # Translate - New
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
-      => 'Vous pouvez trouver une explication sur les nombreux modes debug dans la <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
+      => 'Vous pouvez trouver une explication sur les nombreux modes debug dans la <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
     ,                                                        # Translate - New
     'The published order of these assets can be changed using [_1]template tag modifiers[_2].'
       => 'L\'ordre de publication de ces éléments peut être modifié en utilisant [_1] tags de modification de gabarits [_2]'
