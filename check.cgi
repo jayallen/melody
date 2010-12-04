@@ -179,70 +179,70 @@ my $is_good = 1;
 my (@REQ, @DATA, @OPT);
 
 my @CORE_REQ = (
-    [ 'Algorithm::Diff', 1.1902, 1],
-    [ 'Cache', 2.04, 1],
-    [ 'CGI', 3.50, 1 ],
-    [ 'Class::Accessor', 0.22, 1 ],
-    [ 'Class::Data::Inheritable', 0.06, 1],
-    [ 'Class::Trigger', '0.1001', 1 ],
-    [ 'Data::ObjectDriver', 0.06, 1 ],
-    [ 'Digest::SHA1', 0.06, 1 ],
-    [ 'File::Copy::Recursive', 0.23, 1],
-    [ 'Heap::Fibonacci', 0.71, 1],
-    [ 'HTML::Diff', 0.561, 1],
-    [ 'HTML::Parser', 3.66, 0 ],
-    [ 'Image::Size', 2.93, 1 ],
-    [ 'JSON', 2.12, 1],
-    [ 'Jcode', 0.88, 1],
-    [ 'Locale::Maketext', 1.13, 1],
-    [ 'Log::Dispatch', 2.26, 1],
-    [ 'Log::Log4Perl', 1.30, 1],
-    [ 'Lucene::QueryParser', 1.04, 1],
-    [ 'LWP', 5.831, 1 ],
-    [ 'Params::Validate', 0.73, 1],
-    [ 'Sub::Install', 0.925, 1],
-    [ 'TheSchwartz', 1.07, 0],
-    [ 'URI', 1.36, 0],
-    [ 'version', 0.76, 0],
-    [ 'YAML::Tiny', 1.12, 1 ],
+    [ 'Algorithm::Diff', 1.1902, 1, '', 'http://search.cpan.org/dist/Algorithm-Diff/'],
+    [ 'Cache', 2.04, 1, '', 'http://search.cpan.org/dist/Cache/'],
+    [ 'CGI', 3.50, 1, '', 'http://search.cpan.org/dist/CGI/'],
+    [ 'Class::Accessor', 0.22, 1, '', 'http://search.cpan.org/dist/Class-Accessor/'],
+    [ 'Class::Data::Inheritable', 0.06, 1, '', 'http://search.cpan.org/dist/Class-Data-Inheritable/'],
+    [ 'Class::Trigger', '0.1001', 1, '', 'http://search.cpan.org/dist/Class-Trigger/'],
+    [ 'Data::ObjectDriver', 0.06, 1, '', 'http://search.cpan.org/dist/Data-ObjectDriver/'],
+    [ 'Digest::SHA1', 0.06, 1, '', 'http://search.cpan.org/dist/Digest-SHA1/'],
+    [ 'File::Copy::Recursive', 0.23, 1, '', 'http://search.cpan.org/dist/File-Copy-Recursive/'],
+    [ 'Heap::Fibonacci', 0.71, 1, '', 'http://search.cpan.org/dist/Heap/'],
+    [ 'HTML::Diff', 0.561, 1, '', 'http://search.cpan.org/dist/HTML-Diff/'],
+    [ 'HTML::Parser', 3.66, 1, '', 'http://search.cpan.org/dist/HTML-Parser/'],
+    [ 'Image::Size', 2.93, 1, '', 'http://search.cpan.org/dist/Image-Size/'],
+    [ 'JSON', 2.12, 1, '', 'http://search.cpan.org/dist/JSON/'],
+    [ 'Jcode', 0.88, 1, '', 'http://search.cpan.org/dist/Jcode/'],
+    [ 'Locale::Maketext', 1.13, 1, '', 'http://search.cpan.org/dist/Locale-Maketext/'],
+    [ 'Log::Dispatch', 2.26, 1, '', 'http://search.cpan.org/dist/Log-Dispatch'],
+    [ 'Log::Log4Perl', 1.30, 1, '', 'http://search.cpan.org/dist/Log-Log4Perl'],
+    [ 'Lucene::QueryParser', 1.04, 1, '', 'http://search.cpan.org/dist/Lucene-QueryParser'],
+    [ 'LWP', 5.831, 1, '', 'http://search.cpan.org/dist/libwww-perl/'],
+    [ 'Params::Validate', 0.73, 1, '', 'http://search.cpan.org/dist/Params-Validate'],
+    [ 'Sub::Install', 0.925, 1, '', 'http://search.cpan.org/dist/Sub-Install'],
+    [ 'TheSchwartz', 1.07, 1, '', 'http://search.cpan.org/dist/TheSchwartz'],
+    [ 'URI', 1.36, 1, '', 'http://search.cpan.org/dist/URI'],
+    [ 'version', 0.76, 1, '', 'http://search.cpan.org/dist/version/'],
+    [ 'YAML::Tiny', 1.12, 1, '', 'http://search.cpan.org/dist/YAML-Tiny/'],
 );
 
 my @CORE_DATA = (
-    [ 'DBI', 1.21, 0, translate('DBI is required to store data in database.') ],
-    [ 'DBD::mysql', 0, 0, translate('DBI and DBD::mysql are required if you want to use the MySQL database backend.') ],
-    [ 'DBD::Pg', 1.32, 0, translate('DBI and DBD::Pg are required if you want to use the PostgreSQL database backend.') ],
-    [ 'DBD::SQLite', 0, 0, translate('DBI and DBD::SQLite are required if you want to use the SQLite database backend.') ],
-    [ 'DBD::SQLite2', 0, 0, translate('DBI and DBD::SQLite2 are required if you want to use the SQLite 2.x database backend.') ],
+    [ 'DBI', 1.21, 0, translate('DBI is required to store data in database.'),'http://search.cpan.org/dist/DBI/'],
+    [ 'DBD::mysql', 0, 0, translate('DBI and DBD::mysql are required if you want to use the MySQL database backend.'),'http://search.cpan.org/dist/DBD-mysql/'],
+    [ 'DBD::Pg', 1.32, 0, translate('DBI and DBD::Pg are required if you want to use the PostgreSQL database backend.'),'http://search.cpan.org/dist/DBD-Pg/'],
+    [ 'DBD::SQLite', 0, 0, translate('DBI and DBD::SQLite are required if you want to use the SQLite database backend.'),'http://search.cpan.org/dist/DBD-SQLite/'],
+    [ 'DBD::SQLite2', 0, 0, translate('DBI and DBD::SQLite2 are required if you want to use the SQLite 2.x database backend.'),'http://search.cpan.org/dist/DBD-SQLite2/'],
 );
 
 my @CORE_OPT = (
-    [ 'Archive::Tar', 0, 0, translate('Archive::Tar is needed in order to archive files in backup/restore operation.')],
-    [ 'Archive::Zip', 0, 0, translate('Archive::Zip is needed in order to archive files in backup/restore operation.')],
-    [ 'Attribute::Params::Validate', 1.7, 0, ''],
-    [ 'bignum', 0.23, 0, ''], 
-    [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is needed in order to use memcached as caching mechanism used by Melody.')],
-    [ 'Crypt::DH', 0.96, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ')],
-    [ 'Crypt::DSA', 0, 0, translate('Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.')],
-    [ 'Crypt::SSLeay', 0, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers that require SSL support.')],
-    [ 'GD', 0, 0, translate('This module is needed if you would like to be able to create thumbnails of uploaded images.')],
-    [ 'IO::Compress::Gzip', 0, 0, translate('IO::Compress::Gzip is needed in order to compress files in backup/restore operation.')],
-    [ 'IO::Scalar', 2.110, 0, translate('IO::Scalar is needed in order to archive files in backup/restore operation.')],
-    [ 'IO::Uncompress::Gunzip', 0, 0, translate('IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.')],
-    [ 'IPC::Run', 0, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for Melody.')],
-    [ 'Image::Magick', 0, 0, translate('Image::Magick is optional; It is needed if you would like to be able to create thumbnails of uploaded images.') ],
-    [ 'MIME::Charset', 0.044, 0, translate('MIME::Charset is required for sending mail via SMTP Server.')],
-    [ 'MIME::EncWords', 0.96, 0, translate('MIME::EncWords is required for sending mail via SMTP Server.')],
-    [ 'Mail::Sendmail', 0, 0, translate('Mail::Sendmail is required for sending mail via SMTP Server.')],
-    [ 'Net::OpenID::Consumer', 1.03, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ')],
-    [ 'Path::Class', 0, 0, ''],
-    [ 'SOAP::Lite', '0.710.08', 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.') ],
-    [ 'XML::Atom', 0, 0, translate('XML::Atom is required in order to use the Atom API.')],
-    [ 'XML::LibXML', 0, 0, translate('XML::LibXML is required in order to use the Atom API.')],
-    [ 'XML::NamespaceSupport', 1.09, 0, translate('XML::NamespaceSupport is needed in order to archive files in backup/restore operation.')],
-    [ 'XML::Parser', 2.23, 0, ''],
-    [ 'XML::SAX', 0.96, 0, translate('XML::SAX is needed in order to archive files in backup/restore operation.')],
-    [ 'XML::Simple', 2.14, 0, translate('XML::Simple is needed in order to archive files in backup/restore operation.')],
-    [ 'XML::XPath', 0, 0, ''],
+    [ 'Archive::Tar', 0, 0, translate('Archive::Tar is needed in order to archive files in backup/restore operation.'),'http://search.cpan.org/dist/Archive-Tar/'],
+    [ 'Archive::Zip', 0, 0, translate('Archive::Zip is needed in order to archive files in backup/restore operation.'),'http://search.cpan.org/dist/Archive-Zip/'],
+    [ 'Attribute::Params::Validate', 1.07, 0, '','http://search.cpan.org/dist/Params-Validate/lib/Attribute/Params/Validate.pm'],
+    [ 'bignum', 0.23, 0, '','http://search.cpan.org/dist/bignum/'], 
+    [ 'Cache::Memcached', 0, 0, translate('Cache::Memcached and memcached server/daemon is needed in order to use memcached as caching mechanism used by Melody.'),'http://search.cpan.org/dist/Cache-Memcached/'],
+    [ 'Crypt::DH', 0.06, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers '),'http://search.cpan.org/dist/Crypt-DH/'],
+    [ 'Crypt::DSA', 0, 0, translate('Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.'),'http://search.cpan.org/dist/Crypt-DSA/'],
+    [ 'Crypt::SSLeay', 0, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers that require SSL support.'),'http://search.cpan.org/dist/Crypt-SSLeay/'],
+    [ 'GD', 0, 0, translate('This module is needed if you would like to be able to create thumbnails of uploaded images.'),'http://search.cpan.org/dist/GD/'],
+    [ 'IO::Compress::Gzip', 0, 0, translate('IO::Compress::Gzip is needed in order to compress files in backup/restore operation.'),'http://search.cpan.org/dist/IO-Compress/lib/IO/Compress/Gzip.pm'],
+    [ 'IO::Scalar', 2.110, 0, translate('IO::Scalar is needed in order to archive files in backup/restore operation.'),'http://search.cpan.org/dist/IO-Scalar/'],
+    [ 'IO::Uncompress::Gunzip', 0, 0, translate('IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.'),'http://search.cpan.org/dist/IO-Compress/lib/IO/Compress/Gunzip.pm'],
+    [ 'IPC::Run', 0, 0, translate('This module is needed if you would like to be able to use NetPBM as the image driver for Melody.'),'http://search.cpan.org/dist/IPC-Run/'],
+    [ 'Image::Magick', 0, 0, translate('Image::Magick is optional; It is needed if you would like to be able to create thumbnails of uploaded images.'),'http://search.cpan.org/dist/Image-Magick/'],
+    [ 'MIME::Charset', 0.044, 0, translate('MIME::Charset is required for sending mail via SMTP Server.'),'http://search.cpan.org/dist/MIME-Charset/'],
+    [ 'MIME::EncWords', 0.96, 0, translate('MIME::EncWords is required for sending mail via SMTP Server.'),'http://search.cpan.org/dist/MIME-EncWords/'],
+    [ 'Mail::Sendmail', 0, 0, translate('Mail::Sendmail is required for sending mail via SMTP Server.'),'http://search.cpan.org/dist/Mail-SendMail/'],
+    [ 'Net::OpenID::Consumer', 1.03, 0, translate('This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers '),'http://search.cpan.org/dist/Net-OpenID-Consumer/'],
+    [ 'Path::Class', 0, 0, '','http://search.cpan.org/dist/Path-Class/'],
+    [ 'SOAP::Lite', '0.710.08', 0, translate('SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.'),'http://search.cpan.org/dist/SOAP-Lite/'],
+    [ 'XML::Atom', 0, 0, translate('XML::Atom is required in order to use the Atom API.'),'http://search.cpan.org/dist/XML-Atom/'],
+    [ 'XML::LibXML', 0, 0, translate('XML::LibXML is required in order to use the Atom API.'),'http://search.cpan.org/dist/XML-LibXML/'],
+    [ 'XML::NamespaceSupport', 1.09, 0, translate('XML::NamespaceSupport is needed in order to archive files in backup/restore operation.'),'http://search.cpan.org/dist/XML-NamespaceSupport/'],
+    [ 'XML::Parser', 2.23, 0, '','http://search.cpan.org/dist/XML-Parser/'],
+    [ 'XML::SAX', 0.96, 0, translate('XML::SAX is needed in order to archive files in backup/restore operation.'),'http://search.cpan.org/dist/XML-SAX/'],
+    [ 'XML::Simple', 2.14, 0, translate('XML::Simple is needed in order to archive files in backup/restore operation.'),'http://search.cpan.org/dist/XML-Simple/'],
+    [ 'XML::XPath', 0, 0, '','http://search.cpan.org/dist/XML-XPath'],
 );
 
 use Cwd;
@@ -374,7 +374,7 @@ MSG
     my $got_one_data = 0;
     my $dbi_is_okay = 0;
     for my $ref (@$list) {
-        my($mod, $ver, $req, $desc) = @$ref;
+        my($mod, $ver, $req, $desc, $link) = @$ref;
 #        if ('CODE' eq ref($desc)) {
 #            $desc = $desc->();
 #        }
@@ -382,7 +382,7 @@ MSG
                $desc = trans_templ(qq{<MT_TRANS phrase="[_1] is required for standard Melody application functionality" params="$mod">});
         }
         print "<blockquote>\n" if $mod =~ m/^DBD::/;
-        print "    <h3>$mod" .
+        print "    <h3><a href=\"$link\">$mod</a>" .
             ($ver ? " (version &gt;= $ver)" : "") . "</h3>";
         eval("use $mod" . ($ver ? " $ver;" : ";"));
         if ($@) {
