@@ -2330,6 +2330,26 @@ sub static_file_path {
     return;
 } ## end sub static_file_path
 
+sub support_directory_url {
+    my $app = shift;
+    my $url = $app->config('SupportDirectoryURL')
+           || MT::Util::caturl( $app->static_path, 'support' );
+    $url   .= '/' unless substr( $url, -1, 1 ) eq '/';
+    return $url;
+}
+
+sub support_directory_path {
+    my $app  = shift;
+    my $path = $app->config('SupportDirectoryPath')
+            || File::Spec->catdir( $app->static_file_path, 'support');
+    
+    $path = File::Spec->catdir( $app->path, $path )
+        unless File::Spec->file_name_is_absolute( $path );
+
+    $path .= '/' unless substr( $path, -1, 1 ) eq '/';
+    return $path;
+}
+
 sub template_paths {
     my $mt = shift;
     my @paths;
@@ -4341,6 +4361,18 @@ Returns the application's static web path.
 =head2 $app->static_file_path()
 
 Returns the application's static file path.
+
+=head2 $app->support_directory_url()
+
+Returns the URL to the static support directory. This can be set in the
+mt-config.cgi with the SupportDirectoryURL directive. This method will always
+return a value ending in a /
+
+=head2 $app->support_directory_path()
+
+Returns the file path to the static support directory. This can 
+be set in the mt-config.cgi with the SupportDirectoryPath directive. This method will always
+return a value ending in a /
 
 =head2 MT::core_upload_file_to_sync
 

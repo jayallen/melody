@@ -266,6 +266,7 @@ sub core_tags {
             CGIHost                  => \&_hdlr_cgi_host,
             StaticWebPath            => \&_hdlr_static_path,
             StaticFilePath           => \&_hdlr_static_file_path,
+            SupportDirectoryURL      => \&_hdlr_support_directory_url,
             AdminScript              => \&_hdlr_admin_script,
             CommentScript            => \&_hdlr_comment_script,
             TrackbackScript          => \&_hdlr_trackback_script,
@@ -6605,6 +6606,22 @@ sub _hdlr_static_path {
     $path .= '/' unless $path =~ m!/$!;
     return $path;
 } ## end sub _hdlr_static_path
+
+###########################################################################
+
+=head2 SupportDirectoryURL
+
+The value of the C<SupportDirectoryURL> configuration setting. This value is
+guaranteed to end with a "/" character.
+
+=for tags configuration
+
+=cut
+
+sub _hdlr_support_directory_url {
+    my ($ctx) = @_;
+    return MT->instance->support_directory_url;
+}
 
 ###########################################################################
 

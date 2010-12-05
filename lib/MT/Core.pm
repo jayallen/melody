@@ -318,6 +318,8 @@ BEGIN {
             'AssetAutoDirifyDelimiter' => { default => '-' },
             'SearchTemplatePath' =>
               { default => 'search_templates', path => 1, },
+            'SupportDirectoryPath' => { default => '' },
+            'SupportDirectoryURL'  => { default => '' },
             'ObjectDriver'        => undef,
             'ObjectCacheLimit'    => { default => 1000 },
             'ObjectCacheDisabled' => undef,
