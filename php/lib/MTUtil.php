@@ -1343,6 +1343,22 @@ function static_file_path() {
     return $path;
 }
 
+function support_directory_url() {
+    global $mt;
+    $url = $mt->config('SupportDirectoryURL');
+    if ( ! $url) $url = static_path('') . 'support';
+    if ( ! preg_match('!/$!', $url) ) $url .= '/';
+    return $url;
+}
+
+function support_directory_path() {
+    global $mt;
+    $path = $mt->config('SupportDirectoryPath');
+    if ( ! $path ) $path = static_file_path() . 'support';
+    if ( ! preg_match('!/$!', $path) ) $path .= '/';
+    return $path;
+}
+
 function asset_path($path, $blog) {
     $site_path = $blog['blog_site_path'];
     $site_path = preg_replace('/\/$/', '', $site_path);
