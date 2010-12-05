@@ -28,12 +28,10 @@ TC.attachLoadEvent( init );
         ><__trans phrase="Delete"></a>
 </mt:setvarblock>
 <mt:setvarblock name="related_content">
-    <mt:if name="object_loop">
         <mtapp:widget id="tips" label="<__trans phrase="Helpful Tips">">
             <p><__trans phrase="To add a widget set to your templates, use the following syntax:"></p>
             <p><__trans phrase="<strong>&lt;$MTWidgetSet name=&quot;Name of the Widget Set&quot;$&gt;</strong>"></p>
         </mtapp:widget>
-    </mt:if>
 </mt:setvarblock>
 <mt:setvarblock name="system_msg">
     <mt:if name="rebuild">
