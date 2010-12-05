@@ -21974,8 +21974,7 @@ Name of the widget set.
 sub _hdlr_widget_count {
     my ($ctx, $args, $cond) = @_;
 
-    my $plugin = MT->component('WidgetSetLoop');
-    my $ws = $args->{name} or return $ctx->error($plugin->translate('WidgetSet name required.'));
+    my $ws = $args->{name} or return $ctx->error( MT->translate('WidgetSet name required.') );
     my $blog_id = $args->{blog_id} || $ctx->stash('blog_id') || 0;
 
     my $widgetset = MT->model('template')->load({ name => $ws,
