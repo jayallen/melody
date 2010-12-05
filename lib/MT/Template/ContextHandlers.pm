@@ -21985,7 +21985,8 @@ sub _hdlr_widget_count {
                                     direction => 'descend' })
         or return $ctx->error(MT->translate( "Specified WidgetSet '[_1]' not found.", $ws ));
 
-    return scalar( split(/,/, $widgetset->modulesets) );
+    my @modulesets = split(',', $widgetset->modulesets || '');
+    return scalar @modulesets;
 }
 
 ###########################################################################
