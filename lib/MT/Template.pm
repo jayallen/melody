@@ -361,7 +361,7 @@ sub save_widgetset {
     # build module list
     my @inst;
     if ( $ms && $ms =~ /;/ ) {
-        my @mods = split /;/, $ms;
+        my @mods = split(/;/, $ms);
         for (@mods) {
 
             # tmpl_id = column index . order in column ;
@@ -371,7 +371,7 @@ sub save_widgetset {
         $obj->modulesets( join ',', @inst );
     }
     else {
-        @inst = split /,/, ( $obj->modulesets || '' );
+        @inst = split(/,/, ( $obj->modulesets || '' ));
     }
 
     my @widgets = MT::Template->load( {
