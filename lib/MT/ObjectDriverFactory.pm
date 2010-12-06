@@ -73,7 +73,7 @@ sub dbd_class {
     my $pkg = shift;
 
     my ($type) = @_;
-    $type ||= MT->config('ObjectDriver');
+    $type ||= MT->config('ObjectDriver') || '';
 
     my $dbd_class;
     foreach my $driver (@$drivers) {
