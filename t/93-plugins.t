@@ -82,53 +82,35 @@ foreach my $sig ( sort keys %MT::Plugins ) {
         $info ? (info => $info) : (),
     }
 }
-my $plugins = {  } keys %MT::Plugins };
-print STDERR Dumper($plugins);
 
-
-subtest $test->{sig} => sub {
-        plan tests => 2;
-        $test->{base_class} ||= 'MT::Plugin';
-        $test->{message}    ||= " exists";
-        my $loaded = $test->{not_loaded} ? 0 : 1;
-        is(
-            ($test->{sig} && exists $MT::Plugins{$test->{sig}}) ? 1 : 0,
-            $loaded,
-            $test->{sig} . $test->{message}
-        );
-        SKIP: {
-            skip "Plugin not loaded", 1 unless $loaded;
-            is(
-                ref( $MT::Plugins{$test->{sig}}->{'object'} ),
-                $test->{base_class},
-                $test->{name}.' base class is '.$test->{base_class}
-            );
-        }
-    };
- }
-
-
-# get the list of plugins and place them in a hash
-foreach my $test ( @tests ) {
-
-    subtest $test->{sig} => sub {
-        plan tests => 2;
-
-        $test->{base_class} ||= 'MT::Plugin';
-        $test->{message}    ||= " exists";
-        my $loaded = $test->{not_loaded} ? 0 : 1;
-        is(
-            ($test->{sig} && exists $MT::Plugins{$test->{sig}}) ? 1 : 0,
-            $loaded,
-            $test->{sig} . $test->{message}
-        );
-        SKIP: {
-            skip "Plugin not loaded", 1 unless $loaded;
-            is(
-                ref( $MT::Plugins{$test->{sig}}->{'object'} ),
-                $test->{base_class},
-                $test->{name}.' base class is '.$test->{base_class}
-            );
-        }
-    };
+foreach my $sig ( sort keys %test_info ) {
+    $Test{ $sig } = {
+        info => $test_info{ $sig }
+    }
 }
+
+foreach my $sig ( sort keys %Test ) {
+    my $test = $Test{$sig};
+    subtest $sig => sub {
+        plan tests => 2;
+        my $info = $test->{info};
+        $info->{base_class} ||= 'MT::Plugin';
+        $info->{message}    ||= " exists";
+        my $loaded = $info->{not_loaded} ? 0 : 1;
+        is(
+            ($sig && exists $MT::Plugins{$sig}) ? 1 : 0,
+            $loaded,
+            $sig . $info->{message}
+        );
+        SKIP: {
+            skip "Plugin not loaded", 1 unless $loaded;
+            is(
+                ref( $MT::Plugins{$sig}->{'object'} ),
+                $info->{base_class},
+                $info->{name}.' base class is '.$info->{base_class}
+            );
+        }
+    };
+
+}
+
