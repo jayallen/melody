@@ -383,8 +383,8 @@ sub init_core_registry {
                          'link' => 'http://search.cpan.org/dist/Log-Dispatch',
                          'version' => '2.26'
              },
-             'Log::Log4Perl' => {
-                         'link' => 'http://search.cpan.org/dist/Log-Log4Perl',
+             'Log::Log4perl' => {
+                         'link' => 'http://search.cpan.org/dist/Log-Log4perl',
                          'version' => '1.3'
              },
              'Lucene::QueryParser' => {
