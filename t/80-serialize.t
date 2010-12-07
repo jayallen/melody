@@ -3,9 +3,7 @@
 use strict;
 use warnings;
 
-use lib 'extlib';
-use lib 'lib';
-use lib 't/lib';
+use lib qw( t/lib lib extlib ../lib ../extlib );
 
 use MT;
 use MT::Test;
@@ -15,14 +13,14 @@ use Data::Dumper;
 require MT::Serialize;
 
 if ( $MT::Serialize::VERSION <= 2 ) {
-    plan skip_all => "This test is for MT::Serialize v3 and higher; "
-      . "the current version is $MT::Serialize::VERSION";
+    plan skip_all =>
+      "This test is for MT::Serialize v3 and higher; the current version is $MT::Serialize::VERSION";
 }
 else {
-    plan tests => 112;
+    plan tests => 100;
 }
 
-is( $MT::Serialize::VERSION, 4, 'Default version is v4' );
+is( $MT::Serialize::VERSION, 5, 'Default version is v5' );
 
 my %sers
   = map { $_ => MT::Serialize->new($_) } qw(MTJ JSON MT MT2 MTS Storable);
@@ -51,65 +49,24 @@ my $data2 = [
 ];
 $data2->[1]->{z} = $data2;
 
-SKIP: {
-    skip "Missing Test::LeakTrace", 6 unless eval { require Test::LeakTrace };
-
-    for my $label ( keys %sers ) {
-        my $ser = $sers{$label};
-
-        print "# Checking leaks for $label\n";
-
-        $ser->serialize( \$data1 )
-          ; # call it once outside of leak check to make sure we load the serialization backend
-
-      TODO: {
-            local $TODO
-              = ( $label eq 'MTJ' || $label eq 'MTS' )
-              ? "MTJ and MTS are leaking..."
-              : undef;
-
-            is(
-                Test::LeakTrace::leaked_count(
-                    sub {
-                        my $frozen = $ser->serialize( \$data1 );
-                        my $thawed = ${ $ser->unserialize($frozen) };
-                    }
-                ),
-                0,
-                "No leaks with no circular data"
-            );
-        }
-
-      SKIP: {
-            skip "JSON format doesn't support circular references" => 1
-              if $label eq 'MTJ' || $label eq 'JSON';
-            like(
-                Test::LeakTrace::leaked_count(
-                    sub {
-                        my $frozen = $ser->serialize( \$data2 );
-                        my $thawed = ${ $ser->unserialize($frozen) };
-                    }
-                ),
-                qr/^(17|18|19)$/,
-                "17-19 leaks with circular data"
-            );
-        }
-    } ## end for my $label ( keys %sers)
-} ## end SKIP:
-
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Indent   = 0;
 
-my $dj = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',[1],3,2],'d'=>1},undef]!
-  ;    # to use with JSON
-my $dn
-  = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},3,2],'d'=>1},undef]!
-  ;    # to use for non-recursive structure
-my $dd
-  = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},\'3',2],'d'=>1,'z'=>$VAR1},undef]!
-  ;    # to use for recursive structure
+# to use with JSON
+my $dj = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',[1],3,2],'d'=>1},undef]!;
 
+# to use for non-recursive structure
+my $dn
+  = q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},3,2],'d'=>1},undef]!;
+
+# to use for recursive structure
+my $dd = sub {
+    $_[0] eq
+      q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},\'3',2],'d'=>1,'z'=>$VAR1},undef]!
+      || $_[0] eq
+      q![1,{'a'=>'value-a','b'=>[1],'c'=>['array',$VAR1->[1]{'b'},\3,2],'d'=>1,'z'=>$VAR1},undef]!;
+};
 
 # serialize and deserialize, check the results
 # compare structures with Data::Dumper
@@ -119,23 +76,23 @@ for my $label ( keys %sers ) {
     print "# Checking serialization for $label\n";
     my $json = ( $label eq 'JSON' || $label eq 'MTJ' );
 
-    my $data_to_freeze = $json ? \$data1 : \$data2;
-    my $frozen         = $ser->serialize($data_to_freeze);
-    my $thawed         = ${ $ser->unserialize($frozen) };
+    my $frozen = $ser->serialize( $json ? \$data1 : \$data2 );
+    my $thawed = ${ $ser->unserialize($frozen) };
 
-    is( ref $thawed,     'ARRAY', 'Correct type ARRAYREF' );
-    is( scalar @$thawed, 3,       'Array with 3 elements' );
-    is( $thawed->[0],    1,       'Correct value in the array' );
+    is( ref $thawed,     'ARRAY', 'Returns correct type ARRAYREF' );
+    is( scalar @$thawed, 3,       'Returns array with 3 elements' );
+    is( $thawed->[0],    1,       'Returns correct value in the array' );
     ok( !defined $thawed->[-1], 'Last element is undef' );
-    is( ref $thawed->[1],     'HASH',    'Correct type HASHREF' );
-    is( $thawed->[1]{a},      'value-a', 'Correct value for HASH{a}' );
-    is( ref $thawed->[1]{b},  'ARRAY',   'Correct value for HASH{b} 1/3' );
-    is( $thawed->[1]{b}[0],   1,         'Correct value for HASH{b} 2/3' );
-    is( @{ $thawed->[1]{b} }, 1,         'Correct value for HASH{b} 3/3' );
-    is( ref $thawed->[1]{c},  'ARRAY',   'Correct value for HASH{c} 1/3' );
-    is( @{ $thawed->[1]{c} }, 4,         'Correct value for HASH{c} 2/3' );
-    is( $thawed->[1]{d},      1,         'Correct value for HASH{d}' );
-
+    is( ref $thawed->[1], 'HASH',    'Returns correct type HASHREF' );
+    is( $thawed->[1]{a},  'value-a', 'Returns correct value for HASH{a}' );
+    is( ref $thawed->[1]{b},
+        'ARRAY', 'Returns correct value for HASH{b} 1/3' );
+    is( $thawed->[1]{b}[0],   1, 'Returns correct value for HASH{b} 2/3' );
+    is( @{ $thawed->[1]{b} }, 1, 'Returns correct value for HASH{b} 3/3' );
+    is( ref $thawed->[1]{c},
+        'ARRAY', 'Returns correct value for HASH{c} 1/3' );
+    is( @{ $thawed->[1]{c} }, 4, 'Returns correct value for HASH{c} 2/3' );
+    is( $thawed->[1]{d},      1, 'Returns correct value for HASH{d}' );
   SKIP: {
         skip "JSON format doesn't support scalar and circular references" => 3
           if $label eq 'MTJ' || $label eq 'JSON';
@@ -150,18 +107,31 @@ for my $label ( keys %sers ) {
 
     # fix stringified numbers for MT2
     if ( $label eq 'MT2' || $label eq 'MT' ) {
-
-#    $_ += 0 for $thawed->[0], $thawed->[1]{b}[0], ${$thawed->[1]{c}[2]}, $thawed->[1]{c}[3], $thawed->[1]{d};
         $_ += 0
           for $thawed->[0], $thawed->[1]{b}[0], $thawed->[1]{c}[3],
           $thawed->[1]{d};
     }
 
-    my $dump = Dumper($thawed);
-    $dump =~ s/^\$VAR1\s*=\s*|\s|;$//g;    # remove spaces, $VAR and ; if any
-    is( $dump,
-        ( $json ? $dj : $dd ),
-        "Data dumped by Data::Dumper, frozen by $label" );
+    my $expected_dump_map = {
+                              MTJ      => $dj,
+                              JSON     => $dj,
+                              MT       => $dd,
+                              MT2      => $dd,
+                              MTS      => $dd,
+                              Storable => $dd,
+    };
+
+    ( my $dump = Dumper($thawed) )
+      =~ s/^\$VAR1\s*=\s*|\s|;$//g;    # remove spaces, $VAR and ; if any
+    my $expect = $expected_dump_map->{$label};
+    if ( ref $expect ) {
+        ok( $expect->($dump),
+            'Returns the structure that matches Data::Dumper\'s' );
+    }
+    else {
+        is( $dump, $expect,
+            'Returns the structure that matches Data::Dumper\'s' );
+    }
 } ## end for my $label ( keys %sers)
 
 for my $label (qw(MT2 MTJ MTS)) {
@@ -183,8 +153,7 @@ for my $label (qw(MT2 MTJ MTS)) {
     is(
         $dump,
         ( $label eq 'MTJ' ? $dj : $dn ),
-        "Serialize with $label, deserialize with MT, "
-          . "which provides backward compatibility"
+        "Serialize with $label, deserialize with MT, which provides backward compatibility"
     );
 } ## end for my $label (qw(MT2 MTJ MTS))
 
