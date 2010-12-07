@@ -52,7 +52,7 @@ sub init_request {
     my $default_lang = $q->param('default_language') || browser_language();
     $app->set_language($default_lang);
 
-    if ( $app->is_mtconfig_exists || $q->param('step') eq 'upgrade_from_mt' )
+    if ( $app->is_mtconfig_exists || ($q->param('step') && $q->param('step') eq 'upgrade_from_mt' ))
     {
         $app->mode('upgrade_from_mt');
         return;
