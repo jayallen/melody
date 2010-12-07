@@ -22049,19 +22049,21 @@ sub _hdlr_widget_loop {
     $ctx->stash('widgetset', $tmpl);
     local $vars->{__size__} = scalar(@selected);
     my $glue = $args->{glue} || '';
-    for (my $index = 0; $index <= $#selected; $index++) {
+    my $size = scalar(@selected);
+    for (my $index = 0; $index < $size; $index++) {
         my $widget = MT->model('template')->load({ id => $selected[$index] });
         local $vars->{__first__} = ($index == 0);
-        local $vars->{__last__} = ($index == $#selected-1);
+        local $vars->{__last__} = ($index == ($size-1));
         local $vars->{__index__} = $index;
         local $vars->{__odd__} = $index % 2 == 1;
         local $vars->{__even__} = $index % 2 == 0;
         $ctx->stash('widget', $widget);
         my $res = $builder->build($ctx, $tokens, $cond);
         return $ctx->error($builder->errstr) unless defined $res;
-        
-        $out .= ($index < $#selected and $glue ? sprintf('%s%s', $res, $glue) : $res);
+        $res .= $glue if ($glue && $index < $size - 1);
+        $out .= $res;
     }
+
     
     $ctx->stash('widgeset', undef);
     
