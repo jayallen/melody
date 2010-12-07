@@ -143,162 +143,278 @@ sub init_core_registry {
             },
             seed => { order => 10000, handler => \&seed, },
         },
-        optional_packages => {
-            'HTML::Entities' => {
-                link => 'http://search.cpan.org/dist/HTML-Entities',
-                label =>
-                  'This module is needed to encode special characters, but this feature can be turned off using the NoHTMLEntities option in config.cgi.',
-            },
-            'LWP::UserAgent' => {
-                link => 'http://search.cpan.org/dist/LWP',
-                label =>
-                  'This module is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.',
-            },
-            'HTML::Parser' => {
-                link => 'http://search.cpan.org/dist/HTML-Parser',
-                label =>
-                  'HTML::Parser is optional; It is needed if you wish to use the TrackBack system, the weblogs.com ping, or the MT Recently Updated ping.',
-            },
-            'SOAP::Lite' => {
-                link    => 'http://search.cpan.org/dist/SOAP-Lite',
-                version => 0.50,
-                label =>
-                  'This module is needed if you wish to use the MT XML-RPC server implementation.',
-            },
-            'File::Temp' => {
-                link => 'http://search.cpan.org/dist/File-Temp',
-                label =>
-                  'This module is needed if you would like to be able to overwrite existing files when you upload.',
-            },
-            'List::Util' => {
-                link => 'http://search.cpan.org/dist/Scalar-List-Utils',
-                label =>
-                  'List::Util is optional; It is needed if you want to use the Publish Queue feature.',
-            },
-            'Scalar::Util' => {
-                link => 'http://search.cpan.org/dist/Scalar-List-Utils',
-                label =>
-                  'Scalar::Util is optional; It is needed if you want to use the Publish Queue feature.',
-            },
-            'Image::Magick' => {
-                link => 'http://www.imagemagick.org/script/perl-magick.php',
-                label =>
-                  'This module is needed if you would like to be able to create thumbnails of uploaded images.',
-            },
-            'GD' => {
-                link => 'http://search.cpan.org/dist/GD',
-                label =>
-                  'This module is needed if you would like to be able to create thumbnails of uploaded images.',
-            },
-            'IPC::Run' => {
-                link => 'http://search.cpan.org/dist/IPC-Run',
-                label =>
-                  'This module is needed if you would like to be able to use NetPBM as the image driver for MT.',
-            },
-            'Storable' => {
-                link => 'http://search.cpan.org/dist/Storable',
-                label =>
-                  'This module is required by certain MT plugins available from third parties.',
-            },
-            'Crypt::DSA' => {
-                   link => 'http://search.cpan.org/dist/Crypt-DSA',
-                   label =>
-                     'This module accelerates comment registration sign-ins.',
-            },
-            'Crypt::SSLeay' => {
-                link => 'http://search.cpan.org/dist/Crypt-SSLeay',
-                label =>
-                  'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers such as AOL and Yahoo! which require SSL support.',
-            },
-            'MIME::Base64' => {
-                    link => 'http://search.cpan.org/dist/MIME-Base64',
-                    label =>
-                      'This module is needed to enable comment registration.',
-            },
-            'XML::Atom' => {
-                      link  => 'http://search.cpan.org/dist/XML-Atom',
-                      label => 'This module enables the use of the Atom API.',
-            },
+        'optional_packages' => {
             'Archive::Tar' => {
-                link => 'http://search.cpan.org/dist/Archive-Tar',
-                label =>
-                  'This module is required in order to archive files in backup/restore operation.',
-            },
-            'IO::Compress::Gzip' => {
-                link => 'http://search.cpan.org/dist/IO-Compress-Zlib',
-                label =>
-                  'This module is required in order to compress files in backup/restore operation.',
-            },
-            'IO::Uncompress::Gunzip' => {
-                link => 'http://search.cpan.org/dist/IO-Compress-Zlib',
-                label =>
-                  'This module is required in order to decompress files in backup/restore operation.',
+                'label' =>
+                  'Archive::Tar is needed in order to archive files in backup/restore operation.',
+                'link' => 'http://search.cpan.org/dist/Archive-Tar/'
             },
             'Archive::Zip' => {
-                link => 'http://search.cpan.org/dist/Archive-Zip',
-                label =>
-                  'This module is required in order to archive files in backup/restore operation.',
+                'label' =>
+                  'Archive::Zip is needed in order to archive files in backup/restore operation.',
+                'link' => 'http://search.cpan.org/dist/Archive-Zip/'
             },
-            'XML::SAX' => {
-                link => 'http://search.cpan.org/dist/XML-SAX',
-                label =>
-                  'This module and its dependencies are required in order to restore from a backup.',
+            'Attribute::Params::Validate' => {
+                'link' =>
+                  'http://search.cpan.org/dist/Params-Validate/lib/Attribute/Params/Validate.pm',
+                'version' => '1.07'
             },
-            'Digest::SHA1' => {
-                link => 'http://search.cpan.org/dist/Digest-SHA1',
-                label =>
-                  'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers including Vox and LiveJournal.',
+            'Cache::Memcached' => {
+                'label' =>
+                  'Cache::Memcached and memcached server/daemon is needed in order to use memcached as caching mechanism used by Melody.',
+                'link' => 'http://search.cpan.org/dist/Cache-Memcached/'
             },
-            'Mail::Sendmail' => {
-                link => 'http://search.cpan.org/dist/Mail-Sendmail',
-                label =>
-                  'This module is required for sending mail via SMTP Server.',
+            'Crypt::DH' => {
+                'label' =>
+                  'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ',
+                'link'    => 'http://search.cpan.org/dist/Crypt-DH/',
+                'version' => '0.06'
             },
-            'Safe' => {
-                link => 'http://search.cpan.org/dist/Safe',
-                label =>
-                  'This module is used in test attribute of MTIf conditional tag.',
+            'Crypt::DSA' => {
+                'label' =>
+                  'Crypt::DSA is optional; if it is installed, comment registration sign-ins will be accelerated.',
+                'link' => 'http://search.cpan.org/dist/Crypt-DSA/'
             },
-            'Digest::MD5' => {
-                  link  => 'http://search.cpan.org/dist/Digest-MD5',
-                  label => 'This module is used by the Markdown text filter.',
+            'Crypt::SSLeay' => {
+                'label' =>
+                  'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers that require SSL support.',
+                'link' => 'http://search.cpan.org/dist/Crypt-SSLeay/'
             },
-            'Text::Balanced' => {
-                link => 'http://search.cpan.org/dist/Text-Balanced',
-                label =>
-                  'This module is required in search.cgi if you are using a version of Perl older than Perl 5.8.',
+            'DBD::Pg' => {
+                'label' =>
+                  'DBI and DBD::Pg are required if you want to use the PostgreSQL database backend.',
+                'link'    => 'http://search.cpan.org/dist/DBD-Pg/',
+                'version' => '1.32'
             },
-            'XML::Parser' => {
-                          link => 'http://search.cpan.org/dist/Text-Balanced',
-                          label => 'This module required for action streams.',
+            'DBD::SQLite' => {
+                'label' =>
+                  'DBI and DBD::SQLite are required if you want to use the SQLite database backend.',
+                'link' => 'http://search.cpan.org/dist/DBD-SQLite/'
             },
-        },
-        required_packages => {
-            'Image::Size' => {
-                link => 'http://search.cpan.org/dist/Image-Size',
-                label =>
-                  'This module is required for file uploads (to determine the size of uploaded images in many different formats).',
+            'DBD::SQLite2' => {
+                'label' =>
+                  'DBI and DBD::SQLite2 are required if you want to use the SQLite 2.x database backend.',
+                'link' => 'http://search.cpan.org/dist/DBD-SQLite2/'
             },
-            'CGI::Cookie' => {
-                link =>
-                  'http://search.cpan.org/search?query=cgi-cookie&mode=module',
-                label => 'This module is required for cookie authentication.',
+            'DBD::mysql' => {
+                'label' =>
+                  'DBI and DBD::mysql are required if you want to use the MySQL database backend.',
+                'link' => 'http://search.cpan.org/dist/DBD-mysql/'
             },
             'DBI' => {
-                       link  => 'http://search.cpan.org/dist/DBI',
-                       label => 'DBI is required to store data in database.',
-                       version => 1.21,
+                      'label' => 'DBI is required to store data in database.',
+                      'link'  => 'http://search.cpan.org/dist/DBI/',
+                      'version' => '1.21'
             },
-            'CGI' => {
-                link  => 'http://search.cpan.org/dist/CGI.pm',
-                label => 'CGI is required for all application functionality.',
+            'GD' => {
+                'label' =>
+                  'This module is needed if you would like to be able to create thumbnails of uploaded images.',
+                'link' => 'http://search.cpan.org/dist/GD/'
             },
-            'File::Spec' => {
-                link    => 'http://search.cpan.org/dist/File-Spec',
-                version => 0.8,
-                label =>
-                  'File::Spec is required for path manipulation across operating systems.',
+            'IO::Compress::Gzip' => {
+                'label' =>
+                  'IO::Compress::Gzip is needed in order to compress files in backup/restore operation.',
+                'link' =>
+                  'http://search.cpan.org/dist/IO-Compress/lib/IO/Compress/Gzip.pm'
+            },
+            'IO::Scalar' => {
+                'label' =>
+                  'IO::Scalar is needed in order to archive files in backup/restore operation.',
+                'link'    => 'http://search.cpan.org/dist/IO-Scalar/',
+                'version' => '2.11'
+            },
+            'IO::Uncompress::Gunzip' => {
+                'label' =>
+                  'IO::Uncompress::Gunzip is required in order to decompress files in backup/restore operation.',
+                'link' =>
+                  'http://search.cpan.org/dist/IO-Compress/lib/IO/Compress/Gunzip.pm'
+            },
+            'IPC::Run' => {
+                'label' =>
+                  'This module is needed if you would like to be able to use NetPBM as the image driver for Melody.',
+                'link' => 'http://search.cpan.org/dist/IPC-Run/'
+            },
+            'Image::Magick' => {
+                'label' =>
+                  'Image::Magick is optional; It is needed if you would like to be able to create thumbnails of uploaded images.',
+                'link' => 'http://search.cpan.org/dist/Image-Magick/'
+            },
+            'MIME::Charset' => {
+                'label' =>
+                  'MIME::Charset is required for sending mail via SMTP Server.',
+                'link'    => 'http://search.cpan.org/dist/MIME-Charset/',
+                'version' => '0.044'
+            },
+            'MIME::EncWords' => {
+                'label' =>
+                  'MIME::EncWords is required for sending mail via SMTP Server.',
+                'link'    => 'http://search.cpan.org/dist/MIME-EncWords/',
+                'version' => '0.96'
+            },
+            'Mail::Sendmail' => {
+                'label' =>
+                  'Mail::Sendmail is required for sending mail via SMTP Server.',
+                'link' => 'http://search.cpan.org/dist/Mail-SendMail/'
+            },
+            'Net::OpenID::Consumer' => {
+                'label' =>
+                  'This module and its dependencies are required in order to allow commenters to be authenticated by OpenID providers ',
+                'link' => 'http://search.cpan.org/dist/Net-OpenID-Consumer/',
+                'version' => '1.03'
+            },
+            'Path::Class' =>
+              { 'link' => 'http://search.cpan.org/dist/Path-Class/' },
+            'SOAP::Lite' => {
+                'label' =>
+                  'SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.',
+                'link'    => 'http://search.cpan.org/dist/SOAP-Lite/',
+                'version' => '0.710.08'
+            },
+            'XML::Atom' => {
+                      'label' =>
+                        'XML::Atom is required in order to use the Atom API.',
+                      'link' => 'http://search.cpan.org/dist/XML-Atom/'
+            },
+            'XML::LibXML' => {
+                    'label' =>
+                      'XML::LibXML is required in order to use the Atom API.',
+                    'link' => 'http://search.cpan.org/dist/XML-LibXML/'
+            },
+            'XML::NamespaceSupport' => {
+                'label' =>
+                  'XML::NamespaceSupport is needed in order to archive files in backup/restore operation.',
+                'link' => 'http://search.cpan.org/dist/XML-NamespaceSupport/',
+                'version' => '1.09'
+            },
+            'XML::Parser' => {
+                          'link' => 'http://search.cpan.org/dist/XML-Parser/',
+                          'version' => '2.23'
+            },
+            'XML::SAX' => {
+                'label' =>
+                  'XML::SAX is needed in order to archive files in backup/restore operation.',
+                'link'    => 'http://search.cpan.org/dist/XML-SAX/',
+                'version' => '0.96'
+            },
+            'XML::Simple' => {
+                'label' =>
+                  'XML::Simple is needed in order to archive files in backup/restore operation.',
+                'link'    => 'http://search.cpan.org/dist/XML-Simple/',
+                'version' => '2.14'
+            },
+            'XML::XPath' =>
+              { 'link' => 'http://search.cpan.org/dist/XML-XPath' },
+            'bignum' => {
+                          'link'    => 'http://search.cpan.org/dist/bignum/',
+                          'version' => '0.23'
             }
+        },
+        'required_packages' => {
+             'Algorithm::Diff' => {
+                      'link' => 'http://search.cpan.org/dist/Algorithm-Diff/',
+                      'version' => '1.1902'
+             },
+             'CGI' => {
+                        'link'    => 'http://search.cpan.org/dist/CGI/',
+                        'version' => '3.5'
+             },
+             'Cache' => {
+                          'link'    => 'http://search.cpan.org/dist/Cache/',
+                          'version' => '2.04'
+             },
+             'Class::Accessor' => {
+                      'link' => 'http://search.cpan.org/dist/Class-Accessor/',
+                      'version' => '0.22'
+             },
+             'Class::Data::Inheritable' => {
+                      'link' =>
+                        'http://search.cpan.org/dist/Class-Data-Inheritable/',
+                      'version' => '0.06'
+             },
+             'Class::Trigger' => {
+                       'link' => 'http://search.cpan.org/dist/Class-Trigger/',
+                       'version' => '0.1001'
+             },
+             'Data::ObjectDriver' => {
+                   'link' => 'http://search.cpan.org/dist/Data-ObjectDriver/',
+                   'version' => '0.06'
+             },
+             'Digest::SHA1' => {
+                         'link' => 'http://search.cpan.org/dist/Digest-SHA1/',
+                         'version' => '0.06'
+             },
+             'File::Copy::Recursive' => {
+                 'link' => 'http://search.cpan.org/dist/File-Copy-Recursive/',
+                 'version' => '0.23'
+             },
+             'HTML::Diff' => {
+                           'link' => 'http://search.cpan.org/dist/HTML-Diff/',
+                           'version' => '0.561'
+             },
+             'HTML::Parser' => {
+                         'link' => 'http://search.cpan.org/dist/HTML-Parser/',
+                         'version' => '3.66'
+             },
+             'Heap::Fibonacci' => {
+                                'link' => 'http://search.cpan.org/dist/Heap/',
+                                'version' => '0.71'
+             },
+             'Image::Size' => {
+                          'link' => 'http://search.cpan.org/dist/Image-Size/',
+                          'version' => '2.93'
+             },
+             'JSON' => {
+                         'link'    => 'http://search.cpan.org/dist/JSON/',
+                         'version' => '2.12'
+             },
+             'Jcode' => {
+                          'link'    => 'http://search.cpan.org/dist/Jcode/',
+                          'version' => '0.88'
+             },
+             'LWP' => {
+                        'link' => 'http://search.cpan.org/dist/libwww-perl/',
+                        'version' => '5.831'
+             },
+             'Locale::Maketext' => {
+                     'link' => 'http://search.cpan.org/dist/Locale-Maketext/',
+                     'version' => '1.13'
+             },
+             'Log::Dispatch' => {
+                         'link' => 'http://search.cpan.org/dist/Log-Dispatch',
+                         'version' => '2.26'
+             },
+             'Log::Log4Perl' => {
+                         'link' => 'http://search.cpan.org/dist/Log-Log4Perl',
+                         'version' => '1.3'
+             },
+             'Lucene::QueryParser' => {
+                   'link' => 'http://search.cpan.org/dist/Lucene-QueryParser',
+                   'version' => '1.04'
+             },
+             'Params::Validate' => {
+                      'link' => 'http://search.cpan.org/dist/Params-Validate',
+                      'version' => '0.73'
+             },
+             'Sub::Install' => {
+                          'link' => 'http://search.cpan.org/dist/Sub-Install',
+                          'version' => '0.925'
+             },
+             'TheSchwartz' => {
+                          'link' => 'http://search.cpan.org/dist/TheSchwartz',
+                          'version' => '1.07'
+             },
+             'URI' => {
+                        'link'    => 'http://search.cpan.org/dist/URI',
+                        'version' => '1.36'
+             },
+             'YAML::Tiny' => {
+                           'link' => 'http://search.cpan.org/dist/YAML-Tiny/',
+                           'version' => '1.12'
+             },
+             'version' => {
+                            'link' => 'http://search.cpan.org/dist/version/',
+                            'version' => '0.76'
+             }
         },
     };
 } ## end sub init_core_registry
