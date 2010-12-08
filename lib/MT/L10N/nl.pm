@@ -1202,10 +1202,10 @@ use vars qw( @ISA %Lexicon );
     'The path provided below is not writable.' =>
       'Het pad dat hieronder werd opgegeven is niet beschrijfbaar.',
     'Invalid session.' => 'Ongeldige sessie.',
-    'No permissions. Please contact your administrator for upgrading Melody.'
-      => 'Geen permissies.  Gelieve uw administrator te contacteren om Melody te upgraden.',
-    'Melody has been upgraded to version [_1].' =>
-      'Melody is bijgewerkt tot versie [_1]',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => 'Geen permissies.  Gelieve uw administrator te contacteren om [_1] te upgraden.',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1] is bijgewerkt tot versie [_2]',
 
 ## lib/MT/App/Search/Legacy.pm
     'You are currently performing a search. Please wait until your search is completed.'

@@ -2689,10 +2689,10 @@ que la dirección provista es correcta y le pertenece.',
     'The path provided below is not writable.' =>
       'No se puede escribir en la ruta provista abajo.',
     'Invalid session.' => 'Sesión no válida.',
-    'No permissions. Please contact your administrator for upgrading Movable Type.'
-      => 'Sin permiso. Por favor contacte a su administrador para actualizar Melody.',
-    'Movable Type has been upgraded to version [_1].' =>
-      'Melody ha sido actualizado a la versión [_1].',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => 'Sin permiso. Por favor contacte a su administrador para actualizar [_1].',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1] ha sido actualizado a la versión [_2].',
 
 ## lib/MT/App/Search.pm
     'Invalid [_1] parameter.' => 'Parámetro [_1] no válido',

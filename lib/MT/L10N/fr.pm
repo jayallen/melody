@@ -1229,10 +1229,10 @@ use vars qw( @ISA %Lexicon );
     'The path provided below is not writable.' =>
       'Le chemin ci-dessous n\'est pas ouvert en écriture',
     'Invalid session.' => 'Session invalide.',
-    'No permissions. Please contact your administrator for upgrading Melody.'
-      => 'Pas d\'autorisation. Contactez votre administrateur système Melody pour modifier vos privilèges.',
-    'Melody has been upgraded to version [_1].' =>
-      'Melody a été mis à jour à la version [_1].',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => 'Pas d\'autorisation. Contactez votre administrateur système [_1] pour modifier vos privilèges.',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1] a été mis à jour à la version [_2].',
 
 ## lib/MT/App/Search/Legacy.pm
     'You are currently performing a search. Please wait until your search is completed.'

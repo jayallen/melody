@@ -989,10 +989,10 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
     'The path provided below is not writable.' =>
       '指定されたパスに書き込みできません。',
     'Invalid session.' => 'セッションが不正です。',
-    'No permissions. Please contact your administrator for upgrading Melody.'
-      => '権限がありません。Melodyのアップグレードを管理者に依頼してください。',
-    'Melody has been upgraded to version [_1].' =>
-      'Melodyをバージョン[_1]にアップグレードしました。',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => '権限がありません。[_1]のアップグレードを管理者に依頼してください。',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1]をバージョン[_2]にアップグレードしました。',
 
 ## lib/MT/App/Viewer.pm
     'Loading blog with ID [_1] failed' => 'Loading blog with ID [_1] failed',
