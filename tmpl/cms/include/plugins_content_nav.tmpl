@@ -1,28 +1,5 @@
-<script type="text/javascript">
-$(document).ready( function() {
-  var url = document.URL;
-  var a   = url.match(/#(.+)$/);
-  $('#content-nav ul li a').click( function() {
-    var current = $(this).parent().parent().find('.active');
-    var newactive = $(this).attr('title');
-    current.removeClass('active');
-    $('#' + current.find('a').attr('title')).hide();
-    $(this).parent().addClass('active');
-    $('#' + newactive).show();
-  });  
-<mt:if name="plugin">
-  $('#content-nav ul li a[title="plugin-<$mt:var name="plugin"$>"]').trigger('click');
-<mt:else>
-  if (a && $('#content-nav ul li a[title="'+a[1]+'"]')) {
-    $('#content-nav ul li a[title="'+a[1]+'"]').trigger('click');
-  } else {
-    $('#content-nav ul li:first-child').find('a').trigger('click');
-  }
-</mt:if>
-});
-</script>
 <ul>
 <mt:loop name="plugin_loop"><mt:if name="plugin_has_config">
-    <li<mt:if name="plugin" eq="$plugin_id"> class="active"</mt:if>><a href="javascript:void(0)" title="plugin-<$mt:var name="plugin_id" dirify="1"$>"><b><$mt:var name="plugin_name"$></b></a></li>
+    <li class="plugin-<$mt:var name="plugin_id" dirify="1"$>-tab<mt:if name="plugin" eq="$plugin_id"> active</mt:if>"><a href="javascript:void(0)" id="plugin-<$mt:var name="plugin_id" dirify="1"$>-tab" title="<__trans phrase="[_1] Preferences" params="<$mt:var name="plugin_name" encode_html="1"$>">"><b><$mt:var name="plugin_name"$></b></a></li>
 </mt:if></mt:loop>
 </ul>

@@ -121,8 +121,7 @@ sub save_config {
         $tmpl->param( plugin_config_saved => 1 );
         return $app->build_page($tmpl);
     }
-    $app->add_return_arg( saved  => 1 );
-    $app->add_return_arg( plugin => $profile->{object}->id );
+    $app->add_return_arg( saved  => $profile->{object}->id );
     $app->call_return;
 } ## end sub save_config
 

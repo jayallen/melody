@@ -63,4 +63,6 @@
   background-image: url(../images/status_icons/user-enabled-sysadmin.png);
 }
 
-
+/* Refactored Plugin Preferences */
+#list-plugins .plugin_form h3.plugin-name { display: none; }
+/* END Refactored Plugin Preferences */
