@@ -3378,7 +3378,7 @@ sub help_url {
 
     my $url = $pkg->config->HelpURL;
     return $url if defined $url;
-    $url = $pkg->translate('http://github.com/openmelody/melody/wiki/');
+    $url = $pkg->translate('http://openmelody.org/docs/');
     if ($append) {
         $url .= $append;
     }
