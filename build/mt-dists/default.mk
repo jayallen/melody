@@ -1,9 +1,9 @@
 PRODUCT_NAME = Melody
-PRODUCT_VERSION = 0.9.30
-VERSION_ID = 1.0.0b2 (build 30)
+PRODUCT_VERSION = 0.9.31
+VERSION_ID = 1.0.0b2 (build 31)
 SCHEMA_VERSION = 4.0077
-# Corresponds to MT 4.34 (plus Melody enhancements)
-API_VERSION = 4.34
+# Corresponds to MT 4.35 (plus Melody enhancements)
+API_VERSION = 4.35
 BUILD_LANGUAGE = en_US
 VERSION_SUFFIX = 
 PORTAL_URL = http://openmelody.org/

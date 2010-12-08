@@ -6,9 +6,9 @@
 # $Id$
 
 if('__MAKE_ME__' == '__MAKE_' . 'ME__') { # If make is not run
-    define('VERSION', '4.34');
-    define('VERSION_ID', '1.0.0b2 (build 30)');
-    define('PRODUCT_VERSION', '0.9.30');
+    define('VERSION', '4.35');
+    define('VERSION_ID', '1.0.0b2 (build 31)');
+    define('PRODUCT_VERSION', '0.9.31');
     define('PRODUCT_NAME', 'Melody');    
 } else {
     define('VERSION', '__API_VERSION__');
@@ -208,7 +208,7 @@ class MT {
         if ($fp = file($file)) {
             foreach ($fp as $line) {
                 // search through the file
-                if (!ereg('^\s*\#',$line)) {
+                if (!preg_match('/^\s*\#/',$line)) {
                     // ignore lines starting with the hash symbol
                     if (preg_match('/^\s*(\S+)\s+(.*)$/', $line, $regs)) {
                         $key = strtolower(trim($regs[1]));
@@ -299,7 +299,7 @@ class MT {
             $data = preg_split('/[\r?\n]/', $data);
             foreach ($data as $line) {
                 // search through the file
-                if (!ereg('^\s*\#',$line)) {
+                if (!preg_match('/^\s*\#/',$line)) {
                     // ignore lines starting with the hash symbol
                     if (preg_match('/^\s*(\S+)\s+(.*)$/', $line, $regs)) {
                         $key = strtolower(trim($regs[1]));
@@ -462,6 +462,7 @@ class MT {
         }
 
         // now set the path so it may be queried
+        $path = preg_replace('/\\\\/', '\\\\\\\\', $path );
         $this->request = $path;
 
         // When we are invoked as an ErrorDocument, the parameters are
