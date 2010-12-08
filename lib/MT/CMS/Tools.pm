@@ -130,6 +130,9 @@ sub start_recover {
     $param ||= {};
     $param->{'email'} = $q->param('email');
     $param->{'return_to'} = $q->param('return_to') || $cfg->ReturnToURL || '';
+    if ( $param->{recovered} ) {
+        $param->{return_to} = MT::Util::encode_js($param->{return_to});
+    }
     $param->{'can_signin'} = ( ref $app eq 'MT::App::CMS' ) ? 1 : 0;
     $app->add_breadcrumb( $app->translate('Password Recovery') );
 
@@ -332,7 +335,7 @@ sub new_password {
                 }
                 $app->make_commenter_session($user);
                 if ($redirect) {
-                    return $app->redirect($redirect);
+                    return $app->redirect(MT::Util::encode_html($redirect));
                 }
                 else {
                     return $app->redirect_to_edit_profile();
