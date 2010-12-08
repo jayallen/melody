@@ -2893,8 +2893,8 @@ que la dirección provista es correcta y le pertenece.',
       'Se encontro un direcotrio dañado en la inicialización del plugin: [_1]',
     'Loading template \'[_1]\' failed.' =>
       'Fallo cargando la plantilla \'[_1]\'.',
-    'http://github.com/openmelody/melody/wiki/' =>
-      'http://github.com/openmelody/melody/wiki/',
+    'http://openmelody.org/docs/' =>
+      'http://openmelody.org/docs/',
     'OpenID'               => 'OpenID',
     'LiveJournal'          => 'LiveJournal',
     'Vox'                  => 'Vox',
@@ -4441,8 +4441,8 @@ que la dirección provista es correcta y le pertenece.',
       => 'Esta es una versión beta de [_1] y no serecomienda su uso para producción',
     'OpenMelody.org'                  => 'OpenMelody.org',
     'http://plugins.movabletype.org/' => 'http://plugins.movabletype.org/',
-    'http://github.com/openmelody/melody/wiki' =>
-      'http://github.com/openmelody/melody/wiki',
+    'http://openmelody.org/docs' =>
+      'http://openmelody.org/docs',
     'Documentation'               => 'Documentación',
     'http://wiki.openmelody.org/' => 'http://wiki.openmelody.org/',
     'Wiki'                        => 'Wiki',
