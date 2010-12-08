@@ -71,11 +71,13 @@
         </mt:if>
     </mt:unless>
     <mt:unless name="can_use_userpic">
+      <mt:if name="is_administrator">
         <mtapp:statusmsg
             id="userpic"
             class="error">
             <__trans phrase="Image::Magick is either not present on your server or incorrectly configured. Due to that, you will not be able to use Melody's userpics feature. If you wish to use that feature, please install Image::Magick or use an alternative image driver.">
         </mtapp:statusmsg>
+      </mt:if>
     </mt:unless>
     <mt:unless name="main">
     <mtapp:statusmsg
