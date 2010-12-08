@@ -104,6 +104,8 @@
         id="use-revision"
         class="has-option"
         label="<__trans phrase="Revision history">"
+        hint="<__trans phrase='Enable this setting to have Melody track revisions made by users to entries, pages and templates. Learn more about <a href="http://openmelody.org/docs/sysadmin-revisionsystem">revision histories</a>.'>"
+        show_hint="1"
         content_class="field-content-text">
         <label for="use-revision"><input type="checkbox" value="1" name="use_revision" id="use-revision"<mt:if name="use_revision"> checked="checked"</mt:if><mt:unless name="master_revision_switch"> disabled="disabled"</mt:unless> /> <__trans phrase="Enable revision history"></label>
     </mtapp:setting>

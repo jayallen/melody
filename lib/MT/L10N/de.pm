@@ -1190,10 +1190,10 @@ use vars qw( @ISA %Lexicon );
     'The path provided below is not writable.' =>
       'Der unten angegebene Pfad ist nicht beschreibbar.',
     'Invalid session.' => 'Ungültige Session',
-    'No permissions. Please contact your administrator for upgrading Melody.'
-      => 'Bitte kontaktieren Sie Ihren Administrator, um das Upgrade von Melody durchzuführen. Sie haben nicht die erforderlichen Rechte.',
-    'Melody has been upgraded to version [_1].' =>
-      'Melody erfolgreich auf Version [_1] aktualisiert.',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => 'Bitte kontaktieren Sie Ihren Administrator, um das Upgrade von [_1] durchzuführen. Sie haben nicht die erforderlichen Rechte.',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1] erfolgreich auf Version [_2] aktualisiert.',
 
 ## lib/MT/App/Search/Legacy.pm
     'You are currently performing a search. Please wait until your search is completed.'
@@ -7754,8 +7754,8 @@ Suchbasis: [_2]",
     ,                                                   # Translate - New # OK
     'System Settings Changes Took Place' =>
       'Die Systemeinstellungen wurden geändert',       # Translate - New # OK
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
-      => 'Eine Beschreibung der verschiedenen Debug-Modi finden Sie in der <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">Dokumentation</a>'
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
+      => 'Eine Beschreibung der verschiedenen Debug-Modi finden Sie in der <a href="http://openmelody.org/docs/ref-debug">Dokumentation</a>'
     ,                                                   # Translate - New # OK
     'The published order of these assets can be changed using [_1]template tag modifiers[_2].'
       => 'Die Reihenfolge, in der diese Assets veröffentlicht werden, kann mittels [_1]Template Tag Modifiers[_2] beeinflusst werden.'

@@ -477,7 +477,7 @@ BEGIN {
             'AllowComments'     => { default => 1, },
             'AllowPings'        => { default => 1, },
             'HelpURL' =>
-              { default => 'http://github.com/openmelody/melody/wiki/', },
+              { default => 'http://openmelody.org/docs/', },
             'UsePlugins'               => { default => 1, },
             'PluginSwitch'             => { type    => 'HASH', },
             'PluginSchemaVersion'      => { type    => 'HASH', },

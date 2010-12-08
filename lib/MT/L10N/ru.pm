@@ -799,10 +799,10 @@ sub numerate {
     'The path provided below is not writable.' =>
       'Указанный ниже путь не перезаписываемый.',
     'Invalid session.' => 'Неверная сессия.',
-    'No permissions. Please contact your administrator for upgrading Melody.'
-      => 'Недостаточно прав для выполнения этого действия. Пожалуйста, свяжитесь с администратором для обновления Melody.',
-    'Melody has been upgraded to version [_1].' =>
-      'Melody обновлён до версии [_1].',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => 'Недостаточно прав для выполнения этого действия. Пожалуйста, свяжитесь с администратором для обновления [_1].',
+    '[_1] has been upgraded to version [_1].' =>
+      '[_1] обновлён до версии [_1].',
 
 ## lib/MT/App/CMS.pm
     'Invalid request' => 'Неверный запрос',
@@ -5348,8 +5348,8 @@ sub numerate {
     'The email address used in the From: header of each email sent from the system.  The address is used in password recovery, commenter registration, comment, trackback notification and a few other minor events.'
       => 'Этот адрес будет использован в заголовке «От» в письмах, отправленных системой. Адрес также используется при восстановлении паролей, регистрации комментаторов, уведомлениях о комментариях, трекбэках и в некоторых других незначительных событиях.',
     'Debug Mode' => 'Режим отладки',
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
-      => 'Вы можете найти описание различных режимов отладки в <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">документации</a>.',
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
+      => 'Вы можете найти описание различных режимов отладки в <a href="http://openmelody.org/docs/ref-debug">документации</a>.',
     'Performance Logging' =>
       'Журналирование производительности',
     'Turns on or off performance logging.' =>

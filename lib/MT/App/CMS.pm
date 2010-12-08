@@ -394,7 +394,7 @@ sub init_request {
             if (
                     !$schema
                  || ( $schema < $app->schema_version )
-                 || ( ( !$version || ( $version < $app->version_number ) )
+                 || ( ( !$version || ( $version < $app->product_version ) )
                       && $app->config->NotifyUpgrade )
               )
             {

@@ -1202,10 +1202,10 @@ use vars qw( @ISA %Lexicon );
     'The path provided below is not writable.' =>
       'Het pad dat hieronder werd opgegeven is niet beschrijfbaar.',
     'Invalid session.' => 'Ongeldige sessie.',
-    'No permissions. Please contact your administrator for upgrading Melody.'
-      => 'Geen permissies.  Gelieve uw administrator te contacteren om Melody te upgraden.',
-    'Melody has been upgraded to version [_1].' =>
-      'Melody is bijgewerkt tot versie [_1]',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => 'Geen permissies.  Gelieve uw administrator te contacteren om [_1] te upgraden.',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1] is bijgewerkt tot versie [_2]',
 
 ## lib/MT/App/Search/Legacy.pm
     'You are currently performing a search. Please wait until your search is completed.'
@@ -7764,8 +7764,8 @@ Zoekbasis: [_2]",
     'System Settings Changes Took Place' =>
       'Wijzigingen aan systeeminstellingen werden uitgevoerd'
     ,                                                       # Translate - New
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
-      => 'Uitleg over de verschillende debug modi kan gevonden worden in de <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentatie</a>.'
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
+      => 'Uitleg over de verschillende debug modi kan gevonden worden in de <a href="http://openmelody.org/docs/ref-debug">documentatie</a>.'
     ,                                                       # Translate - New
     'The published order of these assets can be changed using [_1]template tag modifiers[_2].'
       => 'De publicatievolgorde van deze mediabestanden kan gewijzigd worden via [_1]argumenten in de sjabloontags[_2].'

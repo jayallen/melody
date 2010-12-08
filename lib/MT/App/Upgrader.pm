@@ -162,10 +162,10 @@ sub upgrade {
 
     my $ver = $^V ? join( '.', unpack 'C*', $^V ) : $];
     my $perl_ver_check = '';
-    if ( $] < 5.006001 ) {    # our minimal requirement for support
+    if ( $] < 5.008008 ) {    # our minimal requirement for support
         $param{version_warning} = 1;
         $param{perl_version}    = $ver;
-        $param{perl_minimum}    = '5.6.1';
+        $param{perl_minimum}    = '5.8.8';
     }
 
     my $method = $app->request_method;
@@ -627,10 +627,10 @@ sub main {
 
     my $ver = $^V ? join( '.', unpack 'C*', $^V ) : $];
     my $perl_ver_check = '';
-    if ( $] < 5.006001 ) {    # our minimal requirement for support
+    if ( $] < 5.008008 ) {    # our minimal requirement for support
         $param->{version_warning} = 1;
         $param->{perl_version}    = $ver;
-        $param->{perl_minimum}    = '5.6.1';
+        $param->{perl_minimum}    = '5.8.8';
     }
 
     my $driver       = MT::Object->driver;
@@ -657,13 +657,15 @@ sub main {
         };
         if ( $author && !$author->is_superuser ) {
             return $app->errtrans(
-                "No permissions. Please contact your administrator for upgrading Movable Type."
+                "No permissions. Please contact your administrator for upgrading [_1].", MT->product_name
             );
         }
     }
 
-    my $cur_schema  = MT->schema_version;
-    my $cur_version = MT->version_number;
+    my $cur_schema      = MT->schema_version;
+    my $cur_version     = MT->product_version;
+    my $cur_version_id  = MT->version_id;
+
     if ( $cur_schema > $schema ) {
 
         # yes, MT itself is needing an upgrade...
@@ -673,18 +675,19 @@ sub main {
         $param->{mt_version_incremented} = 1;
         MT->log(
                  MT->translate(
-                            "Movable Type has been upgraded to version [_1].",
-                            $cur_version
+                            "[_1] has been upgraded to version [_2].",
+                            MT->product_name, $cur_version_id
                  )
         );
         $app->config->MTVersion( $cur_version, 1 );
         $app->config->save_config;
     }
 
-    $param->{help_url}    = $app->help_url();
-    $param->{to_schema}   = $cur_schema;
-    $param->{from_schema} = $schema;
-    $param->{mt_version}  = $cur_version;
+    $param->{help_url}      = $app->help_url();
+    $param->{to_schema}     = $cur_schema;
+    $param->{from_schema}   = $schema;
+    $param->{mt_version}    = $cur_version;
+    $param->{mt_version_id} = $cur_version_id;
 
     my @plugins;
     my $plugin_ver = $app->{cfg}->PluginSchemaVersion;

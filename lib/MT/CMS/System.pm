@@ -312,8 +312,8 @@ sub save_cfg_system {
         }
     }
 
-    my $tz = $q->param('default_time_zone') || undef;
-    $cfg->DefaultTimezone($tz);
+    my $tz = $q->param('default_time_zone');
+    $cfg->DefaultTimezone($tz, 1);
     $cfg->DefaultSiteRoot( $q->param('default_site_root') || undef, 1 );
     $cfg->DefaultSiteURL( $q->param('default_site_url') || undef, 1 );
     $cfg->NewUserAutoProvisioning( $q->param('personal_weblog') ? 1 : 0, 1 );

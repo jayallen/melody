@@ -989,10 +989,10 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
     'The path provided below is not writable.' =>
       '指定されたパスに書き込みできません。',
     'Invalid session.' => 'セッションが不正です。',
-    'No permissions. Please contact your administrator for upgrading Melody.'
-      => '権限がありません。Melodyのアップグレードを管理者に依頼してください。',
-    'Melody has been upgraded to version [_1].' =>
-      'Melodyをバージョン[_1]にアップグレードしました。',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => '権限がありません。[_1]のアップグレードを管理者に依頼してください。',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1]をバージョン[_2]にアップグレードしました。',
 
 ## lib/MT/App/Viewer.pm
     'Loading blog with ID [_1] failed' => 'Loading blog with ID [_1] failed',
@@ -3562,7 +3562,7 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
     'The email address used in the From: header of each email sent from the system.  The address is used in password recovery, commenter registration, comment, trackback notification and a few other minor events.'
       => 'メールアドレスは、システムが送信するメールのFrom: 欄に使用されます。メールアドレスはパスワードの再設定や、コメント投稿者の登録、コメント投稿、トラックバック通知、その他いくつかのイベントに使用されます。',
     'Debug Mode' => 'デバッグモード',
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
       => 'デバッグモードについて詳しくは<a href="http://www.movabletype.jp/documentation/appendices/config-directives/debugmode.html">ドキュメント</a>を参照してください。',
     'Performance Logging' => 'パフォーマンスログ',
     'Turns on or off performance logging.' =>

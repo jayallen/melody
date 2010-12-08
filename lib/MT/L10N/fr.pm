@@ -1229,10 +1229,10 @@ use vars qw( @ISA %Lexicon );
     'The path provided below is not writable.' =>
       'Le chemin ci-dessous n\'est pas ouvert en écriture',
     'Invalid session.' => 'Session invalide.',
-    'No permissions. Please contact your administrator for upgrading Melody.'
-      => 'Pas d\'autorisation. Contactez votre administrateur système Melody pour modifier vos privilèges.',
-    'Melody has been upgraded to version [_1].' =>
-      'Melody a été mis à jour à la version [_1].',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => 'Pas d\'autorisation. Contactez votre administrateur système [_1] pour modifier vos privilèges.',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1] a été mis à jour à la version [_2].',
 
 ## lib/MT/App/Search/Legacy.pm
     'You are currently performing a search. Please wait until your search is completed.'
@@ -7948,8 +7948,8 @@ Base de recherche : [_2]",
     'System Settings Changes Took Place' =>
       'Les modifications des paramètres système ont été appliqués'
     ,                                                        # Translate - New
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
-      => 'Vous pouvez trouver une explication sur les nombreux modes debug dans la <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
+      => 'Vous pouvez trouver une explication sur les nombreux modes debug dans la <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
     ,                                                        # Translate - New
     'The published order of these assets can be changed using [_1]template tag modifiers[_2].'
       => 'L\'ordre de publication de ces éléments peut être modifié en utilisant [_1] tags de modification de gabarits [_2]'

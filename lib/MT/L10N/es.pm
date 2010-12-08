@@ -2689,10 +2689,10 @@ que la dirección provista es correcta y le pertenece.',
     'The path provided below is not writable.' =>
       'No se puede escribir en la ruta provista abajo.',
     'Invalid session.' => 'Sesión no válida.',
-    'No permissions. Please contact your administrator for upgrading Movable Type.'
-      => 'Sin permiso. Por favor contacte a su administrador para actualizar Melody.',
-    'Movable Type has been upgraded to version [_1].' =>
-      'Melody ha sido actualizado a la versión [_1].',
+    'No permissions. Please contact your administrator for upgrading [_1].'
+      => 'Sin permiso. Por favor contacte a su administrador para actualizar [_1].',
+    '[_1] has been upgraded to version [_2].' =>
+      '[_1] ha sido actualizado a la versión [_2].',
 
 ## lib/MT/App/Search.pm
     'Invalid [_1] parameter.' => 'Parámetro [_1] no válido',
@@ -2893,8 +2893,8 @@ que la dirección provista es correcta y le pertenece.',
       'Se encontro un direcotrio dañado en la inicialización del plugin: [_1]',
     'Loading template \'[_1]\' failed.' =>
       'Fallo cargando la plantilla \'[_1]\'.',
-    'http://github.com/openmelody/melody/wiki/' =>
-      'http://github.com/openmelody/melody/wiki/',
+    'http://openmelody.org/docs/' =>
+      'http://openmelody.org/docs/',
     'OpenID'               => 'OpenID',
     'LiveJournal'          => 'LiveJournal',
     'Vox'                  => 'Vox',
@@ -3564,8 +3564,8 @@ que la dirección provista es correcta y le pertenece.',
     'The email address used in the From: header of each email sent from the system.  The address is used in password recovery, commenter registration, comment, trackback notification and a few other minor events.'
       => 'La dirección de correo usada en el cabecera From: (remitente) de los mensajes enviados por el sistema. La dirección se usa en la recuperación de contraseña, en el registro de comentaristas, comentarios, notificaciones de TrackBack y otros eventos menores.',
     'Debug Mode' => 'Modo de depuración',
-    'You can find an explanation of the various debug modes in the <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentation</a>'
-      => 'Puede encontrar una explicación de los diferentes modos de depuración en la <a href="http://www.movabletype.org/documentation/developer/plugins/debug-mode.html">documentación</a>',
+    'You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'
+      => 'Puede encontrar una explicación de los diferentes modos de depuración en la <a href="http://openmelody.org/docs/ref-debug">documentación</a>',
     'Performance Logging' => 'Histórico de rendimiento',
     'Turns on or off performance logging.' =>
       'Activa o desactiva el histórico de rendimiento.',
@@ -4441,8 +4441,8 @@ que la dirección provista es correcta y le pertenece.',
       => 'Esta es una versión beta de [_1] y no serecomienda su uso para producción',
     'OpenMelody.org'                  => 'OpenMelody.org',
     'http://plugins.movabletype.org/' => 'http://plugins.movabletype.org/',
-    'http://github.com/openmelody/melody/wiki' =>
-      'http://github.com/openmelody/melody/wiki',
+    'http://openmelody.org/docs' =>
+      'http://openmelody.org/docs',
     'Documentation'               => 'Documentación',
     'http://wiki.openmelody.org/' => 'http://wiki.openmelody.org/',
     'Wiki'                        => 'Wiki',
