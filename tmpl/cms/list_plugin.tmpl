@@ -1,5 +1,5 @@
 <$mt:setvar name="plugins" value="1"$>
-<$mt:setvar name="page_title" value="<__trans phrase="Installed Add-Ons &amp; Plugins">"$>
+<$mt:setvar name="page_title" value="<__trans phrase="Installed Plugins">"$>
 <$mt:setvar name="position_actions_top" value="1"$>
 <$mt:setvar name="system-plugin-settings" value="1"$>
 <mt:setvarblock name="content_nav">
@@ -7,126 +7,50 @@
 </mt:setvarblock>
 
 <mt:setvarblock name="plugins"> class="active"</mt:setvarblock>
-<MTSetVarBlock name="system_msg">
-    <mt:if name="blog_id">
-        <mt:if name="saved">
-            <mtapp:statusmsg
-                id="saved"
-                class="success">
-                <__trans phrase="Your plugin settings have been saved.">
-            </mtapp:statusmsg>
-        </mt:if>
-        <mt:if name="reset">
-            <mtapp:statusmsg
+<mt:setvarblock name="system_msg">
+   <mt:if name="saved">
+      <mtapp:statusmsg
+           id="saved"
+           class="success">
+         <__trans phrase="Your plugin settings have been saved.">
+      </mtapp:statusmsg>
+   </mt:if>
+   <mt:if name="reset">
+      <mtapp:statusmsg
                 id="reset"
                 class="success">
                 <__trans phrase="Your plugin settings have been reset.">
-            </mtapp:statusmsg>
-        </mt:if>
-        <mt:if name="switched">
-            <mt:if name="needs_restart">
-                <mtapp:statusmsg
-                    id="switched"
-                    class="success">
-                    <__trans phrase="Your plugins have been reconfigured. Since you're running in a persistent application environment, you will need to restart your web server for these changes to take effect.">
-                </mtapp:statusmsg>
-            <mt:else>
-                <mtapp:statusmsg
-                    id="switched"
-                    class="success">
-                    <__trans phrase="Your plugins have been reconfigured.">
-                </mtapp:statusmsg>
-            </mt:if>
-        </mt:if>
-    <mt:else>
-        <mt:if name="saved">
-            <mtapp:statusmsg
-                id="saved"
+      </mtapp:statusmsg>
+   </mt:if>
+   <mt:if name="switched">
+       <mt:if name="needs_restart">
+           <mtapp:statusmsg
+                id="switched"
                 class="success">
-                <__trans phrase="Your plugin settings have been saved.">
+                <__trans phrase="Your plugins have been reconfigured. Since you're running in a persistent application environment, you will need to restart your web server for these changes to take effect.">
             </mtapp:statusmsg>
-        </mt:if>
-        <mt:if name="reset">
-            <mtapp:statusmsg
-                id="reset"
+       <mt:else>
+           <mtapp:statusmsg
+                id="switched"
                 class="success">
-                <__trans phrase="Your plugin settings have been reset.">
-            </mtapp:statusmsg>
-        </mt:if>
-        <mt:if name="switched">
-            <mt:if name="needs_restart">
-                <mtapp:statusmsg
-                    id="switched"
-                    class="success">
-                    <__trans phrase="Your plugins have been reconfigured. Since you're running in a persistent application environment, you will need to restart your web server for these changes to take effect.">
-                </mtapp:statusmsg>
-            <mt:else>
-                <mtapp:statusmsg
-                    id="switched"
-                    class="success">
-                    <__trans phrase="Your plugins have been reconfigured.">
-                </mtapp:statusmsg>
-            </mt:if>
-        </mt:if>
-    </mt:if>
+                <__trans phrase="Your plugins have been reconfigured.">
+           </mtapp:statusmsg>
+       </mt:if>
+   </mt:if>
 </MTSetVarBlock>
 <mt:setvarblock name="html_head" append="1">
     <script type="text/javascript">
     /* <![CDATA[ */
-    var last_shown;
-    <mt:if name="can_config">
-    function resetPlugin(f) {
-        if (confirm("<__trans phrase="Are you sure you want to reset the settings for this plugin?" escape="js">")) {
-            f['__mode'].value = 'reset_plugin_config';
-            f.submit();
-        }
-    }
 
-    function activatePlugin(flag, plugin_sig) {
-        var question;
-        if (flag == 0) {
-            if (plugin_sig == '*') {
-                question = '<__trans phrase="Are you sure you want to disable plugin functionality?" escape="js">';
-            } else {
-                question = '<__trans phrase="Disable this plugin?" escape="js">';
-            }
-        } else {
-            if (plugin_sig == '*') {
-                question = '<__trans phrase="Are you sure you want to enable plugin functionality? (This will re-enable any plugins that were not individually disabled.)" escape="js">';
-            } else {
-                question = '<__trans phrase="Enable this plugin?" escape="js">';
-            }
-        }
-        if (confirm(question)) {
-            var f = getByID("plugin_control");
-            f['plugin_sig'].value = plugin_sig;
-            f['state'].value = flag == 0 ? 'off' : 'on';
-            f.submit();
-        }
-        return false;
-    };
-    function togglePlugin(plugin_id) {
-        if (last_shown && last_shown == plugin_id) {
-            if (DOM.hasClassName('plugin-' + plugin_id, 'plugin-expanded')) {
-                DOM.removeClassName('plugin-' + plugin_id, 'plugin-expanded');
-                DOM.removeClassName(DOM.getFirstAncestorByClassName(DOM.getElement('plugin-' + plugin_id), 'plugin-group'), 'plugin-group-expanded')
-            } else {
-                DOM.addClassName('plugin-' + plugin_id, 'plugin-expanded');
-                DOM.addClassName(DOM.getFirstAncestorByClassName(DOM.getElement('plugin-' + plugin_id), 'plugin-group'), 'plugin-group-expanded')
-            }
-        } else if (last_shown) {
-            DOM.removeClassName('plugin-' + last_shown, 'plugin-expanded');
-            DOM.removeClassName(DOM.getFirstAncestorByClassName(DOM.getElement('plugin-' + last_shown), 'plugin-group'), 'plugin-group-expanded')
-            DOM.addClassName('plugin-' + plugin_id, 'plugin-expanded');
-            DOM.addClassName(DOM.getFirstAncestorByClassName(DOM.getElement('plugin-' + plugin_id), 'plugin-group'), 'plugin-group-expanded')
-        } else {
-            DOM.addClassName('plugin-' + plugin_id, 'plugin-expanded');
-            DOM.addClassName(DOM.getFirstAncestorByClassName(DOM.getElement('plugin-' + plugin_id), 'plugin-group'), 'plugin-group-expanded')
-        }
-        last_shown = plugin_id;
-    }
-    </mt:if>
-    /* ]]> */
+   var tableSelect = [];
+   function init() {
+     tableSelect.push(new TC.TableSelect( 'enabled-plugins-table' ));
+     tableSelect[tableSelect.length-1].rowSelect = true;
+     tableSelect.push(new TC.TableSelect( 'disabled-plugins-table' ));
+     tableSelect[tableSelect.length-1].rowSelect = true;
+   }
+   TC.attachLoadEvent(init);
+   /* ]]> */
     </script>
 </mt:setvarblock>
 <mt:include name="include/header.tmpl">
@@ -161,7 +85,7 @@
 
 <mt:setvarblock name="action_buttons">
   <a href="javascript:void(0)"
-     onclick="doForMarkedInThisWindow(getByID('enabled-plugins-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'disable_item', {}, '<__trans phrase="to publish" escape="js">'); return false;"
+     onclick="doForMarkedInThisWindow(getByID('enabled-plugins-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'switch_plugins', {}, '<__trans phrase="to publish" escape="js">'); return false;"
      accesskey="a"
      title="<__trans phrase="Disable selected plugins (a)">"
   ><__trans phrase="Disable"></a>
@@ -171,7 +95,7 @@
 
 <mt:setvarblock name="action_buttons">
   <a href="javascript:void(0)"
-     onclick="doForMarkedInThisWindow(getByID('disabled-plugins-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'enable_item', {}, '<__trans phrase="to publish" escape="js">'); return false;"
+     onclick="doForMarkedInThisWindow(getByID('disabled-plugins-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'switch_plugins', {}, '<__trans phrase="to publish" escape="js">'); return false;"
      accesskey="a"
      title="<__trans phrase="Enable selected plugins (a)">"
   ><__trans phrase="Enable"></a>

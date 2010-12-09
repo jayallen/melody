@@ -112,6 +112,8 @@ sub core_methods {
         'handle_junk'    => "${pkg}Comment::handle_junk",
         'not_junk'       => "${pkg}Comment::not_junk",
 
+        'switch_plugins' => "${pkg}Plugin::switch",
+
         'ping'               => "${pkg}Entry::send_pings",
         'rebuild_phase'      => "${pkg}Blog::rebuild_phase",
         'rebuild'            => "${pkg}Blog::rebuild_pages",

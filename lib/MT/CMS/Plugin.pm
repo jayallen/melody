@@ -3,6 +3,33 @@ package MT::CMS::Plugin;
 use strict;
 use MT::Util qw( remove_html );
 
+# plugin enablement/disablement
+sub switch {
+    my ($app) = @_;
+    $app->validate_magic or return;
+    return unless _can_config_plugins($app);
+    my $cfg = $app->config;
+
+    my $PluginSwitch = $cfg->PluginSwitch || {};
+
+    my @plugins = $app->query->param('id');
+    for my $sig (@plugins) {
+        if ( exists $MT::Plugins{$sig} ) {
+            my $state;
+            if ( exists $PluginSwitch->{$sig} && !$PluginSwitch->{$sig} ) {
+                $state = "1";
+            } else {
+                $state = "0";
+            }
+            $cfg->PluginSwitch( $sig.'='.$state, 1 );
+        }
+    }
+    $cfg->save_config;
+
+    $app->add_return_arg( 'switched' => 1 );
+    $app->call_return;
+}
+
 sub list_plugins {
     my $app = shift;
     my $q   = $app->query;
@@ -413,29 +440,27 @@ sub build_plugin_table {
             # don't list non-configurable plugins for blog scope...
             next if $scope ne 'system';
 
-# Removed for Melody - obsolete
-#            if ( $last_fld ne $fld ) {
-#                $row = {
-#                    plugin_sig    => $plugin_sig,
-#                    plugin_folder => $folder,
-#                    plugin_set    => $fld ? $folder_counts{$fld} > 1 : 0,
-#                    plugin_error  => $profile->{error},
-#                };
-#                push @$enabled_plugins, $row;
-#                $last_fld      = $fld;
-#                $next_is_first = 1;
-#            }
-
+            my $yaml;
+            if (!$profile->{enabled} && -f $profile->{full_path}) {
+                require YAML::Tiny;
+                $yaml = eval { YAML::Tiny->read($profile->{full_path}) };
+            }
             # no registered plugin objects--
             $row = {
                      first           => $next_is_first,
                      plugin_major    => $fld ? 0 : 1,
                      plugin_icon     => $icon,
-                     plugin_name     => $plugin_sig,
                      plugin_sig      => $plugin_sig,
                      plugin_error    => $profile->{error},
                      plugin_disabled => $profile->{enabled} ? 0 : 1,
                      plugin_id       => $id,
+                     $yaml ? (
+                         plugin_name => $yaml->[0]->{name},
+                         plugin_version => $yaml->[0]->{version},
+#                         plugin_desc    => MT->translate( $yaml->[0]->{description} ),
+                         ) : (
+                         plugin_name => $plugin_sig,
+                         ),
             };
             push @enabled_plugins,  $row if $profile->{enabled};
             push @disabled_plugins, $row if !$profile->{enabled};

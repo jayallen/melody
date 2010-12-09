@@ -1426,7 +1426,6 @@ sub init_addons {
     my $cfg    = $mt->config;
     my $addons = $mt->find_addons('pack');
 
-    # print STDERR Dumper({addons => $addons})."\n";
     return $mt->_init_plugins_core( {}, 1, $addons );
 }
 
@@ -1442,7 +1441,6 @@ sub init_plugins {
     my $PluginSwitch = $cfg->PluginSwitch || {};
     my $plugins      = $mt->find_addons('plugin');
 
-    # print STDERR Dumper({plugins => $plugins})."\n";
     return $mt->_init_plugins_core( $PluginSwitch, $use_plugins, $plugins );
 }
 
@@ -1462,7 +1460,7 @@ sub _init_plugins_core {
         my ( $plugin, $sig ) = @_;
         die "Bad plugin filename '$plugin'"
           if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
-        local $plugin_sig      = $sig;
+        local $plugin_sig      = $plugin->{sig};
         local $plugin_registry = {};
         $plugin = $1;
         if (
@@ -1533,13 +1531,13 @@ sub _init_plugins_core {
                  $pclass eq 'MT::Plugin'
                  && (
                       !$use_plugins
-                      || ( exists $PluginSwitch->{ $plugin->{dir} }
-                           && !$PluginSwitch->{ $plugin->{dir} } )
+                      || ( exists $PluginSwitch->{ $plugin->{sig} }
+                           && !$PluginSwitch->{ $plugin->{sig} } )
                  )
               )
             {
-                $Plugins{ $plugin->{dir} }{full_path} = $plugin->{path};
-                $Plugins{ $plugin->{dir} }{enabled}   = 0;
+                $Plugins{ $plugin->{sig} }{full_path} = File::Spec->catfile($plugin->{path},$plugin->{file});
+                $Plugins{ $plugin->{sig} }{enabled}   = 0;
                 next;
             }
 
@@ -1788,7 +1786,7 @@ sub scan_directory_for_addons {
                     my $plugin_file
                       = File::Spec->catfile( $plugin_full_path, $file );
                     if ( -f $plugin_file ) {
-
+                        my $sig = File::Spec->catfile( $plugin_dir, $file );
                         # Plugin is a file, add it to list for processing
                         push @{ $plugins{$type} }, {
                             label => $label,              # used only by packs
@@ -1797,6 +1795,7 @@ sub scan_directory_for_addons {
                             base  => $plugin_full_path,
                             dir   => $plugin_dir,
                             file  => $file,
+                            sig   => $sig,
 
                             # TODO: remove following comment if app is stable
                             # Changed from $plugin_file because load_tmpl was failing
