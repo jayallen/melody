@@ -19,9 +19,6 @@ sub cfg_system_settings {
       unless $app->user->is_superuser();
 
     my $cfg = $app->config;
-    $app->init_config()
-      ;    # TODO - not sure why this is needed, but without it, not all
-           #        config preferences are loaded (e.g. DefaultTimezone)
 
     $param{languages}
       = $app->languages_list( $app->config('DefaultUserLanguage') );
