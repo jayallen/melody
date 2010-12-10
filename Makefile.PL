@@ -48,6 +48,7 @@ WriteMakefile(
 #optional
         'bignum'                => '0.17',
         'Crypt::DH'             => '0.06',
+        'Devel::Leak::Object'   => 0,            # RPT memory leak diagnostics
         'IO::Scalar'            => '2.110',
         'Mail::Sendmail'        => 0,
         'Math::BigInt'          => '1.63',
@@ -55,6 +56,7 @@ WriteMakefile(
         'MIME::EncWords'        => '0.040',
         'Net::OpenID::Consumer' => '1.03',
         'Path::Class'           => '0.21',
+        'Proc::ProcessTable'    => 0,
         'SOAP::Lite'            => '0.710.08',
         'XML::NamespaceSupport' => '1.09',
         'XML::SAX'              => '0.96',

@@ -206,6 +206,11 @@ sub init_core_registry {
                       'link'  => 'http://search.cpan.org/dist/DBI/',
                       'version' => '1.21'
             },
+            'Devel::Leak::Object' => {
+                link => 'http://search.cpan.org/dist/Devel-Leak-Object',
+                 label =>
+                  'This module is used by the --leak option of the tools/run-periodic-tasks script.',
+             },
             'GD' => {
                 'label' =>
                   'This module is needed if you would like to be able to create thumbnails of uploaded images.',
@@ -264,6 +269,11 @@ sub init_core_registry {
             },
             'Path::Class' =>
               { 'link' => 'http://search.cpan.org/dist/Path-Class/' },
+            'Proc::ProcessTable' => {
+                link => 'http://search.cpan.org/dist/Proc-ProcessTable',
+                label =>
+                  'This module is used by the tools/run-periodic-tasks script and RPTProcessCap directive.',
+            },
             'SOAP::Lite' => {
                 'label' =>
                   'SOAP::Lite is optional; It is needed if you wish to use the Melody XML-RPC server implementation.',
