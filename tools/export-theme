@@ -13,7 +13,7 @@ use strict;
 use warnings;
 use Carp;
 
-use lib qw( lib extlib plugins/ThemeExport/lib );
+use lib qw( lib extlib addons/ThemeExport.plugin/lib );
 use base qw( MT::Tool );
 use MT::Theme::Util qw( find_theme_plugin );
 
@@ -54,13 +54,10 @@ sub help {
         --zip       Produce a zip file of the resulting theme. (default: off)
                     
 };
-} ## end sub help
+}
 
-my (
-     $BLOG_IDS,    $TS_NAME, $TS_ID,      $TS_KEY,  $DRYRUN,
-     $INTERACTIVE, $ZIP,     $TS_VERSION, $VERBOSE, $BASE_DIR,
-     $STATIC,      %seen,    %static_map
-);
+my ( $BLOG_IDS,   $TS_NAME, $TS_ID,    $TS_KEY, $DRYRUN, $INTERACTIVE, $ZIP,
+     $TS_VERSION, $VERBOSE, $BASE_DIR, $STATIC, %seen,   %static_map );
 
 $TS_NAME     = 'My Template Set';
 $TS_VERSION  = '1.0';
@@ -68,15 +65,15 @@ $INTERACTIVE = 0;
 
 sub options {
     return (
-             'blog=s'    => \$BLOG_IDS,
-             'name=s'    => \$TS_NAME,
-             'static'    => \$STATIC,
-             'id=s'      => \$TS_ID,
-             'key=s'     => \$TS_KEY,
-             'version=s' => \$TS_VERSION,
-             'dryrun'    => \$DRYRUN,
-             'i'         => \$INTERACTIVE,
-             'zip'       => \$ZIP,
+        'blog=s'    => \$BLOG_IDS,
+        'name=s'    => \$TS_NAME,
+        'static'    => \$STATIC,
+        'id=s'      => \$TS_ID,
+        'key=s'     => \$TS_KEY,
+        'version=s' => \$TS_VERSION,
+        'dryrun'    => \$DRYRUN,
+        'i'         => \$INTERACTIVE,
+        'zip'       => \$ZIP,
     );
 }
 
@@ -89,36 +86,36 @@ sub main {
 
     # No use doing a dry run if we can't see what's happening
     $VERBOSE = $DRYRUN if $DRYRUN;
-
-    $class->show_usage() && exit if ( !defined $BLOG_IDS ) || !$TS_NAME;
+    
+    $class->show_usage() && exit if (! defined $BLOG_IDS) || !$TS_NAME;
 
     my $blog;
-    my ( %pack_opts, %export_opts );
+    my (%pack_opts, %export_opts);
     $pack_opts{'pack_name'} = 'My Theme Pack';
 
-    my $id   = $TS_ID;
-    my $key  = $TS_KEY;
-    my $name = $TS_NAME;
-
-    $id  ||= MT::Util::dirify($TS_NAME);
-    $key ||= MT::Util::dirify($TS_NAME);
+    my $id     = $TS_ID;
+    my $key    = $TS_KEY;
+    my $name   = $TS_NAME;
+    
+    $id     ||= MT::Util::dirify($TS_NAME);
+    $key    ||= MT::Util::dirify($TS_NAME);
 
     my $pack_opts = {
-                      logger       => sub { print STDERR $_[0] },
-                      key          => $TS_KEY,
-                      pack_version => $TS_VERSION,
-                      verbose      => $VERBOSE,
-                      dryrun       => $DRYRUN,
-                      zip          => $ZIP,
+        logger       => sub { print STDERR $_[0] },
+        key          => $TS_KEY, 
+        pack_version => $TS_VERSION,
+        verbose      => $VERBOSE,
+        dryrun       => $DRYRUN,
+        zip          => $ZIP,
     };
 
-    my @blog_ids = split( ',', $BLOG_IDS );
-    if ( $#blog_ids == 0 && !$name ) {
+    my @blog_ids = split(',',$BLOG_IDS);
+    if ($#blog_ids == 0 && !$name) {
         $blog = MT->model('blog')->load( $blog_ids[0] );
         $pack_opts->{'pack_name'} = $blog->name . ' Theme Pack';
     }
 
-    my $exporter    = MT::Theme::Exporter->new($pack_opts);
+    my $exporter = MT::Theme::Exporter->new( $pack_opts );
     my $static_base = MT::Theme::Exporter::_static_file_path( MT->instance );
     foreach my $blog_id (@blog_ids) {
         $blog = MT->model('blog')->load( MT::Util::trim($blog_id) );
@@ -127,84 +124,70 @@ sub main {
         if ( $blog->template_set ) {
             my $plugin = find_theme_plugin( $blog->template_set );
             my $static;
-            if ( defined( $static_map{ $blog->template_set } ) ) {
+            if (defined( $static_map{ $blog->template_set }) ) {
                 $export_opts{'static'} = $static_map{ $blog->template_set };
-            }
-            else {
-                $static = File::Spec->catdir( $static_base, 'plugins',
-                                              $plugin->key );
-                if ( -e $static ) {
-                    $export_opts{'static'}
-                      = File::Spec->catdir( 'plugins', $plugin->key );
+            } else {
+                $static = File::Spec->catdir( $static_base, 'plugins', $plugin->key );
+                if (-e $static) {
+                    $export_opts{'static'} = File::Spec->catdir( 'plugins', $plugin->key );
                 }
             }
         }
-        if ( !defined( $export_opts{'static'} ) && $INTERACTIVE ) {
-          PROMPT:
-            my $path = _prompt(
-                                "Path to static files for "
-                                  . $blog->name
-                                  . " (press <ENTER> to skip)\n"
-                                  . "Relative to '"
-                                  . $static_base . "'",
-                                ''
-            );
+        if (!defined($export_opts{'static'}) && $INTERACTIVE) {
+PROMPT:
+            my $path = _prompt("Path to static files for " . $blog->name ." (press <ENTER> to skip)\n".
+                               "Relative to '".$static_base."'",'');
             my $fullpath = File::Spec->catdir( $static_base, $path );
-            if ( !-e $fullpath ) {
+            if (! -e $fullpath ) {
                 print "The path you entered '$fullpath' does not exist.\n";
                 goto PROMPT;
             }
-            if ( $path ne "" ) {
+            if ($path ne "") {
                 $export_opts{'static'} = $path;
                 $static_map{ $blog->template_set } = $path;
             }
-        } ## end if ( !defined( $export_opts...))
+        }
         my $id = _generate_unique_id( $blog->name );
-        $exporter->export( {
-                             blog_id => $blog_id,
-                             name    => $blog->name . " Theme",
-                             id      => $id,
-                             key     => $id,
-                             %export_opts
-                           }
-        );
-    } ## end foreach my $blog_id (@blog_ids)
+        $exporter->export({
+            blog_id => $blog_id,
+            name    => $blog->name . " Theme",
+            id      => $id,
+            key     => $id,
+            %export_opts
+        });
+    }
     $exporter->write();
-} ## end sub main
+}
 
 sub _generate_unique_id {
     my ($str) = @_;
-    my $name = MT::Util::dirify($str);
-    if ( defined $seen{$name} ) {
-        if ( $name =~ s/_(\d+)$// ) {
-            $name = $name . ( $1 + 1 );
-            return _generate_unique_id($name);
-        }
-        else {
+    my $name = MT::Util::dirify( $str );
+    if ( defined $seen{ $name } ) {
+        if ($name =~ s/_(\d+)$//) {
+            $name = $name . ($1 + 1);
+            return _generate_unique_id( $name );
+        } else {
             return _generate_unique_id( $name . "_1" );
         }
-    }
-    else {
-        $seen{$name} = 1;
+    } else {
+        $seen{ $name } = 1;
         return $name;
     }
 }
 
 sub _prompt {
-    my ( $promptString, $defaultValue ) = @_;
+    my ($promptString,$defaultValue) = @_;
     if ($defaultValue) {
         print $promptString, "[", $defaultValue, "]: ";
-    }
-    else {
+    } else {
         print $promptString, ": ";
     }
-    $| = 1;          # force a flush after our print
-    $_ = <STDIN>;    # get the input from STDIN (presumably the keyboard)
+    $| = 1;               # force a flush after our print
+    $_ = <STDIN>;         # get the input from STDIN (presumably the keyboard)
     chomp;
     if ("$defaultValue") {
         return $_ ? $_ : $defaultValue;    # return $_ if it has a value
-    }
-    else {
+    } else {
         return $_;
     }
 }

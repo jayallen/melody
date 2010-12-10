@@ -8,6 +8,7 @@ use File::Copy::Recursive qw(dircopy);
 use File::Path;
 use File::Spec;
 use MT;
+use MT::PublishOption;
 use MT::FileMgr;
 use MT::Util qw( dirify );
 use YAML::Tiny;
@@ -33,8 +34,8 @@ sub new {
     my $params = shift;
     my $self   = {};
     foreach my $prop (
-             qw( id key pack_name pack_description pack_version dryrun verbose
-             logger app author_name author_link basedir outdir zip )
+        qw( id key pack_name pack_description pack_version dryrun verbose
+        logger app author_name author_link basedir outdir zip )
       )
     {
         if ( exists $params->{$prop} ) {
@@ -60,10 +61,11 @@ sub new {
         # TODO - error check
         #my @formats = MT::Util::Archive->available_formats();
         require MT::Util::Archive;
-        $self->{'zipfilepath'} = File::Spec->catfile( $self->{'outdir'},
-                                                $self->{'basedir'} . ".zip" );
-        $self->{'ziparchive'}
-          = MT::Util::Archive->new( 'zip', $self->{'zipfilepath'} );
+        $self->{'zipfilepath'} =
+          File::Spec->catfile( $self->{'outdir'},
+            $self->{'basedir'} . ".zip" );
+        $self->{'ziparchive'} =
+          MT::Util::Archive->new( 'zip', $self->{'zipfilepath'} );
     }
 
 
@@ -72,20 +74,19 @@ sub new {
     $opts{'author_name'} = $self->{'author_name'} if $self->{'author_name'};
 
     $self->{'yaml'} = YAML::Tiny->new;
-    $self->{'yaml'}->[0]
-      = {
-          id          => $self->{'id'},
-          key         => $self->{'key'},
-          name        => $self->{'pack_name'},
-          description => $self->{'pack_description'},
-          %opts
-      };
+    $self->{'yaml'}->[0] = {
+        id          => $self->{'id'},
+        key         => $self->{'key'},
+        name        => $self->{'pack_name'},
+        description => $self->{'pack_description'},
+        %opts
+    };
 
     # End init code
 
     bless $self, $class;
     return $self;
-} ## end sub new
+}
 
 sub _archive_file {
     my $self = shift;
@@ -104,9 +105,9 @@ sub write_config {
 
 sub write {
     my $self = shift;
-    my $filepath
-      = File::Spec->catfile( $self->{'outdir'}, $self->{'basedir'}, 'plugins',
-                             $self->{'key'}, 'config.yaml' );
+    my $filepath =
+      File::Spec->catfile( $self->{'outdir'}, $self->{'basedir'}, 'plugins',
+        $self->{'key'}, 'config.yaml' );
     $self->_debug("  - Writing config.yaml file $filepath");
     unless ( $self->_is_dryrun() ) {
         my $header = '';
@@ -127,16 +128,16 @@ sub write {
 
         if ( $self->{'zip'} ) {
             $self->_archive_file(
-                                  $self->{'outdir'},
-                                  File::Spec->catfile(
-                                             $self->{'basedir'}, 'plugins',
-                                             $self->{'key'},     'config.yaml'
-                                  )
+                $self->{'outdir'},
+                File::Spec->catfile(
+                    $self->{'basedir'}, 'plugins',
+                    $self->{'key'},     'config.yaml'
+                )
             );
             $self->{'ziparchive'}->close();
         }
-    } ## end unless ( $self->_is_dryrun...)
-} ## end sub write
+    }
+}
 
 sub export {
     my $self = shift;
@@ -151,33 +152,34 @@ sub export {
     # Initialize the data structure for the current template set
     # we are exporting.
     $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id} = {
-                        label     => $name,
-                        base_path => File::Spec->catdir( 'templates', $ts_id )
+        label     => $name,
+        base_path => File::Spec->catdir( 'templates', $ts_id )
     };
 
     # Create a shortcut to our template set node, this is in essense a cursor
     # pointing to the current template set being exported.
     $self->{'current_ts'} = $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id};
 
-    # Set the current template path. Each theme will live in its own subdirectory
-    # under the theme pack's 'templates' directory.
+ # Set the current template path. Each theme will live in its own subdirectory
+ # under the theme pack's 'templates' directory.
     my $templates_path =
       File::Spec->catdir( $self->{'outdir'}, $self->{'basedir'}, 'plugins',
-                          $self->{'key'}, 'templates', $ts_id );
+        $self->{'key'}, 'templates', $ts_id );
 
     unless ( $self->_is_dryrun() ) {
         $self->{'fmgr'}->exists($templates_path)
           or $self->{'fmgr'}->mkpath($templates_path)
           or die sprintf( "Could not make path %s: %s\n",
-                          $templates_path, $self->{'fmgr'}->errstr );
+            $templates_path, $self->{'fmgr'}->errstr );
     }
 
 # TODO - static files need utilize config assistant's new static file structure
-    my $from
-      = File::Spec->catdir( _static_file_path( $self->{'app'} ), $static );
+    my $from =
+      File::Spec->catdir( _static_file_path( $self->{'app'} ), $static );
     if ( -e $from && $static ) {
-        my $to = File::Spec->catdir( $self->{'outdir'}, $self->{'basedir'},
-                                     'mt-static', $static );
+        my $to =
+          File::Spec->catdir( $self->{'outdir'}, $self->{'basedir'},
+            'mt-static', $static );
         $self->_debug( 'Copying static files from ' . $from . ' to ' . $to );
         unless ( $self->_is_dryrun() ) {
             $self->{'fmgr'}->mkpath($to);
@@ -199,14 +201,14 @@ sub export {
       foreach map { @{ _template_group( $blog_id, $_ ) } }
       ( $set_type, 'all' );
 
-    # Store the provided configuration data in the node
-    # corresponding to the template's type and basename.
-    # REMOVED because it is in _process_templates
-    # $self->{'current_ts'}->{templates}->{ $cfg->{type} }->{ $cfg->{basename} }
-    #   = $cfg->{data};
+  # Store the provided configuration data in the node
+  # corresponding to the template's type and basename.
+  # REMOVED because it is in _process_templates
+  # $self->{'current_ts'}->{templates}->{ $cfg->{type} }->{ $cfg->{basename} }
+  #   = $cfg->{data};
 
     $self->_process_export_queue();
-} ## end sub export
+}
 
 =head2
 
@@ -231,20 +233,18 @@ sub _process_export_queue {
 # FIXME: this is hard coded to global templates based upon the assumption that
 #        only global templates will be automatically included
 # my $cfg = $self->_process_templates( $inc->{'blog_id'}, 'global', {
-            my $cfg =
-              $self->_process_templates(
-                      0, 'global',
-                      {
-                        type      => 'module',
-                        basename  => dirify( $inc->{'name'} ),
-                        load_args => [ { blog_id => 0, id => $inc->{'id'} } ]
-                      }
-              );
+            my $cfg = $self->_process_templates(
+                0, 'global',
+                {   type      => 'module',
+                    basename  => dirify( $inc->{'name'} ),
+                    load_args => [ { blog_id => 0, id => $inc->{'id'} } ]
+                }
+            );
 
             $seen{ $inc->{id} } = 1;
         }
-    } ## end foreach my $inc ( sort { $a...})
-} ## end sub _process_export_queue
+    }
+}
 
 =head2
 
@@ -264,34 +264,31 @@ sub _template_group {
         # Blog-level templates
         #
         blog => [ {
-               type      => 'index',
-               load_args => { %blog_id, type => 'index' },
-               config    => sub {
-                   {
-                      outfile    => $_[0]->outfile,
-                      rebuild_me => $_[0]->rebuild_me
-                   };
-               },
+                type      => 'index',
+                load_args => { %blog_id, type => 'index' },
+                config    => sub {
+                    {   outfile    => $_[0]->outfile,
+                        rebuild_me => $_[0]->rebuild_me
+                    };
+                },
             },
-            {
-               type      => 'archive',
-               config    => \&_templatemap_config,
-               load_args => [
-                              { %blog_id,   type => 'archive' }    => -or =>
-                                { %blog_id, type => 'individual' } => -or =>
-                                { %blog_id, type => 'page' },
-               ],
+            {   type      => 'archive',
+                config    => \&_templatemap_config,
+                load_args => [
+                    { %blog_id,   type => 'archive' }    => -or =>
+                      { %blog_id, type => 'individual' } => -or =>
+                      { %blog_id, type => 'page' },
+                ],
             },
-            {
-               type      => 'system',
-               basename  => sub { $_[0]->type },
-               load_args => [
-                           { %blog_id,   type => 'popup_image' }     => -or =>
-                             { %blog_id, type => 'dynamic_error' }   => -or =>
-                             { %blog_id, type => 'search_results' }  => -or =>
-                             { %blog_id, type => 'comment_preview' } => -or =>
-                             { %blog_id, type => 'comment_response' }
-               ],
+            {   type      => 'system',
+                basename  => sub { $_[0]->type },
+                load_args => [
+                    { %blog_id,   type => 'popup_image' }     => -or =>
+                      { %blog_id, type => 'dynamic_error' }   => -or =>
+                      { %blog_id, type => 'search_results' }  => -or =>
+                      { %blog_id, type => 'comment_preview' } => -or =>
+                      { %blog_id, type => 'comment_response' }
+                ],
             }
         ],
 
@@ -299,42 +296,37 @@ sub _template_group {
         # Global shared templates
         #
         global => [ {
-                       type      => 'system',
-                       basename  => sub { $_[0]->type },
-                       load_args => [
-                             { %blog_id,   type => 'login_form' }    => -or =>
-                               { %blog_id, type => 'profile_view' }  => -or =>
-                               { %blog_id, type => 'profile_feed' }  => -or =>
-                               { %blog_id, type => 'register_form' } => -or =>
-                               { %blog_id, type => 'profile_error' } => -or =>
-                               { %blog_id, type => 'profile_edit_form' } =>
-                               -or =>
-                               { %blog_id, type => 'password_reset_form' } =>
-                               -or =>
-                               { %blog_id, type => 'register_confirmation' }
-                       ],
-                    },
-                    {
-                       type      => 'email',
-                       load_args => { %blog_id, type => 'email' },
-                    },
+                type      => 'system',
+                basename  => sub { $_[0]->type },
+                load_args => [
+                    { %blog_id,   type => 'login_form' }          => -or =>
+                      { %blog_id, type => 'profile_view' }        => -or =>
+                      { %blog_id, type => 'profile_feed' }        => -or =>
+                      { %blog_id, type => 'register_form' }       => -or =>
+                      { %blog_id, type => 'profile_error' }       => -or =>
+                      { %blog_id, type => 'profile_edit_form' }   => -or =>
+                      { %blog_id, type => 'password_reset_form' } => -or =>
+                      { %blog_id, type => 'register_confirmation' }
+                ],
+            },
+            {   type      => 'email',
+                load_args => { %blog_id, type => 'email' },
+            },
         ],
 
         #
         # Templates found in both the global shared and blog sets
         #
         all => [ {
-                    type      => 'module',
-                    load_args => { %blog_id, type => 'custom' },
-                 },
-                 {
-                    type      => 'widget',
-                    load_args => { %blog_id, type => 'widget' },
-                 },
-                 {
-                    type      => 'widgetset',
-                    load_args => { %blog_id, type => 'widgetset' },
-                 },
+                type      => 'module',
+                load_args => { %blog_id, type => 'custom' },
+            },
+            {   type      => 'widget',
+                load_args => { %blog_id, type => 'widget' },
+            },
+            {   type      => 'widgetset',
+                load_args => { %blog_id, type => 'widgetset' },
+            },
         ],
     );
 
@@ -345,7 +337,7 @@ sub _template_group {
       unless exists $template_groups{$key};
 
     return $template_groups{$key};
-} ## end sub _template_group
+}
 
 sub _process_templates {
     my $self = shift;
@@ -363,7 +355,7 @@ sub _process_templates {
         # use Data::Dumper;
         # $self->_debug(Dumper($t));
         $self->_debug( sprintf '  - Creating %s: %s',
-                       $args->{type}, $t->name );
+            $args->{type}, $t->name );
 
         my $basename ||= $t->identifier || _create_basename( $t->name );
 
@@ -383,7 +375,8 @@ sub _process_templates {
 
         my $includes = $self->_find_includes($t);
         foreach my $i (@$includes) {
-            push @{ $self->{'export_queue'} }, $i if ( $i->{blog_id} eq 0 );
+            push @{ $self->{'export_queue'} }, $i
+              if ( $i->{blog_id} eq 0 );
 
             # TODO - for now it might be best if this only processed
             #        global templates?
@@ -392,13 +385,25 @@ sub _process_templates {
 
         # Write the template text out to a file within the plugin envelope
         if ( $self->_write_tmpl( $t, $ts_id, $args->{type}, $basename ) ) {
-
+            print "Wrote template " . $t->name . " (".$t->type.",build=".$t->build_type.")\n";
             # Using the template in context, compile the YAML config
             my $cfg = {
-                   label => $t->name,
-                   filename =>
-                     File::Spec->catfile( $args->{type}, $basename . '.mtml' )
+                label => $t->name,
+                filename => File::Spec->catfile( $args->{type}, $basename . '.mtml' ),
+                ($t->type eq 'index' && $t->build_type != MT::PublishOption::ONDEMAND()) ? ( build_type => $t->build_type ) : (),
             };
+            use Data::Dumper;
+#            print Dumper($cfg);
+            if ($t->type =~ /^(module|widget|custom)$/) {
+                $cfg->{'include_with_ssi'} = 1 if ($t->include_with_ssi);
+                foreach (qw( expire_type expire_event expire_interval )) {
+                    my $var = 'cache_'.$_;
+                    if (my $val = $t->$var()) {
+                        $cfg->{cache}->{$_} = $val;
+                        $cfg->{cache}->{$_} *= 60 if ($_ eq 'expire_interval');
+                    }
+                }
+            }
 
             # The "config" attribute can be either a code or hash reference
             if ( 'CODE' eq ref( $args->{config} ) ) {
@@ -412,10 +417,10 @@ sub _process_templates {
             # corresponding to the template's type and basename.
             if ( $blog_id == 0 ) {
                 unless ( $self->{'yaml'}->[0]->{'default_templates'}
-                         ->{'base_path'} )
+                    ->{'base_path'} )
                 {
-                    $self->{'yaml'}->[0]->{'default_templates'}->{'base_path'}
-                      = 'templates/global';
+                    $self->{'yaml'}->[0]->{'default_templates'}
+                      ->{'base_path'} = 'templates/global';
                 }
                 $self->{'yaml'}->[0]->{'default_templates'}
                   ->{ 'global:' . $args->{'type'} }->{$basename} = $cfg;
@@ -424,9 +429,9 @@ sub _process_templates {
                 $self->{'current_ts'}->{'templates'}->{ $args->{'type'} }
                   ->{$basename} = $cfg;
             }
-        } ## end if ( $self->_write_tmpl...)
-    } ## end while ( my $t = $iter->)
-} ## end sub _process_templates
+        }
+    }
+}
 
 sub _templatemap_config {
     my $t = shift;
@@ -437,17 +442,18 @@ sub _templatemap_config {
         my $type = lc( $map->archive_type );
         $type =~ s/ /-/g;
         $mappings->{$type} = {
-                  archive_type => $map->archive_type,
-                  preferred    => $map->is_preferred,
-                  $map->file_template
-                    && $map->file_template ne '~' && $map->file_template ne ''
-                  ? ( file_template => $map->file_template )
-                  : (),
+            archive_type => $map->archive_type,
+            preferred    => $map->is_preferred,
+            $map->build_type != MT::PublishOption::ONDEMAND() ? (build_type => $map->build_type) : (),
+            $map->file_template
+              && $map->file_template ne '~' && $map->file_template ne ''
+            ? ( file_template => $map->file_template )
+            : (),
         };
     }
 
     return { mappings => $mappings };
-} ## end sub _templatemap_config
+}
 
 sub _create_basename {
     my $name = shift;
@@ -495,27 +501,24 @@ sub _write_tmpl {
 
     unless ($basename) {
         $self->_debug(
-                sprintf 'No template basename for template "%s". Skipping...',
-                $tmpl->name );
+            sprintf 'No template basename for template "%s". Skipping...',
+            $tmpl->name );
         return;
     }
 
     if ( $self->{'created'}{"$ts_id/$type/$basename"} ) {
         $self->_error(
-                 sprintf
-                   'Template basename "%s" previously used for template "%s".'
-                   . ' Skipping...',
-                 "$ts_id/$type/$basename", $tmpl->name
+            sprintf
+              'Template basename "%s" previously used for template "%s".'
+              . ' Skipping...',
+            "$ts_id/$type/$basename", $tmpl->name
         );
         return;
     }
 
-    my $fn = File::Spec->catfile(
-                                  $self->{'basedir'}, 'plugins',
-                                  $self->{'key'},     'templates',
-                                  $ts_id,             $type,
-                                  $basename . '.mtml'
-    );
+    my $fn =
+      File::Spec->catfile( $self->{'basedir'}, 'plugins', $self->{'key'},
+        'templates', $ts_id, $type, $basename . '.mtml' );
     my $fn_abs = File::Spec->catfile( $self->{'outdir'}, $fn );
     $self->_debug("\t-- Writing template text file out to $fn");
 
@@ -523,7 +526,7 @@ sub _write_tmpl {
         $self->{'fmgr'}->exists( dirname($fn_abs) )
           or $self->{'fmgr'}->mkpath( dirname($fn_abs) )
           or die sprintf( "Could not make path %s: %s\n",
-                          dirname($fn_abs), $self->{'fmgr'}->errstr );
+            dirname($fn_abs), $self->{'fmgr'}->errstr );
 
         open FILE, ">$fn_abs"
           or die "Could not open $fn_abs for writing: $!\n";
@@ -532,7 +535,7 @@ sub _write_tmpl {
     }
     $self->_archive_file( $self->{'outdir'}, $fn );
     $self->{'created'}{"$ts_id/$type/$basename"} = $tmpl->name;
-} ## end sub _write_tmpl
+}
 
 sub _find_includes {
     my $self = shift;
@@ -551,32 +554,30 @@ sub _find_includes {
             next if exists $seen{$type}{$mod};
             $seen{$type}{$mod} = 1;
             my $other = MT->model('template')->load( {
-                                                   blog_id => (
-                                                        $tag->[1]->{global}
-                                                        ? 0
-                                                        : [ $obj->blog_id, 0 ]
-                                                   ),
-                                                   name => $mod,
-                                                   type => $type,
-                                                 },
-                                                 {
-                                                   sort      => 'blog_id',
-                                                   direction => 'descend',
-                                                 }
+                    blog_id => (
+                        $tag->[1]->{global}
+                        ? 0
+                        : [ $obj->blog_id, 0 ]
+                    ),
+                    name => $mod,
+                    type => $type,
+                },
+                {   sort      => 'blog_id',
+                    direction => 'descend',
+                }
             );
             if ($other) {
                 push @includes,
-                  {
-                    type    => $type,
+                  { type    => $type,
                     name    => $mod,
                     id      => $other->id,
                     blog_id => $other->blog_id
                   };
             }
-        } ## end foreach my $tag (@$includes)
-    } ## end if ( my $includes = $obj...)
+        }
+    }
     return \@includes;
-} ## end sub _find_includes
+}
 
 1;
 __END__
