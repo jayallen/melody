@@ -5328,7 +5328,7 @@ use vars qw( @ISA %Lexicon );
     'http://www.sixapart.com/movabletype/support' =>
       'http://www.sixapart.com/movabletype/support',
     'Melody Technical Support' => 'Support Technique Melody',
-    'Melody Community Forums'  => 'Forums de la communauté Melody ',
+    'Melody Community Forums'  => 'Forums de la communauté Melody',
     'Save Changes (s)'         => 'Sauvegarder les modifications',
     'Change this message.'     => 'Changer ce message.',
     'Edit this message.'       => 'Modifier ce message.',

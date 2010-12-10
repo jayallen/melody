@@ -4990,7 +4990,7 @@ sub numerate {
       'http://www.sixapart.com/movabletype/support',
     'Melody Technical Support' =>
       'Техническая поддержка Melody',
-    'Melody Community Forums' => 'Форум сообщества Melody ',
+    'Melody Community Forums' => 'Форум сообщества Melody',
     'Save Changes (s)'        => 'Сохранить изменения',
     'Change this message.' => 'Изменить это сообщение.',
     'Edit this message.' =>
