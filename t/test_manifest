@@ -4,7 +4,6 @@
 #   02-meta-new.t
 #   03-meta-new-author.t
 #   24-meta-entry-save.t
-#   70-app-query.t
 #   89-pod.t
 #
 00-compile.t
@@ -48,8 +47,10 @@
 64-objectmeta.t
 65-ssi.t
 66-templatecache.t
+70-app-query.t
 80-serialize.t
 81-pagination.t
+89-pod.t
 90-podcoverage.t
 91-tagcoverage.t
 92-pubqueue.t
