@@ -861,12 +861,12 @@ sub optional {
       { id => 'sendmail', name => $app->translate('Sendmail') };
 
     foreach (@$transfer) {
-        if ( $_->{id} eq $param{mail_transfer} ) {
+        if ( $param{mail_transfer} && $_->{id} eq $param{mail_transfer} ) {
             $_->{selected} = 1;
         }
     }
 
-    $param{ 'use_' . $param{mail_transfer} } = 1;
+    $param{ 'use_' . $param{mail_transfer} } = 1 if $param{mail_transfer};
     $param{mail_loop}                        = $transfer;
     $param{config}                           = $app->serialize_config(%param);
 
