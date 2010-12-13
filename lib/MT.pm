@@ -19,6 +19,8 @@ our ( $VERSION, $SCHEMA_VERSION );
 our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,
       $PORTAL_URL );
 our ( $MT_DIR, $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
+
+ # FIXME JAY
 our (
       $plugin_sig, $plugin_envelope, $plugin_registry,
       %Plugins,    @Components,      %Components,
@@ -77,6 +79,8 @@ BEGIN {
 
     # Alias these; Components is the preferred array for MT 4
     *Plugins = \@Components;
+     # FIXME JAY Need to issue a depreaction warning for direct use of the above
+
 } ## end BEGIN
 
 # On-demand loading of compatibility module, if a plugin asks for it, using
@@ -567,6 +571,7 @@ sub run_tasks {
     MT::TaskMgr->run_tasks(@_);
 }
 
+# FIXME JAY Need to work relevant parts of this into MT::ComponentMgr
 sub add_plugin {
     my $class = shift;
     my ($plugin) = @_;
@@ -1262,15 +1267,20 @@ sub init_paths {
     return 1;
 } ## end sub init_paths
 
+*mt_dir = \&server_path;
+sub server_path { $_[0]->{mt_dir} }
+sub app_dir     { $_[0]->{app_dir} }
+sub config_dir  { $_[0]->{config_dir} }
+
 sub init_core {
     my $mt = shift;
-    return if exists $Components{'core'};
+    return if exists $Components{'core'}; # FIXME JAY
     require MT::Core;
     my $c = MT::Core->new( { id => 'core', path => $MT_DIR } )
       or die MT::Core->errstr;
-    $Components{'core'} = $c;
+    $Components{'core'} = $c; # FIXME JAY
 
-    push @Components, $c;
+    push @Components, $c; # FIXME JAY
 
     return 1;
 }
@@ -1333,7 +1343,8 @@ sub init {
 
     # Find and initialize all non-core components
     require MT::Plugin;
-    $mt->find_addons()                  or return;
+    
+    $mt->componentmgr->init_components  or return;
     $mt->init_addons(@_)                or return;
     $mt->init_config_from_db( \%param ) or return;
     $mt->init_debug_mode;
@@ -1429,12 +1440,10 @@ sub upload_file_to_sync {
 
 # use Data::Dumper;
 sub init_addons {
-    my $mt     = shift;
+    my $mt  = shift;
+    my $cfg = $mt->config;
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
-    my $cfg    = $mt->config;
-    my $addons = $mt->find_addons('pack');
-    ###l4p $logger->debug('After find_addons("pack"): ', l4mtdump($addons));
-    return $mt->_init_plugins_core( {}, 1, $addons );
+    return $mt->componentmgr->init_components({ type => 'pack' });
 }
 
 sub init_plugins {
@@ -1445,424 +1454,28 @@ sub init_plugins {
     # This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
     require MT::Compat::v3;
 
-    my $cfg          = $mt->config;
-    my $use_plugins  = $cfg->UsePlugins;
-    my $PluginSwitch = $cfg->PluginSwitch || {};
-    ###l4p $logger->debug('$PluginSwitch: ', l4mtdump($PluginSwitch));
-
-    my $plugins      = $mt->find_addons('plugin');
-    ###l4p $logger->debug('After find_addons("plugin"): ', l4mtdump($plugins));
-    return $mt->_init_plugins_core( $PluginSwitch, $use_plugins, $plugins );
+    my $cfg = $mt->config;
+    return $mt->componentmgr->init_components({
+        use_plugins   => $cfg->UsePlugins,
+        plugin_switch => $cfg->PluginSwitch || {},
+        type          => 'plugin'
+    });
 }
 
-sub _init_plugins_core {
-    my $mt = shift;
-    my ( $PluginSwitch, $use_plugins, $plugins ) = @_;
-    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
+{
+    my $componentmgr;
 
-    my $timer;
-    if ( $mt->config->PerformanceLogging ) {
-        $timer = $mt->get_timer();
+    sub componentmgr {
+        my $self  = shift;
+        return $componentmgr ||= MT::ComponentMgr->new( ref $self || $self );
     }
-
-    # TODO Refactor/abstract this load_plugin anonymous subroutine out of here
-    # For testing purposes and maintainability, we need to make it a point
-    # to continually make large methods like this smaller and more focused.
-    my $load_plugin = sub {
-        my ( $plugin, $sig ) = @_;
-        die "Bad plugin filename '$plugin'"
-          if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
-        local $plugin_sig      = $plugin->{sig};
-        # local $plugin_sig      = $sig;
-        ###l4p $logger->debug('$plugin_sig: '.$plugin_sig);
-        local $plugin_registry = {};
-        $plugin = $1;
-        if (
-             !$use_plugins
-             || ( exists $PluginSwitch->{$plugin_sig}
-                  && !$PluginSwitch->{$plugin_sig} )
-          )
-        {
-            $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-            $Plugins{$plugin_sig}{enabled}   = 0;
-            return 0;
-        }
-        return 0 if exists $Plugins{$plugin_sig};
-        $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-        $timer->pause_partial if $timer;
-        eval "# line " 
-          . __LINE__ . " " 
-          . __FILE__
-          . "\nrequire '"
-          . $plugin_full_path . "';";
-        $timer->mark( "Loaded plugin " . $sig ) if $timer;
-        if ($@) {
-            $Plugins{$plugin_sig}{error} = $@;
-
-            # Log the issue but do it in a post_init callback so
-            # that we won't prematurely initialize the schema before
-            # all plugins are finished loading
-            my $msg = $mt->translate( "Plugin error: [_1] [_2]",
-                                      $plugin, $Plugins{$plugin_sig}{error} );
-            $mt->log(
-                  { message => $msg, class => 'system', level => 'ERROR', } );
-            return 0;
-        }
-        else {
-            if ( my $obj = $Plugins{$plugin_sig}{object} ) {
-                $obj->init_callbacks();
-            }
-            else {
-
-                # A plugin did not register itself, so
-                # create a dummy plugin object which will
-                # cause it to show up in the plugin listing
-                # by it's filename.
-                MT->add_plugin( {} );
-            }
-        }
-        $Plugins{$plugin_sig}{enabled} = 1;
-        return 1;
-    };    # end load_plugin sub
-
-
-    my @deprecated_perl_init = ();
-    foreach my $plugin (@$plugins) {
-
-        # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
-        if ( $plugin->{file} =~ /\.pl$/ ) {
-            push( @deprecated_perl_init, $plugin );
-            $plugin_envelope  = $plugin->{envelope};
-            $plugin_full_path = $plugin->{path};
-            ###l4p $logger->debug('Loading deprecated plugin: ',l4mtdump($plugin));
-            $load_plugin->( $plugin->{path}, $plugin->{file} );
-        }
-        else {
-            my $pclass
-              = $plugin->{type} eq 'pack' ? 'MT::Component' : 'MT::Plugin';
-
-            # Don't process disabled plugin config.yaml files.
-            if (
-                 $pclass eq 'MT::Plugin'
-                 && (
-                      !$use_plugins
-                      || ( exists $PluginSwitch->{ $plugin->{sig} }
-                           && !$PluginSwitch->{ $plugin->{sig} } )
-                 )
-              )
-            {
-                $Plugins{ $plugin->{sig} }{full_path} = File::Spec->catfile($plugin->{path},$plugin->{file});
-                $Plugins{ $plugin->{sig} }{enabled}   = 0;
-                next;
-            }
-
-            # TODO - the plugin signature cannot simply be the base directory
-            #        in the event that there are multiple yaml files. Therefore
-            #        the signature must become a conjunction of the directory and
-            #        config.yaml file.
-            #        To address this, the ultimate normalizer should be the
-            #        id declared in the yaml.
-            # See http://bugs.movabletype.org/?79933
-            local $plugin_sig = $plugin->{dir} . '/' . $plugin->{file};
-            ###l4p $logger->debug('coco plugin_sig: ', $plugin_sig);
-            next if exists $Plugins{$plugin_sig};
-
-            # TODO - the id needs to be yaml specific, not directory
-            # TODO - the id needs to be reformulated from contents of yaml
-            my $id = lc $plugin->{dir};
-            $id =~ s/\.\w+$//;
-
-            my $plugin_init = {
-                id       => $id,
-                path     => $plugin->{base},
-                config   => $plugin->{file},
-                envelope => $plugin->{envelope}
-            };
-            ###l4p $logger->info("Initializing $pclass: ",l4mtdump($plugin_init));
-            my $p = $pclass->new( $plugin_init);
-            ###l4p $logger->debug("Blessed $pclass: ", l4mtdump($p));
-
-            $Plugins{$plugin_sig}{enabled} = 1;
-            $plugin_envelope               = $plugin->{envelope};
-            $plugin_full_path              = $plugin->{path};
-            MT->add_plugin($p);
-            $p->init_callbacks();
-            next;
-        } ## end else [ if ( $plugin->{file} =~...)]
-    } ## end foreach my $plugin (@$plugins)
-
-    # FIXME See _perl_init_plugin_warnings() below for more details
-    if (@deprecated_perl_init) {
-        MT->add_callback(
-            'post_init',
-            1, undef,
-            sub {
-                MT->_perl_init_plugin_warnings(@deprecated_perl_init);
-            }
-        );
-    }
-
-    # Reset the Text_filters hash in case it was preloaded by plugins by
-    # calling all_text_filters (Markdown in particular does this).
-    # Upon calling all_text_filters again, it will be properly loaded by
-    # querying the registry.
-    %Text_filters = ();
-
-    1;
-} ## end sub _init_plugins_core
-
-###
-### FIXME Handle perl plugin deprecation properly
-###
-### This was a quickly cobbled together solution to preserve a good
-### feature gone horribly wrong: With EACH load of the application
-### ONE log message PER deprecated plugin would be generated. Do the math.
-# If we have deprecated plugins, we definitely warn them. Question is:
-#                           HOW LOUDLY?!?!?!
-#
-# Additional note: This had to be done post_init because
-# the MT::Session properties had not yet been initialized
-sub _perl_init_plugin_warnings {
-    my $cb       = shift;
-    my @deps     = @_;
-    my $mt       = MT->instance;
-    my $warn_msg = sub {
-        return
-          $mt->translate(
-                        "DEPRECATION WARNING: One of your plugins ([_1]) "
-                     .  "uses a deprecated plugin file format (.pl) that "
-                     .  "will not be supported in the future.",
-                     (shift)->{file}
-          );
-    };
-
-    # We definitely complain to STDERR every time for each plugin
-    print STDERR $warn_msg->($_) . "\n" foreach @deps;
-
-    # We need to be more sensitive about the activity log...
-    # Get the session storing the last warning for perl-init plugins
-    # If it's over a day old, it doesn't exist.
-    require MT::Session;
-    my $sess_terms = {
-                       id => 'Deprecation warning: Perl initialized plugins',
-                       kind => 'DW ',
-    };
-    my $recent_warning
-      = MT::Session::get_unexpired_value( 86400, $sess_terms, {} );
-
-    require File::Spec;
-    my $plugin_sig = sub {
-        @_ and return
-          File::Spec->catfile( ( $_[0]->{envelope} || '' ),
-                               ( $_[0]->{file} || '' ) );
-    };
-
-    # ISSUE A NEW WARNING IF:
-    #  -- No recent warning was found, OR
-    #  -- We find a perl-init'd plugin not recorded in most recent warn
-    my $needs_warning = !$recent_warning;
-    $needs_warning
-      ||= grep { !$recent_warning->get( $plugin_sig->($_) ) } @deps;
-
-    if ($needs_warning) {
-        my $dep_plugin_log_warn = sub {
-            $mt->log( {
-                        message  => $warn_msg->(shift),
-                        class    => 'system',
-                        category => 'deprecation',
-                        level    => 'WARNING',
-                      }
-            );
-        };
-
-        # Reuse recent warning record or create a new session
-        $recent_warning ||= MT::Session->new();
-        $recent_warning->set_values($sess_terms);
-        $recent_warning->start(time);
-        foreach my $p (@deps) {
-            $dep_plugin_log_warn->($p);
-            $recent_warning->set( $plugin_sig->($p),
-                                  ( $p->{label} || $p->{id} ) );
-        }
-        unless ( $recent_warning->save ) {
-            warn "Could not record recent warning about "
-              . "perl initialized plugins : "
-              . ( $recent_warning->errstr || 'Unknown error' );
-        }
-    } ## end if ($needs_warning)
-} ## end sub _perl_init_plugin_warnings
-
-my %addons;
-
-sub find_addons {
-    my $mt = shift;
-    my ($type) = @_;
-    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
-    unless (%addons) {
-        my @PluginPaths;
-        my $cfg = $mt->config;
-        unshift @PluginPaths, File::Spec->catdir( $MT_DIR, 'addons' );
-        unshift @PluginPaths, $cfg->PluginPath;
-        foreach my $PluginPath (@PluginPaths) {
-            ###l4p $logger->info("Looking for plugins in $PluginPath");
-            __merge_hash( \%addons,
-                          $mt->scan_directory_for_addons($PluginPath) );
-        }
-    }
-    if ($type) {
-        my $addons = $addons{$type} ||= [];
-        return $addons;
-    }
-    return 1;
 }
-
-sub scan_directory_for_addons {
-    my $mt             = shift;
-    my ($PluginPath)   = @_;
-    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
-    my $plugin_lastdir = $PluginPath;
-    $plugin_lastdir =~ s![\\/]$!!;
-    $plugin_lastdir =~ s!.*[\\/]!!;
-    local *DH;
-    my %plugins;
-    if ( opendir DH, $PluginPath ) {
-        my @p = readdir DH;
-      PLUGIN:
-        for my $plugin_dir (@p) {
-            next if ( $plugin_dir =~ /^\.\.?$/ || $plugin_dir =~ /~$/ );
-
-            # Legacy support when plugins were not
-            # placed in their own directory
-            $plugin_full_path
-              = File::Spec->catfile( $PluginPath, $plugin_dir );
-            if ( -f $plugin_full_path ) {
-                if ( $plugin_full_path =~ /\.pl$/ ) {
-
-                    my $err = $mt->translate("The plugin [_1] "
-                            . "was not loaded because it resides in the "
-                            . "top level of a plugin directory, a legacy MT "
-                            . "plugin practice Melody does not support.",
-                              $plugin_full_path);
-                    print STDERR "ERROR: $err\n";
-                    ###l4p $logger->error($err);
-                    $mt->log( {
-                                message => $err,
-                                class   => 'system',
-                                level   => MT->model('log')->ERROR()
-                              }
-                    );
-                    # push @{ $plugins{'plugin'} },
-                    #   {
-                    #     dir      => $PluginPath,
-                    #     file     => $plugin_dir,
-                    #     path     => $plugin_full_path,
-                    #     envelope => $plugin_lastdir,
-                    #   };
-                }
-            }
-            else {
-                # open and scan the directory for plugin files,
-                # save them to load later. Report errors in
-                # the activity log
-                unless ( opendir SUBDIR, $plugin_full_path ) {
-                    my $msg =
-                      $mt->translate(
-                         "Bad directory found in plugin initialization: [_1]",
-                         $plugin_full_path
-                      );
-                    $mt->log( {
-                                message => $msg,
-                                class   => 'system',
-                                level   => 'ERROR',
-                              }
-                    );
-                    next;
-                }
-
-                my @plugin_files = readdir SUBDIR;
-                closedir SUBDIR;
-                for my $file (@plugin_files) {
-                    if ( $file eq 'lib' || $file eq 'extlib' ) {
-                        my $plib
-                          = File::Spec->catdir( $plugin_full_path, $file );
-                        unshift @INC, $plib if -d $plib;
-                        next;
-                    }
-
-                    # Skip all unless it's a plugin file (pl or yaml)
-                    next unless $file =~ m{(\.pl|config\.yaml)$};
-
-                    # Give preference to config.yaml initialization
-                    next
-                      if ( '.pl' eq $1 )
-                      and -f File::Spec->catfile( $plugin_full_path,
-                                                  'config.yaml' );
-
-                    my ( $label, $type )
-                      = ( $plugin_dir =~ /^([^\.]+)\.?(\w+)?$/ );
-                    unless ($type) {
-                        if ( $plugin_dir =~ /addons/ ) {
-                            $type = 'pack';
-                        }
-                        else {
-                            $type = 'plugin';
-                        }
-                    }
-                    if ( $type eq 'pack' ) {
-                        $label .= ' Pack';
-                    }
-                    elsif ( $type eq 'theme' ) {
-                        $label .= ' Theme';
-                    }
-                    elsif ( $type eq 'plugin' ) {
-                        $label .= ' Plugin';
-                    }
-                    my $plugin_file
-                      = File::Spec->catfile( $plugin_full_path, $file );
-                    if ( -f $plugin_file ) {
-                        my $sig = File::Spec->catfile( $plugin_dir, $file );
-                        ###l4p $logger->debug("Adding $plugin_file ", l4mtdump({
-                        ###l4p     dir      => $plugin_dir,
-                        ###l4p     base     => $plugin_full_path,
-                        ###l4p     envelope => "$plugin_lastdir/" . $plugin_dir,
-                        ###l4p     path     => $plugin_full_path,
-                        ###l4p     file     => $file,
-                        ###l4p     sig     => $sig,
-                        ###l4p }));
-
-                        # Plugin is a file, add it to list for processing
-                        push @{ $plugins{$type} }, {
-                            label => $label,              # used only by packs
-                            id    => lc($label),          # used only by packs
-                            type  => $type,
-                            base  => $plugin_full_path,
-                            dir   => $plugin_dir,
-                            file  => $file,
-                            sig   => $sig,
-
-                            # TODO: remove following comment if app is stable
-                            # Changed from $plugin_file because load_tmpl was failing
-                            path     => $plugin_full_path,
-                            envelope => "$plugin_lastdir/" . $plugin_dir,
-                        };
-                    }
-                } ## end for my $file (@plugin_files)
-            } ## end else [ if ( -f $plugin_full_path)]
-        } ## end for my $plugin_dir (@p)
-        closedir DH;
-    } ## end if ( opendir DH, $PluginPath)
-    return \%plugins;
-} ## end sub scan_directory_for_addons
-
-*mt_dir = \&server_path;
-sub server_path { $_[0]->{mt_dir} }
-sub app_dir     { $_[0]->{app_dir} }
-sub config_dir  { $_[0]->{config_dir} }
 
 sub component {
-    my $mt = shift;
+    my $mt   = shift;
     my ($id) = @_;
-    return $Components{ lc $id };
+    my $cmgr = $mt->componentmgr;
+    return $cmgr->component( lc $id );
 }
 
 sub publisher {
@@ -2424,7 +2037,7 @@ sub template_paths {
         }
     }
 
-    for my $addon ( @{ $mt->find_addons('pack') } ) {
+    for my $addon ( $mt->componentmgr->components({ type => 'pack' }) ) {
         push @paths,
           File::Spec->catdir( $addon->{path}, 'tmpl', $mt->{template_dir} )
           if $mt->{template_dir};
@@ -2604,7 +2217,7 @@ sub build_page {
 
     # List of installed packs in the application footer
     my @packs_installed;
-    my $packs = $mt->find_addons('pack');
+    my $packs = $mt->componentmgr->components({ type => 'pack' });
     if ($packs) {
         foreach my $pack (@$packs) {
             my $c = $mt->component( lc $pack->{id} );
