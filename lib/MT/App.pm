@@ -3664,7 +3664,7 @@ sub log {
     # we will turn into a hash reference filling in the
     # defaults for undefined values
     else {
-        $msg = { message => $msg, %defaults };
+        $msg = { %defaults, message => $msg };
     }
 
     # Now, send it on up to the SUPER class
