@@ -20,9 +20,9 @@ our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,
       $PORTAL_URL );
 our ( $MT_DIR, $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
 
- # FIXME JAY
 __PACKAGE__->mk_accessors(qw( _componentmgr ));
 
+# FIXME JAY - Most of these need to generate a deprecation warning
 our (
       $plugin_sig, $plugin_envelope, $plugin_registry,
       %Plugins,    @Components,      %Components,
