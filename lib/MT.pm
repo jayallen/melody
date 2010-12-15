@@ -1377,10 +1377,11 @@ sub componentmgr {
 
     # Configure search_paths array(ref) with AddonPath and PluginPath config
     # directive values in that order.  These values can be either scalar
-    # strings or arrayrefs so we need to conditionally dereference
+    # strings or arrayrefs so we need to conditionally dereference to flatten
+    # the list
     $cmgr->search_paths([
-        ref $cfg->AddonPath  ? @{ $cfg->AddonPath }  : $cfg->AddonPath,
-        ref $cfg->PluginPath ? @{ $cfg->PluginPath } : $cfg->PluginPath,
+        map { ref $_  ? @{ $_ }  : $_ } 
+            $cfg->AddonPath, $cfg->PluginPath
     ]);
 
     # Set and return MT::ComponentMgr instance
