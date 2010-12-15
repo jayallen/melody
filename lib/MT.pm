@@ -565,79 +565,11 @@ sub log {
 
 } ## end sub log
 
-my $plugin_full_path;
-
 sub run_tasks {
     my $mt = shift;
     require MT::TaskMgr;
     MT::TaskMgr->run_tasks(@_);
 }
-
-# FIXME JAY Need to work relevant parts of this into MT::ComponentMgr
-sub add_plugin {
-    my $class = shift;
-    my ($plugin) = @_;
-    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
-    ###l4p $logger->debug('$plugin in add_plugin: ', l4mtdump($plugin));
-
-    if ( ref $plugin eq 'HASH' ) {
-        require MT::Plugin;
-        $plugin = new MT::Plugin($plugin);
-    }
-    $plugin->{name} ||= $plugin_sig;
-    $plugin->{plugin_sig} = $plugin_sig;
-
-    my $id = $plugin->id;
-    unless ($plugin_envelope) {
-        warn
-          "MT->add_plugin improperly called outside of MT plugin load loop.";
-        return;
-    }
-    ###l4p $logger->debug('Setting plugin_envelope to $plugin_envelope');
-
-    $plugin->envelope($plugin_envelope);
-    Carp::confess(
-        "You cannot register multiple plugin objects from a single script. $plugin_sig"
-      )
-      if exists( $Plugins{$plugin_sig} )
-          && ( exists $Plugins{$plugin_sig}{object} );
-
-    $Components{ lc $id } = $plugin if $id;
-    $Plugins{$plugin_sig}{object} = $plugin;
-    $plugin->{full_path} = $plugin_full_path;
-    $plugin->path($plugin_full_path);
-    unless ( $plugin->{registry} && ( %{ $plugin->{registry} } ) ) {
-        $plugin->{registry} = $plugin_registry;
-    }
-    if ( $plugin->{registry} ) {
-        if ( my $settings = $plugin->{registry}{config_settings} ) {
-            $settings = $plugin->{registry}{config_settings} = $settings->()
-              if ref($settings) eq 'CODE';
-            $class->config->define($settings) if $settings;
-        }
-        if ( my $class = $plugin->{registry}{plugin_class} ) {
-            eval "require $class;";
-            if ($@) {
-                MT->log( {
-                       message =>
-                         MT->translate(
-                           "Could not rebless '[_2]'. Could not find plugin class: [_1]",
-                           $class,
-                           $plugin->name
-                         ),
-                       class => 'system',
-                       level => MT->model('log')->ERROR(),
-                    }
-                );
-            }
-            else {
-                bless $plugin, $class;
-            }
-        }
-    } ## end if ( $plugin->{registry...})
-    push @Components, $plugin;
-    1;
-} ## end sub add_plugin
 
 our %CallbackAlias;
 our $CallbacksEnabled = 1;
@@ -1388,6 +1320,15 @@ sub componentmgr {
     return $self->_componentmgr( $cmgr );
 }
 
+# Delegate the component method to MT::ComponentMgr
+*component = \&MT::ComponentMgr::component;
+
+sub add_plugin {
+    my $mt = shift;
+    # FIXME MT::add_plugin is called by legacy Perl-initiated plugins and should generate a deprecation warning.
+    $mt->componentmgr->add_plugin( @_ ); # For now, delegate to componentmgr
+} ## end sub add_plugin
+
 sub init_debug_mode {
     my $mt  = shift;
     my $cfg = $mt->config;
@@ -1483,13 +1424,6 @@ sub init_plugins {
         plugin_switch => $cfg->PluginSwitch || {},
         type          => 'plugin'
     });
-}
-
-sub component {
-    my $mt   = shift;
-    my ($id) = @_;
-    my $cmgr = $mt->componentmgr;
-    return $cmgr->component( lc $id );
 }
 
 sub publisher {
