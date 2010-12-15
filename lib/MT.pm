@@ -11,9 +11,10 @@ use strict;
 use base qw( MT::ErrorHandler );
 use File::Spec;
 use File::Basename;
+use Scalar::Util qw( blessed looks_like_number );
+use YAML qw( Dump );
 use MT::Util qw( weaken );
 use MT::I18N qw( encode_text );
-use Scalar::Util qw( blessed looks_like_number );
 
 our ( $VERSION, $SCHEMA_VERSION );
 our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,

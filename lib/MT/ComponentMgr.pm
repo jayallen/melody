@@ -11,30 +11,30 @@ use YAML qw( Dump );
 __PACKAGE__->mk_accessors(qw( base_path paths_initialized search_paths _components _init_files glob_flags init_file_patterns ));
 
 =pod
-# Initialize all non-core Components
-$mt->componentmgr->init_components({ type => 'pack' }) or return;
-
-# Complete setup of config and initialize DebugMode
-$mt->init_config_from_db( \%param ) or return;
-$mt->init_debug_mode;
-
-# Load compatibility module for prior version
-# This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
-require MT::Compat::v3;
-
-# Initialize all plugins starting with those in the AddonPath
-# followed by those in the PluginPath
-my $cfg = $mt->config;
-foreach my $paths ( $cfg->AddonPath, $cfg->PluginPath ) {
-    $paths = [ $paths ] unless 'ARRAY' eq ref $paths;
-    $mt->componentmgr->init_components({
-        not_type      => 'pack',
-        paths         => $paths,
-        use_plugins   => $cfg->UsePlugins,
-        plugin_switch => $cfg->PluginSwitch || {},
-    }) or return;
-}
-
+# # Initialize all non-core Components
+# $mt->componentmgr->init_components({ type => 'pack' }) or return;
+# 
+# # Complete setup of config and initialize DebugMode
+# $mt->init_config_from_db( \%param ) or return;
+# $mt->init_debug_mode;
+# 
+# # Load compatibility module for prior version
+# # This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
+# require MT::Compat::v3;
+# 
+# # Initialize all plugins starting with those in the AddonPath
+# # followed by those in the PluginPath
+# my $cfg = $mt->config;
+# foreach my $paths ( $cfg->AddonPath, $cfg->PluginPath ) {
+#     $paths = [ $paths ] unless 'ARRAY' eq ref $paths;
+#     $mt->componentmgr->init_components({
+#         not_type      => 'pack',
+#         paths         => $paths,
+#         use_plugins   => $cfg->UsePlugins,
+#         plugin_switch => $cfg->PluginSwitch || {},
+#     }) or return;
+# }
+# 
 =cut
 
 sub new {
