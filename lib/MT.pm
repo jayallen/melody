@@ -1315,24 +1315,46 @@ sub init {
 } ## end sub init
 
 sub componentmgr {
-    my $self = shift;
+    my $mt = shift;
     my $cfg  = $mt->config;
-    return $self->_componentmgr if $self->_componentmgr;
+
+    # Return from cache if we've been here before
+    return $mt->_componentmgr if $mt->_componentmgr;
 
     # Initialize MT::ComponentMgr instance for use by this class
-    my $cmgr = MT::ComponentMgr->new( ref $self || $self );
+    my $cmgr = MT::ComponentMgr->new();
 
-    # Configure search_paths array(ref) with AddonPath and PluginPath config
-    # directive values in that order.  These values can be either scalar
-    # strings or arrayrefs so we need to conditionally dereference to flatten
-    # the list
-    $cmgr->search_paths([
-        map { ref $_  ? @{ $_ }  : $_ }
-            $cfg->AddonPath, $cfg->PluginPath
-    ]);
+    # Below we compile the search_paths MT::ComponentMgr will use
+    # to find addons/plugins based on the values of the AddonPath and 
+    # PluginPath config directives.
+    require Path::Class;
+    my @pathobjs;
+    foreach my $pcfg ( $cfg->AddonPath, $cfg->PluginPath ) {
+        next unless defined $pcfg and $pcfg ne '';    # Skip empty elem
 
-    # Set and return MT::ComponentMgr instance
-    return $self->_componentmgr( $cmgr );
+        # These path config can be either scalar strings or arrayrefs so we
+        # need to conditionally dereference them to ensure a consistent list.
+        # In many cases, this will be a 1-element array
+        my @p = ( ref $pcfg eq 'ARRAY' ? @$pcfg : $pcfg );
+
+        foreach my $p ( @p ) {
+            # Convert paths to Path::Class::Dir objects for easy manipulation
+            $p = Path::Class->dir( $p );
+
+            # Convert relative paths to absolute paths using config_dir as a
+            # base which is PROBABLY correct since mt_dir may be a central 
+            # directory
+            $p = $p->absolute( $mt->{config_dir} )) if $p->is_relative;
+
+            push( @pathobjs, $p ); # P-Push it REAL good
+        }
+    }
+    
+    # Set configmgr's search_paths property with the paths derived above
+    $cmgr->search_paths( \@pathobjs );
+
+    # Cache and return MT::ComponentMgr instance
+    return $mt->_componentmgr( $cmgr );
 }
 
 # Delegate the component method to MT::ComponentMgr
