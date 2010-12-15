@@ -1321,44 +1321,33 @@ sub componentmgr {
     # Return from cache if we've been here before
     return $mt->_componentmgr if $mt->_componentmgr;
 
+    require MT::ComponentMgr;
+
     # Initialize MT::ComponentMgr instance for use by this class
-    my $cmgr = MT::ComponentMgr->new();
-
-    # Below we compile the search_paths MT::ComponentMgr will use
-    # to find addons/plugins based on the values of the AddonPath and 
-    # PluginPath config directives.
-    require Path::Class;
-    my @pathobjs;
-    foreach my $pcfg ( $cfg->AddonPath, $cfg->PluginPath ) {
-        next unless defined $pcfg and $pcfg ne '';    # Skip empty elem
-
-        # These path config can be either scalar strings or arrayrefs so we
-        # need to conditionally dereference them to ensure a consistent list.
-        # In many cases, this will be a 1-element array
-        my @p = ( ref $pcfg eq 'ARRAY' ? @$pcfg : $pcfg );
-
-        foreach my $p ( @p ) {
-            # Convert paths to Path::Class::Dir objects for easy manipulation
-            $p = Path::Class->dir( $p );
-
-            # Convert relative paths to absolute paths using config_dir as a
-            # base which is PROBABLY correct since mt_dir may be a central 
-            # directory
-            $p = $p->absolute( $mt->{config_dir} )) if $p->is_relative;
-
-            push( @pathobjs, $p ); # P-Push it REAL good
-        }
-    }
-    
-    # Set configmgr's search_paths property with the paths derived above
-    $cmgr->search_paths( \@pathobjs );
+    #  * The search_paths property tells MT::ComponentMgr where to
+    #    look for addons/plugins.
+    #  * The base_path property is used to resolve any relative paths.
+    #    $mt->config_dir is PROBABLY correct since $mt->{mt_dir} may be
+    #    a centrallized directory
+    my $cmgr = MT::ComponentMgr->new({
+        base_path    => $mt->config_dir,
+        search_paths => [
+            map { ref $_ eq 'ARRAY' ? @$_ : $_ }
+                $cfg->AddonPath, $cfg->PluginPath
+        ],
+    });
 
     # Cache and return MT::ComponentMgr instance
-    return $mt->_componentmgr( $cmgr );
+    # return $mt->_componentmgr( $cmgr );
+    $mt->_componentmgr( $cmgr );
+    return $mt->_componentmgr;
 }
 
 # Delegate the component method to MT::ComponentMgr
-*component = \&MT::ComponentMgr::component;
+sub component {
+    my $mt = shift;
+    $mt->componentmgr->component( @_ );
+}
 
 sub add_plugin {
     my $mt = shift;

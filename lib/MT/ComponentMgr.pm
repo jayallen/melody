@@ -4,23 +4,112 @@ use strict;
 use warnings;
 use base qw( Class::Accessor::Fast MT::ErrorHandler );
 use List::Util qw( first );
+use File::Glob qw( :glob :nocase );
+use Path::Class;
+use YAML qw( Dump );
 
-__PACKAGE__->mk_accessors(qw( base_path search_paths _components ));
+__PACKAGE__->mk_accessors(qw( base_path paths_initialized search_paths _components _init_files glob_flags init_file_patterns ));
 
+=pod
+# Initialize all non-core Components
+$mt->componentmgr->init_components({ type => 'pack' }) or return;
 
-Given the search paths, find all plugin init files
+# Complete setup of config and initialize DebugMode
+$mt->init_config_from_db( \%param ) or return;
+$mt->init_debug_mode;
 
+# Load compatibility module for prior version
+# This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
+require MT::Compat::v3;
 
+# Initialize all plugins starting with those in the AddonPath
+# followed by those in the PluginPath
+my $cfg = $mt->config;
+foreach my $paths ( $cfg->AddonPath, $cfg->PluginPath ) {
+    $paths = [ $paths ] unless 'ARRAY' eq ref $paths;
+    $mt->componentmgr->init_components({
+        not_type      => 'pack',
+        paths         => $paths,
+        use_plugins   => $cfg->UsePlugins,
+        plugin_switch => $cfg->PluginSwitch || {},
+    }) or return;
+}
 
-sub find_init_files {
-    my $self = shift;
+=cut
+
+sub new {
+    my $class = shift;
+    my $self  = $class->SUPER::new( @_ );    # YAY Class::Accessor::Fast!
+
+    # These are the default glob patterns for component init 
+    # files relative to the AddonPath or PluginPath
+    $self->init_file_patterns([ "*/*.yaml", "*/*.pl" ]);
+
+    # These glob flags affect the way bsd_glob() works. See File::Glob POD
+    $self->glob_flags(GLOB_MARK | GLOB_NOCASE | GLOB_QUOTE | GLOB_ALPHASORT);
     
+    return $self;
+}
+
+sub init_paths {
+    my $self  = shift;
+    return $self->search_paths if $self->paths_initialized;
+
+    my $paths = $self->search_paths || [];
+
+    my @pathobjs;
+    foreach my $p ( @$paths ) {
+        # Convert paths to Path::Class::Dir objects for easy manipulation
+        $p = Path::Class->dir( $p );
+
+        # Convert relative paths to absolute paths using config_dir as a
+        # base which is PROBABLY correct since mt_dir may be a central 
+        # directory
+        $p = $p->absolute( $self->base_path ) if $p->is_relative;
+
+        push( @pathobjs, $p ); # P-Push it REAL good
+    }
+
+    if ( @pathobjs ) {
+        $self->search_paths( \@pathobjs );
+        $self->paths_initialized( 1 );
+    }
+
+    return $self->search_paths;
 }
 
 sub init_components {
     my $self = shift;
+    my $init_files = $self->init_files();
     my $args = shift;
-    # type, use_plugins, plugin_switch
+    # type, not_type, paths, use_plugins, plugin_switch
+
+print STDERR Dump($args);
+    # { type => 'pack' }
+    # {
+    #     not_type      => 'pack',
+    #     paths         => $paths,
+    #     use_plugins   => $cfg->UsePlugins,
+    #     plugin_switch => $cfg->PluginSwitch || {},
+    # }    
+    1;
+}
+
+sub init_files {
+    my $self   = shift;
+    my $fcache = $self->_init_files  || {};
+    my $paths  = $self->search_paths || $self->init_paths();
+    $fcache->{$_} ||= $self->locate_init_files( $_ ) foreach @$paths;
+    return $fcache;
+}
+
+sub locate_init_files {
+    my $self = shift;
+    my $path = shift;
+    return unless defined $path and $path ne '';
+    my @found = map { bsd_glob("$path/$_", $self->glob_flags) }
+                    @{ $self->init_file_patterns };
+    return \@found;
 }
 
 =head2 $componentmgr->component( ID || \%args )
