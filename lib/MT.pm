@@ -1275,14 +1275,29 @@ sub init {
     $mt->init_config( \%param ) or return;
     $mt->init_lang_defaults(@_) or return;
 
-    # Find and initialize all non-core components
-    require MT::Plugin;
-    
-    $mt->componentmgr->init_components  or return;
-    $mt->init_addons(@_)                or return;
+    # Initialize all non-core Components
+    $mt->componentmgr->init_components({ type => 'pack' }) or return;
+
+    # Complete setup of config and initialize DebugMode
     $mt->init_config_from_db( \%param ) or return;
     $mt->init_debug_mode;
-    $mt->init_plugins(@_) or return;
+
+    # Load compatibility module for prior version
+    # This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
+    require MT::Compat::v3;
+
+    # Initialize all plugins starting with those in the AddonPath
+    # followed by those in the PluginPath
+    my $cfg = $mt->config;
+    foreach my $paths ( $cfg->AddonPath, $cfg->PluginPath ) {
+        $paths = [ $paths ] unless 'ARRAY' eq ref $paths;
+        $mt->componentmgr->init_components({
+            not_type      => 'pack',
+            paths         => $paths,
+            use_plugins   => $cfg->UsePlugins,
+            plugin_switch => $cfg->PluginSwitch || {},
+        }) or return;
+    }
 
     # Set the plugins_installed flag signalling that it's
     # okay to initialize the schema and use the database.
@@ -1401,30 +1416,6 @@ sub upload_file_to_sync {
           ( $fi->blog_id || 0 ) . ':' . $$ . ':' . ( time - ( time % 10 ) ) );
     MT::TheSchwartz->insert($job);
 } ## end sub upload_file_to_sync
-
-# use Data::Dumper;
-sub init_addons {
-    my $mt  = shift;
-    my $cfg = $mt->config;
-    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
-    return $mt->componentmgr->init_components({ type => 'pack' });
-}
-
-sub init_plugins {
-    my $mt = shift;
-    ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
-
-    # Load compatibility module for prior version
-    # This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
-    require MT::Compat::v3;
-
-    my $cfg = $mt->config;
-    return $mt->componentmgr->init_components({
-        use_plugins   => $cfg->UsePlugins,
-        plugin_switch => $cfg->PluginSwitch || {},
-        type          => 'plugin'
-    });
-}
 
 sub publisher {
     my $mt = shift;
@@ -3163,7 +3154,7 @@ functionality of Movable Type. If you want to subclass MT and extensively
 modify it's core behavior, this method can be overridden to do that.
 The L<MT::Core> module is a L<MT::Component> that defines the core
 features of MT, and this method loads that component. Non-core components
-are loaded by the L<init_addons> method.
+are loaded afterwards by L<MT::ConfigMgr> initiated in the L<init> method.
 
 =head2 $mt->init_paths()
 
@@ -3242,11 +3233,15 @@ the MT constructor.
 
 =head2 $mt->init_addons(%param)
 
+FIXME JAY This IS NO LONGER
+
 Loads any discoverable addons that are available. This is called from
 the C<init> method, after C<init_config> method has loaded the
 configuration settings, but prior to making a database connection.
 
 =head2 $mt->init_plugins(%param)
+
+FIXME JAY This IS NO LONGER
 
 Loads any discoverable plugins that are available. This is called from
 the C<init> method, after the C<init_config> method has loaded the
