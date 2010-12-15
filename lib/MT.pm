@@ -1367,6 +1367,26 @@ sub init {
     return $mt;
 } ## end sub init
 
+sub componentmgr {
+    my $self = shift;
+    my $cfg  = $mt->config;
+    return $self->_componentmgr if $self->_componentmgr;
+
+    # Initialize MT::ComponentMgr instance for use by this class
+    my $cmgr = MT::ComponentMgr->new( ref $self || $self );
+
+    # Configure search_paths array(ref) with AddonPath and PluginPath config
+    # directive values in that order.  These values can be either scalar
+    # strings or arrayrefs so we need to conditionally dereference
+    $cmgr->search_paths([
+        ref $cfg->AddonPath  ? @{ $cfg->AddonPath }  : $cfg->AddonPath,
+        ref $cfg->PluginPath ? @{ $cfg->PluginPath } : $cfg->PluginPath,
+    ]);
+
+    # Set and return MT::ComponentMgr instance
+    return $self->_componentmgr( $cmgr );
+}
+
 sub init_debug_mode {
     my $mt  = shift;
     my $cfg = $mt->config;
@@ -1462,15 +1482,6 @@ sub init_plugins {
         plugin_switch => $cfg->PluginSwitch || {},
         type          => 'plugin'
     });
-}
-
-{
-    my $componentmgr;
-
-    sub componentmgr {
-        my $self  = shift;
-        return $componentmgr ||= MT::ComponentMgr->new( ref $self || $self );
-    }
 }
 
 sub component {
