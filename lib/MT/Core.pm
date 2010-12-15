@@ -311,6 +311,8 @@ BEGIN {
             'AltTemplatePath' => { default => 'alt-tmpl', path => 1, },
             'CSSPath'         => { default => 'css', },
             'ImportPath'      => { default => 'import',   path => 1, },
+            'AddonPath' =>
+              { default => 'addons', path => 1, type => 'ARRAY', },
             'PluginPath' =>
               { default => 'plugins', path => 1, type => 'ARRAY', },
             'EnableArchivePaths' => { default => 0, },
