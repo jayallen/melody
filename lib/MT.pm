@@ -8,7 +8,7 @@ package MT;
 
 use strict;
 # use MT::ErrorHandler;
-use base qw( Class::Accessor::Fast MT::ErrorHandler );
+use base qw( MT::ErrorHandler );
 use File::Spec;
 use File::Basename;
 use MT::Util qw( weaken );
@@ -19,8 +19,6 @@ our ( $VERSION, $SCHEMA_VERSION );
 our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,
       $PORTAL_URL );
 our ( $MT_DIR, $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
-
-__PACKAGE__->mk_accessors(qw( _componentmgr ));
 
 # FIXME JAY - Most of these need to generate a deprecation warning
 our (
@@ -1314,35 +1312,42 @@ sub init {
     return $mt;
 } ## end sub init
 
-sub componentmgr {
-    my $mt = shift;
-    my $cfg  = $mt->config;
+{
+    my $componentmgr;
 
-    # Return from cache if we've been here before
-    return $mt->_componentmgr if $mt->_componentmgr;
+    sub componentmgr {
+        my $mt = shift;
+        my $cfg  = $mt->config;
 
-    require MT::ComponentMgr;
+        # Return from cache if we've been here before
+        # return $mt->_componentmgr if $mt->_componentmgr;
+        return $componentmgr if $componentmgr;
 
-    # Initialize MT::ComponentMgr instance for use by this class
-    #  * The search_paths property tells MT::ComponentMgr where to
-    #    look for addons/plugins.
-    #  * The base_path property is used to resolve any relative paths.
-    #    $mt->config_dir is PROBABLY correct since $mt->{mt_dir} may be
-    #    a centrallized directory
-    my $cmgr = MT::ComponentMgr->new({
-        base_path    => $mt->config_dir,
-        search_paths => [
-            map { ref $_ eq 'ARRAY' ? @$_ : $_ }
-                $cfg->AddonPath, $cfg->PluginPath
-        ],
-    });
 
-    # Cache and return MT::ComponentMgr instance
-    # return $mt->_componentmgr( $cmgr );
-    $mt->_componentmgr( $cmgr );
-    return $mt->_componentmgr;
+        require MT::ComponentMgr;
+
+        # Initialize MT::ComponentMgr instance for use by this class
+        #  * The search_paths property tells MT::ComponentMgr where to
+        #    look for addons/plugins.
+        #  * The base_path property is used to resolve any relative paths.
+        #    $mt->config_dir is PROBABLY correct since $mt->{mt_dir} may be
+        #    a centrallized directory
+        my $cmgr = MT::ComponentMgr->new({
+            base_path    => $mt->config_dir,
+            search_paths => [
+                map { ref $_ eq 'ARRAY' ? @$_ : $_ }
+                    $cfg->AddonPath, $cfg->PluginPath
+            ],
+        });
+
+        # Cache and return MT::ComponentMgr instance
+        # return $mt->_componentmgr( $cmgr );
+        return $componentmgr = $cmgr;
+        # $mt->_componentmgr( $cmgr );
+        # return $mt->_componentmgr;
+    }
+
 }
-
 # Delegate the component method to MT::ComponentMgr
 sub component {
     my $mt = shift;
