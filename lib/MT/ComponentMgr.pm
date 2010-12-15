@@ -128,8 +128,10 @@ C<components> method instead which takes the same exact argument hash.
 sub component {
     my $self   = shift;
     my $args   = shift or return;
+    # FIXME The following is a stop-gap hack attack...
+    return $MT::Components{'core'} if defined $args and $args eq 'core';#HACK!
     my $cstore = $self->_components;
-    $args->{id} = $args unless 'HASH' eq ref $args;
+    $args = { id => $args } unless 'HASH' eq ref $args;
     return first { defined($_) } @{ $self->components( $args ) };
 }
 
