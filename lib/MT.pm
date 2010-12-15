@@ -1380,7 +1380,7 @@ sub componentmgr {
     # strings or arrayrefs so we need to conditionally dereference to flatten
     # the list
     $cmgr->search_paths([
-        map { ref $_  ? @{ $_ }  : $_ } 
+        map { ref $_  ? @{ $_ }  : $_ }
             $cfg->AddonPath, $cfg->PluginPath
     ]);
 
