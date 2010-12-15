@@ -8,7 +8,7 @@ package MT;
 
 use strict;
 # use MT::ErrorHandler;
-use base qw( MT::ErrorHandler );
+use base qw( Class::Accessor::Fast MT::ErrorHandler );
 use File::Spec;
 use File::Basename;
 use MT::Util qw( weaken );
@@ -21,6 +21,8 @@ our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,
 our ( $MT_DIR, $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
 
  # FIXME JAY
+__PACKAGE__->mk_accessors(qw( _componentmgr ));
+
 our (
       $plugin_sig, $plugin_envelope, $plugin_registry,
       %Plugins,    @Components,      %Components,
