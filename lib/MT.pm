@@ -1291,10 +1291,10 @@ sub init {
     foreach my $paths ( $cfg->AddonPath, $cfg->PluginPath ) {
         $paths = [ $paths ] unless 'ARRAY' eq ref $paths;
         $mt->componentmgr->init_components({
-            not_type      => 'pack',
-            paths         => $paths,
-            use_plugins   => $cfg->UsePlugins,
-            plugin_switch => $cfg->PluginSwitch || {},
+            not_type     => 'pack',
+            paths        => $paths,
+            disable_init => ! $cfg->UsePlugins,
+            filter_init  => $cfg->PluginSwitch || {},
         }) or return;
     }
 
@@ -1333,11 +1333,13 @@ sub init {
         #    $mt->config_dir is PROBABLY correct since $mt->{mt_dir} may be
         #    a centrallized directory
         my $cmpmgr = MT::ComponentMgr->new({
-            base_path     => $mt->config_dir,
-            search_paths  => [
+            base_path    => $mt->config_dir,
+            search_paths => [
                 map { ref $_ eq 'ARRAY' ? @$_ : $_ }
                     $cfg->AddonPath, $cfg->PluginPath
             ],
+            disable_init => ! $cfg->UsePlugins,
+            filter_init  => $cfg->PluginSwitch || {},
         });
 
         # Cache and return MT::ComponentMgr instance
