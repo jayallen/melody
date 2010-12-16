@@ -90,43 +90,45 @@ __PACKAGE__->mk_accessors(qw(
 ));
 
 =pod
-# # Initialize all non-core Components
-# $mt->componentmgr->init_components({ type => 'pack' }) or return;
-# 
-# # Complete setup of config and initialize DebugMode
-# $mt->init_config_from_db( \%param ) or return;
-# $mt->init_debug_mode;
-# 
-# # Load compatibility module for prior version
-# # This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
-# require MT::Compat::v3;
-# 
-# # Initialize all plugins starting with those in the AddonPath
-# # followed by those in the PluginPath
-# my $cfg = $mt->config;
-# foreach my $paths ( $cfg->AddonPath, $cfg->PluginPath ) {
-#     $paths = [ $paths ] unless 'ARRAY' eq ref $paths;
-#     $mt->componentmgr->init_components({
-#         not_type      => 'pack',
-#         paths         => $paths,
-#         use_plugins   => $cfg->UsePlugins,
-#         plugin_switch => $cfg->PluginSwitch || {},
-#     }) or return;
-# }
-# 
+{
+    # # Initialize all non-core Components
+    # $mt->componentmgr->init_components({ type => 'pack' }) or return;
+    #
+    # # Complete setup of config and initialize DebugMode
+    # $mt->init_config_from_db( \%param ) or return;
+    # $mt->init_debug_mode;
+    #
+    # # Load compatibility module for prior version
+    # # This should always be MT::Compat::v(MAJOR_RELEASE_VERSION - 1).
+    # require MT::Compat::v3;
+    #
+    # # Initialize all plugins starting with those in the AddonPath
+    # # followed by those in the PluginPath
+    # my $cfg = $mt->config;
+    # foreach my $paths ( $cfg->AddonPath, $cfg->PluginPath ) {
+    #     $paths = [ $paths ] unless 'ARRAY' eq ref $paths;
+    #     $mt->componentmgr->init_components({
+    #         not_type      => 'pack',
+    #         paths         => $paths,
+    #         auto_init   => $cfg->UsePlugins,
+    #         filter_init => $cfg->PluginSwitch || {},
+    #     }) or return;
+    # }
+    #
+}
 =cut
 
 sub new {
     my $class = shift;
     my $self  = $class->SUPER::new( @_ );    # YAY Class::Accessor::Fast!
 
-    # These are the default glob patterns for component init 
+    # These are the default glob patterns for component init
     # files relative to the AddonPath or PluginPath
     $self->init_file_patterns([ "*/*.yaml", "*/*.pl" ]);
 
     # These glob flags affect the way bsd_glob() works. See File::Glob POD
     $self->glob_flags(GLOB_MARK | GLOB_NOCASE | GLOB_QUOTE | GLOB_ALPHASORT);
-    
+
     return $self;
 }
 
@@ -142,7 +144,7 @@ sub init_paths {
         $p = Path::Class->dir( $p );
 
         # Convert relative paths to absolute paths using config_dir as a
-        # base which is PROBABLY correct since mt_dir may be a central 
+        # base which is PROBABLY correct since mt_dir may be a central
         # directory
         $p = $p->absolute( $self->base_path ) if $p->is_relative;
 
@@ -168,9 +170,9 @@ print STDERR Dump($args);
     # {
     #     not_type      => 'pack',
     #     paths         => $paths,
-    #     use_plugins   => $cfg->UsePlugins,
-    #     plugin_switch => $cfg->PluginSwitch || {},
-    # }    
+    #     auto_init   => $cfg->UsePlugins,
+    #     filter_init => $cfg->PluginSwitch || {},
+    # }
     1;
 }
 
@@ -248,7 +250,7 @@ __END__
 NEED TO WORK MOST OR ALL OF THE FOLLOWING INTO THE CLASS
 
 sub component_libdirs {
-    
+
 }
 
 # # Plugin is a file, add it to list for processing
@@ -260,7 +262,7 @@ sub component_libdirs {
 #     dir   => $plugin_dir,
 #     file  => $file,
 #     sig   => $sig,
-# 
+#
 #     # TODO: remove following comment if app is stable
 #     # Changed from $plugin_file because load_tmpl was failing
 #     path     => $plugin_full_path,
@@ -272,7 +274,7 @@ sub add_component {
     my $cstore = $self->_components;
     ###l4p $logger ||= MT::Log::Log4perl->new(); $logger->trace();
     ###l4p $logger->debug('$plugin in add_plugin: ', l4mtdump($plugin));
-    
+
     id
     type
     object
@@ -280,8 +282,8 @@ sub add_component {
     name
     full_path
     envelope
-    
-    
+
+
     if ( ref $plugin eq 'HASH' ) {
         require MT::Plugin;
         $plugin = new MT::Plugin($plugin);
@@ -366,13 +368,13 @@ sub search {
     PATH: foreach my $path ( @$paths ) {
       EXT: foreach my $ext ( qw( yaml pl )) {
         push( @found, $pkg->SUPER::search( "$path/*/*.$ext" ));
-        
+
             map { bsd_glob("$path/*/*.$_", $pkg->GlobFlags) } qw( yaml pl )
-            
+
         }
         );
     }
-    
+
 }
 
 1;
@@ -442,8 +444,8 @@ sub _init_plugins_core {
         return 0 if exists $Plugins{$plugin_sig};
         $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
         $timer->pause_partial if $timer;
-        eval "# line " 
-          . __LINE__ . " " 
+        eval "# line "
+          . __LINE__ . " "
           . __FILE__
           . "\nrequire '"
           . $plugin_full_path . "';";
