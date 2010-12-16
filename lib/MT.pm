@@ -1317,13 +1317,12 @@ sub init {
     my $componentmgr;
 
     sub componentmgr {
-        my $mt = shift;
-        my $cfg  = $mt->config;
+        my $mt  = shift;
+        my $cfg = $mt->config;
 
         # Return from cache if we've been here before
         # return $mt->_componentmgr if $mt->_componentmgr;
         return $componentmgr if $componentmgr;
-
 
         require MT::ComponentMgr;
 
@@ -1333,19 +1332,16 @@ sub init {
         #  * The base_path property is used to resolve any relative paths.
         #    $mt->config_dir is PROBABLY correct since $mt->{mt_dir} may be
         #    a centrallized directory
-        my $cmgr = MT::ComponentMgr->new({
-            base_path    => $mt->config_dir,
-            search_paths => [
+        my $cmpmgr = MT::ComponentMgr->new({
+            base_path     => $mt->config_dir,
+            search_paths  => [
                 map { ref $_ eq 'ARRAY' ? @$_ : $_ }
                     $cfg->AddonPath, $cfg->PluginPath
             ],
         });
 
         # Cache and return MT::ComponentMgr instance
-        # return $mt->_componentmgr( $cmgr );
-        return $componentmgr = $cmgr;
-        # $mt->_componentmgr( $cmgr );
-        # return $mt->_componentmgr;
+        return $componentmgr = $cmpmgr;
     }
 
 }
