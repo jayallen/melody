@@ -1458,7 +1458,7 @@ sub _init_plugins_core {
         my ( $plugin, $sig ) = @_;
         die "Bad plugin filename '$plugin'"
           if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
-        local $plugin_sig      = $plugin->{sig};
+        local $plugin_sig      = $sig;
         local $plugin_registry = {};
         $plugin = $1;
         if (
