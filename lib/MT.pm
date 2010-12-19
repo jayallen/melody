@@ -1738,23 +1738,17 @@ sub scan_directory_for_addons {
         for my $plugin_dir (@p) {
             next if ( $plugin_dir =~ /^\.\.?$/ || $plugin_dir =~ /~$/ );
 
-            # Legacy support when plugins were not
-            # placed in their own directory
             $plugin_full_path
               = File::Spec->catfile( $PluginPath, $plugin_dir );
             if ( -f $plugin_full_path ) {
                 if ( $plugin_full_path =~ /\.pl$/ ) {
-                    push @{ $plugins{'plugin'} },
-                      {
-                        dir      => $PluginPath,
-                        file     => $plugin_dir,
-                        path     => $plugin_full_path,
-                        envelope => $plugin_lastdir,
-                      };
+                    warn "Plugins without envelopes are no longer loaded in "
+                        ." Melody: $plugin_full_path";
+                    # Yes, that's all you get.  Don't ask for more...
+                    next;
                 }
             }
             else {
-
                 # open and scan the directory for plugin files,
                 # save them to load later. Report errors in
                 # the activity log
