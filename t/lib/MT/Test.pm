@@ -17,6 +17,9 @@ use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 use File::Spec;
 use File::Temp qw( tempfile );
 use File::Basename;
+use Data::Dumper;
+use List::Util qw( first );
+use Carp qw( longmess croak );
 use MT;
 
 MT->add_callback( 'post_init', 1, undef, \&add_plugin_test_libs );
@@ -122,6 +125,7 @@ sub init_app {
         }
     ) or die( MT->errstr );
     {
+        no warnings 'once';
         local $SIG{__WARN__} = sub { };
         my $orig_login = \&MT::App::login;
         *MT::App::print = sub {
@@ -174,12 +178,14 @@ sub init_time {
 sub init_testdb {
     my $pkg = shift;
 
+    no warnings 'once';
+
     # This is a bit of MT::Upgrade magic to prevent the full
     # instantiation of the MT schema. We force the classes list
     # to only contain the test 'Foo', 'Bar' classes and neuter
     # the
     require MT::Upgrade;
-
+    
     # Add our test 'Foo' and 'Bar' classes to the list of
     # object classes to install.
     %MT::Upgrade::classes = ( foo => 'Foo', bar => 'Bar' );
@@ -214,6 +220,7 @@ if ( $ENV{PREFILLED_CACHE} ) {
 
 sub init_memcached {
     my $pkg = shift;
+    no warnings 'once';
     eval { require MT::Memcached; };
     if ($@) {
         die "Cannot fake MT::Memcached, as it's not available";
@@ -390,6 +397,107 @@ sub init_upgrade {
 sub init_db {
     my $pkg = shift;
     $pkg->init_newdb(@_) && $pkg->init_upgrade(@_);
+}
+
+sub debug_handle {
+    return $_[0]->DEBUG ? sub { diag( @_ ) }    # Diagnostic output function
+                        : sub { };              # No-op function
+}
+
+sub revert_component_init {
+    my $pkg    = shift;
+    my $debug  = $pkg->debug_handle( shift );
+    my $mt     = MT->instance;
+
+    # MT package scalar variables we need to reset
+    my @global_scalars = qw(    plugin_sig         plugin_envelope
+                                plugin_registry    plugins_installed 
+                                $plugin_full_path                       );
+    my $c_hash = \%MT::Components;      # Aliased...
+    my $c_arry = \@MT::Components;      #  for...
+    my $p_hash = \%MT::Plugins;         #   brevity!
+    $debug->( 'INITIAL %MT::Components: ' . Dumper( $c_hash ));
+
+    # We are reinitializing everything *BUT* the core component
+    # so we need to preserve it before destroying the rest.
+    # Die if it's not initialized because that's just wrong
+    my $core = delete $c_hash->{core} or die "No core component found!";
+
+
+    $debug->( 'Undefining all MT package scalar vars '
+            . 'related to component/plugin initialization' );
+    no strict 'refs';
+    undef ${"MT::$_"} and $debug->( "\t\$MT::$_" ) for @global_scalars;
+
+    # %MT::addons Anyone??????Bueller?? Bueller??
+
+    {
+        # As it says in MT.pm:
+        #   Reset the Text_filters hash in case it was preloaded by plugins
+        #   by calling all_text_filters (Markdown in particular does this).
+        #   Upon calling all_text_filters again, it will be properly loaded
+        #   by querying the registry.
+        no warnings 'once';
+        %MT::Text_filters = ();
+    }
+
+    $debug->('Unloading plugins\' perl init scripts from %INC cache');
+    # This forces both perl and MT to treat the file as if it's never been
+    # loaded previously which is necessary for making MT process the plugin
+    # as it does in its own init methods.
+    foreach my $pdata ( values %$p_hash ) {
+        my $path = first { defined($_) and m{\.pl}i }
+                    $pdata->{object}{"full_path","path"};
+        next unless $path;
+        delete $INC{ $path } and $debug->("\t$path");
+    }
+
+    # And finally: Re-initialize %MT::Components and @MT::Components
+    # with only the 'core' component and undef %MT::Plugins completely
+    $c_arry = [ $core ];
+    $c_hash = { core => $core };
+    $p_hash = { };
+
+    # Find and initialize all non-core components
+    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    my %path_params = (
+        Config    => $mt->{config_dir},
+        Directory => $mt->{mt_dir}
+    );
+    my $killme = sub { die "FAIL ".Carp::longmess() };
+    #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+    eval {
+        $debug->('Re-initializing addons');
+        $mt->init_addons()                          or $killme->();
+
+        $mt->init_config_from_db( \%path_params )   or $killme->();
+        $mt->init_debug_mode;
+
+        $debug->('Re-initializing plugins');
+        $mt->init_plugins()                         or $killme->();
+
+        # Set the plugins_installed flag signalling that it's
+        # okay to initialize the schema and use the database.
+        no warnings 'once';
+        $MT::plugins_installed = 1;        
+    };
+    die "Failed: $@".Carp::longmess() if $@;
+    $debug->('Plugins re-initialization complete');
+}
+
+{
+    my $re_looped = 0;
+    sub mt_package_hashvars_dump {
+        my $pkg = shift;
+        my $re  = $re_looped++ ? 're' : '';
+        my $sep = '---'x25;
+        return join( "\n\n",
+            $sep,
+            'Components ${re}initialized: ' . Dumper(\%MT::Components),
+            'Plugins ${re}initialized: '    . Dumper(\%MT::Plugins),
+            $sep,
+        );
+    }
 }
 
 sub progress { }
@@ -1366,7 +1474,10 @@ sub _run_app {
                                       grep { defined $_ } values %ENV )
             );
             my $filename = basename($src);
-            $CGITempFile::TMPDIRECTORY = '/tmp';
+            {
+                no warnings 'once';
+                $CGITempFile::TMPDIRECTORY = '/tmp';
+            }
             my $tmpfile = new CGITempFile($seqno) or die "CGITempFile: $!";
             my $tmp     = $tmpfile->as_string;
             my $cgi_fh  = Fh->new( $filename, $tmp, 0 ) or die "FH? $!";

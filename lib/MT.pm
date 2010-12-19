@@ -567,15 +567,18 @@ sub run_tasks {
 }
 
 sub add_plugin {
-    my $class = shift;
+    my $class    = shift;
     my ($plugin) = @_;
+    my $sig      = $plugin_sig            || $plugin->{sig};
+    my $name     = eval { $plugin->name } || $plugin->{name};
 
     if ( ref $plugin eq 'HASH' ) {
         require MT::Plugin;
         $plugin = new MT::Plugin($plugin);
     }
-    $plugin->{name} ||= $plugin_sig;
-    $plugin->{plugin_sig} = $plugin_sig;
+
+    $plugin->{name}      ||= $name || $plugin_sig;
+    $plugin->{plugin_sig}  = $plugin_sig;
 
     my $id = $plugin->id;
     unless ($plugin_envelope) {
@@ -584,19 +587,21 @@ sub add_plugin {
         return;
     }
     $plugin->envelope($plugin_envelope);
+
     Carp::confess(
         "You cannot register multiple plugin objects from a single script. $plugin_sig"
       )
       if exists( $Plugins{$plugin_sig} )
           && ( exists $Plugins{$plugin_sig}{object} );
 
-    $Components{ lc $id } = $plugin if $id;
+    $Components{ lc $id }         = $plugin if $id;
     $Plugins{$plugin_sig}{object} = $plugin;
-    $plugin->{full_path} = $plugin_full_path;
+    $plugin->{full_path}          = $plugin_full_path;
     $plugin->path($plugin_full_path);
-    unless ( $plugin->{registry} && ( %{ $plugin->{registry} } ) ) {
-        $plugin->{registry} = $plugin_registry;
-    }
+    
+    $plugin->{registry} = $plugin_registry
+        unless eval { keys %{ $plugin->{registry} } };
+
     if ( $plugin->{registry} ) {
         if ( my $settings = $plugin->{registry}{config_settings} ) {
             $settings = $plugin->{registry}{config_settings} = $settings->()
@@ -1418,7 +1423,6 @@ sub upload_file_to_sync {
     MT::TheSchwartz->insert($job);
 } ## end sub upload_file_to_sync
 
-# use Data::Dumper;
 sub init_addons {
     my $mt     = shift;
     my $cfg    = $mt->config;
@@ -1451,74 +1455,13 @@ sub _init_plugins_core {
         $timer = $mt->get_timer();
     }
 
-    # TODO Refactor/abstract this load_plugin anonymous subroutine out of here
-    # For testing purposes and maintainability, we need to make it a point
-    # to continually make large methods like this smaller and more focused.
-    my $load_plugin = sub {
-        my ( $plugin, $sig ) = @_;
-        die "Bad plugin filename '$plugin'"
-          if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
-        local $plugin_sig      = $sig;
-        local $plugin_registry = {};
-        $plugin = $1;
-        if (
-             !$use_plugins
-             || ( exists $PluginSwitch->{$plugin_sig}
-                  && !$PluginSwitch->{$plugin_sig} )
-          )
-        {
-            $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-            $Plugins{$plugin_sig}{enabled}   = 0;
-            return 0;
-        }
-        return 0 if exists $Plugins{$plugin_sig};
-        $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-        $timer->pause_partial if $timer;
-        eval "# line " 
-          . __LINE__ . " " 
-          . __FILE__
-          . "\nrequire '"
-          . $plugin_full_path . "';";
-        $timer->mark( "Loaded plugin " . $sig ) if $timer;
-        if ($@) {
-            $Plugins{$plugin_sig}{error} = $@;
-
-            # Log the issue but do it in a post_init callback so
-            # that we won't prematurely initialize the schema before
-            # all plugins are finished loading
-            my $msg = $mt->translate( "Plugin error: [_1] [_2]",
-                                      $plugin, $Plugins{$plugin_sig}{error} );
-            $mt->log(
-                  { message => $msg, class => 'system', level => 'ERROR', } );
-            return 0;
-        }
-        else {
-            if ( my $obj = $Plugins{$plugin_sig}{object} ) {
-                $obj->init_callbacks();
-            }
-            else {
-
-                # A plugin did not register itself, so
-                # create a dummy plugin object which will
-                # cause it to show up in the plugin listing
-                # by it's filename.
-                MT->add_plugin( {} );
-            }
-        }
-        $Plugins{$plugin_sig}{enabled} = 1;
-        return 1;
-    };    # end load_plugin sub
-
-
     my @deprecated_perl_init = ();
     foreach my $plugin (@$plugins) {
 
         # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
         if ( $plugin->{file} =~ /\.pl$/ ) {
             push( @deprecated_perl_init, $plugin );
-            $plugin_envelope  = $plugin->{envelope};
-            $plugin_full_path = $plugin->{path};
-            $load_plugin->( $plugin->{path}, $plugin->{file} );
+            $mt->load_perl_plugin( $plugin );
         }
         else {
             my $pclass
@@ -1591,6 +1534,93 @@ sub _init_plugins_core {
 
     1;
 } ## end sub _init_plugins_core
+
+#   Documenting the silly variations of the exact same thing.  These should
+#   simply be transformations lazily rendered and cached
+#
+#   base     - The absolute filesystem path to the plugin's top-level folder.
+#              Example: /var/www/cgi/mt/plugins/MyPlugin
+#
+#   dir      - The name of the plugin's top-level folder.
+#              Transformation: File::Basename::basename( $plugin->{base} )
+#              Example: ConfigAssistant.pack
+#
+#   envelope - For PluginPath's within the Melody application folder, this is
+#              the relative path from the Melody directory to the plugin's
+#              top-level folder.  (WHAT ABOUT OUTSIDE OF MELODY DIR?)
+#              Transformation: ( $plugin->{envelope} = $plugin->{base} )
+#                                           =~ s!$ENV{MT_HOME}/?!!;
+#              Examples:
+#              *    addons/ConfigAssistant.pack
+#              *    plugins/FieldDay
+#
+#   sig      - The path to the yaml/perl initialization file from the
+#              perspective of its plugin directory. Examples: 
+#              Transformation:  $plugin->{dir} + init_file
+#              *    ConfigAssistant.pack/config.yaml
+#              *    Log4MT.plugin/config.yaml
+#              *    Log4MT.plugin/config.yaml
+#              *    MT-OldPlugin/OldPlugin.pl
+#   
+sub load_perl_plugin {
+    my $mt = shift;
+    my ( $plugin ) = @_;
+    die "Bad plugin filename '".$plugin->{file}."'"
+      if ( $plugin->{file} !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
+    my $timer = undef;                       # FIXME JAY Had to disable timer
+    my $sig   = $plugin_sig = $plugin->{sig};
+    $plugin_full_path
+        = File::Spec->catfile( $plugin->{path}, $plugin->{file} );
+    # local $plugin_registry = {};
+    # FIXME JAY Temporarily disabled this check, uses more fucking globals
+    # if (
+    #      !$use_plugins
+    #      || ( exists $PluginSwitch->{$sig}
+    #           && !$PluginSwitch->{$sig} )
+    #   )
+    # {
+    #     $Plugins{$sig}{full_path} = $plugin_full_path;
+    #     $Plugins{$sig}{enabled}   = 0;
+    #     return 0;
+    # }
+    return 0 if exists $Plugins{$sig};
+    $Plugins{$sig}{full_path} = $plugin_full_path;
+    $timer->pause_partial if $timer;
+    eval "# line " 
+      . __LINE__ . " " 
+      . __FILE__
+      . "\nrequire '"
+      . $plugin_full_path . "';";
+    $timer->mark( "Loaded plugin " . $plugin->{sig} ) if $timer;
+    if ($@) {
+        $Plugins{$sig}{error} = $@;
+
+        # Log the issue but do it in a post_init callback so
+        # that we won't prematurely initialize the schema before
+        # all plugins are finished loading
+        my $msg = $mt->translate( "Plugin error: [_1] [_2]",
+                                  $plugin, $Plugins{$sig}{error} );
+        $mt->log(
+              { message => $msg, class => 'system', level => 'ERROR', } );
+        return 0;
+    }
+    else {
+        if ( my $obj = $Plugins{$sig}{object} ) {
+            $obj->init_callbacks();
+        }
+        else {
+
+            # A plugin did not register itself, so
+            # create a dummy plugin object which will
+            # cause it to show up in the plugin listing
+            # by it's filename.
+            MT->add_plugin( {} );
+        }
+    }
+    $Plugins{$sig}{enabled} = 1;
+    return 1;
+};    # end load_plugin sub
+
 
 ###
 ### FIXME Handle perl plugin deprecation properly
@@ -1784,8 +1814,8 @@ sub scan_directory_for_addons {
                     my $plugin_file
                       = File::Spec->catfile( $plugin_full_path, $file );
                     if ( -f $plugin_file ) {
+                        ## Plugin is a file, add it to list for processing
                         my $sig = File::Spec->catfile( $plugin_dir, $file );
-                        # Plugin is a file, add it to list for processing
                         push @{ $plugins{$type} }, {
                             label => $label,              # used only by packs
                             id    => lc($label),          # used only by packs
