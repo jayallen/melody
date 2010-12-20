@@ -2516,6 +2516,7 @@ optgroup option {
     text-align: right;
     position: relative;
     white-space: nowrap;
+    width: 145px;
 }
 .page-listing-table .extra .actions a,
 .entry-listing-table .extra .actions a {
