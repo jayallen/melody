@@ -4,9 +4,23 @@
 #
 # $Id$
 
-package __FILE__;
+package MT::Plugin::NakedPerl;
 
 use strict;
+use warnings;
+use base 'MT::Plugin';
+our $VERSION = '0.1';
+
+my $plugin;
+MT->add_plugin($plugin = __PACKAGE__->new({
+    name        => "Naked perl-initialized test",
+    version     => $VERSION,
+    description => "Bad legacy plugin without a plugin envelope. No cookie",
+    author_name => "Whatnot Smith",
+    key         => 'NakedPerl',
+    id          => 'NakedPerl',
+}));
+
 
 use MT::Template::Context;
 MT::Template::Context->add_tag( EzPlug => sub {1} );

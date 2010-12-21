@@ -1,76 +1,131 @@
 #!/usr/bin/perl
-
 use strict;
 use warnings;
-
-use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 16;
-
+use lib 't/lib', 'lib', 'extlib', 'addons/Log4MT.plugin/extlib';
+use Data::Dumper;
+use Test::Warn;
+use Test::More tests => 17;
 use MT;
-use MT::Test qw( :app :db );
+use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
+###l4p our $logger = MT::Log::Log4perl->new(); $logger->trace();
 
-# get the list of plugins and place them in a hash
-my $plugins = ();
+our ( $app );
+my %Test = ();          # Hash of tests to run
+my @extra_plugins;      # Array of (custom?) plugins which are not included
 
-my $app = MT->instance();
+# Bundled plugins included in our tests indexed by plugin
+# signature with expected test values
+my %bundled_plugins = (
+    'Markdown.plugin/config.yaml' => {
+        name        => 'Markdown and SmartyPants',
+        base_class  => 'MT::Plugin',  #     <----- DEFAULT
+        plugin_path => 'addons',      #     <----- DEFAULT
+        enabled     => 1,             #     <----- DEFAULT
+    },
+    'Awesome/config.yaml'             => { name => 'Oh Awesome'      },
+    'ThemeExport.plugin/config.yaml'  => { name => 'Theme Exporter'  },
+    'ThemeManager.plugin/config.yaml' => { name => 'Theme Manager'   },
+    'DePoClean.plugin/config.yaml'    => { name => 'DePoClean'       },
+    'WXRImporter.plugin/config.yaml'  => { name => 'WXR Importer'    },
+    'ClassicBlogThemePack.plugin/config.yaml' 
+                                => { name => 'Classic Blog Theme Pack'      },
+    'SimpleEditor.plugin/config.yaml'
+                                => { name => 'Six Apart Rich Text Editor'   },
+    'MelodyFeedback.plugin/config.yaml'
+                                => { name => 'Open Melody Community Feedback' },
+    'MultiBlog.plugin/config.yaml' => {
+        name         => 'MultiBlog',
+        base_class   => 'MultiBlog::Plugin',
+    },
+    'TypePadAntiSpam.plugin/config.yaml' => {
+        name         => 'TypePad AntiSpam',
+        base_class   => 'TypePadAntiSpam::Plugin',
+    },
+    'ConfigAssistant.pack/config.yaml' => {
+        name         => 'Configuration Assistant',
+        base_class   => 'MT::Component',
+    },
+    'Rebless/config.yaml' => {
+        name         => 'Rebless Me',
+        base_class   => 'Rebless::Plugin',
+    },
+    'stray.pl' => {
+        message      => ': Stray, unloaded perl plugin',
+        not_loaded   => 1,
+    },
+    'stray.yaml' => {
+        message      => ': Stray, unloaded yaml plugin',
+        not_loaded   => 1,
+    },
+    'subfoldered/subfoldered.pl' => {
+        name        => 'Subfoldered plugin',
+    }
+);
 
-# The horse left the barn long ago
-# my $cfg = $app->config;
-# $cfg->PluginPath(['t/plugins', 'plugins']);
-$app->init_plugins();
+# Initialize plugins - Should emit warnings that we test for
+warnings_like {
+    require MT::Test;
+    import MT::Test qw( :app :db );
 
-for my $sig ( keys %MT::Plugins ) {
+    $app = MT->instance();
+    $app->init_plugins();
+}
+[
+    qr/stray.pl.+not loaded.+plugins.+without.+enclosing folder/,
+    qr/.+plugin \(subfoldered.pl\).+deprecated plugin file format/
+],
+'Deprecation and compatibility break warnings';
 
-    # print STDERR "Plugin: $sig\n";
-    my $profile = $MT::Plugins{$sig};
-    if ( my $plugin = $profile->{object} ) {
+###l4p $logger->debug("PLUGIN: $_") foreach keys %MT::Plugins;
 
-        # print STDERR "  name: " . $plugin->name . "($sig,".ref($profile->{object}).")\n";
-        $plugins->{ $plugin->name }++;
+# Compile test data for LOADED plugins
+foreach my $sig ( sort keys %MT::Plugins ) {
+    my $info      = delete $bundled_plugins{ $sig };
+    unless ( $info ) {
+        push( @extra_plugins, $sig );
+        next;
+    }
+    my $profile   = $MT::Plugins{ $sig };
+    $Test{ $sig } = {
+        enabled => $profile->{enabled} || 0,
+        plugin  => $profile->{object},
+        $info ? (info => $info) : (),
     }
 }
 
-###########################################################
-# Test for the existence of at least these plugins
-###########################################################
-
-# plguins that really exist with the build
-ok( exists $plugins->{"MultiBlog"},                "MultiBlog exists" );
-ok( exists $plugins->{"Markdown and SmartyPants"}, "Markdown exists" );
-ok( exists $plugins->{"Configuration Assistant"}, "Config Assistant exists" );
-ok( exists $plugins->{"Theme Exporter"},          "Theme Exporter exists" );
-ok( exists $plugins->{"Theme Manager"},           "Theme Manager exists" );
-ok( exists $plugins->{"Simple Rich Text Editor"},
-    "Simple Rich Text Editor exists" );
-ok( exists $plugins->{"DePoClean"}, "DePoClean exists" );
-ok( exists $plugins->{"Open Melody Community Feedback"},
-    "Open Melody Community Feedback exists" );
-ok( exists $plugins->{"WXR Importer"},     "WXR Importer exists" );
-ok( exists $plugins->{"TypePad AntiSpam"}, "TypePad AntiSpam exists" );
-
-ok( exists $plugins->{"Rebless Me"}, "Rebless Me Test Plugin exists" );
-is( ref( $MT::Plugins{'Rebless/config.yaml'}->{'object'} ),
-    'Rebless::Plugin', 'Rebless Plugin is Rebless::Plugin' );
-is( ref( $MT::Plugins{'ConfigAssistant.pack/config.yaml'}->{'object'} ),
-    'MT::Component', 'Config Assistant is MT::Component' );
-is( ref( $MT::Plugins{'ThemeManager.plugin/config.yaml'}->{'object'} ),
-    'MT::Plugin', 'Theme Manager is MT::Plugin' );
-
-SKIP: {
-
-    # To test these, you need to do one of the following:
-    #   1) use a custom config file (like the ones we used to have) so you can
-    #      set the PluginPath normally
-    #   2) bootstrap the app yourself or
-    #   3) Override/Hook into the init process so you can set the PluginPath
-    #      BEFORE the plugins are initialized, or
-    #   4) Break up the damn _init_plugins_core method so that it's actually
-    #      testable.
-    skip "MT::Test dummy plugins skipped", 2
-      unless ref( $app->config->PluginPath ) eq 'ARRAY'
-          and grep {m{(t|..)/plugins$}} @{ $app->config->PluginPath };
-
-    # test plugins created by MT::Test
-    ok( exists $plugins->{"Awesome"},     "Awesome exists" );
-    ok( exists $plugins->{"testplug.pl"}, "testplug.pl exists" );
+# Compile test data for NON-LOADED plugins
+foreach my $sig ( sort keys %bundled_plugins ) {
+    $Test{ $sig } = {
+        info => $bundled_plugins{ $sig }
+    }
 }
+
+# Execute the tests
+foreach my $sig ( sort keys %Test ) {
+    my $test = $Test{$sig};
+    subtest $sig => sub {
+        plan tests => 2;
+        my $info = $test->{info};
+        $info->{base_class} ||= 'MT::Plugin';
+        $info->{message}    ||= " exists";
+        my $loaded = $info->{not_loaded} ? 0 : 1;
+        is(
+            ($sig && exists $MT::Plugins{$sig}) ? 1 : 0,
+            $loaded,
+            $sig . $info->{message}
+        );
+        SKIP: {
+            skip "Plugin not loaded", 1 unless $loaded;
+            is(
+                ref( $MT::Plugins{$sig}->{'object'} ),
+                $info->{base_class},
+                $info->{name}.' base class is '.$info->{base_class}
+            );
+        }
+    };
+
+}
+
+# Warn about any plugins not included since they might be newly bundled
+diag("The following plugins were not included in the test: \n\t* "
+    .join("\n\t* ", @extra_plugins));

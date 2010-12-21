@@ -1,4 +1,4 @@
-id: 'ReblessMe-Plugin'
-name: 'Rebless Me'
+name:   'Rebless Me'
+id:     'ReblessMe'
+key:    'ReblessMe'
 plugin_class: 'Rebless::Plugin'
-
