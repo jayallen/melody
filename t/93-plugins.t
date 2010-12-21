@@ -4,62 +4,68 @@ use warnings;
 use lib 't/lib', 'lib', 'extlib', 'addons/Log4MT.plugin/extlib';
 use Data::Dumper;
 use Test::Warn;
-use Test::More tests => 16;
+use Test::More tests => 17;
 use MT;
 use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
 ###l4p our $logger = MT::Log::Log4perl->new(); $logger->trace();
 
 our ( $app );
+my %Test = ();          # Hash of tests to run
+my @extra_plugins;      # Array of (custom?) plugins which are not included
 
-my %test_info = (
-    'addons/Markdown.plugin/config.yaml' => {
+# Bundled plugins included in our tests indexed by plugin
+# signature with expected test values
+my %bundled_plugins = (
+    'Markdown.plugin/config.yaml' => {
         name        => 'Markdown and SmartyPants',
         base_class  => 'MT::Plugin',  #     <----- DEFAULT
         plugin_path => 'addons',      #     <----- DEFAULT
         enabled     => 1,             #     <----- DEFAULT
     },
-    't/plugins/Awesome/config.yaml'          => { name => 'Oh Awesome'      },
-    'addons/ThemeExport.plugin/config.yaml'  => { name => 'Theme Exporter'  },
-    'addons/ThemeManager.plugin/config.yaml' => { name => 'Theme Manager'   },
-    'addons/DePoClean.plugin/config.yaml'    => { name => 'DePoClean'       },
-    'addons/WXRImporter.plugin/config.yaml'  => { name => 'WXR Importer'    },
-    'addons/ClassicBlogThemePack.plugin/config.yaml' 
+    'Awesome/config.yaml'             => { name => 'Oh Awesome'      },
+    'ThemeExport.plugin/config.yaml'  => { name => 'Theme Exporter'  },
+    'ThemeManager.plugin/config.yaml' => { name => 'Theme Manager'   },
+    'DePoClean.plugin/config.yaml'    => { name => 'DePoClean'       },
+    'WXRImporter.plugin/config.yaml'  => { name => 'WXR Importer'    },
+    'ClassicBlogThemePack.plugin/config.yaml' 
                                 => { name => 'Classic Blog Theme Pack'      },
-    'addons/SimpleEditor.plugin/config.yaml'
+    'SimpleEditor.plugin/config.yaml'
                                 => { name => 'Six Apart Rich Text Editor'   },
-    'addons/MelodyFeedback.plugin/config.yaml'
+    'MelodyFeedback.plugin/config.yaml'
                                 => { name => 'Open Melody Community Feedback' },
-    'addons/MultiBlog.plugin/config.yaml' => {
+    'MultiBlog.plugin/config.yaml' => {
         name         => 'MultiBlog',
         base_class   => 'MultiBlog::Plugin',
     },
-    'addons/TypePadAntiSpam.plugin/config.yaml' => {
+    'TypePadAntiSpam.plugin/config.yaml' => {
         name         => 'TypePad AntiSpam',
         base_class   => 'TypePadAntiSpam::Plugin',
     },
-    'addons/ConfigAssistant.pack/config.yaml' => {
+    'ConfigAssistant.pack/config.yaml' => {
         name         => 'Configuration Assistant',
         base_class   => 'MT::Component',
     },
-    't/plugins/Rebless/config.yaml' => {
+    'Rebless/config.yaml' => {
         name         => 'Rebless Me',
         base_class   => 'Rebless::Plugin',
     },
-    't/plugins/stray.pl' => {
+    'stray.pl' => {
         message      => ': Stray, unloaded perl plugin',
         not_loaded   => 1,
     },
-    't/plugins/stray.yaml' => {
+    'stray.yaml' => {
         message      => ': Stray, unloaded yaml plugin',
         not_loaded   => 1,
     },
-    't/plugins/subfoldered/subfoldered.pl' => {
+    'subfoldered/subfoldered.pl' => {
         name        => 'Subfoldered plugin',
     }
 );
 
+# Initialize plugins - Should emit warnings that we test for
 warnings_like {
-    use MT::Test qw( :app :db );
+    require MT::Test;
+    import MT::Test qw( :app :db );
 
     $app = MT->instance();
     $app->init_plugins();
@@ -72,10 +78,14 @@ warnings_like {
 
 ###l4p $logger->debug("PLUGIN: $_") foreach keys %MT::Plugins;
 
-my %Test = ();
+# Compile test data for LOADED plugins
 foreach my $sig ( sort keys %MT::Plugins ) {
+    my $info      = delete $bundled_plugins{ $sig };
+    unless ( $info ) {
+        push( @extra_plugins, $sig );
+        next;
+    }
     my $profile   = $MT::Plugins{ $sig };
-    my $info      = delete $test_info{ $sig };
     $Test{ $sig } = {
         enabled => $profile->{enabled} || 0,
         plugin  => $profile->{object},
@@ -83,12 +93,14 @@ foreach my $sig ( sort keys %MT::Plugins ) {
     }
 }
 
-foreach my $sig ( sort keys %test_info ) {
+# Compile test data for NON-LOADED plugins
+foreach my $sig ( sort keys %bundled_plugins ) {
     $Test{ $sig } = {
-        info => $test_info{ $sig }
+        info => $bundled_plugins{ $sig }
     }
 }
 
+# Execute the tests
 foreach my $sig ( sort keys %Test ) {
     my $test = $Test{$sig};
     subtest $sig => sub {
@@ -114,3 +126,6 @@ foreach my $sig ( sort keys %Test ) {
 
 }
 
+# Warn about any plugins not included since they might be newly bundled
+diag("The following plugins were not included in the test: \n\t* "
+    .join("\n\t* ", @extra_plugins));
