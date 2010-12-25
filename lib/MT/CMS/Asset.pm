@@ -1005,12 +1005,7 @@ sub _upload_file {
     my $basename = $q->param('file') || $q->param('fname');
     $basename =~ s!\\!/!g;    ## Change backslashes to forward slashes
     $basename =~ s!^.*/!!;    ## Get rid of full directory paths
-    if (MT->config->EnableAssetAutoDirify) {
-        my $delimiter = MT->config->AssetAutoDirifyDelimiter;
-        my (@parts) = ($basename =~ m/([\w\W]+)(\.[\w]+)/g);
-        use MT::Util;
-        $basename = scalar(@parts) == 2 ? MT::Util::dirify($parts[0], $delimiter) . $parts[1] : MT::Util::dirify($basename, $delimiter);
-    }
+
     if ( $basename =~ m!\.\.|\0|\|! ) {
         return
           start_upload( $app, %param,
