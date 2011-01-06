@@ -65,9 +65,6 @@ sub ascii_only { ( ( ref $_[0] ) || $_[0] ) eq __PACKAGE__ }
     '_USAGE_ARCHIVING_3' =>
       'Select the archive type to which you would like to add a new archive template. Then select the template to associate with that archive type.',
 
-    '_USAGE_BANLIST' =>
-      'Below is the list of IP addresses who you have banned from commenting on your site or from sending TrackBack pings to your site. To add a new IP address, enter the address in the form below. To delete a banned IP address, check the delete box in the table below, and press the DELETE button.',
-
     '_USAGE_PREFS' =>
       'This screen allows you to set a variety of optional settings concerning your blog, your archives, your comments, and your publicity &amp; notification settings. When you create a new blog, these values will be set to reasonable defaults.',
 

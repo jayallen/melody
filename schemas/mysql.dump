@@ -148,18 +148,6 @@ create table mt_entry (
     index (entry_week_number)
 );
 
-create table mt_ipbanlist (
-    ipbanlist_id integer not null auto_increment primary key,
-    ipbanlist_blog_id integer not null,
-    ipbanlist_ip varchar(15) not null,
-    ipbanlist_created_on datetime not null,
-    ipbanlist_modified_on timestamp not null,
-    ipbanlist_created_by integer,
-    ipbanlist_modified_by integer,
-    index (ipbanlist_blog_id),
-    index (ipbanlist_ip)
-);
-
 create table mt_log (
     log_id integer not null auto_increment primary key,
     log_message varchar(255),

@@ -966,12 +966,6 @@ use vars qw( @ISA %Lexicon );
     'Importer type [_1] was not found.' =>
       'No se encontró el tipo de importador [_1].',
 
-## lib/MT/CMS/BanList.pm
-    'You did not enter an IP address to ban.' =>
-      'No tecleó una dirección IP para bloquear.',
-    'The IP you entered is already banned for this blog.' =>
-      'La IP que introdujo ya está bloqueada en este blog.',
-
 ## lib/MT/CMS/System.pm
     'Permission denied.' => 'Permiso denegado.',
     'You don\'t have a system email address configured.  Please set this first, save it, then try the test email again.'
@@ -2042,10 +2036,6 @@ use vars qw( @ISA %Lexicon );
 ## lib/MT/ObjectTag.pm
     'Tag Placement'  => 'Gestión de Etiqueta',
     'Tag Placements' => 'Gestión de las Etiquetas',
-
-## lib/MT/IPBanList.pm
-    'IP Ban'  => 'Bloqueo de IP',
-    'IP Bans' => 'Bloqueos de IP',
 
 ## lib/MT/Log.pm
     'Log message'                 => 'Mensaje del registro',
@@ -3808,17 +3798,6 @@ que la dirección provista es correcta y le pertenece.',
     'Don\'t Divide'   => 'No dividir',
     'Make Backup (b)' => 'Hacer copia (b)',
     'Make Backup'     => 'Hacer copia',
-
-## tmpl/cms/list_banlist.tmpl
-    'IP Banning Settings' => 'Bloqueo de IPs',
-    'IP addresses'        => 'Direcciones IP',
-    'Delete selected IP Address (x)' =>
-      'Borrar la dirección IP seleccionada (x)',
-    'You have added [_1] to your list of banned IP addresses.' =>
-      'Agregó [_1] a su lista de direcciones IP bloqueadas.',
-    'You have successfully deleted the selected IP addresses from the list.'
-      => 'Eliminó correctamente las direcciones IP seleccionadas.',
-    'Ban IP Address' => 'Bloquear la dirección IP',
 
 ## tmpl/cms/preview_entry.tmpl
     'Preview [_1]'          => 'Pre-ver [_1]',

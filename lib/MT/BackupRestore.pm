@@ -1426,13 +1426,6 @@ sub parents {
     };
 }
 
-package MT::IPBanList;
-
-sub parents {
-    my $obj = shift;
-    { blog_id => MT->model('blog'), };
-}
-
 package MT::Blocklist;
 
 sub parents {

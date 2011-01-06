@@ -510,10 +510,6 @@ use vars qw( @ISA %Lexicon );
 
 ## default_templates/monthly_entry_listing.mtml
 
-## lib/MT/IPBanList.pm
-    'IP Ban'  => 'Interdiction IP',
-    'IP Bans' => 'Interdictions IP',
-
 ## lib/MT/BasicAuthor.pm
     'authors' => 'auteurs',
 
@@ -2432,11 +2428,6 @@ use vars qw( @ISA %Lexicon );
       'Les notes doivent être dupliquées si les trackbacks le sont'
     ,                                               # Translate - New
 
-## lib/MT/CMS/BanList.pm
-    'You did not enter an IP address to ban.' =>
-      'Vous devez saisir une adresse IP à bannir.',
-    'The IP you entered is already banned for this blog.' =>
-      'L\'adresse IP saisie est déjà bannie pour ce blog.',
 
 ## lib/MT/CMS/Plugin.pm
     'Plugin Set: [_1]'   => 'Éventail de plugins : [_1]',
@@ -4841,18 +4832,6 @@ use vars qw( @ISA %Lexicon );
     'Action Bars' => 'Barres de tâches',
     'Select the location of the entry editor&rsquo;s action bar.' =>
       'Sélectionner l\'emplacement de la barre d\'action de l\'éditeur de note.',
-
-## tmpl/cms/list_banlist.tmpl
-    'IP Banning Settings' => 'Paramètres des IP bannies',
-    'IP addresses'        => 'Adresses IP',
-    'Delete selected IP Address (x)' =>
-      'Effacer les adresses IP sélectionnées (x)',
-    'You have added [_1] to your list of banned IP addresses.' =>
-      'L\'adresse [_1] a été ajoutée à la liste des adresses IP bannies.',
-    'You have successfully deleted the selected IP addresses from the list.'
-      => 'L\'adresse IP sélectionnée a été supprimée de la liste.',
-    'Ban IP Address' => 'Bannir l\'adresse IP',
-    'Date Banned'    => 'Bannie le :',
 
 ## tmpl/cms/cfg_registration.tmpl
     'Registration Settings' => 'Paramètres des enregistrements',

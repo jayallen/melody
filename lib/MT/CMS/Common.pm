@@ -69,7 +69,7 @@ sub save {
         $param{error}       = $app->errstr;
         $param{return_args} = $q->param('return_args');
 
-        if ( ( $type eq 'notification' ) || ( $type eq 'banlist' ) ) {
+        if ( $type eq 'notification' ) {
             return list( $app, \%param );
         }
         else {
@@ -277,19 +277,6 @@ sub save {
         $app->add_return_arg( no_writedir => 1 )
           unless $fmgr->exists($site_path) && $fmgr->can_write($site_path);
     } ## end elsif ( my $cfg_screen = ...)
-    elsif ( $type eq 'banlist' ) {
-        return
-          $app->redirect(
-                          $app->uri(
-                                     'mode' => 'list',
-                                     args   => {
-                                               '_type' => 'banlist',
-                                               blog_id => $blog_id,
-                                               saved   => $obj->ip
-                                     }
-                          )
-          );
-    }
     elsif ( $type eq 'template' && $q->param('rebuild') ) {
         if ( !$id ) {
 
@@ -615,16 +602,11 @@ sub list {
     my $perms = $app->permissions;
     return $app->return_to_dashboard( redirect => 1 ) unless $perms;
 
-    #
-    #   In order for a user to see the IP Address banlist, they must have
-    #   can_manage_feedback on the current blog.
-    #
     if (
          $perms
          && (   ( $type eq 'blog' && !$perms->can_edit_config )
              || ( $type eq 'template'     && !$perms->can_edit_templates )
-             || ( $type eq 'notification' && !$perms->can_edit_notifications )
-             || ( $type eq 'banlist'      && !$perms->can_manage_feedback ) )
+             || ( $type eq 'notification' && !$perms->can_edit_notifications ) )
       )
     {
         return $app->return_to_dashboard( permission => 1 );
@@ -646,10 +628,6 @@ sub list {
         $args{direction} = 'descend';
         $args{offset}    = $offset;
         $args{limit}     = $limit + 1;
-    }
-    elsif ( $type eq 'banlist' ) {
-        $param{use_plugins} = $app->config->UsePlugins;
-        $limit = 0;
     }
     my $iter = $class->load_iter( \%terms, \%args );
 
@@ -789,17 +767,7 @@ sub list {
     }
 
     # add any breadcrumbs
-    if ( $type eq 'banlist' ) {
-        $app->add_breadcrumb( $app->translate('IP Banning') );
-        $param{nav_config}                       = 1;
-        $param{object_type}                      = 'banlist';
-        $param{show_ip_info}                     = 1;
-        $param{list_noncron}                     = 1;
-        $param{search_type}                      = 'entry';
-        $param{can_edit_config_or_publish_paths} = $perms->can_edit_config
-          || $perms->can_set_publish_paths;
-    }
-    elsif ( $type eq 'ping' ) {
+    if ( $type eq 'ping' ) {
         $app->add_breadcrumb( $app->translate('TrackBacks') );
         $param{nav_trackbacks} = 1;
         $param{object_type}    = 'ping';

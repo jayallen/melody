@@ -72,8 +72,6 @@ BEGIN {
             'comment'         => 'MT::Comment',
             'notification'    => 'MT::Notification',
             'templatemap'     => 'MT::TemplateMap',
-            'banlist'         => 'MT::IPBanList',
-            'ipbanlist'       => 'MT::IPBanList',
             'tbping'          => 'MT::TBPing',
             'ping'            => 'MT::TBPing',
             'ping_cat'        => 'MT::TBPing',
@@ -469,11 +467,9 @@ BEGIN {
             'LaunchBackgroundTasks'    => { default => 0 },
             'TypeKeyVersion'           => { default => '1.1' },
             'TransparentProxyIPs'      => { default => 0, },
-
             # 11/Nov/2010 - Temporarily setting default DebugMode to 1. See
             # https://openmelody.lighthouseapp.com/projects/26604/tickets/567
             'DebugMode'         => { default => 1, },
-            'ShowIPInformation' => { default => 0, },
             'AllowComments'     => { default => 1, },
             'AllowPings'        => { default => 1, },
             'HelpURL' =>

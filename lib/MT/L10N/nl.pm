@@ -503,10 +503,6 @@ use vars qw( @ISA %Lexicon );
 
 ## default_templates/monthly_entry_listing.mtml
 
-## lib/MT/IPBanList.pm
-    'IP Ban'  => 'IP ban',
-    'IP Bans' => 'IP bans',
-
 ## lib/MT/BasicAuthor.pm
     'authors' => 'auteurs',
 
@@ -2357,12 +2353,6 @@ use vars qw( @ISA %Lexicon );
     'Entries must be cloned if trackbacks are cloned' =>
       'Berichten moeten worden gekloond als trackbacks worden gekloond'
     ,                                   # Translate - New
-
-## lib/MT/CMS/BanList.pm
-    'You did not enter an IP address to ban.' =>
-      'U vulde geen IP adres in om te verbannen.',
-    'The IP you entered is already banned for this blog.' =>
-      'Het IP adres dat u opgaf is al verbannen van deze weblog.',
 
 ## lib/MT/CMS/Plugin.pm
     'Plugin Set: [_1]'   => 'Pluginset: [_1]',
@@ -4706,17 +4696,6 @@ use vars qw( @ISA %Lexicon );
     'Action Bars' => 'Actiebalken',
     'Select the location of the entry editor&rsquo;s action bar.' =>
       'Selecteer de locatie voor de actiebalk in de berichteneditor.',
-
-## tmpl/cms/list_banlist.tmpl
-    'IP Banning Settings'            => 'IP-verbanningsinstellingen',
-    'IP addresses'                   => 'IP adressen',
-    'Delete selected IP Address (x)' => 'Verwijder geselecteerd IP adres (s)',
-    'You have added [_1] to your list of banned IP addresses.' =>
-      'U hebt [_1] toegevoegd aan uw lijst met uitgesloten IP adressen.',
-    'You have successfully deleted the selected IP addresses from the list.'
-      => 'U hebt de geselecteerde IP adressen uit de lijst is verwijderd.',
-    'Ban IP Address' => 'Verban IP adres',
-    'Date Banned'    => 'Verbanningsdatum',
 
 ## tmpl/cms/cfg_registration.tmpl
     'Registration Settings' => 'Registratie-instellingen',

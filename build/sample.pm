@@ -190,10 +190,9 @@ sub encoding {"iso-8859-1"}    # Latin-1
 
     ## Blog Config: Navigation
     'Configuration' => '',
-    'Core Setup'    => '',
-    'Preferences'   => '',
-    'Archiving'     => '',
-    'IP Banning'    => '',
+    'Core Setup' => '',
+    'Preferences' => '',
+    'Archiving' => '',
 
     ## Add a Category screen (category_add.tmpl)
     'Add a Category'                                           => '',
@@ -211,15 +210,6 @@ sub encoding {"iso-8859-1"}    # Latin-1
     'Archive File Template'                                           => '',
     'Del'                                                             => '',
     '_USAGE_ARCHIVING_3'                                              => '',
-
-    ## Blog Config | IP Banning (cfg_banlist.tmpl)
-    'You did not select any IP addresses to delete.'           => '',
-    '_USAGE_BANLIST'                                           => '',
-    'You have added [_1] to your list of banned IP addresses.' => '',
-    'You have successfully deleted the selected IP addresses from the list.'
-      => '',
-    'IP Ban List'                                                   => '',
-    'You have [quant,_1,user] in your list of banned IP addresses.' => '',
 
     ## Blog Config | Preferences (cfg_prefs.tmpl)
     '_USAGE_PREFS'                              => '',

@@ -2000,11 +2000,6 @@ sub numerate {
     'Tag \'[_1]\' (ID:[_2]) deleted by \'[_3]\'' =>
       'Тег «[_1]» (ID:[_2]) удалён пользователм «[_3]»',
 
-## lib/MT/CMS/BanList.pm
-    'You did not enter an IP address to ban.' =>
-      'Вы не ввели IP адрес, который хотите заблокировать.',
-    'The IP you entered is already banned for this blog.' =>
-      'Введённый IP уже заблокирован в этом блоге.',
 
 ## lib/MT/CMS/Tools.pm
     'Password Recovery' => 'Восстановление пароля',
@@ -2956,10 +2951,6 @@ sub numerate {
     'Job' => 'Задача',
 
 ## lib/MT/Trackback.pm
-
-## lib/MT/IPBanList.pm
-    'IP Ban'  => 'Блокировка IP',
-    'IP Bans' => 'Блокировка IP',
 
 ## lib/MT/Mail.pm
     'Unknown MailTransfer method \'[_1]\'' =>
@@ -4553,19 +4544,6 @@ sub numerate {
     'Members'             => 'Пользователи',
     'Role Is Active'      => 'Роль активна',
     'Role Not Being Used' => 'Роль не используется',
-
-## tmpl/cms/list_banlist.tmpl
-    'IP Banning Settings' =>
-      'Параметры заблокированных IP',
-    'IP addresses' => 'IP адреса',
-    'Delete selected IP Address (x)' =>
-      'Удалить выбранные IP адреса (x)',
-    'You have added [_1] to your list of banned IP addresses.' =>
-      'Адрес [_1] добавлен в список заблокированных IP адресов.',
-    'You have successfully deleted the selected IP addresses from the list.'
-      => 'Выбранные IP адреса удалены из списка.',
-    'Ban IP Address' => 'Заблокировать IP адрес',
-    'Date Banned'    => 'Дата блокировки:',
 
 ## tmpl/cms/dialog/new_password.tmpl
     'Choose New Password' => 'Выберите новый пароль',

@@ -633,7 +633,6 @@ sub clone_with_children {
     #    Placement records
     #    Template records
     #    Permission records
-    #    IPBanList records???
     #    Notification records???
 
     my $new_blog_id;

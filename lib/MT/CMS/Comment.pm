@@ -170,10 +170,7 @@ sub edit_commenter {
 sub list {
     my $app = shift;
     my $q   = $app->query;
-    my $trim_length
-      = $app->config('ShowIPInformation')
-      ? const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_SHORT')
-      : const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
+    my $trim_length = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
     my $author_max_len = const('DISPLAY_LENGTH_EDIT_COMMENT_AUTHOR');
     my $comment_short_len
       = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_BREAK_UP_SHORT');
@@ -1767,10 +1764,7 @@ sub build_comment_table {
     my $i;
     $i = 1;
     my ( %blogs, %entries, %perms, %cmntrs );
-    my $trim_length
-      = $app->config('ShowIPInformation')
-      ? const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_SHORT')
-      : const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
+    my $trim_length = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
     my $author_max_len = const('DISPLAY_LENGTH_EDIT_COMMENT_AUTHOR');
     my $comment_short_len
       = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_BREAK_UP_SHORT');

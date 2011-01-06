@@ -2260,15 +2260,7 @@ sub _send_comment_notification {
                                         id      => $comment->id
                               }
           );
-        my $ban_link = $base
-          . $app->uri_params(
-                              'mode' => 'save',
-                              args   => {
-                                        '_type' => 'banlist',
-                                        blog_id => $blog->id,
-                                        ip      => $comment->ip
-                              }
-          );
+
         my %param = (
              blog           => $blog,
              entry          => $entry,
@@ -2276,7 +2268,6 @@ sub _send_comment_notification {
              approve_url    => $approve_link,
              spam_url       => $spam_link,
              edit_url       => $edit_link,
-             ban_url        => $ban_link,
              comment        => $comment,
              unapproved     => !$comment->visible(),
              state_editable => (

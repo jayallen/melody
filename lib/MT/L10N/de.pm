@@ -501,10 +501,6 @@ use vars qw( @ISA %Lexicon );
 
 ## default_templates/monthly_entry_listing.mtml
 
-## lib/MT/IPBanList.pm
-    'IP Ban'  => 'IP-Sperre',
-    'IP Bans' => 'IP-Sperren',
-
 ## lib/MT/BasicAuthor.pm
     'authors' => 'Autoren',
 
@@ -2358,12 +2354,6 @@ use vars qw( @ISA %Lexicon );
     'Entries must be cloned if trackbacks are cloned' =>
       'Zum Klonen von TrackBacks müssen auch die Einträge geklont werden.'
     ,                                                   # Translate - New # OK
-
-## lib/MT/CMS/BanList.pm
-    'You did not enter an IP address to ban.' =>
-      'Keine IP-Adresse angegeben.',
-    'The IP you entered is already banned for this blog.' =>
-      'Die angegebene IP-Adresse ist für dieses Weblog bereits gesperrt.',
 
 ## lib/MT/CMS/Plugin.pm
     'Plugin Set: [_1]'   => 'Plugin-Gruppe: [_1]',
@@ -4705,17 +4695,6 @@ use vars qw( @ISA %Lexicon );
     'Action Bars' => 'Menüleisten',
     'Select the location of the entry editor&rsquo;s action bar.' =>
       'Gewünschte Position der Menüleiste',
-
-## tmpl/cms/list_banlist.tmpl
-    'IP Banning Settings'            => 'IP-Sperren-Einstellungen',
-    'IP addresses'                   => 'IP-Adressen',
-    'Delete selected IP Address (x)' => 'Gewählte IP-Adressen löschen (x)',
-    'You have added [_1] to your list of banned IP addresses.' =>
-      'Sie haben [_1] zur Liste mit gesperrten IP-Adressen hinzugefügt.',
-    'You have successfully deleted the selected IP addresses from the list.'
-      => 'Sie haben die ausgewählten IP-Adressen erfolgreich aus der Liste entfernt.',
-    'Ban IP Address' => 'IP-Adresse sperren',
-    'Date Banned'    => 'gesperrt am',
 
 ## tmpl/cms/cfg_registration.tmpl
     'Registration Settings' => 'Registrierungs-Einstellungen',

@@ -184,23 +184,6 @@ sub ping {
       or return $app->_response(
           Error => $app->translate( "Invalid TrackBack ID '[_1]'", $tb_id ) );
 
-    my $user_ip = $app->remote_ip;
-
-    ## Check if this user has been banned from sending TrackBack pings.
-    require MT::IPBanList;
-    my $iter = MT::IPBanList->load_iter( { blog_id => $tb->blog_id } );
-    while ( my $ban = $iter->() ) {
-        my $banned_ip = $ban->ip;
-        if ( $user_ip =~ /$banned_ip/ ) {
-            return
-              $app->_response(
-                           Error =>
-                             $app->translate(
-                               "You are not allowed to send TrackBack pings.")
-              );
-        }
-    }
-
     my ( $blog_id, $entry, $cat );
     if ( $tb->entry_id ) {
         require MT::Entry;
@@ -501,18 +484,12 @@ sub _send_ping_notification {
                 args =>
                   { blog_id => $blog->id, '_type' => 'ping', id => $ping->id }
           );
-        my $ban_link = $base
-          . $app->uri_params(
-             'mode' => 'save',
-             args =>
-               { '_type' => 'banlist', blog_id => $blog->id, ip => $ping->ip }
-          );
+
         my %param = (
              blog           => $blog,
              approve_url    => $approve_link,
              spam_url       => $spam_link,
              edit_url       => $edit_link,
-             ban_url        => $ban_link,
              ping           => $ping,
              unapproved     => !$ping->visible(),
              state_editable => (
