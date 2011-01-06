@@ -61,25 +61,18 @@ my @word_pool = qw(
 srand(1);
 
 # these are all the numbers that control how many of what are generated
-<<<<<<< HEAD
-my $blog_count          = sub { $blogs * $weight_factor };
-my $authors_per_blog    = sub { $authors * $weight_factor };
-my $categories_per_blog = sub { $cats + int( rand(10) ) * $weight_factor };
-my $entries_per_blog    = sub { $entries + int( rand(30) ) * $weight_factor };
-my $notifications_per_blog = sub { 3 + int( rand(20) ) };
-my $bans_per_blog          = sub { 2 + int( rand(10) ) };
-my $comments_per_entry     = sub { int( rand(10) ) * $weight_factor };
-my $tags_per_entry         = sub { int( rand(5) ) * $weight_factor };
-my $pings_per_trackback    = sub { int( rand(10) ) * $weight_factor };
-=======
-my $blog_count             = sub { $blogs              * $weight_factor };
-my $authors_per_blog       = sub { $authors            * $weight_factor };
-my $categories_per_blog    = sub { $cats + int(rand(10)) * $weight_factor };
-my $entries_per_blog       = sub { $entries + int(rand(30)) * $weight_factor };
-my $notifications_per_blog = sub { 3   + int(rand(20))                  };
-my $comments_per_entry     = sub {       int(rand(10)) * $weight_factor };
-my $tags_per_entry         = sub {       int(rand(5))  * $weight_factor };
-my $pings_per_trackback    = sub {       int(rand(10)) * $weight_factor };
+
+sub weighted { +shift * $weight_factor  }
+sub randint  { int(rand( +shift ))      }
+my $notifications_per_blog = sub {        3 + randint( 20 )             };
+my $blog_count             = sub { weighted( $blogs )                   };
+my $authors_per_blog       = sub { weighted( $authors )                 };
+my $categories_per_blog    = sub { weighted( $cats    + randint( 10 ))  };
+my $entries_per_blog       = sub { weighted( $entries + randint( 30 ))  };
+my $comments_per_entry     = sub { weighted( randint( 10 ) )            };
+my $tags_per_entry         = sub { weighted( randint( 5 ) )             };
+my $pings_per_trackback    = sub { weighted( randint( 10 ) )            };
+
 my %defs = (
     'MT::Blog' => {
         table => 'blog',
