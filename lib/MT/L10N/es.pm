@@ -792,7 +792,7 @@ use vars qw( @ISA %Lexicon );
       '¡Acabo de finalizar la instalación de [_1] [_2]!',
     'Welcome to my new blog powered by [_1]. This is the first post on my blog and was created for me automatically when I finished the installation process. But that is ok, because I will soon be creating posts of my own!'
       => 'Bienvenido a mi nuevo blog de [_1]. Esta es la primera entrada en mi blog y fue creada automáticamente al finalizar el proceso de instalación. ¡Pronto crearé mis propias entradas!',
-    'Movable Type also created a comment for me as well so that I could see what a comment will look like on my blog once people start submitting comments on all the posts I will write.'
+    'Melody also created a comment for me as well so that I could see what a comment will look like on my blog once people start submitting comments on all the posts I will write.'
       => 'Melody también creo un comentario por mi para ver como lucen los comentarios en mi blog una vez que la gente comience a enviar comentarios en las entradas que escriba.',
     'Can administer the blog.' => 'Puede administrar el blog.',
     'Editor'                   => 'Editor',

@@ -2238,7 +2238,7 @@ sub seed_database {
     $comment->blog_id( $blog->id );
     $comment->text(
         MT->translate(
-            "Movable Type also created a comment for me as well so that I could see what a comment will look like on my blog once people start submitting comments on all the posts I will write."
+            "Melody also created a comment for me as well so that I could see what a comment will look like on my blog once people start submitting comments on all the posts I will write."
         )
     );
     $comment->visible(1);
