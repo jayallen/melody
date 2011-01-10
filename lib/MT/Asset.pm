@@ -169,7 +169,36 @@ sub save {
     if ( defined $asset->file_ext ) {
         $asset->file_ext( lc( $asset->file_ext ) );
     }
+    if (MT->config->EnableAssetAutoDirify) {
+        use MT::Util qw(dirify decode_url);
+        my $delimiter = MT->config->AssetAutoDirifyDelimiter;
+        my $fmgr = $asset->blog->file_mgr;
+        my $old_path = $asset->file_path;
 
+        ##file_ext is stored as jpg, not .jpg, hence the -1
+        my $basename = substr($asset->file_name, 0, index($asset->file_name, $asset->file_ext)-1);
+        my $basename_dirified = dirify($basename, $delimiter);
+        my $path = $asset->file_path;
+        my $blog_site_url = $asset->blog->site_url();
+
+        $path =~ s/$basename/$basename_dirified/;
+        ##Assets with spaces and such in them are URL encoded initially.
+        ##If they are not decoded, then the Perl regexs below will fail.
+        my $url = decode_url $asset->url;
+        $url =~ s/$basename/$basename_dirified/;
+        $url =~ s/$blog_site_url/\%r\//;
+
+        ##URL should now look like %r/myfolder/myfile.jpeg, not http://www.mydomain.com/myfolder/myfile.jpeg
+        ##This value will let the asset be stored as having a relative path to the blog, making it easier
+        ##to manually move assets in cases like a shared host moving a user between servers.
+        $asset->file_path($path);
+        $asset->url($url);
+        $asset->file_name($basename);
+        ##No need to call $asset->save because it is called below.
+
+        $fmgr->rename($old_path, $path); ##Move the file to the new dirified file name
+
+    }
     unless ( $asset->SUPER::save(@_) ) {
 
         # TODO - note to committers: should this be here? Seems odd.
