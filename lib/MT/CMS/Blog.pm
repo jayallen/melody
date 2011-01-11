@@ -631,6 +631,7 @@ sub cfg_blog_settings {
     $param{no_cachedir}         = $q->param('no_cachedir');
     $param{no_writecache}       = $q->param('no_writecache');
     $param{include_system}      = $blog->include_system || '';
+    $param{is_blog}             = 1;
 
     my $mtview_path = File::Spec->catfile( $blog->site_path(), "mtview.php" );
 
