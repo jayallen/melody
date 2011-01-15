@@ -481,7 +481,7 @@ use vars qw( @ISA %Lexicon );
     'Learn more about OpenID' => 'Mehr über OpenID erfahren',
 
 ## default_templates/powered_by.mtml
-    '_MTCOM_URL' => 'http://www.movabletype.com/',
+    '_MTCOM_URL' => 'http://openmelody.org/',
 
 ## default_templates/tag_cloud.mtml
 
