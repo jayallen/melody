@@ -1312,6 +1312,10 @@ body.system #blog-nav li:hover li a:hover {
 /* Welcome Widget */
 
 .welcome-widget {
+	background: white;
+}
+
+.welcome-widget .inner {
     background: url('../images/widget/welcome-bg.jpg') no-repeat;
 }
 
