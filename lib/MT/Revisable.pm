@@ -570,3 +570,19 @@ following methods:
 =item * load_revision
 
 If some of the above methods are not applicable to your driver, simply return undef. 
+
+=head1 QUESTIONS TO INVESTIGATE/DOCUMENT
+
+=over 4
+
+=item * Why are we recording revisions in a datasource+'_rev' table AND datasource+'_meta' table?  What's the purpose of their usage?
+
+=item * Why isn't datasource+'_rev_rev_number' column indexed?
+
+=item * Why is revisioning ONLY enabled for changes made through MT::App::CMS? api_pre_save and cms_pre_save but "return 1 unless $app->isa('MT::App');"
+
+=item * Why are there no pre-/post-remove and remove_filter callbacks for revisions?
+
+$obj->diff_object($obj_b)
+
+=back
