@@ -265,7 +265,7 @@ use vars qw( @ISA %Lexicon );
       '<a href="[_2]">–ê—Ä—Ö–∏–≤—ã</a> [_1]',
 
 ## default_templates/powered_by.mtml
-    '_MTCOM_URL' => 'http://www.movabletype.com/',
+    '_MTCOM_URL' => 'http://openmelody.org/',
 
 ## default_templates/category_archive_list.mtml
 

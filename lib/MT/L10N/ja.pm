@@ -542,7 +542,7 @@ use vars qw( @ISA %Lexicon );
     'Pages' => 'ウェブページ',
 
 ## default_templates/powered_by.mtml
-    '_MTCOM_URL' => 'http://www.sixapart.jp/movabletype/',
+    '_MTCOM_URL' => 'http://openmelody.org/',
 
 ## default_templates/recent_assets.mtml
 

@@ -196,7 +196,7 @@ the address you provided is correct and belongs to you.',
     '_DATE_TO'           => 'To',
     '_LOCALE_WEEK_START' => '0',
     '_SHORT_MAY'         => 'May',
-    '_MTCOM_URL'         => 'http://www.movabletype.com/',
+    '_MTCOM_URL'         => 'http://openmelody.org/',
     '_CATEGORY_BASENAME' => 'Basename',
 
     '_AUTO'                => 1,
