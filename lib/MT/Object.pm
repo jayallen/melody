@@ -291,10 +291,10 @@ sub install_properties {
         );
     }
 
-    # Because of the inheritance of MT::Entry by MT::Page, we need to do this here
-    if ( $class->isa('MT::Revisable') ) {
-        $class->init_revisioning();
-    }
+    # Because of the inheritance of MT::Entry by MT::Page,
+    # we need to do this here.
+    # FIXME As opposed to where? Pretend we know nothing.
+    $class->init_revisioning() if $class->isa('MT::Revisable');
 
     return $props;
 } ## end sub install_properties
@@ -2701,7 +2701,7 @@ For example, you cannot do the following:
         $foo->remove;
     }
 
-Instead you should do either this:
+Instead you should do either this: # FIXME NO unbounded, non-iterative loads!!
 
     my @foo = MT::Foo->load({ foo => 'bar' });
     for my $foo (@foo) {
