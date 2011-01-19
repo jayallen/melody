@@ -34,7 +34,13 @@ sub login {
 
     $class->set_extension_args($claimed_identity);
 
-    my $check_url = $claimed_identity->check_url(%params);
+    my $check_url = $claimed_identity->check_url(
+        %params,
+        (   2 == $claimed_identity->protocol_version
+            ? ( delayed_return => 1 )
+            : ()
+        ),
+    );
 
     return $app->redirect($check_url);
 } ## end sub login
@@ -46,7 +52,6 @@ sub handle_sign_in {
     my $INTERVAL = 60 * 60 * 24 * 7;
 
     $auth_type ||= 'OpenID';
-
     my $blog         = $app->model('blog')->load( $q->param('blog_id') );
     my $author_class = $app->model('author');
 
@@ -54,8 +59,10 @@ sub handle_sign_in {
     my $session;
 
     my %param = $app->query->Vars;
+    my $nickname = $param{'openid.sreg.nickname'};
+    $param{'openid.sreg.nickname'} = Encode::encode_utf8($nickname)
+        if Encode::is_utf8($nickname);
     my $csr = $class->get_csr( \%param, $blog ) or return 0;
-
     if ( my $setup_url = $csr->user_setup_url( post_grant => 'return' ) ) {
         return $app->redirect($setup_url);
     }
@@ -109,7 +116,10 @@ sub handle_sign_in {
 
         if ( my $userpic = $cmntr->userpic ) {
             my @stat  = stat( $userpic->file_path() );
-            my $mtime = $stat[9];
+            require MT::FileMgr;
+            my $fmgr  = MT::FileMgr->new('Local');
+            my $mtime = $fmgr->file_mod_time( $userpic->file_path() );
+
             if ( $mtime > time - $INTERVAL ) {
 
                 # newer than 7 days ago, don't download the userpic
@@ -138,7 +148,6 @@ sub handle_sign_in {
         }
     } ## end elsif ( my $vident = $csr...)
     else {
-
         # If there's no signature, then we trust the cookie.
         my %cookies     = $app->cookies();
         my $cookie_name = MT::App::COMMENTER_COOKIE_NAME();
@@ -217,14 +226,29 @@ sub _get_csr {
     $ua ||= _get_ua();
     return unless $ua;
     require Net::OpenID::Consumer;
-    Net::OpenID::Consumer->new(
-        ua              => $ua,
-        args            => $params,
-        consumer_secret => $secret,
 
-        # debug => sub {
-        # }
+
+    my $can_cache;
+    my $tmp_dir = MT->config('TempDir');
+    if ($tmp_dir) {
+        $tmp_dir = File::Spec->catdir( $tmp_dir, 'openid' );
+        eval { require Cache::File; };
+        $can_cache = 1 if !$@ && $tmp_dir;
+    }
+     Net::OpenID::Consumer->new(
+         ua              => $ua,
+         args            => $params,
+         consumer_secret => $secret,
+        (   $can_cache
+            ? ( cache => Cache::File->new(
+                    cache_root      => $tmp_dir,
+                   default_expires => '6000 sec'
+                )
+                )
+            : ()
+        ),
     );
+
 }
 
 sub get_csr {
@@ -278,7 +302,7 @@ sub _get_nickname {
         }
         $xml->cleanup;
 
-        return MT::I18N::utf8_off($name) if $name;
+        return $name if $name;
     }
 
     ## Atom
@@ -294,8 +318,7 @@ sub _get_nickname {
                     $name = $name_el->string_value;
                 }
                 $xml->cleanup;
-
-                return MT::I18N::utf8_off($name) if $name;
+                return $name if $name;
             }
         }
     }
