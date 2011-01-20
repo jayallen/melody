@@ -167,8 +167,7 @@ TC.attachLoadEvent( init );
 
 <mtapp:listing
     hide_pager="1">
-    <mt:if __first__>
-        <input type="hidden" name="move_cat_id" value="" />
+    <mt:if name="__first__">
         <thead>
             <tr>
                 <th id="delete-col-head" class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
@@ -184,6 +183,9 @@ TC.attachLoadEvent( init );
             <tr class="create-row create-inline" id="create-0">
                 <td class="move-col" colspan="2">&nbsp;</td>
                 <td colspan="4">
+                    <mt:if name="__first__">
+                        <input type="hidden" name="move_cat_id" value="" />
+                    </mt:if>
                     <mt:setvarblock name="new_parent_label"><__trans phrase="New Parent [_1]" params="<mt:var name="object_label">"></mt:setvarblock>
                     <mtapp:setting
                         id="new-parent-category"
@@ -296,6 +298,7 @@ TC.attachLoadEvent( init );
         </tbody>
     </mt:if>
 <mt:else>
+    <mt:ignore> NOTE: The else above is used by mtapp:listing. See POD for details</mt:ignore>
     <mtapp:statusmsg id="zero-state" class="info zero-state">
         <__trans phrase="No categories could be found.">
     </mtapp:statusmsg>
