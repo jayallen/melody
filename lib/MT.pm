@@ -2801,36 +2801,38 @@ sub get_next_sched_post_for_user {
     return $next_sched_utc;
 } ## end sub get_next_sched_post_for_user
 
-our %Commenter_Auth;
+{
+    our %Commenter_Auth;
 
-sub init_commenter_authenticators {
-    my $self = shift;
-    my $auths = $self->registry("commenter_authenticators") || {};
-    %Commenter_Auth = %$auths;
-    my $app = $self->app;
-    my $blog = $app->blog if $app->isa('MT::App');
-    foreach my $auth ( keys %$auths ) {
-        if ( my $c = $auths->{$auth}->{condition} ) {
-            $c = $self->handler_to_coderef($c);
-            if ($c) {
-                delete $Commenter_Auth{$auth} unless $c->($blog);
+    sub init_commenter_authenticators {
+        my $self = shift;
+        my $auths = $self->registry("commenter_authenticators") || {};
+        %Commenter_Auth = %$auths;
+        my $app = $self->app;
+        my $blog = $app->blog if $app->isa('MT::App');
+        foreach my $auth ( keys %$auths ) {
+            if ( my $c = $auths->{$auth}->{condition} ) {
+                $c = $self->handler_to_coderef($c);
+                if ($c) {
+                    delete $Commenter_Auth{$auth} unless $c->($blog);
+                }
             }
         }
+        $Commenter_Auth{$_}{key} ||= $_ for keys %Commenter_Auth;
     }
-    $Commenter_Auth{$_}{key} ||= $_ for keys %Commenter_Auth;
-}
 
-sub commenter_authenticator {
-    my $self = shift;
-    my ($key) = @_;
-    %Commenter_Auth or $self->init_commenter_authenticators();
-    return $Commenter_Auth{$key};
-}
+    sub commenter_authenticator {
+        my $self = shift;
+        my ($key) = @_;
+        %Commenter_Auth or $self->init_commenter_authenticators();
+        return $Commenter_Auth{$key};
+    }
 
-sub commenter_authenticators {
-    my $self = shift;
-    %Commenter_Auth or $self->init_commenter_authenticators();
-    return values %Commenter_Auth;
+    sub commenter_authenticators {
+        my $self = shift;
+        %Commenter_Auth or $self->init_commenter_authenticators();
+        return values %Commenter_Auth;
+    }
 }
 
 sub _commenter_auth_params {
