@@ -3221,26 +3221,6 @@ HATENA
     };
 } ## end sub core_commenter_authenticators
 
-our %Captcha_Providers;
-
-sub captcha_provider {
-    my $self = shift;
-    my ($key) = @_;
-    $self->init_captcha_providers() unless %Captcha_Providers;
-    return $Captcha_Providers{$key};
-}
-
-sub captcha_providers {
-    my $self = shift;
-    $self->init_captcha_providers() unless %Captcha_Providers;
-    my $def  = delete $Captcha_Providers{'mt_default'};
-    my @vals = values %Captcha_Providers;
-    if ( defined($def) && $def->{condition}->() ) {
-        unshift @vals, $def;
-    }
-    @vals;
-}
-
 sub core_captcha_providers {
     return {
         'mt_default' => {
@@ -3257,16 +3237,38 @@ sub core_captcha_providers {
     };
 }
 
-sub init_captcha_providers {
-    my $self = shift;
-    my $providers = $self->registry("captcha_providers") || {};
-    foreach my $provider ( keys %$providers ) {
-        delete $providers->{$provider}
-          if exists( $providers->{$provider}->{condition} )
-              && !( $providers->{$provider}->{condition}->() );
+{
+    our %Captcha_Providers;
+
+    sub captcha_provider {
+        my $self = shift;
+        my ($key) = @_;
+        $self->init_captcha_providers() unless %Captcha_Providers;
+        return $Captcha_Providers{$key};
     }
-    %Captcha_Providers = %$providers;
-    $Captcha_Providers{$_}{key} ||= $_ for keys %Captcha_Providers;
+
+    sub captcha_providers {
+        my $self = shift;
+        $self->init_captcha_providers() unless %Captcha_Providers;
+        my $def  = delete $Captcha_Providers{'mt_default'};
+        my @vals = values %Captcha_Providers;
+        if ( defined($def) && $def->{condition}->() ) {
+            unshift @vals, $def;
+        }
+        @vals;
+    }
+
+    sub init_captcha_providers {
+        my $self = shift;
+        my $providers = $self->registry("captcha_providers") || {};
+        foreach my $provider ( keys %$providers ) {
+            delete $providers->{$provider}
+              if exists( $providers->{$provider}->{condition} )
+                  && !( $providers->{$provider}->{condition}->() );
+        }
+        %Captcha_Providers = %$providers;
+        $Captcha_Providers{$_}{key} ||= $_ for keys %Captcha_Providers;
+    }
 }
 
 sub effective_captcha_provider {
