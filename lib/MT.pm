@@ -727,9 +727,12 @@ sub register_callbacks {
     1;
 }
 
-our $CB_ERR;
-sub callback_error { $CB_ERR = $_[0]; }
-sub callback_errstr {$CB_ERR}
+{    
+    our $CB_ERR;
+    # TODO Convert function to method in appropriate package
+    sub callback_error { $CB_ERR = $_[0]; }
+    sub callback_errstr {$CB_ERR}
+}
 
 sub run_callback {
     my $class = shift;
@@ -845,6 +848,7 @@ sub run_callbacks {
         }
     }
 
+    # TODO Convert to method in appropriate package
     callback_error( join( '', @errors ) );
 
     $CallbacksEnabled{$_} = 1 for @methods;
