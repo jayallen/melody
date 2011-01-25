@@ -19,14 +19,13 @@ our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,
       $PORTAL_URL );
 our ( $MT_DIR, $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
 our (
-      $plugin_sig, $plugin_envelope, $plugin_registry,
-      %Plugins,    @Components,      %Components,
-      $DebugMode,  $mt_inst,         %mt_inst
+      $plugin_sig,      %Plugins,    @Components,     $mt_inst,
+      $plugin_envelope, $DebugMode,  %Components,     %mt_inst,
+      $plugin_registry, %CallbackAlias, $plugins_installed
 );
-my %Text_filters;
+my ( %Text_filters, $plugin_full_path, %CallbacksEnabled, @Callbacks );
 
-# For state determination in MT::Object
-our $plugins_installed;
+our $CallbacksEnabled = 1;
 
 BEGIN {
     $plugins_installed = 0;
@@ -558,8 +557,6 @@ sub log {
 
 } ## end sub log
 
-my $plugin_full_path;
-
 sub run_tasks {
     my $mt = shift;
     require MT::TaskMgr;
@@ -631,11 +628,6 @@ sub add_plugin {
     push @Components, $plugin;
     1;
 } ## end sub add_plugin
-
-our %CallbackAlias;
-our $CallbacksEnabled = 1;
-my %CallbacksEnabled;
-my @Callbacks;
 
 sub add_callback {
     my $class = shift;
