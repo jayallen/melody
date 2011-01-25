@@ -14,45 +14,37 @@ sub plugin {
 
 sub init_app {
     my $plugin = shift;
-    my ($app) = @_;
+    my ($app)  = @_;
+    my $cfg    = $app->config;
     return if $app->id eq 'wizard';
 
-    # Disable the AutoPrefs plugin if it's installed. (AutoPrefs has been
-    # merged with Config Assistant, so is not needed anymore.)
-    my $switch = MT->config('PluginSwitch') || {};
-    unless ( ( $switch->{'AutoPrefs'} || '' ) eq '0' ) {
-        $switch->{'AutoPrefs'} = 0;
-        MT->config( 'PluginSwitch', $switch, 1 );
-        MT->config->save_config();
-    }
+    # Disable the AutoPrefs plugin if it's still installed. (AutoPrefs has
+    # been merged with Config Assistant, so is not needed anymore.)
+    my $switch = $cfg->PluginSwitch || {};
+    $switch->{'AutoPrefs/config.yaml'} = $switch->{'AutoPrefs'} = 0;
+    $cfg->PluginSwitch( $switch );
 
+    # FIXME This needs some commentary...
     init_options($app);
-    my $r = $plugin->registry;
-    $r->{tags} = sub { load_tags( $app, $plugin ) };
+
+    # FIXME This looks fishy... Pretty sure we shouldn't be accessing the registry as a hash but instead $plugin->registry('tags', sub { ... })
+    my $r = $plugin->registry->{tags} = sub { load_tags( $app, $plugin ) };
 
     # Static files only get copied during an upgrade.
     if ( $app->id eq 'upgrade' ) {
-
-        # Because no schema version is set, the upgrade process doesn't run
-        # during the plugin's initial install. But, we need it to so that
-        # static files will get copied. Check if PluginschemaVersion has been
-        # set for Config Assistant. If not, set it. That way, when the upgrade
-        # runs it sees it and will run the upgrade_function.
-        # If this isn't the upgrade screen, just quit.
-        my $cfg = MT->config('PluginSchemaVersion');
-
-        # $cfg->{$plugin->id} = '0.1';  ### UNCOMMENT TO TEST UPGRADE ###
-        if ( ( $cfg->{ $plugin->id } || '' ) eq '' ) {
-
-            # There is no schema version set. Set one!
-            $cfg->{ $plugin->id } = '0.1';
-        }
+        # Because no schema version is set, the upgrade process does nothing
+        # during the plugin's initial install.  So, in order to copy static
+        # files on first run, we set an initial schema version which triggers
+        # the framework.
+        my $schemas                 = $cfg->PluginSchemaVersion || {};
+        $schemas->{ $plugin->id } ||= '0.1';
+        # $schemas->{$plugin->id}   = '0.1';  ## UNCOMMENT TO TEST UPGRADE ##
+        $cfg->PluginSchemaVersion( $schemas );
     }
-
-    require Sub::Install;
 
     # TODO - This should not have to reinstall a subroutine. It should invoke
     #        a callback.
+    require Sub::Install;
     Sub::Install::reinstall_sub( {
                                    code => \&needs_upgrade,
                                    into => 'MT::Component',
@@ -87,9 +79,9 @@ sub init_options {
                     my $option
                       = $r->{'template_sets'}->{$set}->{'options'}->{$opt};
 
-                    # To avoid option names that may collide with other
-                    # options in other template sets settings are derived
-                    # by combining the name of the template set and the
+                    # To avoid option names that may collide with other 
+                    # options in other template sets settings are derived 
+                    # by combining the name of the template set and the 
                     # option's key.
                     my $optname = $set . '_' . $opt;
                     if ( _option_exists( $sig, $optname ) ) {
@@ -99,7 +91,7 @@ sub init_options {
                     else {
 
                         # if ( my $default = $option->{default} ) {
-                        #     if (   !ref($default)
+                        #     if (   !ref($default) 
                         #         && (   $default =~ /^\s*sub/
                         #             || $default =~ /^\$/)) {
                         #         $default
@@ -118,7 +110,7 @@ sub init_options {
                             $obj->{'registry'}->{'settings'}->{$optname}
                               = { scope => 'blog', %$option, };
                         }
-                    } ## end else [ if ( _option_exists( $sig...))]
+                    }
                 } ## end foreach my $opt ( keys %{ $r...})
             } ## end if ( $r->{'template_sets'...})
         }    # end foreach (@sets)
@@ -192,7 +184,7 @@ sub load_tags {
                    class    => 'system',
                    category => 'plugin',
                    level    => MT::Log::ERROR(),
-                 }
+                }
             );
         }
     }
