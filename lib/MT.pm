@@ -1698,26 +1698,28 @@ sub _perl_init_plugin_warnings {
     } ## end if ($needs_warning)
 } ## end sub _perl_init_plugin_warnings
 
-my %addons;
+{
+    my %addons;
 
-sub find_addons {
-    my $mt = shift;
-    my ($type) = @_;
-    unless (%addons) {
-        my @PluginPaths;
-        my $cfg = $mt->config;
-        unshift @PluginPaths, File::Spec->catdir( $MT_DIR, 'addons' );
-        unshift @PluginPaths, $cfg->PluginPath;
-        foreach my $PluginPath (@PluginPaths) {
-            __merge_hash( \%addons,
-                          $mt->scan_directory_for_addons($PluginPath) );
+    sub find_addons {
+        my $mt = shift;
+        my ($type) = @_;
+        unless (%addons) {
+            my @PluginPaths;
+            my $cfg = $mt->config;
+            unshift @PluginPaths, File::Spec->catdir( $MT_DIR, 'addons' );
+            unshift @PluginPaths, $cfg->PluginPath;
+            foreach my $PluginPath (@PluginPaths) {
+                __merge_hash( \%addons,
+                              $mt->scan_directory_for_addons($PluginPath) );
+            }
         }
+        if ($type) {
+            my $addons = $addons{$type} ||= [];
+            return $addons;
+        }
+        return 1;
     }
-    if ($type) {
-        my $addons = $addons{$type} ||= [];
-        return $addons;
-    }
-    return 1;
 }
 
 sub scan_directory_for_addons {
