@@ -1,0 +1,6 @@
+name: "Two YAMLs - config"
+key:  TwoYAMLsConfig
+id:   TwoYAMLsConfig
+description: 'A plugin to test compatibility for multiple YAML files'
+version: '1.0'
+

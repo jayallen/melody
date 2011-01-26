@@ -1,0 +1,6 @@
+name: "Two YAMLs - second"
+key:  TwoYAMLsSecond
+id:   TwoYAMLsSecond
+description: 'A second plugin to test compatibility for multiple YAML files'
+version: '1.0'
+

@@ -1741,7 +1741,7 @@ sub scan_directory_for_addons {
             if ( -f $plugin_full_path ) {
                 if ( $plugin_full_path =~ /\.pl$/ ) {
                     warn "Plugins without envelopes are no longer loaded in "
-                        ." Melody: $plugin_full_path";
+                        ."Melody: $plugin_full_path";
                     # Yes, that's all you get.  Don't ask for more...
                     next;
                 }
