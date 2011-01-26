@@ -12,8 +12,7 @@ require MT::Blog;
 # we should *reload it* and start again
 my $blog = MT::Blog->load(1);
 
-require MT::Object;
-MT::Object->driver->clear_cache;
+$blog->clear_cache;
 
 $blog = MT::Blog->load(1);
 is( $blog->meta('page_layout'),
@@ -47,13 +46,13 @@ is( $ref_blog->my_meta_hash->{something}, 'else',
     "New meta column has the right HASH value ({'something' => 'else'}) after update"
 );
 
-MT::Object->driver->clear_cache
+$ref_blog->clear_cache
   ;    # reset ramcache to make sure data is coming from memcached
 
 $ref_blog->my_meta_hash( { a_new => 'hash' } );
 $ref_blog->meta_obj->save;
 
-MT::Object->driver->clear_cache;
+$ref_blog->clear_cache;
 
 $ref_blog = MT::Blog->load(1);
 ok( exists $ref_blog->my_meta_hash->{a_new},
@@ -66,7 +65,7 @@ my $author = MT::Author->load(1);
 $author->meta( 'field.my_field', { foo => 11 } );
 $author->save;
 
-MT::Object->driver->clear_cache;
+$author->clear_cache;
 $author = MT::Author->load(1);
 my $collection = $author->meta_obj->get_collection('field');
 ok( %$collection, "get_collection retrieves multiple field meta objects" );

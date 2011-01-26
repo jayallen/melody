@@ -12,8 +12,7 @@ require MT::Author;
 # we should *reload it* and start again
 my $o = MT::Author->load(1);
 
-require MT::Object;
-MT::Object->driver->clear_cache;
+$o->clear_cache;
 
 $o = MT::Author->load(1);
 MT::Author->install_meta(
@@ -48,13 +47,13 @@ is( $ref_o->my_meta_hash->{something}, 'else',
     "New meta column has the right HASH value ({'something' => 'else'}) after update"
 );
 
-MT::Object->driver->clear_cache
+$ref_o->clear_cache
   ;    # reset ramcache to make sure data is coming from memcached
 
 $ref_o->my_meta_hash( { a_new => 'hash' } );
 $ref_o->meta_obj->save;
 
-MT::Object->driver->clear_cache;
+$ref_o->clear_cache;
 
 $ref_o = MT::Author->load(1);
 ok( exists $ref_o->my_meta_hash->{a_new},
@@ -67,7 +66,7 @@ my $author = MT::Author->load(1);
 $author->meta( 'field.my_field', { foo => 11 } );
 $author->save;
 
-MT::Object->driver->clear_cache;
+$author->clear_cache;
 $author = MT::Author->load(1);
 my $collection = $author->meta_obj->get_collection('field');
 ok( %$collection, "get_collection retrieves multiple field meta objects" );

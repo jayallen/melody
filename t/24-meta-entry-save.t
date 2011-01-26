@@ -12,8 +12,7 @@ require MT::Entry;
 # we should *reload it* and start again
 my $o = MT::Entry->load(1);
 
-require MT::Object;
-MT::Object->driver->clear_cache;
+$o->clear_cache;
 
 $o = MT::Entry->load(1);
 MT::Entry->install_meta( { column_defs => { my_meta_hash => 'hash meta' } } );
