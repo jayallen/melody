@@ -2,10 +2,12 @@
 # $Id$
 use strict;
 use warnings;
-use lib 'lib';
-use lib 'extlib';
+use lib 't/lib', 'lib', 'extlib';
+
 use Test::More tests => 73;
 use_ok 'MT::Serialize';
+
+use MT::Test;
 
 my @TESTS = (
               {},
