@@ -19,14 +19,13 @@ our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,
       $PORTAL_URL );
 our ( $MT_DIR, $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
 our (
-      $plugin_sig, $plugin_envelope, $plugin_registry,
-      %Plugins,    @Components,      %Components,
-      $DebugMode,  $mt_inst,         %mt_inst
+      $plugin_sig,      %Plugins,    @Components,     $mt_inst,
+      $plugin_envelope, $DebugMode,  %Components,     %mt_inst,
+      $plugin_registry, %CallbackAlias, $plugins_installed
 );
-my %Text_filters;
+my ( %Text_filters, $plugin_full_path, %CallbacksEnabled, @Callbacks );
 
-# For state determination in MT::Object
-our $plugins_installed;
+our $CallbacksEnabled = 1;
 
 BEGIN {
     $plugins_installed = 0;
@@ -558,8 +557,6 @@ sub log {
 
 } ## end sub log
 
-my $plugin_full_path;
-
 sub run_tasks {
     my $mt = shift;
     require MT::TaskMgr;
@@ -567,15 +564,18 @@ sub run_tasks {
 }
 
 sub add_plugin {
-    my $class = shift;
+    my $class    = shift;
     my ($plugin) = @_;
+    my $sig      = $plugin_sig            || $plugin->{sig};
+    my $name     = eval { $plugin->name } || $plugin->{name};
 
     if ( ref $plugin eq 'HASH' ) {
         require MT::Plugin;
         $plugin = new MT::Plugin($plugin);
     }
-    $plugin->{name} ||= $plugin_sig;
-    $plugin->{plugin_sig} = $plugin_sig;
+
+    $plugin->{name}      ||= $name || $plugin_sig;
+    $plugin->{plugin_sig}  = $plugin_sig;
 
     my $id = $plugin->id;
     unless ($plugin_envelope) {
@@ -584,19 +584,21 @@ sub add_plugin {
         return;
     }
     $plugin->envelope($plugin_envelope);
+
     Carp::confess(
         "You cannot register multiple plugin objects from a single script. $plugin_sig"
       )
       if exists( $Plugins{$plugin_sig} )
           && ( exists $Plugins{$plugin_sig}{object} );
 
-    $Components{ lc $id } = $plugin if $id;
+    $Components{ lc $id }         = $plugin if $id;
     $Plugins{$plugin_sig}{object} = $plugin;
-    $plugin->{full_path} = $plugin_full_path;
+    $plugin->{full_path}          = $plugin_full_path;
     $plugin->path($plugin_full_path);
-    unless ( $plugin->{registry} && ( %{ $plugin->{registry} } ) ) {
-        $plugin->{registry} = $plugin_registry;
-    }
+    
+    $plugin->{registry} = $plugin_registry
+        unless eval { keys %{ $plugin->{registry} } };
+
     if ( $plugin->{registry} ) {
         if ( my $settings = $plugin->{registry}{config_settings} ) {
             $settings = $plugin->{registry}{config_settings} = $settings->()
@@ -626,11 +628,6 @@ sub add_plugin {
     push @Components, $plugin;
     1;
 } ## end sub add_plugin
-
-our %CallbackAlias;
-our $CallbacksEnabled = 1;
-my %CallbacksEnabled;
-my @Callbacks;
 
 sub add_callback {
     my $class = shift;
@@ -730,9 +727,12 @@ sub register_callbacks {
     1;
 }
 
-our $CB_ERR;
-sub callback_error { $CB_ERR = $_[0]; }
-sub callback_errstr {$CB_ERR}
+{    
+    our $CB_ERR;
+    # TODO Convert function to method in appropriate package
+    sub callback_error { $CB_ERR = $_[0]; }
+    sub callback_errstr {$CB_ERR}
+}
 
 sub run_callback {
     my $class = shift;
@@ -848,6 +848,7 @@ sub run_callbacks {
         }
     }
 
+    # TODO Convert to method in appropriate package
     callback_error( join( '', @errors ) );
 
     $CallbacksEnabled{$_} = 1 for @methods;
@@ -1418,7 +1419,6 @@ sub upload_file_to_sync {
     MT::TheSchwartz->insert($job);
 } ## end sub upload_file_to_sync
 
-# use Data::Dumper;
 sub init_addons {
     my $mt     = shift;
     my $cfg    = $mt->config;
@@ -1451,74 +1451,13 @@ sub _init_plugins_core {
         $timer = $mt->get_timer();
     }
 
-    # TODO Refactor/abstract this load_plugin anonymous subroutine out of here
-    # For testing purposes and maintainability, we need to make it a point
-    # to continually make large methods like this smaller and more focused.
-    my $load_plugin = sub {
-        my ( $plugin, $sig ) = @_;
-        die "Bad plugin filename '$plugin'"
-          if ( $plugin !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
-        local $plugin_sig      = $sig;
-        local $plugin_registry = {};
-        $plugin = $1;
-        if (
-             !$use_plugins
-             || ( exists $PluginSwitch->{$plugin_sig}
-                  && !$PluginSwitch->{$plugin_sig} )
-          )
-        {
-            $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-            $Plugins{$plugin_sig}{enabled}   = 0;
-            return 0;
-        }
-        return 0 if exists $Plugins{$plugin_sig};
-        $Plugins{$plugin_sig}{full_path} = $plugin_full_path;
-        $timer->pause_partial if $timer;
-        eval "# line " 
-          . __LINE__ . " " 
-          . __FILE__
-          . "\nrequire '"
-          . $plugin_full_path . "';";
-        $timer->mark( "Loaded plugin " . $sig ) if $timer;
-        if ($@) {
-            $Plugins{$plugin_sig}{error} = $@;
-
-            # Log the issue but do it in a post_init callback so
-            # that we won't prematurely initialize the schema before
-            # all plugins are finished loading
-            my $msg = $mt->translate( "Plugin error: [_1] [_2]",
-                                      $plugin, $Plugins{$plugin_sig}{error} );
-            $mt->log(
-                  { message => $msg, class => 'system', level => 'ERROR', } );
-            return 0;
-        }
-        else {
-            if ( my $obj = $Plugins{$plugin_sig}{object} ) {
-                $obj->init_callbacks();
-            }
-            else {
-
-                # A plugin did not register itself, so
-                # create a dummy plugin object which will
-                # cause it to show up in the plugin listing
-                # by it's filename.
-                MT->add_plugin( {} );
-            }
-        }
-        $Plugins{$plugin_sig}{enabled} = 1;
-        return 1;
-    };    # end load_plugin sub
-
-
     my @deprecated_perl_init = ();
     foreach my $plugin (@$plugins) {
 
         # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
         if ( $plugin->{file} =~ /\.pl$/ ) {
             push( @deprecated_perl_init, $plugin );
-            $plugin_envelope  = $plugin->{envelope};
-            $plugin_full_path = $plugin->{path};
-            $load_plugin->( $plugin->{path}, $plugin->{file} );
+            $mt->load_perl_plugin( $plugin );
         }
         else {
             my $pclass
@@ -1591,6 +1530,93 @@ sub _init_plugins_core {
 
     1;
 } ## end sub _init_plugins_core
+
+#   Documenting the silly variations of the exact same thing.  These should
+#   simply be transformations lazily rendered and cached
+#
+#   base     - The absolute filesystem path to the plugin's top-level folder.
+#              Example: /var/www/cgi/mt/plugins/MyPlugin
+#
+#   dir      - The name of the plugin's top-level folder.
+#              Transformation: File::Basename::basename( $plugin->{base} )
+#              Example: ConfigAssistant.pack
+#
+#   envelope - For PluginPath's within the Melody application folder, this is
+#              the relative path from the Melody directory to the plugin's
+#              top-level folder.  (WHAT ABOUT OUTSIDE OF MELODY DIR?)
+#              Transformation: ( $plugin->{envelope} = $plugin->{base} )
+#                                           =~ s!$ENV{MT_HOME}/?!!;
+#              Examples:
+#              *    addons/ConfigAssistant.pack
+#              *    plugins/FieldDay
+#
+#   sig      - The path to the yaml/perl initialization file from the
+#              perspective of its plugin directory. Examples: 
+#              Transformation:  $plugin->{dir} + init_file
+#              *    ConfigAssistant.pack/config.yaml
+#              *    Log4MT.plugin/config.yaml
+#              *    Log4MT.plugin/config.yaml
+#              *    MT-OldPlugin/OldPlugin.pl
+#   
+sub load_perl_plugin {
+    my $mt = shift;
+    my ( $plugin ) = @_;
+    die "Bad plugin filename '".$plugin->{file}."'"
+      if ( $plugin->{file} !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
+    my $timer = undef;                       # FIXME JAY Had to disable timer
+    my $sig   = $plugin_sig = $plugin->{sig};
+    $plugin_full_path
+        = File::Spec->catfile( $plugin->{path}, $plugin->{file} );
+    # local $plugin_registry = {};
+    # FIXME JAY Temporarily disabled this check, uses more fucking globals
+    # if (
+    #      !$use_plugins
+    #      || ( exists $PluginSwitch->{$sig}
+    #           && !$PluginSwitch->{$sig} )
+    #   )
+    # {
+    #     $Plugins{$sig}{full_path} = $plugin_full_path;
+    #     $Plugins{$sig}{enabled}   = 0;
+    #     return 0;
+    # }
+    return 0 if exists $Plugins{$sig};
+    $Plugins{$sig}{full_path} = $plugin_full_path;
+    $timer->pause_partial if $timer;
+    eval "# line " 
+      . __LINE__ . " " 
+      . __FILE__
+      . "\nrequire '"
+      . $plugin_full_path . "';";
+    $timer->mark( "Loaded plugin " . $plugin->{sig} ) if $timer;
+    if ($@) {
+        $Plugins{$sig}{error} = $@;
+
+        # Log the issue but do it in a post_init callback so
+        # that we won't prematurely initialize the schema before
+        # all plugins are finished loading
+        my $msg = $mt->translate( "Plugin error: [_1] [_2]",
+                                  $plugin, $Plugins{$sig}{error} );
+        $mt->log(
+              { message => $msg, class => 'system', level => 'ERROR', } );
+        return 0;
+    }
+    else {
+        if ( my $obj = $Plugins{$sig}{object} ) {
+            $obj->init_callbacks();
+        }
+        else {
+
+            # A plugin did not register itself, so
+            # create a dummy plugin object which will
+            # cause it to show up in the plugin listing
+            # by it's filename.
+            MT->add_plugin( {} );
+        }
+    }
+    $Plugins{$sig}{enabled} = 1;
+    return 1;
+};    # end load_plugin sub
+
 
 ###
 ### FIXME Handle perl plugin deprecation properly
@@ -1672,26 +1698,28 @@ sub _perl_init_plugin_warnings {
     } ## end if ($needs_warning)
 } ## end sub _perl_init_plugin_warnings
 
-my %addons;
+{
+    my %addons;
 
-sub find_addons {
-    my $mt = shift;
-    my ($type) = @_;
-    unless (%addons) {
-        my @PluginPaths;
-        my $cfg = $mt->config;
-        unshift @PluginPaths, File::Spec->catdir( $MT_DIR, 'addons' );
-        unshift @PluginPaths, $cfg->PluginPath;
-        foreach my $PluginPath (@PluginPaths) {
-            __merge_hash( \%addons,
-                          $mt->scan_directory_for_addons($PluginPath) );
+    sub find_addons {
+        my $mt = shift;
+        my ($type) = @_;
+        unless (%addons) {
+            my @PluginPaths;
+            my $cfg = $mt->config;
+            unshift @PluginPaths, File::Spec->catdir( $MT_DIR, 'addons' );
+            unshift @PluginPaths, $cfg->PluginPath;
+            foreach my $PluginPath (@PluginPaths) {
+                __merge_hash( \%addons,
+                              $mt->scan_directory_for_addons($PluginPath) );
+            }
         }
+        if ($type) {
+            my $addons = $addons{$type} ||= [];
+            return $addons;
+        }
+        return 1;
     }
-    if ($type) {
-        my $addons = $addons{$type} ||= [];
-        return $addons;
-    }
-    return 1;
 }
 
 sub scan_directory_for_addons {
@@ -1708,23 +1736,17 @@ sub scan_directory_for_addons {
         for my $plugin_dir (@p) {
             next if ( $plugin_dir =~ /^\.\.?$/ || $plugin_dir =~ /~$/ );
 
-            # Legacy support when plugins were not
-            # placed in their own directory
             $plugin_full_path
               = File::Spec->catfile( $PluginPath, $plugin_dir );
             if ( -f $plugin_full_path ) {
                 if ( $plugin_full_path =~ /\.pl$/ ) {
-                    push @{ $plugins{'plugin'} },
-                      {
-                        dir      => $PluginPath,
-                        file     => $plugin_dir,
-                        path     => $plugin_full_path,
-                        envelope => $plugin_lastdir,
-                      };
+                    warn "Plugins without envelopes are no longer loaded in "
+                        ." Melody: $plugin_full_path";
+                    # Yes, that's all you get.  Don't ask for more...
+                    next;
                 }
             }
             else {
-
                 # open and scan the directory for plugin files,
                 # save them to load later. Report errors in
                 # the activity log
@@ -1784,8 +1806,8 @@ sub scan_directory_for_addons {
                     my $plugin_file
                       = File::Spec->catfile( $plugin_full_path, $file );
                     if ( -f $plugin_file ) {
+                        ## Plugin is a file, add it to list for processing
                         my $sig = File::Spec->catfile( $plugin_dir, $file );
-                        # Plugin is a file, add it to list for processing
                         push @{ $plugins{$type} }, {
                             label => $label,              # used only by packs
                             id    => lc($label),          # used only by packs
@@ -2779,36 +2801,38 @@ sub get_next_sched_post_for_user {
     return $next_sched_utc;
 } ## end sub get_next_sched_post_for_user
 
-our %Commenter_Auth;
+{
+    our %Commenter_Auth;
 
-sub init_commenter_authenticators {
-    my $self = shift;
-    my $auths = $self->registry("commenter_authenticators") || {};
-    %Commenter_Auth = %$auths;
-    my $app = $self->app;
-    my $blog = $app->blog if $app->isa('MT::App');
-    foreach my $auth ( keys %$auths ) {
-        if ( my $c = $auths->{$auth}->{condition} ) {
-            $c = $self->handler_to_coderef($c);
-            if ($c) {
-                delete $Commenter_Auth{$auth} unless $c->($blog);
+    sub init_commenter_authenticators {
+        my $self = shift;
+        my $auths = $self->registry("commenter_authenticators") || {};
+        %Commenter_Auth = %$auths;
+        my $app = $self->app;
+        my $blog = $app->blog if $app->isa('MT::App');
+        foreach my $auth ( keys %$auths ) {
+            if ( my $c = $auths->{$auth}->{condition} ) {
+                $c = $self->handler_to_coderef($c);
+                if ($c) {
+                    delete $Commenter_Auth{$auth} unless $c->($blog);
+                }
             }
         }
+        $Commenter_Auth{$_}{key} ||= $_ for keys %Commenter_Auth;
     }
-    $Commenter_Auth{$_}{key} ||= $_ for keys %Commenter_Auth;
-}
 
-sub commenter_authenticator {
-    my $self = shift;
-    my ($key) = @_;
-    %Commenter_Auth or $self->init_commenter_authenticators();
-    return $Commenter_Auth{$key};
-}
+    sub commenter_authenticator {
+        my $self = shift;
+        my ($key) = @_;
+        %Commenter_Auth or $self->init_commenter_authenticators();
+        return $Commenter_Auth{$key};
+    }
 
-sub commenter_authenticators {
-    my $self = shift;
-    %Commenter_Auth or $self->init_commenter_authenticators();
-    return values %Commenter_Auth;
+    sub commenter_authenticators {
+        my $self = shift;
+        %Commenter_Auth or $self->init_commenter_authenticators();
+        return values %Commenter_Auth;
+    }
 }
 
 sub _commenter_auth_params {
@@ -3197,26 +3221,6 @@ HATENA
     };
 } ## end sub core_commenter_authenticators
 
-our %Captcha_Providers;
-
-sub captcha_provider {
-    my $self = shift;
-    my ($key) = @_;
-    $self->init_captcha_providers() unless %Captcha_Providers;
-    return $Captcha_Providers{$key};
-}
-
-sub captcha_providers {
-    my $self = shift;
-    $self->init_captcha_providers() unless %Captcha_Providers;
-    my $def  = delete $Captcha_Providers{'mt_default'};
-    my @vals = values %Captcha_Providers;
-    if ( defined($def) && $def->{condition}->() ) {
-        unshift @vals, $def;
-    }
-    @vals;
-}
-
 sub core_captcha_providers {
     return {
         'mt_default' => {
@@ -3233,16 +3237,38 @@ sub core_captcha_providers {
     };
 }
 
-sub init_captcha_providers {
-    my $self = shift;
-    my $providers = $self->registry("captcha_providers") || {};
-    foreach my $provider ( keys %$providers ) {
-        delete $providers->{$provider}
-          if exists( $providers->{$provider}->{condition} )
-              && !( $providers->{$provider}->{condition}->() );
+{
+    our %Captcha_Providers;
+
+    sub captcha_provider {
+        my $self = shift;
+        my ($key) = @_;
+        $self->init_captcha_providers() unless %Captcha_Providers;
+        return $Captcha_Providers{$key};
     }
-    %Captcha_Providers = %$providers;
-    $Captcha_Providers{$_}{key} ||= $_ for keys %Captcha_Providers;
+
+    sub captcha_providers {
+        my $self = shift;
+        $self->init_captcha_providers() unless %Captcha_Providers;
+        my $def  = delete $Captcha_Providers{'mt_default'};
+        my @vals = values %Captcha_Providers;
+        if ( defined($def) && $def->{condition}->() ) {
+            unshift @vals, $def;
+        }
+        @vals;
+    }
+
+    sub init_captcha_providers {
+        my $self = shift;
+        my $providers = $self->registry("captcha_providers") || {};
+        foreach my $provider ( keys %$providers ) {
+            delete $providers->{$provider}
+              if exists( $providers->{$provider}->{condition} )
+                  && !( $providers->{$provider}->{condition}->() );
+        }
+        %Captcha_Providers = %$providers;
+        $Captcha_Providers{$_}{key} ||= $_ for keys %Captcha_Providers;
+    }
 }
 
 sub effective_captcha_provider {

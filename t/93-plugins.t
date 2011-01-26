@@ -4,7 +4,7 @@ use warnings;
 use lib 't/lib', 'lib', 'extlib', 'addons/Log4MT.plugin/extlib';
 use Data::Dumper;
 use Test::Warn;
-use Test::More tests => 17;
+use Test::More tests => 11;
 use MT;
 use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
 ###l4p our $logger = MT::Log::Log4perl->new(); $logger->trace();
@@ -22,7 +22,6 @@ my %bundled_plugins = (
         plugin_path => 'addons',      #     <----- DEFAULT
         enabled     => 1,             #     <----- DEFAULT
     },
-    'Awesome/config.yaml'             => { name => 'Oh Awesome'      },
     'ThemeExport.plugin/config.yaml'  => { name => 'Theme Exporter'  },
     'ThemeManager.plugin/config.yaml' => { name => 'Theme Manager'   },
     'DePoClean.plugin/config.yaml'    => { name => 'DePoClean'       },
@@ -45,36 +44,12 @@ my %bundled_plugins = (
         name         => 'Configuration Assistant',
         base_class   => 'MT::Component',
     },
-    'Rebless/config.yaml' => {
-        name         => 'Rebless Me',
-        base_class   => 'Rebless::Plugin',
-    },
-    'stray.pl' => {
-        message      => ': Stray, unloaded perl plugin',
-        not_loaded   => 1,
-    },
-    'stray.yaml' => {
-        message      => ': Stray, unloaded yaml plugin',
-        not_loaded   => 1,
-    },
-    'subfoldered/subfoldered.pl' => {
-        name        => 'Subfoldered plugin',
-    }
 );
 
-# Initialize plugins - Should emit warnings that we test for
-warnings_like {
-    require MT::Test;
-    import MT::Test qw( :app :db );
-
-    $app = MT->instance();
-    $app->init_plugins();
-}
-[
-    qr/stray.pl.+not loaded.+plugins.+without.+enclosing folder/,
-    qr/.+plugin \(subfoldered.pl\).+deprecated plugin file format/
-],
-'Deprecation and compatibility break warnings';
+# Initialize app and plugins
+use MT::Test qw( :app :db );
+$app = MT->instance();
+$app->init_plugins();
 
 ###l4p $logger->debug("PLUGIN: $_") foreach keys %MT::Plugins;
 
