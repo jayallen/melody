@@ -27,11 +27,19 @@
     background-color: #CC0000;
     color:#fff;
 }
-.msg-info {
-    background-color: #fff;
+
+body.system .msg-info {
     /* background-image: url('../images/icon_info.gif'); */
-    color: #000;
+    background-color: #E1D6E6;
+    color: #6B3081;
 }
+
+.msg-info {
+    /* background-image: url('../images/icon_info.gif'); */
+    background-color: #C9E1EE;
+    color: #33789c;
+}
+
 .msg-alert {
    /* background-color: #FF9;
      background-image: url('../images/icon_alert.png'); */
