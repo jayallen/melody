@@ -291,10 +291,10 @@ sub install_properties {
         );
     }
 
-    # Because of the inheritance of MT::Entry by MT::Page, we need to do this here
-    if ( $class->isa('MT::Revisable') ) {
-        $class->init_revisioning();
-    }
+    # Because of the inheritance of MT::Entry by MT::Page,
+    # we need to do this here.
+    # FIXME As opposed to where? Pretend we know nothing.
+    $class->init_revisioning() if $class->isa('MT::Revisable');
 
     return $props;
 } ## end sub install_properties
@@ -1796,9 +1796,6 @@ The name of the datasource for your class. The datasource is a name uniquely
 identifying your class--it is used by the object drivers to construct table
 names, file names, etc. So it should not be specific to any one driver.
 
-Please note: the length of the datasource name should be conservative; some
-drivers place limits on the length of table and column names.
-
 =item * meta
 
 Specify this property if you wish to support the storage of additional
@@ -2704,7 +2701,7 @@ For example, you cannot do the following:
         $foo->remove;
     }
 
-Instead you should do either this:
+Instead you should do either this: # FIXME NO unbounded, non-iterative loads!!
 
     my @foo = MT::Foo->load({ foo => 'bar' });
     for my $foo (@foo) {
@@ -2727,6 +2724,38 @@ This last example is useful if you will not be removing every I<MT::Foo>
 object where I<foo> equals C<bar>, because it saves memory--only the
 I<MT::Foo> objects that you will be deleting are kept in memory at the same
 time.
+
+=head2 Compatibility limitations on identifier name length
+
+You should be conservative with the length of your datasource and column names
+because some drivers place hard limits on the length of table identifiers
+(e.g. Oracle's 30-character limit). The datasource is of specific concern
+because it I<added to all other elements as a namespace identifier>.
+
+For example, using a datasource like C<myclass_foobarbaz_map> with primary
+key and indexed columns C<id>, C<foo_bar_id>, C<foo_baz_id> and C<bar_baz_id>
+you might think you avoided the limit with the following identifiers:
+
+  Table:      mt_myclass_foobarbaz_map             (OK, 25 characters)
+
+  Columns:    myclass_foobarbaz_map_id             (OK, 25)
+              myclass_foobarbaz_map_foo_id         (OK, 29)
+              myclass_foobarbaz_map_bar_id         (OK, 29)
+              myclass_foobarbaz_map_baz_id         (OK, 29)
+
+However, you need to also remember that all driver's use a special name for
+indexes and some create a sequence identifier to track autoincremented primary
+keys. It's almost always the index names which exceed the length:
+
+  Sequence:   mt_myclass_foobarbaz_map_id          (OK, 28)
+
+  Indexes:    mt_myclass_foobarbaz_map_foo_id      (FAIL, 32)
+              mt_myclass_foobarbaz_map_bar_id      (FAIL, 32)
+              mt_myclass_foobarbaz_map_baz_id      (FAIL, 32)
+
+The above would cause object initialization to fail completely making for a
+very unhappy user of your code. By simply shortening the datasource value, you
+can shorten every single identifier in the table.
 
 =head1 SUBCLASSING
 

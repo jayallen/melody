@@ -85,7 +85,8 @@ __PACKAGE__->install_properties( {
 
            # This is registered by MT::Revisable
            #'revision' => 'integer meta',
-## Have to keep this around for use in upgrade.cgi.
+
+           ## Have to keep this around for use in upgrade.cgi.
            'category_id' => 'integer',
        },
        indexes => {

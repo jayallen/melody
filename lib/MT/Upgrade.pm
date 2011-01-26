@@ -3946,6 +3946,12 @@ setting, if the existing schema version is 3.2 or earlier (preserves
 
 =head2 core_upgrade_functions
 
+This function returns a hash reference which defines the set of
+upgrade functions carried out by Melody for the purpose of managing its own
+tables and data.
+
+It is called by MT::Core in the process of populating the value for the C<upgrade_functions> key of the registry.
+
 =head2 core_upgrade_meta
 
 =head2 core_upgrade_meta_for_table

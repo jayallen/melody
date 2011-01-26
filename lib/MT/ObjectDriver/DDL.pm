@@ -632,17 +632,53 @@ method to return B<false> if the database does not support the C<ALTER TABLE
 
 =head2 $ddl->fix_class()
 
-=head2 $ddl->insert_from_sql()
+=head2 $ddl->insert_from_sql( $class, $ddl->column_defs($class) )
 
-=head2 $ddl->drop_table_sql()
+This class is called as one of the many steps in C<fix_class()>. It returns a
+set of SQL statements which are used by C<fix_class()> to replay a complex
+workflow for upgrading an existing schema based on the specified class'
+properties definition followed by a re-insertion of records into the freshly
+created (and upgraded) database from the "upgrade" table created in
+C<create_table_as_sql()>.
+
+=head2 $ddl->drop_table_sql( $class )
+
+This method takes a class name as an argument and returns a SQL statement
+which can be used to drop the class' datasource table.
+
+This method is called, directly after C<create_table_as_sql()> and before
+C<create_table_sql()>, as one of the many steps in C<fix_class()>.
 
 =head2 $ddl->drop_index_sql()
 
 =head2 $ddl->create_table_sql()
 
-=head2 $ddl->create_table_as_sql()
+This method takes a class name as an argument and, using the object class's
+properties for schema definition, returns the SQL necessary to create its
+datasource table
+
+This method is called as one of the many steps in C<fix_class()>. In that
+method, if the table existed prior to the upgrade, this is called directly
+after removing the table with C<drop_table_sql()> and before
+C<insert_from_sql()>. If the table did not exist, this is the first method DDL
+method invoked by C<fix_class()>.
+
+=head2 $ddl->create_table_as_sql( $class )
+
+This method returns a SQL statement that is used to create a temporary clone
+of the datasource table of the specified class. The clone is identical in both
+structue and data except that it has C<_upgrade> appended to the table name.
+
+This method is called as one of the many steps in C<fix_class()>.
 
 =head2 $ddl->index_table_sql()
+
+This method takes a class name as an argument and returns a set of SQL
+statements necessary for the creation of indexes based on the class properties
+definition.
+
+This method is called as one of the many steps in C<fix_class()> and is in
+fact the last.
 
 =head2 $ddl->index_column_sql()
 
