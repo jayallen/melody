@@ -31,6 +31,7 @@ sub trans_error {
     return $obj->error(
            $obj->can('translate') ? $obj->translate(@_) : MT->translate(@_) );
 }
+*errtrans = \&trans_error;
 
 sub errstr { ref( $_[0] ) ? $_[0]->{_errstr} : $ERROR }
 

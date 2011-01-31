@@ -2272,13 +2272,6 @@ sub supported_languages {
     \%langs;
 } ## end sub supported_languages
 
-# For your convenience
-sub trans_error {
-    my $app = shift;
-    return $app->error( $app->translate(@_) );
-}
-*errtrans = \&trans_error;
-
 sub all_text_filters {
     unless (%Text_filters) {
         if ( my $filters = MT->registry('text_filters') ) {
