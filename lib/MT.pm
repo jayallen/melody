@@ -752,12 +752,11 @@ sub run_callback {
         if ( $cb->{internal} ) {
             $name = "Internal callback";
         }
-        elsif ( UNIVERSAL::isa( $plugin, 'MT::Plugin' ) ) {
-            $name = $plugin->name() || $mt->translate("Unnamed plugin");
+        elsif ( blessed $plugin and $plugin->isa( 'MT::Component' )) {
+            $name = $plugin->name();
         }
-        else {
-            $name = $mt->translate("Unnamed plugin");
-        }
+        $name ||= $mt->translate("Unnamed plugin");
+
         $mt->log( {
                     message =>
                       $mt->translate( "[_1] died with: [_2]", $name, $err ),
@@ -1515,7 +1514,7 @@ sub _init_plugins_core {
     if (@deprecated_perl_init) {
         MT->add_callback(
             'post_init',
-            1, undef,
+            1, $mt,
             sub {
                 MT->_perl_init_plugin_warnings(@deprecated_perl_init);
             }
@@ -1648,6 +1647,7 @@ sub _perl_init_plugin_warnings {
     # We need to be more sensitive about the activity log...
     # Get the session storing the last warning for perl-init plugins
     # If it's over a day old, it doesn't exist.
+
     require MT::Session;
     my $sess_terms = {
                        id => 'Deprecation warning: Perl initialized plugins',
