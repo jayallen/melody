@@ -11,7 +11,7 @@ use Data::ObjectDriver::Iterator;
 
 __PACKAGE__->mk_accessors(qw( pk_generator txn_active ));
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 our $DEBUG = $ENV{DOD_DEBUG} || 0;
 our $PROFILE = $ENV{DOD_PROFILE} || 0;
 our $PROFILER;
@@ -107,6 +107,7 @@ sub debug {
 sub profiler {
     my $driver = shift;
     my ($sql) = @_;
+    local $@;
     $PROFILER ||= eval {
         require Data::ObjectDriver::Profiler;
         Data::ObjectDriver::Profiler->new;
@@ -609,6 +610,14 @@ I<Data::ObjectDriver::Profiler> instance:
 Then see the documentation for I<Data::ObjectDriver::Profiler> to see the
 methods on that class.
 
+In some applications there are phases of execution in which no I/O
+operations should occur, but sometimes it's difficult to tell when,
+where, or if those I/O operations are happening.  One approach to
+surfacing these situations is to set, either globally or locally,
+the $Data::ObjectDriver::RESTRICT_IO flag.  If set, this will tell
+Data::ObjectDriver to die with some context rather than executing
+network calls for data.
+
 
 =head1 TRANSACTIONS
 
@@ -781,12 +790,9 @@ reporting bugs.
 
 L<http://code.sixapart.com/>
 
-Alternatively you can fork our git repositories. See the full list at:
-http://github.com/sixapart
-
 =head1 AUTHOR & COPYRIGHT
 
-Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2010
+Except where otherwise noted, I<Data::ObjectDriver> is Copyright 2005-2006
 Six Apart, cpan@sixapart.com. All rights reserved.
 
 =cut
