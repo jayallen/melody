@@ -541,11 +541,14 @@ sub do_search_replace {
                       ->load( { blog_id => '0', author_id => $author->id },
                               { not => { blog_id => 1 } }, );
                     if (@perms) {
-                        @streams = map {
-                            $terms[0]{blog_id} = $_->blog_id;
-                            { iter => $class->load_iter( \@terms, \%args ) }
-                        } @perms;
+                        my @blog_terms;
+                        push( @blog_terms,
+                              { blog_id => $_->blog_id, }, '-or' )
+                          foreach @perms;
+                        push @terms, \@blog_terms if @blog_terms;
                     }
+                    @streams
+                      = ( { iter => $class->load_iter( \@terms, \%args ) } );
                 }
 
                 # Pull out the head of each iterator
