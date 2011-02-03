@@ -28,7 +28,7 @@ my %bundled_plugins = (
     'WXRImporter.plugin/config.yaml'  => { name => 'WXR Importer'    },
     'ClassicBlogThemePack.plugin/config.yaml' 
                                 => { name => 'Classic Blog Theme Pack'      },
-    'SimpleEditor.plugin/config.yaml'
+    'SixApartEditor.plugin/config.yaml'
                                 => { name => 'Six Apart Rich Text Editor'   },
     'MelodyFeedback.plugin/config.yaml'
                                 => { name => 'Open Melody Community Feedback' },
