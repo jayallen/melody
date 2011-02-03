@@ -37,7 +37,6 @@ __PACKAGE__->install_properties( {
            author        => 1,
            email         => 1,
            commenter_id  => 1,
-           parent_id     => 1,
            last_moved_on => 1,    # used for junk expiration
 
            # For URL lookups to aid spam filtering
@@ -48,6 +47,8 @@ __PACKAGE__->install_properties( {
              { columns => [ 'blog_id', 'visible', 'created_on', 'id' ], },
            dd_coment_vis_mod => { columns => [ 'visible', 'modified_on' ], },
            visible_date      => { columns => [ 'visible', 'created_on' ], },
+           # To help determine whether a comment should be throttled
+           blog_ip_date => { columns => [ 'blog_id', 'ip', 'created_on'], },
        },
        meta => 1,
        defaults =>
