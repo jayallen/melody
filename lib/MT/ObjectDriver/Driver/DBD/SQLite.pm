@@ -15,6 +15,9 @@ use DBI qw(:sql_types);
 
 BEGIN {
     eval "use DBD::SQLite 1.11;";
+    # Line 117 says:
+    # eval "use DBD::SQLite 1.14;";
+    # FIXME Perhaps these checks should be consolidated?
     if ($@) {
         *bind_param_attributes = sub {
             my ( $dbd, $data_type ) = @_;
