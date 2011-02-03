@@ -75,14 +75,20 @@ sub dsn_from_config {
         my $old   = umask($umask);
         local *JUNK;
         sysopen JUNK, $db_file, O_RDWR | O_CREAT, 0666 or return undef;
-
+        # FIXME Commented out error leads to unhelpful DBI error
+        # I believe the last change here (commenting out error and
+        # returning undef) is masking a useful initialization error in favor
+        # of DBI's not so useful one
         #or return $driver->error(MT->translate("Can't open '[_1]': [_2]", $db_file, $!));
         close JUNK;
         umask($old);
     }
     unless ( -w $db_file ) {
         return undef;
-
+        # FIXME Commented out error leads to unhelpful DBI error
+        # I believe the last change here (commenting out error and
+        # returning undef) is masking a useful initialization error in favor
+        # of DBI's not so useful one
         #return $driver->error(MT->translate(
         #    "Your database file ('[_1]') is not writable.", $db_file));
     }
@@ -90,6 +96,10 @@ sub dsn_from_config {
     unless ( -w $dir ) {
         return undef;
 
+        # FIXME Commented out error leads to unhelpful DBI error
+        # I believe the last change here (commenting out error and
+        # returning undef) is masking a useful initialization error in favor
+        # of DBI's not so useful one
         #return $driver->error(MT->translate(
         #    "Your database directory ('[_1]') is not writable.", $dir));
     }
