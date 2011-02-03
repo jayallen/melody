@@ -1517,24 +1517,12 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/AuthorMonthly.pm
     'AUTHOR-MONTHLY_ADV' => 'monatliche Autorenarchive',
-    'author/author-display-name/yyyy/mm/index.html' =>
-      'autor/anzeigename-des-autors/jjjj/mm/index.html',
-    'author/author_display_name/yyyy/mm/index.html' =>
-      'autor/anzeigename_des_autors/jjjj/mm/index.html',
 
 ## lib/MT/ArchiveType/AuthorWeekly.pm
     'AUTHOR-WEEKLY_ADV' => 'wöchentliche Autorenarchive',
-    'author/author-display-name/yyyy/mm/day-week/index.html' =>
-      'autor/anzeigename-des-autors/jjjj/mm/tag-woche/index.html',
-    'author/author_display_name/yyyy/mm/day-week/index.html' =>
-      'autor/anzeigename_des_autors/jjjj/mm/tag-woche/index.html',
 
 ## lib/MT/ArchiveType/AuthorDaily.pm
     'AUTHOR-DAILY_ADV' => 'tägliche Autorenarchive',
-    'author/author-display-name/yyyy/mm/dd/index.html' =>
-      'autor/anzeigename-des-autors/jjjj/mm/tt/index.html',
-    'author/author_display_name/yyyy/mm/dd/index.html' =>
-      'autor/anzeigename_des_autors/jjjj/mm/tt/index.html',
 
 ## lib/MT/ArchiveType/Individual.pm
     'INDIVIDUAL_ADV'                    => 'Einzelarchive',
@@ -1566,10 +1554,6 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/AuthorYearly.pm
     'AUTHOR-YEARLY_ADV' => 'jährliche Autorenarchive',
-    'author/author-display-name/yyyy/index.html' =>
-      'autor/anzeigename-des-autors/jjjj/index.html',
-    'author/author_display_name/yyyy/index.html' =>
-      'autor/anzeigename_des_autors/jjjj/index.html',
 
 ## lib/MT/ArchiveType/Monthly.pm
     'MONTHLY_ADV'        => 'Monatsarchive',
@@ -1599,10 +1583,6 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/Author.pm
     'AUTHOR_ADV' => 'Autorenarchive',
-    'author/author-display-name/index.html' =>
-      'autor/anzeigename-des-autors/index.html',
-    'author/author_display_name/index.html' =>
-      'autor/anzeigename_des_autors/index.html',
 
 ## lib/MT/ArchiveType/CategoryYearly.pm
     'CATEGORY-YEARLY_ADV' => 'jährliche Kategoriearchive',

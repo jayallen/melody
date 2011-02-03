@@ -1106,38 +1106,18 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
 
 ## lib/MT/ArchiveType/Author.pm
     'AUTHOR_ADV' => 'ユーザー別',
-    'author/author-display-name/index.html' =>
-      'author/author-display-name/index.html',
-    'author/author_display_name/index.html' =>
-      'author/author_display_name/index.html',
 
 ## lib/MT/ArchiveType/AuthorDaily.pm
     'AUTHOR-DAILY_ADV' => 'ユーザー-日別',
-    'author/author-display-name/yyyy/mm/dd/index.html' =>
-      'author/author-display-name/yyyy/mm/dd/index.html',
-    'author/author_display_name/yyyy/mm/dd/index.html' =>
-      'author/author_display_name/yyyy/mm/dd/index.html',
 
 ## lib/MT/ArchiveType/AuthorMonthly.pm
     'AUTHOR-MONTHLY_ADV' => 'ユーザー-月別',
-    'author/author-display-name/yyyy/mm/index.html' =>
-      'author/author-display-name/yyyy/mm/index.html',
-    'author/author_display_name/yyyy/mm/index.html' =>
-      'author/author_display_name/yyyy/mm/index.html',
 
 ## lib/MT/ArchiveType/AuthorWeekly.pm
     'AUTHOR-WEEKLY_ADV' => 'ユーザー-週別',
-    'author/author-display-name/yyyy/mm/day-week/index.html' =>
-      'author/author-display-name/yyyy/mm/day-week/index.html',
-    'author/author_display_name/yyyy/mm/day-week/index.html' =>
-      'author/author_display_name/yyyy/mm/day-week/index.html',
 
 ## lib/MT/ArchiveType/AuthorYearly.pm
     'AUTHOR-YEARLY_ADV' => 'ユーザー-年別',
-    'author/author-display-name/yyyy/index.html' =>
-      'author/author-display-name/yyyy/index.html',
-    'author/author_display_name/yyyy/index.html' =>
-      'author/author_display_name/yyyy/index.html',
 
 ## lib/MT/ArchiveType/Category.pm
     'CATEGORY_ADV'                     => 'カテゴリ',

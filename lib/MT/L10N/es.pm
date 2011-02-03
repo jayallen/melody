@@ -1640,10 +1640,6 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/Author.pm
     'AUTHOR_ADV' => 'por autor',
-    'author/author-display-name/index.html' =>
-      'autor/nombre-público-autor/index.html',
-    'author/author_display_name/index.html' =>
-      'autor/nombre-público-autor/index.html',
 
 ## lib/MT/ArchiveType/CategoryMonthly.pm
     'CATEGORY-MONTHLY_ADV' => 'por mes y categoría',
@@ -1672,17 +1668,9 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/AuthorMonthly.pm
     'AUTHOR-MONTHLY_ADV' => 'por mes y autor',
-    'author/author-display-name/yyyy/mm/index.html' =>
-      'autor/nombre-público-autor/aaaa/mm/index.html',
-    'author/author_display_name/yyyy/mm/index.html' =>
-      'autor/nombre_público_autor/aaaa/mm/index.html',
 
 ## lib/MT/ArchiveType/AuthorDaily.pm
     'AUTHOR-DAILY_ADV' => 'por día y autor',
-    'author/author-display-name/yyyy/mm/dd/index.html' =>
-      'autor/nombre-público-autor/aaaa/mm/dd/index.html',
-    'author/author_display_name/yyyy/mm/dd/index.html' =>
-      'autor/nombre-público-autor/aaaa/mm/dd/index.html',
 
 ## lib/MT/ArchiveType/Individual.pm
     'INDIVIDUAL_ADV'              => 'por entrada',
@@ -1729,17 +1717,9 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/AuthorYearly.pm
     'AUTHOR-YEARLY_ADV' => 'por año y autor',
-    'author/author-display-name/yyyy/index.html' =>
-      'autor/nombre-público-autor/aaaa/index.html',
-    'author/author_display_name/yyyy/index.html' =>
-      'author/nombre_público_autor/aaaa/index.html',
 
 ## lib/MT/ArchiveType/AuthorWeekly.pm
     'AUTHOR-WEEKLY_ADV' => 'por semana y autor',
-    'author/author-display-name/yyyy/mm/day-week/index.html' =>
-      'autor/nombre-público-autor/aaaa/mm/día-semana/index.html',
-    'author/author_display_name/yyyy/mm/day-week/index.html' =>
-      'autor/nombre-público-autor/aaaa/mm/día-semana/index.html',
 
 ## lib/MT/Util.pm
     'moments from now'               => 'dentro de unos momentos',

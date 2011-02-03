@@ -1527,24 +1527,12 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/AuthorMonthly.pm
     'AUTHOR-MONTHLY_ADV' => 'per auteur per maand',
-    'author/author-display-name/yyyy/mm/index.html' =>
-      'auteur/getoonde-naam-auteur/jjjj/mm/index.html',
-    'author/author_display_name/yyyy/mm/index.html' =>
-      'auteur/getoonde_naam_auteur/jjjj/mm/index.html',
 
 ## lib/MT/ArchiveType/AuthorWeekly.pm
     'AUTHOR-WEEKLY_ADV' => 'per auteur per week',
-    'author/author-display-name/yyyy/mm/day-week/index.html' =>
-      'auteur/auteur-getoonde-naam/jjjj/mm/dag-week/index.html',
-    'author/author_display_name/yyyy/mm/day-week/index.html' =>
-      'auteur/auteur_getoonde_naam/jjjj/mm/dag-week/index.html',
 
 ## lib/MT/ArchiveType/AuthorDaily.pm
     'AUTHOR-DAILY_ADV' => 'per auteur per dag',
-    'author/author-display-name/yyyy/mm/dd/index.html' =>
-      'auteur/getoonde-auteursnaam/jjjj/mm/dd/index.html',
-    'author/author_display_name/yyyy/mm/dd/index.html' =>
-      'auteur/getoonde_auteursnaam/jjjj/mm/dd/index.html',
 
 ## lib/MT/ArchiveType/Individual.pm
     'INDIVIDUAL_ADV'              => 'per bericht',
@@ -1578,10 +1566,6 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/AuthorYearly.pm
     'AUTHOR-YEARLY_ADV' => 'per auteur per jaar',
-    'author/author-display-name/yyyy/index.html' =>
-      'auteur/auteur-getoonde-naam/jjjj/index.html',
-    'author/author_display_name/yyyy/index.html' =>
-      'auteur/auteur_getoonde_naam/jjjj/index.html',
 
 ## lib/MT/ArchiveType/Monthly.pm
     'MONTHLY_ADV'        => 'per maand',
@@ -1611,10 +1595,6 @@ use vars qw( @ISA %Lexicon );
 
 ## lib/MT/ArchiveType/Author.pm
     'AUTHOR_ADV' => 'per auteur',
-    'author/author-display-name/index.html' =>
-      'auteur/auteur-getoonde-naam/index.html',
-    'author/author_display_name/index.html' =>
-      'auteur/auteur_getoonde_naam/index.html',
 
 ## lib/MT/ArchiveType/CategoryYearly.pm
     'CATEGORY-YEARLY_ADV' => 'per categorie per jaar',

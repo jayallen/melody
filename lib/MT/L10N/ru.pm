@@ -1549,10 +1549,6 @@ sub numerate {
 
 ## lib/MT/ArchiveType/AuthorMonthly.pm
     'AUTHOR-MONTHLY_ADV' => 'авторов по месяцам',
-    'author/author-display-name/yyyy/mm/index.html' =>
-      'автор/отображаемое-имя/гггг/мм/index.html',
-    'author/author_display_name/yyyy/mm/index.html' =>
-      'автор/отображаемое_имя/гггг/мм/index.html',
 
 ## lib/MT/ArchiveType/Monthly.pm
     'MONTHLY_ADV'        => 'по месяцам',
@@ -1603,17 +1599,9 @@ sub numerate {
 
 ## lib/MT/ArchiveType/Author.pm
     'AUTHOR_ADV' => 'авторов',
-    'author/author-display-name/index.html' =>
-      'автор/отображаемое-имя/index.html',
-    'author/author_display_name/index.html' =>
-      'автор/отображаемое_имя/index.html',
 
 ## lib/MT/ArchiveType/AuthorYearly.pm
     'AUTHOR-YEARLY_ADV' => 'авторов по годам',
-    'author/author-display-name/yyyy/index.html' =>
-      'автор/отображаемое-имя/гггг/index.html',
-    'author/author_display_name/yyyy/index.html' =>
-      'автор/отображаемое_имя/гггг/index.html',
 
 ## lib/MT/ArchiveType/Weekly.pm
     'WEEKLY_ADV' => 'по неделям',
@@ -1622,10 +1610,6 @@ sub numerate {
 
 ## lib/MT/ArchiveType/AuthorWeekly.pm
     'AUTHOR-WEEKLY_ADV' => 'авторов по неделям',
-    'author/author-display-name/yyyy/mm/day-week/index.html' =>
-      'автор/отображаемое-имя/гггг/мм/день-недели/index.html',
-    'author/author_display_name/yyyy/mm/day-week/index.html' =>
-      'автор/отображаемое_имя/гггг/мм/день-недели/index.html',
 
 ## lib/MT/ArchiveType/CategoryMonthly.pm
     'CATEGORY-MONTHLY_ADV' => 'категорий по месяцам',
@@ -1650,10 +1634,6 @@ sub numerate {
 
 ## lib/MT/ArchiveType/AuthorDaily.pm
     'AUTHOR-DAILY_ADV' => 'авторов по дням',
-    'author/author-display-name/yyyy/mm/dd/index.html' =>
-      'автор/отображаемое-имя/гггг/мм/дд/index.html',
-    'author/author_display_name/yyyy/mm/dd/index.html' =>
-      'автор/отображаемое_имя/гггг/мм/дд/index.html',
 
 ## lib/MT/Config.pm
     'Configuration' => 'Конфигурация',
