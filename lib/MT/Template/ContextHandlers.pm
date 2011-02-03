@@ -8997,9 +8997,6 @@ sub _hdlr_entries {
                                               },
                                               { %blog_args, unique => 1 }
                       );
-                    if ( my $last = $args->{lastn} || $args->{limit} ) {
-                        $args{limit} = $last;
-                    }
                 }
             }
             push @filters, sub { $cexpr->( $preloader->( $_[0]->id ) ) };
