@@ -494,16 +494,16 @@ body.system #blog-selector-control #current-blog-title {color:#6B3081;}
 
 #blog-nav-list a span span {
     padding-right: 13px;
-    background: url('../images/nav-arrow-down.gif') no-repeat right center;
+    background: url('../images/nav-arrow-down-m.gif') no-repeat right center;
 }
 #blog-nav-list .show-nav a span span {
-    background-image: url('../images/nav-arrow-down-hover.gif');
+    background-image: url('../images/nav-arrow-down-hover-m.gif');
 }
 .system #blog-nav-list a span span {
-    background-image: url('../images/nav-arrow-down-system.gif');
+    background-image: url('../images/nav-arrow-down-system-m.gif');
 }
 .system #blog-nav-list .show-nav a span span {
-    background-image: url('../images/nav-arrow-down-hover-system.gif');
+    background-image: url('../images/nav-arrow-down-hover-system-m.gif');
 }
 
 #blog-nav a,
@@ -608,10 +608,10 @@ body.system #blog-nav li:hover li a:hover {
 }
 
 #blog-dashboard a {
-    background: url('../images/nav-icon-dashboard.gif') no-repeat center 10px;
+    background: url('../images/nav-icon-dashboard-m.gif') no-repeat center 10px;
 }
 .system #blog-dashboard a {
-/*    background-image: url('../images/nav-icon-dashboard-system.gif'); */
+    background-image: url('../images/nav-icon-dashboard-system-m.gif'); 
 }
 
 #rebuild-site a {
