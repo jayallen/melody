@@ -1922,26 +1922,6 @@ sub ping {
                   };
             }
         }
-        if ( $blog->mt_update_key ) {
-            require MT::XMLRPC;
-            if ( MT::XMLRPC->mt_ping($blog) ) {
-                push @res,
-                  {
-                    good => 1,
-                    url  => $mt->{cfg}->MTPingURL,
-                    type => "update"
-                  };
-            }
-            else {
-                push @res,
-                  {
-                    good  => 0,
-                    url   => $mt->{cfg}->MTPingURL,
-                    type  => "update",
-                    error => MT::XMLRPC->errstr
-                  };
-            }
-        } ## end if ( $blog->mt_update_key)
     } ## end if ( $send_updates && ...)
 
     my $cfg     = $mt->{cfg};
@@ -2084,7 +2064,6 @@ sub needs_ping {
     {
         my @updates = $mt->update_ping_list($blog);
         @list{@updates} = (1) x @updates;
-        $list{ $mt->{cfg}->MTPingURL } = 1 if $blog && $blog->mt_update_key;
     }
     if ($entry) {
         @list{ @{ $entry->to_ping_url_list } } = ();

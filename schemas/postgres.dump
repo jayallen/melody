@@ -59,7 +59,6 @@ create table mt_blog (
     blog_ping_others text,
     blog_junk_score_threshold float,
     blog_junk_folder_expiry integer,
-    blog_mt_update_key varchar(30),
     blog_autodiscover_links smallint,
     blog_welcome_msg text,
     blog_old_style_archive_links smallint,

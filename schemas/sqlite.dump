@@ -56,7 +56,6 @@ create table mt_blog (
     blog_ping_weblogs boolean,
     blog_ping_blogs boolean,
     blog_ping_others text,
-    blog_mt_update_key varchar(30),
     blog_autodiscover_links boolean,
     blog_welcome_msg text,
     blog_junk_score_threshold float,
