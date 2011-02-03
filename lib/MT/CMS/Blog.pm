@@ -1655,7 +1655,7 @@ sub post_save {
         allow_comments_default server_offset convert_paras convert_paras_comments allow_pings_default status_default
         allow_anon_comments words_in_excerpt moderate_unreg_comments moderate_pings allow_unreg_comments
         allow_reg_comments allow_pings manual_approve_commenters require_comment_emails junk_folder_expiry ping_weblogs
-        mt_update_key language welcome_msg google_api_key email_new_pings ping_blogs ping_google
+        language welcome_msg google_api_key email_new_pings ping_blogs ping_google
         ping_others autodiscover_links sanitize_spec cc_license is_dynamic remote_auth_token custom_dynamic_templates
         junk_score_threshold internal_autodiscovery basename_limit use_comment_confirmation
         allow_commenter_regist archive_url archive_path old_style_archive_links archive_tmpl_daily archive_tmpl_weekly

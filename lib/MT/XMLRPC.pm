@@ -24,19 +24,15 @@ sub weblogs_ping {
 }
 
 sub mt_ping {
-    my $class  = shift;
-    my ($blog) = @_;
-    my $url    = MT->config->MTPingURL
-      or return $class->error(
-            MT->translate("No MTPingURL defined in the configuration file") );
-    if ( !ref($blog) ) {
-        require MT::Blog;
-        $blog = MT::Blog->load($blog)
-          or return $class->error(
-                          MT->translate( 'Can\'t load blog #[_1].', $blog ) );
-    }
-    $class->ping_update( 'mtUpdates.ping', $blog, $url,
-                         $blog->mt_update_key );
+    MT->log({
+        message =>
+            MT->translate(
+                "Call made to mt_ping via XMLRPC. This method is no longer supported.",
+            ),
+            class => 'system',
+            level => MT->model('log')->ERROR(),
+            }
+        });
 }
 
 sub ping_update {
@@ -123,12 +119,11 @@ message can be obtained by calling I<errstr> on the class name.
 
 =head2 MT::XMLRPC->mt_ping($blog)
 
-Send an XML-RPC ping to I<movabletype.org> for the blog I<$blog>, which should
-be an I<MT::Blog> object, and which should contain a valid Movable Type
-Recently Updated Key.
+Once upon a time this function would send an XML-RPC ping to I<movabletype.org> 
+for the blog I<$blog>, which should be an I<MT::Blog> object, and which should 
+contain a valid Movable Type Recently Updated Key.
 
-On success, returns a true value; on failure, returns C<undef>, and the error
-message can be obtained by calling I<errstr> on the class name.
+This method however is no longer supported and has been removed from Melody.
 
 =head2 MT::XMLRPC->ping_update($method, $blog, $url)
 

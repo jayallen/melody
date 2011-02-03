@@ -53,7 +53,6 @@ CREATE TABLE mt_blog (
     blog_ping_weblogs TINYINT,
     blog_ping_blogs TINYINT,
     blog_ping_others TEXT,
-    blog_mt_update_key VARCHAR(30),
     blog_autodiscover_links TINYINT,
     blog_welcome_msg TEXT,
     blog_old_style_archive_links TINYINT,
