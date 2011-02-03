@@ -4289,7 +4289,7 @@ que la dirección provista es correcta y le pertenece.',
 ## tmpl/cms/include/sysinfo_content_nav.tmpl
     'Plugins &amp; Addons' => 'Plugins y Addons',
     'Resources'            => 'Recursos',
-    'Sanity Check'         => 'Verificación del sistema ',
+    'System Diagnostics'         => 'Verificación del sistema ',
 
 ## tmpl/cms/include/ping_table.tmpl
     'Publish selected [_1] (p)' => 'Publicar [_1] seleccionados (p)',
