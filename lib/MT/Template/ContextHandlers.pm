@@ -4698,7 +4698,7 @@ B<Attributes:>
 =item * type (optional)
 
 If specified, can be used to test if a particular type of registration
-is enabled. The core types include "OpenID", "Vox", "LiveJournal", "TypeKey"
+is enabled. The core types include "OpenID", "LiveJournal", "TypeKey"
 and "MovableType". The identifier is case-insensitive.
 
 =back
@@ -7576,7 +7576,7 @@ Returns URL to a small (16x16) image represents in what authentication
 provider the author in context is authenticated. For most of users it will
 be a small spanner logo of Movable Type. If user is a commenter, icon image
 is provided by each of authentication provider. Movable Type provides
-images for Vox, LiveJournal and OpenID out of the box.
+images for LiveJournal and OpenID out of the box.
 
 B<Attributes:>
 
@@ -12167,7 +12167,7 @@ sub _hdlr_comment_email {
 =head2 CommentAuthorIdentity
 
 Returns a profile icon link for the current commenter in context. The icon
-is for the authentication service used (ie, TypeKey, OpenID, Vox
+is for the authentication service used (ie, TypeKey, OpenID, 
 LiveJournal, etc.). If the commenter has a URL in their profile the icon
 is linked to that URL.
 
@@ -13096,7 +13096,7 @@ Returns a string which identifies what authentication provider the commenter
 in context used to authenticate him/herself. Commenter context is created by
 either MTComments or MTCommentReplies template tag. For example, 'MT' will be
 returned when the commenter in context is authenticated by Movable Type. When
-the commenter in context is authenticated by Vox, 'Vox' will be returned.
+the commenter in context is authenticated by LiveJournal, 'LiveJournal' will be returned.
 
 B<Example:>
 
@@ -13124,7 +13124,7 @@ provider the commenter in context is authenticated. Commenter context
 is created by either a L<Comments> or L<CommentReplies> block tag. For
 commenters authenticated by Movable Type, it will be a small spanner
 logo of Movable Type. Otherwise, icon image is provided by each of
-authentication provider. Movable Type provides images for Vox,
+authentication provider. Movable Type provides images for 
 LiveJournal and OpenID out of the box.
 
 B<Example:>

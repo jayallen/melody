@@ -8,8 +8,6 @@
 global $_commenter_auths;
 $provider = new OpenIDCommenterAuth();
 $_commenter_auths[$provider->get_key()] = $provider;
-$provider = new VoxCommenterAuth();
-$_commenter_auths[$provider->get_key()] = $provider;
 $provider = new LiveJournalCommenterAuth();
 $_commenter_auths[$provider->get_key()] = $provider;
 $provider = new TypeKeyCommenterAuth();
@@ -72,21 +70,6 @@ class LiveJournalCommenterAuth extends BaseCommenterAuthProvider {
     }
     function get_logo_small() {
         return 'images/comment/livejournal_logo.png';
-    }
-}
-
-class VoxCommenterAuth extends BaseCommenterAuthProvider {
-    function get_key() {
-        return 'Vox';
-    }
-    function get_label() {
-        return 'Vox Commenter Authenticator';
-    }
-    function get_logo() {
-        return 'images/comment/signin_vox.png';
-    }
-    function get_logo_small() {
-        return 'images/comment/vox_logo.png';
     }
 }
 
