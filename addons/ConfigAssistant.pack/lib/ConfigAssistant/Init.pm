@@ -359,15 +359,22 @@ sub load_tags {
                 };
                 if ( $option->{'type'} eq 'checkbox' ) {
                     $tags->{block}->{ $tag . 'Loop' } = sub {
-                        $_[0]->stash( 'field',     $opt );
-                        $_[0]->stash( 'plugin_ns', find_option_plugin($opt)->id );
-                        $_[0]->stash( 'scope',     lc( $option->{scope} ) );
-                        runner( '_hdlr_field_array_loop', 'ConfigAssistant::Plugin', @_ );
+                        my $blog = $_[0]->stash('blog');
+                        my $bset = $blog->template_set;
+                        $_[0]->stash( 'field', $bset . '_' . $opt );
+                        $_[0]->stash( 'plugin_ns',
+                                      find_theme_plugin($bset)->id );
+                        $_[0]->stash( 'scope', 'blog' );
+                        runner( '_hdlr_field_array_loop',
+                                'ConfigAssistant::Plugin', @_ );
                     };
                     $tags->{block}->{ $tag . 'Contains' } = sub {
-                        $_[0]->stash( 'field',     $opt );
-                        $_[0]->stash( 'plugin_ns', find_option_plugin($opt)->id );
-                        $_[0]->stash( 'scope',     lc( $option->{scope} ) );
+                        my $blog = $_[0]->stash('blog');
+                        my $bset = $blog->template_set;
+                        $_[0]->stash( 'field', $bset . '_' . $opt );
+                        $_[0]->stash( 'plugin_ns',
+                                      find_theme_plugin($bset)->id );
+                        $_[0]->stash( 'scope', 'blog' );
                         runner( '_hdlr_field_array_contains',
                                 'ConfigAssistant::Plugin', @_ );
                     };
@@ -375,10 +382,12 @@ sub load_tags {
                 } ## end if ( $option->{'type'}...)
                 elsif ( $option->{'type'} eq 'file' ) {
                     $tags->{block}->{ $tag . 'Asset' } = sub {
-                        $_[0]->stash( 'field', $opt );
+                        my $blog = $_[0]->stash('blog');
+                        my $bset = $blog->template_set;
+                        $_[0]->stash( 'field', $bset . '_' . $opt );
                         $_[0]->stash( 'plugin_ns',
-                                      find_option_plugin($opt)->id );
-                        $_[0]->stash( 'scope', lc( $option->{scope} ) );
+                                      find_theme_plugin($bset)->id );
+                        $_[0]->stash( 'scope', 'blog' );
                         runner( '_hdlr_field_asset',
                                 'ConfigAssistant::Plugin', @_ );
                     };
@@ -386,10 +395,12 @@ sub load_tags {
                 }
                 elsif ( $option->{'type'} eq 'link-group' ) {
                     $tags->{block}->{ $tag . 'Links' } = sub {
-                        $_[0]->stash( 'field', $opt );
+                        my $blog = $_[0]->stash('blog');
+                        my $bset = $blog->template_set;
+                        $_[0]->stash( 'field', $bset . '_' . $opt );
                         $_[0]->stash( 'plugin_ns',
-                                      find_theme_plugin($opt)->id );
-                        $_[0]->stash( 'scope', lc( $option->{scope} ) );
+                                      find_theme_plugin($bset)->id );
+                        $_[0]->stash( 'scope', 'blog' );
                         runner( '_hdlr_field_link_group',
                                 'ConfigAssistant::Plugin', @_ );
                     };
@@ -404,10 +415,12 @@ sub load_tags {
                     my $obj_class = substr( $t, 0, index( $t, '_list' ) );
                     $tags->{block}->{ $tag . $tag_type } = sub {
                         $_[0]->stash( 'obj_class', $obj_class );
-                        $_[0]->stash( 'field', $opt );
+                        my $blog = $_[0]->stash('blog');
+                        my $bset = $blog->template_set;
+                        $_[0]->stash( 'field', $bset . '_' . $opt );
                         $_[0]->stash( 'plugin_ns',
-                                      find_option_plugin($opt)->id );
-                        $_[0]->stash( 'scope', lc( $option->{scope} ) );
+                                      find_theme_plugin($bset)->id );
+                        $_[0]->stash( 'scope', 'blog' );
                         runner( '_hdlr_field_category_list',
                                 'ConfigAssistant::Plugin', @_ );
                     };
