@@ -2920,40 +2920,6 @@ LiveJournal
             logo_small        => 'images/comment/livejournal_logo.png',
             order             => 11,
         },
-        'Vox' => {
-            class      => 'MT::Auth::Vox',
-            label      => 'Vox',
-            login_form => <<Vox,
-<form method="post" action="<mt:var name="script_url">">
-<input type="hidden" name="__mode" value="login_external" />
-<input type="hidden" name="blog_id" value="<mt:var name="blog_id">" />
-<input type="hidden" name="entry_id" value="<mt:var name="entry_id">" />
-<input type="hidden" name="static" value="<mt:var name="static" escape="html">" />
-<input type="hidden" name="key" value="Vox" />
-<fieldset>
-<mtapp:setting
-    id="vox_display"
-    label="<__trans phrase="Your Vox Blog URL">">
-http:// <input name="openid_userid" style="background: #fff url('<mt:var name="static_uri">images/comment/vox_logo.png') no-repeat 2px center; padding: 2px 2px 2px 20px; border: 1px solid #5694b6; width: 200px; font-size: 110%; vertical-align: middle" />.vox.com
-</mtapp:setting>
-<div class="actions-bar actions-bar-login">
-    <div class="actions-bar-inner pkg actions">
-        <button
-            type="submit"
-            class="primary-button"
-            ><__trans phrase="Sign in"></button>
-    </div>
-</div>
-<p><img src="<mt:var name="static_uri">images/comment/blue_moreinfo.png"> <a href="http://www.vox.com/"><__trans phrase="Learn more about Vox."></a></p>
-</fieldset>
-</form>
-Vox
-            login_form_params => \&_commenter_auth_params,
-            condition         => \&_openid_commenter_condition,
-            logo              => 'images/comment/signin_vox.png',
-            logo_small        => 'images/comment/vox_logo.png',
-            order             => 12,
-        },
         'Google' => {
             label      => 'Google',
             class      => 'MT::Auth::GoogleOpenId',
@@ -3197,7 +3163,7 @@ LIVEDOOR
 <input type="hidden" name="key" value="Hatena" />
 <fieldset>
 <mtapp:setting
-    id="vox_display"
+    id="hatena_display"
     label="<__trans phrase="Your Hatena ID">">
 <input name="openid_userid" style="background: #fff url('<mt:var name="static_uri">images/comment/hatena_logo.png') no-repeat 2px center; padding: 2px 2px 2px 20px; border: 1px solid #5694b6; width: 200px; font-size: 110%; vertical-align: middle" />
 </mtapp:setting>
