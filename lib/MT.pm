@@ -1003,6 +1003,15 @@ sub init_config {
         }
     } ## end for my $meth (@mt_paths)
 
+    if ( my $local_lib = $cfg->PerlLocalLibPath ) {
+        $local_lib = [ $local_lib ] if ! 'ARRAY' eq ref $local_lib;
+        eval "use local::lib qw( @{$local_lib} )";
+        return $mt->trans_error(
+            'Can\'t load local lib from path [_1]: ',
+            join(', ', @$local_lib),
+            $@, ) if $@;
+    }
+
     return $mt->trans_error("Bad ObjectDriver config")
       unless $cfg->ObjectDriver;
 

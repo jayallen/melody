@@ -311,6 +311,8 @@ BEGIN {
             'ImportPath'      => { default => 'import',   path => 1, },
             'PluginPath' =>
               { default => 'plugins', path => 1, type => 'ARRAY', },
+             'PerlLocalLibPath' =>
+              { default => undef, path => 1, type => 'ARRAY', },
             'EnableArchivePaths' => { default => 0, },
             'SearchTemplatePath' =>
               { default => 'search_templates', path => 1, },
