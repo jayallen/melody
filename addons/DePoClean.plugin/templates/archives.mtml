@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"> 
 <head profile="http://gmpg.org/xfn/11"> 
 	<title><$mt:BlogName escape="html"$> -   <__trans phrase="Archived"></title> 
-	<$mt:Include module="<__trans phrase="HTML Head">"$>
+	<$mt:Include identifier="html_head"$>
 
 	<link rel='canonical' href='<$mt:Link template="<__trans phrase="Archives">"$>' /> 
 </head> 
@@ -11,24 +11,38 @@
  
 <div class="container"> 
  
-	<$mt:Include module="<__trans phrase="Header">"$>
+	<$mt:Include identifier="header"$>
+
 
 		<div class="post">
+
 			<h2><__trans phrase="The Archives"></h2>
+
 		</div>
+
 			
+
 		<div class="post" style="border-bottom:0px">
+
 		    
+
 		<div style="float:right;width:250px;">
+
 			<h3><__trans phrase="By Month"></h3>
+
 			<ul class="nav">
 			<mt:ArchiveList type="Monthly">
+
 				<li><a href='<$mt:ArchiveLink$>' title='<$mt:ArchiveTitle escape="html"$>'><$mt:ArchiveTitle$></a></li>
 			</mt:ArchiveList>
 			</ul>
+
 		</div>
+
             
+
 		<h3><__trans phrase="By Category"></h3>
+
 		<ul class="nav">
 			<mt:TopLevelCategories>
 				<li class="cat-item"><a href="<$mt:CategoryArchiveLink$>" title="<__trans phrase="View all posts filed under"> <$mt:CategoryLabel escape="html"$>"><$mt:CategoryLabel$></a>
@@ -44,12 +58,21 @@
 				</mt:SubCategories>
 			</mt:TopLevelCategories>
 		</ul>
+
 		</div>
+
+
 
 <br clear="all" />
 
-	<$mt:Include module="<__trans phrase="Footer">"$>
+
+
+	<$mt:Include identifier="footer"$>
+
+
 
 	</div> <!-- end container -->
+
 </body>
-</html>
+
+</html>

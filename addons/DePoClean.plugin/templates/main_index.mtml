@@ -33,7 +33,7 @@
 <head profile="http://gmpg.org/xfn/11"> 
 	<title><$mt:BlogName escape="html"$> &#8211; <$mt:BlogDescription escape="html"$></title> 
 	<meta name='robots' content='noindex,nofollow' />
-	<$mt:Include module="<__trans phrase="HTML Head">"$>
+	<$mt:Include identifier="html_head"$>
 </head> 
 <body> 
 <div class="container"> 
@@ -52,7 +52,7 @@
 	</div>
 
 	<mt:If tag="FlickrPhotoType" ne="Disable"> 
-	<$mt:Include module="<__trans phrase="Flickr">"$>
+	<$mt:Include identifier="flickr"$>
 	</mt:If>
 
 <$mt:Date format="%Y$%m%d" setvar="today"$>
@@ -60,9 +60,9 @@
         <$mt:EntryDate format="%Y%M%d" setvar="this_entry"$>
         <mt:If name="today" gt="$this_entry">
                 <mt:SetVarBlock name="cache_key">Listing;EntryDetails;<$mt:EntryID$></mt:SetVarBlock>
-                <$mt:Include module="<__trans phrase="Entry Details">" cache="1" cache_key="$cache_key" ttl="604800"$>
+                <$mt:Include identifier="entry_details" cache="1" cache_key="$cache_key" ttl="604800"$>
         <mt:Else>
-                <$mt:Include module="<__trans phrase="Entry Details">"$>
+                <$mt:Include identifier="entry_details"$>
         </mt:If>
 </mt:Entries>
 	
@@ -72,7 +72,7 @@
 	</div> 
  
 	<br clear="all" />
-	<$mt:Include module="<__trans phrase="Footer">"$>
+	<$mt:Include identifier="footer"$>
  
 	</div> <!-- end container --> 
 </body> 
