@@ -253,11 +253,11 @@ body.system #header {background: #6B3081 url('../images/header-inner.gif') repea
     border: 1px solid #474747;
     border-width: 0 1px 0 0;
     padding-right: 17px;
-    background: url('../images/system-nav-down.gif') no-repeat right center;
+  /*  background: url('../images/system-nav-down.gif') no-repeat right center; */
 }
 #system-menu.show-nav a.nav-menu-link {
     border-color: #575757;
-    background-image: url('../images/system-nav-down-hover.gif');
+ /*   background-image: url('../images/system-nav-down-hover.gif'); */
 }
 
 body.system #utility-nav a {
@@ -389,7 +389,7 @@ body.system #blog-selector-control #current-blog-title {color:#6B3081;}
 
 #blog-selector-control #current-blog-title span {
     padding-left: 22px;
-    background: #fff url('../images/blog-selector-arrow.gif') no-repeat right top;
+    background: #fff url('../images/blog-selector-arrow-m.gif') no-repeat right top;
 }
 
 #blog-selector-control #create-blog,
@@ -458,7 +458,7 @@ body.system #blog-selector-control #current-blog-title {color:#6B3081;}
 }
 
 #blog-nav #blog-nav-inner {
-    background: #466478 url('../images/blog-nav.jpg') repeat-x;
+    background: #33789c url('../images/blog-nav.jpg') repeat-x;
 }
 
 #blog-nav ul {
@@ -494,16 +494,16 @@ body.system #blog-selector-control #current-blog-title {color:#6B3081;}
 
 #blog-nav-list a span span {
     padding-right: 13px;
-    background: url('../images/nav-arrow-down.gif') no-repeat right center;
+    background: url('../images/nav-arrow-down-m.gif') no-repeat right center;
 }
 #blog-nav-list .show-nav a span span {
-    background-image: url('../images/nav-arrow-down-hover.gif');
+    background-image: url('../images/nav-arrow-down-hover-m.gif');
 }
 .system #blog-nav-list a span span {
-    background-image: url('../images/nav-arrow-down-system.gif');
+    background-image: url('../images/nav-arrow-down-system-m.gif');
 }
 .system #blog-nav-list .show-nav a span span {
-    background-image: url('../images/nav-arrow-down-hover-system.gif');
+    background-image: url('../images/nav-arrow-down-hover-system-m.gif');
 }
 
 #blog-nav a,
@@ -608,10 +608,10 @@ body.system #blog-nav li:hover li a:hover {
 }
 
 #blog-dashboard a {
-    background: url('../images/nav-icon-dashboard.gif') no-repeat center 10px;
+    background: url('../images/nav-icon-dashboard-m.gif') no-repeat center 10px;
 }
 .system #blog-dashboard a {
-/*    background-image: url('../images/nav-icon-dashboard-system.gif'); */
+    background-image: url('../images/nav-icon-dashboard-system-m.gif'); 
 }
 
 #rebuild-site a {
@@ -2959,12 +2959,12 @@ td.output-file ul li {
     display: block;
     width: 12px;
     text-decoration: none;
-    background: url('../images/pagination.gif') no-repeat left center;
+    background: url('../images/pagination-m.gif') no-repeat left center;
 }
 .system .pagination a,
 .system .pagination a:hover,
 .system .pagination span {
-    background-image: url('../images/pagination-system.gif');
+    background-image: url('../images/pagination-system-m.gif');
 }
 .pagination span.current-rows {
     width: auto;
