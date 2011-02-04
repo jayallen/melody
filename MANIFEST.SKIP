@@ -27,6 +27,10 @@ lib/MT/FileMgr/FTP.pm
 lib/MT/FileMgr/SFTP.pm
 lib/MT/FileMgr/DAV.pm
 
+# Unnecessary jquery libraries
+addons/ThemeManager.plugin/static/js/jquery-1.4.2.min.js
+addons/ConfigAssistant.pack/static/colorpicker/js/jquery.js
+
 # Performance Log Processing
 # Removing until DateTime dependency can be reviewed
 tools/report-slow-request
