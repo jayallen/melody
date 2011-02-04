@@ -1,0 +1,6 @@
+name:           Ignore perl - YAML initialized - YAY
+version:        1.0
+description:    YAML-initialized version of this plugin
+author_name:    Jay Allen
+key:            IgnorePerl
+id:             ignoreperl

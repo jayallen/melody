@@ -15,7 +15,7 @@ use lib 't/lib', 'lib', 'extlib';
 use Data::Dumper;
 use Test::Output qw( :functions );
 use Test::Warn;
-use Test::More tests => 9;
+use Test::More tests => 10;
 
 {
     no warnings 'once';
@@ -117,6 +117,9 @@ sub init_test_data {
         },
         'TwoYAMLs/second.yaml' => {
             name         => 'Two YAMLs - second',
+        },
+        'IgnorePerl/config.yaml' => {
+            name         => 'Ignore perl - YAML initialized - YAY',
         },
         'stray.pl' => {
             message      => ': Stray, unloaded perl plugin',
