@@ -24,15 +24,10 @@ sub weblogs_ping {
 }
 
 sub mt_ping {
-    MT->log({
-        message =>
-            MT->translate(
-                "Call made to mt_ping via XMLRPC. This method is no longer supported.",
-            ),
-            class => 'system',
-            level => MT->model('log')->ERROR(),
-            }
-        });
+    require Carp;
+    warn MT->translate(
+        "Call to retired method, XMLRPC::mt_ping ".Carp::longmess()
+    );
 }
 
 sub ping_update {
