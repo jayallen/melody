@@ -46,15 +46,9 @@
         </mt:if>
 
         <mt:unless name="typekey_enabled">
-        <script type="text/javascript">
-            $(function() {
-                $('#lnkTypePad').click(function() {
-                    $('a[title=web-services]').click();
-                });
-            });
-        </script>
-        <div><a href="#" id="lnkTypePad"><__trans phrase="Setup TypePad"></a></div>
+            <div><a href="javascript:void(0)" id="lnkTypePad"><__trans phrase="Setup TypePad"></a></div>
         </mt:unless>
+
         <mt:unless name="openid_enabled">
         <p>
         <img src="<mt:var name="static_uri">images/status_icons/warning.gif" alt="<__trans phrase="OpenID providers disabled">" width="9" height="9" />

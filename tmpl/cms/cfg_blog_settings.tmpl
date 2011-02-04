@@ -131,6 +131,14 @@ function init() {
     disableFields('site_url','site_path');
 }
 
+// Event handler for Setup TypePad link on Login & Signup tab
+// Switches to Web Services tab
+$(function() {
+    $('#lnkTypePad').click(function() {
+        $('a[title=web-services]').click();
+    });
+});
+
 TC.attachLoadEvent( init );
 /* ]]> */
 </script>
