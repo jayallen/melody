@@ -2959,12 +2959,12 @@ td.output-file ul li {
     display: block;
     width: 12px;
     text-decoration: none;
-    background: url('../images/pagination.gif') no-repeat left center;
+    background: url('../images/pagination-m.gif') no-repeat left center;
 }
 .system .pagination a,
 .system .pagination a:hover,
 .system .pagination span {
-    background-image: url('../images/pagination-system.gif');
+    background-image: url('../images/pagination-system-m.gif');
 }
 .pagination span.current-rows {
     width: auto;
