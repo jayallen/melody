@@ -1244,9 +1244,11 @@ sub MarkdownWithSmartyPants {
         }
     }
     $text = Markdown($text);
-    if ( defined &SmartyPants::SmartyPants ) {
-        $text = SmartyPants::SmartyPants( $text, '1' );
-    }
+
+    # Apply the SmartyPants filter.
+    use MT::Plugin::SmartyPants;
+    $text = MT::Plugin::SmartyPants::SmartyPants( $text, '1' );
+
     return $text;
 }
 

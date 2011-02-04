@@ -2,7 +2,7 @@ name: Markdown and SmartyPants
 id: MarkdownSmartyPants
 key: MarkdownSmartyPants
 description: <MT_TRANS phrase="Easily translates plain punctuation characters into 'smart' typographic punctuation.">
-version: 1.0.2
+version: 1.0.3
 author_name: John Gruber
 author_link: http://daringfireball.net/
 plugin_link: http://daringfireball.net/projects/smartypants/
