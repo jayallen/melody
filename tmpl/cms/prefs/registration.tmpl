@@ -46,7 +46,14 @@
         </mt:if>
 
         <mt:unless name="typekey_enabled">
-        <div><a href="<mt:var name="script_url">?__mode=cfg_web_services&amp;blog_id=<mt:var name="blog_id" escape="url">"><__trans phrase="Setup TypePad"></a></div>
+        <script type="text/javascript">
+            $(function() {
+                $('#lnkTypePad').click(function() {
+                    $('a[title=web-services]').click();
+                });
+            });
+        </script>
+        <div><a href="#" id="lnkTypePad"><__trans phrase="Setup TypePad"></a></div>
         </mt:unless>
         <mt:unless name="openid_enabled">
         <p>
