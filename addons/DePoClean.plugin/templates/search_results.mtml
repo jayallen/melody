@@ -6,7 +6,7 @@
 		</mt:IfPreviousResults>
 		<mt:IfMoreResults>
 			<span class="previous">
-            			<a href="<$mt:MoreLink$>">&larr; Before</a>
+            			<a href="<$mt:NextLink$>">&larr; Before</a>
 			</span>
 		</mt:IfMoreResults>
 </mt:SetVarBlock>
@@ -16,18 +16,18 @@
 <head profile="http://gmpg.org/xfn/11"> 
 	<title><$mt:BlogName escape="html"$> &#8211; <$mt:BlogDescription escape="html"$></title> 
 	<meta name='robots' content='noindex,nofollow' />
-	<$mt:Include module="<__trans phrase="HTML Head">"$>
+	<$mt:Include identifier="html_head"$>
 </head> 
 <body> 
 <div class="container"> 
-	<$mt:Include module="<__trans phrase="Header">"$>
+	<$mt:Include identifier="header"$>
 	<div class="post">
 		<h2 style="font-weight:normal"><__trans phrase="Search Results for"> <strong><$mt:SearchString$></strong></h2>
 	</div>
 
 	<mt:SearchResults>
 		<mt:SetVarBlock name="cache_key">Listing;EntryDetails;<$mt:EntryID$></mt:SetVarBlock>
-                <$mt:Include module="<__trans phrase="Entry Details">" cache="1" cache_key="$cache_key" ttl="604800"$>
+                <$mt:Include identifier="entry_details" cache="1" cache_key="$cache_key" ttl="604800"$>
 	</mt:SearchResults>			
 		
 	<div class="postnoline"> 
@@ -35,7 +35,7 @@
 	</div> 
  
 	<br clear="all" />
-	<$mt:Include module="<__trans phrase="Footer">"$>
+	<$mt:Include identifier="footer"$>
  
 	</div> <!-- end container --> 
 </body> 
