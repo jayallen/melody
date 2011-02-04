@@ -30,7 +30,7 @@ body.dialog #container-inner button { background:#D8224F; color:#fff; border:2px
 body.dialog #container-inner button:hover {  } 
 
 .dialog .actions-bar { margin:0 0 5px; }
-.dialog .actions-bar .actions a {background:none!important; background-color:#E1D6E6!important; color:#fff!important; -moz-border-radius:4px;-webkit-border-radius:4px;}
+.dialog .actions-bar .actions a {background:none!important; background-color:#E1D6E6!important; color:#fff!important; -moz-border-radius:4px;-webkit-border-radius:4px; border-radius:4px;}
 .dialog .actions-bar .actions a:hover {}
 
 body.dialog #container-inner div#ctl, body.dialog #container-inner div#ctr, body.dialog #container-inner div#cbl, body.dialog #container-inner div#cbr {background:none;}
