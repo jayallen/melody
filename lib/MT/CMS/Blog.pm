@@ -2749,7 +2749,7 @@ MT::CMS::Blog
 
 =head2 update_dynamicity
 
-=head2 update_publishing_profile
+=head2 update_publish_profile
 
 =head2 update_welcome_message
 

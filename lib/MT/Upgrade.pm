@@ -957,7 +957,7 @@ sub core_upgrade_functions {
                 code  => sub {
                     my ($blog) = @_;
                     require MT::CMS::Blog;
-                    MT::CMS::Blog::update_publishing_profile( $App, $blog );
+                    MT::CMS::Blog::update_publish_profile( $App, $blog );
                     require MT::Template;
                     require MT::PublishOption;
                     my @tmpls
