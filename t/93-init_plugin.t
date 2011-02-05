@@ -15,7 +15,7 @@ use lib 't/lib', 'lib', 'extlib';
 use Data::Dumper;
 use Test::Output qw( :functions );
 use Test::Warn;
-use Test::More tests => 10;
+use Test::More tests => 11;
 
 {
     no warnings 'once';
@@ -71,6 +71,13 @@ sub main {
             }
         };
     }
+
+    require MT::Template::Context;
+    my $ctx    = MT::Template::Context->new;
+    my $b      = MT::Builder->new;
+    my $result = $b->build( $ctx, $b->compile( $ctx, '<mt:IDontExist>' ));
+    is( (! defined $result and $b->errstr =~ m{Unknown tag found}), 1,
+        'IDontExist tag from ignored perl plugin' );
 }
 
 sub test_plugin_loaded {
