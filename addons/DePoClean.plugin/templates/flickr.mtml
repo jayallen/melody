@@ -58,15 +58,17 @@ var url = null;
 			if (url != null) {
 				$.getJSON(url, function(data) {
 					$.each(data.items, function(index, obj) {
-						$('<img/>')
-							.attr('src', obj.media.m.replace('_m.jpg', '_s.jpg'))
-							.attr('alt', obj.title)
-							.attr('title', obj.title)
-							.appendTo(
-								$('<a/>')
-									.attr('href', obj.link)
-									.appendTo(flickr)
-							)
+						if (index < 18) {
+							$('<img/>')
+								.attr('src', obj.media.m.replace('_m.jpg', '_s.jpg'))
+								.attr('alt', obj.title)
+								.attr('title', obj.title)
+								.appendTo(
+									$('<a/>')
+										.attr('href', obj.link)
+										.appendTo(flickr)
+								);
+						}
 					});
 				});
 			}
