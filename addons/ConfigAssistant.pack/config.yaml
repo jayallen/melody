@@ -83,7 +83,7 @@ object_types:
 
 blog_preferences:
   __default__:
-    label: 'Movable Type Factory Default'
-    description: 'This is the default factory settings for Movable Type.'
+    label: 'Factory Default'
+    description: 'These are the default factory settings.'
     order: 1
     preferences: default_prefs.yaml
