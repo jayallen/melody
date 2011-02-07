@@ -52,11 +52,13 @@
 </mt:setvarblock>
 
 <mt:if name="is_power_edit">
-    <$mt:setvar name="hide_pager" value="1"$>
+    <$mt:var name="hide_pager" value="1"$>
+    <$mt:var name="listing_class" value="power-edit"$>
 </mt:if>
 
 <mtapp:listing
-    hide_pager="$hide_pager">
+    hide_pager="$hide_pager"
+    listing_class="$listing_class">
     <mt:if __first__>
         <thead>
             <tr>
@@ -72,11 +74,11 @@
         </mt:unless>
                 </th>
                 <th class="title"><__trans phrase="Title"></th>
-                <th class="status<mt:unless name="is_power_edit"> si</mt:unless>">
         <mt:unless name="is_power_edit">
+                <th class="status<mt:unless name="is_power_edit"> si</mt:unless>">
                     <img src="<$mt:var name="static_uri"$>images/icon_comment.png" alt="<__trans phrase="Status">" title="<__trans phrase="Status">" width="16" height="16" />
-        </mt:unless>
                 </th>
+        </mt:unless>
                 <th class="category"><mt:if name="object_type" eq="page"><__trans phrase="Folder"><mt:else><__trans phrase="Category"></mt:if></th>
                 <th class="author"><__trans phrase="Author"></th>
         <mt:unless name="blog_view">
@@ -149,15 +151,19 @@
             </mt:if>
         </mt:if>
                 </td>
+                <mt:unless name="view_expanded">
                 <mt:unless name="is_power_edit">
                 <td class="tr comments"><mt:if name="comments_enabled"><$mt:var name="comment_count" default="0"$><mt:else>-</mt:if></td>
+                </mt:unless>
                 </mt:unless>
         <mt:if name="view_expanded">
             </tr>
             <tr class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> slave">
                 <td>&#160;</td>
                 <td>&#160;</td>
+                <td>&#160;</td>
                 <td><mt:if name="has_edit_access"><a href="<$mt:var name="script_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;id=<$mt:var name="id"$>&amp;blog_id=<$mt:var name="blog_id"$>"><mt:if name="object_type" ne="page"><__trans phrase="Edit Entry"><mt:else><__trans phrase="Edit Page"></mt:if></a><mt:else>&#160;</mt:if></td>
+                <td class="tr comments"><mt:if name="comments_enabled"><$mt:var name="comment_count" default="0"$><mt:else>-</mt:if></td>
         </mt:if>
                 <td class="category">
         <mt:if name="is_editable">
@@ -204,6 +210,7 @@
         </mt:if>
                 </td>
             </tr>
+        <mt:unless name="is_power_edit">
         <mt:if name="view_compact">
             <tr class="obj-<mt:var name="id"> <mt:if name="__odd__">odd<mt:else>even</mt:if> slave">
                 <td class="bl">&#160;</td>
@@ -226,6 +233,7 @@
                 </td>
             </tr>
         </mt:if>
+        </mt:unless>
     <mt:if __last__>
         </tbody>
     </mt:if>

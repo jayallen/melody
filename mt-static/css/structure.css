@@ -2472,9 +2472,20 @@ optgroup option {
 }
 .page-listing-table,
 .entry-listing-table {
+    /* TODO - eliminate need for !important */
     margin-left: -28px !important;
     width: 730px !important;
 }
+
+.power-edit .page-listing-table,
+.power-edit .entry-listing-table {
+    margin-left: 0px !important;
+}
+
+.listing.power-edit {
+    width: 870px !important;
+}
+
 .listing thead tr {
   background: none;
 }
@@ -2512,6 +2523,10 @@ optgroup option {
 .page-listing-table .date,
 .entry-listing-table .date {
     text-align: right;
+}
+.power-edit .page-listing-table .date,
+.power-edit .entry-listing-table .date {
+    text-align: left;
 }
 .page-listing-table .extra .actions,
 .entry-listing-table .extra .actions {
