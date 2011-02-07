@@ -6048,7 +6048,7 @@ que la dirección provista es correcta y le pertenece.',
     'Chooser'                   => 'Chooser',
 
 ## addons/ConfigAssistant.pack/config.yaml
-    'Movable Type Factory Default\'' =>
+    'Factory Default\'' =>
       'Opciones predeterminadas de fábrica\'',
 
 ## addons/ThemeExport.plugin/tmpl/dialog_export.tmpl
