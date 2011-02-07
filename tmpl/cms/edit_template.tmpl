@@ -785,9 +785,9 @@ Wrapping is currently hard-coded active for demonstration via the text-area's mt
 <mt:if name="use_revision">
 <mtapp:setting
     id="revision-note"
-    label="<__trans phrase="Change note">"
-    label_class="left-label">
-    <input type="text" name="revision-note" id="revision-note" value="<mt:var name="revision-note" escape="html">"<mt:if name="save_revision" eq="0"> style="display:none"</mt:if>/>
+    label="<__trans phrase="Revision note">"
+    label_class="top-label">
+    <input type="text" class="full-width" name="revision-note" id="revision-note" value="<mt:var name="revision-note" escape="html">"<mt:if name="save_revision" eq="0"> style="display:none"</mt:if>/>
 </mtapp:setting>
 </mt:if>
 

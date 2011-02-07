@@ -472,9 +472,9 @@
 <mt:if name="use_revision">
     <mtapp:setting
         id="revision-note"
-        label="<__trans phrase="Change note">"
+        label="<__trans phrase="Revision note">"
         label_class="left-label">
-        <input type="text" name="revision-note" id="revision-note" value="<mt:var name="revision-note" escape="html">" />
+        <textarea name="revision-note" id="revision-note" class="full-width" rows="2"><mt:var name="revision-note" escape="html"></textarea>
     </mtapp:setting>
 </mt:if>
     </mtapp:widget>
