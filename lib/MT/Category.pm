@@ -402,7 +402,10 @@ sub parent_category {
     unless ( $cat->{__parent_category} ) {
         $cat->{__parent_category}
           = ( $cat->parent ) ? $class->load( $cat->parent ) : undef;
-        weaken( $cat->{__parent_category} );
+
+        # Commenting out the following line fixed parent/child category
+        # hierarhies, but on the Edit Entry screen and when publishing.
+        # weaken( $cat->{__parent_category} );
     }
     $cat->{__parent_category};
 }
