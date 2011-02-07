@@ -147,8 +147,8 @@ sub process_file_upload {
         $root_path = File::Spec->catdir( $app->static_file_path, 'support' );
         $base_url  = $app->static_path . '/support';
         $fmgr      = MT::FileMgr->new('Local');
-        $blog_id = 0;    # the resulting asset will be added to this context
-        $format = File::Spec->catfile( '%s', 'support' );
+        $blog_id   = $app->blog ? $app->blog->id : 0;  # the resulting asset will be added to this context
+        $format    = File::Spec->catfile( '%s', 'support' );
 
     }
     else {
