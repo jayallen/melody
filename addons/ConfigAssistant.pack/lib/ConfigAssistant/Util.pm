@@ -123,9 +123,8 @@ sub process_file_upload {
         $root_path = $app->blog->site_path;
         $base_url  = $app->blog->site_url;
         $fmgr      = $app->blog->file_mgr;
-        $blog_id   = $app->blog
-          ->id;    # the resulting asset will be added to this context
-        $format = '%r';
+        $blog_id   = $app->blog->id;    # the resulting asset will be added to this context
+        $format    = '%r';
 
     }
     elsif ( lc($scope) eq 'archive' ) {
@@ -139,8 +138,7 @@ sub process_file_upload {
         $root_path = $app->blog->archive_path;
         $base_url  = $app->blog->archive_url;
         $fmgr      = $app->blog->file_mgr;
-        $blog_id   = $app->blog
-          ->id;    # the resulting asset will be added to this context
+        $blog_id   = $app->blog->id;    # the resulting asset will be added to this context
         $format = '%a';
 
     }
