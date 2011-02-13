@@ -21955,14 +21955,18 @@ sub _hdlr_if_commenter_registration_allowed {
 
 =head2 WidgetCount
 
-Function tag that returns the number of widgets in a widget set.
+Function tag that returns the number of widgets in a widget set. One of the two
+optional attributes must be specified.
 
 B<Attributes:>
 
 =over 4
 
-=item * name (required)
+=item * name (optional)
 Name of the widget set.
+
+=item * identifier (optional)
+Identifier of the widget set.
 
 =back
 
@@ -21974,15 +21978,22 @@ Name of the widget set.
 sub _hdlr_widget_count {
     my ($ctx, $args, $cond) = @_;
 
-    my $ws = $args->{name} or return $ctx->error( MT->translate('WidgetSet name required.') );
+    my $ws = $args->{name} || $args->{identifier} or return $ctx->error( MT->translate('WidgetSet name required.') );
     my $blog_id = $args->{blog_id} || $ctx->stash('blog_id') || 0;
 
-    my $widgetset = MT->model('template')->load({ name => $ws,
+    my $widgetset =
+        MT->model('template')->load({ identifier => $ws,
                                     blog_id => $blog_id ? [ 0, $blog_id ] : 0,
                                     type => 'widgetset' },
                                   { sort => 'blog_id',
                                     direction => 'descend' })
-        or return $ctx->error(MT->translate( "Specified WidgetSet '[_1]' not found.", $ws ));
+        ||
+        MT->model('template')->load({ name => $ws,
+                                    blog_id => $blog_id ? [ 0, $blog_id ] : 0,
+                                    type => 'widgetset' },
+                                  { sort => 'blog_id',
+                                    direction => 'descend' })
+        || return $ctx->error(MT->translate( "Specified WidgetSet '[_1]' not found.", $ws ));
 
     my @modulesets = split(',', $widgetset->modulesets || '');
     return scalar @modulesets;
@@ -21993,14 +22004,17 @@ sub _hdlr_widget_count {
 =head2 WidgetSetLoop
 
 Block loop tag that lets you loop over the contents of a widget set instead of loading the
-widgets all at once.
+widgets all at once. One of the two optional attributes must be specified.
 
 B<Attributes:>
 
 =over 4
 
-=item * name (required) 
+=item * name (optional) 
 Name of the widget set.
+
+=item * identifier (optional)
+Identifier of the widget set.
 
 =item * blog_id (optional)
 Load widgetset from another blog. This will not load them with the context of the other blog.
@@ -22029,15 +22043,23 @@ It provides the following meta variables:
 sub _hdlr_widget_loop {
     my ($ctx, $args, $cond) = @_;
     my $tmpl_name = $args->{name}
-        or return $ctx->error(MT->translate("Template name is required."));
+        || $args->{identifier}
+        || return $ctx->error(MT->translate("Template name is required."));
     my $blog_id = $args->{blog_id} || $ctx->stash('blog_id') || 0;
     
-    my $tmpl = MT->model('template')->load({ name => $tmpl_name,
+    my $tmpl =
+        MT->model('template')->load({ identifier => $tmpl_name,
+                                    blog_id => $blog_id ? [ 0, $blog_id ] : 0,
+                                    type => 'widgetset' },
+                                    { sort => 'blog_id',
+                                    direction => 'descend' })
+        ||
+        MT->model('template')->load({ name => $tmpl_name,
                                     blog_id => $blog_id ? [ 0, $blog_id ] : 0,
                                     type => 'widgetset' },
                                   { sort => 'blog_id',
                                     direction => 'descend' })
-        or return $ctx->error(MT->translate( "Specified WidgetSet '[_1]' not found.", $tmpl_name ));
+        || return $ctx->error(MT->translate( "Specified WidgetSet '[_1]' not found.", $tmpl_name ));
 
     my $modulesets = $tmpl->modulesets;
     my @selected = split ',', $modulesets;
