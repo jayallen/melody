@@ -208,8 +208,9 @@ sub _load_inheritance {
     my $base = ${"$pkg\::ISA"}[0];
     return [] if $base eq $pkg;
     my @inherited;
-    if ( exists $Registry->{$key}{$base} ) {
-        for my $field ( values %{ $Registry->{$key}->{$base} } ) {
+    my $registry = ${"$class\::Registry"};
+    if (exists $registry->{$key}{$base}) {
+        for my $field ( values %{ $registry->{$key}->{$base} } ) {
             push @inherited, $field;
         }
     }
