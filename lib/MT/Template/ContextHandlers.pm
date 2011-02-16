@@ -48,6 +48,7 @@ sub core_tags {
             'ElseIf'  => \&_hdlr_elseif,
 
             'IfImageSupport?' => \&_hdlr_if_image_support,
+            'IfPluginInstalled?' => \&_hdlr_if_plugin_installed,
 
             'EntryIfTagged?' => \&_hdlr_entry_if_tagged,
 
@@ -3781,6 +3782,51 @@ sub _hdlr_if_image_support {
     }
     return $if_image_support;
 }
+
+###########################################################################
+
+=head2 IfPluginInstalled
+
+A conditional tag that returns true when the Melody installation has a
+given plugin installed. This tag is intended so that theme designers can
+make functionality avaliable if a plugin is installed, but hide it when it
+is not without getting publish errors.
+
+If the plugin is not found at all, it will ignore the version min and max
+attributes.
+
+Attributes
+
+=item * `plugin` - Required - The name of a plugin. This corresponds to the
+          "id" YAML field in a config.yaml file
+=item * `version_min` - Optional - The minimum version of a plugin. If specified, 
+         the plugin must be greater than or equal to this version.
+=item * `version_max` - Optional - The maximum version of a plugin. If specified,
+         the plugin must be less than or equal to this version.
+
+Example:
+    <mt:IfPluginInstalled plugin="ActionStreams">
+        <mt:OtherProfiles...>
+
+        </mt:OtherProfiles>
+    </mt:IfPluginInstalled>
+
+=cut
+
+
+sub _hdlr_if_plugin_installed {
+    my ( $ctx, $args, $cond ) = @_;
+
+    my $name = $args->{plugin}
+        || return $ctx->error( MT->translate('No plugin attribute specified in <mt:IfPluginInstalled/>') );
+    my $plugin = MT->component( $name )
+        || return 0;
+    return 0 if ( $args->{version_min} && $plugin->version < $args->{version_min} );
+    return 0 if ( $args->{version_max} && $plugin->version > $args->{version_max} );
+
+    return 1;
+}
+
 
 ###########################################################################
 
