@@ -1543,7 +1543,7 @@ is empty.
 
 B<Example:>
 
-    <$mt:BlogDescription _default="Not 'just another' Movable Type blog."$>
+    <$mt:BlogDescription _default="Not 'just another' Melody blog."$>
 
 =cut
 
@@ -2995,7 +2995,7 @@ If the <$mt:CommenterEmail$> matches foo@domain.com or bar@domain.com:
     </mt:If>
 
 If the <$mt:CommenterUsername$> matches the username of someone on the
-Movable Type team:
+Melody team:
 
     <mt:If tag="CommenterUsername" like="(beau|byrne|brad|jim|mark|fumiaki|yuji|djchall)">
         <!-- do something -->
@@ -3766,7 +3766,7 @@ sub _hdlr_get_var {
 
 =head2 IfImageSupport
 
-A conditional tag that returns true when the Movable Type installation
+A conditional tag that returns true when the Melody installation
 has the Perl modules necessary for manipulating image files.
 
 =cut
@@ -5791,7 +5791,7 @@ sub _hdlr_link {
 
 =head2 Version
 
-The version number of the Movable Type system.
+The version number of the Melody system.
 
 B<Example:>
 
@@ -5810,7 +5810,7 @@ sub _hdlr_mt_version {
 
 =head2 ProductName
 
-The Movable Type edition in use.
+The Melody edition in use.
 
 B<Attributes:>
 
@@ -5826,9 +5826,9 @@ B<Example:>
 
     <$mt:ProductName$>
 
-for the MTOS edition, this would output:
+for the Melody edition, this would output:
 
-    Movable Type Open Source
+    Melody
 
 =for tags configuration
 
@@ -6444,7 +6444,7 @@ sub _hdlr_admin_cgi_path {
 
 =head2 ConfigFile
 
-Returns the full file path for the Movable Type configuration file
+Returns the full file path for the Melody configuration file
 (config.cgi).
 
 =for tags configuration
@@ -6507,7 +6507,7 @@ sub _hdlr_jquery_url { MT->instance->config->JQueryURL }
 
 =head2 CGIServerPath
 
-Returns the file path to the directory where Movable Type has been
+Returns the file path to the directory where Melody has been
 installed. Any trailing "/" character is removed.
 
 =for tags configuration
@@ -6546,7 +6546,7 @@ sub _hdlr_cgi_relative_url {
 
 =head2 StaticFilePath
 
-The file path to the directory where Movable Type's static files are
+The file path to the directory where Melody's static files are
 stored (as configured by the C<StaticFilePath> setting, or based on
 the location of the MT application files alone). This value is
 guaranteed to end with a "/" character.
@@ -7550,7 +7550,7 @@ sub _hdlr_author_url {
 =head2 AuthorAuthType
 
 Outputs the authentication type identifier for the author currently
-in context. For Movable Type registered users, this is "MT".
+in context. For Melody registered users, this is "MT".
 
 =for tags authors
 
@@ -7574,8 +7574,8 @@ sub _hdlr_author_auth_type {
 
 Returns URL to a small (16x16) image represents in what authentication
 provider the author in context is authenticated. For most of users it will
-be a small spanner logo of Movable Type. If user is a commenter, icon image
-is provided by each of authentication provider. Movable Type provides
+be a small spanner logo of Melody. If user is a commenter, icon image
+is provided by each of authentication provider. Melody provides
 images for LiveJournal and OpenID out of the box.
 
 B<Attributes:>
@@ -7677,7 +7677,7 @@ sub _hdlr_author_userpic_url {
 =head2 AuthorUserpicAsset
 
 This container tag creates a context that contains the userpic asset for
-the current author. This then allows you to use all of Movable Type's
+the current author. This then allows you to use all of Melody's
 asset template tags to display the userpic's properties.
 
     <ul><mt:Authors>
@@ -13095,7 +13095,7 @@ sub _hdlr_commenter_email {
 Returns a string which identifies what authentication provider the commenter
 in context used to authenticate him/herself. Commenter context is created by
 either MTComments or MTCommentReplies template tag. For example, 'MT' will be
-returned when the commenter in context is authenticated by Movable Type. When
+returned when the commenter in context is authenticated by Melody. When
 the commenter in context is authenticated by LiveJournal, 'LiveJournal' will be returned.
 
 B<Example:>
@@ -13122,9 +13122,9 @@ sub _hdlr_commenter_auth_type {
 Returns URL to a small (16x16) image represents in what authentication
 provider the commenter in context is authenticated. Commenter context
 is created by either a L<Comments> or L<CommentReplies> block tag. For
-commenters authenticated by Movable Type, it will be a small spanner
-logo of Movable Type. Otherwise, icon image is provided by each of
-authentication provider. Movable Type provides images for 
+commenters authenticated by Melody, it will be a small spanner
+logo of Melody. Otherwise, icon image is provided by each of
+authentication provider. Melody provides images for 
 LiveJournal and OpenID out of the box.
 
 B<Example:>
@@ -13319,7 +13319,7 @@ sub _hdlr_commenter_userpic_url {
 
 This template tag is a container tag that puts the current commenter's
 userpic asset in context. Because userpics are stored as assets within
-Movable Type, this allows you to utilize all of the asset-related
+Melody, this allows you to utilize all of the asset-related
 template tags when displaying a user's userpic.
 
 B<Example:>
@@ -17520,7 +17520,7 @@ sub _hdlr_entry_blog_url {
 
 =head2 EntryEditLink
 
-A link to edit the entry in context from the Movable Type CMS. This tag is
+A link to edit the entry in context from the Melody CMS. This tag is
 only recognized in system templates where an authenticated user is
 logged-in.
 
@@ -18597,7 +18597,7 @@ sub _hdlr_asset_file_path {
 
 =head2 AssetDateAdded
 
-The date the asset in context was added to Movable Type.
+The date the asset in context was added to Melody.
 
 B<Attributes:>
 
@@ -19512,7 +19512,7 @@ an page which is used as part of the individual pages's archive filename.
 The basename is created by dirifiying the page title when the page is
 first saved (regardless of the page status). From then on, barring direct
 manipulation, the page basename stays constant even when you change the
-page's title. In this way, Movable Type ensures that changes you make
+page's title. In this way, Melody ensures that changes you make
 to an page after saving it don't change the URL to the page, subsequently
 breaking incoming links.
 
@@ -21400,7 +21400,7 @@ sub _get_author {
 =head2 Section
 
 A utility block tag that is used to wrap content that can be cached,
-or merely manipulated by any of Movable Type's tag modifiers.
+or merely manipulated by any of Melody's tag modifiers.
 
 B<Attributes:>
 
@@ -21412,7 +21412,7 @@ When specified, causes the contents of the section tag to be cached
 for some period of time. The 'period' attribute can specify the
 cache duration (in seconds), or will use the C<DashboardCachePeriod>
 configuration setting as a default (this feature was initially added
-to support cacheable portions of the Movable Type Dashboard).
+to support cacheable portions of the Melody Dashboard).
 
 =item * period (optional)
 
