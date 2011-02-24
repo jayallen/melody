@@ -22046,9 +22046,11 @@ sub _hdlr_widget_loop {
     my $builder = $ctx->stash('builder');
     my $tokens = $ctx->stash('tokens'); 
     $ctx->stash('widgetset', $tmpl);
-    local $vars->{__size__} = scalar(@selected);
-    my $glue = $args->{glue} || '';
     my $size = scalar(@selected);
+    local $vars->{__size__} = $size;
+    local $vars->{ws_name} = $tmpl->name;
+    local $vars->{ws_identifier} = $tmpl->identifier;
+    my $glue = $args->{glue} || '';
     for (my $index = 0; $index < $size; $index++) {
         my $widget = MT->model('template')->load({ id => $selected[$index] });
         local $vars->{__first__} = ($index == 0);
