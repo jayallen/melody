@@ -95,6 +95,10 @@
     }
     /* ]]> */
     </script>
+    <script type="text/javascript">
+    var tagList = <mt:var name="tags_js" default="[]"/>
+    <mt:Include name="include/autocomplete_js.tmpl">
+    </script>
 </mt:setvarblock>
 <mt:include name="include/header.tmpl">
 <div id="asset" class="status-<mt:if name="file_is_missing">missing<mt:else>publish</mt:if><mt:unless name="file_is_missing"> <mt:if name="has_thumbnail">asset-thumbnail<mt:else>asset-no-thumbnail</mt:if></mt:unless>">
