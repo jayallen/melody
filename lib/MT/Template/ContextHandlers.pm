@@ -22062,10 +22062,7 @@ sub _hdlr_widget_loop {
         $res .= $glue if ($glue && $index < $size - 1);
         $out .= $res;
     }
-
-    
     $ctx->stash('widgeset', undef);
-    
     return $out;
 }
 
