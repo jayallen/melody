@@ -187,7 +187,7 @@ body.system #header {background: #6B3081 url('../images/header-inner.gif') repea
     background: url('../melody/melody-logo-white-banner.png') no-repeat;
 }
 .system #brand a {
-    background-image: url('../images/melody-logo-white-banner.png');
+    background-image: url('../melody/melody-logo-white-banner.png');
 }
 #brand span {
     position: relative;
