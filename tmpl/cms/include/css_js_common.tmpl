@@ -17,6 +17,7 @@
 </mt:setvartemplate>
     
 <mt:setvarblock name="html_head" prepend="1">
+      <mt:var name="linked_stylesheet" relpath="css/jquery/jquery.ui.all.css">
   <mt:unless name="optimize_ui">
       <mt:var name="linked_stylesheet" relpath="styles.css">
       <mt:var name="linked_stylesheet" relpath="melody/styles.css">
@@ -66,7 +67,7 @@
       </mt:if>
       <mt:var name="linked_script" href="$jqueryurl">
       <mt:var name="linked_script" relpath="js/mt_core_compact.js">
-      <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.js">
+      <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.min.js">
     </mt:unless>
 </mt:setvarblock> <mt:ignore> End of mt:setvarblock name="html_head" prepend="1" </mt:ignore>
 
