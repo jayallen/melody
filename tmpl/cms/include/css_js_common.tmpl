@@ -1,0 +1,91 @@
+<mt:ignore>
+    Common CSS and Javascript header elements
+    
+    This template is used by dialog/head.tmpl, include/header.tmpl,
+    preview_strip.tmpl and preview_template_strip.tmpl.  It is not
+    currently used by include/chromeless_header.tmpl or header_popup.tmpl
+    since both are different enough to be annoying...
+</mt:ignore>
+<mt:setvartemplate name="linked_stylesheet">
+    <mt:if name="relpath"><mt:var name="static_uri" cat="$relpath" setvar="href"><mt:var name="relpath" value=""></mt:if>
+    <mt:if name="href"><link rel="stylesheet" href="<$mt:var name="href"$>?v=<mt:version escape="url">" type="text/css" /></mt:if>
+</mt:setvartemplate>
+
+<mt:setvartemplate name="linked_script">
+    <mt:if name="relpath"><mt:var name="static_uri" cat="$relpath" setvar="href"><mt:var name="relpath" value=""></mt:if>
+    <mt:if name="href"><script type="text/javascript" src="<$mt:var name="href"$>?v=<mt:version escape="url">"></script></mt:if>
+</mt:setvartemplate>
+    
+<mt:setvarblock name="html_head" prepend="1">
+  <mt:unless name="optimize_ui">
+      <mt:var name="linked_stylesheet" relpath="styles.css">
+      <mt:var name="linked_stylesheet" relpath="melody/styles.css">
+  <mt:else>
+      <mt:var name="linked_stylesheet" relpath="css/main.css">
+  </mt:unless>
+    <!--[if IE]>
+        <mt:var name="linked_stylesheet" relpath="css/hacks/ie.css">
+    <![endif]-->
+    <!--[if lte IE 6]>
+        <mt:var name="linked_stylesheet" relpath="css/hacks/ie6.css">
+    <![endif]-->
+    <mt:if name="local_lang_id" ne="en-us">
+      <mt:setvarblock name="relpath">styles_<mt:var name="local_lang_id">.css</mt:setvarblock>
+      <mt:var name="linked_stylesheet" relpath="$relpath">
+    </mt:if>
+
+    <mt:ignore>
+        Although the following would be more appropriately prepended to
+        the js_include block below, we are forced to put them here because
+        there is no js_include in Movable Type and hence many plugins add
+        dependent JS libraries to the end of html_head. :-/
+    </mt:ignore>
+    <mt:jqueryurl setvar="jqueryurl">
+    <mt:unless name="optimize_ui">
+      <mt:var name="linked_script" href="$jqueryurl">
+      <mt:var name="linked_script" relpath="js/common/Core.js">
+      <mt:var name="linked_script" relpath="js/common/JSON.js">
+      <mt:var name="linked_script" relpath="js/common/Timer.js">
+      <mt:var name="linked_script" relpath="js/common/Cookie.js">
+      <mt:var name="linked_script" relpath="js/common/DOM.js">
+      <mt:var name="linked_script" relpath="js/common/Devel.js">
+      <mt:var name="linked_script" relpath="js/common/Observable.js">
+      <mt:var name="linked_script" relpath="js/common/Autolayout.js">
+      <mt:var name="linked_script" relpath="js/common/Component.js">
+      <mt:var name="linked_script" relpath="js/common/List.js">
+      <mt:var name="linked_script" relpath="js/common/App.js">
+      <mt:var name="linked_script" relpath="js/common/Cache.js">
+      <mt:var name="linked_script" relpath="js/common/Client.js">
+      <mt:var name="linked_script" relpath="js/common/Template.js">
+      <mt:var name="linked_script" relpath="js/tc.js">
+      <mt:var name="linked_script" relpath="js/tc/tableselect.js">
+      <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.js">
+    <mt:else>
+      <mt:if name="jqueryurl" like="/mt-static\/jquery\/jquery.js">
+          <mt:var name="jqueryurl" replace="jquery.js","jquery.min.js">
+      </mt:if>
+      <mt:var name="linked_script" href="$jqueryurl">
+      <mt:var name="linked_script" relpath="js/mt_core_compact.js">
+      <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.js">
+    </mt:unless>
+</mt:setvarblock> <mt:ignore> End of mt:setvarblock name="html_head" prepend="1" </mt:ignore>
+
+<mt:setvarblock name="js_include" prepend="1">
+    <mt:var name="linked_script" relpath="mt.js">
+    <mt:if name="local_lang_id" ne="en-us">
+        <mt:setvarblock name="relpath">mt_<mt:var name="local_lang_id">.js</mt:setvarblock>
+        <mt:var name="linked_script" relpath="$relpath">
+    </mt:if>
+
+    <script type="text/javascript">
+    /* <![CDATA[ */
+        __blankURI__      = '<$mt:var name="static_uri">html/blank.html';
+        CMSScriptURI      = '<$mt:var name="mt_url"$>';
+        ScriptURI         = '<mt:var name="script_url">';
+        ScriptBaseURI     = '<mt:var name="script_base_url">';
+        StaticURI         = '<mt:var name="static_uri">';
+        HelpBaseURI       = '<mt:var name="help_url">';
+        window.onkeypress = dialogKeyPress;
+    /* ]]> */
+    </script>
+</mt:setvarblock>
