@@ -1422,6 +1422,7 @@ sub comment_listing {
     return '1;' if ( !$entry );
     my $offset = $q->param('offset');
     $offset ||= 0;
+    my @replies_only = $q->param('replies_only') ? (parent => [ \'IS NULL', 0 ]) : ();
 
     if ( $offset !~ /^\d+$/ ) {
         $offset = 0;
@@ -1442,11 +1443,14 @@ sub comment_listing {
     return '1;' if ( !$tmpl );
     my $total = MT::Comment->count( { entry_id => $entry_id, visible => 1 } );
     my @comments = MT::Comment->load(
-                                      { entry_id => $entry_id, visible => 1 },
+                                      { entry_id => $entry_id, visible => 1,
+                                          @replies_only
+                                      },
                                       {
                                          limit     => $limit,
                                          offset    => $offset,
-                                         direction => $direction
+                                         direction => $direction,
+                                         sort => 'created_on'
                                       }
     );
     my $ctx = MT::Template::Context->new;
