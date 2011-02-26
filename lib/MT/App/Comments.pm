@@ -1409,7 +1409,7 @@ sub comment_listing {
     $app->{no_print_body} = 1;
     $app->response_code(200);
     $app->response_message('OK');
-    $app->send_http_header('text/javascript');
+    $app->send_http_header('application/json');
 
     require MT::Entry;
     require MT::Comment;
