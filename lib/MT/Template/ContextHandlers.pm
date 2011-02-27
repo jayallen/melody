@@ -11525,6 +11525,12 @@ If 'namespace' is also specified, filters the comments based on
 the count within that namespace. This specifies the maximum count
 to consider the comment for inclusion.
 
+=item * top
+
+If top is specified, the only comments that will be loaded
+are ones that are top-level parent comments. In a nested commenting
+scheme, they would be the top comments in each nested branch.
+
 =back
 
 =for tags multiblog, comments, loop, scoring
@@ -11668,6 +11674,7 @@ sub _hdlr_comments {
     # if there are no comments in the stash
     else {
         $terms{visible} = 1;
+        $terms{parent_id} = \' IS NULL' if $args->{top};
         $ctx->set_blog_load_context( $args, \%terms, \%args )
           or return $ctx->error( $ctx->errstr );
 
