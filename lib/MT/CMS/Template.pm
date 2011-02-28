@@ -2643,6 +2643,7 @@ sub edit_widget {
     my %all_widgets;
     while ( my $m = $iter->() ) {
         next unless $m;
+        $all_widgets{ $m->id }{id}      = $m->id;
         $all_widgets{ $m->id }{name}    = $m->name;
         $all_widgets{ $m->id }{blog_id} = $m->blog_id;
     }
@@ -2691,12 +2692,22 @@ sub edit_widget {
         }
     } ## end if ($id)
     $param->{installed} = \@inst_modules if @inst_modules;
-    my @avail_modules = map { {
-           id      => $_,
-           name    => $all_widgets{$_}{name},
-           blog_id => $all_widgets{$_}{blog_id}
-        }
-    } keys %all_widgets;
+
+    # Sort the available widgets into alphabetical order
+    my @avail_modules;
+    foreach my $widget (
+        sort {
+            $all_widgets{$a}{name} cmp $all_widgets{$b}{name}
+        } keys %all_widgets
+      )
+    {
+        push @avail_modules,
+          {
+            id      => $all_widgets{$widget}{id},
+            name    => $all_widgets{$widget}{name},
+            blog_id => $all_widgets{$widget}{blog_id},
+          };
+    }
     $param->{available} = \@avail_modules;
 
     my $res = $app->run_callbacks( 'cms_edit.widgetset', $app, $id, $wtmpl,
