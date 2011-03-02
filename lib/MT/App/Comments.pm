@@ -1416,7 +1416,7 @@ sub comment_listing {
     require MT::Template;
     require MT::Template::Context;
 
-    my $entry_id = $app->q('entry_id');
+    my $entry_id = $q->param('entry_id');
     return '1;' if ( !$entry_id );
     my $entry = MT::Entry->load($entry_id);
     return '1;' if ( !$entry );
