@@ -4,7 +4,7 @@ key: DePoClean
 author_link: http://openmelody.org
 author_name: OpenMelody Team, based on DePoClean.
 description: This plugin provides a Movable Type/Melody version of the DePoClean Theme
-version: 1.0.1
+version: 1.0.2
 static_version: 1
 plugin_link: http://openmelody.org
 l10n_class: DePoCleanTheme::L10N

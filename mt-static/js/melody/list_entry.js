@@ -1,4 +1,4 @@
-$(document).ready( function() {
+jQuery(document).ready( function($) {
     $('.list-entry li.quick_look a').click( function() {
         var id = $(this).parents('tr').prev().find('.cb input').val();
         var url = ScriptURI + '?__mode=get_entry&amp;blog_id='+BlogID+'&amp;id=' + id;

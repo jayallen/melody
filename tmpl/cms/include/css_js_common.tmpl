@@ -44,6 +44,11 @@
     <mt:jqueryurl setvar="jqueryurl">
     <mt:unless name="optimize_ui">
       <mt:var name="linked_script" href="$jqueryurl">
+      <script type="text/javascript" charset="utf-8">
+      /* <![CDATA[ */
+         $.noConflict();
+      /* ]]> */
+      </script>
       <mt:var name="linked_script" relpath="js/common/Core.js">
       <mt:var name="linked_script" relpath="js/common/JSON.js">
       <mt:var name="linked_script" relpath="js/common/Timer.js">
@@ -66,6 +71,11 @@
           <mt:var name="jqueryurl" replace="jquery.js","jquery.min.js" setvar="jqueryurl">
       </mt:if>
       <mt:var name="linked_script" href="$jqueryurl">
+      <script type="text/javascript" charset="utf-8">
+      /* <![CDATA[ */
+         $.noConflict();
+      /* ]]> */
+      </script>
       <mt:var name="linked_script" relpath="js/mt_core_compact.js">
       <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.min.js">
     </mt:unless>

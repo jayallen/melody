@@ -24,7 +24,7 @@
         <div><a href="<mt:Ignore><mt:var name="script_url">?__mode=cfg_blog_settings&amp;blog_id=<mt:var name="blog_id" escape="url"></mt:Ignore>javascript:void(0);" id="regLink"><__trans phrase="Setup Registration"></a></div>
     </mtapp:setting>
     <script type="text/javascript">
-        $(document).ready(function() {
+        jQuery(document).ready(function($) {
             $("#regLink").click(function() {
                  $('a[title=registration]').click();
             });

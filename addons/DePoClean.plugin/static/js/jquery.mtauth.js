@@ -193,7 +193,7 @@
       };
       this.initialize = function() {
 	this.user = $.fn.movabletype.getUser();
-	$(document).ready( function() {
+	jQuery(document).ready( function($) {
 	    /*if (mt.blog.id && mt.blog.registration.required) {*/
 	      /***
 	       * If request contains a '#_login' or '#_logout' hash, use this to

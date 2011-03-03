@@ -19,7 +19,7 @@
     functions are intended to be exclusive.  Use ajaxSubmit if you want
     to bind your own submit handler to the form.  For example,
 
-    $(document).ready(function() {
+    jQuery(document).ready(function($) {
         $('#myForm').bind('submit', function() {
             $(this).ajaxSubmit({
                 target: '#output'
@@ -31,7 +31,7 @@
     Use ajaxForm when you want the plugin to manage all the event binding
     for you.  For example,
 
-    $(document).ready(function() {
+    jQuery(document).ready(function($) {
         $('#myForm').ajaxForm({
             target: '#output'
         });

@@ -4,7 +4,7 @@ id: ClassicBlogThemePack
 description: '&ldquo;Classic Blog&rdquo; was the original template set included with Movable Type 4.0. This Theme Pack combines the various styles available for the Classic Blog template set, and completely removes the need for the StyleCatcher.'
 author_name: 'Dan Wolfgang, uiNNOVATIONS'
 author_link: 'http://uinnovations.com'
-version: 1.0.6
+version: 1.0.7
 static_version: 4
 l10n_class: ClassicBlogThemePack::L10N
 

@@ -39,7 +39,7 @@ function interactive_export( c ) {
     }
    
 }
-$(document).ready( function() {
+jQuery(document).ready( function($) {
     $('#steps li').click( function() {
         var p = $(this).attr('pageid');
         if (p != page) {

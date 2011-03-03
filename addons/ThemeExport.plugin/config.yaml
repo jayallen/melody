@@ -3,7 +3,7 @@ name: 'Theme Exporter'
 description: "A plugin that provides a simple user interface for exporting a blog's templates into an easily distributable theme."
 plugin_author: 'Endevver, LLC.'
 plugin_link: 'http://endevver.com/plugins/theme-export/'
-version: 1.0.1
+version: 1.0.2
 static_version: 1
 
 applications:

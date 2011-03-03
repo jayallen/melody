@@ -10,7 +10,7 @@ function getParameterByName( name )
       return decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
-$(document).ready( function() {
+jQuery(document).ready( function($) {
     $('#content-nav ul li a').click( function() {
         var active    = $(this).parents('ul').find('li.active a').attr('id').replace(/-tab$/,'');
         var newactive = $(this).attr('id').replace(/-tab$/,'');
