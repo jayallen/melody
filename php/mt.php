@@ -7,8 +7,8 @@
 
 if('__MAKE_ME__' == '__MAKE_' . 'ME__') { # If make is not run
     define('VERSION', '4.35');
-    define('VERSION_ID', '1.0.0 (RC 1, build 33)');
-    define('PRODUCT_VERSION', '0.9.33');
+    define('VERSION_ID', '1.0.0 (RC 1, build 34)');
+    define('PRODUCT_VERSION', '0.9.34');
     define('PRODUCT_NAME', 'Melody');    
 } else {
     define('VERSION', '__API_VERSION__');

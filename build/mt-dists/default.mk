@@ -1,6 +1,6 @@
 PRODUCT_NAME = Melody
-PRODUCT_VERSION = 0.9.33
-VERSION_ID = 1.0.0 (RC 1, build 33)
+PRODUCT_VERSION = 0.9.34
+VERSION_ID = 1.0.0 (RC 1, build 34)
 SCHEMA_VERSION = 4.0078
 # Corresponds to MT 4.35 (plus Melody enhancements)
 API_VERSION = 4.35

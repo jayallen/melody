@@ -42,7 +42,7 @@ BEGIN {
         # different version and their uses and the version module POD
         # for details about the next line and its semantics:
         # http://search.cpan.org/~jpeacock/version-0.85/lib/version.pod
-        use version 0.77; our $VERSION = version->declare("v0.9.33");
+        use version 0.77; our $VERSION = version->declare("v0.9.34");
 
         # MakeMaker stops at the line above, so NOW, we swap the $VERSION
         # to $PRODUCT_VERSION and assign $VERSION
@@ -52,7 +52,7 @@ BEGIN {
         $SCHEMA_VERSION  = '4.0078';
         $PRODUCT_NAME    = 'Melody';
         $PRODUCT_CODE    = 'OM';
-        $VERSION_ID      = '1.0.0 (RC 1, build 33)';
+        $VERSION_ID      = '1.0.0 (RC 1, build 34)';
         $PORTAL_URL      = 'http://openmelody.org';
     } ## end if ( '__MAKE_ME__' eq ...)
     else {
