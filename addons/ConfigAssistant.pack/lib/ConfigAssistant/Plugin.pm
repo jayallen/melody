@@ -358,7 +358,8 @@ sub save_config {
                 }
             }
             if ( $opt->{type} eq 'file' ) {
-                my $result = process_file_upload( $app, $var, 'support',
+                my $scope = $opt->{scope} || 'support';
+                my $result = process_file_upload( $app, $var, $scope,
                                                   $opt->{destination} );
                 if ( $result->{status} == ConfigAssistant::Util::ERROR() ) {
                     return $app->error(
@@ -385,6 +386,10 @@ sub save_config {
               || ( defined $new and $old ne $new );
             ###l4p $logger->debug('$has_changed: '.$has_changed);
 
+            # If the field data has changed, and if the field uses the 
+            # "republish" key, we want to republish the specified templates.
+            # Add the specified templates to $repub_queue so that they can
+            # be republished later.
             if ( $has_changed && $opt && $opt->{'republish'} ) {
                 foreach ( split( ',', $opt->{'republish'} ) ) {
                     $repub_queue->{$_} = 1;
@@ -407,19 +412,47 @@ sub save_config {
             $app->run_callbacks( 'options_change.plugin.' . $plugin->id,
                                  $app, $plugin );
         }
+        
+        # Index templates that have been flagged should be republished.
+        use MT::WeblogPublisher;
         foreach ( keys %$repub_queue ) {
             my $tmpl = MT->model('template')
               ->load( { blog_id => $blog_id, identifier => $_, } );
-            next unless $tmpl;
-            MT->log( {
-                   blog_id => $blog_id,
-                   message => "Config Assistant: Republishing " . $tmpl->name
-                 }
-            );
-            $app->rebuild_indexes(
+
+            if (!$tmpl) {
+                MT->log( {
+                       blog_id => $blog_id,
+                       level   => '2', # Warning
+                       message => "Config Assistant could not find a "
+                                  . "template with the identifier " . $_,
+                     }
+                );
+                next;
+            }
+
+            my $result = $app->rebuild_indexes(
                                    Blog     => $app->blog,
                                    Template => $tmpl,
                                    Force    => 1,
+            );
+
+            # Report on the success/failure of the template republishing.
+            my ($message, $level);
+            if ($result) {
+                $message = "Config Assistant: Republishing template " 
+                           . $tmpl->name;
+                $level   = '1'; # Info
+            }
+            else {
+                $message = "Config Assistant could not republish template " 
+                           . $tmpl->name;
+                $level   = '4'; # Error
+            }
+            MT->log( {
+                   blog_id => $blog_id,
+                   level   => $level,
+                   message => $message,
+                 }
             );
         }
         $pdata->data($data);
@@ -516,12 +549,12 @@ sub type_link_group {
 
     foreach (@$list) {
         $html
-          .= '<li class="pkg"><a class="link" href="'
+          .= '<li><a class="link" href="'
           . $_->{'url'} . '">'
           . $_->{'label'}
           . '</a> <a class="remove" href="javascript:void(0);"><img src="'
           . $static
-          . '/images/icon_close.png" /></a> <a class="edit" href="javascript:void(0);">edit</a></li>';
+          . '/images/icon_close.png" alt="remove" title="remove" /></a> <a class="edit" href="javascript:void(0);">edit</a></li>';
     }
     $html
       .= "<li class=\"last\"><button class=\"add-link\">Add Link</button></li>"
@@ -577,8 +610,17 @@ sub type_entry {
     my ( $ctx, $field_id, $field, $value ) = @_;
     my $out;
     my $obj_class = $ctx->stash('object_class') || 'entry';
-    my $obj       = MT->model($obj_class)->load($value);
-    my $obj_name  = ( $obj ? $obj->title : '' ) || '';
+    my ($obj, $obj_name);
+    
+    # The $value is the object ID. Only if $value exists should we try to 
+    # load the object. Otherwise, the most recent entry/page is loaded
+    # and the $obj_name is incorrectly populated with the most recent object
+    # title. This way, $obj_name is blank if there is no $value, which is
+    # clearer to the user.
+    if ($value) {
+        $obj       = MT->model($obj_class)->load($value);
+        $obj_name  = ( $obj ? $obj->title : '' ) || '';
+    }
     my $blog_id   = $field->{all_blogs} ? 0 : $app->blog->id;
     unless ( $ctx->var('entry_chooser_js') ) {
         $out .= <<EOH;
@@ -606,6 +648,7 @@ EOH
   </div>
 </div>
 EOH
+    $ctx->stash('object_class','');
     return $out;
 } ## end sub type_entry
 
