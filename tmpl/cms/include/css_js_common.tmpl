@@ -63,7 +63,7 @@
       <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.js">
     <mt:else>
       <mt:if name="jqueryurl" like="/mt-static\/jquery\/jquery.js">
-          <mt:var name="jqueryurl" replace="jquery.js","jquery.min.js">
+          <mt:var name="jqueryurl" replace="jquery.js","jquery.min.js" setvar="jqueryurl">
       </mt:if>
       <mt:var name="linked_script" href="$jqueryurl">
       <mt:var name="linked_script" relpath="js/mt_core_compact.js">
