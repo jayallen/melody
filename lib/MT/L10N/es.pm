@@ -5701,7 +5701,7 @@ que la dirección provista es correcta y le pertenece.',
     'Your database is already current.' => 'Su base de datos está al día.',
 
 ## tmpl/cms/resources.tmpl
-    'Resouces Provided by Plugins' =>
+    'Resources Provided by Plugins' =>
       'Recursos que provistos por los Plugins',
     'Tags:'           => 'Etiquetas:',
     'Tag Attributes:' => 'Atributos de etiquetas:',
