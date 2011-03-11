@@ -12,7 +12,7 @@ function setExtraPath(sel) {
 
 <mt:if name="missing_paths">
     <mt:if name="have_permissions">
-<p><__trans phrase="Before you can upload a file, you need to publish your blog. [_1]Configure your blog's publishing paths[_2] and rebuild your blog." params="<a href="javascript:void(0);" onclick="closeDialog('<mt:var name="script_url">?__mode=cfg_archives&amp;blog_id=<mt:var name="blog_id">');">%%</a>"></p>
+<p><__trans phrase="Before you can upload a file, you need to publish your blog. [_1]Configure your blog's publishing paths[_2] and rebuild your blog." params="<a href="javascript:void(0);" onclick="closeDialog('<mt:var name="script_url">?__mode=cfg_blog_settings&amp;blog_id=<mt:var name="blog_id">#publishing');">%%</a>"></p>
     <mt:else>
 <p><__trans phrase="Your system or blog administrator needs to publish the blog before you can upload files. Please contact your system or blog administrator."></p>
     </mt:if>

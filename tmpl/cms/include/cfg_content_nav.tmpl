@@ -19,19 +19,23 @@ jQuery(document).ready( function($) {
     $('#' + newactive).show();
     active = newactive;
   });  
+  $.history.init(function(hash){
+      if (hash == "") hash = "about";
+      $('#content-nav ul li.'+hash+'-tab a').click();
+  });
 });
 </script>
 <mt:if name="BLOG_ID">
     <mt:setvarblock id="more_items" name="more_items"></mt:setvarblock>
 <ul>
-    <li class="active"><a href="javascript:void(0)" title="general"><b><__trans phrase="General"></b></a></li>
-    <li><a href="javascript:void(0)" title="publishing"><b><__trans phrase="Publishing"></b></a></li>
-    <li><a href="javascript:void(0)" title="entry"><b><__trans phrase="Compose"></b></a></li>
-    <li><a href="javascript:void(0)" title="comments"><b><__trans phrase="Comments"></b></a></li>
-    <li><a href="javascript:void(0)" title="trackbacks"><b><__trans phrase="TrackBacks"></b></a></li>
-    <li><a href="javascript:void(0)" title="registration"><b><__trans phrase="Login & Sign-up"></b></a></li>
-    <li><a href="javascript:void(0)" title="spam"><b><__trans phrase="Spam"></b></a></li>
-    <li><a href="javascript:void(0)" title="web-services"><b><__trans phrase="Web Services"></b></a></li>
+    <li class="general-tab active"><a href="javascript:void(0)" title="general"><b><__trans phrase="General"></b></a></li>
+    <li class="publishing-tab"><a href="javascript:void(0)" title="publishing"><b><__trans phrase="Publishing"></b></a></li>
+    <li class="entry-tab"><a href="javascript:void(0)" title="entry"><b><__trans phrase="Compose"></b></a></li>
+    <li class="comments-tab"><a href="javascript:void(0)" title="comments"><b><__trans phrase="Comments"></b></a></li>
+    <li class="trackbacks-tab"><a href="javascript:void(0)" title="trackbacks"><b><__trans phrase="TrackBacks"></b></a></li>
+    <li class="registration-tab"><a href="javascript:void(0)" title="registration"><b><__trans phrase="Login & Sign-up"></b></a></li>
+    <li class="spam-tab"><a href="javascript:void(0)" title="spam"><b><__trans phrase="Spam"></b></a></li>
+    <li class="web-services-tab"><a href="javascript:void(0)" title="web-services"><b><__trans phrase="Web Services"></b></a></li>
     <mt:var name="more_items">
 </ul>
 </mt:if>
