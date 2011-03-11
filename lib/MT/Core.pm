@@ -469,7 +469,7 @@ BEGIN {
             'TransparentProxyIPs'      => { default => 0, },
             # 11/Nov/2010 - Temporarily setting default DebugMode to 1. See
             # https://openmelody.lighthouseapp.com/projects/26604/tickets/567
-            'DebugMode'         => { default => 1, },
+            'DebugMode'         => { default => 0, },
             'AllowComments'     => { default => 1, },
             'AllowPings'        => { default => 1, },
             'HelpURL' =>
