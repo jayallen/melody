@@ -43,10 +43,6 @@
 }
 
 /* Full Screen Editor */
-#edit-entry .fullscreen #content-inner,
-#edit-page .fullscreen #content-inner {
-  background-image: url('../images/content-inner.gif');
-}
 .edit-entry .fullscreen #title-field #title {
   width: 890px;
 }
