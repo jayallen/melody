@@ -14,10 +14,7 @@ use File::Basename;
 use DBI qw(:sql_types);
 
 BEGIN {
-    eval "use DBD::SQLite 1.11;";
-    # Line 117 says:
-    # eval "use DBD::SQLite 1.14;";
-    # FIXME Perhaps these checks should be consolidated?
+    eval "use DBD::SQLite 1.20;";
     if ($@) {
         *bind_param_attributes = sub {
             my ( $dbd, $data_type ) = @_;
@@ -127,7 +124,7 @@ sub configure {
     my ($driver) = @_;
     no warnings 'redefine';
     *MT::ObjectDriver::Driver::DBI::count = \&count;
-    eval "use DBD::SQLite 1.14;";
+    eval "use DBD::SQLite 1.20;";
     if ($@) {
         $orig_load_iter        = \&MT::Object::load_iter;
         *MT::Object::load_iter = \&_load_iter;

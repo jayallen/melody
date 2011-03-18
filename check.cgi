@@ -211,7 +211,7 @@ my @CORE_DATA = (
     [ 'DBI', 1.21, 0, translate('DBI is required to store data in database.'),'http://search.cpan.org/dist/DBI/'],
     [ 'DBD::mysql', 0, 0, translate('DBI and DBD::mysql are required if you want to use the MySQL database backend.'),'http://search.cpan.org/dist/DBD-mysql/'],
     [ 'DBD::Pg', 1.32, 0, translate('DBI and DBD::Pg are required if you want to use the PostgreSQL database backend.'),'http://search.cpan.org/dist/DBD-Pg/'],
-    [ 'DBD::SQLite', 0, 0, translate('DBI and DBD::SQLite are required if you want to use the SQLite database backend.'),'http://search.cpan.org/dist/DBD-SQLite/'],
+    [ 'DBD::SQLite', 1.20, 0, translate('DBI and DBD::SQLite are required if you want to use the SQLite database backend.'),'http://search.cpan.org/dist/DBD-SQLite/'],
     [ 'DBD::SQLite2', 0, 0, translate('DBI and DBD::SQLite2 are required if you want to use the SQLite 2.x database backend.'),'http://search.cpan.org/dist/DBD-SQLite2/'],
 );
 

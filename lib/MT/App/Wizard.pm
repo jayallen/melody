@@ -189,7 +189,8 @@ sub init_core_registry {
             'DBD::SQLite' => {
                 'label' =>
                   'DBI and DBD::SQLite are required if you want to use the SQLite database backend.',
-                'link' => 'http://search.cpan.org/dist/DBD-SQLite/'
+                'link' => 'http://search.cpan.org/dist/DBD-SQLite/',
+                'version' => '1.20'
             },
             'DBD::SQLite2' => {
                 'label' =>
