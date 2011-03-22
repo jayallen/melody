@@ -5,7 +5,6 @@
     <title><mt:if name="html_title"><mt:var name="html_title"><mt:else><mt:var name="page_title"></mt:if> | <$mt:var name="mt_product_name"$></title>
 
     <mt:unless name="cfg_exists">
-
         <mt:setvarblock name="html_head" prepend="1">
             <link rel="icon" href="<$mt:var name="static_uri"$>images/favicon.ico" type="image/ico" />
                 <mt:unless name="optimize_ui">
@@ -13,10 +12,10 @@
                     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/utilities.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
                     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/messaging.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
                     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/chromeless.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
+                    <link rel="stylesheet" href="<$mt:var name="static_uri"$>melody/chromeless.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
                 <mt:else>
                     <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/simple.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
                 </mt:unless>
-                <link rel="stylesheet" href="<$mt:var name="static_uri"$>melody/chromeless.css?v=<mt:var name="m    t_version_id" escape="url">" type="text/css" />
                 <!--[if IE]>
                 <link rel="stylesheet" href="<$mt:var name="static_uri"$>css/hacks/ie.css?v=<mt:var name="mt_version_id" escape="url">" type="text/css" />
                 <![endif]-->
