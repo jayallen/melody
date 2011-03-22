@@ -129,6 +129,18 @@ sub run_tasks {
             $sess->start(time);
             $sess->save;
         } ## end foreach my $task_name (@tasks_to_run)
+        
+        
+        ##FIXME
+        ##See bug #717 for background on this.
+        ##This is a temporary fix intended to keep certain built-in scheduled
+        ##tasks from becoming burdensome on the logging system.
+        my @do_not_log = (MT->translate('Add Summary Watcher to queue'));
+        for (my $index = 0; $index < scalar(@completed); $index++) {
+            foreach (@do_not_log) {
+                splice(@completed, $index, 1) if $completed[$index] eq $_;
+            }
+        }
         if (@completed) {
             $app->log( {
                    class    => 'system',
