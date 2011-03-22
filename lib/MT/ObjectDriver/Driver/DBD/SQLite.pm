@@ -12,7 +12,7 @@ use warnings;
 use Fcntl;
 use File::Basename;
 use DBI qw(:sql_types);
-use Croak ();
+use Carp ();
 
 BEGIN {
     eval "use DBD::SQLite 1.20;";
