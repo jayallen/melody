@@ -74,30 +74,23 @@ sub dsn_from_config {
         local *JUNK;
         sysopen JUNK, $db_file, O_RDWR | O_CREAT, 0666
           or Carp::croak(
-                  $driver->error(
-                      MT->translate( "Can't open '[_1]': [_2]", $db_file, $! )
-                  )
-          );
+                   MT->translate( "Can't open '[_1]': [_2]", $db_file, $! ) );
         close JUNK;
         umask($old);
     }
     unless ( -w $db_file ) {
         Carp::croak(
-              $driver->error(
-                  MT->translate(
+               MT->translate(
                       "Your database file ('[_1]') is not writable.", $db_file
-                  )
-              )
+               )
         );
     }
     my $dir = dirname($db_file);
     unless ( -w $dir ) {
         Carp::croak(
-             $driver->error(
                  MT->translate(
                      "Your database directory ('[_1]') is not writable.", $dir
                  )
-             )
         );
     }
     my $dsn = 'dbi:';
