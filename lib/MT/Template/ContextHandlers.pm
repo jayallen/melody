@@ -3816,6 +3816,10 @@ B<Attributes:>
 If either 'name' or 'tag' are specified, tests the entry in context
 for whether it has a tag association by that name.
 
+=item * include_private
+
+If include_private is set to 1, this will include private tags (tags beginning with "@").
+
 =back
 
 =for tags tags, entries
@@ -3835,7 +3839,7 @@ sub _hdlr_entry_if_tagged {
     }
     else {
         my @tags = $entry->tags;
-        @tags = grep /^[^@]/, @tags;
+        @tags = grep /^[^@]/, @tags unless $args->{include_private};
         return @tags ? 1 : 0;
     }
 }
