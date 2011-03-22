@@ -3,23 +3,33 @@ id: typepadantispam
 key: typepadantispam
 author_name: Six Apart Ltd.
 author_link: http://www.sixapart.com/
-version: 1.0.1
-blog_config_template: config.tmpl
-system_config_template: system.tmpl
+version: 1.0.2
 plugin_class: "TypePadAntiSpam::Plugin"
 
-settings:
-    api_key:
-        scope: system
-        default: ''
+options:
     weight:
-        scope: blog
-        default: ''
+      label: 'Junk Score Weight'
+      type: select
+      scope: blog
+      values: '"1 - Least weight":"1",2,3,4,5,6,7,8,9,"10 - Most weight":"10"'
+      hint: >
+          Comments and TrackBacks receive a junk score between -10 (definitely spam) and +10 (definitely not spam). This setting allows you to control the weight of the TypePad AntiSpam rating relative to other filters you may have installed to help you filter comments and TrackBacks.
+    api_key:
+      label: 'API Key'
+      default: ''
+      order: 1
+      scope: system
+      type: text
+      hint: >
+         To enable this plugin, you'll need a free TypePad AntiSpam API key. You can <strong>get your free API key at <a href="http://antispam.typepad.com/" target="_blank">antispam.typepad.com</a></strong>. Once you have your key, return to this page and enter it in the field below.'
     service_host:
-        scope: system
-        default: api.antispam.typepad.com
-
-
+      label: 'Service Host'
+      default: api.antispam.typepad.com
+      order: 2
+      scope: system
+      type: text
+      hint: >
+          The default service host for TypePad AntiSpam is api.antispam.typepad.com. You should only change this if you are using a different service that is compatible with the TypePad AntiSpam API.
 
 callbacks:
     handle_spam: $TypePadAntiSpam::TypePadAntiSpam::Callbacks::handle_junk
