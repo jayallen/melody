@@ -1,0 +1,7 @@
+#!/usr/bin/env perl
+
+use FindBin qw($Bin);
+use lib "$Bin/lib";
+use Melody::Devel;
+
+Melody::Devel->run;

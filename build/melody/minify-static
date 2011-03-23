@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+if [[ ! -e './mt-static' ]]; then
+    echo "This command should be run from the root of your Melody directory" >> /dev/stderr
+    exit 1
+fi
+
+echo "Creating mt-static/js/mt_core_compact.js"
+cat                                     \
+    mt-static/js/common/Core.js         \
+    mt-static/js/common/JSON.js         \
+    mt-static/js/common/Timer.js        \
+    mt-static/js/common/Cookie.js       \
+    mt-static/js/common/DOM.js          \
+    mt-static/js/common/Observable.js   \
+    mt-static/js/common/Autolayout.js   \
+    mt-static/js/common/Component.js    \
+    mt-static/js/common/List.js         \
+    mt-static/js/common/App.js          \
+    mt-static/js/common/Cache.js        \
+    mt-static/js/common/Client.js       \
+    mt-static/js/common/Template.js     \
+    mt-static/js/tc.js                  \
+    mt-static/js/tc/tableselect.js      \
+ >| mt-static/js/mt_core_compact.js     \
+ && ./build/minifier.pl mt-static/js/mt_core_compact.js
+
+echo "Creating mt-static/css/main.css"
+cat                                 \
+    mt-static/css/reset.css         \
+    mt-static/css/structure.css     \
+    mt-static/css/messaging.css     \
+    mt-static/css/utilities.css     \
+    mt-static/melody/styles.css     \
+>| mt-static/css/main.css           \
+&& ./build/minifier.pl mt-static/css/main.css
+
+echo "Creating mt-static/css/simple.css"
+cat                                 \
+    mt-static/css/reset.css         \
+    mt-static/css/utilities.css     \
+    mt-static/css/messaging.css     \
+    mt-static/css/chromeless.css    \
+    mt-static/melody/chromeless.css \
+ >| mt-static/css/simple.css        \
+ && ./build/minifier.pl mt-static/css/simple.css
+
+echo "Done"
