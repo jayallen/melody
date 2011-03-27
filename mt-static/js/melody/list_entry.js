@@ -57,7 +57,7 @@ jQuery(document).ready( function($) {
 });
 
 function ajax_publish( id ) {
-    var link = $('tr#obj-'+id+' td.publish a');
+    var link = jQuery('tr#obj-'+id+' td.publish a');
     var was_unpublished = 0;
     if (link.parents('tr').hasClass('unpublished')) {
         was_unpublished = 1;
@@ -65,24 +65,24 @@ function ajax_publish( id ) {
         if (!r) { return; }
     }
     link.css('background','url('+StaticURI+'images/ani-rebuild.gif) no-repeat center -1px');
-    $('.listing tr.obj-'+id).addClass('publishing').removeClass('has_published').removeClass('has_errors');
+    jQuery('.listing tr.obj-'+id).addClass('publishing').removeClass('has_published').removeClass('has_errors');
     var url = ScriptURI + '?__mode=rebuild_entry&amp;blog_id='+BlogID+'&amp;id=' + id;
-    $.ajax({
+    jQuery.ajax({
         url: url,
         dataType: 'json',
         error: function (xhr, status, error) {
             link.css('background','url('+StaticURI+'melody/icon-error.gif) no-repeat center -1px');
-            $('.listing tr.obj-'+id).removeClass('publishing').addClass('has_errors');
+            jQuery('.listing tr.obj-'+id).removeClass('publishing').addClass('has_errors');
         },
         success: function (data, status, xhr) {
-            $('.listing tr.obj-'+id).removeClass('publishing').addClass('has_published').addClass('published').removeClass('unpublished');
+            jQuery('.listing tr.obj-'+id).removeClass('publishing').addClass('has_published').addClass('published').removeClass('unpublished');
             if (data.success) {
                 link.qtip('destroy');
                 if (was_unpublished) {
                     link.parents('tr').next().find('.url').hide().html(data.permalink_rel).fadeIn('fast');
                 }
                 link.fadeOut('slow',function() {
-                    $('.listing tr.obj-'+id).removeClass('has_published');
+                    jQuery('.listing tr.obj-'+id).removeClass('has_published');
                     link.show();
                     link.css('background','url('+StaticURI+'images/nav-icon-rebuild.gif) no-repeat center 0px');
                 });
