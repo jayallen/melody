@@ -46,3 +46,7 @@ body.chromeless-wide { background:#33789c;}
 p.login {background:none!important;}
 
 .msg-info {color:#000;}
+
+body.dialog #container-inner #purge-cache {
+    width: 15px;
+}
