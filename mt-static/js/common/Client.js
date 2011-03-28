@@ -109,7 +109,7 @@ Client.Request = new Class( Observable, {
         this.transport.open( "POST", this.client.url, this.asynchronous, this.client.user, this.client.password );
         this.transport.setRequestHeader( "content-type", this.contentType );
     
-        this.transport.send( Object.toJSON( this.request ) );
+        this.transport.send( jQuery.toJSON( this.request ) );
     },
     
     

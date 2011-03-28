@@ -25,6 +25,12 @@
                 <mt:if name="local_lang_id" ne="en-us">
                     <link rel="stylesheet" href="<$mt:var name="static_uri"$>styles_<$mt:var name="local_lang_id"$>.css?v=<mt:var name="mt_version_id" escape="url">" />
                 </mt:if>
+            <script type="text/javascript" src="<$mt:JQueryURL$>"></script>
+            <script type="text/javascript" charset="utf-8">
+                /* <![CDATA[ */
+                $.noConflict();
+                /* ]]> */
+            </script>
             <script type="text/javascript" src="<$mt:var name="static_uri"$>js/common/Core.js?v=<mt:var name="mt_version_id" escape="url">"></script>
             <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc.js?v=<mt:var name="mt_version_id" escape="url">"></script>
         </mt:setvarblock>

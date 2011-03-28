@@ -11,8 +11,8 @@
 <mt:unless name="up_to_date">
     <script type="text/javascript" src="<mt:var name="static_uri">js/tc.js?v=<mt:var name="mt_version_id" escape="url">"></script>
     <script type="text/javascript" src="<mt:var name="static_uri">js/tc/client.js?v=<mt:var name="mt_version_id" escape="url">"></script>
-    <script type="text/javascript" src="<mt:var name="static_uri">js/tc/json.js?v=<mt:var name="mt_version_id" escape="url">"></script>
-
+    <script type="text/javascript" src="<$mt:JQueryURL$>"></script>
+    <script type="text/javascript" src="<mt:var name="static_uri">jquery/jquery.json.js"></script>
 	<script type="text/javascript">
 	/* <![CDATA[ */
     function upgradeDone(success) {
@@ -148,7 +148,7 @@
         // reset response_pos so we know where to pull from
         // for any interactive output...
         response_pos = 0;
-        var actions = actionList.toJSON();
+        var actions = $.toJSON( actionList );
         TC.Client.call({
             'load': actionDone,
             'interactive': actionInteractive,
