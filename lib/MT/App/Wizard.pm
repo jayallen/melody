@@ -832,11 +832,9 @@ sub configure {
         $param{dbserver_null} = 1 unless $param{dbserver};
 
         if ($driver) {
-            chomp $param{dbname} if $param{dbname};
-            chomp $param{dbuser} if $param{dbuser};
-            chomp $param{dbpass} if $param{dbpass};
-            chomp $param{dbsocket} if $param{dbsocket};
-            chomp $param{dbserver} if $param{dbserver};
+            foreach my $key (qw( dbname dbuser dbpass dbsocket dbserver )) {
+                chomp $param{$_} if defined $param{$_};
+            }
             my $cfg = $app->config;
             $cfg->ObjectDriver($driver);
             $cfg->Database( $param{dbname} )   if $param{dbname};
