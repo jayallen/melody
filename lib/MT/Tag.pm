@@ -320,7 +320,9 @@ sub cache {
                         }
                      ),
                    limit     => $limit,
-                   fetchonly => [ 'id', 'name' ]
+                   fetchonly => [ 'id', 'name' ],
+                   sort => 'name',
+                   direction => 'ascend'
                  }
           );
         if (@tags) {
