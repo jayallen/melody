@@ -1,0 +1,73 @@
+<mt:setvarblock name="page_title"><__trans phrase="Manage Link Lists"></mt:setvarblock>
+
+<mt:SetVarBlock name="html_head" append="1">
+<script type="text/javascript">
+var orderJson = <$mt:var name="order_json"$>
+
+jQuery(function($) {
+	var x = $('#linkbox_list-listing-table tbody').sortable({
+		stop: function(event, ui) {
+			var id = $(ui.item).attr('id');
+			id = id.substring(0, id.indexOf('_'));
+			
+			$(ui.item).parent().find('tr').each(function(i) {
+				$(this)
+					.removeClass('odd')
+					.removeClass('even')
+					.addClass( i % 2 == 0 ? 'even' : 'odd');
+				var thisId = $(this).attr('id');
+				thisId = thisId.substring(0, thisId.indexOf('_'));
+				orderJson[thisId] = i;
+			});
+			
+			$.ajax({
+				url: '<$mt:AdminCGIPath$><$mt:AdminScript$>',
+				dataType: 'json',
+				type: 'post',
+				data: {
+					'__mode': 'linkbox_save_list_order',
+					'blog_id': <$mt:var name="blog_id"$>,
+					'json': $.toJSON( orderJson )
+				}
+			})
+		}
+	});
+});
+</script>
+</mt:SetVarBlock>
+
+<mt:setvarblock name="action_buttons">
+                <a href="javascript:void(0)"
+                    onclick="doRemoveItems(getByID('<$mt:var name="object_type"$>-listing-form'), '<mt:var name="object_label" lower_case="1" escape="js">', '<mt:var name="object_label_plural" lower_case="1" escape="js">'); return false;"
+                    accesskey="x"
+                    title="<__trans phrase="Delete selected [_1] (x)" params="<mt:var name="object_label_plural">">"
+                    ><__trans phrase="Delete"></a>
+</mt:setvarblock>
+
+
+<mt:setvarblock name="content_header">
+<p id="create-new-link"><a href="<$mt:var name="mt_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;blog_id=<$mt:var name="blog_id"$>" class="icon-left icon-create"><__trans phrase="Create [_1]" params="<mt:var name="object_label" lower_case="1">"></a></p>
+</mt:setvarblock>
+<mt:include name="include/header.tmpl">
+<mtapp:listing>
+    <mt:if __first__>
+        <thead>
+            <tr>
+                <th class="cb"><input type="checkbox" name="id-head" value="all" class="select" /></th>
+                <th>Name</th>
+                <th>Links</th>
+            </tr>
+        </thead>
+        <tbody>
+    </mt:if>
+    <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if>" id="<mt:var name="id">_row">
+        <td class="cb"><input type="checkbox" name="id" value="<mt:var name="id">" class="select" /></td>
+        <td><a href="<$mt:var name="script_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;id=<$mt:var name="id"$>&amp;blog_id=<$mt:var name="blog_id"$>"><mt:var name="name"></a></td>
+        <td><mt:var name="links_count"></td>
+    </tr>
+    <mt:if __last__>
+        </tbody>
+    </mt:if>
+</mtapp:listing>
+
+<mt:include name="include/footer.tmpl">
