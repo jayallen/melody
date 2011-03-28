@@ -1,0 +1,335 @@
+<mt:setvarblock name="page_title"><__trans phrase="Edit Link List"></mt:setvarblock>
+<$mt:setvar name="position_actions_bottom" value="1"$>
+
+<mt:if name="id">
+<mt:setvarblock name="object_nav">
+<ul class="object-nav">
+    <li><a href="<$mt:var name="script_url"$>?__mode=list_<$mt:var name="object_type" lower_case="1"$>&amp;blog_id=<$mt:var name="blog_id"$>"><__trans phrase="Manage [_1]" params="<$mt:var name="object_label_plural"$>"></a></li>
+</ul>
+</mt:setvarblock>
+</mt:if>
+
+<mt:setvarblock name="system_msg">
+<mt:if name="saved">
+    <mtapp:statusmsg
+        id="saved"
+        class="success">
+        <__trans phrase="Your changes have been saved.">
+    </mtapp:statusmsg>
+</mt:if>
+</mt:setvarblock>
+
+<mt:setvarblock name="html_head" append="1">
+<script type="text/javascript" src="<$mt:StaticWebPath$>jquery/ui/jquery.ui.all.js"></script>
+<script type="text/javascript">
+<!--
+
+var links = eval ('(<mt:var name="links">)');
+TC.attachLoadEvent(function(){buildLinkTable(links)});
+
+var next_new_id = 0;
+
+jQuery(function($) {
+	$('#linkbox-listing-table tfoot').sortable({
+		stop: function(event, ui) {
+			var id = $(ui.item).attr('id');
+			id = id.substring('link_row_'.length, id.length);
+			$('#link_edit_row_' + id).insertAfter( $(ui.item) );
+			var children = $(ui.item).parent().children('tr[id^=link_row]');
+			for (var index = 0; index < children.length; index++) {
+				var obj = $(children[index]).children('td:nth-child(2)');
+				for (var index2 = 0; index2 < links.length; index2++) {
+					var link = links[index2];
+					if (link.name == obj.text()) {
+						link.order = index;
+						link.dirty = 1;
+					}
+				}
+			}
+		}
+	});
+});
+
+function grab_new_links() {
+    var new_links = new Array;
+    var order = 0;
+    for (var i =  0; i > next_new_id; i--) {
+        var new_link = new Object;
+        new_link.id   = i;
+        new_link.link = getByID('link_link_' + i).value;
+        new_link.name = getByID('link_name_' + i).value;
+        new_link.desc = getByID('link_desc_' + i).value;
+        new_link.order = order++;
+        new_links[new_links.length] = new_link;
+    }
+    return new_links;
+}
+
+function buildLinks(form_el) {
+    var new_links = grab_new_links();
+    form_el.links.value = links.toJSON();
+    form_el.new_links.value = new_links.toJSON();
+    return true;
+}
+
+function editLink(id) {
+    if (id != 0) {
+        hide ('link_row_' + id);        
+    }
+    show ('link_edit_row_'+ id);
+}
+
+function buildLinkTable (data) {
+    var link_table = getByID('linkbox-listing-table');
+	for (var i = 0; i < data.length; i++) {
+	    if (!data[i].remove) {	        
+    	    var link_id = data[i].id;
+    	    var index = i + 1;
+	    var rowindex = i*2+1;
+			var link_row = link_table.insertRow(rowindex);
+			link_row.id = 'link_row_' + index;
+			link_row.className = (i % 2 ? 'even' : 'odd');
+		//	link_table.appendChild(link_row);
+			
+			link_cell = document.createElement('td');
+			link_cell.appendChild(document.createTextNode(data[i].link));
+			link_row.appendChild(link_cell);
+			
+			link_cell = document.createElement('td');
+			link_cell.appendChild(document.createTextNode(data[i].name));
+			link_row.appendChild(link_cell);
+			
+			link_cell = document.createElement('td');
+			link_cell.appendChild(document.createTextNode(data[i].desc));
+			link_row.appendChild(link_cell);
+			
+			link_cell = document.createElement('td');
+			link_a = document.createElement('a');
+			link_a.href = 'javascript:void(0)';
+			link_a.index = index;
+			link_a.onclick = function() {
+				editLink(this.index);
+			}
+			link_a.appendChild(document.createTextNode('edit'));
+			link_cell.appendChild(link_a);
+			link_cell.appendChild(document.createTextNode(" / "));
+
+			link_a = document.createElement('a');
+			link_a.href = 'javascript:void(0)';
+			link_a.index = index;
+			link_a.onclick = function() {
+				deleteLink(this.index, this.parentNode.parentNode);
+			}
+			link_a.appendChild(document.createTextNode('delete'));
+			link_cell.appendChild(link_a);
+			link_row.appendChild(link_cell);
+			
+			edit_row = link_table.insertRow(rowindex+1);
+			edit_row.id = 'link_edit_row_' + index;
+			edit_row.className = (i % 2 ? 'even' : 'odd');
+			edit_row.className += " hidden";
+
+			edit_cell = document.createElement('td');
+			inp = document.createElement('input');
+			inp.type = "text";
+			inp.name = "link_link_" + index;
+			inp.id = "link_link_" + index;
+			inp.value = data[i].link;
+			edit_cell.appendChild(inp);
+			edit_row.appendChild(edit_cell);
+			
+			edit_cell = document.createElement('td');
+			inp = document.createElement('input');
+			inp.type = "text";
+			inp.name = "link_name_" + index;
+			inp.id = "link_name_" + index;
+			inp.value = data[i].name;
+			edit_cell.appendChild(inp);
+			edit_row.appendChild(edit_cell);
+			
+			edit_cell = document.createElement('td');
+			inp = document.createElement('textarea');
+			inp.name = "link_desc_" + index;
+			inp.id = "link_desc_" + index;
+//			inp.cols = 20;
+//			inp.rows = 4;
+			inp.className = "full-width short"; 
+			inp.appendChild(document.createTextNode(data[i].desc));
+			edit_cell.appendChild(inp);
+			edit_row.appendChild(edit_cell);
+			
+			link_cell = document.createElement('td');
+			link_a = document.createElement('a');
+			link_a.href = 'javascript:void(0)';
+			link_a.index = index;
+			link_a.onclick = function() {
+				saveLink(this);
+			}
+			link_a.appendChild(document.createTextNode('save'));
+			link_cell.appendChild(link_a);
+			link_cell.appendChild(document.createTextNode(" / "));
+
+			link_a = document.createElement('a');
+			link_a.href = 'javascript:void(0)';
+			link_a.index = index;
+			link_a.onclick = function() {
+				cleanupLink(this.index);
+			}
+			link_a.appendChild(document.createTextNode('cancel'));
+			link_cell.appendChild(link_a);
+			edit_row.appendChild(link_cell);
+	    }
+	}
+}
+
+function create_add_row() {
+    var link_table = getByID('linkbox-listing-table');
+        
+    var new_links = grab_new_links();
+	get_add_row(link_table);
+    
+    for (var i = 0; i < new_links.length; i++) {
+        var link = new_links[i];
+        getByID('link_link_' + link.id).value = link.link;
+        getByID('link_name_' + link.id).value = link.name;
+        getByID('link_desc_' + link.id).value = link.desc;
+    }
+}
+
+function get_add_row(target_table) {
+	edit_row = target_table.insertRow(2*links.length+1);
+	edit_row.id = 'link_edit_row_' + next_new_id;
+	edit_row.className = ((links.length - next_new_id) % 2 ? 'even' : 'odd');
+
+	edit_cell = document.createElement('td');
+	inp = document.createElement('input');
+	inp.type = "text";
+	inp.name = "link_link_" + next_new_id;
+	inp.id = "link_link_" + next_new_id;
+	edit_cell.appendChild(inp);
+	edit_row.appendChild(edit_cell);
+	
+	edit_cell = document.createElement('td');
+	inp = document.createElement('input');
+	inp.type = "text";
+	inp.name = "link_name_" + next_new_id;
+	inp.id = "link_name_" + next_new_id;
+	edit_cell.appendChild(inp);
+	edit_row.appendChild(edit_cell);
+	
+	edit_cell = document.createElement('td');
+	inp = document.createElement('textarea');
+	inp.name = "link_desc_" + next_new_id;
+	inp.id = "link_desc_" + next_new_id;
+//	inp.cols = 20;
+//	inp.rows = 4;
+	inp.className = "full-width short";
+	edit_cell.appendChild(inp);
+	edit_row.appendChild(edit_cell);
+	
+	next_new_id--;
+	return edit_row;
+}
+
+function saveLink(tgtRow) {
+	var id = tgtRow.index;
+	var link = getByID('link_link_'+id).value;
+	var name = getByID('link_name_'+id).value;
+	var desc = getByID('link_desc_'+id).value;
+
+    if (id != 0) {
+        links[id - 1].name = name;
+        links[id - 1].desc = desc;
+        links[id - 1].link = link;
+        links[id - 1].dirty = 1;
+    }
+    srcrow = tgtRow.parentNode.parentNode;
+    row = tgtRow.parentNode.parentNode.previousSibling;
+    for(x=0;x<3;x++) {
+	row.childNodes[x].innerHTML = srcrow.childNodes[x].firstChild.value;
+    }	
+    hide(srcrow.id);
+    show(row.id);
+}
+
+function deleteLink(id, trow) {
+    links[id - 1].remove = 1;
+    links[id - 1].dirty = 1;
+    //buildLinkTable(links);
+    var link_table = getByID('linkbox-listing-table');
+    link_table.deleteRow(trow.rowIndex);
+    //link_table.deleteRow(2*id-1);
+
+}
+
+function cleanupLink(id) {
+    hide ('link_edit_row_' + id);
+	
+	if (id != 0) {
+	    show('link_row_'+id);
+	}
+}
+
+-->
+</script>
+</mt:setvarblock>
+
+<mt:setvarblock name="form_header">
+<form method="post" action="<mt:var name="script_url">" onsubmit="return buildLinks(this)">
+    <input type="hidden" name="blog_id" value="<mt:var name="blog_id">" />
+    <input type="hidden" name="__mode" value="save" />
+    <input type="hidden" name="_type" value="<mt:var name="object_type">" />
+    <input type="hidden" name="id" value="<mt:var name="id">" />
+    <input type="hidden" name="return_args" value="<mt:var name="return_args" escape="html">" />
+    <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
+    <input type="hidden" name="links" value="" />
+    <input type="hidden" name="new_links" value="" />
+    
+    <input type="hidden" name="order" value="<mt:var name="order">" />
+</mt:setvarblock>
+<mt:setvartemplate name="action_buttons">
+    <button
+        type="submit"
+        accesskey="s"
+        title="<__trans phrase="Save changes to this [_1] (s)" params="<mt:var name="object_label" lower_case="1">">"
+        class="primary-button"
+        ><__trans phrase="Save Changes"></button>
+</mt:setvartemplate>
+
+<mt:include name="include/header.tmpl" id="header_include">
+
+    <mt:include name="include/actions_bar.tmpl" hide_pager="1">
+
+    <fieldset>
+<mtapp:setting
+    id="name"
+    label="<__trans phrase="Name">">
+    <div class="textarea-wrapper">
+        <input name="name" id="name" class="full-width" maxlength="100" value="<mt:var name="name" escape="html">" class="wide" />
+    </div>
+</mtapp:setting>
+    </fieldset>
+
+    <div class="listing" id="selector">
+    <table cellspacing="0" id="linkbox-listing-table" class="compact">
+    <thead>
+    	<tr>
+    	<th><MT_TRANS phrase="Link URL"></th>
+    	<th><MT_TRANS phrase="Name"></th>
+    	<th><MT_TRANS phrase="Description"></th>
+    	<th><MT_TRANS phrase="Action"></th>
+    </tr></thead>
+    <tbody id="link_table">
+    </tbody>
+    <tfoot>
+        <tr><td colspan="4" style="text-align: center"><a href="#" onclick="create_add_row(0); return false" id="link_create">Create new link</a></td></tr>
+    </tfoot>
+    </table>
+    </div>
+
+<mt:include name="include/actions_bar.tmpl" bar_position="bottom" hide_pager="1">
+<mt:setvarblock name="form_footer">
+</form>
+</mt:setvarblock>
+
+<mt:include name="include/footer.tmpl">

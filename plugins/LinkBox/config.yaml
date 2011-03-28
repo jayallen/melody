@@ -1,0 +1,62 @@
+id: LinkBox
+key: LinkBox
+name: Link Box
+version: 2.0
+author_name: Apperceptive, LLC; Mike Thomsen for the Melody Project
+author_link: http://www.apperceptive.com
+description: Inserts blogroll-style linkbox into templates.
+blog_config_template: blog_config.tmpl
+schema_version: 1.00
+
+settings:
+    liststyle:
+        default: ul
+        scope: blog
+    sortorder:
+        default: added
+        scope: blog
+
+callbacks:
+    cms_post_save.linkbox_list: $LinkBox::LinkBox::post_save_list
+    blog_template_set_change: $LinkBox::LinkBox::ts_change
+
+object_types:
+    linkbox_link: LinkBox::Link
+    linkbox_list: LinkBox::LinkList
+
+applications:
+    cms:
+        methods:
+            linkbox_list: $LinkBox::LinkBox::list
+            linkbox_widget: $LinkBox::LinkBox::widget
+            linkbox_save_list_order: $LinkBox::LinkBox::save_list_order
+            linkbox_del: $LinkBox::LinkBox::del
+            list_linkbox_list: $LinkBox::LinkBox::list_lists
+            view_linkbox_list: $LinkBox::LinkBox::view_linkbox_list
+        page_actions:
+            list_templates:
+                linkbox_create_widget:
+                    label: Create a LinkBox Widget
+                    mode: linkbox_widget
+                    permission: edit_templates
+        menus:
+            manage:linkbox_lists:
+                label: Link Lists
+                mode: list_linkbox_list
+                order: 5000
+                view: blog
+                permission: publish_post
+
+
+tags:
+    function:
+        LinkBox: $linkBox::LinkBox::Tags::_hdlr_linkbox
+        LinkBoxLinkURL: $linkBox::LinkBox::Tags::_hdlr_linkbox_link_url
+        LinkBoxLinkName: $linkBox::LinkBox::Tags::_hdlr_linkbox_link_name
+        LinkBoxLinkDescription: $linkBox::LinkBox::Tags::_hdlr_linkbox_link_description
+        LinkBoxName: $linkBox::LinkBox::Tags::_hdlr_link_box_name
+    block:
+        LinkBoxLinks: $linkBox::LinkBox::Tags::_hdlr_linkbox_iterator
+        LinkBoxes: $linkBox::LinkBox::Tags::_hdlr_link_boxes
+
+

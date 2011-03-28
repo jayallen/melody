@@ -1,0 +1,33 @@
+<TMPL_INCLUDE NAME="header.tmpl">
+<h2>LinkBox</h2>
+<div class="list" id="selector">
+<table cellspacing="0" class="compact" border="0">
+<thead>
+<tr valign="middle">
+<th><MT_TRANS phrase="Link"></th>
+<th><MT_TRANS phrase="Name"></th>
+<th><MT_TRANS phrase="Description"></th>
+</tr>
+</thead>
+<tbody>
+<form name="editform">
+	<input type="hidden" name="__mode" value="linkbox_save">
+	<input type="hidden" name="blog_id" value="<TMPL_VAR NAME=BLOG_ID>">
+<TMPL_IF NAME="LINKS_LOOP">
+	<TMPL_LOOP NAME="LINKS_LOOP">
+	<tr class="<TMPL_IF __ODD__>odd<TMPL_ELSE>even</TMPL_IF>">
+		<td><input type="text" name="link" value="<TMPL_VAR NAME=LINK>"></td><td><input type="text" name="name" value="<TMPL_VAR NAME=NAME>"></td><td><input type="text" name="desc" value="<TMPL_VAR NAME=DESC>"></td></tr>
+	<input type="hidden" name="id" value="<TMPL_VAR NAME=ID>">
+	</TMPL_LOOP>
+<TMPL_ELSE>
+<tr>
+	<td><input type="text" name="link" value="<TMPL_VAR NAME=LINK>"></td><td><input type="text" name="name" value="<TMPL_VAR NAME=NAME>"></td><td><input type="text" name="desc" value="<TMPL_VAR NAME=DESC>"></td>
+</tr>
+<input type="hidden" name="id" value="<TMPL_VAR NAME=ID>">
+
+</TMPL_IF>
+</tbody>
+</table><br />
+<input type="submit" value="Save">
+</form>
+<TMPL_INCLUDE NAME="footer.tmpl">
