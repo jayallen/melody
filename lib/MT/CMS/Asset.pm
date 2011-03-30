@@ -226,7 +226,7 @@ sub list {
     my $no_insert   = $q->param('no_insert')   ? 1 : 0;
     my $perms       = $app->permissions;
     my %carry_params = map { $_ => $q->param($_) || '' }
-      (qw( edit_field upload_mode require_type next_mode asset_select ));
+      (qw( edit_field upload_mode require_type next_mode asset_select saved_deleted ));
     $carry_params{'user_id'} = $q->param('filter_val')
       if $filter eq 'userpic';
     _set_start_upload_params( $app, \%carry_params );
