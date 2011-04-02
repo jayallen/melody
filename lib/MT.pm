@@ -1003,7 +1003,7 @@ sub init_config {
         }
     } ## end for my $meth (@mt_paths)
 
-    if ( my $local_lib = $cfg->PerlLocalLibPath ) {
+    if ( my $local_lib = $cfg->PERL5LIB || $cfg->PerlLocalLibPath ) {
         $local_lib = [ $local_lib ] if ! 'ARRAY' eq ref $local_lib;
         eval "use local::lib qw( @{$local_lib} )";
         return $mt->trans_error(
