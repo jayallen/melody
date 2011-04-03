@@ -501,7 +501,7 @@
             </mt:if>
             <mt:if name="object_type" eq="entry">
                 <mt:if name="can_publish_post">
-                <a href="javascript:void(0);" id="basename-lock" title="<__trans phrase="Unlock this entry&rsquo;s output filename for editing">" onclick="return toggleFile()"><span>Unlock</span></a>
+                <a href="javascript:void(0);" id="basename-lock" title="<__trans phrase="Unlock this entry&rsquo;s output filename for editing">"><span>Unlock</span></a>
                 </mt:if>
                 <p class="alert-warning-inline" id="basename-warning" style="display: none">
                     <img src="<$mt:var name="static_uri"$>images/status_icons/warning.gif" alt="<__trans phrase="Warning">" width="9" height="9" />
@@ -957,20 +957,18 @@ function openTFDocs() {
 }
 
 function toggleFile() {
-    var fld = getByID("basename");
+    var fld = $('#basename');
     if (fld) {
-        fld.disabled = false;
-        fld.focus();
-        var baseman = getByID("basename_manual");
-        if (baseman) baseman.value = "1";
-        var basewarn = getByID("basename-warning");
-        if (basewarn) basewarn.style.display = "block";
+        fld.removeAttr('disabled').focus();
+        $('#basename_manual').val('1');
+        $('#basename-warning').show();
     }
-    var img = getByID("basename-lock");
-    if (img)
-        img.style.display = 'none';
-    return false;
+    $('#basename-lock').hide( function() { return false; } );
 }
+
+$(document).ready( function() {
+    $('#basename-lock').live('click', toggleFile);
+});
 
 var orig_basename;
 var tbTableSelect;
