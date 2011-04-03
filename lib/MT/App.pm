@@ -3097,6 +3097,73 @@ sub load_widgets {
     return $param;
 } ## end sub load_widgets
 
+sub render_widget {
+    my $app    = shift;
+    my %params = @_;
+    my ( $widget_id, $instance, $widget_set, $param, $widget, $widget_cfgs, $order,
+         $passthru_param, $scope )
+      = @params{qw( widget_id instance set param widget widget_cfgs order passthru_param scope )};
+    my $blog = $app->blog;
+    my $blog_id = $blog->id;
+    my $widget_inst = $widget_id . '-' . $instance;
+    my $widget_cfg = $widget_cfgs->{$widget_inst} || {};
+    my $widget_param = { %$param, %{ $widget_cfg->{param} || {} } };
+    foreach (@$passthru_param) {
+        $widget_param->{$_} = '';
+    }
+    my $tmpl_name = $widget->{template};
+    print STDERR "Template name for $widget_id: " . $tmpl_name . "\n";
+    my $p = $widget->{plugin};
+    my $tmpl;
+        if ($p) {
+            $tmpl = $p->load_tmpl($tmpl_name);
+        }
+    else {
+        
+        # This is probably never used since all
+        # widgets in reality are provided through
+        # some sort of component/plugin.
+        $tmpl = $app->load_tmpl($tmpl_name);
+    }
+    next unless $tmpl;
+    $tmpl_name = '.' . $tmpl_name;
+    $tmpl_name =~ s/\.tmpl$//;
+    
+    my $set = $widget->{set} || $widget_cfg->{set} || 'main';
+    local $widget_param->{blog_id}         = $blog_id;
+    local $widget_param->{widget_block}    = $set;
+    local $widget_param->{widget_id}       = $widget_inst;
+    local $widget_param->{widget_scope}    = $scope;
+    local $widget_param->{widget_singular} = $widget->{singular} || 0;
+    local $widget_param->{magic_token}     = $app->current_magic;
+    if ( my $h = $widget->{code} || $widget->{handler} ) {
+        $h = $app->handler_to_coderef($h);
+        $h->( $app, $tmpl, $widget_param );
+    }
+    my $ctx = $tmpl->context;
+    if ($blog) {
+        $ctx->stash( 'blog_id', $blog_id );
+        $ctx->stash( 'blog',    $blog );
+    }
+    
+    $app->run_callbacks( 'template_param' . $tmpl_name,
+                         $app, $tmpl->param, $tmpl );
+    
+    my $content = $app->build_page( $tmpl, $widget_param );
+    
+    if ( !defined $content ) {
+        return $app->error(
+            "Error processing template for widget $widget_id: "
+            . $tmpl->errstr );
+    }
+    
+    $app->run_callbacks( 'template_output' . $tmpl_name,
+                         $app, \$content, $tmpl->param, $tmpl );
+    
+    print STDERR "Widget content: $content\n";
+    return ($content,$tmpl);
+}
+
 sub build_widgets {
     my $app    = shift;
     my %params = @_;
@@ -3121,7 +3188,8 @@ sub build_widgets {
     # The actual widget id is this minus the instance number.
     foreach my $widget_inst (@$order) {
         my $widget_id = $widget_inst;
-        $widget_id =~ s/-\d+$//;
+        $widget_id =~ s/-(\d+)$//;
+        my $num = $1 || 1;
         my $widget = $widgets->{$widget_id};
         next unless $widget;
         my $widget_cfg = $widget_cfgs->{$widget_inst} || {};
@@ -3129,54 +3197,16 @@ sub build_widgets {
         foreach (@$passthru_param) {
             $widget_param->{$_} = '';
         }
-        my $tmpl_name = $widget->{template};
-
-        my $p = $widget->{plugin};
-        my $tmpl;
-        if ($p) {
-            $tmpl = $p->load_tmpl($tmpl_name);
-        }
-        else {
-
-            # This is probably never used since all
-            # widgets in reality are provided through
-            # some sort of component/plugin.
-            $tmpl = $app->load_tmpl($tmpl_name);
-        }
-        next unless $tmpl;
-        $tmpl_name = '.' . $tmpl_name;
-        $tmpl_name =~ s/\.tmpl$//;
-
         my $set = $widget->{set} || $widget_cfg->{set} || 'main';
-        local $widget_param->{blog_id}         = $blog_id;
-        local $widget_param->{widget_block}    = $set;
-        local $widget_param->{widget_id}       = $widget_inst;
-        local $widget_param->{widget_scope}    = $widget_set;
-        local $widget_param->{widget_singular} = $widget->{singular} || 0;
-        local $widget_param->{magic_token}     = $app->current_magic;
-        if ( my $h = $widget->{code} || $widget->{handler} ) {
-            $h = $app->handler_to_coderef($h);
-            $h->( $app, $tmpl, $widget_param );
-        }
-        my $ctx = $tmpl->context;
-        if ($blog) {
-            $ctx->stash( 'blog_id', $blog_id );
-            $ctx->stash( 'blog',    $blog );
-        }
-
-        $app->run_callbacks( 'template_param' . $tmpl_name,
-                             $app, $tmpl->param, $tmpl );
-
-        my $content = $app->build_page( $tmpl, $widget_param );
-
-        if ( !defined $content ) {
-            return $app->error(
-                           "Error processing template for widget $widget_id: "
-                             . $tmpl->errstr );
-        }
-
-        $app->run_callbacks( 'template_output' . $tmpl_name,
-                             $app, \$content, $tmpl->param, $tmpl );
+        my ($content,$tmpl) = $app->render_widget(
+            widget_id    => $widget_id,
+            widget       => $widget,
+            widget_cfgs  => $widget_cfg,
+            set          => $set,
+            scope        => $widget_set,
+            instance     => $num,
+            param        => $widget_param,
+            );
 
         $param->{$set} ||= '';
         $param->{$set} .= $content;
@@ -3222,15 +3252,31 @@ sub update_widget_prefs {
         my $all_widgets = $app->registry("widgets");
         if ( my $widget = $all_widgets->{$widget_id} ) {
             my $widget_inst = $widget_id;
+            my $num = 1;
             unless ( $widget->{singular} ) {
-                my $num = 1;
                 while ( exists $these_widgets->{$widget_inst} ) {
                     $widget_inst = $widget_id . '-' . $num;
                     $num++;
                 }
             }
             $these_widgets->{$widget_inst} = { set => $set };
+            my $param;
+            eval { require MT::Image; MT::Image->new or die; };
+            $param->{can_use_userpic} = $@ ? 0 : 1;
+            $param->{widget_id} = $widget_id;
+            $param->{widget_set} = $set;
+            my ($content,$tmpl) = $app->render_widget(
+                widget_id   => $widget_id,
+                widget      => $widget,
+                set         => $set,
+                scope       => $blog_id ? 'dashboard:blog:' . $blog_id : 'dashboard:system',
+                instance    => $num,
+                param       => $param,
+                ) or return;
+            $result->{'widget_html'} = $content;
         }
+
+        $result->{'widget_set'}  = $set;
         $resave_widgets = 1;
     }
     if ( ( $action eq 'save' ) && $these_widgets ) {
