@@ -590,14 +590,6 @@ function toggleDisable(id, state) {
         id.disabled="";
 }
 
-function toggleDisplayOptions() {
-    return toggleActive('display-options');
-}
-
-function toggleEntryDisplayOptions() {
-    return toggleActive('display-options-widget');
-}
-
 function toggleActive( id ) {
     var id = DOM.getElement( id );
     if ( !id )
