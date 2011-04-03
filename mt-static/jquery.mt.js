@@ -100,7 +100,7 @@
 
 jQuery(document).ready( function($) {
     /* Dashboard BEGIN */
-    $('.widget-close-link').live('click',function() {
+    $('.widget-close-link').click( function() {
         var w = $(this).parents('.widget');
         var id = w.attr('id');
         var label = w.find('.widget-label span').html();
@@ -121,7 +121,7 @@ jQuery(document).ready( function($) {
             $('#add_widget').find('select').append('<option value="'+id+'">'+label+"</option>");
         },'json').error(function() { showMsg("Error removing widget.", "widget-updated", "alert"); });
     });
-    $('#add_widget button').live('click', function() {
+    $('#add_widget button').click( function() {
         var id = $(this).parent().find('select').val();
 		$.post( ScriptURI, {
             '__mode'          : 'update_widget_prefs',
@@ -141,16 +141,6 @@ jQuery(document).ready( function($) {
             $(html).hide().appendTo(trgt).fadeIn('slow');
         },'json').error(function() { showMsg("Error removing widget.", "widget-updated", "alert"); });
     });
-    /* Dialogs */
-    $('.open-dialog').fancybox({
-        'width'         : 660,
-        'height'        : 498,
-        'autoScale'     : false,
-        'transitionIn'  : 'none',
-        'transitionOut' : 'none',
-        'type'          : 'iframe'
-    });
-
 /*
         function updateWidget(id) {
             var f = getByID(id + "-form");
@@ -193,8 +183,8 @@ jQuery(document).ready( function($) {
 */
     /* Dashboard END */
     /* Display Options BEGIN */
-    $('.display-options-link').live('click',function() {
-        var opts = $('#display-options-widget');
+    jQuery('.display-options-link').click( function() {
+        var opts = jQuery('#display-options-widget');
         if ( opts.hasClass('active') ) opts.removeClass( 'active' );
         else opts.addClass( 'active' );
     });
