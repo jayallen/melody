@@ -2635,7 +2635,7 @@ sub load_template_prefs {
     if ( !$prefs ) {
         $prefs = '';
     }
-    my @p = split /,/, $prefs;
+    my @p = split(/,/, $prefs);
     for my $p (@p) {
         if ( $p =~ m/^(.+?):(\d+)$/ ) {
             $param{ 'disp_prefs_height_' . $1 } = $2;
@@ -2648,7 +2648,7 @@ sub _parse_entry_prefs {
     my $app = shift;
     my ( $prefs, $param, $fields ) = @_;
 
-    my @p = split /,/, $prefs;
+    my @p = split(/,/, $prefs);
     for my $p (@p) {
         if ( $p =~ m/^(.+?):(\d+)$/ ) {
             my ( $name, $num ) = ( $1, $2 );
@@ -2694,18 +2694,18 @@ sub load_entry_prefs {
     # defaults:
     if ( !$prefs ) {
         $prefs = $app->load_default_entry_prefs;
-        ( $prefs, $pos ) = split /\|/, $prefs;
+        ( $prefs, $pos ) = split(/\|/, $prefs);
         $is_from_db = 0;
         $app->_parse_entry_prefs( $prefs, \%param, \my @fields );
         $param{disp_prefs_default_fields} = \@fields;
     }
     else {
-        ( $prefs, $pos ) = split /\|/, $prefs;
+        ( $prefs, $pos ) = split(/\|/, $prefs);
     }
     $app->_parse_entry_prefs( $prefs, \%param, \my @custom_fields );
     if ($is_from_db) {
         my $default_prefs = $app->load_default_entry_prefs;
-        ( $default_prefs, my ($default_pos) ) = split /\|/, $default_prefs;
+        ( $default_prefs, my ($default_pos) ) = split(/\|/, $default_prefs);
         $pos ||= $default_pos;
         $app->_parse_entry_prefs(
                                   $default_prefs,
@@ -2846,7 +2846,7 @@ sub user_blog_prefs {
 
     my $perms = $app->permissions;
     return {} unless $perms;
-    my @prefs = split /,/, $perms->blog_prefs || '';
+    my @prefs = split(/,/, $perms->blog_prefs || '');
     my %prefs;
     foreach (@prefs) {
         my ( $name, $value ) = split /=/, $_, 2;
@@ -3025,7 +3025,7 @@ sub _entry_prefs_from_params {
         $prefs .= ':' . $fields{$_} if $fields{$_} > 1;
     }
     if ( $type && lc $type eq 'custom' ) {
-        my @fields = split /,/, $q->param('custom_prefs');
+        my @fields = split(/,/, $q->param('custom_prefs'));
         foreach (@fields) {
             $prefs .= ',' if $prefs ne '';
             $prefs .= $_;

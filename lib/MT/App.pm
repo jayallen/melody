@@ -135,7 +135,7 @@ sub filter_conditional_list {
         my ($item) = @_;
         if ( $system_perms && ( my $sp = $item->{system_permission} ) ) {
             my $allowed = 0;
-            my @sp = split /,/, $sp;
+            my @sp = split(/,/, $sp);
             foreach my $sp (@sp) {
                 my $perm = 'can_' . $sp;
                 $allowed = 1, last
@@ -148,7 +148,7 @@ sub filter_conditional_list {
         }
         if ( my $p = $item->{permission} ) {
             my $allowed = 0;
-            my @p = split /,/, $p;
+            my @p = split(/,/, $p);
             foreach my $p (@p) {
                 my $perm = 'can_' . $p;
                 $allowed = 1, last
@@ -2774,7 +2774,7 @@ sub run {
                               || (    $blog
                                    && $perms
                                    && $perms->can_administer_blog() );
-                            my @p = split /,/, $set;
+                            my @p = split(/,/, $set);
                             foreach my $p (@p) {
                                 my $perm = 'can_' . $p;
                                 $allowed = 1, last
