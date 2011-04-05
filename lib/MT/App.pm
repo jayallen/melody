@@ -3104,7 +3104,7 @@ sub render_widget {
          $passthru_param, $scope )
       = @params{qw( widget_id instance set param widget widget_cfgs order passthru_param scope )};
     my $blog = $app->blog;
-    my $blog_id = $blog->id;
+    my $blog_id = $blog ? $blog->id : 0;
     my $widget_inst = $widget_id . '-' . $instance;
     my $widget_cfg = $widget_cfgs->{$widget_inst} || {};
     my $widget_param = { %$param, %{ $widget_cfg->{param} || {} } };
@@ -3112,7 +3112,6 @@ sub render_widget {
         $widget_param->{$_} = '';
     }
     my $tmpl_name = $widget->{template};
-    print STDERR "Template name for $widget_id: " . $tmpl_name . "\n";
     my $p = $widget->{plugin};
     my $tmpl;
         if ($p) {
@@ -3160,7 +3159,6 @@ sub render_widget {
     $app->run_callbacks( 'template_output' . $tmpl_name,
                          $app, \$content, $tmpl->param, $tmpl );
     
-    print STDERR "Widget content: $content\n";
     return ($content,$tmpl);
 }
 
