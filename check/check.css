@@ -13,7 +13,7 @@ body.has-static {
 }
 
 body.has-static #header {
-    background: #6B3081 url('$static_path/melody/melody-logo-white-banner.png') no-repeat 25px 10px;
+    background: #6B3081 url('$static_path/images/melody/melody-logo-white-banner.png') no-repeat 25px 10px;
     height: 55px;
 }
 
