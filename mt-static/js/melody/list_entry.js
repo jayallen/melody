@@ -71,7 +71,7 @@ function ajax_publish( id ) {
         url: url,
         dataType: 'json',
         error: function (xhr, status, error) {
-            link.css('background','url('+StaticURI+'melody/icon-error.gif) no-repeat center -1px');
+            link.css('background','url('+StaticURI+'images/melody/icon-error.gif) no-repeat center -1px');
             jQuery('.listing tr.obj-'+id).removeClass('publishing').addClass('has_errors');
         },
         success: function (data, status, xhr) {
@@ -87,7 +87,7 @@ function ajax_publish( id ) {
                     link.css('background','url('+StaticURI+'images/nav-icon-rebuild.gif) no-repeat center 0px');
                 });
             } else {
-                link.css('background','url('+StaticURI+'melody/icon-error.gif) no-repeat center -1px');
+                link.css('background','url('+StaticURI+'images/melody/icon-error.gif) no-repeat center -1px');
                 link.qtip({
                     content: data.errstr,
                     position: {

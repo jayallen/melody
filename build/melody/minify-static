@@ -31,7 +31,7 @@ cat                                 \
     mt-static/css/structure.css     \
     mt-static/css/messaging.css     \
     mt-static/css/utilities.css     \
-    mt-static/melody/styles.css     \
+    mt-static/css/melody-styles.css     \
 >| mt-static/css/main.css           \
 && ./build/minifier.pl mt-static/css/main.css
 
@@ -41,7 +41,7 @@ cat                                 \
     mt-static/css/utilities.css     \
     mt-static/css/messaging.css     \
     mt-static/css/chromeless.css    \
-    mt-static/melody/chromeless.css \
+    mt-static/css/melody-chromeless.css \
  >| mt-static/css/simple.css        \
  && ./build/minifier.pl mt-static/css/simple.css
 

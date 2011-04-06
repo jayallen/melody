@@ -13,7 +13,7 @@
     display: block;
     width: 150px;
     height: 41px;
-    background: url('../melody/melody-logo-white-banner.png') no-repeat;
+    background: url('../images/melody/melody-logo-white-banner.png') no-repeat;
 }
 
 /* Redesigned Plugins Screen */
@@ -48,7 +48,7 @@
 }
 #template-body-actions .fullscreen,
 #editor-content .editor-toolbar .fullscreen {
-  background-image: url('fullscreen-icon.gif');
+  background-image: url('../images/melody/fullscreen-icon.gif');
 }
 .edit-template .fullscreen #title-field #title {
   width: 890px;

@@ -14,7 +14,7 @@
 }
 
 .ui-dialog-inner {
-	background: url('../../../images/content.jpg') repeat-x;
+	background: url('../images/content.jpg') repeat-x;
     border-collapse:separate;
     position:relative;
     left:0;
@@ -50,7 +50,7 @@
 .mt.ui-dialog .ui-dialog-titlebar-close {
 	width: 16px;
 	height: 16px;
-	background: url(i/dialog-titlebar-close.png) no-repeat;
+	background: url(../jquery/themes/flora/i/dialog-titlebar-close.png) no-repeat;
 	position:absolute;
 	top: 20px;
 	right: 10px;
@@ -64,7 +64,7 @@
 
 .mt .ui-dialog .ui-dialog-titlebar-close-hover,
 .mt.ui-dialog .ui-dialog-titlebar-close-hover {
-	background: url(i/dialog-titlebar-close-hover.png) no-repeat;
+	background: url(../jquery/themes/flora/i/dialog-titlebar-close-hover.png) no-repeat;
 }
 
 .mt .ui-dialog .ui-dialog-title,
@@ -104,7 +104,7 @@
 .mt .ui-dialog .ui-dialog-buttonpane button,
 .mt.ui-dialog .ui-dialog-buttonpane button {
     margin: 6px 6px 16px 6px;
-    background: #333 url('../../../images/buttons/button.gif') no-repeat 0 center;
+    background: #333 url('../images/buttons/button.gif') no-repeat 0 center;
 	border: none;
 	border-top: 1px solid #d4d4d4;
 	font-weight: bold;
@@ -118,7 +118,7 @@
 
 .mt .ui-dialog .ui-dialog-buttonpane button:first-child,
 .mt.ui-dialog .ui-dialog-buttonpane button:first-child {
-    background-image: url('../../../images/buttons/button-primary.gif');
+    background-image: url('../images/buttons/button-primary.gif');
 }
 
 /* Dialog handle styles */
@@ -151,14 +151,14 @@
 
 /* Overlays */
 .ui-widget-overlay { 
-  background: #aaaaaa url(images/ui-bg_flat_0_aaaaaa_40x100.png) 50% 50% repeat-x; 
+  background: #aaaaaa url(jquery/images/ui-bg_flat_0_aaaaaa_40x100.png) 50% 50% repeat-x; 
   opacity: .6;
   filter:Alpha(Opacity=30); 
 }
 .ui-widget-shadow { 
   margin: -8px 0 0 -8px; 
   padding: 8px; 
-  background: #aaaaaa url(images/ui-bg_flat_0_aaaaaa_40x100.png) 50% 50% repeat-x; 
+  background: #aaaaaa url(jquery/images/ui-bg_flat_0_aaaaaa_40x100.png) 50% 50% repeat-x; 
   opacity: .3;
   filter:Alpha(Opacity=30);
   -moz-border-radius: 8px;
