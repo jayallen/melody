@@ -671,7 +671,7 @@ body.system #blog-nav li:hover li a:hover {
     height: 19px;
     border: 0;
     padding: 0;
-}
+   }
 
 #basic-search {
     position: absolute;
@@ -2052,8 +2052,11 @@ button.primary-button {
 .system .actions-bar .actions button.primary-button,
 .system .actions-bar .actions a.primary-button,
 .system button.primary-button {
-    background-image: url('../images/buttons/button-primary-system.gif');
-}
+ background: #6B3081;
+ color: #fff !important;
+ border: none;
+ -moz-border-radius:4px;
+ -webkit-border-radius:4px;}
 .actions-bar .actions button.disabled-button,
 .actions-bar .actions a.disabled-button {
     background-image: url('../images/buttons/button-primary-disabled.gif');
