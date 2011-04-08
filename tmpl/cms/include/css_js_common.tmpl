@@ -18,6 +18,7 @@
     
 <mt:setvarblock name="html_head" prepend="1">
       <mt:var name="linked_stylesheet" relpath="css/jquery/jquery.ui.all.css">
+      <mt:var name="linked_stylesheet" relpath="js/fancybox/jquery.fancybox-1.3.4.css">
   <mt:unless name="optimize_ui">
       <mt:var name="linked_stylesheet" relpath="styles.css">
       <mt:var name="linked_stylesheet" relpath="css/melody-styles.css">
@@ -66,6 +67,7 @@
       <mt:var name="linked_script" relpath="js/tc.js">
       <mt:var name="linked_script" relpath="js/tc/tableselect.js">
       <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.js">
+      <mt:var name="linked_script" relpath="js/fancybox/jquery.fancybox-1.3.4.js">
     <mt:else>
       <mt:if name="jqueryurl" like="/mt-static\/jquery\/jquery.js">
           <mt:var name="jqueryurl" replace="jquery.js","jquery.min.js" setvar="jqueryurl">

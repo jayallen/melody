@@ -370,9 +370,6 @@ function openDialog(f, mode, params) {
     if (params) url += '&' + params;
     url += '&__type=dialog';
     if (window.app) window.app.closeFlyouts();
-    show("dialog-container");
-    // handle escape key for closing modal dialog
-    DOM.addEventListener( document.body, "keypress", dialogKeyPress, true );
     openDialogUrl(url);
     if ( document.all && DOM.getElement( "dialog-container" ) ) {
         DOM.addClassName( "dialog-container", "hidden" );
@@ -384,33 +381,42 @@ function openDialog(f, mode, params) {
 }
 
 function openDialogUrl(url) {
-    var iframe = getByID("dialog-iframe");
-    var frame_d = iframe.contentDocument;
-    if (!frame_d) {
-        // Sometimes the contentWindow is unavailable because we've just
-        // unhidden the container div that holds the iframe. If this happens
-        // we have to wait for the contentWindow object to be created
-        // before we can access the document within. This may take an extra
-        // try using a setTimeout on this window.
-        if (iframe.contentWindow)
-            frame_d = iframe.contentWindow.document || iframe.document;
+    // Create Dialog
+    var dlg = jQuery('body').find('#ajaxDialog');
+    if (!dlg.size()) {
+        // Init Dialog
+        jQuery('body').append('<div id="ajaxDialog"></div>');
+        dlg = jQuery('#ajaxDialog').dialog({
+            modal:true,
+            autoOpen:false,
+            width:900,
+            height:400,
+            position:['center','center'],
+            title: 'Loading...',
+            zIndex: 9999,
+            close:function(){ jQuery(this).empty(); }
+        });
     }
-    if (frame_d) {
-        frame_d.open();
-        frame_d.write("<html><head><style type=\"text/css\">\n"
-            + "#dialog-indicator {\nposition: relative;\ntop: 200px;\n"
-            + "background: url(" + StaticURI + "images/indicator.gif) "
-            + "no-repeat;\nwidth: 66px;\nheight: 66px;\nmargin: 0 auto;"
-            + "\n}\n</style><script type=\"text/javascript\">\n"
-            + "function init() {\ndocument.location = \"" + url + "\";\n}\n"
-            + "if (window.navigator.userAgent.match(/ AppleWebKit\\//))\n"
-            + "window.setTimeout(\"init()\", 1500);\n"
-            + "else window.onload = init;\n</scr"+"ipt></head><body>"
-            + "<div align=\"center\"><div id=\"dialog-indicator\"></div>"
-            + "</div></body></html>");
-        frame_d.close();
-    } else {
-        window.setTimeout("openDialogUrl('" + url + "')", 100);
+
+    // Load Dialog Content
+    jQuery('#ajaxDialog').load(url, function(){
+        var title = jQuery('#ajaxDialog #content-header h1').html();
+        jQuery('#ajaxDialog #content-header').remove();
+        dlg.dialog('option', 'title', title);
+        // TODO - bootstrap form
+        jQuery('#ajaxDialog form').ajaxForm({
+            'target':'#ajaxDialog',
+            'dataType':'script',
+            'success': function(html,status,xhr) {
+                jQuery('#ajaxDialog').html( html );
+            }
+        });
+    });
+    // the loaded information only shows the first click, other times show an empty dialog
+
+    // Open Dialog (or Reload)
+    if (!dlg.dialog('isOpen')){
+        dlg.dialog('open');
     }
 }
 
@@ -421,7 +427,7 @@ function closeDialog(url) {
     if (url)
         w.location = url;
     else
-        hide("dialog-container", w.document);
+        w.jQuery.fancybox.close();
     return false;
 }
 
