@@ -141,6 +141,16 @@ jQuery(document).ready( function($) {
             $(html).hide().appendTo(trgt).fadeIn('slow');
         },'json').error(function() { showMsg("Error removing widget.", "widget-updated", "alert"); });
     });
+    /* Dialogs */
+    $('.open-dialog').fancybox({
+        'width'         : 660,
+        'height'        : 498,
+        'autoScale'     : false,
+        'transitionIn'  : 'none',
+        'transitionOut' : 'none',
+        'type'          : 'iframe'
+    });
+
 /*
         function updateWidget(id) {
             var f = getByID(id + "-form");
