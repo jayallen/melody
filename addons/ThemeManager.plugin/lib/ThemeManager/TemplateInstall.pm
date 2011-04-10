@@ -567,9 +567,9 @@ sub _set_module_caching_prefs {
                         $tmpl->$var($val);
                     }
                 }
-                foreach (qw( include_with_ssi )) {
-                    $tmpl->$_( $tmpls->{$t}->{$m}->{cache}->{$_} );
-                }
+#                foreach (qw( include_with_ssi )) {
+#                    $tmpl->$_( $tmpls->{$t}->{$m}->{cache}->{$_} );
+#                }
                 $tmpl->save;
             }
         }
