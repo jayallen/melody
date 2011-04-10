@@ -2035,10 +2035,8 @@ sub build_page {
         }
     }
 
-    # FIXME Should these be run if you're building a page without a blog
-    # selector or menus?  For example, chromeless screens like login and
-    # error.tmpl
-    $app->build_blog_selector($param);
+    # FIXME Should these be run if you're building a page without menus?
+    # For example, chromeless screens like login and error.tmpl
     $app->build_menus($param);
     if ( !ref($page)
          || ( $page->isa('MT::Template') && !$page->param('page_actions') ) )
