@@ -260,6 +260,7 @@ sub core_tags {
             'App:ListFilters'        => \&_hdlr_app_list_filters,
             'App:ActionBar'          => \&_hdlr_app_action_bar,
             'App:Link'               => \&_hdlr_app_link,
+            'App:BlogSelector'       => \&_hdlr_app_blog_selector,
             Var                      => \&_hdlr_get_var,
             CGIPath                  => \&_hdlr_cgi_path,
             AdminCGIPath             => \&_hdlr_admin_cgi_path,
@@ -2452,6 +2453,44 @@ sub _hdlr_app_setting_group {
     $insides
 </fieldset>
 EOT
+}
+
+###########################################################################
+
+=head2 App:BlogSelector
+
+This template tag typically lives in the header of the application. It is
+included on every page that has the blog selector pull down control and is
+responsible for rendering its contents. Different app themes may wish to 
+overload the default blog selector and can do so by registering one in this
+way:
+
+     id: MyPlugin
+     applications:
+       cms:
+         blog_selector:
+           handler: 'MT::App::CMS::build_blog_selector'
+
+See documentation for Pluggable Blog Selector.
+
+B<Attributes:>
+
+None by default. Each implemented blog_selector may support its own set of
+arguments. 
+
+=cut
+
+sub _hdlr_app_blog_selector {
+    my ( $ctx, $args, $cond ) = @_;
+    my $app = MT->instance;
+    my $sel = $app->registry('blog_selector');
+    if ( my $code = $sel->{code} ) {
+        if ( !ref($code) ) {
+            $code = $sel->{code} = $app->handler_to_coderef($code);
+        }
+        return $code->(@_);
+    }
+    return $ctx->error("No blog selector was registered or found. The app MUST have a blog selector.");
 }
 
 ###########################################################################

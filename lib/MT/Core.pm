@@ -1955,6 +1955,9 @@ BEGIN {
                     require MT::CMS::Search;
                     return MT::CMS::Search::core_search_apis( MT->app, @_ );
                 },
+                blog_selector   => {
+                    code => '$Core::MT::App::CMS::build_blog_selector',
+                },
                 menus           => sub { MT->app->core_menus() },
                 methods         => sub { MT->app->core_methods() },
                 widgets         => sub { MT->app->core_widgets() },
