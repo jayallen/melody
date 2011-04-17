@@ -10,7 +10,7 @@
         hint="<__trans phrase="Select the number of days of entries or the exact number of entries you would like displayed on your blog.">"
         help_page="blog_settings_general"
         help_section="entries_to_display">
-        <input name="list_on_index" id="list_on_index" size="2" value="<mt:var name="list_on_index" escape="html">" />
+        <input type="text" name="list_on_index" id="list_on_index" size="2" value="<mt:var name="list_on_index" escape="html">" />
         <select name="days_or_posts" id="days_or_posts">
             <option value="days"<mt:if name="days"> selected="selected"</mt:if>><__trans phrase="Days"></option>
             <option value="posts"<mt:if name="posts"> selected="selected"</mt:if>><__trans phrase="Entries"></option>
@@ -35,7 +35,7 @@
         hint="<__trans phrase="Enter the number of words that should appear in an auto-generated excerpt.">"
         help_page="blog_settings_general"
         help_section="excerpt_length">
-        <input name="words_in_excerpt" id="words_in_excerpt" size="3" value="<mt:var name="words_in_excerpt" escape="html">" />
+        <input type="text" name="words_in_excerpt" id="words_in_excerpt" size="3" value="<mt:var name="words_in_excerpt" escape="html">" />
     </mtapp:setting>
 
     <mtapp:setting

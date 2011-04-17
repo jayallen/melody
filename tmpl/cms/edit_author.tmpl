@@ -187,7 +187,7 @@ TC.attachLoadEvent(init);
     label="<__trans phrase="Username">"
     hint="<__trans phrase="The username used to login.">">
     <div class="textarea-wrapper">
-        <input name="name" id="name" class="full-width" value="<mt:var name="name" escape="html">" <mt:unless name="auth_mode_mt"><mt:unless name="new_user_external_auth">disabled="disabled"</mt:unless></mt:unless> /><mt:unless name="auth_mode_mt"><mt:unless name="new_user_external_auth"><input name="name" type="hidden" value="<mt:var name="name" escape="html">" /></mt:unless></mt:unless>
+        <input type="text" name="name" id="name" class="full-width" value="<mt:var name="name" escape="html">" <mt:unless name="auth_mode_mt"><mt:unless name="new_user_external_auth">disabled="disabled"</mt:unless></mt:unless> /><mt:unless name="auth_mode_mt"><mt:unless name="new_user_external_auth"><input name="name" type="hidden" value="<mt:var name="name" escape="html">" /></mt:unless></mt:unless>
     </div>
 </mtapp:setting>
 
@@ -208,7 +208,7 @@ TC.attachLoadEvent(init);
         label="<__trans phrase="Display Name">"
         hint="<__trans phrase="The name used when published.">">
         <div class="textarea-wrapper">
-            <input name="nickname" id="nickname" class="full-width" value="<mt:var name="nickname" escape="html">" />
+            <input type="text" name="nickname" id="nickname" class="full-width" value="<mt:var name="nickname" escape="html">" />
         </div>
     </mtapp:setting>
 
@@ -218,7 +218,7 @@ TC.attachLoadEvent(init);
         label="<__trans phrase="Email Address">"
         hint="<__trans phrase="The email address associated with this user.">">
         <div class="textarea-wrapper">
-            <input name="email" id="email" class="full-width" value="<mt:var name="email" escape="html">" />
+            <input type="text" name="email" id="email" class="full-width" value="<mt:var name="email" escape="html">" />
         </div>
     </mtapp:setting>
 
@@ -227,7 +227,7 @@ TC.attachLoadEvent(init);
         label="<__trans phrase="Website URL">"
         hint="<__trans phrase="The URL of the site associated with this user. eg. http://www.movabletype.com/">">
         <div class="textarea-wrapper">
-            <input name="url" id="url" class="full-width" value="<mt:var name="url" escape="html">" />
+            <input type="text" name="url" id="url" class="full-width" value="<mt:var name="url" escape="html">" />
         </div>
     </mtapp:setting>
 
@@ -312,7 +312,7 @@ TC.attachLoadEvent(init);
                     label="<__trans phrase="Password recovery word/phrase">"
                     hint="<__trans phrase="This word or phrase is not used in the password recovery.">">
                     <div class="textarea-wrapper">
-                        <input name="hint" id="hint" class="full-width" value="<mt:var name="hint" escape="html">" />
+                        <input type="text" name="hint" id="hint" class="full-width" value="<mt:var name="hint" escape="html">" />
                     </div>
                 </mtapp:setting>
             </mt:if>

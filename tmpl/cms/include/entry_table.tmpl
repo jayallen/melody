@@ -138,10 +138,10 @@
             <mt:if name="has_edit_access">
                 <mt:if name="is_power_edit">
                     <mt:if name="title">
-                    <input name="title_<$mt:var name="id"$>" value="<$mt:var name="title" escape="html"$>" />
+                    <input type="text" name="title_<$mt:var name="id"$>" value="<$mt:var name="title" escape="html"$>" />
                     <mt:else>
                     <input type="hidden" name="title_<$mt:var name="id"$>" value="" />
-                    <input name="no_title_<$mt:var name="id"$>" style="color:#999;" value="<$mt:var name="title_short" escape="html"$>" onfocus="if(this.value=='<$mt:var name="title_short" escape="js"$>'){this.value=''; this.style.color='#000';};" onblur="if((this.value=='<$mt:var name="title_short" escape="js"$>') || (this.value=='')){ this.value = '<$mt:var name="title_short" escape="js"$>'; this.style.color='#999'; }else{ title_<$mt:var name="id"$>.value=this.value; };" />
+                    <input type="text" name="no_title_<$mt:var name="id"$>" style="color:#999;" value="<$mt:var name="title_short" escape="html"$>" onfocus="if(this.value=='<$mt:var name="title_short" escape="js"$>'){this.value=''; this.style.color='#000';};" onblur="if((this.value=='<$mt:var name="title_short" escape="js"$>') || (this.value=='')){ this.value = '<$mt:var name="title_short" escape="js"$>'; this.style.color='#999'; }else{ title_<$mt:var name="id"$>.value=this.value; };" />
                     </mt:if>
                 <mt:else>
                     <a href="<$mt:var name="script_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;id=<$mt:var name="id"$>&amp;blog_id=<$mt:var name="blog_id"$>"><$mt:var name="title" escape="html" default="..."$></a>
@@ -194,7 +194,7 @@
         </mt:unless>
                 <td class="date tr">
         <mt:if name="has_publish_access">
-                    <input name="created_on_<$mt:var name="id"$>" value="<$mt:var name="created_on_time_formatted"$>" />
+                    <input type="text" name="created_on_<$mt:var name="id"$>" value="<$mt:var name="created_on_time_formatted"$>" />
         <mt:else>
                     <span title="<$mt:var name="created_on_time_formatted"$>">
             <mt:if name="created_on_relative">

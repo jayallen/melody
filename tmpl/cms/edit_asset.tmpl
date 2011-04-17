@@ -132,7 +132,7 @@
 <mt:unless name="file_is_missing">
                     <div class="asset-embed">
                         <a href="javascript:void(0)" onclick="toggleHidden('asset-embed-input');toggleHidden('asset-embed-link');selectAll('asset-embed-input')" id="asset-embed-link"><__trans phrase="Embed Asset"></a>
-                        <input value="<mt:var name="url" escape="html">" id="asset-embed-input" class="hidden" />
+                        <input type="text" value="<mt:var name="url" escape="html">" id="asset-embed-input" class="hidden" />
                     </div>
 </mt:unless>
                 </div>
@@ -156,7 +156,7 @@
                 help_page="assets"
                 help_section="asset_label">
                 <div class="textarea-wrapper">
-                    <input name="label" id="label" maxlength="100" value="<mt:var name="label" escape="html">" class="full-width" />
+                    <input type="text" name="label" id="label" maxlength="100" value="<mt:var name="label" escape="html">" class="full-width" />
                 </div>
             </mtapp:setting>
 
@@ -172,7 +172,7 @@
                 label="<__trans phrase="Tags">"
                 label_class="text-top">
                 <div class="textarea-wrapper">
-                    <input name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" autocomplete="off" />
+                    <input type="text" name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" autocomplete="off" />
                 </div>
             </mtapp:setting>
         </div>

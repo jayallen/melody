@@ -84,7 +84,7 @@ function is_valid_path(path_){
                 <input type="hidden" name="old_site_path_<mt:var name="id" escape="html">" id="old_site_path_<mt:var name="id" escape="html">" value="<mt:var name="old_site_path" escape="html">" />
                 </mt:if>
                 <div class="textarea-wrapper">
-                    <input name="site_path_<mt:var name="id" escape="html">" id="site_path_<mt:var name="id" escape="html">" class="path_field full-width" value="<$mt:var name="old_site_path" escape="html"$>" />
+                    <input type="text" name="site_path_<mt:var name="id" escape="html">" id="site_path_<mt:var name="id" escape="html">" class="path_field full-width" value="<$mt:var name="old_site_path" escape="html"$>" />
                 </div>
             </mtapp:setting>
             <mtapp:setting
@@ -94,7 +94,7 @@ function is_valid_path(path_){
                 <input type="hidden" name="old_site_url_<mt:var name="id" escape="html">" id="old_site_url_<mt:var name="id" escape="html">" value="<mt:var name="old_site_url" escape="html">" />
                 </mt:if>
                 <div class="textarea-wrapper">
-                    <input name="site_url_<mt:var name="id" escape="html">" id="site_url_<mt:var name="id" escape="html">" class="site_url full-width" value="<mt:var name="old_site_url" escape="html">" />
+                    <input type="text" name="site_url_<mt:var name="id" escape="html">" id="site_url_<mt:var name="id" escape="html">" class="site_url full-width" value="<mt:var name="old_site_url" escape="html">" />
                 </div>
             </mtapp:setting>
             <mt:if name="old_archive_path">
@@ -103,7 +103,7 @@ function is_valid_path(path_){
                     label="<__trans phrase="Archive Path">">
                     <input type="hidden" name="old_archive_path_<mt:var name="id" escape="html">" id="old_archive_path_<mt:var name="id" escape="html">" value="<mt:var name="old_archive_path" escape="html">" />
                     <div class="textarea-wrapper">
-                        <input name="archive_path_<mt:var name="id" escape="html">" id="archive_path_<mt:var name="id" escape="html">" class="path_field full-width" value="<mt:var name="old_archive_path" escape="html">" />
+                        <input type="text" name="archive_path_<mt:var name="id" escape="html">" id="archive_path_<mt:var name="id" escape="html">" class="path_field full-width" value="<mt:var name="old_archive_path" escape="html">" />
                     </div>
                 </mtapp:setting>
             </mt:if>
@@ -113,7 +113,7 @@ function is_valid_path(path_){
                     label="<__trans phrase="Archive URL">">
                     <input type="hidden" name="old_archive_url_<mt:var name="id" escape="html">" id="old_archive_url_<mt:var name="id" escape="html">" value="<mt:var name="old_archive_url" escape="html">" />
                     <div class="textarea-wrapper">
-                        <input name="archive_url_<mt:var name="id" escape="html">" id="archive_url_<mt:var name="id" escape="html">" class="archive_url full-width" value="<mt:var name="old_archive_url" escape="html">" />
+                        <input type="text" name="archive_url_<mt:var name="id" escape="html">" id="archive_url_<mt:var name="id" escape="html">" class="archive_url full-width" value="<mt:var name="old_archive_url" escape="html">" />
                     </div>
                 </mtapp:setting>
             </mt:if>

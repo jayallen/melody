@@ -131,7 +131,7 @@ TC.attachLoadEvent( init );
     id="label"
     label="<__trans phrase="Label">">
     <div class="textarea-wrapper">
-        <input name="label" id="label" class="full-width" maxlength="100" value="<mt:var name="label" escape="html">" class="wide" />
+        <input type="text" name="label" id="label" class="full-width" maxlength="100" value="<mt:var name="label" escape="html">" class="wide" />
     </div>
 </mtapp:setting>
 
@@ -144,7 +144,7 @@ TC.attachLoadEvent( init );
     hint="<__trans phrase="This is the basename assigned to your category.">"
     help_page="categories"
     help_section="category_basename">
-        <input name="basename" id="basename" class="width90" maxlength="250" value="<mt:var name="basename" escape="html">" disabled="disabled" onchange="setElementValue('basename', dirify(this.value))" />
+        <input type="text" name="basename" id="basename" class="width90" maxlength="250" value="<mt:var name="basename" escape="html">" disabled="disabled" onchange="setElementValue('basename', dirify(this.value))" />
         <a href="javascript:void(0);"id="basename-lock" title="<__trans phrase="Unlock this category&rsquo;s output filename for editing">" onclick="return toggleFile()"><span>Unlock</span></a>
     
     <p class="alert-warning-inline" id="basename-warning" style="display: none;">
@@ -195,7 +195,7 @@ TC.attachLoadEvent( init );
         help_page="categories"
         help_section="trackback_passphrase_protection">
         <div class="textarea-wrapper">
-            <input name="tb_passphrase" id="tb_passphrase" class="full-width" value="<mt:var name="tb_passphrase" escape="html">" size="30" />
+            <input type="text" name="tb_passphrase" id="tb_passphrase" class="full-width" value="<mt:var name="tb_passphrase" escape="html">" size="30" />
         </div>
     </mtapp:setting>
 </mt:if>
@@ -223,7 +223,7 @@ TC.attachLoadEvent( init );
     label="<__trans phrase="Tags">"
     hint="<__trans phrase="Assign tags to this category">"
     >
-    <input name="cat_tags" id="cat_tags" class="full-width" value="<$mt:var name="cat_tags" escape="html"$>" size="30" />
+    <input type="text" name="cat_tags" id="cat_tags" class="full-width" value="<$mt:var name="cat_tags" escape="html"$>" size="30" />
 </mtapp:setting>
 
 </mt:Ignore>
@@ -249,7 +249,7 @@ TC.attachLoadEvent( init );
                     help_page="entries"
                     help_section="entry_tags">
                     <div class="textarea-wrapper">
-                        <input name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" mt:watch-change="1" autocomplete="off" />
+                        <input type="text" name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" mt:watch-change="1" autocomplete="off" />
                         <input type="hidden" name="_ignore_tags" id="tags-cache" value="<$mt:var name="tags" escape="html"$>" />
                     </div>
                     <!-- FIXME - move this styling to the ie hacks css file -->

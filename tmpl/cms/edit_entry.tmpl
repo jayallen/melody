@@ -479,9 +479,9 @@
             help_page="entries"
             help_section="date">
             <span class="date-time-fields<mt:if name="status_future"><mt:if name="can_publish_post"> highlight</mt:if></mt:if>">
-                <input id="created-on" class="entry-date" name="authored_on_date" value="<$mt:var name="authored_on_date" escape="html"$>" />
+                <input type="text" id="created-on" class="entry-date" name="authored_on_date" value="<$mt:var name="authored_on_date" escape="html"$>" />
                 <a href="javascript:void(0);" mt:command="open-calendar-created-on" class="date-picker" title="<__trans phrase="Select entry date">"><span>Choose Date</span></a>
-                <input class="entry-time" name="authored_on_time" value="<$mt:var name="authored_on_time" escape="html"$>" />
+                <input type="text" class="entry-time" name="authored_on_time" value="<$mt:var name="authored_on_time" escape="html"$>" />
             </span>
         </mtapp:setting>
 
@@ -1141,7 +1141,7 @@ function listPreviousPings () {
                 label_class="top-label"
                 help_page="entries"
                 help_section="entry_title">
-                <input name="title" id="title" value="<$mt:var name="title" escape="html"$>" maxlength="255" mt:watch-change="1" onkeyup="rebasename(this)" />
+                <input type="text" name="title" id="title" value="<$mt:var name="title" escape="html"$>" maxlength="255" mt:watch-change="1" onkeyup="rebasename(this)" />
             </mtapp:setting>
 
         <mt:else eq="text">
@@ -1209,7 +1209,7 @@ function listPreviousPings () {
                     help_page="entries"
                     help_section="entry_tags">
                     <div class="textarea-wrapper">
-                        <input name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" mt:watch-change="1" autocomplete="off" />
+                        <input type="text" name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" mt:watch-change="1" autocomplete="off" />
                         <input type="hidden" name="_ignore_tags" id="tags-cache" value="<$mt:var name="tags" escape="html"$>" />
                     </div>
                     <!-- FIXME - move this styling to the ie hacks css file -->
@@ -1238,7 +1238,7 @@ function listPreviousPings () {
                 help_page="entries"
                 help_section="keywords">
                 <div class="textarea-wrapper">
-                    <input name="keywords" id="keywords" class="full-width" value="<$mt:var name="keywords" escape="html"$>" mt:watch-change="1" autocomplete="off" />
+                    <input type="text" name="keywords" id="keywords" class="full-width" value="<$mt:var name="keywords" escape="html"$>" mt:watch-change="1" autocomplete="off" />
                 </div>
             </mtapp:setting>
 

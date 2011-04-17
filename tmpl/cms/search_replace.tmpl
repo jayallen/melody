@@ -178,7 +178,7 @@
 </mt:if>
 
         <div id="search-bar-search-field" class="pkg">
-            <input name="search" id="search" value="<mt:var name="search" escape="html">" />
+            <input type="text" name="search" id="search" value="<mt:var name="search" escape="html">" />
             <div class="search-button-wrapper">
                 <button
                     onclick="doSearch()"
@@ -195,12 +195,12 @@
         <div id="search-bar-replace-fields" style="display: none;">
             <div class="search-bar-replace-wrapper pkg">
                 <div class="search-bar-replace-label"><label for="search-alt"><__trans phrase="Search"></label></div>
-                <div class="search-bar-replace-field"><input name="search-alt" id="search-alt" value="<mt:var name="search" escape="html">" disabled="disabled" /></div>
+                <div class="search-bar-replace-field"><input type="text" name="search-alt" id="search-alt" value="<mt:var name="search" escape="html">" disabled="disabled" /></div>
             </div>
             <div class="search-bar-replace-wrapper pkg">
                 <div class="search-bar-replace-label"><label for="replace"><__trans phrase="Replace"></label></div>
                 <div class="search-bar-replace-field">
-                    <input name="replace" id="replace" value="<mt:var name="replace" escape="html">" />
+                    <input type="text" name="replace" id="replace" value="<mt:var name="replace" escape="html">" />
                     <button
                         onclick="doReplace(); return false"
                         type="submit"
