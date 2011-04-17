@@ -103,6 +103,37 @@ jQuery(document).ready( function($) {
     $('.listing-filter').listfilter({});
     /* Filter/Listing Screen END */
 
+    /* Content Nav BEGIN */
+    if ( $('.settings-screen #content-nav').length ) {
+        // TODO - this code is only really relevant on the blog and system
+        // settings pages. It could probably be modified further to only
+        // initialize on those screens?
+        var active = $('#content-nav ul li.active a').attr('title');
+        $('#'+active).show();
+        $('fieldset input, fieldset select, fieldset textarea').change( function () {
+            var sel = '#content-nav ul li a[title="'+active+'"]';
+            var e = $(sel).parent();
+            if (!e.hasClass('changed')) { 
+                e.find('b').html( e.find('b').html() + " *" );
+            }
+            e.addClass('changed');
+        });
+        $('#content-nav ul li a').click( function() {
+            var current = $(this).parent().parent().find('.active');
+            var newactive = $(this).attr('title');
+            current.removeClass('active');
+            $('#' + active).hide();
+            $(this).parent().addClass('active');
+            $('#' + newactive).show();
+            active = newactive;
+        });  
+        $.history.init(function(hash){
+            if (hash == "") hash = "about";
+            $('#content-nav ul li.'+hash+'-tab a').click();
+        });
+    }
+    /* Content Nav END */
+
     /* Dashboard BEGIN */
     $('.widget-close-link').click( function() {
         var w = $(this).parents('.widget');
