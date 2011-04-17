@@ -99,6 +99,10 @@
 })(jQuery);
 
 jQuery(document).ready( function($) {
+    /* Filter/Listing Screen BEGIN */
+    $('.listing-filter').listfilter({});
+    /* Filter/Listing Screen END */
+
     /* Dashboard BEGIN */
     $('.widget-close-link').click( function() {
         var w = $(this).parents('.widget');
@@ -136,7 +140,6 @@ jQuery(document).ready( function($) {
             'widget_singular' : 1
         }, function(data, status, xhr) {
             var trgt = '#widget-container-' + data['result']['widget_set'];
-            alert('appending to: ' + trgt);
             var html = $( data['result']['widget_html'] ).css('visible','hidden');
             $(html).hide().appendTo(trgt).fadeIn('slow');
         },'json').error(function() { showMsg("Error removing widget.", "widget-updated", "alert"); });
