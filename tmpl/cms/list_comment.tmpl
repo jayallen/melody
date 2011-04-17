@@ -88,51 +88,16 @@
 <mt:setvarblock name="html_body_footer">
     <$mt:include name="include/display_options.tmpl"$>
 </mt:setvarblock>
-<mt:setvarblock name="html_head" append="1">
+<mt:setvarblock name="js_include" append="1">
 <script type="text/javascript">
 /* <![CDATA[ */
-function enableFilterButton() {
-    getByID("filter-button").style.display = "inline";
-}
-
-function toggleFilter() {
-    var filterActive = getByID("filter-title");
-    if (filterActive.style.display == "none") {
-        filterActive.style.display = "block";
-        getByID("filter-select").style.display = "none";
-    } else {
-        filterActive.style.display = "none";
-        getByID("filter-select").style.display = "block";
-    }
-}
-
-function setFilterCol(choice) {
-    var sel = getByID('filter-select-form');
-    if (!sel) return;
-    sel.className = "filter-" + choice;
-    var fld = getByID('filter-col');
-    if (fld) {
-        if (choice == 'status')
-            fld.selectedIndex = 0;
-        col_span = getByID("filter-text-col");
-        if (fld.selectedIndex > -1 && col_span)
-            col_span.innerHTML = '<strong>' +
-                fld.options[fld.selectedIndex].text + '</strong>';
-    }
-}
-
 var tableSelect;
-function init()
-{
+jQuery(document).ready( function($) {
 	// setup
 	tableSelect = new TC.TableSelect( "comment-listing-table" );
 	tableSelect.rowSelect = true;
-	setFilterCol(<mt:if name="filter">'<mt:var name="filter" escape="js">'<mt:else>'none'</mt:if>);<mt:if name="filter">
-	setFilterVal('<mt:var name="filter_val" escape="js">');
-</mt:if>
-}
-
-TC.attachLoadEvent( init );
+    $('.listing-filter').listfilter('setfilter','<mt:var name="filter" escape="js" default="none">','<mt:var name="filter_val" escape="js">');
+});
 /* ]]> */
 </script>
 </mt:setvarblock>
@@ -152,11 +117,11 @@ TC.attachLoadEvent( init );
                 <div id="filter-title" class="filter-title">
             <mt:unless name="filter">
                     <strong><__trans phrase="All [_1]" params="<$mt:var name="object_label_plural"$>"></strong>
-                    <!-- <a href="javascript:void(0)" onclick="toggleFilter()" class="filter-link">[ <__trans phrase="change"> ]</a> -->
+                    <!-- <a href="javascript:void(0)" class="filter-link toggle-filter">[ <__trans phrase="change"> ]</a> -->
             <mt:else>
                 <mt:if name="filter_key">
                     <strong><__trans phrase="Showing only: [_1]" params="<mt:var name="filter_label">"></strong>
-                    <!-- <a href="javascript:void(0)" onclick="toggleFilter()" class="filter-link">[ <__trans phrase="change"> ]</a> -->
+                    <!-- <a href="javascript:void(0)" class="filter-link toggle-filter">[ <__trans phrase="change"> ]</a> -->
                 <mt:else>
                     <strong>
                     <mt:if name="filter_newentry">
@@ -173,12 +138,12 @@ TC.attachLoadEvent( init );
                 </mt:if>
         <div id="filter-select" class="page-title" style="display: none">
             <!-- start filter form -->
-                <select id="filter-col" name="filter" onchange="setFilterCol(this.options[this.selectedIndex].value);enableFilterButton(this)">
+                <select id="filter-col" name="filter">
                     <option value="status"><__trans phrase="status"></option>
                 </select>
                 <__trans phrase="is">
                 <span id="filter-status" style="display: none">
-                    <select id="status-val" name="filter_val" onchange="enableFilterButton()">
+                    <select id="status-val" name="filter_val" class="filter-value">
                         <option value="approved"><__trans phrase="approved"></option>
                         <option value="pending"><__trans phrase="pending"></option>
                         <option value="junk"><__trans phrase="spam"></option>

@@ -82,47 +82,16 @@
 <mt:setvarblock name="html_body_footer">
     <$mt:include name="include/display_options.tmpl"$>
 </mt:setvarblock>
-<mt:setvarblock name="html_head" append="1">
+<mt:setvarblock name="js_include" append="1">
 <script type="text/javascript">
 /* <![CDATA[ */
-function enableFilterButton() {
-    getByID("filter-button").style.display = "inline";
-}
-
-function toggleFilter() {
-    var filterActive = getByID("filter-title");
-    if (filterActive.style.display == "none") {
-        filterActive.style.display = "block";
-        getByID("filter-select").style.display = "none";
-    } else {
-        filterActive.style.display = "none";
-        getByID("filter-select").style.display = "block";<mt:unless name="filter">setFilterCol('status');</mt:unless>
-    }
-}
-
-function setFilterCol(choice) {
-    var sel = getByID('filter-select');
-    if (!sel) return;
-    sel.className = "filter-" + choice;
-    var fld = getByID('filter-col');
-    if (choice == 'status')
-        fld.selectedIndex = 0;
-    col_span = getByID("filter-text-col");
-    if (fld.selectedIndex > -1 && col_span)
-        col_span.innerHTML = '<strong>' +
-            fld.options[fld.selectedIndex].text + '</strong>';
-}
-
 var tableSelect;
-function init() {
+jQuery(document).ready( function($) {
     // setup
     tableSelect = new TC.TableSelect( "ping-listing-table" );
     tableSelect.rowSelect = true;
-    setFilterCol(<mt:if name="filter">'<mt:var name="filter" escape="js">'<mt:else>'none'</mt:if>);<mt:if name="filter">
-    setFilterVal('<mt:var name="filter_val" escape="js">');
-</mt:if>
-}
-TC.attachLoadEvent( init );
+    $('.listing-filter').listfilter('setfilter','<mt:var name="filter" escape="js" default="none">','<mt:var name="filter_val" escape="js">');
+});
 /* ]]> */
 </script>
 </mt:setvarblock>
@@ -143,7 +112,7 @@ TC.attachLoadEvent( init );
             <div id="filter-title">
             <mt:unless name="filter">
                 <strong><__trans phrase="All [_1]" params="<$mt:var name="object_label_plural"$>"></strong>
-                <a href="javascript:void(0)" onclick="toggleFilter()" class="filter-link">[ <__trans phrase="change"> ]</a>
+                <a href="javascript:void(0)" class="filter-link filter-toggle">[ <__trans phrase="change"> ]</a>
             <mt:else>
                 <mt:if name="filter_special">  
                 <strong><__trans phrase="Showing only: [_1]" params="<$mt:var name="filter_phrase" escape="html"$>"></strong>  
@@ -151,7 +120,7 @@ TC.attachLoadEvent( init );
                 <mt:else><mt:if name="filter_key">
                 <strong><__trans phrase="Showing only: [_1]" params="<mt:var name="filter_label">" escape="html"></strong>
                 <mt:else>
-                <strong><a href="javascript:void(0)" onclick="toggleFilter()">
+                <strong><a href="javascript:void(0)" class="filter-toggle">
                     <__trans phrase="[_1] where [_2] is [_3]" params='<$mt:var name="object_label_plural"$>%%<span id="filter-text-col">&nbsp;</span>%%<span id="filter-text-val"></span>'>
                 </a></strong>
                 <a class="filter-link" href="<mt:var name="script_url">?__mode=<mt:var name="mode" escape="url"><mt:if name="blog_id">&amp;blog_id=<mt:var name="blog_id" escape="url"></mt:if><mt:if name="is_power_edit">&amp;is_power_edit=1</mt:if>">[ <__trans phrase="Remove filter"> ]</a>
@@ -161,12 +130,12 @@ TC.attachLoadEvent( init );
             <div id="filter-select" class="page-title" style="display: none">
                 <__trans phrase="Show only [_1] where" params="<$mt:var name="object_label_plural"$>">
                 <!-- begin filter form -->
-                    <select id="filter-col" name="filter-col" onchange="setFilterCol(this.options[this.selectedIndex].value); enableFilterButton()">
+                    <select id="filter-col" name="filter-col">
                         <option value="status"><__trans phrase="status"></option>
                     </select>
                     <__trans phrase="is">
                     <span id="filter-status" style="display: none">
-                        <select name="status-val" onchange="enableFilterButton()">
+                        <select name="status-val" class="filter-value">
                             <option value="approved"><__trans phrase="approved"></option>
                             <option value="pending"><__trans phrase="unapproved"></option>
                         </select>
@@ -179,7 +148,7 @@ TC.attachLoadEvent( init );
                         type="submit"
                         ><__trans phrase="Filter"></a>
                     <a href="javascript:void(0)"
-                        onclick="toggleFilter(); return false;"
+                        class="filter-toggle"
                         type="submit"
                         ><__trans phrase="Cancel"></a>
                 </span>
