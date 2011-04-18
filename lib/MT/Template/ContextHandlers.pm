@@ -5536,11 +5536,13 @@ B<Example:> Passing Parameters to a Template Module
                 $tmpl_file =~ s/\.tmpl$//;
                 $tmpl_file = '.' . $tmpl_file;
             }
-            $mt->run_callbacks( 'template_param' . $tmpl_file,
-                                $mt, $tmpl->param, $tmpl );
 
             # propagate our context
             local $tmpl->{context} = $ctx;
+
+            $mt->run_callbacks( 'template_param' . $tmpl_file,
+                                $mt, $tmpl->param, $tmpl );
+
             my $out = $tmpl->output();
             return $ctx->error( $tmpl->errstr ) unless defined $out;
 
