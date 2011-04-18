@@ -1496,7 +1496,7 @@ sub to_hash {
     foreach ( keys %$values ) {
         $hash->{"${pfx}.$_"} = $values->{$_};
     }
-    if ( my $meta = $props->{meta_columns} ) {
+    if ( my $meta = $props->{fields} ) {
         foreach ( keys %$meta ) {
             $hash->{"${pfx}.$_"} = $obj->meta($_);
         }
