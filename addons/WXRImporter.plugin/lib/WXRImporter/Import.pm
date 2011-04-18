@@ -2,7 +2,7 @@
 # Author: Six Apart (http://www.sixapart.com)
 # Released under the Artistic License
 #
-# $Id: Import.pm 1104 2007-12-12 01:49:35Z hachi $
+# $Id$
 
 package WXRImporter::Import;
 use strict;
@@ -14,7 +14,7 @@ sub import_contents {
     my %param = @_;
     my $iter  = $param{Iter};
     my $blog  = $param{Blog}
-      or return $class->error( MT->translate("No Blog") );
+        or return $class->error( MT->translate("No Blog") );
     my $cb = $param{Callback} || sub { };
     my $encoding = $param{Encoding};
 
@@ -31,13 +31,12 @@ sub import_contents {
         my $path = $root_path;
         if ($relative_path) {
             if ( $relative_path =~ m!\.\.|\0|\|! ) {
-                return
-                  $class->error(
-                                 MT->translate(
-                                                "Invalid extra path '[_1]'",
-                                                $relative_path
-                                 )
-                  );
+                return $class->error(
+                    MT->translate(
+                        "Invalid extra path '[_1]'",
+                        $relative_path
+                    )
+                );
             }
             $path = File::Spec->catdir( $path, $relative_path );
         }
@@ -49,25 +48,24 @@ sub import_contents {
 
         $param{'mt_path'} = $path;
         $param{'mt_url'}  = $url;
-    } ## end if ( $root_path && $root_url)
+    }
 
     if ( exists $param{ImportAs} ) {
     }
     elsif ( exists $param{ParentAuthor} ) {
         require MT::Auth;
-        return
-          $class->error(
-                 MT->translate(
-                         "You need to provide a password if you are going to "
-                       . "create new users for each user listed in your blog."
-                 )
-          )
-          if MT::Auth->password_exists
-              && !( exists $param{NewAuthorPassword} );
+        return $class->error(
+            MT->translate(
+                      "You need to provide a password if you are going to "
+                    . "create new users for each user listed in your blog."
+            )
+            )
+            if MT::Auth->password_exists
+                && !( exists $param{NewAuthorPassword} );
     }
     else {
         return $class->error(
-                      MT->translate("Need either ImportAs or ParentAuthor") );
+            MT->translate("Need either ImportAs or ParentAuthor") );
     }
     $cb->("\n");
     my $import_result = eval {
@@ -79,7 +77,7 @@ sub import_contents {
         $class->errstr ? undef : 1;
     };
     $import_result;
-} ## end sub import_contents
+}
 
 sub start_import {
     my $self = shift;
@@ -90,34 +88,34 @@ sub start_import {
     #}
 
     my $xml = do { local $/ = undef; <$stream> }
-      || '';
+        || '';
     $xml
-      =~ s{<wp:comment_content>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</wp:comment_content>} 
+        =~ s{<wp:comment_content>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</wp:comment_content>} 
              {<wp:comment_content><![CDATA[$1]]></wp:comment_content>}sg;
     use HTML::Entities::Numbered;
     $xml = HTML::Entities::Numbered::name2hex_xml($xml);
 
     require WXRImporter::WXRHandler;
-    my $handler =
-      WXRImporter::WXRHandler->new(
-                                    callback   => $param{Callback},
-                                    blog       => $param{Blog},
-                                    def_cat_id => $param{DefaultCategoryID},
-                                    convert_breaks => $param{ConvertBreaks},
-                                    ( exists $param{ImportAs} )
-                                    ? ( author => $param{ImportAs} )
-                                    : ( parent => $param{ParentAuthor} ),
-                                    pass        => $param{NewAuthorPassword},
-                                    wp_path     => $param{wp_path},
-                                    mt_path     => $param{mt_path},
-                                    mt_url      => $param{mt_url},
-                                    wp_download => $param{wp_download},
-      );
+    my $handler = WXRImporter::WXRHandler->new(
+        callback       => $param{Callback},
+        blog           => $param{Blog},
+        def_cat_id     => $param{DefaultCategoryID},
+        convert_breaks => $param{ConvertBreaks},
+        ( exists $param{ImportAs} )
+        ? ( author => $param{ImportAs} )
+        : ( parent => $param{ParentAuthor} ),
+        pass        => $param{NewAuthorPassword},
+        wp_path     => $param{wp_path},
+        mt_path     => $param{mt_path},
+        mt_url      => $param{mt_url},
+        wp_download => $param{wp_download},
+    );
 
     require MT::Util;
     my $parser = MT::Util::sax_parser();
     $param{Callback}->( ref($parser) . "\n" )
-      if MT::ConfigMgr->instance->DebugMode;
+        if MT::ConfigMgr->instance->DebugMode;
+    $handler->{is_pp} = ref($parser) eq 'XML::SAX::PurePerl' ? 1 : 0;
     $parser->{Handler} = $handler;
     my $e;
     eval { $parser->parse_string($xml); };
@@ -129,14 +127,14 @@ sub start_import {
         return $self->error($e);
     }
     1;
-} ## end sub start_import
+}
 
 sub get_param {
     my $class = shift;
     my ($blog_id) = @_;
 
     my $blog = MT::Blog->load($blog_id)
-      or return $class->error( MT->translate('No Blog') );
+        or return $class->error( MT->translate('No Blog') );
 
     my $param = { blog_id => $blog_id };
     my $label_path;
@@ -148,10 +146,10 @@ sub get_param {
         $label_path = MT->translate('Site Root');
     }
     $param->{missing_paths}
-      = (    ( defined $blog->site_path || defined $blog->archive_path )
-          && ( -d $blog->site_path || -d $blog->archive_path ) ) ? 0 : 1;
+        = (    ( defined $blog->site_path || defined $blog->archive_path )
+            && ( -d $blog->site_path || -d $blog->archive_path ) ) ? 0 : 1;
     $param;
-} ## end sub get_param
+}
 
 ## This package will be removed once WordPress fixes issues
 ## which it generates non-well formed XML (therefore it's
