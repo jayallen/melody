@@ -679,7 +679,7 @@ sub do_search_replace {
                 my $mode = 'view';
                 if ( $type eq 'blog' ) {
                     $args{blog_id} = delete $args{id};
-                    $mode = 'cfg_prefs';
+                    $mode = 'cfg_blog_settings';
                 }
                 return $app->redirect(
                                 $app->uri( mode => $mode, args => \%args, ) );

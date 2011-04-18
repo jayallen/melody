@@ -22,6 +22,7 @@ template_sets:
         blog_preferences: 'DePoClean_theme_preferences'
         thumbnail: 'depo-small.png'
         preview: depo-large.png
+        documentation: documentation.html
         options:
             fieldsets:
                 flickr:

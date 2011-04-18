@@ -660,16 +660,22 @@ sub start {
     # test for required packages...
     my $req = $app->registry("required_packages");
     my @REQ;
-    foreach my $key ( keys %$req ) {
-        my $pkg = $req->{$key};
-        push @REQ,
-          [ $key, $pkg->{version} || 0, 1, $pkg->{label}, $key,
-            $pkg->{link} ];
+    foreach my $pkg ( keys %$req ) {
+        my $info = $req->{$pkg};
+        push @REQ, [
+            $pkg,
+            $info->{version} || 0,
+            1,
+            $info->{label} || '',
+            $pkg,
+            $info->{link} || '',
+        ];
     }
     my ($needed) = $app->module_check( \@REQ );
     if (@$needed) {
         $param{package_loop} = $needed;
         $param{required}     = 1;
+        $param{install_help} = 1;
         return $app->build_page( "packages.tmpl", \%param );
     }
 
@@ -697,6 +703,7 @@ sub start {
         $param{package_loop}           = $db_missing;
         $param{missing_db_or_optional} = 1;
         $param{missing_db}             = 1;
+        $param{install_help} = 1;
         return $app->build_page( "packages.tmpl", \%param );
     }
 
@@ -714,6 +721,7 @@ sub start {
         $param{package_loop}           = $opt_missing;
         $param{missing_db_or_optional} = 1;
         $param{optional}               = 1;
+        $param{install_help} = 1;
         return $app->build_page( "packages.tmpl", \%param );
     }
 

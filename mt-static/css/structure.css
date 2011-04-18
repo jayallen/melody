@@ -184,10 +184,10 @@ body.system #header {background: #6B3081 url('../images/header-inner.gif') repea
     display: block;
     width: 150px;
     height: 40px;
-    background: url('../melody/melody-logo-white-banner.png') no-repeat;
+    background: url('../images/melody/melody-logo-white-banner.png') no-repeat;
 }
 .system #brand a {
-    background-image: url('../melody/melody-logo-white-banner.png');
+    background-image: url('../images/melody/melody-logo-white-banner.png');
 }
 #brand span {
     position: relative;
@@ -671,7 +671,7 @@ body.system #blog-nav li:hover li a:hover {
     height: 19px;
     border: 0;
     padding: 0;
-}
+   }
 
 #basic-search {
     position: absolute;
@@ -940,7 +940,8 @@ body.system #blog-nav li:hover li a:hover {
 
 .content-nav #main-content {
     width: 760px;
-    padding-left: 20px;
+    padding-left: 0px;
+margin-left:20px;
 /*    border-left: 1px solid #cddee7;*/
 }
 
@@ -1048,11 +1049,12 @@ body.system #blog-nav li:hover li a:hover {
 }
 
 #content-nav ul li.active {
-    background: #fff url('../images/content-nav-active-top.gif') no-repeat;
+    background: #fff 
 }
 .system #content-nav ul li.active {
-    background-image: url('../images/content-nav-active-top-system.gif');
+    background-image: none;
 }
+
 
 #content-nav ul li a {
     padding-bottom: 3px;
@@ -1063,23 +1065,31 @@ body.system #blog-nav li:hover li a:hover {
 }
 
 #content-nav ul li.active a {
-    background: #fff url('../images/content-nav-active-bottom.gif') no-repeat left bottom;
+    background: #fff!important;
 }
 .system #content-nav ul li.active a {
-    background-image: url('../images/content-nav-active-bottom-system.gif');
+    background-image: none!important;
 }
+
 
 #content-nav ul li a b {
     display: block;
     padding: 0 10px;
 }
-#content-nav ul li.active a b {
-    border: 1px solid #d6e6ef;
-    border-width: 0 1px;
-    background: url('../images/content-nav-arrow.gif') no-repeat right center;
+#content-nav ul li.active a b { 
+  /*  border: 1px solid #d6e6ef;*/
+    border-width: 0;
+    background: none; 
+        background: rgb(230,230,230);
+        padding-top:2px;
+        padding-bottom:2px;
+ -moz-border-radius:4px;
+ -webkit-border-radius:4px;
+    
 }
 .system #content-nav ul li.active a b {
-    background-image: url('../images/content-nav-arrow-system.gif');
+   /* background-image: url('../images/content-nav-arrow-system.gif'); */
+   font-weight: bold;
 }
 
 
@@ -1111,8 +1121,12 @@ body.system #blog-nav li:hover li a:hover {
     width: 9px;
     height: 9px;
     margin: 10px 10px 0 0;
-    background: url('../images/status_icons/close-disabled.gif') no-repeat;
+   /* background: url('../images/status_icons/close-disabled.gif') no-repeat; */
 }
+
+.widget-close-link:before { content: "\2A02"; line-height: 0.5em;}
+
+
 .widget-close-link span {
     display: none;
 }
@@ -1355,9 +1369,11 @@ body.system #blog-nav li:hover li a:hover {
 }
 
 .dashboard .blog_stats-widget .widget-close-link {
-    background-image: url('../images/status_icons/invert-close-disabled.gif');
+   /* background-image: url('../images/status_icons/invert-close-disabled.gif'); */
     margin: 0 3px 0 0;
 }
+
+.dashboard .blog_stats-widget .widget-close-link:before { content: "\2A02"; line-height: 0.5em; color:#fff;}
 
 .dashboard .blog_stats-widget .widget-header {
   /*  background: #000 url('../images/black-corner-tl.gif') no-repeat top left; */
@@ -2036,8 +2052,11 @@ button.primary-button {
 .system .actions-bar .actions button.primary-button,
 .system .actions-bar .actions a.primary-button,
 .system button.primary-button {
-    background-image: url('../images/buttons/button-primary-system.gif');
-}
+ background: #6B3081;
+ color: #fff !important;
+ border: none;
+ -moz-border-radius:4px;
+ -webkit-border-radius:4px;}
 .actions-bar .actions button.disabled-button,
 .actions-bar .actions a.disabled-button {
     background-image: url('../images/buttons/button-primary-disabled.gif');
@@ -5115,7 +5134,7 @@ background: #C9E1EE;
     margin: 0 4px 0 0;
     padding: 0;
     color: #000;
-    background: url(../../codepress/images/toggle.gif) left top no-repeat;
+    background: url(../codepress/images/toggle.gif) left top no-repeat;
     text-indent: 1000em;
     min-width: 0;
     -moz-user-select: none !important;
