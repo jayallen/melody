@@ -42,7 +42,7 @@
 <mt:setvarblock name="action_buttons">
     <a href="javascript:void(0)"
         onclick="doRemoveItems(getByID('tag-listing-form'), '<__trans phrase="tag" escape="js">', '<__trans phrase="tags" escape="js">'); return false;"
-        accesskey="x"
+        accesskey="x" class="secondary button"
         title="<__trans phrase="Delete selected [_1] (x)" params="<$mt:var name="object_label_plural"$>">"
         ><__trans phrase="Delete"></a>
 </mt:setvarblock>
@@ -236,10 +236,10 @@
                         show_hint="0">
                         <span class="buttons"> 
                             <a href="javascript:void(0)" 
-                                onclick="submit_edit(<mt:var name="tag_id">); return false;"
+                                onclick="submit_edit(<mt:var name="tag_id">); return false;" class="primary button"
                                 title="<__trans phrase="Rename [_1]" params="<mt:var name="object_label">">" 
                                 ><__trans phrase="Rename"></a> 
-                            <a href="javascript:void(0)" 
+                            <a href="javascript:void(0)" class="secondary button"
                                 onclick="cancel_edit(<mt:var name="tag_id">)"
                                 ><__trans phrase="Cancel"></a> 
                         </span> 

@@ -152,7 +152,7 @@ TC.attachLoadEvent( init );
 <mt:setvarblock name="action_buttons">
     <a href="javascript:void(0)"
         onclick="doRemoveItems(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="category" escape="js">', '<__trans phrase="categories" escape="js">'); return false;"
-        accesskey="x"
+        accesskey="x" class="secondary button"
         title="<__trans phrase="Delete selected category (x)">"
         ><__trans phrase="Delete"></a>
 </mt:setvarblock>
@@ -202,10 +202,10 @@ TC.attachLoadEvent( init );
                         hint=""
                         show_hint="0">
                         <span class="buttons"> 
-                            <a href="javascript:void(0)" mt:command="submit"
+                            <a href="javascript:void(0)" mt:command="submit" class="primary button"
                                 title="<__trans phrase="Create Category">" 
                                 ><__trans phrase="Create"></a> 
-                            <a href="javascript:void(0)" 
+                            <a href="javascript:void(0)" class="secondary button"
                                 onclick="cancelCreateMode(0); return false"
                                 ><__trans phrase="Cancel"></a> 
                         </span> 
@@ -284,10 +284,10 @@ TC.attachLoadEvent( init );
                             show_hint="0">
                             <span class="buttons"> 
                                 <a href="javascript:void(0)"
-                                mt:command="submit" 
+                                mt:command="submit" class="primary button"
                                 title="<__trans phrase="Create Category">" 
                                     ><__trans phrase="Create"></a> 
-                                <a href="javascript:void(0)" 
+                                <a href="javascript:void(0)" class="secondary button"
                                     onclick="cancelCreateMode(<mt:var name="category_id">); return false"
                                     ><__trans phrase="Cancel"></a> 
                             </span> 
@@ -328,10 +328,10 @@ TC.attachLoadEvent( init );
                         show_hint="0">
                         <span class="buttons"> 
                             <a href="javascript:void(0)"
-                                mt:command="submit"
+                                mt:command="submit" class="primary button"
                                 title="<__trans phrase="Create Category">" 
                                 ><__trans phrase="Create"></a> 
-                            <a href="javascript:void(0)" 
+                            <a href="javascript:void(0)" class="secondary button"
                                 onclick="cancelCreateMode(0); return false"
                                 ><__trans phrase="Cancel"></a> 
                         </span> 

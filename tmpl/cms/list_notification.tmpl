@@ -168,7 +168,7 @@
 <mt:setvarblock name="action_buttons">
 <a href="javascript:void(0)"
     onclick="doRemoveItems(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="contact" escape="js">', '<__trans phrase="contacts" escape="js">'); return false;"
-    accesskey="x"
+    accesskey="x" class="secondary button"
     title="<__trans phrase="Delete selected [_1] (x)" params="<$mt:var name="object_label_plural"$>">"
     ><__trans phrase="Delete"></a>
 </mt:setvarblock>
@@ -210,9 +210,9 @@
     hint=""
     show_hint="0">
     <span class="buttons">
-        <a href="javascript:void(0)" mt:command="submit"
+        <a href="javascript:void(0)" mt:command="submit" class="primary button"
             ><__trans phrase="Add Contact"></a>
-        <a href="javascript:void(0)"
+        <a href="javascript:void(0)" class="secondary button"
             onclick="cancelCreateMode(); return false"
             ><__trans phrase="Cancel"></a>
     </span>

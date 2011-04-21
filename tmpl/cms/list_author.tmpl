@@ -78,12 +78,12 @@
     <mt:if name="is_administrator">
     <a href="javascript:void(0)"
         onclick="setObjectStatus(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="user" escape="js">', '<__trans phrase="users" escape="js">', 1); return false;"
-        accesskey="e"
+        accesskey="e" class="secondary button"
         title="<__trans phrase="Enable selected users (e)">"
         ><__trans phrase="_USER_ENABLE" escape="js"></a>
     <a href="javascript:void(0)"
         onclick="var sysadmin = getByID('sysadmin'); if (sysadmin && sysadmin.checked) { alert('<__trans phrase="_NO_SUPERUSER_DISABLE" escape="js">'); sysadmin.click(); return false; } setObjectStatus(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="user" escape="js">', '<__trans phrase="users" escape="js">', 0); return false;"
-        accesskey="d"
+        accesskey="d" class="secondary button"
         title="<__trans phrase="Disable selected users (d)">"
         ><__trans phrase="_USER_DISABLE" escape="js"></a>
     </mt:if>
