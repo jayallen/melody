@@ -10,6 +10,7 @@ mt = {
         timeout: <$mt:UserSessionCookieTimeout$>
     },
     links: {
+        signUp: '<$mt:CGIPath$><$mt:CommentScript$>?__mode=signup&blog_id=<$mt:BlogID$>&return_to=<$mt:BlogURL$>',
         signIn: '<$mt:SignInLink$>',
         signOut: '<$mt:SignOutLink$>'
     },
