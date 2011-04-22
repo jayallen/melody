@@ -26,6 +26,7 @@
     <form method="post" enctype="multipart/form-data" action="<mt:var name="script_url">">
         <input type="hidden" name="__mode" value="restore" />
         <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
+        <fieldset>
         <mtapp:setting
             id="file"
             label="<__trans phrase="Backup file">"
@@ -61,6 +62,7 @@
                 ><__trans phrase="Restore"></button>
         </mt:setvarblock>
         <mt:include name="include/actions_bar.tmpl" bar_position="bottom" hide_pager="1" settings_bar="1">
+        </fieldset>
     </form>
     </mt:if>
 </div>
