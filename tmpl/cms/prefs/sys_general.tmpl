@@ -5,7 +5,7 @@
     <mtapp:setting
         id="system_email_address"
         label="<__trans phrase="System Email">"
-        hint="<__trans phrase="The email address used in the From: header of each email sent from the system.  The address is used in password recovery, commenter registration, comment, trackback notification and a few other minor events.">"
+        hint="<__trans phrase='The email address all emails will be from. It is used in password recovery, commenter registration and other outbound system emails. To confirm your system is working properly, send a test email from the [_1]System Diagnostics[_2] area.' params='<a href="?__mode=sanity_check">%%</a>'>"
         show_hint="1">
         <div class="textarea-wrapper">
             <input type="text" id="system_email_address" name="system_email_address"<mt:if name="system_email_address"> value="<mt:var name="system_email_address" escape="html">"</mt:if> class="full-width" />
