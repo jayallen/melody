@@ -2048,9 +2048,9 @@ button.big-button[type] {
 *:first-child+html button.big-button[type] {
     padding: 4px 10px 3px; /* IE7 */
 }
-.actions-bar .actions button.primary-button,
-.actions-bar .actions a.primary-button,
-button.primary-button {
+.actions-bar .actions button.primary,
+.actions-bar .actions a.primary,
+button.primary {
   /*  background-image: url('../images/buttons/button-primary.gif'); */
     -moz-border-radius:4px;
     -webkit-border-radius:4px;
@@ -2058,11 +2058,11 @@ button.primary-button {
  color: #fff !important;
 }
 
-.actions-bar .actions a.primary-button:hover {-moz-border-radius:4px;-webkit-border-radius:4px;background: #000;color: #fff !important;}
+.actions-bar .actions a.primary:hover {-moz-border-radius:4px;-webkit-border-radius:4px;background: #000;color: #fff !important;}
 
-.system .actions-bar .actions button.primary-button,
-.system .actions-bar .actions a.primary-button,
-.system button.primary-button {
+.system .actions-bar .actions button.primary,
+.system .actions-bar .actions a.primary,
+.system button.primary {
  background: #6B3081;
  color: #fff !important;
  border: none;
@@ -2080,7 +2080,7 @@ button.primary-button {
 .actions-bar .actions a:hover,
 .actions-bar .actions a:active,
 .actions-bar .actions button:hover,
-button.primary-button:hover {
+button.primary:hover {
     color: #fff;
     background-color: #000;
     background-position: -500px center;
@@ -3956,11 +3956,11 @@ body.preview-screen {
     background: url(../images/status_icons/primary.png) no-repeat 0 50%;
 }
 
-#category-list a.primary {
+#category-list a.principal {
     padding-left: 13px;
     color: #33789C;
 }
-#category-list .focus a.primary {
+#category-list .focus a.principal {
     background: url(../images/status_icons/primary-disabled.png) no-repeat 0 50%;
 }
 

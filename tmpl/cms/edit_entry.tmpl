@@ -113,7 +113,7 @@
         type="submit"
         accesskey="s"
         title="<mt:var name="submit_button_title">"
-        class="primary-button"
+        class="primary button"
         ><__trans phrase="Save"></button>
     <button
         mt:mode="preview_entry"
@@ -330,9 +330,9 @@
                     } #]
                     <mt:if name="object_type" ne="page">
                     [# if ( i == 0 ) { #]
-                        <li class="primary pkg" mt:focus-hover="1" mt:id="[#= cat.id #]"><strong>[#= label #]</strong><a href="javascript:void(0);" mt:command="remove" class="delete" title="[#|h trans("Remove") #]">&nbsp;<span>[#|h trans("Remove") #]</span></a></li>
+                        <li class="principal pkg" mt:focus-hover="1" mt:id="[#= cat.id #]"><strong>[#= label #]</strong><a href="javascript:void(0);" mt:command="remove" class="delete" title="[#|h trans("Remove") #]">&nbsp;<span>[#|h trans("Remove") #]</span></a></li>
                     [# } else { #]
-                        <li class="pkg" mt:focus-hover="1" mt:id="[#= cat.id #]"><mt:if name="object_type" eq="entry"><a mt:focus-hover="1" href="javascript:void(0);" mt:command="primary" class="primary" title="[#|h trans("Make primary") #]">[#= label #]</a></mt:if><a mt:focus-hover="1" href="javascript:void(0);" mt:command="remove" class="delete" title="[#|h "Remove" #]">&nbsp;<span>[#|h trans("Remove") #]</span></a></li>
+                        <li class="pkg" mt:focus-hover="1" mt:id="[#= cat.id #]"><mt:if name="object_type" eq="entry"><a mt:focus-hover="1" href="javascript:void(0);" mt:command="primary" class="principal" title="[#|h trans("Make primary") #]">[#= label #]</a></mt:if><a mt:focus-hover="1" href="javascript:void(0);" mt:command="remove" class="delete" title="[#|h "Remove" #]">&nbsp;<span>[#|h trans("Remove") #]</span></a></li>
                     [# } #]
                     <mt:else>
                     <li class="pkg" mt:focus-hover="1" mt:id="[#= cat.id #]">[#= label #]</li>
