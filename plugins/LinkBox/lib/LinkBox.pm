@@ -281,7 +281,7 @@ sub ts_change {
             $list = MT->model('linkbox_list')->new();
             $list->name( $reg->{$_}->{label}() );
             $list->blog_id( $blog->id );
-            $list->order ( $reg->{$_}->{order} ? $reg->{$_}->{order} || 0 );
+            $list->order ( $reg->{$_}->{order} ? $reg->{$_}->{order} : 0 );
             $list->save() or die $list->errstr;
 
             my $links = $reg->{$_}->{links};
