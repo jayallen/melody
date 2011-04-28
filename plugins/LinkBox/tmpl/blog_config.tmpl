@@ -1,0 +1,14 @@
+<div class="setting">
+<div class="label"><label>List Style:</label></div>
+<div class="field">
+<input type="radio" value="ul" name="liststyle"<TMPL_IF NAME=LISTSTYLE_UL> checked="checked"</TMPL_IF> /> Unordered List<br />
+<input type="radio" value="ol" name="liststyle"<TMPL_IF NAME=LISTSTYLE_OL> checked="checked"</TMPL_IF> /> Ordered List<br />
+</div>
+</div>
+<div class="setting">
+<div class="label"><label>Sort Order:</label></div>
+<div class="field">
+<input type="radio" value="added" name="sortorder"<TMPL_IF NAME=SORTORDER_ADDED> checked="checked"</TMPL_IF> /> Date Added<br />
+<input type="radio" value="alpha" name="sortorder"<TMPL_IF NAME=SORTORDER_ALPHA> checked="checked"</TMPL_IF> /> Alphabetical<br />
+</div>
+</div>

@@ -7,7 +7,6 @@ use MT::Util qw( epoch2ts encode_url format_ts relative_date );
 sub edit {
     my $cb = shift;
     my ( $app, $id, $obj, $param ) = @_;
-
     if ($id) {
         my $asset_class = $app->model('asset');
         $param->{asset}        = $obj;
@@ -97,6 +96,15 @@ sub edit {
         );
         $param->{previous_entry_id} = $prev_asset->id if $prev_asset;
         $param->{next_entry_id}     = $next_asset->id if $next_asset;
+        my $tags_js = MT::Util::to_json(
+                                         MT::Tag->cache(
+                                                         blog_id => $obj->blog_id,
+                                                         class => ref($obj),
+                                                         private => 1
+                                         )
+        );
+        $tags_js =~ s!/!\\/!g;
+        $param->{tags_js} = $tags_js;
     } ## end if ($id)
     1;
 } ## end sub edit
@@ -478,14 +486,6 @@ sub complete_insert {
         require MT::ObjectTag;
         my $q       = $app->query;
         my $blog_id = $q->param('blog_id');
-        $param->{tags_js} =
-          MT::Util::to_json(
-                             MT::Tag->cache(
-                                             blog_id => $blog_id,
-                                             class   => 'MT::Asset',
-                                             private => 1
-                             )
-          );
     } ## end if ($perms)
     $param->{'no_insert'} = $q->param('no_insert');
     $app->load_tmpl( 'dialog/asset_options.tmpl', $param );
