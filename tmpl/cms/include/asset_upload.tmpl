@@ -97,6 +97,11 @@ function setExtraPath(sel) {
                             /* we don't need the modal mask here */
                             this.modalMask = { element: DOM.getElement( "folder-selector" ), show: Function.stub, hide: Function.stub };
                             this.form = DOM.getElement( "upload-form" );
+                            
+                            // Set the hidden middle_path form element when the
+                            // page loads, so that it picks up the date-folder
+                            // structure.
+                            setExtraPath( DOM.getElement('site_path') );
                         },
 
 
