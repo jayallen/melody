@@ -51,6 +51,9 @@
       /* ]]> */
       </script>
       <mt:var name="linked_script" relpath="jquery/jquery.json.js">
+      <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.js">
+      <mt:var name="linked_script" relpath="js/fancybox/jquery.fancybox-1.3.4.js">
+
       <mt:var name="linked_script" relpath="js/common/Core.js">
       <mt:var name="linked_script" relpath="js/common/Timer.js">
       <mt:var name="linked_script" relpath="js/common/Cookie.js">
@@ -66,8 +69,6 @@
       <mt:var name="linked_script" relpath="js/common/Template.js">
       <mt:var name="linked_script" relpath="js/tc.js">
       <mt:var name="linked_script" relpath="js/tc/tableselect.js">
-      <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.js">
-      <mt:var name="linked_script" relpath="js/fancybox/jquery.fancybox-1.3.4.js">
     <mt:else>
       <mt:if name="jqueryurl" like="/mt-static\/jquery\/jquery.js">
           <mt:var name="jqueryurl" replace="jquery.js","jquery.min.js" setvar="jqueryurl">
@@ -79,8 +80,9 @@
       /* ]]> */
       </script>
       <mt:var name="linked_script" relpath="jquery/jquery.json.js">
-      <mt:var name="linked_script" relpath="js/mt_core_compact.js">
       <mt:var name="linked_script" relpath="jquery/ui/minified/jquery.ui.all.min.js">
+      <mt:var name="linked_script" relpath="js/fancybox/jquery.fancybox-1.3.4.pack.js">
+      <mt:var name="linked_script" relpath="js/mt_core_compact.js">
     </mt:unless>
 </mt:setvarblock> <mt:ignore> End of mt:setvarblock name="html_head" prepend="1" </mt:ignore>
 
