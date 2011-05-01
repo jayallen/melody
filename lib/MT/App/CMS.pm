@@ -284,6 +284,13 @@ sub core_widgets {
                           singular => 1,
                           set      => 'sidebar',
         },
+        melody_docs => {
+                          label    => 'Documentation Updates',
+                          template => 'widget/melody_docs.tmpl',
+                          handler  => "${pkg}Dashboard::melody_docs_widget",
+                          singular => 1,
+                          set      => 'sidebar',
+        },
         melody_news => {
                          label    => 'Melody News',
                          template => 'widget/melody_news.tmpl',

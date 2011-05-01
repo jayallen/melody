@@ -1,0 +1,9 @@
+<mtapp:widget class="widget docs-news-widget" label="<__trans phrase="Documentation Updates">" can_close="1">
+    <div id="melody-news-panel" mt:tab-content="news">
+        <mt:if name="news_items">
+            <mt:var name="news_items"/>
+        <mt:else>
+            <p><__trans phrase="No Melody news available."></p>
+        </mt:if>
+    </div>
+</mtapp:widget>
