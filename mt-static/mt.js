@@ -2931,24 +2931,6 @@ extend( MT.App.CodePress, {
 
 
 
-function showMsg(message, id, type, rebuild, blogID) {
-    if (getByID(id)) {
-        msg = getByID(id);
-        msg.style.display = 'block';
-    } else {
-        var msg = document.createElement("div");
-        msg.setAttribute("id", id);
-        DOM.addClassName(msg, 'msg');
-        DOM.addClassName(msg, 'msg-'+type);
-    }
-    msg.innerHTML = "<a href=\"javascript:void(0)\" onclick=\"javascript:hide('"+id+"');\" class=\"close-me\"><span>close</span></a>"+message;
-    if (rebuild == 'all')
-        msg.innerHTML += ' ' + trans('[_1]Publish[_2] your site to see these changes take effect.', '<a href="javascript:void(0);" class="rebuild-link" onclick="doRebuild(\''+blogID+'\');">', '</a>');
-    if (rebuild == 'index')
-        msg.innerHTML += ' ' + trans('[_1]Publish[_2] your site to see these changes take effect.', '<a href="javascript:void(0);" class="rebuild-link" onclick="doRebuild(\''+blogID+'\', prompt=\'index\');">', '</a>');
-    getByID('msg-block').appendChild(msg);
-}
-
 function hideAllDropDown() { // hides SELECT lists under the nav on IE6
     if((/MSIE/.test(navigator.userAgent)) && parseInt(navigator.appVersion)==4) {
         var dd = document.getElementsByTagName('select');
@@ -2977,22 +2959,6 @@ function showDropDown(el) {
         }
     }
     return;
-}
-
-function setBarPosition(radio) {
-    var mode = radio.value ? radio.value.toLowerCase() : radio;
-    var c = TC.elementOrId('container-inner');
-    var s = "show-actions-bar-";
-    if (mode == 'bottom') {
-        TC.removeClassName(c, s + "top");
-        TC.addClassName(c, s + "bottom");
-    } else if (mode == 'both') {
-        TC.addClassName(c, s + "top");
-        TC.addClassName(c, s + "bottom");
-    } else if (mode == 'top') {
-        TC.addClassName(c, s + "top");
-        TC.removeClassName(c, s + "bottom");
-    }
 }
 
 function selectAll(id) {
