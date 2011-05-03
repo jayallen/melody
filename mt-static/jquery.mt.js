@@ -189,7 +189,7 @@ jQuery(document).ready( function($) {
     /* Dialogs END */
 
     /* Display Options BEGIN */
-    jQuery('.display-options-link').click( function() {
+    $('.display-options-link').click( function() {
         var opts = jQuery('#display-options-widget');
         if ( opts.hasClass('active') ) opts.removeClass( 'active' );
         else opts.addClass( 'active' );
