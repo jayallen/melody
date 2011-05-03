@@ -196,4 +196,10 @@ jQuery(document).ready( function($) {
     });
     /* Display Options END */
 
+    /* Date Picker(s) BEGIN */
+    $('.entry-date').datepicker({
+            'dateFormat' : 'yy-mm-dd' 
+    });
+    /* Date Picker(s) END */
+
 });
