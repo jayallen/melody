@@ -186,48 +186,8 @@ jQuery(document).ready( function($) {
         'transitionOut' : 'none',
         'type'          : 'iframe'
     });
+    /* Dialogs END */
 
-/*
-        function updateWidget(id) {
-            var f = getByID(id + "-form");
-            if (!f) return false;
-            f['widget_action'].value = 'save';
-            if (!TC.Client) return true;
-            // if (f['widget_refresh'] && f['widget_refresh'].value) {
-            //     return true;
-            // }
-
-            var args = DOM.getFormData( f );
-            args['json'] = '1';
-            TC.Client.call({
-                'load': function(c, responseText) { updatedWidget(id, responseText); },
-                'error': function() { showMsg("Error updating widget.", "widget-updated", "alert"); },
-                'method': 'POST',
-                'uri': ScriptURI,
-                'arguments': args
-            });
-            return false;
-        }
-
-        function updatedWidget(id, responseText) {
-            var el = TC.elementOrId(id);
-            var result;
-            try {
-                result = eval('(' + responseText + ')');
-            } catch(e) {
-                showMsg("Error updating widget.", "widget-updated", "alert");
-                return;
-            }
-            if (result.result.html) {
-        // updatePrefs has returned a new widget
-                el.innerHTML = result.result.html;
-            }
-            if (result.result.message) {
-                showMsg(result.result.message, "widget-updated", "info");
-            }
-        }
-*/
-    /* Dashboard END */
     /* Display Options BEGIN */
     jQuery('.display-options-link').click( function() {
         var opts = jQuery('#display-options-widget');
