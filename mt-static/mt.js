@@ -1327,22 +1327,21 @@ Pager = new Class(Object, {
     render: function() {
         if (!this.element) return;
 
-        /*
-        This long method is concerned with creating the elements of
-        the pagination control. It refreshes the controls based on
-        the 'state' member of the Pager object. This control is
-        typically tied to a Datasource object. So the navigation
-        links of the control will influence the Datasource.
-        Likewise, upon navigating the Datasource, it will invoke
-        the pager to refresh when the data has been updated.
+        //This long method is concerned with creating the elements of
+        //the pagination control. It refreshes the controls based on
+        //the 'state' member of the Pager object. This control is
+        //typically tied to a Datasource object. So the navigation
+        //links of the control will influence the Datasource.
+        //Likewise, upon navigating the Datasource, it will invoke
+        //the pager to refresh when the data has been updated.
 
-        pager.rows (number of rows shown)
-        pager.listTotal (total number of rows in datasource)
-        pager.offset (offset currently used)
-        pager.chronological (boolean, whether the listing is chronological or not)
-        */
+        //pager.rows (number of rows shown)
+        //pager.listTotal (total number of rows in datasource)
+        //pager.offset (offset currently used)
+        //pager.chronological (boolean, whether the listing is chronological or not)
+
         var html = '';
-        /* TODO - this can all be replaced with a js template */
+        // TODO - this can all be replaced with a js template
         if (this.datasource && this.datasource.navigating) {
             // TODO: change this to use a CSS class instead.
             html = "<div>" + trans('Loading...') + " <img src=\"" + StaticURI + "images/indicator.white.gif\" height=\"10\" width=\"10\" alt=\"...\" /></div>";
