@@ -175,7 +175,9 @@ jQuery(document).ready( function($) {
             $(html).hide().appendTo(trgt).fadeIn('slow');
         },'json').error(function() { showMsg("Error removing widget.", "widget-updated", "alert"); });
     });
-    /* Dialogs */
+    /* Dashboard END */
+
+    /* Dialogs BEGIN */
     $('.open-dialog').fancybox({
         'width'         : 660,
         'height'        : 498,
