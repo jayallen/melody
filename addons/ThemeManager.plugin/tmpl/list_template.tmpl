@@ -6,18 +6,18 @@
         <mt:if name="filter_key" eq="backup_templates">
             <mt:setvarblock name="script_url_plus"><mt:var name="script_url">?__mode=list&amp;_type=template&amp;blog_id=<mt:var name="blog_id"></mt:setvarblock>
         </mt:if>
-        <ul>
+        <ul id="template-filter">
         <mt:if name="blog_id">
-            <li id="all-tab"><a href="<$mt:var name="script_url_plus"$>#all" onclick="showTable('all-listing');"><__trans phrase="Show All Templates"></a></li>
-            <li id="index-tab"><a href="<$mt:var name="script_url_plus"$>#index" onclick="showTable('index-listing');"><__trans phrase="Index Templates"></a></li>
-            <li id="system-tab"><a href="<$mt:var name="script_url_plus"$>#system" onclick="showTable('system-listing');"><__trans phrase="System Templates"></a></li>
-            <li id="archive-tab"><a href="<$mt:var name="script_url_plus"$>#archive" onclick="showTable('archive-listing');"><__trans phrase="Archive Templates"></a></li>
-            <li id="module-tab"><a href="<$mt:var name="script_url_plus"$>#module" onclick="showTable('module-listing');"><__trans phrase="Template Modules"></a></li>
+            <li id="all-tab"><a href="<$mt:var name="script_url_plus"$>#all"><__trans phrase="Show All Templates"></a></li>
+            <li id="index-tab"><a href="<$mt:var name="script_url_plus"$>#index"><__trans phrase="Index Templates"></a></li>
+            <li id="system-tab"><a href="<$mt:var name="script_url_plus"$>#system"><__trans phrase="System Templates"></a></li>
+            <li id="archive-tab"><a href="<$mt:var name="script_url_plus"$>#archive"><__trans phrase="Archive Templates"></a></li>
+            <li id="module-tab"><a href="<$mt:var name="script_url_plus"$>#module"><__trans phrase="Template Modules"></a></li>
         <mt:else>
-            <li id="all-tab"><a href="<mt:var name="script_url">?__mode=list&amp;_type=template#all" onclick="showTable('all-listing');"><__trans phrase="Show All Templates"></a></li>
-            <li id="module-tab"><a href="<mt:var name="script_url">?__mode=list&amp;_type=template#module" onclick="showTable('module-listing');"><__trans phrase="Template Modules"></a></li>
-            <li id="email-tab"><a href="<mt:var name="script_url">?__mode=list&amp;_type=template#email" onclick="showTable('email-listing');"><__trans phrase="Email Templates"></a></li>
-            <li id="system-tab"><a href="<mt:var name="script_url">?__mode=list&amp;_type=template#system" onclick="showTable('system-listing');"><__trans phrase="System Templates"></a></li>
+            <li id="all-tab"><a href="<mt:var name="script_url">?__mode=list&amp;_type=template#all"><__trans phrase="Show All Templates"></a></li>
+            <li id="module-tab"><a href="<mt:var name="script_url">?__mode=list&amp;_type=template#module"><__trans phrase="Template Modules"></a></li>
+            <li id="email-tab"><a href="<mt:var name="script_url">?__mode=list&amp;_type=template#email"><__trans phrase="Email Templates"></a></li>
+            <li id="system-tab"><a href="<mt:var name="script_url">?__mode=list&amp;_type=template#system"><__trans phrase="System Templates"></a></li>
         </mt:if>
         </ul>
         <$mtapp:ListFilters$>
@@ -34,79 +34,17 @@
     </mtapp:widget>
     <$MTApp:PageActions from="list_template"$>
 </mt:setvarblock>
+
 <mt:setvarblock name="html_head" append="1">
 <link rel="stylesheet" href="<mt:PluginStaticWebPath component="ThemeManager">css/app.css" type="text/css" />
 <mt:unless tag="ProductName" eq="Melody">
 <script type="text/javascript" src="<mt:Var name="static_uri">jquery/jquery.js"></script>
 </mt:unless>
 <script type="text/javascript">
-
-jQuery(document).ready( function($) {
-  $('td.status a').click( function() {
-    var id = $(this).parents('tr').find('.cb input').val();
-    var link = $(this);
-    link.css('background','url(<mt:Var name="static_uri">images/ani-rebuild.gif) no-repeat center -1px');
-    $.ajax({
-      url: '<mt:var name="script_url">?__mode=tm.rebuild_tmpl&amp;blog_id=<mt:var name="blog_id">&amp;id=' + id,
-      dataType: 'json',
-      error: function (xhr, status, error) {
-        link.css('background','url(<mt:PluginStaticWebPath component="ThemeManager">images/icon-error.gif) no-repeat center -1px');
-      },
-      success: function (data, status, xhr) {
-        if (data.success) {
-          link.css('background','url(<mt:Var name="static_uri">images/nav-icon-rebuild.gif) no-repeat center 0px');
-        } else {
-          link.css('background','url(<mt:PluginStaticWebPath component="ThemeManager">images/icon-error.gif) no-repeat center -1px');
-        }
-      }
-    });
-  });
-});
-
-/* <![CDATA[ */
-    <mt:unless name="filter_key" eq="backup_templates">
-        <mt:if name="blog_id">
-var tableList = ["index", "archive", "module", "system"];
-        <mt:else>
-var tableList = ["module", "email", "system"];
-        </mt:if>
-    <mt:else>
-var tableList = ["backup"];
-    </mt:unless>
-function showTable(name) {
-    for (var i=0, len=tableList.length; i<len; i++) {
-        var el = tableList[i] + "-listing"
-        var elTab = tableList[i] + "-tab"
-        if (name == "all-listing") {
-            DOM.removeClassName ( el, "hidden");
-            DOM.removeClassName ( elTab, "current-filter");
-            DOM.addClassName( "all-tab", "current-filter" );
-        }
-        else if (name == el) {
-            DOM.removeClassName ( el, "hidden");
-            DOM.addClassName( elTab, "current-filter" );
-            DOM.removeClassName( "all-tab", "current-filter" );
-        }
-        else {
-            DOM.addClassName( el, "hidden" );
-            DOM.removeClassName( elTab, "current-filter" );
-            DOM.removeClassName( "all-tab", "current-filter" );
-        }
-    }
-}
-var tableSelect = [];
-function init() {
-<mt:loop name="template_type_loop">
-    tableSelect.push(new TC.TableSelect( '<mt:var name="template_type" escape="html">-listing-table' ));
-    tableSelect[tableSelect.length-1].rowSelect = true;
-</mt:loop>
-    var name = (window.location.hash && window.location.hash.match( /^#/ ) ) ? window.location.hash.substr(1) : "all";
-    showTable(name + "-listing");
-}
-TC.attachLoadEvent(init);
-/* ]]> */
+PluginStaticURI = '<$mt:PluginStaticWebPath component="ThemeManager"$>';
 </script>
 </mt:setvarblock>
+
 <mt:setvarblock name="system_msg">
     <mt:if name="profile_updated">
         <mtapp:statusmsg
@@ -159,7 +97,7 @@ TC.attachLoadEvent(init);
     </mt:If>
 </mt:setvarblock>
 
-<mt:include name="include/header.tmpl">
+<mt:include name="include/header.tmpl" listing_screen="1">
 <mt:loop name="template_type_loop">
 <mt:if name="__first__">
 <$mt:var name="list_filter_form"$>
