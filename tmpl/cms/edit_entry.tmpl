@@ -480,7 +480,7 @@
             help_section="date">
             <span class="date-time-fields<mt:if name="status_future"><mt:if name="can_publish_post"> highlight</mt:if></mt:if>">
                 <input type="text" id="created-on" class="entry-date" name="authored_on_date" value="<$mt:var name="authored_on_date" escape="html"$>" />
-                <a href="javascript:void(0);" mt:command="open-calendar-created-on" class="date-picker" title="<__trans phrase="Select entry date">"><span>Choose Date</span></a>
+                <a href="javascript:void(0);" class="date-picker" title="<__trans phrase="Select entry date">"><span>Choose Date</span></a>
                 <input type="text" class="entry-time" name="authored_on_time" value="<$mt:var name="authored_on_time" escape="html"$>" />
             </span>
         </mtapp:setting>
@@ -623,14 +623,16 @@
     </mt:if>
 </mt:setvarblock>
 
-<mt:setvarblock name="js_include" append="1">
-    <!--// this MUST loaded after mt.js // -->
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/edit.js?v=<$mt:var name="mt_version_id" escape="url"$>"></script>
-</mt:setvarblock>
-
 <mt:if name="rich_editor"><mt:var name="rich_editor_tmpl"><mt:else><mt:include name="include/archetype_editor.tmpl"></mt:if>
 
+<mt:setvarblock name="js_include" prepend="1">
+    <!--// this MUST loaded after mt.js // -->
+    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/edit.js?v=<$mt:var name="mt_version_id" escape="url"$>"></script>
+    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/screens/edit_entry.js?v=<$mt:var name="mt_version_id" escape="url"$>"></script>
+</mt:setvarblock>
+
 <mt:setvarblock name="html_head" append="1">
+<mt:ignore>
     <script type="text/javascript">
         /* <![CDATA[ */
         Editor.strings.unsavedChanges = '<mt:if name="object_type"entry><__trans phrase="You have unsaved changes to this entry that will be lost." escape="js"><mt:else><__trans phrase="You have unsaved changes to this page that will be lost." escape="js"></mt:if>';
@@ -644,16 +646,26 @@
         }
         /* ]]> */
     </script>
-</mt:setvarblock>
+</mt:ignore>
 
-<mt:setvarblock name="html_head" append="1">
+<mt:ignore>
     <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/focus.js"></script>
     <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/client.js"></script>
     <script type="text/javascript" src="<$mt:var name="static_uri"$>js/melody/fullscreen.js"></script>
-
+</mt:ignore>
 
     <script type="text/javascript">
     /* <![CDATA[ */
+ReEdit = <mt:var name="reedit" default="0">;
+Id = <mt:var name="id">;
+CurTextFormat = '<mt:var name="convert_breaks" escape="js">';
+ObjectType = '<mt:var name="object_type" escape="js">';
+
+var docs = new Array();
+<mt:loop name="text_filters">
+docs['<$mt:var name="filter_key" escape="js"$>'] = '<$mt:var name="filter_docs" escape="js"$>';</mt:loop>
+
+<mt:ignore>
 var orig_text_format;
 var cur_text_format = '<mt:var name="convert_breaks" escape="js">';
 orig_text_format = cur_text_format;
@@ -663,161 +675,6 @@ customizable_fields.push('publishing');
 customizable_fields.push('feedback');
 customizable_fields.push('assets');
 var default_fields = [<mt:loop name="disp_prefs_default_fields" glue=",">'<mt:var name="name" escape="js">'</mt:loop>];
-
-function savedEntryOptions(c) {
-    var message = '<__trans phrase="Your entry screen preferences have been saved." escape="js">';
-    showMsg(message, 'saved-prefs-msg', 'success');
-}
-
-function saveEntryFieldOptions() {
-    var frm = document.forms['display-options-form'];
-    var entry_prefs = getByID('entry_prefs');
-    var mode;
-    mode = entry_prefs.value;
-
-    var custom_prefs = '';
-    var bar_position;
-    for (var i = 0; i < frm.elements.length; i++) {
-        var fld = frm.elements[i];
-        if (fld.name == 'bar_position') {
-            if (fld.checked) bar_position = fld.value;
-        } else if (fld.name == 'entry_prefs') {
-            mode = fld.value;
-        } else if (fld.name == 'custom_prefs') {
-            if (fld.checked) {
-                if (custom_prefs != '') custom_prefs += ',';
-                custom_prefs += fld.value;
-            }
-        }
-    }
-    // TBD: we need to get the blog id from the selector control
-    // itself
-    var param = '__mode=save_entry_prefs'
-        + '&_type=<mt:var name="object_type">'
-        + '&blog_id=<mt:var name="blog_id">'
-        + '&entry_prefs=' + mode
-        + '&magic_token=<mt:var name="magic_token">'
-        + '&bar_position=' + bar_position;
-    if (mode == 'Custom') {
-        param += '&custom_prefs=' + custom_prefs;
-    }
-    var params = { uri: '<mt:var name="script_url">', method: 'POST', arguments: param, load: savedEntryOptions };
-    TC.Client.call(params);
-}
-
-function convertedText(c, result) {
-    var form = document.forms['entry_form'];
-    var response = eval('('+result+')');
-    if (response.error) {
-        alert("Error: " + response.error);
-        return;
-    }
-
-    form.text.value = response.result.text;
-    form.text_more.value = response.result.text_more;
-    orig_text_format = cur_text_format = 'richtext';
-    TC.removeClassName(TC.elementOrId("editor-content"), "editor-plaintext");
-    app.setEditorIframeHTML();
-}
-
-function changedTextFormat(sel) {
-    var form = sel.form;
-    var option = sel.options[sel.selectedIndex].value;
-    if ((cur_text_format != 'richtext') && (option == 'richtext')) {
-        // warn user that changing to richtext is not reversible (easily)
-        if (!confirm("<__trans phrase="Are you sure you want to use the Rich Text editor?" escape="js">")) {
-            // revert selection
-            for (var i = 0; i < sel.options.length; i++) {
-                if (sel.options[i].value == cur_text_format)
-                    sel.selectedIndex = i;
-            }
-            app.editor.focus();
-            return;
-        }
-    }
-    var s = document.forms['entry_form'].convert_breaks;
-    var key = s.options[s.selectedIndex].value;
-    if (url = docs[key]) {
-        if (url.indexOf('http://') == -1)
-            url = HelpBaseURI + url;
-        TC.removeClassName(getByID('formatting-help-link'), 'disabled');
-    } else {
-        TC.addClassName(getByID('formatting-help-link'), 'disabled');
-    }
-
-    if (cur_text_format == 'richtext') {
-        // changing to plaintext editor
-        TC.addClassName(TC.elementOrId("editor-content"), "editor-plaintext");
-        orig_text_format = cur_text_format = option;
-        app.editor.setMode('textarea');
-        app.editor.focus();
-    } else if (option == 'richtext') {
-        app.saveHTML(false);
-        // changing to richtext editor
-        // convert existing format to richtext
-        var param = {
-            '__mode': 'convert_to_html',
-            'text': form.text.value,
-            'text_more': form.text_more.value,
-            'format': orig_text_format
-        };
-        var params = {
-            uri: '<mt:var name="script_url">', method: 'POST',
-                arguments: param, load: convertedText
-        };
-        TC.Client.call(params);
-    } else {
-        orig_text_format = cur_text_format = option;
-        app.editor.focus();
-    }
-}
-
-function setDefaultFieldGroup() {
-    var i, j, selected_fields, disable_fields, field_object;
- 
-    // set checkbox data based on which group was selected
-    selected_fields = default_fields;
-    var bar_position = document.getElementById('bar_position_bottom');
-    if (bar_position) {
-        bar_position.checked = true;
-        setBarPosition(bar_position);
-    }
-
-    // uncheck all the checkboxes
-    for (i = 0; i < customizable_fields.length; i++) {
-        field_object = TC.elementOrId("custom-prefs-"+customizable_fields[i]);
-        if (field_object) field_object.checked = false;
-        var div = TC.elementOrId(customizable_fields[i] + '-field');
-        if (div)
-            TC.addClassName(div, 'hidden');
-    }
-
-    // check only the checkboxes in the current set
-    if (selected_fields) {
-        for (i = 0; i < selected_fields.length; i++) {
-            for (j = 0; j < customizable_fields.length; j++) {
-                if (selected_fields[i] == customizable_fields[j]) {
-                    field_object = TC.elementOrId("custom-prefs-"+customizable_fields[j]);
-                    var hide = true;
-                    if (field_object) {
-                        hide = false;
-                        field_object.checked = true;
-                    }
-                    var div = TC.elementOrId(customizable_fields[j] + '-field');
-                    if (div) {
-                        if (hide)
-                            TC.addClassName(div, 'hidden');
-                        else
-                            TC.removeClassName(div, 'hidden');
-                    }
-                }
-            }
-        }
-        setCustomFields();
-    }
-
-    return false;
-}
 
 var pre_sortable_node;
 function setCustomFields(args) {
@@ -923,26 +780,6 @@ function tagSplit(str) {
     return tags;
 }
 
-document.onkeyup = function(e) {
-    if (!e) e = window.event;
-    if (e.ctrlKey) {
-        if (e.keyCode == 80) {
-            if (e.shiftKey) {
-                getByID('status').value = 1; // ctrl-shift-p: unpublish
-            } else {
-                getByID('status').value = 2; // ctrl-p: publish
-            }
-        }
-        if (e.keyCode == 85) {
-            getByID('status').value = 1; // ctrl-u: unpublish
-        }
-    }
-};
-
-var docs = new Array();
-<mt:loop name="text_filters">
-docs['<$mt:var name="filter_key" escape="js"$>'] = '<$mt:var name="filter_docs" escape="js"$>';
-</mt:loop>
 function openTFDocs() {
     var s = document.forms['entry_form'].convert_breaks;
     var key = s.options[s.selectedIndex].value;
@@ -956,54 +793,12 @@ function openTFDocs() {
     }
 }
 
-function toggleFile() {
-    var fld = $('#basename');
-    if (fld) {
-        fld.removeAttr('disabled').focus();
-        $('#basename_manual').val('1');
-        $('#basename-warning').show();
-    }
-    $('#basename-lock').hide( function() { return false; } );
-}
-
-$(document).ready( function() {
-    $('#basename-lock').live('click', toggleFile);
-});
-
-var orig_basename;
-var tbTableSelect;
-var cmtTableSelect;
 var autoTag;
 <mt:if name="tags_js">
 tagList = <$mt:var name="tags_js"$>;
 </mt:if>
-function init() {
-    // setup
-    tbTableSelect = new TC.TableSelect( "manage-trackbacks" );
-    tbTableSelect.rowSelect = true;
-    cmtTableSelect = new TC.TableSelect( "manage-comments" );
-    cmtTableSelect.rowSelect = true;
-    var basename = getByID("basename");
-    var basename_old = getByID("basename_old");
-    var title = getByID("title");
-    if (basename) {
-        if (basename.value != '') {<mt:if name="reedit">
-            toggleFile();</mt:if>
-            orig_basename = basename.value;
-        }<mt:if name="reedit"> else {
-            <mt:if name="id">
-            basename.value = basename_old.value;
-            <mt:else>
-            basename.value = dirify(title.value);
-            </mt:if>
-        }
-</mt:if>
-    }
-    <mt:Ignore><mt:if name="tags_js">initTags();</mt:if></mt:Ignore>
-    <mt:unless name="id">title.focus();</mt:unless>
-}
 
-<mt:Include name="include/autocomplete_js.tmpl">
+<mt:ignore><mt:Include name="include/autocomplete_js.tmpl"></mt:ignore>
 
 var tagPos = 0;
 function initTags() {
@@ -1021,8 +816,6 @@ function initTags() {
     autoTag = new TC.TagComplete("tags", tagList);
     autoTag.delimiter = tag_delim;
 }
-
-TC.attachLoadEvent( init );
 
 function highlightSwitch(selection) {
     var descriptionObject = getByID('created_on-label');
@@ -1054,6 +847,7 @@ function highlightSwitch(selection) {
 function listPreviousPings () {
     window.open('<mt:var name="script_url">?__mode=pinged_urls&entry_id=<mt:var name="id" escape="html">&blog_id=<mt:var name="blog_id" escape="html">', 'urls', 'width=400,height=400,resizable=yes,scrollbars=yes');
 }
+</mt:ignore>
 /* ]]> */
         </script>
 </mt:setvarblock>
@@ -1065,9 +859,67 @@ function listPreviousPings () {
         /* ]]> */
     </script>
     </mt:if>
-    <mt:include name="include/calendar.tmpl">
 </mt:setvarblock>
 
+        <form name="display-options-form" method="post" action="<mt:var name="script_url">">
+            <input type="hidden" id="entry_prefs" name="entry_prefs" value="<mt:if name="disp_prefs_default">Default<mt:else>Custom</mt:if>">
+                <mtapp:setting
+                    id="entry_fields"
+                    label="<__trans phrase="Fields">"
+                    label_class="display-options">
+                    <ul id="entry-pref-field-list">
+                        <mt:loop name="field_loop">
+                        <mt:unless name="system_field"><mt:unless name="lock_field"><li class="dbx-box"><label class="dbx-handle"><input type="checkbox" name="custom_prefs" id="custom-prefs-<$mt:var name="field_id" escape="html"$>" value="<$mt:var name="field_name" escape="html"$>" onclick="setCustomFields(); return true" <mt:if name="lock_field"><mt:if name="show_field"> checked="checked"</mt:if> disabled="disabled"<mt:elseif name="show_field"> checked="checked"</mt:if> class="cb" /> <$mt:var name="field_label" escape="html"$></label></li><mt:else><li<mt:if name="use_field"> class="dbx-box"</mt:if>><label<mt:if name="use_field"> class="dbx-handle"</mt:if>><input type="checkbox" name="custom_prefs" id="custom-prefs-<$mt:var name="field_id" escape="html"$>" value="<$mt:var name="field_name" escape="html"$>" onclick="setCustomFields(); return true" <mt:if name="lock_field"><mt:if name="show_field"> checked="checked"</mt:if> disabled="disabled"<mt:elseif name="show_field"> checked="checked"</mt:if> class="cb" /> <$mt:var name="field_label" escape="html"$></label></li></mt:unless></mt:unless>
+                        </mt:loop>
+                    </ul>
+                </mtapp:setting>
+                <mtapp:setting
+                    id="metadata_fields"
+                    label="<__trans phrase="Metadata">"
+                    label_class="display-options">
+                    <ul>
+                        <mt:if name="object_type" ne="page">
+                        <li><label><input type="checkbox" name="custom_prefs" id="custom-prefs-category" value="category" onclick="setCustomFields(); return true"<mt:if name="disp_prefs_show_category"> checked="checked"</mt:if> class="cb" /> <__trans phrase="Category"></label></li>
+                        </mt:if>
+                        <li><label><input type="checkbox" name="custom_prefs" id="custom-prefs-publishing" value="publishing" onclick="setCustomFields(); return true"<mt:if name="disp_prefs_show_publishing"> checked="checked"</mt:if> class="cb" /> <__trans phrase="Publishing"></label></li>
+                        <li><label><input type="checkbox" name="custom_prefs" id="custom-prefs-feedback" value="feedback" onclick="setCustomFields(); return true"<mt:if name="disp_prefs_show_feedback"> checked="checked"</mt:if> class="cb" /> <__trans phrase="Feedback"></label></li>
+                        <li><label><input type="checkbox" name="custom_prefs" id="custom-prefs-assets" value="assets" onclick="setCustomFields(); return true"<mt:if name="disp_prefs_show_assets"> checked="checked"</mt:if> class="cb" /> <__trans phrase="Assets"></label></li>
+                    </ul>
+                </mtapp:setting>
+                <mtapp:setting
+                    id="action_bars"
+                    label="<__trans phrase="Actions">"
+                    label_class="display-options">
+                    <ul class="action-button-options">
+                        <li><label><input type="radio" name="bar_position" id="bar_position_top" value="Top"<mt:unless name="position_actions_both"><mt:if name="position_actions_top"> checked="checked"</mt:if></mt:unless> onclick="setBarPosition(this)" class="rb" /> <__trans phrase="Top"></label></li>
+                        <li><label><input type="radio" name="bar_position" id="bar_position_both" value="Both"<mt:if name="position_actions_both"> checked="checked"</mt:if> onclick="setBarPosition(this)" class="rb" /> <__trans phrase="Both"></label></li>
+                        <li><label><input type="radio" name="bar_position" id="bar_position_bottom" value="Bottom"<mt:unless name="position_actions_both"><mt:if name="position_actions_bottom"> checked="checked"</mt:if></mt:unless> onclick="setBarPosition(this)" class="rb" /> <__trans phrase="Bottom"></label></li>
+                    </ul>
+                </mtapp:setting>
+                <mtapp:setting
+                    id="reset_display_options"
+                    label="<__trans phrase="Reset display options">"
+                    label_class="display-options"
+                    show_label="0">
+                    <a href="javascript:void(0)" id="reset-display-options" title="<__trans phrase="Reset display options to blog defaults">" ><__trans phrase="Reset defaults"></a>
+                </mtapp:setting>
+            <div class="actions-bar display-options-actions-bar buttons">
+                <div class="actions-bar-inner">
+                    <a href="javascript:void(0)"
+                        id="save-field-options"
+                        mt:command="close-flyout"
+                        title="<__trans phrase="Save display options">"
+                        ><__trans phrase="OK"></a>
+                    <a href="javascript:void(0)"
+                        onclick="restoreBarPosition();"
+                        mt:command="close-flyout"
+                        title="<__trans phrase="Close display options">"
+                        ><__trans phrase="Cancel"></a>
+                </div>
+            </div>
+        </form>
+    </mtapp:widget>
+</mt:setvarblock>
 <mt:unless name="new_object">
     <mt:setvarblock name="object_nav">
         <ul class="object-nav">
@@ -1160,7 +1012,7 @@ function listPreviousPings () {
                         <!-- text filters -->
                         <div id="field-convert_breaks">
                             <__trans phrase="Format:">
-                            <select name="convert_breaks" id="convert_breaks" onchange="changedTextFormat(this)">
+                            <select name="convert_breaks" id="convert_breaks">
                 <mt:loop name="text_filters">
                                 <option value="<$mt:var name="filter_key"$>"<mt:if name="filter_selected"> selected="selected"</mt:if>><$mt:var name="filter_label" escape="html"$></option>
                 </mt:loop>

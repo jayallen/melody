@@ -1,133 +1,25 @@
 <mt:setvarblock name="page_title"><__trans phrase="Manage Categories"></mt:setvarblock>
-<mt:setvarblock name="html_head" append="1">
+
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/list_category.js"></script>
 <script type="text/javascript">
 /* <![CDATA[ */
-// build array of each category's id and the header id
+var object_type = '<mt:var name="object_type">';
 var categoryRows = new Array('0'<mt:loop name="category_loop">,'<mt:var name="category_id">'</mt:loop>);
-
-function submitMoveMode() {
-    var f = getByID('category-listing-form');
-    f['__mode'].value = 'save_cat';
-    f.submit();
-}
-function setCreateMode (id) {
-    DOM.addClassName(getByID('create-new-link'), 'hidden');
-    var f = getByID('category-listing-form');
-    f['__mode'].value = 'save_cat';
-    if (getByID('msg-block')) {
-        getByID('msg-block').style.display = 'none'; // hide any messaging 
-    }
-    if (document.all) {
-        getByID('create-' + id).style.display = 'block'; // show subcategory creation row
-    } else {
-        getByID('create-' + id).style.display = 'table-row';
-    }
-    // reset any fields that might be set from a previous failed attempt.
-    for (var i = 0; i < categoryRows.length; i++) {
-        getByID('category-new-parent-' + categoryRows[i]).value = '';
-        if (categoryRows[i] != id) {
-            el = getByID('create-' + categoryRows[i]);
-            if (el.style.display != 'none') el.style.display = 'none';
-        }
-    }
-    if (document.forms['category-listing-form'].move_cat_id)
-        document.forms['category-listing-form'].move_cat_id.value = '0';
-
-    getByID('category-new-parent-' + id).focus();
-
-    if (getByID('action-col-head'))
-        getByID('action-col-head').style.display = 'none'; // hide header of actions column
-    if (getByID('delete-col-head'))
-        getByID('delete-col-head').style.display = 'none'; // hide header of delete column
-    for (var i = 0; i < categoryRows.length; i++) {
-        if (getByID('action-' + categoryRows[i]))
-            getByID('action-' + categoryRows[i]).style.display = 'none'; // hide actions column for category rows
-        if (getByID('delete-' + categoryRows[i]))
-            getByID('delete-' + categoryRows[i]).style.display = 'none'; // hide delete column for category rows
-    }
-    if (getByID('footer-list-actions')) {
-        getByID('footer-list-actions').style.display = 'none';
-    }
-    return false;
-}
-
-function cancelCreateMode (id) {
-    DOM.removeClassName(getByID('create-new-link'), 'hidden');
-    getByID('create-' + id).style.display = 'none'; // hide subcategory creation row
-    if (document.all) {
-        if (getByID('action-col-head'))
-            getByID('action-col-head').style.display = 'block'; // show header of actions column
-        if (getByID('delete-col-head'))
-            getByID('delete-col-head').style.display = 'block'; // show header of delete column
-    } else {
-        if (getByID('action-col-head'))
-            getByID('action-col-head').style.display = 'table-cell';
-        if (getByID('delete-col-head'))
-            getByID('delete-col-head').style.display = 'table-cell';
-    }
-    for (var i = 0; i < categoryRows.length; i++) {
-        if (document.all) {
-            if (getByID('action-' + categoryRows[i]))
-                getByID('action-' + categoryRows[i]).style.display = 'block'; // show actions column for category rows
-            if (getByID('delete-' + categoryRows[i]))
-                getByID('delete-' + categoryRows[i]).style.display = 'block'; // show delete column for category rows
-        } else {
-            if (getByID('action-' + categoryRows[i]))
-                getByID('action-' + categoryRows[i]).style.display = 'table-cell';
-            if (getByID('delete-' + categoryRows[i]))
-                getByID('delete-' + categoryRows[i]).style.display = 'table-cell';
-        }
-    }
-    if (getByID('footer-list-actions')) {
-        getByID('footer-list-actions').style.display = 'block';
-    }
-}
-
-function setMoveMode (id) {
-    var f = getByID('category-listing-form');
-    f['__mode'].value = 'save_cat';
-    if (getByID('msg-block')) {
-        getByID('msg-block').style.display = 'none'; // hide any messaging 
-    }
-    DOM.addClassName( getByID('category-' + id), "selected" );
-    getByID('move-radio-' + id).style.display = 'none'; // hide radio button of selected row
-    if (document.all) {
-        getByID('move-col-head').style.display = 'block'; // show header of radio button column
-        getByID('move-0').style.display = 'block'; // show top level row
-    } else {
-        getByID('move-col-head').style.display = 'table-cell';
-        getByID('move-0').style.display = 'table-row';
-    }
-    getByID('action-col-head').style.display = 'none'; // hide header of actions column
-    getByID('delete-col-head').style.display = 'none'; // hide header of delete column
-        if (getByID('footer-list-actions')) {
-            getByID('footer-list-actions').style.display = 'none';
-        }
-    document.forms['category-listing-form'].move_cat_id.value = id;
-    for (var i = 0; i < categoryRows.length; i++) {
-        if (document.all) {
-            getByID('move-col-' + categoryRows[i]).style.display = 'block'; // show radio buttons for category rows
-        } else {
-            getByID('move-col-' + categoryRows[i]).style.display = 'table-cell';
-        }
-        getByID('action-' + categoryRows[i]).style.display = 'none'; // hide actions column for category rows
-        getByID('delete-' + categoryRows[i]).style.display = 'none'; // hide delete column for category rows
-    }
-    return false;
-}
-
-var tableSelect;
-function init()
-{
+jQuery(document).ready( function($) {
+   $('.listing-filter').listfilter('setfilter','<mt:var name="filter" escape="js" default="none">','<mt:var name="filter_val" escape="js">');
     // setup
-    tableSelect = new TC.TableSelect( "category-listing-table" );
-    tableSelect.rowSelect = true;
-}
-
-TC.attachLoadEvent( init );
+});
 /* ]]> */
 </script>
+</mt:setvarblock> <mt:ignore>End of mt:setvarblock name="js_include" append="1" </mt:ignore>
+
+<mt:setvarblock name="html_body_footer" append="1">
+<div id="create-category">
+Hello!
+</div>
 </mt:setvarblock>
+
 <mt:setvarblock name="system_msg">
     <div id="msg-block">
         <mt:if name="saved">
@@ -161,9 +53,9 @@ TC.attachLoadEvent( init );
 </mt:setvarblock>
 <mt:var name="position_actions_top" value="1">
 <mt:setvarblock name="content_header">
-    <p id="create-new-link"><a href="javascript:void(0)" onclick="return setCreateMode(0)" class="icon-left icon-create"><__trans phrase="Create top level category"></a></p>
+    <p id="create-new-link"><a href="javascript:void(0)" class="icon-left icon-create"><__trans phrase="Create top level category"></a></p>
 </mt:setvarblock>
-<mt:include name="include/header.tmpl">
+<mt:include name="include/header.tmpl" listing_screen="1">
 
 <mtapp:listing
     hide_pager="1">
@@ -180,6 +72,7 @@ TC.attachLoadEvent( init );
         </thead>
         <tbody>
     </mt:if>
+<mt:ignore>
             <tr class="create-row create-inline" id="create-0">
                 <td class="move-col" colspan="2">&nbsp;</td>
                 <td colspan="4">
@@ -211,7 +104,6 @@ TC.attachLoadEvent( init );
                         </span> 
                     </mtapp:setting>
             </tr>
-
             <tr class="move-row" id="move-0">
                 <td id="delete-0">&nbsp;</td>
                 <td class="move-col" id="move-col-0"><input type="radio" name="move-radio" id="move-radio-0" value="0" onclick="submitMoveMode()" /></td>
@@ -220,6 +112,7 @@ TC.attachLoadEvent( init );
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
             </tr>
+</mt:ignore>
 
             <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if>" id="category-<mt:var name="category_id">">
                 <td class="cb" id="delete-<mt:var name="category_id">"><input type="checkbox" name="id" value="<mt:var name="category_id">" class="select" /></td>
@@ -262,7 +155,7 @@ TC.attachLoadEvent( init );
 
                 </td>
             </tr>
-
+<mt:ignore>
             <tr class="create-row create-inline" id="create-<mt:var name="category_id">">
                 <td class="move-col" colspan="2">&nbsp;</td>
                 <td colspan="4" style="padding-left: 15px;">
@@ -294,6 +187,7 @@ TC.attachLoadEvent( init );
                         </mtapp:setting>
                     </div></td>
             </tr>
+</mt:ignore>
     <mt:if __last__>
         </tbody>
     </mt:if>

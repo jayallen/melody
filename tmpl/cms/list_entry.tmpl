@@ -65,35 +65,25 @@
     <$mtapp:PageActions from="$mode"$>
 </mt:setvarblock>
 <mt:setvarblock name="html_body_footer" append="1">
-    <mt:include name="include/dialogs/quicklook.tmpl">
+    <$mt:include name="include/dialogs/quicklook.tmpl"$>
     <$mt:include name="include/display_options.tmpl"$>
 </mt:setvarblock>
 </mt:unless>
 
 <mt:setvarblock name="html_head" append="1">
 <link rel="stylesheet" href="<mt:var name="static_uri">css/melody.dialog.css" type="text/css">
-<mt:ignore>----- No longer needed because we load jquery.ui.all.css in header
-    <link rel="stylesheet" href="<mt:var name="static_uri">css/jquery/jquery.ui.core.css" type="text/css">
-    <link rel="stylesheet" href="<mt:var name="static_uri">css/jquery/jquery.ui.dialog.css" type="text/css">
-</mt:Ignore>
 <link rel="stylesheet" href="<mt:var name="static_uri">css/melody-quicklook.css" type="text/css">
 </mt:setvarblock>
 
-
 <mt:setvarblock name="js_include" append="1">
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/list_entry.js"></script>
 <script type="text/javascript" src="<mt:var name="static_uri">jquery/jquery.qtip-1.0.min.js"></script>
-<script type="text/javascript" src="<mt:var name="static_uri">js/melody/list_entry.js"></script>
 <script type="text/javascript">
 /* <![CDATA[ */
-var tableSelect;
 var object_type = '<mt:var name="object_type">';
 jQuery(document).ready( function($) {
    $('.listing-filter').listfilter('setfilter','<mt:var name="filter" escape="js" default="none">','<mt:var name="filter_val" escape="js">');
-<mt:unless name="is_power_edit">
     // setup
-    tableSelect = new TC.TableSelect( "<mt:var name="object_type">-listing-table" );
-    tableSelect.rowSelect = true;
-</mt:unless>
 });
 /* ]]> */
 </script>
@@ -220,7 +210,7 @@ jQuery(document).ready( function($) {
 </mt:unless>
 </mt:setvarblock>
 
-<$mt:include name="include/header.tmpl"$>
+<$mt:include name="include/header.tmpl" listing_screen="1"$>
 <$mt:var name="list_filter_form"$>
 <$mt:include name="include/entry_table.tmpl"$>
 <$mt:include name="include/footer.tmpl"$>

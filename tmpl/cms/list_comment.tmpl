@@ -91,16 +91,14 @@
 <mt:setvarblock name="js_include" append="1">
 <script type="text/javascript">
 /* <![CDATA[ */
-var tableSelect;
+var object_type = '<mt:var name="object_type">';
 jQuery(document).ready( function($) {
-	// setup
-	tableSelect = new TC.TableSelect( "comment-listing-table" );
-	tableSelect.rowSelect = true;
-    $('.listing-filter').listfilter('setfilter','<mt:var name="filter" escape="js" default="none">','<mt:var name="filter_val" escape="js">');
+   $('.listing-filter').listfilter('setfilter','<mt:var name="filter" escape="js" default="none">','<mt:var name="filter_val" escape="js">');
 });
 /* ]]> */
 </script>
-</mt:setvarblock>
+</mt:setvarblock> <mt:ignore>End of mt:setvarblock name="js_include" append="1" </mt:ignore>
+
 <mt:setvarblock name="list_filter_form">
 <form id="filter-form" method="get" action="<mt:var name="mt_url">">
     <input type="hidden" name="__mode" value="list_<$mt:var name="object_type"$>" />
@@ -158,7 +156,7 @@ jQuery(document).ready( function($) {
 </div>
 </mt:setvarblock>
 
-<mt:include name="include/header.tmpl">
+<mt:include name="include/header.tmpl" listing_screen="1">
 <$mt:var name="list_filter_form"$>
 <mt:include name="include/comment_table.tmpl">
 <mt:include name="include/footer.tmpl">
