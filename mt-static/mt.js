@@ -11,6 +11,8 @@ var CMSScriptURI;
 var ScriptURI;
 var ScriptBaseURI;
 var StaticURI;
+var PluginStaticURI;
+var BlogId;
 var HelpBaseURI;
 var Lexicon = {};
 var itemset_options = {};
