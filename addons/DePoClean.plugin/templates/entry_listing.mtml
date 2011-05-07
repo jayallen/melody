@@ -43,15 +43,9 @@
 	<div class="post">
 		<h2 style="font-weight:normal">Posts from <strong><$mt:ArchiveTitle escape="html"$></strong></h2>
 	</div>
-	
-	<mt:If name="search_results">
-		<$mt:var name="isSearch" value="1"$>
-	<mt:Else>
-		<$mt:var name="isSearch" value="0"$>
-	</mt:If>
 
 <$mt:Date format="%Y$%m%d" setvar="today"$>
-<mt:Entries limit="$entries_per_page" search_results="$isSearch">
+<mt:Entries limit="$entries_per_page" search_results="$search_results">
         <$mt:EntryDate format="%Y%M%d" setvar="this_entry"$>
         <mt:If name="today" gt="$this_entry">
                 <mt:SetVarBlock name="cache_key">Listing;EntryDetails;<$mt:EntryID$></mt:SetVarBlock>
