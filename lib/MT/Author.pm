@@ -49,6 +49,7 @@ __PACKAGE__->install_properties( {
            'password_reset'           => 'string meta',
            'password_reset_expires'   => 'string meta',
            'password_reset_return_to' => 'string meta',
+           'list_prefs'               => 'hash meta',
        },
        defaults => { type => 1, status => 1, },
        indexes  => {
