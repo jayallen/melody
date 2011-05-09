@@ -21,7 +21,8 @@ use MT::Placement;
 use MT::Comment;
 use MT::TBPing;
 use MT::Util qw( archive_file_for discover_tb start_end_period extract_domain
-  extract_domains weaken );
+  extract_domains weaken first_n_words remove_html encode_html trim );
+use MT::I18N qw( const );
 
 sub CATEGORY_CACHE_TIME () {604800}    ## 7 * 24 * 60 * 60 == 1 week
 
