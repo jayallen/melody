@@ -137,6 +137,11 @@ use vars qw( @EXPORT_OK %EXPORT_TAGS);
 sub ALIGN () {'none'}
 sub UNITS () {'pixels'}
 
+# This method is in place for forwards compatibility with MT5. Features
+# backported from MT5 often make use of this, so it is just easier to keep
+# a stub of it around rather than remove it from all MT5 related commits.
+sub is_blog { 1; }
+
 sub class_label {
     MT->translate("Blog");
 }
