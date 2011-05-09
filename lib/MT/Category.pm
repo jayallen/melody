@@ -43,12 +43,52 @@ __PACKAGE__->install_properties( {
      }
 );
 
+sub list_props {
+    return {
+        parent => {
+            auto  => 1,
+            label => 'Parent',
+        },
+        entry_count => {
+            base    => '__common.integer',
+            label => 'Entry count',
+            raw => sub {
+                my ( $prop, $obj ) = @_;
+                return MT->model('placement')->count({ category_id => $obj->id });
+            },
+        },
+        custom_sort => {
+            class => 'category',
+            bulk_sort => sub {
+                my ( $prop, $objs ) = @_;
+                require MT::Category;
+                require MT::Blog;
+                my $rep  = $objs->[0] or return;
+                my $blog = MT::Blog->load({ id => $rep->blog_id }, { no_class => 1 });
+                my $meta = $prop->class . '_order';
+                my $text = $blog->$meta || '';
+                my @cats = _sort_by_id_list( $text, $objs );
+                @cats = grep { ref $_ } MT::Category::_flattened_category_hierarchy( \@cats );
+                return @cats;
+            },
+        },
+    };
+}
+
 sub class_label {
     MT->translate("Category");
 }
 
 sub class_label_plural {
     MT->translate("Categories");
+}
+
+sub contents_label {
+    MT->translate("Entry");
+}
+
+sub contents_label_plural {
+    MT->translate("Entries");
 }
 
 sub basename_prefix {
