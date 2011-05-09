@@ -1147,7 +1147,8 @@ sub save {
         ## If there is a TrackBack item for this entry, but
         ## pings are now disabled, make sure that we mark the
         ## object as disabled.
-        if ( $tb = $entry->trackback ) {
+        my $tb = $entry->trackback;
+        if ( $tb && !$tb->is_disabled ) {
             $tb->is_disabled(1);
             $tb->save or return $entry->error( $tb->errstr );
         }
