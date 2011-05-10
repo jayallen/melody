@@ -398,6 +398,29 @@ sub class_label_plural {
     return MT->translate($label);
 }
 
+sub contents_label { return '' }
+
+sub contents_label_plural {
+    my $pkg = shift;
+    my $label = $pkg->contents_label
+        or return '';
+    $label =~ s/y$/ie/;
+    $label .= 's';
+    return MT->translate($label);
+}
+
+sub container_label { return '' }
+
+sub container_label_plural {
+    my $pkg = shift;
+    my $label = $pkg->container_label
+        or return '';
+    $label =~ s/y$/ie/;
+    $label .= 's';
+    return MT->translate($label);
+}
+
+
 sub class_labels {
     my $pkg       = shift;
     my @all_types = MT->models( $pkg->properties->{datasource} );
