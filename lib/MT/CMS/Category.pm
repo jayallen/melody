@@ -547,6 +547,36 @@ sub move_category {
       );
 } ## end sub move_category
 
+sub pre_load_filtered_list {
+    my ( $cb, $app, $filter, $opts, $cols ) = @_;
+    delete $opts->{limit};
+    delete $opts->{offset};
+    delete $opts->{sort_order};
+    $opts->{sort_by} = 'custom_sort';
+    @$cols = qw( id parent label entry_count );
+}
+
+sub filtered_list_param {
+    my ( $cb, $app, $param, $objs ) = @_;
+    my $type = $app->param('datasource');
+    my $meta = $type . '_order';
+    my $text = join(
+        ':',
+        $app->blog->$meta,
+        map {
+            join(
+                ':',
+                $_->id,
+                $_->parent,
+                Encode::encode_utf8($_->label),
+            )
+        }
+        sort { $a->id <=> $b->id } @$objs
+    );
+    require Digest::MD5;
+    $param->{checksum} = Digest::MD5::md5_hex( $text );
+}
+
 1;
 
 __END__
