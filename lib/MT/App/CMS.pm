@@ -1566,6 +1566,18 @@ sub init_core_callbacks {
             $pkg . 'pre_save.author'    => "${pfx}User::pre_save",
             $pkg . 'post_save.author'   => "${pfx}User::post_save",
             $pkg . 'post_delete.author' => "${pfx}User::post_delete",
+            $pkg . 'pre_load_filtered_list.member' => sub {
+                my ( $cb, $app, $filter, $opts, $cols ) = @_;
+                $filter->append_item({
+                    type => 'permission',
+                    args => {
+                        blog_id => $opts->{blog_id},
+                    },
+                });
+                if ( exists $opts->{blog_id} ) {
+                    delete $opts->{blog_id};
+                }
+            },
 
             # blog callbacks
             $pkg . 'edit.blog'                   => "${pfx}Blog::edit",
@@ -1577,6 +1589,12 @@ sub init_core_callbacks {
             $pkg . 'post_save.blog'   => "${pfx}Blog::post_save",
             $pkg . 'save_filter.blog' => "${pfx}Blog::save_filter",
             $pkg . 'post_delete.blog' => "${pfx}Blog::post_delete",
+            $pkg . 'pre_load_filtered_list.blog' => sub {
+                my ( $cb, $app, $filter, $opts, $cols ) = @_;
+                if ( exists $opts->{blog_id} ) {
+                    $opts->{parent_id} = delete $opts->{blog_id};
+                }
+            },
 
             # folder callbacks
             $pkg . 'edit.folder' => "${pfx}Folder::edit",
@@ -1607,6 +1625,14 @@ sub init_core_callbacks {
             $pkg . 'post_save.category'   => "${pfx}Category::post_save",
             $pkg . 'save_filter.category' => "${pfx}Category::save_filter",
             $pkg . 'post_delete.category' => "${pfx}Category::post_delete",
+            $pkg . 'pre_load_filtered_list.category'
+                => "${pfx}Category::pre_load_filtered_list",
+            $pkg . 'filtered_list_param.category'
+                => "${pfx}Category::filtered_list_param",
+            $pkg . 'pre_load_filtered_list.folder'
+                => "${pfx}Category::pre_load_filtered_list",
+            $pkg . 'filtered_list_param.folder'
+                => "${pfx}Category::filtered_list_param",
 
             # comment callbacks
             $pkg . 'edit.comment' => "${pfx}Comment::edit",
@@ -1684,6 +1710,18 @@ sub init_core_callbacks {
             },
             $pkg . 'delete_permission_filter.tag' => "${pfx}Tag::can_delete",
             $pkg . 'post_delete.tag'              => "${pfx}Tag::post_delete",
+            $pkg . 'pre_load_filtered_list.tag' => sub {
+                my ( $cb, $app, $filter, $opts, $cols ) = @_;
+                if ( exists $opts->{blog_id} ) {
+                    #$filter->append_item({
+                    #    type => 'blog',
+                    #    args => {
+                    #        blog_id => $opts->{blog_id},
+                    #    },
+                    #});
+                    delete $opts->{blog_id};
+                }
+            },
 
             # junk-related callbacks
             #'HandleJunk' => \&_builtin_spam_handler,
