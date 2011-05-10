@@ -99,9 +99,27 @@
 })(jQuery);
 
 jQuery(document).ready( function($) {
+
+    // Ported over from MT5
+    // TODO - evaluate for inclusion in Melody
+    $('.button.toolbar').button();
+    $('input').each(function() {
+        $(this).addClass($(this).attr('type'));
+    });
+
     /* Filter/Listing Screen BEGIN */
     $('.listing-filter').listfilter({});
     /* Filter/Listing Screen END */
+
+    /* Status Messages BEGIN */
+    $('.mt-close-msg').live('click', function() {
+        $(this).parents('div.msg').remove();
+    });
+    /* Status Messages END */
+
+    /* Field toggles */
+    $('.fav-actions-nav, #cms-search').mtToggleField({hide_clicked: true});
+    $('.msg, .display-options').mtToggleField();
 
     /* Content Nav BEGIN */
     if ( $('.settings-screen #content-nav').length ) {
@@ -176,6 +194,9 @@ jQuery(document).ready( function($) {
         },'json').error(function() { showMsg("Error removing widget.", "widget-updated", "alert"); });
     });
     /* Dialogs */
+    // MT5's dialog open handler
+    $('a.mt-open-dialog').mtDialog();
+    // Melody's new dialog open handler
     $('.open-dialog').fancybox({
         'width'         : 660,
         'height'        : 498,
@@ -750,24 +771,6 @@ $.event.special.dialogReady = {
 
 $.fn.mtDialogReady = function(options) {
     $(window).trigger('dialogReady');
-};
-
-/*
- * mtRebuild
- *
- * Usage:
- *   jQuery('a.mt-rebuild').mtRebuild({blog_id: 1});
- *
- *   <a href="mt.cgi" class="mt-rebuild">Rebuild</a>
- *
- */
-$.fn.mtRebuild = function(options) {
-    var defaults = {};
-    var opts = $.extend(defaults, options);
-    $(this).click(function() {
-        window.open($(this).attr('href'), 'rebuild_blog_'+opts.blog_id, 'width=400,height=400,resizable=yes');
-        return false;
-    });
 };
 
 /*
