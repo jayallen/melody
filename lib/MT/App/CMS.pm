@@ -1486,8 +1486,12 @@ sub core_menus {
                            permission        => 'administer_blog',
                            system_permission => 'administer',
         },
-        'system:blog' =>
-          { label => "Blogs", mode => 'list_blogs', order => 200, },
+        'system:blog' => { 
+                           label  => "Blogs", 
+                           mode   => 'list', 
+                           args   => { _type => "blog" },
+                           order  => 200, 
+        },
         'system:template' => {
                                label             => "Global Templates",
                                mode              => 'list',
