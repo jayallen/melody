@@ -50,7 +50,7 @@ BEGIN {
 
         $PRODUCT_VERSION = $VERSION;    # The rightful resting place
         $VERSION         = '4.36';      # The true API version
-        $SCHEMA_VERSION  = '4.0078';
+        $SCHEMA_VERSION  = '4.0080';
         $PRODUCT_NAME    = 'Melody';
         $PRODUCT_CODE    = 'OM';
         $VERSION_ID      = '1.0.1';
