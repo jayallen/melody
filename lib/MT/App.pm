@@ -245,6 +245,35 @@ sub list_actions {
     return $actions;
 } ## end sub list_actions
 
+sub content_actions {
+    my $app = shift;
+    my ( $type, @param ) = @_;
+    my $actions = $app->registry( "content_actions", $type ) or return;
+    my @actions;
+    for my $key ( keys %$actions ) {
+        my $action = $actions->{$key};
+        $action->{key} = $key;
+        my %args = %{ $action->{args} || {} };
+        $args{_type} ||= $type;
+        $args{return_args} = $app->make_return_args if $action->{return_args};
+        $action->{url} = $app->uri(
+            mode => $action->{mode},
+            args => {
+                %args,
+                blog_id => ( $app->blog ? $app->blog->id : 0 ),
+                magic_token => $app->current_magic,
+            },
+        ) if $action->{mode};
+        $args{id} = $action->{id}
+            if $action->{id};
+        push @actions, $action;
+    }
+    $actions = $app->filter_conditional_list( \@actions, @param );
+    no warnings;
+    @$actions = sort { $a->{order} <=> $b->{order} } @$actions;
+    return $actions;
+}
+
 sub list_filters {
     my $app = shift;
     my ( $type, @param ) = @_;
@@ -3271,8 +3300,12 @@ sub load_list_actions {
     if ( ref($all_actions) eq 'ARRAY' ) {
         my @plugin_actions;
         my @core_actions;
+        my @button_actions;
         foreach my $a (@$all_actions) {
-            if ( $a->{core} ) {
+            if ( $a->{button} ) {
+                push @button_actions, $a;
+            }
+            elsif ( $a->{core} ) {
                 push @core_actions, $a;
             }
             else {
@@ -3281,13 +3314,27 @@ sub load_list_actions {
         }
         $param->{more_list_actions} = \@plugin_actions;
         $param->{list_actions}      = \@core_actions;
-        $param->{has_list_actions}
-          = ( @plugin_actions || @core_actions ) ? 1 : 0;
+        $param->{button_actions}    = \@button_actions;
+        $param->{all_actions}       = $all_actions;
+        $param->{has_pulldown_actions}
+            = ( @plugin_actions || @core_actions ) ? 1 : 0;
+        $param->{has_list_actions} = scalar @$all_actions;
+
     }
     my $filters = $app->list_filters( $type, @p );
     $param->{list_filters} = $filters if $filters;
     return $param;
 } ## end sub load_list_actions
+
+sub load_content_actions {
+    my $app = shift;
+    my ( $type, $param, @p ) = @_;
+    my $all_actions = $app->content_actions( $type, @p );
+    if ( ref($all_actions) eq 'ARRAY' ) {
+        $param->{content_actions} = $all_actions;
+    }
+    return $param;
+}
 
 sub current_magic {
     my $app  = shift;
