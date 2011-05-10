@@ -1834,7 +1834,7 @@ sub _hdlr_app_listing {
       :                              ' compact';
 
     my $table = <<TABLE;
-        <table id="$id-table" class="$id-table$view" cellspacing="0">
+        <table id="$id-table" class="unit size1of1 listing $listing_class $id-table$view" cellspacing="0">
 $insides
         </table>
 TABLE
@@ -1842,7 +1842,7 @@ TABLE
     if ($show_actions) {
         local $ctx->{__stash}{vars}{__contents__} = $table;
         return $ctx->build(<<EOT);
-<div id="$id" class="listing $listing_class">
+<div id="$id" class="$listing_class line">
     <div class="listing-header">
         $listing_header
     </div>
