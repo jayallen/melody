@@ -50,6 +50,14 @@ sub core_methods {
         'edit'           => "${pkg}Common::edit",
         'view'           => "${pkg}Common::edit",
         'list'           => "${pkg}Common::list",
+        'filtered_list'  => {
+            code => "${pkg}Common::filtered_list",
+            app_mode => 'JSON',
+        },
+        'save_list_prefs' => {
+            code     => "${pkg}Common::save_list_prefs",
+            app_mode => 'JSON',
+        },
         'delete'         => "${pkg}Common::delete",
         'search_replace' => "${pkg}Search::search_replace",
         'list_revision'  => "${pkg}Common::list_revision",
