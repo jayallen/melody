@@ -1,0 +1,98 @@
+<mt:setvarblock name="system_msg" append="1">
+<mt:if name="request.error">
+  <mtapp:statusmsg
+     id="generic-error"
+     class="error"
+     can_close="0">
+    <mt:var name="error">
+  </mtapp:statusmsg>
+</mt:if>
+<mt:if name="request.saved">
+  <mtapp:statusmsg
+     id="saved"
+     class="success">
+    <__trans phrase="You have added [_1] to your list of banned IP addresses." params="<mt:var name="saved" escape="html" escape="html">">
+  </mtapp:statusmsg>
+</mt:if>
+<mt:if name="request.saved_deleted">
+  <mtapp:statusmsg
+     id="saved-deleted"
+     class="success">
+    <__trans phrase="You have successfully deleted the selected IP addresses from the list.">
+  </mtapp:statusmsg>
+</mt:if>
+</mt:setvarblock>
+
+<mt:setvarblock name="content_header" append="1">
+<mt:setvar name="ip_info" value="1">
+<form id="create-inline-ipban" class="create-inline" style="display: none;">
+    <mtapp:setting
+       id="ip-address"
+       label="<__trans phrase="IP Address">"
+       label_class="inline">
+      <input type="text" name="ip-address" id="ip-address" class="text med ipaddress" value="<mt:var name="ip" escape="html">" />
+      <button
+         type="submit"
+         id="submit-ipban"
+         class="add button">
+        <__trans phrase="Add">
+      </button>
+      <button
+         type="button"
+         class="cancel button mt-cancel-action">
+        <__trans phrase="Cancel">
+      </button>
+    </mtapp:setting>
+</form>
+</mt:setvarblock>
+
+<mt:setvarblock name="jq_js_include" append="1">
+
+    jQuery.mtValidateRules['.ipaddress'] = function( $e ){
+        return /^(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])$/.test($e.val()) };
+    jQuery.mtValidateMessages['.ipaddress'] = '<__trans phrase="Invalid IP address.">';
+
+    function openCreateMode () {
+        jQuery('#content-actions').hide();
+        jQuery('#create-inline-ipban').show();
+        jQuery('#actions-bar-top').hide();
+        jQuery('#ip-address').mtUnvalidate().val('').focus();
+    }
+
+    function closeCreateMode () {
+        jQuery('#content-actions').show();
+        jQuery('#create-inline-ipban').hide();
+        jQuery('#actions-bar-top').show();
+        current_edit = 0;
+    }
+
+    jQuery('#create-inline-ipban').submit(function() {
+        // If input has focus, jQuery.wrap() throws exception...
+        // Change focus before validate.
+        jQuery('#submit-ipban').focus();
+        if ( !jQuery('#ip-address').mtValidate() ) {
+            jQuery('#ip-address').focus();
+            return false;
+        }
+        renderList({
+            __mode: 'save',
+            _type: 'banlist',
+            ip: jQuery('#ip-address').val(),
+            forward_list: 1,
+            magic_token: 1
+        });
+        closeCreateMode();
+        return false;
+    });
+
+    jQuery('#create-inline-ipban button.mt-cancel-action').click(function() {
+        jQuery('#ip-address').mtUnvalidate();
+        closeCreateMode();
+        return false;
+    });
+
+    jQuery('#action-ban-ip').click( function() {
+        openCreateMode();
+        return false;
+    });
+</mt:setvarblock>
