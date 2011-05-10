@@ -1051,7 +1051,7 @@ BEGIN {
         listing_screens => {
             blog => {
                 object_label     => 'Blog',
-                view             => [qw( system )],
+                view             => 'system',
                 primary          => 'name',
                 default_sort_key => 'name',
                 scope_mode       => 'none',

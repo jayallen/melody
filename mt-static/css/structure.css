@@ -2994,7 +2994,7 @@ td.output-file ul li {
 .system .pagination a,
 .system .pagination a:hover,
 .system .pagination span {
-    background-image: url('../images/pagination-system-m.gif');
+/*    background-image: url('../images/pagination-system-m.gif'); */
 }
 .pagination span.current-rows {
     width: auto;

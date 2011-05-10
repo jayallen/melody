@@ -593,11 +593,8 @@ sub list {
     my $app  = shift;
     my $q    = $app->query;
     my $type = $q->param('_type');
-    my $scope =
-        $app->blog                            ? 'blog'
-      : defined $app->query->param('blog_id') ? 'system'
-      :                                         'user';
     my $blog_id = $app->blog ? $app->blog->id : 0;
+    my $scope = $app->blog ? 'blog' : !$blog_id ? 'system' : 'user';
     my $list_mode = 'list_' . $type;
     if ( my $hdlrs = $app->handlers_for_mode($list_mode) ) {
         return $app->forward($list_mode);
