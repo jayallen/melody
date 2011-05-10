@@ -84,6 +84,7 @@
 
 <mt:setvarblock name="js_include" prepend="1">
     <mt:var name="linked_script" relpath="mt.js">
+    <mt:var name="linked_script" relpath="jquery.mt.js">
     <mt:if name="local_lang_id" ne="en-us">
         <mt:setvarblock name="relpath">mt_<mt:var name="local_lang_id">.js</mt:setvarblock>
         <mt:var name="linked_script" relpath="$relpath">
