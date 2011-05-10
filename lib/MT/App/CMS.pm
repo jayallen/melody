@@ -68,20 +68,17 @@ sub core_methods {
         'edit_widget' => "${pkg}Template::edit_widget",
 
         ## Listing methods
-        'list_ping'        => "${pkg}TrackBack::list",
-        'list_entry'       => "${pkg}Entry::list",
         'list_template'    => "${pkg}Template::list",
         'list_widget'      => "${pkg}Template::list_widget",
-        'list_page'        => "${pkg}Page::list",
-        'list_comment'     => "${pkg}Comment::list",
-        'list_member'      => "${pkg}User::list_member",
-        'list_user'        => "${pkg}User::list",
-        'list_author'      => "${pkg}User::list",
         'list_commenter'   => "${pkg}Comment::list_commenter",
-        'list_asset'       => "${pkg}Asset::list",
-        'list_blog'        => "${pkg}Blog::list",
-        'list_category'    => "${pkg}Category::list",
-        'list_tag'         => "${pkg}Tag::list",
+        'list_asset'       => {
+            code => "${pkg}Asset::dialog_list_asset",
+            condition => sub {
+                my $app = shift;
+                return 0 unless $app->param('dialog_view');
+                return 1;
+            }
+        },
         'list_association' => "${pkg}User::list_association",
         'list_role'        => "${pkg}User::list_role",
         'list_plugin'      => "${pkg}Plugin::list_plugins",
@@ -106,11 +103,13 @@ sub core_methods {
         'save_entry'   => "${pkg}Entry::save",
         'save_role'    => "${pkg}User::save_role",
         'save_widget'  => "${pkg}Template::save_widget",
+        'save_filter'  => "${pkg}Filter::save",
         'save_blog'    => "${pkg}Blog::save",
 
         ## Delete
         'delete_entry'  => "${pkg}Entry::delete",
         'delete_widget' => "${pkg}Template::delete_widget",
+        'delete_filter' => "${pkg}Filter::delete",
 
         ## List actions
         'enable_object'  => "${pkg}User::enable",
@@ -147,7 +146,6 @@ sub core_methods {
 
         'view_rpt_log'         => "${pkg}RptLog::view",
         'view_log'             => "${pkg}Log::view",
-        'list_log'             => "${pkg}Log::view",
         'reset_rpt_log'        => "${pkg}RptLog::reset",
         'reset_log'            => "${pkg}Log::reset",
         'export_log'           => "${pkg}Log::export",
@@ -226,6 +224,7 @@ sub core_methods {
         'dialog_select_sysadmin' => "${pkg}User::dialog_select_sysadmin",
         'dialog_grant_role'      => "${pkg}User::dialog_grant_role",
         'dialog_select_author'   => "${pkg}User::dialog_select_author",
+        'dialog_list_asset'      => "${pkg}Asset::dialog_list_asset",
 
         ## AJAX handlers
         'delete_map'        => "${pkg}Template::delete_map",
