@@ -1916,7 +1916,7 @@ fieldset h3 {
 
 .pkg .actions-bar-top, 
 .pkg .actions-bar-bottom { 
-    display: none;
+/*    display: none; */
 }
 .listing-screen .actions-bar-top, 
 .listing-screen .actions-bar-bottom { 
@@ -2989,9 +2989,7 @@ td.output-file ul li {
 .pagination span {
     float: left;
     display: block;
-    width: 12px;
     text-decoration: none;
-    background: url('../images/pagination-m.gif') no-repeat left center;
 }
 .system .pagination a,
 .system .pagination a:hover,
@@ -3004,6 +3002,7 @@ td.output-file ul li {
     background: none;
 }
 
+/*
 .pagination .start              { background-position:    0px center; }
 .pagination .start-disabled     { background-position:  -40px center; }
 .pagination a.start:hover       { background-position:  -80px center; }
@@ -3016,7 +3015,7 @@ td.output-file ul li {
 .pagination .end                { background-position: -140px center; }
 .pagination .end-disabled       { background-position: -180px center; }
 .pagination a.end:hover         { background-position: -220px center; }
-
+*/
 
 /* filter */
 

@@ -1149,6 +1149,31 @@ sub user {
     return $app->{author};
 }
 
+sub can_do {
+    my $app = shift;
+    my ( $action, $perms ) = @_;
+    my $user = $app->user
+        or die $app->error(
+        $app->translate('Internal Error: Login user is not initialized.') );
+
+    ##TODO: is this always good behavior?
+    return 1 if $user->is_superuser;
+
+    if ( $perms ||= $app->permissions ) {
+        my $blog_result = $perms->can_do($action);
+        return $blog_result if defined $blog_result;
+    }
+    ## if there were no result from blog permission,
+    ## look for system level permission.
+    my $sys_perms = MT::Permission->load(
+        {   author_id => $user->id,
+            blog_id   => 0,
+        }
+    );
+
+    return $sys_perms ? $sys_perms->can_do($action) : undef;
+}
+
 sub permissions {
     my $app = shift;
     $app->{perms} = shift if @_;
