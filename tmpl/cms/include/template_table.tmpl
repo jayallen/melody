@@ -85,10 +85,10 @@
         <tbody>
     </mt:if>
             <tr class="<mt:if name="__odd__">odd<mt:else>even</mt:if> template-<$mt:var name="template_type" default="template" escape="html"$>">
-                <td class="cb"><input type="checkbox" name="id" class="select" value="<mt:var name="id">" /></td>
-                <td class="template-name"><a href="<mt:var name="script_url">?__mode=view&amp;_type=template&amp;id=<mt:var name="id">&amp;blog_id=<mt:var name="blog_id">"><mt:var name="name" escape="html"></a></td>
+                <td class="col cb"><input type="checkbox" name="id" class="select" value="<mt:var name="id">" /></td>
+                <td class="col template-name"><a href="<mt:var name="script_url">?__mode=view&amp;_type=template&amp;id=<mt:var name="id">&amp;blog_id=<mt:var name="blog_id">"><mt:var name="name" escape="html"></a></td>
     <mt:if name="template_type" like="/(index|archive)/">
-                <td class="output-file">
+                <td class="col output-file">
         <mt:if name="outfile">
             <mt:var name="outfile" escape="html"> <mt:if name="published_url"><a href="<mt:var name="published_url">" target="<__trans phrase="_external_link_target">" title="<__trans phrase="View Published Template">"><img src="<mt:var name="static_uri">images/status_icons/view.gif" alt="<__trans phrase="View Published Template">" width="13" height="9" /></a></mt:if>
         <mt:else name="template_type" eq="archive">
@@ -117,7 +117,7 @@
                     <mt:else><__trans phrase="Static"></mt:if>
                 </td>
     <mt:else name="template_type" eq="archive">
-                <td class="publishing-method">
+                <td class="col publishing-method">
                     <ul>
             <mt:loop name="archive_types">
                 <mt:loop name="archive_tmpl_loop">
