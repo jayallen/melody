@@ -1256,20 +1256,23 @@ sub core_menus {
 
         'manage:blog' => {
                            label => "Blogs",
-                           mode  => "list_blog",
+                           mode  => "list",
+                           args => { _type => "blog" },
                            order => 100,
                            view  => "system",
         },
         'manage:user' => {
                            label      => "Users",
-                           mode       => "list_user",
+                           mode       => "list",
+                           args => { _type => "author" },
                            order      => 200,
                            permission => "administer",
                            view       => "system",
         },
         'manage:entry' => {
             label     => "Entries",
-            mode      => 'list_entry',
+            mode      => 'list',
+            args => { _type => "entry" },
             order     => 1000,
             condition => sub {
                 return 1 if $app->user->is_superuser;
@@ -1298,7 +1301,8 @@ sub core_menus {
         },
         'manage:comment' => {
             label     => "Comments",
-            mode      => 'list_comment',
+            mode      => 'list',
+            args => { _type => "comment" },
             order     => 2000,
             condition => sub {
                 return 1 if $app->user->is_superuser;
@@ -1322,32 +1326,36 @@ sub core_menus {
         },
         'manage:asset' => {
                             label      => "Assets",
-                            mode       => 'list_asset',
+                            mode       => 'list',
+                            args => { _type => "asset" },
                             order      => 3000,
                             permission => 'edit_assets',
         },
         'manage:page' => {
                            label      => "Pages",
-                           mode       => 'list_pages',
+                           mode       => 'list',
+                           args => { _type => "page" },
                            order      => 4000,
                            permission => 'manage_pages',
         },
         'manage:ping' => {
                    label      => "TrackBacks",
-                   mode       => 'list_pings',
+                   mode       => 'list',
+                   args => { _type => "ping" },
                    order      => 5000,
                    permission => 'create_post,edit_all_posts,manage_feedback',
         },
         'manage:category' => {
                                label      => "Categories",
-                               mode       => 'list_cat',
+                               mode       => 'list',
+                               args       => { _type => "category" },
                                order      => 6000,
                                permission => 'edit_categories',
                                view       => "blog",
         },
         'manage:folder' => {
                              label      => "Folders",
-                             mode       => 'list_cat',
+                             mode       => 'list',
                              args       => { _type => 'folder' },
                              order      => 7000,
                              permission => 'manage_pages',
@@ -1355,14 +1363,16 @@ sub core_menus {
         },
         'manage:tag' => {
                           label             => "Tags",
-                          mode              => 'list_tag',
+                          mode              => 'list',
+                          args              => { _type => "tag" },
                           order             => 8000,
                           permission        => 'edit_tags',
                           system_permission => 'administer',
         },
         'manage:blog_user' => {
                                 label      => "Users",
-                                mode       => 'list_member',
+                                mode       => 'list',
+                                args       => { _type => "member" },
                                 order      => 9000,
                                 view       => "blog",
                                 permission => 'administer_blog,manage_users',
@@ -1470,7 +1480,8 @@ sub core_menus {
         },
         'system:user' => {
                            label             => "Users",
-                           mode              => 'list_authors',
+                           mode              => 'list',
+                           args              => { _type => "author" },
                            order             => 100,
                            permission        => 'administer_blog',
                            system_permission => 'administer',
@@ -1479,7 +1490,8 @@ sub core_menus {
           { label => "Blogs", mode => 'list_blogs', order => 200, },
         'system:template' => {
                                label             => "Global Templates",
-                               mode              => 'list_template',
+                               mode              => 'list',
+                               args              => { _type => "template" },
                                order             => 250,
                                system_permission => 'edit_templates',
         },
