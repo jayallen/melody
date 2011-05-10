@@ -8,12 +8,6 @@ sub edit {
     MT::CMS::Entry::edit(@_);
 }
 
-sub list {
-    my $app = shift;
-    $app->query->param( 'type', 'page' );
-    return $app->forward( 'list_entry', { type => 'page' } );
-}
-
 sub save_pages {
     my $app = shift;
     return $app->forward('save_entries');

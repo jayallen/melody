@@ -2,63 +2,6 @@ package MT::CMS::Tag;
 
 use strict;
 
-sub list {
-    my $app = shift;
-    my $q   = $app->query;
-    my %param;
-    my $filter_key = $q->param('filter_key') || 'entry';
-    my $type       = $q->param('_type')      || $filter_key;
-    my $plural;
-    $param{TagObjectType} = $type;
-    $param{Package}       = $app->model($type);
-
-    #
-    # Tell the user "Permission denied." if he is trying to access the Tag List
-    # and is not a System Administrator.
-    #
-    if ( !$app->blog && !$app->user->is_superuser ) {
-        return $app->errtrans("Permission denied.");
-    }
-
-
-    #
-    # Return the user to the dashboard and display the permission error message
-    # if he does not have the appropriate blog level permissions and isn't a
-    # System Administrator.
-    #
-    my $perms = $app->permissions;
-    if (
-         $app->blog
-         && ( !$perms
-              || ( !$perms->can_edit_tags && !$app->user->is_superuser ) )
-      )
-    {
-        $app->delete_param('blog_id');
-        return $app->return_to_dashboard( permission => 1 );
-    }
-
-    if ( $param{Package}->can('class_label_plural') ) {
-        $plural = $param{Package}->class_label_plural();
-    }
-    else {
-        if ( $type =~ m/y$/ ) {
-            $plural = $type;
-            $plural =~ s/y$/ies/;
-        }
-        else {
-            $plural = $type . 's';
-        }
-        $plural =~ s/(.*)/\u$1/;
-    }
-
-    $param{TagObjectLabelPlural} = $plural;
-    $app->model($type) or return;
-    unless ( UNIVERSAL::can( $param{Package}, 'tag_count' ) ) {
-        return $app->errtrans("Invalid type");
-    }
-    list_tag_for( $app, %param );
-} ## end sub list
-
 sub rename_tag {
     my $app = shift;
     $app->validate_magic or return;
