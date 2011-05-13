@@ -232,7 +232,8 @@ sub global_perms {
                       = 'CODE' eq ref( $perms->{$pk}{label} )
                       ? $perms->{$pk}{label}->()
                       : $perms->{$pk}{label};
-                    push @Perms, [ $name, $label || '', $scope ];
+                    my $group = $perms->{$pk}{group} || '';
+                    push @Perms, [ $name, $label || '', $scope,  $group];
                 }
                 __mk_perm($_) foreach @Perms;
             }

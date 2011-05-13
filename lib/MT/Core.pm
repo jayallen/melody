@@ -147,6 +147,38 @@ BEGIN {
             },
         },
         backup_instructions => \&load_backup_instructions,
+        permission_groups   => {
+            sys_admin => {
+                label => 'System Administration',
+                order => 100,
+                system => 1
+            },
+            blog_admin => {
+                label => 'Administration',
+                order => 100,
+                system => 0
+            },
+            auth_pub => {
+                label => 'Authoring and Publishing',
+                order => 200,
+                system => 0
+            },
+            blog_design => {
+                label => 'Designing',
+                order => 300,
+                system => 0
+            },
+            blog_upload => {
+                label => 'Assets',
+                order => 400,
+                system => 0
+            },
+            blog_comment => {
+                label => 'Commenting',
+                order => 500,
+                system => 0
+            }
+        },
         permissions         => {
             'system.administer' => {
                                      label => trans("System Administrator"),
