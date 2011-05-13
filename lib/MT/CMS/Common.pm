@@ -455,16 +455,20 @@ sub edit {
     }
 
     if ($id) {    # object exists, we're just editing it.
-         # Stash the object itself so we don't have to keep forcing the promise
-        $obj = $obj_promise->force()
-          or return
-          $app->error(
-                    $app->translate(
-                        "Load failed: [_1]",
-                        $class->errstr || $app->translate("(no reason given)")
-                    )
-          );
-
+        # Stash the object itself so we don't have to keep forcing the promise
+        $obj = $obj_promise->force();
+        unless ($obj) {
+            my $error;
+            if ($class->errstr) {
+                $error = $app->translate("Load failed: [_1]",$class->errstr);
+            } elsif ( !MT->model($type)->exist( $id ) ) {
+                $error = $app->translate("[_1] does not exist.",MT->model($type)->class_label);
+            } else {
+                $error = $app->translate( "(no reason given)");
+            }
+            return $app->error( $error );
+        }
+            
         # Populate the param hash with the object's own values
         for my $col (@$cols) {
             $param{$col}
