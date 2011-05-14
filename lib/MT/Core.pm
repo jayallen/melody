@@ -479,6 +479,9 @@ BEGIN {
                        default =>
                          'http://openmelody.org/blog/melody_news_widget.html',
             },
+            'DocNewsURL' => {
+                default => 'https://github.com/openmelody/melody/wiki.atom'
+            },
 
             # 'MTNewsURL' => {
             #     default => 'http://www.sixapart.com/movabletype/news/mt4_news_widget.html',
