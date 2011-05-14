@@ -21698,8 +21698,10 @@ the tag loops from 1 through 8.
 
 The page number is set to __value__ standard variable in each iteration. 
 
-The tag also sets __odd__, __even__, __first__, __last__ and __counter__
-standard variables. 
+The tag sets __odd__, __even__, __first__, __last__ and __counter__
+standard variables. It also sets __current__ and __end__. __current__ is
+an alias for the current page the user is viewing. __end__ is the number
+of the last page in the block.
 
 B<Example:>
 
@@ -21740,6 +21742,9 @@ sub _hdlr_pager_block {
         local $vars->{__even__}    = ( $i % 2 ) == 0;
         local $vars->{__counter__} = $i;
         local $vars->{__value__}   = $i;
+        local $vars->{__end__} = $pages;
+        local $vars->{__current__} =  $limit ? $offset / $limit + 1 : 1 ;
+
         defined(
                my $out =
                  $build->build(
