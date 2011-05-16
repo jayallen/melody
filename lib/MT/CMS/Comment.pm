@@ -976,7 +976,7 @@ sub handle_junk {
                 $app->return_args($return_args);
             } ## end if ( my $obj = $class->load...)
             else {
-                return $app->errtrans("Invalid request.");
+                return $app->error( $app->translate("[_1] does not exist.",MT->model($type)->class_label) );
             }
         } ## end if ( scalar @obj_ids ==...)
         else {
@@ -1563,7 +1563,7 @@ sub set_item_visible
                 $app->return_args($return_args);
             } ## end if ( my $obj = $class->load...)
             else {
-                return $app->errtrans("Invalid request.");
+                return $app->error( $app->translate("[_1] does not exist.",MT->model($type)->class_label) );
             }
         } ## end if ( scalar @obj_ids ==...)
         else {
