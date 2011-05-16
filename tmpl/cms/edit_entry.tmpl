@@ -1,7 +1,6 @@
 <mt:ignore><!-- FIXME: proper handling of show/hide this widget below --></mt:ignore>
 <mt:setvar name="edit_screen" value="1">
 <$mt:setvar name="show_display_options_link" value="1"$>
-
 <mt:setvarblock name="display_options">
 <div id="display-options-detail" class="unit size1of1 display-options-detail detail">
         <form id="display-options-form" method="post" action="<mt:var name="script_url">">
@@ -861,65 +860,6 @@ function listPreviousPings () {
     </mt:if>
 </mt:setvarblock>
 
-        <form name="display-options-form" method="post" action="<mt:var name="script_url">">
-            <input type="hidden" id="entry_prefs" name="entry_prefs" value="<mt:if name="disp_prefs_default">Default<mt:else>Custom</mt:if>">
-                <mtapp:setting
-                    id="entry_fields"
-                    label="<__trans phrase="Fields">"
-                    label_class="display-options">
-                    <ul id="entry-pref-field-list">
-                        <mt:loop name="field_loop">
-                        <mt:unless name="system_field"><mt:unless name="lock_field"><li class="dbx-box"><label class="dbx-handle"><input type="checkbox" name="custom_prefs" id="custom-prefs-<$mt:var name="field_id" escape="html"$>" value="<$mt:var name="field_name" escape="html"$>" onclick="setCustomFields(); return true" <mt:if name="lock_field"><mt:if name="show_field"> checked="checked"</mt:if> disabled="disabled"<mt:elseif name="show_field"> checked="checked"</mt:if> class="cb" /> <$mt:var name="field_label" escape="html"$></label></li><mt:else><li<mt:if name="use_field"> class="dbx-box"</mt:if>><label<mt:if name="use_field"> class="dbx-handle"</mt:if>><input type="checkbox" name="custom_prefs" id="custom-prefs-<$mt:var name="field_id" escape="html"$>" value="<$mt:var name="field_name" escape="html"$>" onclick="setCustomFields(); return true" <mt:if name="lock_field"><mt:if name="show_field"> checked="checked"</mt:if> disabled="disabled"<mt:elseif name="show_field"> checked="checked"</mt:if> class="cb" /> <$mt:var name="field_label" escape="html"$></label></li></mt:unless></mt:unless>
-                        </mt:loop>
-                    </ul>
-                </mtapp:setting>
-                <mtapp:setting
-                    id="metadata_fields"
-                    label="<__trans phrase="Metadata">"
-                    label_class="display-options">
-                    <ul>
-                        <mt:if name="object_type" ne="page">
-                        <li><label><input type="checkbox" name="custom_prefs" id="custom-prefs-category" value="category" onclick="setCustomFields(); return true"<mt:if name="disp_prefs_show_category"> checked="checked"</mt:if> class="cb" /> <__trans phrase="Category"></label></li>
-                        </mt:if>
-                        <li><label><input type="checkbox" name="custom_prefs" id="custom-prefs-publishing" value="publishing" onclick="setCustomFields(); return true"<mt:if name="disp_prefs_show_publishing"> checked="checked"</mt:if> class="cb" /> <__trans phrase="Publishing"></label></li>
-                        <li><label><input type="checkbox" name="custom_prefs" id="custom-prefs-feedback" value="feedback" onclick="setCustomFields(); return true"<mt:if name="disp_prefs_show_feedback"> checked="checked"</mt:if> class="cb" /> <__trans phrase="Feedback"></label></li>
-                        <li><label><input type="checkbox" name="custom_prefs" id="custom-prefs-assets" value="assets" onclick="setCustomFields(); return true"<mt:if name="disp_prefs_show_assets"> checked="checked"</mt:if> class="cb" /> <__trans phrase="Assets"></label></li>
-                    </ul>
-                </mtapp:setting>
-                <mtapp:setting
-                    id="action_bars"
-                    label="<__trans phrase="Actions">"
-                    label_class="display-options">
-                    <ul class="action-button-options">
-                        <li><label><input type="radio" name="bar_position" id="bar_position_top" value="Top"<mt:unless name="position_actions_both"><mt:if name="position_actions_top"> checked="checked"</mt:if></mt:unless> onclick="setBarPosition(this)" class="rb" /> <__trans phrase="Top"></label></li>
-                        <li><label><input type="radio" name="bar_position" id="bar_position_both" value="Both"<mt:if name="position_actions_both"> checked="checked"</mt:if> onclick="setBarPosition(this)" class="rb" /> <__trans phrase="Both"></label></li>
-                        <li><label><input type="radio" name="bar_position" id="bar_position_bottom" value="Bottom"<mt:unless name="position_actions_both"><mt:if name="position_actions_bottom"> checked="checked"</mt:if></mt:unless> onclick="setBarPosition(this)" class="rb" /> <__trans phrase="Bottom"></label></li>
-                    </ul>
-                </mtapp:setting>
-                <mtapp:setting
-                    id="reset_display_options"
-                    label="<__trans phrase="Reset display options">"
-                    label_class="display-options"
-                    show_label="0">
-                    <a href="javascript:void(0)" id="reset-display-options" title="<__trans phrase="Reset display options to blog defaults">" ><__trans phrase="Reset defaults"></a>
-                </mtapp:setting>
-            <div class="actions-bar display-options-actions-bar buttons">
-                <div class="actions-bar-inner">
-                    <a href="javascript:void(0)"
-                        id="save-field-options"
-                        mt:command="close-flyout"
-                        title="<__trans phrase="Save display options">"
-                        ><__trans phrase="OK"></a>
-                    <a href="javascript:void(0)"
-                        onclick="restoreBarPosition();"
-                        mt:command="close-flyout"
-                        title="<__trans phrase="Close display options">"
-                        ><__trans phrase="Cancel"></a>
-                </div>
-            </div>
-        </form>
-    </mtapp:widget>
-</mt:setvarblock>
 <mt:unless name="new_object">
     <mt:setvarblock name="object_nav">
         <ul class="object-nav">
