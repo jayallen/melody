@@ -172,7 +172,7 @@ sub var {
         if ( lc($1) eq 'request' ) {
             my $mt = MT->instance;
             return '' unless $mt->isa('MT::App');
-            return $mt->param($2);
+            return $mt->query->param($2);
         }
         elsif ( lc($1) eq 'config' ) {
             my $setting = $2;
