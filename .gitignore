@@ -52,6 +52,7 @@ mt-static/js/mt_core_compact.js
 #####################################################
 config.cgi
 mt-static/support/
+addons/ThemeManager.plugin/static/theme_thumbs/
 #mt-static/support/dashboard
 #mt-static/support/logs
 #mt-static/support/themes
