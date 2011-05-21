@@ -27,6 +27,7 @@ __PACKAGE__->install_properties( {
            'remote_auth_token'    => 'string(50)',
            'entry_prefs'          => 'string(255)',
            'text_format'          => 'string(30)',
+           'date_format'          => 'string(30)',
            'status'               => 'integer',
            'external_id'          => 'string(255)',
 
@@ -51,7 +52,11 @@ __PACKAGE__->install_properties( {
            'password_reset_return_to' => 'string meta',
            'list_prefs'               => 'hash meta',
        },
-       defaults => { type => 1, status => 1, },
+       defaults => { 
+           type => 1, 
+           status => 1, 
+           date_format => 'relative',
+       },
        indexes  => {
             created_on     => 1,
             name           => 1,
