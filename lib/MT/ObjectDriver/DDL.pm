@@ -219,6 +219,10 @@ sub drop_index_sql {
     my ( $class, $key ) = @_;
     my $table_name = $class->table_name;
 
+# FIXME: code pulled from MT5, but causes upgrade bug in Melody
+#    my $db_index = $ddl->index_defs($class);
+#    return q() unless exists( $db_index->{$key} );
+
     my $props   = $class->properties;
     my $indexes = $props->{indexes};
     return q() unless exists( $indexes->{$key} );
