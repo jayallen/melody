@@ -369,7 +369,6 @@ sub do_list_action {
     my $app = shift;
     my $q   = $app->query;
     $app->validate_magic or return;
-    my $q    = $app->param;
     # plugin_action_selector should always (?) be in the query; use it?
     my $action_name = $q->param('action_name');
     my $type        = $q->param('_type');
