@@ -557,7 +557,9 @@ sub json_result {
 
 sub json_error {
     my $app = shift;
-    my ($error) = @_;
+    my ($error, $status) = @_;
+    $app->response_code($status)
+        if defined $status;
     $app->send_http_header("text/javascript+json");
     $app->{no_print_body} = 1;
     $app->print( MT::Util::to_json( { error => $error } ) );
@@ -2552,6 +2554,9 @@ sub show_error {
     my $mode    = $app->mode;
     my $url     = $app->uri;
     my $blog_id = $q->param('blog_id');
+    my $status  = $param->{status};
+    $app->response_code($status)
+        if defined $status;
 
     if ( ref $param ne 'HASH' ) {
 
