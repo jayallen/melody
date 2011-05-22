@@ -336,12 +336,12 @@ sub _pre_search_scope_terms_to_class {
 
     my $props = $class->properties;
     my $col = $props->{class_column} or return;
+    my $no_class = 0;
+    if ( $args->{no_class} ) {
+        delete $args->{no_class};
+        $no_class = 1;
+    }
     if ( ref $terms eq 'HASH' ) {
-        my $no_class = 0;
-        if ( $args->{no_class} ) {
-            delete $args->{no_class};
-            $no_class = 1;
-        }
         if ( exists $terms->{$col} ) {
             if ( ( $terms->{$col} eq '*' ) || $no_class ) {
 
@@ -364,24 +364,20 @@ sub _pre_search_scope_terms_to_class {
         $terms->{$col} = $props->{class_type} unless $no_class;
     } ## end if ( ref $terms eq 'HASH')
     elsif ( ref $terms eq 'ARRAY' ) {
-        if ( my @class_terms
-             = grep { ref $_ eq 'HASH' && 1 == scalar keys %$_ && $_->{$col} }
-             @$terms )
-        {
-
-            # Filter out any unlimiting class terms (class = *).
-            @$terms = grep {
-                     ref $_ ne 'HASH'
-                  || 1 != scalar keys %$_
-                  || !$_->{$col}
-                  || $_->{$col} ne '*'
-            } @$terms;
-
+        if ( my @class_terms = grep { ref $_ eq 'HASH' && exists $_->{$col} } @$terms) {
+            for my $term ( @$terms ) {
+                if ( ref $term eq 'HASH' && exists $term->{$col} && $term->{$col} eq '*' ) {
+                    delete $term->{$col};
+                }
+            }
+            # Remove empty hashrefs.
+            @$terms = grep { ref $_ ne 'HASH' || scalar keys %$_ } @$terms;
             # The class column has been explicitly given or removed, so don't
             # add one.
             return;
         }
-        @$terms = ( { $col => $props->{class_type} } => 'AND' => [@$terms] );
+        @$terms = ( { $col => $props->{class_type} } => 'AND' => [@$terms] )
+            unless $no_class;
     } ## end elsif ( ref $terms eq 'ARRAY')
 } ## end sub _pre_search_scope_terms_to_class
 
@@ -803,7 +799,6 @@ sub _get_date_translator {
     my $change     = shift;
     return sub {
         my $obj = shift;
-        my $dbd = $obj->driver->dbd;
       FIELD:
         for
           my $field ( @{ $obj->columns_of_type( 'datetime', 'timestamp' ) } )
