@@ -860,7 +860,8 @@ function renderList(mode, columns, values, limit, page ) {
         return val.match(/\./);
       }, true );
       var main_cols = {};
-      jQuery('#disp_cols input.main.checkbox:checked').each(function() {
+      jQuery('ul#disp_cols input:checked').each(function() {
+//      jQuery('#disp_cols input.main.checkbox:checked').each(function() {
         main_cols[ jQuery(this).val() ] = 1;
       });
       editable_count_in_page = 0;
@@ -880,8 +881,9 @@ function renderList(mode, columns, values, limit, page ) {
         }
         for (var col = 1, col_length = objs[row].length; col < col_length; col++) {
           var col_id = return_cols[ col - 1 ];
-          if ( main_cols[col_id] )
+          if ( main_cols[col_id] ) {
               line += '<td class="col '+col_id+' '+col_classes[col_id]+'">' + objs[row][col] + '</td>';
+          }
         }
         jQuery('<tr id="'+id+'"' + ( id ? '' : ' class="no-action"' ) + '>'+line+'</tr>').appendTo('table.listing-table tbody');
       }
