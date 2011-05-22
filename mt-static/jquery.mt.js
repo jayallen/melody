@@ -190,7 +190,7 @@ jQuery(document).ready( function($) {
 
     /* Display Options BEGIN */
     $('.display-options-link').click( function() {
-        var opts = jQuery('#display-options-widget');
+        var opts = jQuery('#display-options-detail');
         if ( opts.hasClass('active') ) opts.removeClass( 'active' );
         else opts.addClass( 'active' );
     });
