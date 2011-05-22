@@ -2847,7 +2847,11 @@ sub run {
         $body = $app->show_login
             or $body = $app->show_error( { error => $app->errstr } );
     }
-    elsif ( !defined $body ) {
+    elsif ( !defined $body 
+            && !$app->{redirect}
+            && !$app->{login_again}
+            && !$app->{no_print_body} )
+    {
         my $err = $app->errstr || $@;
         $body = $app->show_error( { error => $err } );
     }
