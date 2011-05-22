@@ -4,6 +4,24 @@
 <MTSetVarBlock name="content_nav">
     <mt:include name="include/tools_content_nav.tmpl">
 </MTSetVarBlock>
+
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript">
+var mt;
+mt = { 
+  screen: {
+    open_dialog_on_load: <mt:var name="open_dialog" escape="js" default="0">,
+    files: '<mt:var name="files" escape="url">',
+    assets: '<mt:var name="assets" escape="url">',
+    filename: '<mt:var name="filename" escape="url">',
+    last: '<mt:var name="last" escape="url">',
+    schema_version: '<mt:var name="schema_version" escape="url">'
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/backup.js"></script>
+</mt:setvarblock>
+
 <mt:include name="include/header.tmpl">
 
     <a href="javascript:void(0)" onclick="return openManual('backup_restore', 'backup_restore_main')" class="help-link">?</a>
@@ -84,19 +102,5 @@
         <mt:include name="include/actions_bar.tmpl" bar_position="bottom" hide_pager="1" settings_bar="1">
     </form>
 </div>
-
-<MTIgnore>
-    
-    <!-- THE FOLLOWING CODE NEEDS TO BE ADDED TO THE onload EVENT FOR THIS PAGE. -->
-    <!-- This edit was made to allow use of the common footer. -->
-    
-    <mt:if name="open_dialog">
-    <script type="text/javascript">
-    /* <![CDATA[ */
-    openDialog(false, 'dialog_restore_upload', 'magic_token=<mt:var name="magic_token" escape="url">&amp;files=<mt:var name="files" escape="url">&amp;assets=<mt:var name="assets" escape="url">&amp;current_file=<mt:var name="filename" escape="url">&amp;last=<mt:var name="last" escape="url">&amp;schema_version=<mt:var name="schema_version" escape="url">&amp;redirect=1;');
-    /* ]]> */
-    </script>
-    </mt:if>
-</MTIgnore>
 
 <mt:include name="include/footer.tmpl">
