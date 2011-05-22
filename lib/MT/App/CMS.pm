@@ -2529,8 +2529,12 @@ sub show_error {
     # handle legacy scalar error string signature
     $param = { error => $param } unless ref($param) eq 'HASH';
 
+    my $method_info = MT->request('method_info') || {};
     my $mode = $app->mode;
-    if ( $mode eq 'rebuild' ) {
+    if ( $method_info->{app_mode} && $method_info->{app_mode} eq 'JSON' ) {
+        return $app->json_error( $param->{error}, $param->{status} );
+    }
+    elsif ( $mode eq 'rebuild' ) {
 
         my $r = MT::Request->instance;
         if ( my $tmpl = $r->cache('build_template') ) {
