@@ -2242,7 +2242,7 @@ sub build_menus {
              : $menu->{system_permission} || $menu->{permission} )
         {
             my $allowed = 0;
-            my @p = split /,/, $p;
+            my @p = split(/,/, $p);
             foreach my $p (@p) {
                 my $perm = 'can_' . $p;
                 $allowed = 1, last if ( $perms && $perms->$perm() ) || $admin;
@@ -2296,7 +2296,7 @@ sub build_menus {
                       )
                     {
                         my $allowed = 0;
-                        my @p = split /,/, $p;
+                        my @p = split(/,/, $p);
                         foreach my $p (@p) {
                             my $perm = 'can_' . $p;
                             $allowed = 1, last
@@ -2403,15 +2403,15 @@ sub list_pref {
                        dates => $default{DateFormat} || 'relative',
         };
     }
-    my @list_prefs = split /;/, $cookie;
+    my @list_prefs = split(/;/, $cookie);
     my $new_cookie = '';
     foreach my $pref (@list_prefs) {
         my ( $name, $prefs ) = $pref =~ m/^(\w+):(.*)$/;
         next unless $name && $prefs;
         if ( $name eq $list ) {
-            my @prefs = split /,/, $prefs;
+            my @prefs = split(/,/, $prefs);
             foreach (@prefs) {
-                my ( $k, $v ) = split /=/;
+                my ( $k, $v ) = split(/=/);
                 $list_pref->{$k} = $v if exists $list_pref->{$k};
             }
         }
