@@ -2592,6 +2592,16 @@ sub show_error {
     return $app->SUPER::show_error($param);
 } ## end sub show_error
 
+sub show_login {
+    my $app   = shift;
+    my $method_info = MT->request('method_info') || {};
+    if ( $method_info->{app_mode} eq 'JSON' ) {
+        $app->{login_again} = 1;
+        return $app->show_error({ error => 'Unauthorized', status => 401 });
+    }
+    return $app->SUPER::show_login;
+}
+
 sub load_default_entry_prefs {
     my $app = shift;
     my $prefs;
