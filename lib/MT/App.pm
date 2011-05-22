@@ -2678,7 +2678,7 @@ sub run {
         $timer->pause_partial();
     }
 
-    my ($body);
+    my ($body,$meth_info);
     eval {
 
         # line __LINE__ __FILE__
@@ -2721,9 +2721,12 @@ sub run {
             my @handlers = ref($code) eq 'ARRAY' ? @$code : ($code)
               if defined $code;
 
+            $meth_info = {};
+            $app->request( method_info => {} );
             foreach my $code (@handlers) {
                 if ( ref $code eq 'HASH' ) {
-                    my $meth_info = $code;
+                    $meth_info = $code;
+                    $app->request( method_info => $meth_info );
                     $requires_login
                       = $requires_login & $meth_info->{requires_login}
                       if exists $meth_info->{requires_login};
