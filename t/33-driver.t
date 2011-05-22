@@ -94,7 +94,7 @@ sub reset_db : Test(setup) {
     }
 } ## end sub reset_db :
 
-sub count_group_by : Tests(26) {
+sub count_group_by : Tests(34) {
 
     # legacy way of specifying sort direction
     my $cgb_iter = Bar->count_group_by( { status => '0', },
@@ -151,6 +151,20 @@ sub count_group_by : Tests(26) {
     is( int($month), int( strftime( "%m", localtime ) ), 'month' );
     is( $count, 3, 'count6' );
     ok( !$cgb_iter4->(), 'no $iter' );
+
+    # Sort by count
+    my $cgb_iter5 = Bar->count_group_by(undef, {
+        group => [ 'foo_id' ],
+        sort  => 'cnt',
+    });
+    isa_ok($cgb_iter5, 'CODE');
+    ok(($count, $bfid) = $cgb_iter5->(), 'set');
+    is($bfid, 1, 'id-7');
+    is($count, 1, 'count-7');
+    ok(($count, $bfid) = $cgb_iter5->(), 'set');
+    is($bfid, 2, 'id-8');
+    is($count, 2, 'count-8');
+    ok(!$cgb_iter2->(), 'no $iter');
 } ## end sub count_group_by :
 
 sub sum_group_by : Tests(7) {
@@ -602,7 +616,7 @@ sub alias : Tests(2) {
                'No Foo has Bars with status=2 and status=0 (alias)' );
 } ## end sub alias :
 
-sub conjunctions : Tests(4) {
+sub conjunctions : Tests(5) {
     my $self = shift;
     $self->make_pc_data();
     my @foos = map { Foo->load($_) } ( 1 .. 5 );    # not a search
@@ -635,6 +649,23 @@ sub conjunctions : Tests(4) {
     # where (foo_status = 10) or (foo_name = 'Apple') or (foo_name like '%nux')
     # (selects Apple+MacBook, Apple+iBook, Microsoft+XP, Linux+Ubuntu)
     are_objects( \@res, [ @foos[ 0, 1, 3, 4 ] ], 'big -or results' );
+
+    @res = Foo->load(
+        [
+            [
+                { status => 10 },
+                -or  => { status => 12 },
+            ],
+            -and => [
+                { name => { like => '%nux' } },
+                -or => { name => 'Apple' },
+            ],
+        ]
+    );
+    @res = sort { $a->id <=> $b->id } @res;
+    # where ((foo_status = 10) or (foo_status = 12)) and ((foo_name like '%nux') or (foo_name = 'Apple'))
+    # (selects Apple+iBook, Linux+Ubuntu)
+    are_objects(\@res, [ @foos[1,4] ], 'grouping -or, -and');
 } ## end sub conjunctions :
 
 sub early_ending_iterators : Tests(4) {
