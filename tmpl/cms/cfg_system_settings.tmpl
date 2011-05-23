@@ -34,62 +34,32 @@
 <MTSetVarBlock name="content_nav">
     <mt:include name="include/cfg_system_content_nav.tmpl">
 </MTSetVarBlock>
+
+<mt:setvarblock name="js_include" append="1">
+<script src="<mt:StaticWebPath>jquery/jquery.history.js" type="text/javascript"></script>
+<script type="text/javascript">
+var mt;
+mt = { 
+  screen: {
+    trans: {
+      SELECT_BLOG: '<__trans phrase="Select blog">',
+      NO_BLOG: '<__trans phrase="(No blog selected)">',
+      VALID_SITE_ROOT: '<__trans phrase="You must set a valid Default Site Root." escape="singlequotes">',
+      VALID_DEFAULT_SITE_URL: '<__trans phrase="You must set a valid Default Site URL." escape="singlequotes">',
+      NONE_SELECTED: '<__trans phrase="(None selected)">'
+    }
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/cfg_system_settings.js"></script>
+</mt:setvarblock>
+
 <mt:include name="include/header.tmpl">
 
-<script type="text/javascript">
-/* <![CDATA[ */
-function clearWeblogCloneSource() {
-    var el_name = getByID("new_user_template_blog_name");
-    var el_id = getByID("new_user_template_blog_id");
-    if (el_name && el_id) {
-        el_id.value = "";
-        el_name.innerHTML = "<__trans phrase="(No blog selected)">";
-    }
-    var el_id_link = getByID("select-blog-link");
-    if (el_id_link) {
-        el_id_link.innerHTML = "<__trans phrase="Select blog">";
-    }
-}
-function validate (f) {
-    if (f.default_site_url.value && !is_valid_url(f.default_site_url.value)){
-        alert('<__trans phrase="You must set a valid Default Site URL." escape="singlequotes">');
-        return false;
-    } else if (f.default_site_root.value && !is_valid_path(f.default_site_root.value)) {
-        alert('<__trans phrase="You must set a valid Default Site Root." escape="singlequotes">');
-        return false;
-    }
-    return true;
-}
-function is_valid_url(url_){
-    return url_.match( /^https?:\/\/[A-Za-z0-9!$%()=_.:,;@~-]+/ );
-}
-function is_valid_path(path_){
-    for(i = 0; i < path_.length; i++){
-        var buf = escape(path_.substr(i, 1));
-        if (buf.match(/^%u.*/)){
-            return false;
-        }
-        if (buf.match(/(%.{2}){2}?/)){
-        	return false;
-        }
-    }
-    return true;
-}
-function clearNotifyUsers() {
-    var el_name = getByID("notify_user_name");
-    var el_id = getByID("notify_user_id");
-    if (el_name && el_id) {
-        el_id.value = "";
-        el_name.innerHTML = "<__trans phrase="(None selected)">";
-    }
-}
-/* ]]> */
-</script>
-
 <form action="<mt:var name="script_url">" method="post" onsubmit="return validate(this);">
-<input type="hidden" name="__mode" value="save_cfg_system" />
-<input type="hidden" name="return_args" value="<mt:var name="return_args" escape="html">" />
-<input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
+  <input type="hidden" name="__mode" value="save_cfg_system" />
+  <input type="hidden" name="return_args" value="<mt:var name="return_args" escape="html">" />
+  <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
 
   <div id="general" class="sys-preferences">
     <$mt:include name="prefs/sys_general.tmpl"$> 
