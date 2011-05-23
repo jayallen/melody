@@ -83,23 +83,23 @@
     </mt:if>
     <$MTApp:PageActions$>
 </mt:setvarblock>
-<mt:setvarblock name="html_head" append="1">
-    <script type="text/javascript">
-    /* <![CDATA[ */
-    function validate(form) {    
-        if (form.label.value.match(/\S/,''))
-            return true;
-        alert('<__trans phrase="You must specify a label for the asset." escape="singlequotes">');
-        form.label.focus();
-        return false;
+
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript">
+var tagList = <mt:var name="tags_js" default="[]"/>
+var mt;
+mt = { 
+  screen: {
+    trans: {
+      SPECIFY_LABEL: '<__trans phrase="You must specify a label for the asset." escape="singlequotes">'
     }
-    /* ]]> */
-    </script>
-    <script type="text/javascript">
-    var tagList = <mt:var name="tags_js" default="[]"/>
-    <mt:Include name="include/autocomplete_js.tmpl">
-    </script>
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/autocomplete.js"></script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/edit_asset.js"></script>
 </mt:setvarblock>
+
 <mt:include name="include/header.tmpl">
 <div id="asset" class="status-<mt:if name="file_is_missing">missing<mt:else>publish</mt:if><mt:unless name="file_is_missing"> <mt:if name="has_thumbnail">asset-thumbnail<mt:else>asset-no-thumbnail</mt:if></mt:unless>">
     <form method="post" action="<mt:var name="script_url">" onsubmit="return validate(this)">
