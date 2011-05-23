@@ -1,3 +1,12 @@
+var last_shown;
+function resetPlugin(f) 
+{
+    if (confirm(mt.screen.trans.RESET_SETTINGS)) {
+        f['__mode'].value = 'reset_plugin_config';
+        f.submit();
+    }
+}
+
 function getParameterByName( name )
 {
     name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");

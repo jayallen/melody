@@ -39,22 +39,16 @@
     </mt:if>
 </mt:setvarblock>
 
-<mt:setvarblock name="html_head" append="1">
-    <script src="<mt:StaticWebPath>jquery/jquery.history.js" type="text/javascript"></script>
-    <script src="<mt:StaticWebPath>js/melody/cfg_plugins.js" type="text/javascript"></script>
-    <script type="text/javascript">
-    /* <![CDATA[ */
-    var last_shown;
-    <mt:if name="can_config">
-    function resetPlugin(f) {
-        if (confirm("<__trans phrase="Are you sure you want to reset the settings for this plugin?" escape="js">")) {
-            f['__mode'].value = 'reset_plugin_config';
-            f.submit();
-        }
-    }
-    </mt:if>
-    /* ]]> */
-    </script>
+<mt:setvarblock name="js_include" append="1">
+<script src="<mt:StaticWebPath>jquery/jquery.history.js" type="text/javascript"></script>
+<script type="text/javascript">
+mt = { 
+  screen: {
+    RESET_SETTINGS: '<__trans phrase="Are you sure you want to reset the settings for this plugin?" escape="js">'
+  }
+};
+</script>
+<script src="<mt:StaticWebPath>js/screens/cfg_plugins.js" type="text/javascript"></script>
 </mt:setvarblock>
 
 <mt:include name="include/header.tmpl">
