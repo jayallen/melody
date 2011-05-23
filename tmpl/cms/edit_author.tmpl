@@ -40,106 +40,27 @@
 </mt:if>
 </mt:setvarblock>
 
-<mt:setvarblock name="html_head" append="1">
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/client.js"></script>
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript" src="<mt:var name="static_uri">js/tc/client.js"></script>
+<script type="text/javascript">
+var mt;
+mt = { 
+  screen: {
+    username: '<mt:var name="name" escape="js">',
+    email: '<mt:var name="email" escape="js">',
+    user_id: '<mt:var name="id" escape="url">',
+    trans: {
+      YOUR_PASSWORD: '<__trans phrase="Your Web services password is currently">: ',
+      RESET_SINGLE: '<__trans phrase="_WARNING_PASSWORD_RESET_SINGLE" params="'+username+'%%'+email+'">',
+      ERROR_REMOVING_USERPIC: '<__trans phrase="Error occurred while removing userpic." escape="js">'
+    }
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/edit_author.js"></script>
 </mt:setvarblock>
 
 <mt:include name="include/header.tmpl">
-
-<script type="text/javascript">
-/* <![CDATA[ */
-function reveal_api_password() {
-    var pw = getByID("api_password");
-    alert("<__trans phrase="Your Web services password is currently">: " + pw.value);
-    return false;
-}
-function tagDelimChoice(sel) {
-    if (sel.selectedIndex == 2) {
-        show("tag_delim_input");
-        var el = getByID("tag_delim_input");
-        if (el) el.focus();
-    } else {
-        hide("tag_delim_input");
-    }
-}
-
-function togglePerms(c) {
-    var p = TC.getElementsByTagAndClassName("input", "subPerm", TC.elementOrId("permission-list"));
-    for (var i = 0; i < p.length; i++) {
-        var sc = p[i];
-        if (c.checked) {
-            sc.checked = true;
-            sc.disabled = true;
-        } else {
-            sc.checked = false;
-            sc.disabled = false;
-        }
-    }
-}
-function passwordResetConfirm() {
-    var username = '<mt:var name="name" escape="js">';
-    var email = '<mt:var name="email" escape="js">';
-    if (confirm('<__trans phrase="_WARNING_PASSWORD_RESET_SINGLE" params="'+username+'%%'+email+'">')) {
-        document.forms['recover'].submit();
-    }
-}
-function toggleDisabled( state ){
-    if (state == 1) {
-        state = false;
-    } else if (state == 2) {
-        state = true;
-    }
-    var elements = TC.getElementsByClassName('state_change');
-    for (var i=0; i < elements.length; i++) {
-        elements[i].disabled = state;
-    }
-}
-function togglePerms(c) {
-    var p = TC.getElementsByTagAndClassName("input", "subPerm", TC.elementOrId("permission-list"));
-    for (var i = 0; i < p.length; i++) {
-        var sc = p[i];
-        if (c.checked) {
-            sc.checked = true;
-            sc.disabled = true;
-        } else {
-            sc.checked = false;
-            sc.disabled = false;
-        }
-    }
-}
-
-function removeUserpic() {
-    var param = '__mode=remove_userpic'
-        + '&user_id=<mt:var name="id" escape="url">'
-        + '&magic_token=<mt:var name="magic_token">';
-    var params = { uri: '<mt:var name="script_url">', method: 'POST', arguments: param, load: removedUserpic };
-    TC.Client.call(params);
-}
-
-function removedUserpic(c) {
-    var res = c.responseText;
-    if (res != 'success') {
-        message = '<__trans phrase="Error occurred while removing userpic." escape="js">';
-        showMsg(message, 'ajax-message', 'error');
-    }
-
-    getByID('userpic_asset_id').value = '0';
-    if (!DOM.hasClassName('userpic-preview', 'hidden'))
-       toggleHidden('userpic-preview');
-    if (!DOM.hasClassName('remove-userpic', 'hidden'))
-       toggleHidden('remove-userpic');
-    return false
-}
-
-function init() {
-    var c = document.forms['profile'].elements['is_superuser'];
-    if (c.checked)
-        togglePerms(document.forms['profile'].elements['is_superuser']);
-}
-
-TC.attachLoadEvent(init);
-/* ]]> */
-</script>
 
         <form name="profile" id="profile" method="post" action="<mt:var name="script_url">">
             <input type="hidden" name="__mode" value="save" />
