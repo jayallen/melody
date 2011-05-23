@@ -13,7 +13,6 @@ sub edit {
 
     if ($id) {
 
-#        my $output = $param->{output} ||= 'cfg_prefs.tmpl';
         $param->{need_full_rebuild}  = 1 if $q->param('need_full_rebuild');
         $param->{need_index_rebuild} = 1 if $q->param('need_index_rebuild');
         $param->{use_plugins} = $cfg->UsePlugins;
@@ -1988,14 +1987,6 @@ sub build_blog_table {
     \@data;
 } ## end sub build_blog_table
 
-sub cfg_blog {
-    my $app = shift;
-    my $q   = $app->query;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    $_[0]->forward( "view", { output => 'cfg_prefs.tmpl' } );
-}
-
 sub cfg_archives_save {
     my $app    = shift;
     my $q      = $app->query;
@@ -2479,36 +2470,6 @@ HTACCESS
 1;
 
 __END__
-
-The following subroutines were removed by Byrne Reese for Melody.
-They are rendered obsolete by the new cfg_blog_settings handler.
-
-sub cfg_prefs {
-    my $app     = shift;
-    my $q       = $app->param;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    $blog_id );
-    my $blog_prefs = $app->user_blog_prefs;
-    my $perms      = $app->permissions;
-    return $app->error( $app->translate('Permission denied.') )
-      unless $app->user->is_superuser()
-      || (
-        $perms
-        && (   $perms->can_edit_config
-            || $perms->can_administer_blog
-            || $perms->can_set_publish_paths )
-      );
-    my $output = 'cfg_prefs.tmpl';
-    $app->forward("view",
-        {
-            output       => $output,
-            screen_class => 'settings-screen general-screen'
-        }
-    );
-}
 
 =head1 NAME
 
