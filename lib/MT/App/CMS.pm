@@ -171,8 +171,6 @@ sub core_methods {
         'reset_plugin_config'  => "${pkg}Plugin::reset_config",
         'save_cfg_system'      => "${pkg}System::save_cfg_system",
 
-#        'save_cfg_system_feedback' =>
-#            "${pkg}Comment::save_cfg_system_feedback",
 #        'save_cfg_system_general' => "${pkg}Tools::save_cfg_system_general",
 #        'save_cfg_system_users'   => "${pkg}User::save_cfg_system_users",
 
