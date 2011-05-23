@@ -20,101 +20,34 @@
         </mtapp:statusmsg>
     </mt:if>
 </mt:setvarblock>
-<mt:setvarblock name="html_head" append="1">
+
+<mt:setvarblock name="js_include" append="1">
 <script type="text/javascript">
-/* <![CDATA[ */
-var orig_site_url = "<mt:var name="site_url" _default="$suggested_site_url" escape="js">";
-var orig_site_path = "<mt:var name="site_path" _default="$suggested_site_path" escape="js">";
-function dirify_blog_name(fld) {
-    var dir_blog_name = dirify(fld.value);
-    if (!dir_blog_name.length) return;
-    var url = fld.form['site_url'];
-    var path = fld.form['site_path'];
-    /* detect linux/mac or windows path separator */
-    var slash = orig_site_path.match( /(\\|\/)/ )[ 0 ];
-    var basic_site_url = orig_site_url.replace(/\/BLOG-NAME\/$/, '/');
-    var basic_site_path = orig_site_path.replace(/(\/|\\)BLOG-NAME(\/|\\)?$/, slash);
-    if (basic_site_url && (url.value.indexOf(basic_site_url) == 0))
-        url.value = basic_site_url + dir_blog_name + '/';
-    if (basic_site_path && (path.value.indexOf(basic_site_path) == 0))
-        path.value = basic_site_path + dir_blog_name;
-}
-function validate (f) {
-<mt:if name="can_edit_config">
-    if (!f.name.value) {
-        alert('<__trans phrase="You must set your Blog Name." escape="singlequotes">');
-        return false;
-    } else if (f.server_offset.value == '') {
-        alert('<__trans phrase="You did not select a timezone." escape="singlequotes">');
-        return false;
-</mt:if>
-<mt:if name="can_set_publish_paths">
-<mt:if name="can_edit_config">
-    } else if (!f.site_path.value) {
-<mt:else>
-    if (!f.site_path.value) {
-</mt:if>
-        alert('<__trans phrase="You must set your Local Site Path." escape="singlequotes">');
-        return false;
-    } else if (!f.site_url.value) {
-        alert('<__trans phrase="You must set your Site URL." escape="singlequotes">');
-        return false;
-    } else if (f.server_offset.value == '') {
-        alert('<__trans phrase="You did not select a timezone." escape="singlequotes">');
-        return false;
-    } else if (!is_valid_url(f.site_url.value)){
-        alert('<__trans phrase="Your Site URL is not valid." escape="singlequotes">');
-        return false;
-    } else if (checkUrlSpaces(f.site_url.value)){
-        alert('<__trans phrase="You can not have spaces in your Site URL." escape="singlequotes">');
-        return false;
-    } else if (checkPathSpaces(f.site_path.value)){
-        alert('<__trans phrase="You can not have spaces in your Local Site Path." escape="singlequotes">');
-        return false;
-    } else if (!is_valid_path(f.site_path.value)){
-        alert('<__trans phrase="Your Local Site Path is not valid." escape="singlequotes">');
-        return false;
-</mt:if>
+var mt;
+mt = { 
+  screen: {
+    new_object: <mt:var name="new_object" default="0">,
+    can_edit_config: <mt:var name="can_edit_config" default="0">,
+    can_set_publish_paths: <mt:var name="can_set_publish_paths" default="0">,
+    orig_site_url: '<mt:var name="site_url" _default="$suggested_site_url" escape="js">',
+    orig_site_path: '<mt:var name="site_path" _default="$suggested_site_path" escape="js">',
+    creative_commons_url: '',
+    trans: {
+      SET_BLOG_NAME: '<__trans phrase="You must set your Blog Name." escape="singlequotes">',
+      SET_TIMEZONE: '<__trans phrase="You did not select a timezone." escape="singlequotes">',
+      SET_LOCAL_PATH: '<__trans phrase="You must set your Local Site Path." escape="singlequotes">',
+      SET_SITE_URL: '<__trans phrase="You must set your Site URL." escape="singlequotes">',
+      SELECT_TIMEZONE: '<__trans phrase="You did not select a timezone." escape="singlequotes">',
+      INVALID_SITE_URL: '<__trans phrase="Your Site URL is not valid." escape="singlequotes">',
+      NOSPACES_SITE_URL: '<__trans phrase="You can not have spaces in your Site URL." escape="singlequotes">',
+      NOSPACES_LOCAL_PATH: '<__trans phrase="You can not have spaces in your Local Site Path." escape="singlequotes">',
+      INVALID_SITE_PATH: '<__trans phrase="Your Local Site Path is not valid." escape="singlequotes">'
     }
-    return true;
-}
-function init() {
-<mt:if name="new_object">
-    getByID("name").focus();
-</mt:if>
-}
-function checkUrlSpaces(url_){
-    if (url_.match(/\s+/)){
-        return true;
-    }
-}
-function is_valid_url(url_){
-    return url_.match( /^https?:\/\/[A-Za-z0-9!$%()=_.:,;@~-]+/ );
-}
-function checkPathSpaces(path_){
-    if (path_.match(/\s+/)){
-        return true;
-    }
-}
-function is_valid_path(path_){
-    for(i = 0; i < path_.length; i++){
-        var buf = escape(path_.substr(i, 1));
-        if (buf.match(/^%u.*/)){
-            return false;
-        }
-        if (buf.match(/(%.{2}){2}?/)){
-            return false;
-        }
-    }
-    return true;
-}
-
-TC.attachLoadEvent(init);
-
-/* ]]> */
+  }
+};
 </script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/edit_blog.js"></script>
 </mt:setvarblock>
-
 <mt:include name="include/header.tmpl">
 
 <form method="post" action="<mt:var name="script_url">" onsubmit="return validate(this)">

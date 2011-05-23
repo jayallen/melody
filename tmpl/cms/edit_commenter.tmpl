@@ -85,22 +85,21 @@
         </mt:if>
     </mt:unless></mt:if>
 </mt:setvarblock>
-<mt:include name="include/header.tmpl">
 
-<mt:unless name="tab_commenter">
+<mt:setvarblock name="js_include" append="1">
 <script type="text/javascript">
-/* <![CDATA[ */
-var tableSelect;
-function init()
-{
-        // setup
-        tableSelect = new TC.TableSelect( "selector" );
-        tableSelect.rowSelect = true;
-}
-TC.attachLoadEvent(init);
-/* ]]> */
+var mt;
+mt = { 
+  screen: {
+  }
+};
 </script>
+<mt:unless name="tab_commenter">
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/edit_commenter.js"></script>
 </mt:unless>
+</mt:setvarblock>
+
+<mt:include name="include/header.tmpl">
 
 <form method="post" action="<mt:var name="script_url">">
     <input type="hidden" name="blog_id" value="<mt:var name="blog_id" escape="html">" />
