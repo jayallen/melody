@@ -625,231 +625,49 @@
 <mt:if name="rich_editor"><mt:var name="rich_editor_tmpl"><mt:else><mt:include name="include/archetype_editor.tmpl"></mt:if>
 
 <mt:setvarblock name="js_include" prepend="1">
-    <!--// this MUST loaded after mt.js // -->
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/edit.js?v=<$mt:var name="mt_version_id" escape="url"$>"></script>
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/screens/edit_entry.js?v=<$mt:var name="mt_version_id" escape="url"$>"></script>
-</mt:setvarblock>
 
-<mt:setvarblock name="html_head" append="1">
-<mt:ignore>
-    <script type="text/javascript">
-        /* <![CDATA[ */
-        Editor.strings.unsavedChanges = '<mt:if name="object_type"entry><__trans phrase="You have unsaved changes to this entry that will be lost." escape="js"><mt:else><__trans phrase="You have unsaved changes to this page that will be lost." escape="js"></mt:if>';
-        Editor.strings.enterEmailAddress = '<__trans phrase="Enter email address:" escape="js">';
-        Editor.strings.enterLinkAddress = '<__trans phrase="Enter the link address:" escape="js">';
-        Editor.strings.enterTextToLinkTo = '<__trans phrase="Enter the text to link to:" escape="js">';
-        function restoreBarPosition() {
-            var current_bar_position = '<mt:if name="position_actions_both">both<mt:elseif name="position_actions_top">top<mt:elseif name="position_actions_bottom">bottom<mt:else>top</mt:if>';
-            setBarPosition( current_bar_position );
-            getByID( 'bar_position_' + current_bar_position ).checked = 'checked';
-        }
-        /* ]]> */
-    </script>
-</mt:ignore>
+<script type="text/javascript">
+/* <![CDATA[ */
+Editor.strings.unsavedChanges = '<mt:if name="object_type" eq="entry"><__trans phrase="You have unsaved changes to this entry that will be lost." escape="js"><mt:else><__trans phrase="You have unsaved changes to this page that will be lost." escape="js"></mt:if>';
+Editor.strings.enterEmailAddress = '<__trans phrase="Enter email address:" escape="js">';
+Editor.strings.enterLinkAddress = '<__trans phrase="Enter the link address:" escape="js">';
+Editor.strings.enterTextToLinkTo = '<__trans phrase="Enter the text to link to:" escape="js">';
 
-<mt:ignore>
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/focus.js"></script>
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/client.js"></script>
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/melody/fullscreen.js"></script>
-</mt:ignore>
-
-    <script type="text/javascript">
-    /* <![CDATA[ */
-ReEdit = <mt:var name="reedit" default="0">;
-Id = <mt:var name="id">;
-CurTextFormat = '<mt:var name="convert_breaks" escape="js">';
-ObjectType = '<mt:var name="object_type" escape="js">';
-
-var docs = new Array();
-<mt:loop name="text_filters">
-docs['<$mt:var name="filter_key" escape="js"$>'] = '<$mt:var name="filter_docs" escape="js"$>';</mt:loop>
-
-<mt:ignore>
-var orig_text_format;
-var cur_text_format = '<mt:var name="convert_breaks" escape="js">';
-orig_text_format = cur_text_format;
-var customizable_fields = [<mt:loop name="field_loop" glue=","><mt:unless name="system_field"><mt:unless name="lock_field">'<mt:var name="field_id" escape="js">'<mt:else><mt:if name="use_field">'<mt:var name="field_id" escape="js">'</mt:if></mt:unless></mt:unless></mt:loop>];
-<mt:unless name="object_type" eq="page">customizable_fields.push('category');</mt:unless>
-customizable_fields.push('publishing');
-customizable_fields.push('feedback');
-customizable_fields.push('assets');
-var default_fields = [<mt:loop name="disp_prefs_default_fields" glue=",">'<mt:var name="name" escape="js">'</mt:loop>];
-
-var pre_sortable_node;
-function setCustomFields(args) {
-    var i = 0;
-
-    if (!pre_sortable_node)
-        pre_sortable_node = TC.elementOrId(customizable_fields[0] + "-field").previousSibling;
-
-    if (args && args['order']) {
-        var order = args['order'];
-        for (var i = order.length - 1; i >= 0; i--) {
-            var el = TC.elementOrId(customizable_fields[order[i]] + "-field");
-            el.parentNode.removeChild(el);
-            if (pre_sortable_node.nextSibling)
-                pre_sortable_node.parentNode.insertBefore(el, pre_sortable_node.nextSibling);
-            else
-                pre_sortable_node.parentNode.appendChild(el);
-        }
+var mt;
+mt = { 
+  screen: {
+    position_actions_both: <mt:var name="position_actions_both" default="0">,
+    position_actions_top: <mt:var name="position_actions_top" default="0">,
+    position_actions_bottom: <mt:var name="position_actions_top" default="0">,
+    re_edit: <mt:var name="reedit" default="0">,
+    id: <mt:var name="id">,
+    docs: {<mt:loop name="text_filters"><mt:unless name="__first__">, </mt:unless><$mt:var name="filter_key" escape="js"$>:'<$mt:var name="filter_docs" escape="js"$>'</mt:loop>},
+    tag_list: <mt:if name="tags_js"><$mt:var name="tags_js"$><mt:else>undef</mt:if>,
+    current_text_format: '<mt:var name="convert_breaks" escape="js">',
+    object_type: '<mt:var name="object_type" escape="js">',
+    customizable_fields: ['publishing','feedback','assets'<mt:unless name="object_type" eq="page">,'category'</mt:unless>,<mt:loop name="field_loop" glue=","><mt:unless name="system_field"><mt:unless name="lock_field">'<mt:var name="field_id" escape="js">'<mt:else><mt:if name="use_field">'<mt:var name="field_id" escape="js">'</mt:if></mt:unless></mt:unless></mt:loop>],
+    default_fields: [<mt:loop name="disp_prefs_default_fields" glue=",">'<mt:var name="name" escape="js">'</mt:loop>],
+    tag_delim: '<$mt:var name="auth_pref_tag_delim"$>',
+    basename_limit: <$mt:var name="basename_limit" escape="js"$>,
+    trans: {
+      PUBLISH_ON: '<__trans phrase="Publish On" escape="js">',
+      PUBLISH_DATE: '<__trans phrase="Publish Date" escape="js">'
     }
-
-    // we loop over all customizable fields here (which includes
-    // all the metadata fields). we want to hide the metadata (or
-    // other fieldset, if we grow another customizable fieldset)
-    // from view if all fields within it are hidden. alternatively,
-    // if the user enables a field, the fieldset should be enabled.
-
-    // add only the fields which are currently checked and enabled
-    for (i = 0; i < customizable_fields.length; i++) {
-        var hide = true;
-        var field_object = TC.elementOrId("custom-prefs-"+customizable_fields[i]);
-
-        if (field_object && field_object.checked) {
-            hide = false;
-        }
-        var div = TC.elementOrId(customizable_fields[i] + '-field');
-        if (div) {
-            if (hide)
-                TC.addClassName(div, 'hidden');
-            else
-                TC.removeClassName(div, 'hidden');
-        }
-    }
-
-    var entry_prefs = getByID('entry_prefs');
-    entry_prefs.value = 'Custom';
-
-    return false;
-}
-
-var tag_delim = '<$mt:var name="auth_pref_tag_delim"$>';
-function setDirty () {
-    log.warn('deprecated function setDirty(), call app.setDirty instead');
-    app.setDirty();
-}
-function clearDirty () {
-    log.warn('deprecated function clearDirty(), call app.clearDirty instead');
-    app.clearDirty();
-}
-
-// array of tag names
-var tagList;
-
-function rebasename(title) {
-    if (!orig_basename) {
-        dir_title = dirify(title.value);
-        dir_title = dir_title.substring(0, <$mt:var name="basename_limit" escape="js"$>);
-        trimmed = dir_title.match(/^(.*[^_])/);
-        if (trimmed && trimmed.length) {
-            setElementValue('basename', trimmed[0]);
-        } else {
-            setElementValue('basename', '');
-        }
-    }
-}
-
-RegExp.escape = (function() {
-  var specials = [
-    '/', '.', '*', '+', '?', '|',
-    '(', ')', '[', ']', '{', '}', '\\'
-  ];
-
-  sRE = new RegExp(
-    '(\\' + specials.join('|\\') + ')', 'g'
-  );
-  
-  return function(text) {
-    return text.replace(sRE, '\\$1');
   }
-})();
-
-function tagSplit(str) {
-    var delim = RegExp.escape(tag_delim);
-    var delim_scan = new RegExp('^((([\'"])(.*?)\\3[^' + delim + ']*?|.*?)(' + delim + '\\s*|$))', '');
-    str = str.replace(/(^\s+|\s+$)/g, '');
-    var tags = [];
-    while (str.length && str.match(delim_scan)) {
-        str = str.substr(RegExp.$1.length);
-        var tag = RegExp.$4 ? RegExp.$4 : RegExp.$2;
-        tag = tag.replace(/(^\s+|\s+$)/g, '');
-        tag = tag.replace(/\s+/g, ' ');
-        if (tag != '') tags.push(tag);
-    }
-    return tags;
-}
-
-function openTFDocs() {
-    var s = document.forms['entry_form'].convert_breaks;
-    var key = s.options[s.selectedIndex].value;
-    if (url = docs[key]) {
-        if (url.indexOf('http://') == -1)
-            url = HelpBaseURI + url;
-        window.open(url, 'manual', 'width=450,height=550,scrollbars=yes,status=yes,resizable=yes');
-    } else {
-        return false;
-        // return openManual('entries', 'entry_text_formatting');
-    }
-}
-
-var autoTag;
-<mt:if name="tags_js">
-tagList = <$mt:var name="tags_js"$>;
-</mt:if>
-
-<mt:ignore><mt:Include name="include/autocomplete_js.tmpl"></mt:ignore>
-
-var tagPos = 0;
-function initTags() {
-    /* browsers don't want to cache the tags field, so we use a hidden input field to cache them */
-    var t = getByID('tags-cache');
-    if ( t ) {
-        log('tag cache:'+t.value);
-        var v = getByID('tags');
-        if ( t.value )
-            v.value = t.value;
-        DOM.addEventListener( v, "change", function() { log('caching tags'); t.value = v.value; } );
-    }
-    if (!tagList || tagList.length == 0) return;
-
-    autoTag = new TC.TagComplete("tags", tagList);
-    autoTag.delimiter = tag_delim;
-}
-
-function highlightSwitch(selection) {
-    var descriptionObject = getByID('created_on-label');
-    var highlightObject = getByID('created_on-date');
-    if (highlightObject) {
-        if (selection.value == 4) {
-            highlightObject.className = 'highlight';
-            descriptionObject.innerHTML = '<__trans phrase="Publish On" escape="js">';
-        } else {
-            highlightObject.className = 'default';
-            descriptionObject.innerHTML = '<__trans phrase="Publish Date" escape="js">';
-        }
-    }
-    return false;
-}
-
-    Template.templates.autoSave = '<mt:section encode_js="1">
-    [# if ( saving ) { #]
-        [#= trans("Auto-saving..." ) #]
-    [# } else { #]
-        [#= trans("Last auto-save at [_1]:[_2]:[_3]", hh, mm, ss ) #]
-    [# } #]
-    </mt:section>';
-    <mt:ignore>
-        <__trans phrase="Remove">
-        <__trans phrase="Make primary">
-    </mt:ignore>
-
-function listPreviousPings () {
-    window.open('<mt:var name="script_url">?__mode=pinged_urls&entry_id=<mt:var name="id" escape="html">&blog_id=<mt:var name="blog_id" escape="html">', 'urls', 'width=400,height=400,resizable=yes,scrollbars=yes');
-}
-</mt:ignore>
+};
 /* ]]> */
-        </script>
+</script>
+
+<!--// this MUST loaded after mt.js // -->
+<script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/focus.js"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/client.js"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>js/melody/fullscreen.js"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>js/autocomplete.js"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>js/edit.js?v=<$mt:var name="mt_version_id" escape="url"$>"></script>
+<script type="text/javascript" src="<$mt:var name="static_uri"$>js/screens/edit_entry.js?v=<$mt:var name="mt_version_id" escape="url"$>"></script>
+
 </mt:setvarblock>
+
 <mt:setvarblock name="html_body" append="1">
     <mt:if name="dirty">
     <script type="text/javascript">
