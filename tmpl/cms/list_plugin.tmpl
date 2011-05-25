@@ -38,21 +38,20 @@
        </mt:if>
    </mt:if>
 </MTSetVarBlock>
-<mt:setvarblock name="html_head" append="1">
-    <script type="text/javascript">
-    /* <![CDATA[ */
 
-   var tableSelect = [];
-   function init() {
-     tableSelect.push(new TC.TableSelect( 'enabled-plugins-table' ));
-     tableSelect[tableSelect.length-1].rowSelect = true;
-     tableSelect.push(new TC.TableSelect( 'disabled-plugins-table' ));
-     tableSelect[tableSelect.length-1].rowSelect = true;
-   }
-   TC.attachLoadEvent(init);
-   /* ]]> */
-    </script>
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript">
+var mt;
+mt = { 
+  screen: {
+    trans: {
+    }
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/list_plugin.js"></script>
 </mt:setvarblock>
+
 <mt:include name="include/header.tmpl">
 
 <mt:setvartemplate name="plugin_table">

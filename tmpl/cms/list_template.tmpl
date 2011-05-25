@@ -34,52 +34,23 @@
     </mtapp:widget>
     <$MTApp:PageActions from="list_template"$>
 </mt:setvarblock>
-<mt:setvarblock name="html_head" append="1">
+
+<mt:setvarblock name="js_include" append="1">
 <script type="text/javascript">
-/* <![CDATA[ */
-    <mt:unless name="filter_key" eq="backup_templates">
-        <mt:if name="blog_id">
-var tableList = ["index", "archive", "module", "system"];
-        <mt:else>
-var tableList = ["module", "email", "system"];
-        </mt:if>
-    <mt:else>
-var tableList = ["backup"];
-    </mt:unless>
-function showTable(name) {
-    for (var i=0, len=tableList.length; i<len; i++) {
-        var el = tableList[i] + "-listing"
-        var elTab = tableList[i] + "-tab"
-        if (name == "all-listing") {
-            DOM.removeClassName ( el, "hidden");
-            DOM.removeClassName ( elTab, "current-filter");
-            DOM.addClassName( "all-tab", "current-filter" );
-        }
-        else if (name == el) {
-            DOM.removeClassName ( el, "hidden");
-            DOM.addClassName( elTab, "current-filter" );
-            DOM.removeClassName( "all-tab", "current-filter" );
-        }
-        else {
-            DOM.addClassName( el, "hidden" );
-            DOM.removeClassName( elTab, "current-filter" );
-            DOM.removeClassName( "all-tab", "current-filter" );
-        }
+var mt;
+mt = { 
+  screen: {
+    filter_key: '<mt:var name="filter_key" escape_js="1">',
+    table_list: <mt:unless name="filter_key" eq="backup_templates"><mt:if name="blog_id">["index", "archive", "module", "system"]<mt:else>["module", "email", "system"]</mt:if><mt:else>["backup"]</mt:unless>,
+    template_types: [<mt:loop name="template_type_loop" glue=",">'<mt:var name="template_type" escape="html">'</mt:loop>,
+    trans: {
     }
-}
-var tableSelect = [];
-function init() {
-<mt:loop name="template_type_loop">
-    tableSelect.push(new TC.TableSelect( '<mt:var name="template_type" escape="html">-listing-table' ));
-    tableSelect[tableSelect.length-1].rowSelect = true;
-</mt:loop>
-    var name = (window.location.hash && window.location.hash.match( /^#/ ) ) ? window.location.hash.substr(1) : "all";
-    showTable(name + "-listing");
-}
-TC.attachLoadEvent(init);
-/* ]]> */
+  }
+};
 </script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/list_template.js"></script>
 </mt:setvarblock>
+
 <mt:setvarblock name="system_msg">
     <mt:if name="profile_updated">
         <mtapp:statusmsg
