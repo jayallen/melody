@@ -1,25 +1,25 @@
 <mt:setvarblock name="page_title"><__trans phrase="Widgets"></mt:setvarblock>
-
 <mt:var name="position_actions_top" value="1">
+
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript">
+var mt;
+mt = { 
+  screen: {
+    category_rows: new Array('0'<mt:loop name="category_loop">,'<mt:var name="category_id">'</mt:loop>),
+    trans: {
+    }
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">/js/widget.js"></script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/list_widget.js"></script>
+</mt:setvarblock>
+
 <mt:setvarblock name="html_head" append="1">
 <link rel="stylesheet" href="<mt:var name="static_uri">css/widget.css" type="text/css" />
-<script type="text/javascript" src="<mt:var name="static_uri">/js/widget.js"></script>
-<script type="text/javascript">
-/* <![CDATA[ */
-var widgetSetTableSelect;
-var widgetTableSelect;
-function init() {
-    // setup
-    widgetSetTableSelect = new TC.TableSelect( "template-listing-table" );
-    widgetSetTableSelect.rowSelect = true;
-    widgetTableSelect = new TC.TableSelect( "widget-listing-table" );
-    widgetTableSelect.rowSelect = true;
-}
-
-TC.attachLoadEvent( init );
-/* ]]> */
-</script>
 </mt:setvarblock>
+
 <mt:setvarblock name="action_buttons">
     <a href="javascript:void(0)"
         onclick="doRemoveItems(getByID('template-listing-form'), '<__trans phrase="Widget Set" escape="js">', '<__trans phrase="Widget Sets" escape="js">', '', '', 'delete_widget'); return false;"
