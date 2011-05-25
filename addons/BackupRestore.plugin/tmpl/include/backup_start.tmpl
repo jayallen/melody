@@ -8,8 +8,7 @@
 <script type="text/javascript">
 /* <![CDATA[ */
 function progress(str, id) {
-    var el = getByID(id);
-    if (el) el.innerHTML = str;
+    jQuery('#'+id).html(str);
 }
 /* ]] */
 </script>

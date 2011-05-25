@@ -182,13 +182,6 @@ sub core_methods {
         'remove_user_assoc'        => "${pkg}User::remove_user_assoc",
         'revoke_role'              => "${pkg}User::revoke_role",
         'grant_role'               => "${pkg}User::grant_role",
-        'start_backup'             => "${pkg}Tools::start_backup",
-        'start_restore'            => "${pkg}Tools::start_restore",
-        'backup'                   => "${pkg}Tools::backup",
-        'backup_download'          => "${pkg}Tools::backup_download",
-        'restore'                  => "${pkg}Tools::restore",
-        'restore_premature_cancel' => "${pkg}Tools::restore_premature_cancel",
-        'adjust_sitepath'          => "${pkg}Tools::adjust_sitepath",
 
         'system_check' => "${pkg}Tools::system_info",
         'resources'    => "${pkg}Tools::resources",
@@ -215,8 +208,6 @@ sub core_methods {
         reply_preview => "${pkg}Comment::reply_preview",
 
         ## Dialogs
-        'dialog_restore_upload'  => "${pkg}Tools::dialog_restore_upload",
-        'dialog_adjust_sitepath' => "${pkg}Tools::dialog_adjust_sitepath",
         'dialog_post_comment'    => "${pkg}Comment::dialog_post_comment",
         'dialog_select_weblog'   => "${pkg}Blog::dialog_select_weblog",
         'dialog_select_sysadmin' => "${pkg}User::dialog_select_sysadmin",
@@ -1446,19 +1437,6 @@ sub core_menus {
                             mode       => "start_export",
                             view       => "blog",
                             permission => "administer_blog",
-        },
-        'tools:backup' => {
-                            label      => "Backup",
-                            order      => 600,
-                            mode       => "start_backup",
-                            permission => "administer_blog",
-        },
-        'tools:restore' => {
-                             label      => "Restore",
-                             order      => 700,
-                             mode       => "start_restore",
-                             permission => "administer_blog",
-                             view       => "system",
         },
         'tools:system_information' => {
                                         label => "System Information",

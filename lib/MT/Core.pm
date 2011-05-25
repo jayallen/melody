@@ -1462,7 +1462,6 @@ BEGIN {
                 }
             },
         },
-        backup_instructions => \&load_backup_instructions,
         permission_groups   => {
             sys_admin => {
                 label => 'System Administration',
@@ -2245,11 +2244,6 @@ sub load_core_tags {
 sub load_upgrade_fns {
     require MT::Upgrade;
     return MT::Upgrade->core_upgrade_functions;
-}
-
-sub load_backup_instructions {
-    require MT::BackupRestore;
-    return MT::BackupRestore::core_backup_instructions();
 }
 
 sub l10n_class {'MT::L10N'}

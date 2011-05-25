@@ -1,0 +1,34 @@
+id: BackupRestore
+name: 'Backup/Restore'
+description: 'This plugin provides a system by which one can create and restore a full fidelity backup of their blog. This can be used for added peace of mind, or to move a blog from one system to another.'
+author_name: Six Apart
+version: 1.0
+static_version: 1
+
+applications:
+  cms:
+    methods:
+      start_backup:             '$BackupRestore::MT::BackupRestore::CMS::start_backup'
+      start_restore:            '$BackupRestore::MT::BackupRestore::CMS::start_restore'
+      backup:                   '$BackupRestore::MT::BackupRestore::CMS::backup'
+      backup_download:          '$BackupRestore::MT::BackupRestore::CMS::backup_download'
+      restore:                  '$BackupRestore::MT::BackupRestore::CMS::restore'
+      restore_premature_cancel: '$BackupRestore::MT::BackupRestore::CMS::restore_premature_cancel'
+      adjust_sitepath:          '$BackupRestore::MT::BackupRestore::CMS::adjust_sitepath'
+      dialog_restore_upload:    '$BackupRestore::MT::BackupRestore::CMS::dialog_restore_upload'
+      dialog_adjust_sitepath:   '$BackupRestore::MT::BackupRestore::CMS::dialog_adjust_sitepath'
+    menus:
+      tools:backup:
+        label: 'Backup'
+        order: 600
+        mode: 'start_backup'
+        permission: 'administer_blog'
+      tools:restore:
+        label: 'Restore'
+        order: 700
+        mode: 'start_restore'
+        permission: 'administer_blog'
+        view: 'system'
+
+backup_instructions: '$BackupRestore::MT::BackupRestore::core_backup_instructions'
+

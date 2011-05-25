@@ -647,6 +647,12 @@ sub print {
     }
 }
 
+sub print_encode {
+    my $app = shift;
+    my $enc = $app->charset || 'UTF-8';
+    $app->print( Encode::encode( $enc, $_[0] ) );
+}
+
 sub handler ($$) {
     my $class = shift;
     my ($r) = @_;
@@ -883,16 +889,16 @@ sub init_query {
                   MT::I18N::default->encode_text_encode( $d, $request_charset,
                                                          $charset )
                   if $transcode;
-                my $saved = $d;
-                eval { Encode::decode( $charset, $d, 1 ); };
-                return
-                  $app->errtrans(
-                    "Invalid request: corrupt character data for character set [_1]",
-                    $charset
-                  ) if $@;
-                push @param, $saved if $transcode;
+                unless ( ref($d) && ( 'Fh' eq ref($d) ) ) {
+                    eval { $d = Encode::decode( $charset, $d, 1 ); };
+                    return $app->errtrans(
+                        "Invalid request: corrupt character data for character set [_1]",
+                        $charset
+                    ) if $@;
+                }
+                push @param, $d;
             } ## end foreach my $d (@d)
-            if ( $transcode && @param ) {
+            if (@param) {
                 if ( 1 == scalar(@param) ) {
                     $params{$p} = $param[0];
                 }
@@ -902,11 +908,11 @@ sub init_query {
             }
         } ## end foreach my $p (@p)
         while ( my ( $key, $val ) = each %params ) {
-            if ( ref $val ) {
-                $q->param( $key, @{ $params{$key} } );
+            if ( ref($val) && ( 'ARRAY' eq ref($val) ) ) {
+                $app->param( $key, @{ $params{$key} } );
             }
             else {
-                $q->param( $key, $val );
+                $app->param( $key, $val );
             }
         }
 

@@ -2181,7 +2181,7 @@ sub update_ping_list {
               =~ s!(<(/)?(?:_|MT)_TRANS(_SECTION)?(?:(?:\s+((?:\w+)\s*=\s*(["'])(?:(<(?:[^"'>]|"[^"]*"|'[^']*')+)?>|[^\5]+?)*?\5))+?\s*/?)?>)!
             my($msg, $close, $section, %args) = ($1, $2, $3);
             while ($msg =~ /\b(\w+)\s*=\s*(["'])((?:<(?:[^"'>]|"[^"]*"|'[^']*')+?>|[^\2])*?)?\2/g) {  #"
-                $args{$1} = $3;
+                $args{$1} = Encode::decode_utf8($3);
             }
             if ($section) {
                 if ($close) {
@@ -2203,7 +2203,10 @@ sub update_ping_list {
                 my @p = map MT::Util::decode_html($_),
                         split /\s*%%\s*/, $args{params}, -1;
                 @p = ('') unless @p;
-                my $translation = $mt->translate($args{phrase}, @p);
+                my $phrase = $args{phrase};
+                $phrase = Encode::decode('utf8', $phrase)
+                    unless Encode::is_utf8($phrase);
+                my $translation = $mt->translate($phrase, @p);
                 if (exists $args{escape}) {
                     if (lc($args{escape}) eq 'html') {
                         $translation = MT::Util::encode_html($translation);
@@ -2214,10 +2217,14 @@ sub update_ping_list {
                         $translation = MT::Util::encode_js($translation);
                     }
                 }
+                $translation = Encode::encode('utf8', $translation)
+                    if Encode::is_utf8($translation);
                 $translation;
             }
             !igem or last;
         } ## end while (1)
+        $text = Encode::decode_utf8($text)
+            unless Encode::is_utf8($text);
         return $text;
     } ## end sub translate_templatized
 

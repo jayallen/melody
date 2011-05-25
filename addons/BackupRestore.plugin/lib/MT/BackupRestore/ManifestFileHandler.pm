@@ -1,6 +1,6 @@
-# Movable Type (r) Open Source (C) 2001-2010 Six Apart, Ltd.
-# This program is distributed under the terms of the
-# GNU General Public License, version 2.
+# Movable Type (r) (C) 2001-2011 Six Apart, Ltd. All Rights Reserved.
+# This code cannot be redistributed without permission from www.sixapart.com.
+# For more information, consult your Movable Type license.
 #
 # $Id$
 
@@ -24,7 +24,10 @@ sub start_document {
 
     $self->{start} = 1;
 
-    my $backups = { files => [], assets => [], };
+    my $backups = {
+        files  => [],
+        assets => [],
+    };
 
     $self->{backups} = $backups;
 
@@ -38,21 +41,20 @@ sub start_element {
     my $name  = $data->{LocalName};
     my %attrs = map {
         $data->{Attributes}->{$_}->{LocalName} =>
-          MT::I18N::encode_text(
-                                 MT::I18N::utf8_off(
-                                            $data->{Attributes}->{$_}->{Value}
-                                 ),
-                                 'utf-8'
-          )
+            $data->{Attributes}->{$_}->{Value}
     } keys( %{ $data->{Attributes} } );
     my $ns = $data->{NamespaceURI};
 
     if ( $self->{start} ) {
-        die MT->translate(
-            "Uploaded file was not a valid Movable Type backup manifest file."
-          )
-          if !(    ( 'manifest' eq $name )
-                && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) );
+
+        if (   $name ne 'manifest'
+            or $ns   ne MT::BackupRestore::NS_MOVABLETYPE() ) {
+                die MT->translate(
+                      'Uploaded file was not a valid Movable Type backup '
+                    . 'manifest file.'
+                );
+        }
+
         $self->{start} = 0;
     }
     if ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) {
@@ -62,12 +64,15 @@ sub start_element {
         }
         elsif ( ( 'file' eq $name ) && ( 'asset' eq $attrs{type} ) ) {
             push @{ $backups->{assets} },
-              { name => $attrs{name}, asset_id => $attrs{'asset_id'}, };
+                {
+                name     => $attrs{name},
+                asset_id => $attrs{'asset_id'},
+                };
         }
         $self->{backups} = $backups;
     }
     1;
-} ## end sub start_element
+}
 
 sub characters {
     my $self = shift;
@@ -82,19 +87,3 @@ sub end_element {
 }
 
 1;
-
-__END__
-
-=head1 NAME
-
-MT::BackupRestore::ManifestFileHandler
-
-=head1 METHODS
-
-TODO
-
-=head1 AUTHOR & COPYRIGHT
-
-Please see L<MT/AUTHOR & COPYRIGHT>.
-
-=cut
