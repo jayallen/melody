@@ -16,6 +16,7 @@ WriteMakefile(
 
 # required NoXS
         'Algorithm::Diff'          => '1.1902',
+        'Attribute::Handlers'      => '0.88',
         'Cache'                    => '2.04',
         'CGI'                      => '3.45',
         'Class::Accessor'          => '0.22',
