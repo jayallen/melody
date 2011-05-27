@@ -1198,8 +1198,8 @@ use vars qw( @ISA %Lexicon );
     'The path provided below is not writable.' =>
       'Het pad dat hieronder werd opgegeven is niet beschrijfbaar.',
     'Invalid session.' => 'Ongeldige sessie.',
-    'No permissions. Please contact your administrator for upgrading [_1].'
-      => 'Geen permissies.  Gelieve uw administrator te contacteren om [_1] te upgraden.',
+    'No permissions. Please contact your administrator for upgrading [_1].' =>
+      'Geen permissies.  Gelieve uw administrator te contacteren om [_1] te upgraden.',
     '[_1] has been upgraded to version [_2].' =>
       '[_1] is bijgewerkt tot versie [_2]',
 

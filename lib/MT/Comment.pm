@@ -47,8 +47,9 @@ __PACKAGE__->install_properties( {
              { columns => [ 'blog_id', 'visible', 'created_on', 'id' ], },
            dd_coment_vis_mod => { columns => [ 'visible', 'modified_on' ], },
            visible_date      => { columns => [ 'visible', 'created_on' ], },
+
            # To help determine whether a comment should be throttled
-           blog_ip_date => { columns => [ 'blog_id', 'ip', 'created_on'], },
+           blog_ip_date => { columns => [ 'blog_id', 'ip', 'created_on' ], },
        },
        meta => 1,
        defaults =>

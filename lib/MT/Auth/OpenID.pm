@@ -34,13 +34,15 @@ sub login {
 
     $class->set_extension_args($claimed_identity);
 
-    my $check_url = $claimed_identity->check_url(
-        %params,
-        (   2 == $claimed_identity->protocol_version
-            ? ( delayed_return => 1 )
-            : ()
-        ),
-    );
+    my $check_url =
+      $claimed_identity->check_url(
+                                   %params,
+                                   (
+                                     2 == $claimed_identity->protocol_version
+                                     ? ( delayed_return => 1 )
+                                     : ()
+                                   ),
+      );
 
     return $app->redirect($check_url);
 } ## end sub login
@@ -58,10 +60,10 @@ sub handle_sign_in {
     my $cmntr;
     my $session;
 
-    my %param = $app->query->Vars;
+    my %param    = $app->query->Vars;
     my $nickname = $param{'openid.sreg.nickname'};
     $param{'openid.sreg.nickname'} = Encode::encode_utf8($nickname)
-        if Encode::is_utf8($nickname);
+      if Encode::is_utf8($nickname);
     my $csr = $class->get_csr( \%param, $blog ) or return 0;
     if ( my $setup_url = $csr->user_setup_url( post_grant => 'return' ) ) {
         return $app->redirect($setup_url);
@@ -115,7 +117,7 @@ sub handle_sign_in {
         }
 
         if ( my $userpic = $cmntr->userpic ) {
-            my @stat  = stat( $userpic->file_path() );
+            my @stat = stat( $userpic->file_path() );
             require MT::FileMgr;
             my $fmgr  = MT::FileMgr->new('Local');
             my $mtime = $fmgr->file_mod_time( $userpic->file_path() );
@@ -148,6 +150,7 @@ sub handle_sign_in {
         }
     } ## end elsif ( my $vident = $csr...)
     else {
+
         # If there's no signature, then we trust the cookie.
         my %cookies     = $app->cookies();
         my $cookie_name = MT::App::COMMENTER_COOKIE_NAME();
@@ -235,21 +238,24 @@ sub _get_csr {
         eval { require Cache::File; };
         $can_cache = 1 if !$@ && $tmp_dir;
     }
-     Net::OpenID::Consumer->new(
-         ua              => $ua,
-         args            => $params,
-         consumer_secret => $secret,
-        (   $can_cache
-            ? ( cache => Cache::File->new(
-                    cache_root      => $tmp_dir,
-                   default_expires => '6000 sec'
-                )
-                )
-            : ()
-        ),
+    Net::OpenID::Consumer->new(
+                                ua              => $ua,
+                                args            => $params,
+                                consumer_secret => $secret,
+                                (
+                                  $can_cache
+                                  ? (
+                                      cache =>
+                                        Cache::File->new(
+                                                 cache_root      => $tmp_dir,
+                                                 default_expires => '6000 sec'
+                                        )
+                                    )
+                                  : ()
+                                ),
     );
 
-}
+} ## end sub _get_csr
 
 sub get_csr {
     my $class = shift;

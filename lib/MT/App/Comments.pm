@@ -1,4 +1,4 @@
-# Movable Type (r) Open Source (C) 2001-2010 Six Apart, Ltd.
+# Movable Type (r) Open Source (C) 2001-2011 Six Apart, Ltd.
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
@@ -1367,7 +1367,7 @@ sub redirect_to_target {
         $target = $entry->archive_url;
     }
     elsif ( $static ne '' ) {
-        $target = $static;
+        $target = MT::Util::encode_html($static);
     }
     if ( $q->param('logout') ) {
         if ( $app->user && ( 'TypeKey' eq $app->user->auth_type ) ) {
@@ -1422,7 +1422,8 @@ sub comment_listing {
     return '1;' if ( !$entry );
     my $offset = $q->param('offset');
     $offset ||= 0;
-    my @replies_only = $q->param('replies_only') ? (parent_id => [ \'IS NULL', 0 ]) : ();
+    my @replies_only
+      = $q->param('replies_only') ? ( parent_id => [ \'IS NULL', 0 ] ) : ();
 
     if ( $offset !~ /^\d+$/ ) {
         $offset = 0;
@@ -1438,22 +1439,26 @@ sub comment_listing {
     }
     my $method = $q->param('method');
     $method ||= 'displayComments';
-    my $tmpl = MT->model('template')->load(
-                  { name => MT->translate('Comment Listing'), blog_id => $entry->blog_id } )
-                  ||
-               MT->model('template')->load(
-                   { identifier => 'comment_listing', blog_id => $entry->blog_id });
+    my $tmpl = MT->model('template')->load( {
+                                    name => MT->translate('Comment Listing'),
+                                    blog_id => $entry->blog_id
+                                  }
+      )
+      || MT->model('template')
+      ->load(
+            { identifier => 'comment_listing', blog_id => $entry->blog_id } );
     return '1;' if ( !$tmpl );
     my $total = MT::Comment->count( { entry_id => $entry_id, visible => 1 } );
-    my @comments = MT::Comment->load(
-                                      { entry_id => $entry_id, visible => 1,
-                                          @replies_only
+    my @comments = MT::Comment->load( {
+                                         entry_id => $entry_id,
+                                         visible  => 1,
+                                         @replies_only
                                       },
                                       {
                                          limit     => $limit,
                                          offset    => $offset,
                                          direction => $direction,
-                                         sort => 'created_on'
+                                         sort      => 'created_on'
                                       }
     );
     my $ctx = MT::Template::Context->new;

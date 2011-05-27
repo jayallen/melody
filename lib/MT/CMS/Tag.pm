@@ -60,7 +60,9 @@ sub list {
 } ## end sub list
 
 sub rename_tag {
-    my $app     = shift;
+    my $app = shift;
+    $app->validate_magic or return;
+
     my $q       = $app->query;
     my $perms   = $app->permissions;
     my $blog_id = $app->blog->id if $app->blog;
@@ -241,6 +243,8 @@ sub add_tags_to_entries {
     my $q   = $app->query;
     my @id  = $q->param('id');
 
+    $app->validate_magic or return;
+
     require MT::Tag;
     my $tags      = $q->param('itemset_action_input');
     my $tag_delim = chr( $app->user->entry_prefs->{tag_delim} );
@@ -272,8 +276,9 @@ sub add_tags_to_entries {
 sub remove_tags_from_entries {
     my $app = shift;
     my $q   = $app->query;
+    my @id  = $q->param('id');
 
-    my @id = $q->param('id');
+    $app->validate_magic or return;
 
     require MT::Tag;
     my $tags      = $q->param('itemset_action_input');
@@ -305,8 +310,9 @@ sub remove_tags_from_entries {
 sub add_tags_to_assets {
     my $app = shift;
     my $q   = $app->query;
+    my @id  = $q->param('id');
 
-    my @id = $q->param('id');
+    $app->validate_magic or return;
 
     require MT::Tag;
     my $tags      = $q->param('itemset_action_input');
@@ -337,6 +343,8 @@ sub remove_tags_from_assets {
     my $app = shift;
     my $q   = $app->query;
     my @id  = $q->param('id');
+
+    $app->validate_magic or return;
 
     require MT::Tag;
     my $tags      = $q->param('itemset_action_input');

@@ -1250,7 +1250,7 @@ sub MarkdownWithSmartyPants {
     $text = MT::Plugin::SmartyPants::SmartyPants( $text, '1' );
 
     return $text;
-}
+} ## end sub MarkdownWithSmartyPants
 
 1;
 

@@ -270,7 +270,7 @@ sub core_search_apis {
 sub search_replace {
     my $app     = shift;
     my $q       = $app->query;
-    my $param   = $app->do_search_replace( @_ ) or return;
+    my $param   = $app->do_search_replace(@_) or return;
     my $blog_id = $q->param('blog_id');
     $app->add_breadcrumb( $app->translate('Search & Replace') );
     $param->{nav_search}   = 1;

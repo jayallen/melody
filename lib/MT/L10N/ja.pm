@@ -989,8 +989,8 @@ LDAPディレクトリ上にユーザーがまだ残っている場合、いつ�
     'The path provided below is not writable.' =>
       '指定されたパスに書き込みできません。',
     'Invalid session.' => 'セッションが不正です。',
-    'No permissions. Please contact your administrator for upgrading [_1].'
-      => '権限がありません。[_1]のアップグレードを管理者に依頼してください。',
+    'No permissions. Please contact your administrator for upgrading [_1].' =>
+      '権限がありません。[_1]のアップグレードを管理者に依頼してください。',
     '[_1] has been upgraded to version [_2].' =>
       '[_1]をバージョン[_2]にアップグレードしました。',
 

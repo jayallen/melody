@@ -233,8 +233,11 @@ sub list {
     my $dialog_view = $q->param('dialog_view') ? 1 : 0;
     my $no_insert   = $q->param('no_insert')   ? 1 : 0;
     my $perms       = $app->permissions;
-    my %carry_params = map { $_ => $q->param($_) || '' }
-      (qw( edit_field upload_mode require_type next_mode asset_select saved_deleted ));
+    my %carry_params
+      = map { $_ => $q->param($_) || '' }
+      (
+        qw( edit_field upload_mode require_type next_mode asset_select saved_deleted )
+      );
     $carry_params{'user_id'} = $q->param('filter_val')
       if $filter eq 'userpic';
     _set_start_upload_params( $app, \%carry_params );
@@ -551,6 +554,19 @@ sub can_delete {
     return 1 if $app->user->is_superuser();
     my $perms = $app->permissions;
     return $perms && $perms->can_edit_assets();
+}
+
+sub can_save {
+    my ( $eh, $app, $obj ) = @_;
+    my $author = $app->user;
+    return 1 if $author->is_superuser();
+
+    if ( $obj && !ref $obj ) {
+        $obj = MT->model('asset')->load($obj);
+    }
+    my $blog_id = $obj ? $obj->blog_id : ( $app->blog ? $app->blog->id : 0 );
+
+    return $author->permissions($blog_id)->can_edit_assets();
 }
 
 sub pre_save {
@@ -973,6 +989,7 @@ sub _set_start_upload_params {
 sub _upload_file {
     my $app = shift;
     my (%upload_param) = @_;
+    my $ext;
     require MT::Image;
 
     if ( my $perms = $app->permissions ) {
@@ -1137,7 +1154,7 @@ sub _upload_file {
 
         my $filename = $local_base
           ;   ## Save the filename so we can use it in the error message later
-        my $ext = $local_base;
+        $ext = $local_base;
         $ext =~ m!.*\.(.*)$!
           ; ## Extract the characters to the right of the last dot delimiter / period
         $ext = $1;    ## Those characters are the file extension
@@ -1397,7 +1414,7 @@ sub _upload_file {
 
     my $filename = $local_base
       ;    ## Save the filename so we can use it in the error message later
-    my $ext = $local_base;
+    $ext = $local_base;
     $ext =~ m!.*\.(.*)$!
       ; ## Extract the characters to the right of the last dot delimiter / period
     $ext = $1;    ## Those characters are the file extension

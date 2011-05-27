@@ -19,9 +19,10 @@ our ( $PRODUCT_NAME, $PRODUCT_CODE, $PRODUCT_VERSION, $VERSION_ID,
       $PORTAL_URL );
 our ( $MT_DIR, $APP_DIR, $CFG_DIR, $CFG_FILE, $SCRIPT_SUFFIX );
 our (
-      $plugin_sig,      %Plugins,    @Components,     $mt_inst,
-      $plugin_envelope, $DebugMode,  %Components,     %mt_inst,
-      $plugin_registry, %CallbackAlias, $plugins_installed
+      $plugin_sig,    %Plugins,         @Components,
+      $mt_inst,       $plugin_envelope, $DebugMode,
+      %Components,    %mt_inst,         $plugin_registry,
+      %CallbackAlias, $plugins_installed
 );
 my ( %Text_filters, $plugin_full_path, %CallbacksEnabled, @Callbacks );
 
@@ -42,17 +43,17 @@ BEGIN {
         # different version and their uses and the version module POD
         # for details about the next line and its semantics:
         # http://search.cpan.org/~jpeacock/version-0.85/lib/version.pod
-        use version 0.77; our $VERSION = version->declare("v1.0.0");
+        use version 0.77; our $VERSION = version->declare("v1.0.1");
 
         # MakeMaker stops at the line above, so NOW, we swap the $VERSION
         # to $PRODUCT_VERSION and assign $VERSION
 
         $PRODUCT_VERSION = $VERSION;    # The rightful resting place
-        $VERSION         = '4.35';      # The true API version
+        $VERSION         = '4.36';      # The true API version
         $SCHEMA_VERSION  = '4.0078';
         $PRODUCT_NAME    = 'Melody';
         $PRODUCT_CODE    = 'OM';
-        $VERSION_ID      = '1.0.0';
+        $VERSION_ID      = '1.0.1';
         $PORTAL_URL      = 'http://openmelody.org';
     } ## end if ( '__MAKE_ME__' eq ...)
     else {
@@ -566,7 +567,7 @@ sub run_tasks {
 sub add_plugin {
     my $class    = shift;
     my ($plugin) = @_;
-    my $sig      = $plugin_sig            || $plugin->{sig};
+    my $sig      = $plugin_sig || $plugin->{sig};
     my $name     = eval { $plugin->name } || $plugin->{name};
 
     if ( ref $plugin eq 'HASH' ) {
@@ -574,8 +575,8 @@ sub add_plugin {
         $plugin = new MT::Plugin($plugin);
     }
 
-    $plugin->{name}      ||= $name || $plugin_sig;
-    $plugin->{plugin_sig}  = $plugin_sig;
+    $plugin->{name} ||= $name || $plugin_sig;
+    $plugin->{plugin_sig} = $plugin_sig;
 
     my $id = $plugin->id;
     unless ($plugin_envelope) {
@@ -591,13 +592,13 @@ sub add_plugin {
       if exists( $Plugins{$plugin_sig} )
           && ( exists $Plugins{$plugin_sig}{object} );
 
-    $Components{ lc $id }         = $plugin if $id;
+    $Components{ lc $id } = $plugin if $id;
     $Plugins{$plugin_sig}{object} = $plugin;
-    $plugin->{full_path}          = $plugin_full_path;
+    $plugin->{full_path} = $plugin_full_path;
     $plugin->path($plugin_full_path);
-    
+
     $plugin->{registry} = $plugin_registry
-        unless eval { keys %{ $plugin->{registry} } };
+      unless eval { keys %{ $plugin->{registry} } };
 
     if ( $plugin->{registry} ) {
         if ( my $settings = $plugin->{registry}{config_settings} ) {
@@ -727,8 +728,9 @@ sub register_callbacks {
     1;
 }
 
-{    
+{
     our $CB_ERR;
+
     # TODO Convert function to method in appropriate package
     sub callback_error { $CB_ERR = $_[0]; }
     sub callback_errstr {$CB_ERR}
@@ -752,7 +754,7 @@ sub run_callback {
         if ( $cb->{internal} ) {
             $name = "Internal callback";
         }
-        elsif ( blessed $plugin and $plugin->isa( 'MT::Component' )) {
+        elsif ( blessed $plugin and $plugin->isa('MT::Component') ) {
             $name = $plugin->name();
         }
         $name ||= $mt->translate("Unnamed plugin");
@@ -1004,12 +1006,12 @@ sub init_config {
     } ## end for my $meth (@mt_paths)
 
     if ( my $local_lib = $cfg->PERL5LIB || $cfg->PerlLocalLibPath ) {
-        $local_lib = [ $local_lib ] if ! 'ARRAY' eq ref $local_lib;
+        $local_lib = [$local_lib] if !'ARRAY' eq ref $local_lib;
         eval "use local::lib qw( @{$local_lib} )";
-        return $mt->trans_error(
-            'Can\'t load local lib from path [_1]: ',
-            join(', ', @$local_lib),
-            $@, ) if $@;
+        return
+          $mt->trans_error( 'Can\'t load local lib from path [_1]: ',
+                            join( ', ', @$local_lib ), $@, )
+          if $@;
     }
 
     return $mt->trans_error("Bad ObjectDriver config")
@@ -1304,11 +1306,11 @@ sub init_lang_defaults {
         my $const    = $lang_settings{$setting};
         my $value    = $cfg->default($setting);
         my $i18n_val = MT::I18N::const($const);
-        if ( ! defined $value ) { 
-            $cfg->{__settings}{lc $setting}{default} = $i18n_val;
+        if ( !defined $value ) {
+            $cfg->{__settings}{ lc $setting }{default} = $i18n_val;
         }
         elsif ( $value ne $i18n_val ) {
-            $cfg->{__settings}{lc $setting}{default} = $i18n_val;
+            $cfg->{__settings}{ lc $setting }{default} = $i18n_val;
         }
     }
 
@@ -1465,7 +1467,7 @@ sub _init_plugins_core {
         # TODO in Melody 1.1: do NOT load plugin, .pl is deprecated
         if ( $plugin->{file} =~ /\.pl$/ ) {
             push( @deprecated_perl_init, $plugin );
-            $mt->load_perl_plugin( $plugin );
+            $mt->load_perl_plugin($plugin);
         }
         else {
             my $pclass
@@ -1481,8 +1483,9 @@ sub _init_plugins_core {
                  )
               )
             {
-                $Plugins{ $plugin->{sig} }{full_path} = File::Spec->catfile($plugin->{path},$plugin->{file});
-                $Plugins{ $plugin->{sig} }{enabled}   = 0;
+                $Plugins{ $plugin->{sig} }{full_path}
+                  = File::Spec->catfile( $plugin->{path}, $plugin->{file} );
+                $Plugins{ $plugin->{sig} }{enabled} = 0;
                 next;
             }
 
@@ -1559,22 +1562,23 @@ sub _init_plugins_core {
 #              *    plugins/FieldDay
 #
 #   sig      - The path to the yaml/perl initialization file from the
-#              perspective of its plugin directory. Examples: 
+#              perspective of its plugin directory. Examples:
 #              Transformation:  $plugin->{dir} + init_file
 #              *    ConfigAssistant.pack/config.yaml
 #              *    Log4MT.plugin/config.yaml
 #              *    Log4MT.plugin/config.yaml
 #              *    MT-OldPlugin/OldPlugin.pl
-#   
+#
 sub load_perl_plugin {
     my $mt = shift;
-    my ( $plugin ) = @_;
-    die "Bad plugin filename '".$plugin->{file}."'"
+    my ($plugin) = @_;
+    die "Bad plugin filename '" . $plugin->{file} . "'"
       if ( $plugin->{file} !~ /^([-\\\/\@\:\w\.\s~]+)$/ );
-    my $timer = undef;                       # FIXME JAY Had to disable timer
-    my $sig   = $plugin_sig = $plugin->{sig};
+    my $timer = undef;                        # FIXME JAY Had to disable timer
+    my $sig = $plugin_sig = $plugin->{sig};
     $plugin_full_path
-        = File::Spec->catfile( $plugin->{path}, $plugin->{file} );
+      = File::Spec->catfile( $plugin->{path}, $plugin->{file} );
+
     # local $plugin_registry = {};
     # FIXME JAY Temporarily disabled this check, uses more fucking globals
     # if (
@@ -1604,8 +1608,7 @@ sub load_perl_plugin {
         # all plugins are finished loading
         my $msg = $mt->translate( "Plugin error: [_1] [_2]",
                                   $plugin, $Plugins{$sig}{error} );
-        $mt->log(
-              { message => $msg, class => 'system', level => 'ERROR', } );
+        $mt->log( { message => $msg, class => 'system', level => 'ERROR', } );
         return 0;
     }
     else {
@@ -1750,12 +1753,14 @@ sub scan_directory_for_addons {
             if ( -f $plugin_full_path ) {
                 if ( $plugin_full_path =~ /\.pl$/ ) {
                     warn "Plugins without envelopes are no longer loaded in "
-                        ."Melody: $plugin_full_path";
+                      . "Melody: $plugin_full_path";
+
                     # Yes, that's all you get.  Don't ask for more...
                     next;
                 }
             }
             else {
+
                 # open and scan the directory for plugin files,
                 # save them to load later. Report errors in
                 # the activity log
@@ -2333,18 +2338,18 @@ sub static_file_path {
 sub support_directory_url {
     my $app = shift;
     my $url = $app->config('SupportDirectoryURL')
-           || MT::Util::caturl( $app->static_path, 'support' );
-    $url   .= '/' unless substr( $url, -1, 1 ) eq '/';
+      || MT::Util::caturl( $app->static_path, 'support' );
+    $url .= '/' unless substr( $url, -1, 1 ) eq '/';
     return $url;
 }
 
 sub support_directory_path {
     my $app  = shift;
     my $path = $app->config('SupportDirectoryPath')
-            || File::Spec->catdir( $app->static_file_path, 'support');
-    
+      || File::Spec->catdir( $app->static_file_path, 'support' );
+
     $path = File::Spec->catdir( $app->path, $path )
-        unless File::Spec->file_name_is_absolute( $path );
+      unless File::Spec->file_name_is_absolute($path);
 
     $path .= '/' unless substr( $path, -1, 1 ) eq '/';
     return $path;
@@ -2485,15 +2490,15 @@ sub set_default_tmpl_params {
     my $mt     = shift;
     my ($tmpl) = @_;
     my $param  = {};
-    $param->{mt_debug}        = $MT::DebugMode;
-    $param->{mt_beta}         = 1 
-        if MT->version_id =~ m/^\d+\.\d+\.\d+\s?(?:a(?:lpha)?|b(?:eta)?|rc)/i;
-    $param->{static_uri}      = $mt->static_path;
-    $param->{mt_version}      = MT->version_number;
-    $param->{mt_version_id}   = MT->version_id;
-    $param->{mt_product_code} = MT->product_code;
-    $param->{mt_product_name} = $mt->translate( MT->product_name );
-    $param->{language_tag}    = substr( $mt->current_language, 0, 2 );
+    $param->{mt_debug} = $MT::DebugMode;
+    $param->{mt_beta}  = 1
+      if MT->version_id =~ m/^\d+\.\d+\.\d+\s?(?:a(?:lpha)?|b(?:eta)?|rc)/i;
+    $param->{static_uri}        = $mt->static_path;
+    $param->{mt_version}        = MT->version_number;
+    $param->{mt_version_id}     = MT->version_id;
+    $param->{mt_product_code}   = MT->product_code;
+    $param->{mt_product_name}   = $mt->translate( MT->product_name );
+    $param->{language_tag}      = substr( $mt->current_language, 0, 2 );
     $param->{language_encoding} = $mt->charset;
 
     if ( '__MAKE_ME__' eq '__MAKE_' . 'ME__' && !$MT::DebugMode ) {

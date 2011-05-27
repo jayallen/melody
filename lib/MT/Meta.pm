@@ -209,7 +209,7 @@ sub _load_inheritance {
     return [] if $base eq $pkg;
     my @inherited;
     my $registry = ${"$class\::Registry"};
-    if (exists $registry->{$key}{$base}) {
+    if ( exists $registry->{$key}{$base} ) {
         for my $field ( values %{ $registry->{$key}->{$base} } ) {
             push @inherited, $field;
         }

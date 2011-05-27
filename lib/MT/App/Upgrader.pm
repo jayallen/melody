@@ -656,15 +656,17 @@ sub main {
             $author = MT::Author->load( $app->{author}->id );
         };
         if ( $author && !$author->is_superuser ) {
-            return $app->errtrans(
-                "No permissions. Please contact your administrator for upgrading [_1].", MT->product_name
-            );
+            return
+              $app->errtrans(
+                "No permissions. Please contact your administrator for upgrading [_1].",
+                MT->product_name
+              );
         }
     }
 
-    my $cur_schema      = MT->schema_version;
-    my $cur_version     = MT->product_version;
-    my $cur_version_id  = MT->version_id;
+    my $cur_schema     = MT->schema_version;
+    my $cur_version    = MT->product_version;
+    my $cur_version_id = MT->version_id;
 
     if ( $cur_schema > $schema ) {
 
@@ -675,8 +677,9 @@ sub main {
         $param->{mt_version_incremented} = 1;
         MT->log(
                  MT->translate(
-                            "[_1] has been upgraded to version [_2].",
-                            MT->product_name, $cur_version_id
+                                "[_1] has been upgraded to version [_2].",
+                                MT->product_name,
+                                $cur_version_id
                  )
         );
         $app->config->MTVersion( $cur_version, 1 );

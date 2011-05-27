@@ -1,4 +1,4 @@
-package ClassicBlogThemePack::L10N::en_us;   # American English
+package ClassicBlogThemePack::L10N::en_us;    # American English
 
 use strict;
 use ClassicBlogThemePack::L10N;
