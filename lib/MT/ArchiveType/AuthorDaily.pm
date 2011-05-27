@@ -21,13 +21,13 @@ sub archive_label {
 # Corrected the problem where author archive mappings incorrectly implied that Display Names would be used in generating URLs when there is no guarantee that Display Names are unique.  Basenames must be used instead.  The code actually does the right thing in that it uses Author Basenames already, but the information displayed to the blog administrators in the CMS was never corrected until now.  BugzID: 86237.
 sub default_archive_templates {
     return [ {
-               label    => 'author/author-basename/yyyy/mm/dd/index.html',
-               template => 'author/%-a/%y/%m/%d/%f',
-               default  => 1
+                label    => 'author/author-basename/yyyy/mm/dd/index.html',
+                template => 'author/%-a/%y/%m/%d/%f',
+                default  => 1
              },
              {
-               label    => 'author/author_basename/yyyy/mm/dd/index.html',
-               template => 'author/%a/%y/%m/%d/%f'
+                label    => 'author/author_basename/yyyy/mm/dd/index.html',
+                template => 'author/%a/%y/%m/%d/%f'
              },
     ];
 }

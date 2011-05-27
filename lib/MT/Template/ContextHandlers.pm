@@ -56,7 +56,7 @@ sub core_tags {
 
             'IfCategory?'      => \&_hdlr_if_category,
             'EntryIfCategory?' => \&_hdlr_if_category,
-            'WidgetSetLoop' =>  \&_hdlr_widget_loop,
+            'WidgetSetLoop'    => \&_hdlr_widget_loop,
 
             'IfExternalUserManagement?' =>
               \&_hdlr_if_external_user_management,
@@ -374,17 +374,17 @@ sub core_tags {
             EntryBlogURL          => \&_hdlr_entry_blog_url,
             EntryEditLink         => \&_hdlr_entry_edit_link,
 
-            Include       => \&_hdlr_include,
-            Link          => \&_hdlr_link,
-            WidgetManager => \&_hdlr_widget_manager,
-            WidgetSet     => \&_hdlr_widget_manager,
-            'WidgetSetName' =>  \&_hdlr_widget_set_name,
-            'WidgetSetID' =>  \&_hdlr_widget_set_id,
-            'WidgetContent' =>  \&_hdlr_widget_content,
-            'WidgetCount' =>  \&_hdlr_widget_count,
-            'WidgetName' =>  \&_hdlr_widget_name,
-            'WidgetID' =>  \&_hdlr_widget_id,
-            'WidgetIdentifier' =>  \&_hdlr_widget_identifier,
+            Include            => \&_hdlr_include,
+            Link               => \&_hdlr_link,
+            WidgetManager      => \&_hdlr_widget_manager,
+            WidgetSet          => \&_hdlr_widget_manager,
+            'WidgetSetName'    => \&_hdlr_widget_set_name,
+            'WidgetSetID'      => \&_hdlr_widget_set_id,
+            'WidgetContent'    => \&_hdlr_widget_content,
+            'WidgetCount'      => \&_hdlr_widget_count,
+            'WidgetName'       => \&_hdlr_widget_name,
+            'WidgetID'         => \&_hdlr_widget_id,
+            'WidgetIdentifier' => \&_hdlr_widget_identifier,
 
             ErrorMessage => \&_hdlr_error_message,
 
@@ -10000,7 +10000,13 @@ sub _hdlr_entry_flag {
       or return $ctx->error(
                   MT->translate('You used <$MTEntryFlag$> without a flag.') );
     $e->has_column($flag)
-        or return $ctx->error(MT->translate("You have an error in your '[_2]' attribute: [_1]", $flag, 'flag'));
+      or return
+      $ctx->error(
+            MT->translate(
+                           "You have an error in your '[_2]' attribute: [_1]",
+                           $flag, 'flag'
+            )
+      );
     my $v = $e->$flag();
     ## The logic here: when we added the convert_breaks flag, we wanted it
     ## to default to checked, because we added it in 2.0, and people had
@@ -11047,7 +11053,11 @@ B<Attributes:>
 sub _hdlr_entry_comments {
     my ( $ctx, $args, $cond ) = @_;
     my $e = $ctx->stash('entry') or return $ctx->_no_entry_error();
-    my $count = $args->{top} ? MT->model('comment')->count({ entry_id => $e->id, parent_id => \' IS NULL'}) : $e->comment_count;
+    my $count
+      = $args->{top}
+      ? MT->model('comment')
+      ->count( { entry_id => $e->id, parent_id => \' IS NULL' } )
+      : $e->comment_count;
     return $ctx->count_format( $count, $args );
 }
 
@@ -12548,8 +12558,13 @@ sub _hdlr_comment_reply_link {
     my $comment = $ctx->stash('comment') or return $ctx->_no_comment_error();
 
     my $label = $args->{label} || $args->{text} || MT->translate('Reply');
-    my $comment_author = MT::Util::encode_html(
-        MT::Util::encode_html( MT::Util::encode_js( $comment->author ) ), 1 );
+    my $comment_author =
+      MT::Util::encode_html(
+                             MT::Util::encode_html(
+                                       MT::Util::encode_js( $comment->author )
+                             ),
+                             1
+      );
     my $onclick
       = sprintf( $args->{onclick} || "mtReplyCommentOnClick(%d, '%s')",
                  $comment->id, $comment_author );
@@ -12557,7 +12572,7 @@ sub _hdlr_comment_reply_link {
       sprintf(
         qq(<a title="%s" href="javascript:void(0);" onclick="$onclick">%s</a>),
         $label, $label );
-}
+} ## end sub _hdlr_comment_reply_link
 
 ###########################################################################
 
@@ -15276,9 +15291,10 @@ sub _hdlr_category_comment_count {
     my $class
       = MT->model( $ctx->stash('tag') =~ m/Category/ig ? 'entry' : 'page' );
     my $join_str = '= comment_entry_id';
-    my @args = (
-                 { blog_id => $blog_id, visible => 1,
-                     $args->{top} ? ( parent_id => \' IS NULL' ) : ()
+    my @args = ( {
+                    blog_id => $blog_id,
+                    visible => 1,
+                    $args->{top} ? ( parent_id => \' IS NULL' ) : ()
                  },
                  {
                     'join' =>
@@ -18809,7 +18825,13 @@ sub _hdlr_asset_property {
     }
     else {
         $a->has_column($prop)
-            or return $ctx->error(MT->translate("You have an error in your '[_2]' attribute: [_1]", $prop, 'property'));
+          or return
+          $ctx->error(
+               MT->translate(
+                           "You have an error in your '[_2]' attribute: [_1]",
+                           $prop, 'property'
+               )
+          );
         $ret = $a->$prop || '';
     }
 
@@ -21769,14 +21791,14 @@ sub _hdlr_pager_link {
     $link .= "limit=" . encode_url($limit);
 
     #$link .= "&offset=$offset" if $offset;
-    $link .= "&category="     . encode_url($category)     if $category;
-    $link .= "&author="       . encode_url($author)       if $author;
-    $link .= "&page="         . encode_url($page)         if $page;
-    $link .= "&year="         . encode_url($year)         if $year;
-    $link .= "&month="        . encode_url($month)        if $month;
-    $link .= "&day="          . encode_url($day)          if $day;
+    $link .= "&category=" . encode_url($category)         if $category;
+    $link .= "&author=" . encode_url($author)             if $author;
+    $link .= "&page=" . encode_url($page)                 if $page;
+    $link .= "&year=" . encode_url($year)                 if $year;
+    $link .= "&month=" . encode_url($month)               if $month;
+    $link .= "&day=" . encode_url($day)                   if $day;
     $link .= "&archive_type=" . encode_url($archive_type) if $archive_type;
-    $link .= "&template_id="  . encode_url($template_id)  if $template_id;
+    $link .= "&template_id=" . encode_url($template_id)   if $template_id;
     return $link;
 } ## end sub _hdlr_pager_link
 
@@ -22014,28 +22036,32 @@ Identifier of the widget set.
 
 
 sub _hdlr_widget_count {
-    my ($ctx, $args, $cond) = @_;
+    my ( $ctx, $args, $cond ) = @_;
 
-    my $ws = $args->{name} || $args->{identifier} or return $ctx->error( MT->translate('WidgetSet name required.') );
+    my $ws = $args->{name} || $args->{identifier}
+      or return $ctx->error( MT->translate('WidgetSet name required.') );
     my $blog_id = $args->{blog_id} || $ctx->stash('blog_id') || 0;
 
-    my $widgetset =
-        MT->model('template')->load({ identifier => $ws,
-                                    blog_id => $blog_id ? [ 0, $blog_id ] : 0,
-                                    type => 'widgetset' },
-                                  { sort => 'blog_id',
-                                    direction => 'descend' })
-        ||
-        MT->model('template')->load({ name => $ws,
-                                    blog_id => $blog_id ? [ 0, $blog_id ] : 0,
-                                    type => 'widgetset' },
-                                  { sort => 'blog_id',
-                                    direction => 'descend' })
-        || return $ctx->error(MT->translate( "Specified WidgetSet '[_1]' not found.", $ws ));
+    my $widgetset = MT->model('template')->load( {
+                                   identifier => $ws,
+                                   blog_id => $blog_id ? [ 0, $blog_id ] : 0,
+                                   type    => 'widgetset'
+                                 },
+                                 { sort => 'blog_id', direction => 'descend' }
+      )
+      || MT->model('template')->load( {
+                                   name    => $ws,
+                                   blog_id => $blog_id ? [ 0, $blog_id ] : 0,
+                                   type    => 'widgetset'
+                                 },
+                                 { sort => 'blog_id', direction => 'descend' }
+      )
+      || return $ctx->error(
+              MT->translate( "Specified WidgetSet '[_1]' not found.", $ws ) );
 
-    my @modulesets = split(',', $widgetset->modulesets || '');
+    my @modulesets = split( ',', $widgetset->modulesets || '' );
     return scalar @modulesets;
-}
+} ## end sub _hdlr_widget_count
 
 ###########################################################################
 
@@ -22079,54 +22105,61 @@ It provides the following meta variables:
 =cut
 
 sub _hdlr_widget_loop {
-    my ($ctx, $args, $cond) = @_;
-    my $tmpl_name = $args->{name}
-        || $args->{identifier}
-        || return $ctx->error(MT->translate("Template name is required."));
+    my ( $ctx, $args, $cond ) = @_;
+    my $tmpl_name 
+      = $args->{name}
+      || $args->{identifier}
+      || return $ctx->error( MT->translate("Template name is required.") );
     my $blog_id = $args->{blog_id} || $ctx->stash('blog_id') || 0;
-    
-    my $tmpl =
-        MT->model('template')->load({ identifier => $tmpl_name,
-                                    blog_id => $blog_id ? [ 0, $blog_id ] : 0,
-                                    type => 'widgetset' },
-                                    { sort => 'blog_id',
-                                    direction => 'descend' })
-        ||
-        MT->model('template')->load({ name => $tmpl_name,
-                                    blog_id => $blog_id ? [ 0, $blog_id ] : 0,
-                                    type => 'widgetset' },
-                                  { sort => 'blog_id',
-                                    direction => 'descend' })
-        || return $ctx->error(MT->translate( "Specified WidgetSet '[_1]' not found.", $tmpl_name ));
+
+    my $tmpl = MT->model('template')->load( {
+                                   identifier => $tmpl_name,
+                                   blog_id => $blog_id ? [ 0, $blog_id ] : 0,
+                                   type    => 'widgetset'
+                                 },
+                                 { sort => 'blog_id', direction => 'descend' }
+      )
+      || MT->model('template')->load( {
+                                   name    => $tmpl_name,
+                                   blog_id => $blog_id ? [ 0, $blog_id ] : 0,
+                                   type    => 'widgetset'
+                                 },
+                                 { sort => 'blog_id', direction => 'descend' }
+      )
+      || return $ctx->error(
+          MT->translate( "Specified WidgetSet '[_1]' not found.", $tmpl_name )
+      );
 
     my $modulesets = $tmpl->modulesets;
-    my @selected = split ',', $modulesets;
-    my $vars = $ctx->{__stash}{vars} ||= {};
-    my $out = '';
-    my $builder = $ctx->stash('builder');
-    my $tokens = $ctx->stash('tokens'); 
-    $ctx->stash('widgetset', $tmpl);
+    my @selected   = split ',', $modulesets;
+    my $vars       = $ctx->{__stash}{vars} ||= {};
+    my $out        = '';
+    my $builder    = $ctx->stash('builder');
+    my $tokens     = $ctx->stash('tokens');
+    $ctx->stash( 'widgetset', $tmpl );
     my $size = scalar(@selected);
-    local $vars->{__size__} = $size;
-    local $vars->{ws_name} = $tmpl->name;
+    local $vars->{__size__}      = $size;
+    local $vars->{ws_name}       = $tmpl->name;
     local $vars->{ws_identifier} = $tmpl->identifier;
     my $glue = $args->{glue} || '';
-    for (my $index = 0; $index < $size; $index++) {
-        my $widget = MT->model('template')->load({ id => $selected[$index] });
-        local $vars->{__first__} = ($index == 0);
-        local $vars->{__last__} = ($index == ($size-1));
+
+    for ( my $index = 0; $index < $size; $index++ ) {
+        my $widget
+          = MT->model('template')->load( { id => $selected[$index] } );
+        local $vars->{__first__} = ( $index == 0 );
+        local $vars->{__last__}  = ( $index == ( $size - 1 ) );
         local $vars->{__index__} = $index;
-        local $vars->{__odd__} = $index % 2 == 1;
-        local $vars->{__even__} = $index % 2 == 0;
-        $ctx->stash('widget', $widget);
-        my $res = $builder->build($ctx, $tokens, $cond);
-        return $ctx->error($builder->errstr) unless defined $res;
-        $res .= $glue if ($glue && $index < $size - 1);
+        local $vars->{__odd__}   = $index % 2 == 1;
+        local $vars->{__even__}  = $index % 2 == 0;
+        $ctx->stash( 'widget', $widget );
+        my $res = $builder->build( $ctx, $tokens, $cond );
+        return $ctx->error( $builder->errstr ) unless defined $res;
+        $res .= $glue if ( $glue && $index < $size - 1 );
         $out .= $res;
     }
-    $ctx->stash('widgeset', undef);
+    $ctx->stash( 'widgeset', undef );
     return $out;
-}
+} ## end sub _hdlr_widget_loop
 
 ###########################################################################
 
@@ -22139,9 +22172,10 @@ Used within a WidgetSetLoop context. This returns the name of the widget set.
 =cut
 
 sub _hdlr_widget_set_name {
-    my ($ctx, $args) =  @_;
-    my $ws = $ctx->stash('widgetset') 
-        or return $ctx->error('You called a WidgetSetName outside of a WidgetLoop context');
+    my ( $ctx, $args ) = @_;
+    my $ws = $ctx->stash('widgetset')
+      or return $ctx->error(
+                'You called a WidgetSetName outside of a WidgetLoop context');
     return $ws->name;
 }
 
@@ -22157,9 +22191,10 @@ Used within a WidgetSetLoop context. This returns the ID number of the widget se
 
 
 sub _hdlr_widget_set_id {
-    my ($ctx, $args) = @_;
-    my $ws = $ctx->stash('widgetset') 
-        or return $ctx->error('You called a WidgetSetID outside of a WidgetLoop context');
+    my ( $ctx, $args ) = @_;
+    my $ws = $ctx->stash('widgetset')
+      or return $ctx->error(
+                  'You called a WidgetSetID outside of a WidgetLoop context');
     return $ws->id;
 }
 
@@ -22184,21 +22219,21 @@ caching options that <mt:Include> provides. Briefly, these are:
 
 
 sub _hdlr_widget_content {
-    my ($ctx, $args, $cond) = @_;
+    my ( $ctx, $args, $cond ) = @_;
     my $widget = $ctx->stash('widget')
-        or return $ctx->error('No widget could be loaded.'); ###TODO more robust error handling!
+      or return $ctx->error('No widget could be loaded.')
+      ;    ###TODO more robust error handling!
     return '' unless $widget->text;
 
-    local $args->{widget} = $widget->name;   
- 
+    local $args->{widget} = $widget->name;
+
     return MT::Template::Context::_include_module(@_);
 }
 
-sub _hdlr_widget_return_property
-{
-    my ($ctx, $args, $method) = @_;
+sub _hdlr_widget_return_property {
+    my ( $ctx, $args, $method ) = @_;
     my $widget = $ctx->stash('widget')
-        or return $ctx->error('No widget could be loaded.');
+      or return $ctx->error('No widget could be loaded.');
     return '' unless $widget->$method;
 
     return $widget->$method;
@@ -22216,8 +22251,8 @@ Used within a WidgetSetLoop context. This returns the name of the widget current
 
 
 sub _hdlr_widget_name {
-    my ($ctx, $args) = @_;
-    return _hdlr_widget_return_property($ctx, $args, 'name');
+    my ( $ctx, $args ) = @_;
+    return _hdlr_widget_return_property( $ctx, $args, 'name' );
 }
 
 ###########################################################################
@@ -22232,8 +22267,8 @@ Used within a WidgetSetLoop context. This returns the id of the widget currenlty
 
 
 sub _hdlr_widget_id {
-    my ($ctx, $args) = @_;
-    return _hdlr_widget_return_property($ctx, $args, 'id');
+    my ( $ctx, $args ) = @_;
+    return _hdlr_widget_return_property( $ctx, $args, 'id' );
 }
 
 ###########################################################################
@@ -22248,8 +22283,8 @@ Used within a WidgetSetLoop context. This returns the identifier of the widget c
 
 
 sub _hdlr_widget_identifier {
-    my ($ctx, $args) = @_;
-    return _hdlr_widget_return_property($ctx, $args, 'identifier');
+    my ( $ctx, $args ) = @_;
+    return _hdlr_widget_return_property( $ctx, $args, 'identifier' );
 }
 
 

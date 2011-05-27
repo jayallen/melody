@@ -1225,8 +1225,8 @@ use vars qw( @ISA %Lexicon );
     'The path provided below is not writable.' =>
       'Le chemin ci-dessous n\'est pas ouvert en écriture',
     'Invalid session.' => 'Session invalide.',
-    'No permissions. Please contact your administrator for upgrading [_1].'
-      => 'Pas d\'autorisation. Contactez votre administrateur système [_1] pour modifier vos privilèges.',
+    'No permissions. Please contact your administrator for upgrading [_1].' =>
+      'Pas d\'autorisation. Contactez votre administrateur système [_1] pour modifier vos privilèges.',
     '[_1] has been upgraded to version [_2].' =>
       '[_1] a été mis à jour à la version [_2].',
 

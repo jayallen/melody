@@ -31,25 +31,23 @@ sub can_view {
 sub can_save {
     my ( $eh, $app, $id ) = @_;
     unless ( ref $id ) {
-        $id = MT->model('page')->load($id)
-            or return;
+        $id = MT->model('page')->load($id) or return;
     }
     return unless $id->isa('MT::Page');
 
     my $author = $app->user;
-    return $author->permissions($id->blog_id)->can_manage_pages;
+    return $author->permissions( $id->blog_id )->can_manage_pages;
 }
 
 sub can_delete {
     my ( $eh, $app, $id ) = @_;
     unless ( ref $id ) {
-        $id = MT->model('page')->load($id)
-            or return;
+        $id = MT->model('page')->load($id) or return;
     }
     return unless $id->isa('MT::Page');
 
     my $author = $app->user;
-    return $author->permissions($id->blog_id)->can_manage_pages;
+    return $author->permissions( $id->blog_id )->can_manage_pages;
 }
 
 sub pre_save {

@@ -5,12 +5,13 @@ use warnings;
 use Carp qw( croak );
 use MT::Util
   qw( relative_date      offset_time    offset_time_list    epoch2ts
-      ts2epoch format_ts encode_html    decode_html         dirify );
+  ts2epoch format_ts encode_html    decode_html         dirify );
 use ConfigAssistant::Util
   qw( find_theme_plugin     find_template_def   find_option_def
-      find_option_plugin    process_file_upload 
-      plugin_static_web_path plugin_static_file_path );
+  find_option_plugin    process_file_upload
+  plugin_static_web_path plugin_static_file_path );
 use JSON;
+
 # use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
 our $logger;
 
@@ -21,12 +22,12 @@ sub tag_plugin_static_web_path {
     if ( !$obj ) {
         return
           $ctx->error(
-            MT->translate(
-                  "The plugin you specified '[_2]' in '[_1]' "
-                . "could not be found.",
-                $ctx->stash('tag'),
-                $sig
-            )
+                   MT->translate(
+                                  "The plugin you specified '[_2]' in '[_1]' "
+                                    . "could not be found.",
+                                  $ctx->stash('tag'),
+                                  $sig
+                   )
           );
     }
     elsif ( $obj->registry('static_version') ) {
@@ -37,13 +38,13 @@ sub tag_plugin_static_web_path {
         # TODO - perhaps this should default to: mt-static/plugins/$sig?
         return
           $ctx->error(
-            MT->translate(
-                  "The plugin you specified '[_2]' in '[_1]' has not"
-                . "registered a static directory. Please use "
-                . "<mt:StaticWebPath> instead.",
-                $ctx->stash('tag'),
-                $sig
-            )
+               MT->translate(
+                           "The plugin you specified '[_2]' in '[_1]' has not"
+                             . "registered a static directory. Please use "
+                             . "<mt:StaticWebPath> instead.",
+                           $ctx->stash('tag'),
+                           $sig
+               )
           );
     }
 } ## end sub tag_plugin_static_web_path
@@ -55,12 +56,12 @@ sub tag_plugin_static_file_path {
     if ( !$obj ) {
         return
           $ctx->error(
-            MT->translate(
-                 "The plugin you specified '[_2]' in '[_1]' "
-                . "could not be found.",
-                $ctx->stash('tag'),
-                $sig
-            )
+                   MT->translate(
+                                  "The plugin you specified '[_2]' in '[_1]' "
+                                    . "could not be found.",
+                                  $ctx->stash('tag'),
+                                  $sig
+                   )
           );
     }
     elsif ( $obj->registry('static_version') ) {
@@ -69,12 +70,12 @@ sub tag_plugin_static_file_path {
     else {
         return
           $ctx->error(
-            MT->translate(
-                  "The plugin you specified in '[_1]' has not "
-                . "registered a static directory. Please use "
-                . "<mt:StaticFilePath> instead.",
-                $_[0]->stash('tag')
-            )
+                  MT->translate(
+                              "The plugin you specified in '[_1]' has not "
+                                . "registered a static directory. Please use "
+                                . "<mt:StaticFilePath> instead.",
+                              $_[0]->stash('tag')
+                  )
           );
     }
 } ## end sub tag_plugin_static_file_path
@@ -364,20 +365,24 @@ sub save_config {
                 if ( $result->{status} == ConfigAssistant::Util::ERROR() ) {
                     return $app->error(
                               "Error uploading file: " . $result->{message} );
-                } elsif ( $result->{status} == ConfigAssistant::Util::NO_UPLOAD ) {
-                    if ($param->{$var.'-clear'} && $data->{$var}) {
+                }
+                elsif (
+                       $result->{status} == ConfigAssistant::Util::NO_UPLOAD )
+                {
+                    if ( $param->{ $var . '-clear' } && $data->{$var} ) {
                         my $old = MT->model('asset')->load( $data->{$var} );
                         $old->remove if $old;
                         $param->{$var} = undef;
                     }
-                } else {
+                }
+                else {
                     if ( $data->{$var} ) {
                         my $old = MT->model('asset')->load( $data->{$var} );
                         $old->remove if $old;
                     }
                     $param->{$var} = $result->{asset}->{id};
                 }
-            }
+            } ## end if ( $opt->{type} eq 'file')
             my $old = $data->{$var};
             my $new = $param->{$var};
             my $has_changed 
@@ -386,7 +391,7 @@ sub save_config {
               || ( defined $new and $old ne $new );
             ###l4p $logger->debug('$has_changed: '.$has_changed);
 
-            # If the field data has changed, and if the field uses the 
+            # If the field data has changed, and if the field uses the
             # "republish" key, we want to republish the specified templates.
             # Add the specified templates to $repub_queue so that they can
             # be republished later.
@@ -412,49 +417,51 @@ sub save_config {
             $app->run_callbacks( 'options_change.plugin.' . $plugin->id,
                                  $app, $plugin );
         }
-        
+
         # Index templates that have been flagged should be republished.
         use MT::WeblogPublisher;
         foreach ( keys %$repub_queue ) {
             my $tmpl = MT->model('template')
               ->load( { blog_id => $blog_id, identifier => $_, } );
 
-            if (!$tmpl) {
+            if ( !$tmpl ) {
                 MT->log( {
                        blog_id => $blog_id,
-                       level   => '2', # Warning
+                       level   => '2',        # Warning
                        message => "Config Assistant could not find a "
-                                  . "template with the identifier " . $_,
-                     }
+                         . "template with the identifier "
+                         . $_,
+                    }
                 );
                 next;
             }
 
-            my $result = $app->rebuild_indexes(
-                                   Blog     => $app->blog,
-                                   Template => $tmpl,
-                                   Force    => 1,
-            );
+            my $result =
+              $app->rebuild_indexes(
+                                     Blog     => $app->blog,
+                                     Template => $tmpl,
+                                     Force    => 1,
+              );
 
             # Report on the success/failure of the template republishing.
-            my ($message, $level);
+            my ( $message, $level );
             if ($result) {
-                $message = "Config Assistant: Republishing template " 
-                           . $tmpl->name;
-                $level   = '1'; # Info
+                $message
+                  = "Config Assistant: Republishing template " . $tmpl->name;
+                $level = '1';    # Info
             }
             else {
-                $message = "Config Assistant could not republish template " 
-                           . $tmpl->name;
-                $level   = '4'; # Error
+                $message = "Config Assistant could not republish template "
+                  . $tmpl->name;
+                $level = '4';    # Error
             }
             MT->log( {
-                   blog_id => $blog_id,
-                   level   => $level,
-                   message => $message,
-                 }
+                       blog_id => $blog_id,
+                       level   => $level,
+                       message => $message,
+                     }
             );
-        }
+        } ## end foreach ( keys %$repub_queue)
         $pdata->data($data);
         MT->request( 'plugin_config.' . $plugin->id, undef );
         $pdata->save() or die $pdata->errstr;
@@ -495,14 +502,19 @@ sub type_file {
               . "\">view</a> | <a href=\"javascript:void(0)\" class=\"remove\">remove</a></p>";
         }
         else {
-            $html .= "<p>Selected asset could not be found. <a href=\"javascript:void(0)\" class=\"remove\">reset</a></p>";
+            $html
+              .= "<p>Selected asset could not be found. <a href=\"javascript:void(0)\" class=\"remove\">reset</a></p>";
         }
     }
-    $html .= "      <input type=\"file\" name=\"$field_id\" class=\"full-width\" />\n" .
-             "      <input type=\"hidden\" name=\"$field_id-clear\" value=\"0\" class=\"clear-file\" />\n";
+    $html
+      .= "      <input type=\"file\" name=\"$field_id\" class=\"full-width\" />\n"
+      . "      <input type=\"hidden\" name=\"$field_id-clear\" value=\"0\" class=\"clear-file\" />\n";
 
     $html .= "<script type=\"text/javascript\">\n";
-    $html .= "  \$('#field-".$field_id." a.remove').click( handle_remove_file );\n";
+    $html
+      .= "  \$('#field-"
+      . $field_id
+      . " a.remove').click( handle_remove_file );\n";
     $html .= "</script>\n";
 
     return $html;
@@ -610,18 +622,18 @@ sub type_entry {
     my ( $ctx, $field_id, $field, $value ) = @_;
     my $out;
     my $obj_class = $ctx->stash('object_class') || 'entry';
-    my ($obj, $obj_name);
-    
-    # The $value is the object ID. Only if $value exists should we try to 
+    my ( $obj, $obj_name );
+
+    # The $value is the object ID. Only if $value exists should we try to
     # load the object. Otherwise, the most recent entry/page is loaded
     # and the $obj_name is incorrectly populated with the most recent object
     # title. This way, $obj_name is blank if there is no $value, which is
     # clearer to the user.
     if ($value) {
-        $obj       = MT->model($obj_class)->load($value);
-        $obj_name  = ( $obj ? $obj->title : '' ) || '';
+        $obj = MT->model($obj_class)->load($value);
+        $obj_name = ( $obj ? $obj->title : '' ) || '';
     }
-    my $blog_id   = $field->{all_blogs} ? 0 : $app->blog->id;
+    my $blog_id = $field->{all_blogs} ? 0 : $app->blog->id;
     unless ( $ctx->var('entry_chooser_js') ) {
         $out .= <<EOH;
     <script type="text/javascript">
@@ -648,7 +660,7 @@ EOH
   </div>
 </div>
 EOH
-    $ctx->stash('object_class','');
+    $ctx->stash( 'object_class', '' );
     return $out;
 } ## end sub type_entry
 
@@ -1058,7 +1070,7 @@ sub _hdlr_field_category_list {
     my ( $ctx, $args, $cond ) = @_;
     my $field = $ctx->stash('field') or return _no_field($ctx);
     my $value = _get_field_value($ctx);
-    my @ids = ref($value) eq 'ARRAY' ? @$value : ($value);
+    my @ids   = ref($value) eq 'ARRAY' ? @$value : ($value);
     my $class = $ctx->stash('obj_class');
 
     my @categories = MT->model($class)->load( { id => \@ids } );

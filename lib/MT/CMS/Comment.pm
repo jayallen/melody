@@ -168,9 +168,9 @@ sub edit_commenter {
 } ## end sub edit_commenter
 
 sub list {
-    my $app = shift;
-    my $q   = $app->query;
-    my $trim_length = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
+    my $app            = shift;
+    my $q              = $app->query;
+    my $trim_length    = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
     my $author_max_len = const('DISPLAY_LENGTH_EDIT_COMMENT_AUTHOR');
     my $comment_short_len
       = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_BREAK_UP_SHORT');
@@ -976,7 +976,13 @@ sub handle_junk {
                 $app->return_args($return_args);
             } ## end if ( my $obj = $class->load...)
             else {
-                return $app->error( $app->translate("[_1] does not exist.",MT->model($type)->class_label) );
+                return
+                  $app->error(
+                               $app->translate(
+                                                "[_1] does not exist.",
+                                                MT->model($type)->class_label
+                               )
+                  );
             }
         } ## end if ( scalar @obj_ids ==...)
         else {
@@ -1565,7 +1571,13 @@ sub set_item_visible
                 $app->return_args($return_args);
             } ## end if ( my $obj = $class->load...)
             else {
-                return $app->error( $app->translate("[_1] does not exist.",MT->model($type)->class_label) );
+                return
+                  $app->error(
+                               $app->translate(
+                                                "[_1] does not exist.",
+                                                MT->model($type)->class_label
+                               )
+                  );
             }
         } ## end if ( scalar @obj_ids ==...)
         else {
@@ -1766,7 +1778,7 @@ sub build_comment_table {
     my $i;
     $i = 1;
     my ( %blogs, %entries, %perms, %cmntrs );
-    my $trim_length = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
+    my $trim_length    = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_LONG');
     my $author_max_len = const('DISPLAY_LENGTH_EDIT_COMMENT_AUTHOR');
     my $comment_short_len
       = const('DISPLAY_LENGTH_EDIT_COMMENT_TEXT_BREAK_UP_SHORT');

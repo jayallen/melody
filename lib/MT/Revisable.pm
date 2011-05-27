@@ -52,10 +52,10 @@ sub install_properties {
     my $datasource = $class->datasource;
 
     $props->{column_defs}{current_revision} = {
-        label    => 'Revision Number',
-        type     => 'integer',
-        not_null => 1,
-        default  => 0,
+                                                label    => 'Revision Number',
+                                                type     => 'integer',
+                                                not_null => 1,
+                                                default  => 0,
     };
     $class->install_column('current_revision');
     $props->{defaults}{current_revision} = 0;

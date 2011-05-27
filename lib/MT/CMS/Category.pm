@@ -373,8 +373,7 @@ sub can_save {
     return 1 if $author->is_superuser();
 
     unless ( ref $obj ) {
-        $obj = MT->model('category')->load($obj)
-            or return;
+        $obj = MT->model('category')->load($obj) or return;
     }
     return unless $obj->is_category;
 
@@ -389,8 +388,7 @@ sub can_delete {
     return 1 if $author->is_superuser();
 
     unless ( ref $obj ) {
-        $obj = MT->model('category')->load($obj)
-            or return;
+        $obj = MT->model('category')->load($obj) or return;
     }
     return unless $obj->is_category;
 

@@ -745,7 +745,7 @@ sub core_upgrade_functions {
                 label     => 'Removing unused template maps...',
                 condition => sub {
                     my $blog = shift;
-                    my @blog_at = split(/,/, $blog->archive_type);
+                    my @blog_at = split( /,/, $blog->archive_type );
                     require MT::TemplateMap;
                     MT::TemplateMap->remove(
                         { blog_id => $blog->id, archive_type => \@blog_at },

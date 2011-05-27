@@ -16,7 +16,7 @@ sub edit {
 #        my $output = $param->{output} ||= 'cfg_prefs.tmpl';
         $param->{need_full_rebuild}  = 1 if $q->param('need_full_rebuild');
         $param->{need_index_rebuild} = 1 if $q->param('need_index_rebuild');
-        $param->{use_plugins}  = $cfg->UsePlugins;
+        $param->{use_plugins} = $cfg->UsePlugins;
 
         my $entries_on_index = ( $obj->entries_on_index || 0 );
         if ($entries_on_index) {
@@ -1133,8 +1133,8 @@ sub start_rebuild_pages {
         my $tmpl    = MT->model('template')->load($tmpl_id)
           or return $app->error(
                  $app->translate( 'Can\'t load template #[_1].', $tmpl_id ) );
-        $param{build_type_name}
-          = $app->translate( "index template '[_1]'", MT::Util::encode_html( $tmpl->name ) );
+        $param{build_type_name} = $app->translate( "index template '[_1]'",
+                                       MT::Util::encode_html( $tmpl->name ) );
         $param{is_one_index} = 1;
     }
     elsif ( $type_name =~ /^entry-(\d+)$/ ) {

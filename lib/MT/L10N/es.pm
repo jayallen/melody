@@ -2659,8 +2659,8 @@ que la dirección provista es correcta y le pertenece.',
     'The path provided below is not writable.' =>
       'No se puede escribir en la ruta provista abajo.',
     'Invalid session.' => 'Sesión no válida.',
-    'No permissions. Please contact your administrator for upgrading [_1].'
-      => 'Sin permiso. Por favor contacte a su administrador para actualizar [_1].',
+    'No permissions. Please contact your administrator for upgrading [_1].' =>
+      'Sin permiso. Por favor contacte a su administrador para actualizar [_1].',
     '[_1] has been upgraded to version [_2].' =>
       '[_1] ha sido actualizado a la versión [_2].',
 
@@ -2863,20 +2863,19 @@ que la dirección provista es correcta y le pertenece.',
       'Se encontro un direcotrio dañado en la inicialización del plugin: [_1]',
     'Loading template \'[_1]\' failed.' =>
       'Fallo cargando la plantilla \'[_1]\'.',
-    'http://openmelody.org/docs/' =>
-      'http://openmelody.org/docs/',
-    'OpenID'               => 'OpenID',
-    'LiveJournal'          => 'LiveJournal',
-    'Vox'                  => 'Vox',
-    'Google'               => 'Google',
-    'Yahoo!'               => 'Yahoo!',
-    'AIM'                  => 'AIM',
-    'WordPress.com'        => 'WordPress.com',
-    'TypePad'              => 'TypePad',
-    'Yahoo! JAPAN'         => 'Yahoo! JAPAN',
-    'livedoor'             => 'livedoor',
-    'Hatena'               => 'Hatena',
-    'Movable Type default' => 'Predeterminado Melody',
+    'http://openmelody.org/docs/' => 'http://openmelody.org/docs/',
+    'OpenID'                      => 'OpenID',
+    'LiveJournal'                 => 'LiveJournal',
+    'Vox'                         => 'Vox',
+    'Google'                      => 'Google',
+    'Yahoo!'                      => 'Yahoo!',
+    'AIM'                         => 'AIM',
+    'WordPress.com'               => 'WordPress.com',
+    'TypePad'                     => 'TypePad',
+    'Yahoo! JAPAN'                => 'Yahoo! JAPAN',
+    'livedoor'                    => 'livedoor',
+    'Hatena'                      => 'Hatena',
+    'Movable Type default'        => 'Predeterminado Melody',
 
 ## mt-static/mt.js
     'delete'  => 'borrar',
@@ -4289,7 +4288,7 @@ que la dirección provista es correcta y le pertenece.',
 ## tmpl/cms/include/sysinfo_content_nav.tmpl
     'Plugins &amp; Addons' => 'Plugins y Addons',
     'Resources'            => 'Recursos',
-    'System Diagnostics'         => 'Verificación del sistema ',
+    'System Diagnostics'   => 'Verificación del sistema ',
 
 ## tmpl/cms/include/ping_table.tmpl
     'Publish selected [_1] (p)' => 'Publicar [_1] seleccionados (p)',
@@ -4400,11 +4399,10 @@ que la dirección provista es correcta y le pertenece.',
       => 'Esta es una versión beta de [_1] y no serecomienda su uso para producción',
     'OpenMelody.org'                  => 'OpenMelody.org',
     'http://plugins.movabletype.org/' => 'http://plugins.movabletype.org/',
-    'http://openmelody.org/docs' =>
-      'http://openmelody.org/docs',
-    'Documentation'               => 'Documentación',
-    'http://wiki.openmelody.org/' => 'http://wiki.openmelody.org/',
-    'Wiki'                        => 'Wiki',
+    'http://openmelody.org/docs'      => 'http://openmelody.org/docs',
+    'Documentation'                   => 'Documentación',
+    'http://wiki.openmelody.org/'     => 'http://wiki.openmelody.org/',
+    'Wiki'                            => 'Wiki',
     'http://getsatisfaction.com/openmelody' =>
       'http://getsatisfaction.com/openmelody',
     'Support' => 'Soporte',
@@ -6048,8 +6046,7 @@ que la dirección provista es correcta y le pertenece.',
     'Chooser'                   => 'Chooser',
 
 ## addons/ConfigAssistant.pack/config.yaml
-    'Factory Default\'' =>
-      'Opciones predeterminadas de fábrica\'',
+    'Factory Default\'' => 'Opciones predeterminadas de fábrica\'',
 
 ## addons/ThemeExport.plugin/tmpl/dialog_export.tmpl
     'Export Theme'  => 'Exportar Tema',

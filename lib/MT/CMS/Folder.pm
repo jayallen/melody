@@ -19,8 +19,7 @@ sub can_save {
     return 1 if $author->is_superuser();
 
     unless ( ref $obj ) {
-        $obj = MT->model('folder')->load($obj)
-            or return;
+        $obj = MT->model('folder')->load($obj) or return;
     }
     return unless $obj->isa('MT::Folder');
 
@@ -35,8 +34,7 @@ sub can_delete {
     return 1 if $author->is_superuser();
 
     unless ( ref $obj ) {
-        $obj = MT->model('folder')->load($obj)
-            or return;
+        $obj = MT->model('folder')->load($obj) or return;
     }
     return unless $obj->isa('MT::Folder');
 

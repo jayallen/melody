@@ -1598,9 +1598,7 @@ sub external_authenticators {
 
         my $auth = $cas{$key} or next;
 
-        if (    $key ne 'TypeKey'
-             && $key ne 'OpenID'
-             && $key ne 'LiveJournal' )
+        if ( $key ne 'TypeKey' && $key ne 'OpenID' && $key ne 'LiveJournal' )
         {
             push @external_authenticators,
               {

@@ -1186,8 +1186,8 @@ use vars qw( @ISA %Lexicon );
     'The path provided below is not writable.' =>
       'Der unten angegebene Pfad ist nicht beschreibbar.',
     'Invalid session.' => 'Ungültige Session',
-    'No permissions. Please contact your administrator for upgrading [_1].'
-      => 'Bitte kontaktieren Sie Ihren Administrator, um das Upgrade von [_1] durchzuführen. Sie haben nicht die erforderlichen Rechte.',
+    'No permissions. Please contact your administrator for upgrading [_1].' =>
+      'Bitte kontaktieren Sie Ihren Administrator, um das Upgrade von [_1] durchzuführen. Sie haben nicht die erforderlichen Rechte.',
     '[_1] has been upgraded to version [_2].' =>
       '[_1] erfolgreich auf Version [_2] aktualisiert.',
 

@@ -77,7 +77,7 @@ use vars qw( @ISA %Lexicon );
     'Archived'     => 'archivada',                           # Translate - New
     'The Archives' => 'Los Archivos',                        # Translate - New
     'By Month'     => 'Por Mes',                             # Translate - New
-    'By Category'  => 'Por Categor√≠a',                      # Translate - New
+    'By Category'  => 'Por Categor√≠a',                  # Translate - New
     'View all posts filed under' =>
       'Ver todas las entradas bajo',                         # Translate - New
 

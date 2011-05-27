@@ -132,10 +132,10 @@ sub run_tasks {
 
         ## FIXME
         ## See bug #717 for background on this.
-        ## This is a temporary fix intended to keep certain built-in 
+        ## This is a temporary fix intended to keep certain built-in
         ## scheduled tasks from becoming burdensome on the logging system.
         my $unwanted = MT->translate('Add Summary Watcher to queue');
-        @completed   = grep { $_ ne $unwanted } @completed;
+        @completed = grep { $_ ne $unwanted } @completed;
 
         if (@completed) {
             $app->log( {

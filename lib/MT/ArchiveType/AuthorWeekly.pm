@@ -20,14 +20,14 @@ sub archive_label {
 
 sub default_archive_templates {
     return [ {
-           label => 'author/author-basename/yyyy/mm/day-week/index.html',
-           template => 'author/%-a/%y/%m/%d-week/%f',
-           default  => 1
-         },
-         {
-           label => 'author/author_basename/yyyy/mm/day-week/index.html',
-           template => 'author/%a/%y/%m/%d-week/%f'
-         },
+               label => 'author/author-basename/yyyy/mm/day-week/index.html',
+               template => 'author/%-a/%y/%m/%d-week/%f',
+               default  => 1
+             },
+             {
+               label => 'author/author_basename/yyyy/mm/day-week/index.html',
+               template => 'author/%a/%y/%m/%d-week/%f'
+             },
     ];
 }
 

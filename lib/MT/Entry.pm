@@ -919,7 +919,7 @@ sub to_hash {
 
 sub is_entry {
     my $class = shift;
-    return $class->class eq 'entry' ? 1: 0;
+    return $class->class eq 'entry' ? 1 : 0;
 }
 
 

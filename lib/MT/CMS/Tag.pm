@@ -60,7 +60,7 @@ sub list {
 } ## end sub list
 
 sub rename_tag {
-    my $app     = shift;
+    my $app = shift;
     $app->validate_magic or return;
 
     my $q       = $app->query;
@@ -276,7 +276,7 @@ sub add_tags_to_entries {
 sub remove_tags_from_entries {
     my $app = shift;
     my $q   = $app->query;
-    my @id = $q->param('id');
+    my @id  = $q->param('id');
 
     $app->validate_magic or return;
 
@@ -310,7 +310,7 @@ sub remove_tags_from_entries {
 sub add_tags_to_assets {
     my $app = shift;
     my $q   = $app->query;
-    my @id = $q->param('id');
+    my @id  = $q->param('id');
 
     $app->validate_magic or return;
 

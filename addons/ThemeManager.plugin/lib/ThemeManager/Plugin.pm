@@ -197,7 +197,7 @@ sub theme_dashboard {
 
             # Turn that YAML into a plain old string and save it.
             $blog->theme_meta( $yaml->write_string() );
-            
+
             # Upgraders likely also don't have the theme_mode switch set
             $blog->theme_mode('production');
             $blog->save;
@@ -467,6 +467,7 @@ sub setup_theme {
     # Production Mode or Designer Mode.
     $param->{theme_mode} = $q->param('theme_mode');
     if ( $q->param('theme_mode') ) {
+
         # Save the theme mode selection
         foreach my $blog_id (@blog_ids) {
             my $blog = MT->model('blog')->load($blog_id);
@@ -475,6 +476,7 @@ sub setup_theme {
         }
     }
     else {
+
         # The desired theme mode hasn't been selected yet.
         return $app->load_tmpl( 'theme_mode.mtml', $param );
     }
@@ -605,6 +607,7 @@ sub setup_theme {
         return $app->load_tmpl( 'select_language.mtml', $param );
     } ## end if ( !$q->param('language'...))
     else {
+
         # Either a language has been set, or there is only one language: english.
         my $selected_lang
           = $q->param('language') ? $q->param('language') : $languages[0];

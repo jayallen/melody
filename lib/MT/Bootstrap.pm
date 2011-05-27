@@ -244,7 +244,7 @@ sub import {
             {
                 $err = $1;
                 my $dbmode = 'Enable DebugMode for more details.';
-                $err .= '. '.( $app ? $app->translate($dbmode) : $dbmode );
+                $err .= '. ' . ( $app ? $app->translate($dbmode) : $dbmode );
             }
             print "Content-Type: text/plain; charset=$charset\n\n";
             print $app

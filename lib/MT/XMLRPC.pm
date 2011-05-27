@@ -26,8 +26,7 @@ sub weblogs_ping {
 sub mt_ping {
     require Carp;
     warn MT->translate(
-        "Call to retired method, XMLRPC::mt_ping ".Carp::longmess()
-    );
+              "Call to retired method, XMLRPC::mt_ping " . Carp::longmess() );
 }
 
 sub ping_update {

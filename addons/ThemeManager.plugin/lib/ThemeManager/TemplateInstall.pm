@@ -30,7 +30,7 @@ sub _refresh_all_templates {
             $blog = MT->model('blog')->load($blog_id);
             next BLOG unless $blog;
         }
-        
+
         if ( !$can_refresh_system )
         {    # system refreshers can refresh all blogs
             my $perms = MT->model('permission')
@@ -170,25 +170,26 @@ sub _create_default_templates {
         my $obj = MT->model('template')->new;
         local $val->{name}
           = $val->{name};    # name field is translated in "templates" call
-        # This code was added by Byrne because the localization of the $val->{text} 
-        # variable within the context of the eval block was resulting in the 
-        # translated text not to be saved to the variable.
+         # This code was added by Byrne because the localization of the $val->{text}
+         # variable within the context of the eval block was resulting in the
+         # translated text not to be saved to the variable.
         my $trans = $val->{text};
         eval {
-            $trans = $p->translate_templatized( $trans ); 
-            1
-        } or do {
+            $trans = $p->translate_templatized($trans);
+            1;
+          }
+          or do {
             MT->log(
                 level   => MT->model('log')->ERROR(),
                 blog_id => $blog ? $blog->id : 0,
                 message =>
-                $tm->translate(
+                  $tm->translate(
                     "There was an error translating the template '[_1].' Error: [_2]",
                     $val->{name},
                     $@
-                )
-                );
-        };
+                  )
+            );
+          };
         local $val->{text} = $trans;
 
         $obj->build_dynamic(0);
@@ -567,6 +568,7 @@ sub _set_module_caching_prefs {
                         $tmpl->$var($val);
                     }
                 }
+
 #                foreach (qw( include_with_ssi )) {
 #                    $tmpl->$_( $tmpls->{$t}->{$m}->{cache}->{$_} );
 #                }
@@ -690,9 +692,9 @@ sub _refresh_system_custom_fields {
         next if UNIVERSAL::isa( $field_data, 'MT::Component' );    # plugin
         my %field = %$field_data;
         delete @field{qw( blog_id basename )};
-        my $field_name = delete $field{label};
-        my $field_scope
-          = ( $field{scope} && delete $field{scope} eq 'system' ? 0 : $blog->id );
+        my $field_name  = delete $field{label};
+        my $field_scope = ( $field{scope}
+                        && delete $field{scope} eq 'system' ? 0 : $blog->id );
         $field_name = $field_name->() if 'CODE' eq ref $field_name;
 
       REQUIRED: for my $required (qw( obj_type tag )) {

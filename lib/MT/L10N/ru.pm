@@ -799,8 +799,8 @@ sub numerate {
     'The path provided below is not writable.' =>
       'Указанный ниже путь не перезаписываемый.',
     'Invalid session.' => 'Неверная сессия.',
-    'No permissions. Please contact your administrator for upgrading [_1].'
-      => 'Недостаточно прав для выполнения этого действия. Пожалуйста, свяжитесь с администратором для обновления [_1].',
+    'No permissions. Please contact your administrator for upgrading [_1].' =>
+      'Недостаточно прав для выполнения этого действия. Пожалуйста, свяжитесь с администратором для обновления [_1].',
     '[_1] has been upgraded to version [_1].' =>
       '[_1] обновлён до версии [_1].',
 

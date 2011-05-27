@@ -52,7 +52,8 @@ sub init_request {
     my $default_lang = $q->param('default_language') || browser_language();
     $app->set_language($default_lang);
 
-    if ( $app->is_mtconfig_exists || ($q->param('step') && $q->param('step') eq 'upgrade_from_mt' ))
+    if ( $app->is_mtconfig_exists
+         || ( $q->param('step') && $q->param('step') eq 'upgrade_from_mt' ) )
     {
         $app->mode('upgrade_from_mt');
         return;
@@ -189,7 +190,7 @@ sub init_core_registry {
             'DBD::SQLite' => {
                 'label' =>
                   'DBI and DBD::SQLite are required if you want to use the SQLite database backend.',
-                'link' => 'http://search.cpan.org/dist/DBD-SQLite/',
+                'link'    => 'http://search.cpan.org/dist/DBD-SQLite/',
                 'version' => '1.20'
             },
             'DBD::SQLite2' => {
@@ -209,9 +210,9 @@ sub init_core_registry {
             },
             'Devel::Leak::Object' => {
                 link => 'http://search.cpan.org/dist/Devel-Leak-Object',
-                 label =>
+                label =>
                   'This module is used by the --leak option of the tools/run-periodic-tasks script.',
-             },
+            },
             'GD' => {
                 'label' =>
                   'This module is needed if you would like to be able to create thumbnails of uploaded images.',
@@ -662,14 +663,11 @@ sub start {
     my @REQ;
     foreach my $pkg ( keys %$req ) {
         my $info = $req->{$pkg};
-        push @REQ, [
-            $pkg,
-            $info->{version} || 0,
-            1,
-            $info->{label} || '',
-            $pkg,
-            $info->{link} || '',
-        ];
+        push @REQ,
+          [
+            $pkg, $info->{version} || 0, 1, $info->{label} || '',
+            $pkg, $info->{link} || '',
+          ];
     }
     my ($needed) = $app->module_check( \@REQ );
     if (@$needed) {
@@ -703,7 +701,7 @@ sub start {
         $param{package_loop}           = $db_missing;
         $param{missing_db_or_optional} = 1;
         $param{missing_db}             = 1;
-        $param{install_help} = 1;
+        $param{install_help}           = 1;
         return $app->build_page( "packages.tmpl", \%param );
     }
 
@@ -721,7 +719,7 @@ sub start {
         $param{package_loop}           = $opt_missing;
         $param{missing_db_or_optional} = 1;
         $param{optional}               = 1;
-        $param{install_help} = 1;
+        $param{install_help}           = 1;
         return $app->build_page( "packages.tmpl", \%param );
     }
 
@@ -1002,8 +1000,8 @@ sub optional {
     }
 
     $param{ 'use_' . $param{mail_transfer} } = 1 if $param{mail_transfer};
-    $param{mail_loop}                        = $transfer;
-    $param{config}                           = $app->serialize_config(%param);
+    $param{mail_loop} = $transfer;
+    $param{config}    = $app->serialize_config(%param);
 
     my $ok = 1;
     my $err_msg;
