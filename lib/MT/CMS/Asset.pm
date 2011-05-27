@@ -553,6 +553,19 @@ sub can_delete {
     return $perms && $perms->can_edit_assets();
 }
 
+sub can_save {
+    my ( $eh, $app, $obj ) = @_;
+    my $author = $app->user;
+    return 1 if $author->is_superuser();
+
+    if ( $obj && !ref $obj ) {
+        $obj = MT->model('asset')->load($obj);
+    }
+    my $blog_id = $obj ? $obj->blog_id : ( $app->blog ? $app->blog->id : 0 );
+
+    return $author->permissions($blog_id)->can_edit_assets();
+}
+
 sub pre_save {
     my $eh = shift;
     my ( $app, $obj ) = @_;
@@ -973,6 +986,7 @@ sub _set_start_upload_params {
 sub _upload_file {
     my $app = shift;
     my (%upload_param) = @_;
+    my $ext;
     require MT::Image;
 
     if ( my $perms = $app->permissions ) {
@@ -1137,7 +1151,7 @@ sub _upload_file {
 
         my $filename = $local_base
           ;   ## Save the filename so we can use it in the error message later
-        my $ext = $local_base;
+        $ext = $local_base;
         $ext =~ m!.*\.(.*)$!
           ; ## Extract the characters to the right of the last dot delimiter / period
         $ext = $1;    ## Those characters are the file extension
@@ -1397,7 +1411,7 @@ sub _upload_file {
 
     my $filename = $local_base
       ;    ## Save the filename so we can use it in the error message later
-    my $ext = $local_base;
+    $ext = $local_base;
     $ext =~ m!.*\.(.*)$!
       ; ## Extract the characters to the right of the last dot delimiter / period
     $ext = $1;    ## Those characters are the file extension

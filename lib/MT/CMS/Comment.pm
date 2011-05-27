@@ -1049,6 +1049,8 @@ sub not_junk {
     my $class = $app->model($type);
     my %rebuild_set;
 
+    $app->validate_magic or return;
+
     my $perm_checked = (
         $app->user->is_superuser()
           || ( $q->param('blog_id')

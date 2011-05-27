@@ -1,4 +1,4 @@
-# Movable Type (r) Open Source (C) 2001-2010 Six Apart, Ltd.
+# Movable Type (r) Open Source (C) 2001-2011 Six Apart, Ltd.
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
@@ -394,9 +394,9 @@ sub can_edit_entry {
     return 1 if $author->is_superuser();
     unless ( ref $entry ) {
         require MT::Entry;
-        $entry = MT::Entry->load($entry) or die;
+        $entry = MT::Entry->load($entry) or return;
     }
-    die unless $entry->isa('MT::Entry');
+    return unless $entry->is_entry;
     if ( 'page' eq $entry->class ) {
         return $perms->can_manage_pages;
     }

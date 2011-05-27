@@ -1,4 +1,4 @@
-# Movable Type (r) Open Source (C) 2001-2010 Six Apart, Ltd.
+# Movable Type (r) Open Source (C) 2001-2011 Six Apart, Ltd.
 # This program is distributed under the terms of the
 # GNU General Public License, version 2.
 #
@@ -1901,6 +1901,9 @@ sub refresh_all_templates {
     my ($app)  = @_;
     my $q      = $app->query;
     my $backup = 0;
+
+    $app->validate_magic or return;
+
     if ( $q->param('backup') ) {
 
         # refresh templates dialog uses a 'backup' field
