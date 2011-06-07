@@ -8781,7 +8781,9 @@ sub _hdlr_entries {
 
     # for the case that we want to use mt:Entries with search.cgi
     # send to MT::Template::Search if searh results are found
-    if ( $ctx->stash('results') && $args->{search_results} == 1 ) {
+    if (    $ctx->stash('results')
+        and defined $args->{search_results}
+        and         $args->{search_results} == 1 ) {
         require MT::Template::Context::Search;
         return MT::Template::Context::Search::_hdlr_results( $ctx, $args,
                                                              $cond );
@@ -21869,6 +21871,7 @@ sub _hdlr_pager_link {
     my $day          = $ctx->stash('search_day');
     my $archive_type = $ctx->stash('search_archive_type');
     my $template_id  = $ctx->stash('search_template_id');
+    my $blog_id      = $ctx->stash('search_blog_id');
 
     my $link = $ctx->context_script($args);
 
@@ -21883,14 +21886,15 @@ sub _hdlr_pager_link {
     $link .= "limit=" . encode_url($limit);
 
     #$link .= "&offset=$offset" if $offset;
-    $link .= "&category=" . encode_url($category)         if $category;
-    $link .= "&author=" . encode_url($author)             if $author;
-    $link .= "&page=" . encode_url($page)                 if $page;
-    $link .= "&year=" . encode_url($year)                 if $year;
-    $link .= "&month=" . encode_url($month)               if $month;
-    $link .= "&day=" . encode_url($day)                   if $day;
+    $link .= "&category="     . encode_url($category)     if $category;
+    $link .= "&author="       . encode_url($author)       if $author;
+    $link .= "&page="         . encode_url($page)         if $page;
+    $link .= "&year="         . encode_url($year)         if $year;
+    $link .= "&month="        . encode_url($month)        if $month;
+    $link .= "&day="          . encode_url($day)          if $day;
     $link .= "&archive_type=" . encode_url($archive_type) if $archive_type;
-    $link .= "&template_id=" . encode_url($template_id)   if $template_id;
+    $link .= "&template_id="  . encode_url($template_id)  if $template_id;
+    $link .= "&blog_id="      . encode_url($blog_id)      if $blog_id;
     return $link;
 } ## end sub _hdlr_pager_link
 
