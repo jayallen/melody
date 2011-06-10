@@ -126,7 +126,7 @@ sub rebuild {
     }
     return 1 if $blog->is_dynamic;
     my $at = $blog->archive_type || '';
-    my @at = split /,/, $at;
+    my @at = split(/,/, $at);
     my $entry_class;
     if ( my $set_at = $param{ArchiveType} ) {
         my %at = map { $_ => 1 } @at;
@@ -612,7 +612,7 @@ sub rebuild_entry {
       ? $blog->archive_type_preferred
       : $blog->archive_type;
     if ( $at && $at ne 'None' ) {
-        my @at = split /,/, $at;
+        my @at = split(/,/, $at);
         for my $at (@at) {
             my $archiver = $mt->archiver($at);
             next unless $archiver;    # invalid archive type
@@ -706,7 +706,7 @@ sub rebuild_entry {
         ## Rebuild previous and next daily, weekly, and monthly archives;
         ## adding a new entry could cause changes to the intra-archive
         ## navigation.
-        my %at = map { $_ => 1 } split /,/, $blog->archive_type;
+        my %at = map { $_ => 1 } split(/,/, $blog->archive_type);
         my @db_at = grep {
             my $archiver = $mt->archiver($_);
             $archiver && $archiver->date_based
