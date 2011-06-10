@@ -1097,7 +1097,6 @@ sub save {
           if $yr * 100 + $w != ( $entry->week_number || 0 );
     }
     unless ( $entry->SUPER::save(@_) ) {
-        print STDERR "error during save: " . $entry->errstr . "\n";
         die $entry->errstr;
     }
 
