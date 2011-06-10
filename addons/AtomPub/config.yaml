@@ -1,0 +1,39 @@
+name: AtomPub API
+id: AtomPub
+author_name: Endevver
+description: Provides enhanced support for the AtomPub blog publishing API.
+version: 1.0
+schema_version: 1
+
+applications:
+    atom:
+        handler: AtomPub::Server
+
+config_settings:
+    AtomApp:
+        type: HASH
+        default:
+            weblog: 'MT::AtomServer::Weblog::Legacy'
+            comments: 'MT::AtomServer::Comments'
+            1.0: 'AtomPub::Server::Weblog'
+    AtomAppAuthentication:
+        default: AtomPub::Authen::Basic
+    AtomScript:
+        default: 'addons/AtomPub/atom.cgi'
+
+callbacks:
+    MT::Entry::post_save: $AtomPub::AtomPub::Callbacks::post_save
+
+tags:
+    function:
+        AtomScript: $AtomPub::AtomPub::Tags::hdlr_atom_script
+        EntryAtomID: $AtomPub::AtomPub::Tags::hdlr_entry_atom_id
+
+object_types:
+    atom_id: 'string(255)'
+
+applications:
+    atom:
+        handler: 'MT::AtomServer'
+
+ 
