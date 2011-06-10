@@ -75,7 +75,6 @@ __PACKAGE__->install_properties( {
                            label      => 'Basename',
                            revisioned => 1
            },
-           'atom_id' => 'string(255)',
            'authored_on' =>
              { type => 'datetime', label => 'Publish Date', revisioned => 1 },
            'week_number'   => 'integer',
@@ -89,6 +88,9 @@ __PACKAGE__->install_properties( {
 
            ## Have to keep this around for use in upgrade.cgi.
            'category_id' => 'integer',
+
+           ## Removed in 1.1 when AtomPub was abstracted out of the core
+           #'atom_id' => 'string(255)',
        },
        indexes => {
            status      => 1,
@@ -932,28 +934,6 @@ sub to_ping_url_list {
     [ split /\r?\n/, $urls ];
 }
 
-# TBD: Write a test for this routine
-sub make_atom_id {
-    my $entry = shift;
-
-    my $blog = $entry->blog;
-    my ( $host, $year, $path, $blog_id, $entry_id );
-    $blog_id  = $blog->id;
-    $entry_id = $entry->id;
-    my $url = $blog->site_url || '';
-    return unless $url;
-    $url .= '/' unless $url =~ m!/$!;
-    if ( $url && ( $url =~ m!^https?://([^/:]+)(?::\d+)?(/.*)$! ) ) {
-        $host = $1;
-        $path = $2;
-    }
-    if ( $entry->authored_on && ( $entry->authored_on =~ m/^(\d{4})/ ) ) {
-        $year = $1;
-    }
-    return unless $host && $year && $path && $blog_id && $entry_id;
-    qq{tag:$host,$year:$path/$blog_id.$entry_id};
-} ## end sub make_atom_id
-
 sub discover_tb_from_entry {
     my $entry = shift;
     ## If we need to auto-discover TrackBack ping URLs, do that here.
@@ -1119,10 +1099,6 @@ sub save {
     unless ( $entry->SUPER::save(@_) ) {
         print STDERR "error during save: " . $entry->errstr . "\n";
         die $entry->errstr;
-    }
-    if ( !$entry->atom_id && ( ( $entry->status || 0 ) != HOLD ) ) {
-        $entry->atom_id( $entry->make_atom_id() );
-        $entry->SUPER::save(@_) if $entry->atom_id;
     }
 
     ## If pings are allowed on this entry, create or update

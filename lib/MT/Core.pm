@@ -1627,14 +1627,6 @@ BEGIN {
             },
         },
         config_settings => {
-            'AtomApp' => {
-                           type    => 'HASH',
-                           default => {
-                                   weblog => 'MT::AtomServer::Weblog::Legacy',
-                                   '1.0'  => 'MT::AtomServer::Weblog',
-                                   comments => 'MT::AtomServer::Comments',
-                           },
-            },
             'SchemaVersion'   => undef,
             'MTVersion'       => undef,
             'NotifyUpgrade'   => { default => 1 },
@@ -1728,7 +1720,6 @@ BEGIN {
             'SearchScript'          => { default => 'search.cgi', },
             'XMLRPCScript'          => { default => 'xmlrpc.cgi', },
             'ViewScript'            => { default => 'view.cgi', },
-            'AtomScript'            => { default => 'atom.cgi', },
             'UpgradeScript'         => { default => 'upgrade.cgi', },
             'CheckScript'           => { default => 'check.cgi', },
             'NotifyScript'          => { default => 'add-notify.cgi', },
@@ -1920,7 +1911,6 @@ BEGIN {
         upgrade_functions => \&load_upgrade_fns,
         applications      => {
             'xmlrpc'   => { handler => 'MT::XMLRPCServer', },
-            'atom'     => { handler => 'MT::AtomServer', },
             'feeds'    => { handler => 'MT::App::ActivityFeeds', },
             'view'     => { handler => 'MT::App::Viewer', },
             'notify'   => { handler => 'MT::App::NotifyList', },
