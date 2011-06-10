@@ -29,7 +29,7 @@ sub edit {
 
         if ( $blog->use_revision ) {
             $original_revision = $obj->revision;
-            my $rn = $q->param('r');
+            my $rn = $q->param('r') || 0;
             if ( $rn != $obj->current_revision ) {
                 my $status_text = MT::Entry::status_text( $obj->status );
                 $param->{current_status_text} = $status_text;
