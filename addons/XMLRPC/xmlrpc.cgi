@@ -23,9 +23,9 @@ sub BEGIN {
 }
 
 use XMLRPC::Transport::HTTP;
-use MT::XMLRPCServer;
+use XMLRPC::Server;
 
-$MT::XMLRPCServer::MT_DIR = $MT_DIR;
+$XMLRPC::Server::MT_DIR = $MT_DIR;
 
 use vars qw($server);
 {

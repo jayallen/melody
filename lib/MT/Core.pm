@@ -1718,7 +1718,6 @@ BEGIN {
             'CommentScript'         => { default => 'comments.cgi', },
             'TrackbackScript'       => { default => 'tb.cgi', },
             'SearchScript'          => { default => 'search.cgi', },
-            'XMLRPCScript'          => { default => 'xmlrpc.cgi', },
             'ViewScript'            => { default => 'view.cgi', },
             'UpgradeScript'         => { default => 'upgrade.cgi', },
             'CheckScript'           => { default => 'check.cgi', },
@@ -1910,7 +1909,6 @@ BEGIN {
         },
         upgrade_functions => \&load_upgrade_fns,
         applications      => {
-            'xmlrpc'   => { handler => 'MT::XMLRPCServer', },
             'feeds'    => { handler => 'MT::App::ActivityFeeds', },
             'view'     => { handler => 'MT::App::Viewer', },
             'notify'   => { handler => 'MT::App::NotifyList', },
