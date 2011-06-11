@@ -54,6 +54,7 @@
       <mt:var name="linked_script" relpath="jquery/ui/jquery.ui.all.js">
       <mt:var name="linked_script" relpath="js/fancybox/jquery.fancybox-1.3.4.js">
 
+      <mt:unless name="disable_typecore">
       <mt:var name="linked_script" relpath="js/common/Core.js">
       <mt:var name="linked_script" relpath="js/common/Timer.js">
       <mt:var name="linked_script" relpath="js/common/Cookie.js">
@@ -69,6 +70,7 @@
       <mt:var name="linked_script" relpath="js/common/Template.js">
       <mt:var name="linked_script" relpath="js/tc.js">
       <mt:var name="linked_script" relpath="js/tc/tableselect.js">
+      </mt:unless>
     <mt:else>
       <mt:if name="jqueryurl" like="/mt-static\/jquery\/jquery.js">
           <mt:var name="jqueryurl" replace="jquery.js","jquery.min.js" setvar="jqueryurl">
