@@ -1,12 +1,13 @@
+var pre_sortable_node;
+
 function restoreBarPosition() {
     var current_bar_position = mt.screen.position_actions_both ? 'both' : 
        mt.screen.position_actions_top ? 'top' : 
           mt.screen.position_actions_bottom ? 'bottom' : 'top';
     setBarPosition( current_bar_position );
-    getByID( 'bar_position_' + current_bar_position ).checked = 'checked';
+    jQuery( '#bar_position_' + current_bar_position ).attr('checked','checked');
 }
 
-var pre_sortable_node;
 function setCustomFields(args) {
     var i = 0;
 
@@ -67,7 +68,7 @@ function clearDirty () {
 var tagList;
 
 function rebasename(title) {
-    if (!orig_basename) {
+    if (!mt.screen.orig_basename) {
         dir_title = dirify(title.value);
         dir_title = dir_title.substring(0, mt.screen.basename_limit);
         trimmed = dir_title.match(/^(.*[^_])/);
@@ -163,23 +164,22 @@ function listPreviousPings () {
 }
 
 jQuery(document).ready( function($) {
+/*
+    $('button.save').click( function() { $(this).parents('form').find('input[name=__mode]').val('save_entry'); });
+    $('button.preview').click( function() { $(this).parents('form').find('input[name=__mode]').val('preview_entry'); });
     $('#entry_form').ajaxForm({
         beforeSubmit: function(arr) {
-            alert('submitting form');
             $.fancybox({
                 //'orig': $(this),
                 'opacity': .5,
                 'centerOnScroll': true,
-                'titleShow': false,
                 'showCloseButton': false,
                 'enableEscapeButton': false,
-                'padding': 0,
                 'content': 'Saving...',
                 'title'   : 'Saving Entry',
                 'transitionIn': 'elastic',
                 'transitionOut': 'elastic'
             });
-
         },
         forceSync: true,
         success: function(txt, status, xhr) {
@@ -187,4 +187,5 @@ jQuery(document).ready( function($) {
         },
         dataType: 'json'
     });
+*/
 });
