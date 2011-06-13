@@ -126,73 +126,29 @@ sub list_props {
             },
         },
         nickname => 'Nickname',
-        ## TBD
-        #status => {
-        #    base => '__common.single_select',
-        #    label => 'Status',
-        #    col   => 'status',
-        #    html => sub {
-        #        my ( $prop, $obj ) = @_;
-        #        my $status = $obj->status;
-        #        my $img;
-        #        if ( $obj->type == MT::Author::AUTHOR() ) {
-        #            $img = $obj->is_active    ? 'user-enabled.gif'
-        #                 : $obj->is_banned    ? 'user-disabled.gif'
-        #                 :                      'user-pending.gif'
-        #                 ;
-        #        }
-        #        else {
-        #            $img = $obj->is_trusted   ? 'trusted.gif'
-        #                 : $obj->is_banned    ? 'banned.gif'
-        #                 :                      'authenticated.gif'
-        #                 ;
-        #        }
-        #
-        #        return sprintf '<img src="%s" />',
-        #            MT->static_path . 'images/status_icons/' . $img;
-        #    },
-        #    terms => sub {
-        #        my ( $prop, $args, $db_terms, $db_args ) = @_;
-        #        my $filter = $args->{value};
-        #        my ( $join_terms, $join_args ) = ({},{});
-        #        if ( $filter eq 'trusted' ) {
-        #            $join_terms = { permissions => { like => '%comment%' } };
-        #        }
-        #        elsif ( $filter eq 'active' ) {
-        #            $join_terms = [
-        #                { permissions =>  { not_like => '%comment%' } },
-        #                '-and',
-        #                { restrictions => { not_like => '%comment%' } },
-        #            ];
-        #        }
-        #        elsif ( $filter eq 'banned' ) {
-        #            $join_terms->{restrictions} = { like => '%comment%' };
-        #        }
-        #
-        #
-        #        my $orig_join = $db_args->{join};
-        #        $join_args->{join} = $orig_join if $orig_join;
-        #        my $id_term = $db_terms->{id};
-        #        $db_terms->{id} = $id_term && 'ARRAY' eq ref $id_term
-        #                        ? [ @$id_term, \" = permission_author_id" ]
-        #                        : $id_term
-        #                        ? [ '-and', $id_term, \" = permission_author_id" ]
-        #                        : \" = permission_author_id";
-        #        $db_args->{join} = MT->model('permission')->join_on(
-        #            undef, $join_terms, $join_args,
-        #        );
-        #        use YAML;
-        #        print STDERR YAML::Dump $db_terms;
-        #        print STDERR YAML::Dump $db_args;
-        #        return;
-        #    },
-        #    single_select_options => [
-        #        { label => 'Trusted',  value => 'trusted', },
-        #        { label => 'Active',   value => 'active',  },
-        #        { label => 'Banned',   value => 'banned',  },
-        #        { label => 'Pending',  value => 'pending', },
-        #    ],
-        #},
+        status => {
+            base    => '__virtual.single_select',
+            display => 'none',
+            label   => 'Status',
+            col     => 'status',
+            terms   => sub {
+                my $prop = shift;
+                my ( $args, $db_terms, $db_args ) = @_;
+                my $val      = $args->{value};
+                my %statuses = (
+                    active   => ACTIVE(),
+                    disabled => INACTIVE(),
+                    pending  => PENDING(),
+                );
+                $val = exists $statuses{$val} ? $statuses{$val} : $val;
+                return { status => $val };
+            },
+            single_select_options => [
+                { label => MT->translate('Active'),   value => 'active', },
+                { label => MT->translate('Disabled'), value => 'disabled', },
+                { label => MT->translate('Pending'),  value => 'pending', },
+            ],
+        },
         author_name => {
             base => '__common.author_name',
             label => 'Created by',
