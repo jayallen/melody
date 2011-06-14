@@ -747,6 +747,7 @@ BEGIN {
                                 : $obj->has_column('blog_id') ? $obj->blog_id
                                 : 0
                             );
+                            print STDERR "action: " . $prop->list_permit_action . "\n";
                             return $count
                                 unless $perm->can_do(
                                 $prop->list_permit_action );
@@ -1051,7 +1052,7 @@ BEGIN {
         listing_screens => {
             blog => {
                 object_label     => 'Blog',
-                view             => 'system',
+                view             => [ 'system' ],
                 primary          => 'name',
                 default_sort_key => 'name',
                 scope_mode       => 'none',
@@ -1355,7 +1356,7 @@ BEGIN {
                     inherit       => 0,
                 },
                 default_sort_key => 'name',
-                view             => [ 'blog' ],
+#                view             => [ 'blog' ],
                 scope_mode       => 'none',
             },
             association => {

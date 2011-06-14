@@ -59,7 +59,8 @@ sub _init_core {
     if ( !defined $prop && $cls ne '__common' ) {
         my $common_props = MT->registry( list_properties => '__common' );
         $prop = $common_props->{$id};
-
+#        use Data::Dumper;
+#        print STDERR Dumper($prop);
         # Property is undefined
         die MT->translate( q{Can't initialize list property [_1].[_2].},
             $cls, $id )

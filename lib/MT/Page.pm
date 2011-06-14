@@ -38,48 +38,86 @@ __PACKAGE__->add_callback( 'post_remove', 0, MT->component('core'),
 
 sub list_props {
     return {
-        text => {
-            base => 'entry.text',
-        },
-        text_more => {
-            base => 'entry.text_more',
-        },
-        title => {
-            base => 'entry.title',
-            html => sub {
-                my ( $prop, $obj ) = @_;
-                ## FIXME
-                return $obj->title;
-                #my $id    = $obj->id;
-                #return qq{<a href="<mt:var name="script_url">?__mode=view&_type=page&blog_id=<mt:pageblogid>&id=<mt:pageid>"><mt:pageTitle></a> [<a href="<mt:pagePermalink>">>></a>]};
-            },
-        },
-        authored_on => {
-            base      => 'entry.authored_on',
-        },
-        status => {
-            base => 'entry.status',
-        },
-        author_name => {
-            base => 'entry.author_name',
-        },
-        basename => {
-            base => 'entry.basename',
-        },
-        comment_count => {
-            base => 'entry.comment_count',
-        },
-        ping_count => {
-            base => 'entry.ping_count',
+        id          => { base => 'entry.id',          order => 100, },
+        title       => { base => 'entry.title',       order => 200, },
+        author_name => { base => 'entry.author_name', order => 300, },
+        blog_name   => {
+            base    => '__common.blog_name',
+            display => 'default',
+            order   => 400,
         },
         folder => {
-            base => 'entry.primary_category',
-            label => 'Folder',
-            category_class => 'folder',
+            base             => 'entry.category',
+            label            => 'Folder',
+            filter_label     => 'Folder',
+            display          => 'default',
+            view_filter      => [ 'blog', 'website' ],
+            order            => 500,
+            category_class   => 'folder',
+            zero_state_label => '(root)',
         },
-        tag => {
-            base => 'entry.tag',
+        folder_id => {
+            base             => 'entry.category_id',
+            label            => 'Folder',
+            filter_label     => 'Folder',
+            display          => 'default',
+            view_filter      => [ 'blog', 'website' ],
+            order            => 500,
+            category_class   => 'folder',
+            zero_state_label => '(root)',
+            label_via_param  => sub {
+                my $prop  = shift;
+                my ($app) = @_;
+                my $id    = $app->param('filter_val');
+                my $cat   = MT->model('folder')->load($id);
+                my $label = MT->translate( 'Pages in folder: [_1]',
+                    $cat->label." (ID:".$cat->id.")", );
+                $prop->{filter_label} = MT::Util::encode_html($label);
+                $label
+            },
         },
+        created_on  => { base => 'entry.created_on', order => 600, },
+        modified_on => {
+            order   => 700,
+            base    => 'entry.modified_on',
+            display => 'default',
+        },
+        comment_count => {
+            display => 'optional',
+            base    => 'entry.comment_count',
+            order   => 800,
+        },
+        ping_count => { base => 'entry.ping_count', order => 900, },
+
+        text      => { base => 'entry.text' },
+        text_more => { base => 'entry.text_more' },
+        excerpt   => {
+            base    => 'entry.excerpt',
+            display => 'none',
+            label   => 'Excerpt',
+        },
+        authored_on => {
+            base    => 'entry.authored_on',
+            display => 'optional',
+        },
+        status => {
+            base                  => 'entry.status',
+            single_select_options => [
+                { label => MT->translate('Draft'),     value => 1, },
+                { label => MT->translate('Published'), value => 2, },
+                { label => MT->translate('Scheduled'), value => 4, },
+            ],
+        },
+        basename     => { base => 'entry.basename' },
+        commented_on => { base => 'entry.commented_on' },
+        tag          => {
+            base   => 'entry.tag',
+            tag_ds => 'entry',
+        },
+        current_user =>
+            { base => 'entry.current_user', label => 'My Pages', },
+        author_status   => { base => 'entry.author_status' },
+        current_context => { base => '__common.current_context' },
     };
 }
 

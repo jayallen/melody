@@ -182,159 +182,284 @@ sub container_label {
 
 sub list_props {
     return {
-        text => {
-            auto    => 1,
-            display => 'none',
-            label   => 'Body',
-        },
-        text_more => {
-            auto    => 1,
-            display => 'none',
-            label   => 'Extended',
+        id => {
+            base  => '__virtual.id',
+            order => 100,
         },
         title => {
-            auto  => 1,
-            label => 'Title',
-            display => 'force',
-            order => 100,
+            base       => '__virtual.title',
+            label      => 'Title',
+            display    => 'force',
+            order      => 200,
             sub_fields => [
-                {
-                    id    => 'status',
-                    label => 'Status',
+                {   class   => 'status',
+                    label   => 'Status',
+                    display => 'default',
                 },
-                {
-                    id    => 'link',
-                    label => 'Link',
+                {   class   => 'view-link',
+                    label   => 'Link',
+                    display => 'default',
                 },
-                {
-                    id    => 'excerpt',
-                    label => 'Excerpt',
+                {   class   => 'excerpt',
+                    label   => 'Excerpt',
+                    display => 'optional',
                 },
             ],
             html => sub {
-                my ( $prop, $obj ) = @_;
-                my $title = $obj->title;
-                my $id    = $obj->id;
-                # FIXME: mt:entryPermalink dies in system context.
-                # return qq{<a href="<mt:var name="script_url">?__mode=view&_type=entry&blog_id=<mt:entryblogid>&id=<mt:entryid>"><mt:entryTitle></a> [<a href="<mt:entryPermalink>">>></a>]};
-                return $obj->title;
+                my $prop        = shift;
+                my ($obj)       = @_;
+                my $class       = $obj->class;
+                my $class_label = $obj->class_label;
+                my $title       = $prop->super(@_);
+                my $excerpt     = remove_html( $obj->excerpt )
+                    || remove_html( $obj->text );
+                ## FIXME: Hard coded
+                my $len = 40;
+                if ( length $excerpt > $len ) {
+                    $excerpt = substr( $excerpt, 0, $len );
+                    $excerpt .= '...';
+                }
+                my $id        = $obj->id;
+                my $permalink = MT::Util::encode_html( $obj->permalink );
+                my $edit_url  = MT->app->uri(
+                    mode => 'view',
+                    args => {
+                        _type   => $class,
+                        id      => $obj->id,
+                        blog_id => $obj->blog_id,
+                    }
+                );
+                my $status = $obj->status;
+                my $status_class
+                    = $status == MT::Entry::HOLD()    ? 'Draft'
+                    : $status == MT::Entry::RELEASE() ? 'Published'
+                    : $status == MT::Entry::REVIEW()  ? 'Review'
+                    : $status == MT::Entry::FUTURE()  ? 'Future'
+                    : $status == MT::Entry::JUNK()    ? 'Junk'
+                    :                                   '';
+                my $lc_status_class = lc $status_class;
+                require MT::Entry;
+                my $status_file
+                    = $status == MT::Entry::HOLD()    ? 'draft.gif'
+                    : $status == MT::Entry::RELEASE() ? 'success.gif'
+                    : $status == MT::Entry::REVIEW()  ? 'warning.gif'
+                    : $status == MT::Entry::FUTURE()  ? 'future.gif'
+                    : $status == MT::Entry::JUNK()    ? 'warning.gif'
+                    :                                   '';
+                my $status_img
+                    = MT->static_path . 'images/status_icons/' . $status_file;
+                my $view_img
+                    = MT->static_path . 'images/status_icons/view.gif';
+                my $view_link = $obj->status == MT::Entry::RELEASE()
+                    ? qq{
+                    <span class="view-link">
+                      <a href="$permalink" target="_blank">
+                        <img alt="View $class_label" src="$view_img" />
+                      </a>
+                    </span>
+                }
+                    : '';
+
+                my $out = qq{
+                    <span class="icon status $lc_status_class">
+                      <a href="$edit_url"><img alt="$status_class" src="$status_img" /></a>
+                    </span>
+                    <span class="title">
+                      $title
+                    </span>
+                    $view_link
+                };
+                $out .= qq{<p class="excerpt description">$excerpt</p>}
+                    if trim($excerpt);
+                return $out;
             },
         },
-        authored_on => {
-            auto      => 1,
-            label     => 'Authored on',
+        author_name => {
+            base    => '__virtual.author_name',
+            order   => 300,
+            display => 'default',
         },
-        status => {
-            label => 'Status',
-            col  => 'status',
-            display => 'none',
-            base => '__common.single_select',
-            single_select_options => [
-                { label => 'Draft',     value => 1, },
-                { label => 'Published', value => 2, },
-                { label => 'Reviewing', value => 3, },
-                { label => 'Future',    value => 4, },
-                { label => 'Junk',      value => 5, },
-            ],
-        },
-        created_on => {
-            base => '__common.created_on',
+        blog_name => {
+            base  => '__common.blog_name',
+            label => sub {
+                MT->translate('Blog Name')
+                #MT->app->blog
+                #    ? MT->translate('Blog Name')
+                #    : MT->translate('Website/Blog Name');
+            },
             display   => 'default',
-            order => 600,
+            site_name => sub { MT->app->blog ? 0 : 1 },
+            order     => 400,
         },
-        basename => {
-            label => 'Basename',
-            auto  => 1,
-        },
-        comment_count => {
-            base  => '__common.single_select',
-            col   => 'comment_count',
-            label => 'Comments',
-            default_sort_order => 'descend',
+        category_id => {
+            label            => 'Primary Category',
+            filter_label     => 'Category',
+            filter_tmpl        => '<mt:Var name="filter_form_hidden">',
+            order            => 500,
+            display          => 'default',
+            base             => '__virtual.integer',
+            filter_editable    => 0,
+            col_class        => 'string',
+            view_filter      => 'blog',
+            category_class   => 'category',
             terms => sub {
-                my ( $prop, $args ) = @_;
-                my $col = $prop->col;
-                if ( $args->{value} ) {
-                    return { $col => { '>' => 0 }};
-                }
-                else {
-                    return { $col => 0 };
-                }
-            },
-            sort => sub {
-                my $prop = shift;
-                my ( $terms, $args ) = @_;
-                $args->{sort} = $prop->col;
-            },
-            single_select_options => [
-                { label => 'Has comments', value => 1 },
-                { label => 'No comments', value => 0 },
-            ],
-        },
-        ping_count => {
-            base  => 'entry.comment_count',
-            col   => 'ping_count',
-            label => 'Trackbacks',
-        },
-        commented_on => {
-            base          => '__common.date',
-            label         => 'Commented on',
-            comment_class => 'comment',
-            display       => 'none',
-            terms => sub {
-                my $prop   = shift;
-                my ( $args, $db_terms, $db_args ) = @_;
-                my $option = $args->{option};
-                my $query;
-                my $blog = MT->app ? MT->app->blog : undef;
-                require MT::Util;
-                my $now = MT::Util::epoch2ts( $blog, time() );
-                if ( 'range' eq $option ) {
-                    $query = [
-                        '-and',
-                        { op => '>', value => $args->{from} },
-                        { op => '<', value => $args->{to}   },
-                    ];
-                }
-                elsif ('days' eq $option ) {
-                    my $days   = $args->{days};
-                    my $origin = MT::Util::epoch2ts( $blog, time - $days * 60 * 60 * 24 );
-                    $query = [
-                        '-and',
-                        { op => '>', value => $origin },
-                        { op => '<', value => $now    },
-                    ];
-                }
-                elsif ('before' eq $option ) {
-                    $query = { op => '<', value => $args->{origin} };
-                }
-                elsif ('after' eq $option ) {
-                    $query = { op => '>', value => $args->{origin} };
-                }
-                elsif ('future' eq $option ) {
-                    $query = { op => '>', value => $now };
-                }
-                elsif ('past' eq $option ) {
-                    $query = { op => '<', value => $now };
-                }
-                my $orig_join = $db_args->{join};
-                my $eidstr = '=entry_id';
-                $db_args->{join} = MT->model( $prop->comment_class )->join_on(
+                my ( $prop, $args, $db_terms, $db_args ) = @_;
+                my $blog_id = MT->app->blog->id;
+                my $cat_id  = $args->{value};
+                return $prop->error(
+                    MT->translate(
+                        '[_1] ( id:[_2] ) does not exists.',
+                        $prop->datasource->container_label,
+                        $cat_id
+                    )
+                ) unless $cat_id;
+
+                $db_args->{joins} ||= [];
+                my $join_str = '= entry_id';
+                push @{ $db_args->{joins} }, MT->model('placement')->join_on(
                     undef,
-                    { entry_id => \$eidstr, created_on => $query },
-                    ( $orig_join ? { join => $orig_join } : () ),
+                    {   category_id => $cat_id,
+                        entry_id    => \$join_str,
+                        blog_id     => $blog_id,
+                    },
+                    { unique => 1, },
                 );
                 return;
             },
-            sort => 0,
-        },
-        tag => {
-            base => '__common.string',
-            label => 'Tag',
-            display => 'none',
-            terms => sub {
+            args_via_param => sub {
                 my $prop = shift;
-                my ( $args, $base_terms, $base_args ) = @_;
+                my ( $app, $val ) = @_;
+                my $id    = MT->app->param('filter_val');
+                my $cat   = MT->model('category')->load($id)
+                    or return $prop->error(
+                    MT->translate(
+                        '[_1] ( id:[_2] ) does not exists.',
+                        $prop->datasource->container_label,
+                        $id
+                    )
+                    );
+                return { option => 'equal', value => $cat->id };
+            },
+            label_via_param => sub {
+                my $prop  = shift;
+                my ($app) = @_;
+                my $id    = $app->param('filter_val');
+                my $cat   = MT->model('category')->load($id)
+                    or return $prop->error(
+                    MT->translate(
+                        '[_1] ( id:[_2] ) does not exists.',
+                        $prop->datasource->container_label,
+                        $id
+                    )
+                    );
+                return if !$app->blog || $app->blog->id != $cat->blog_id;
+                my $label = MT->translate( 'Entries from category: [_1]',
+                    $cat->label." (ID:".$cat->id.")", );
+                $prop->{filter_label} = MT::Util::encode_html($label);
+                $label
+            },
+        },
+        category => {
+            label            => 'Primary Category',
+            filter_label     => 'Category',
+            order            => 500,
+            display          => 'default',
+            base             => '__virtual.string',
+            col_class        => 'string',
+            view_filter      => 'blog',
+            category_class   => 'category',
+            zero_state_label => '-',
+            bulk_cats        => sub {
+                my $prop = shift;
+                my ( $objs, $app, $opts ) = @_;
+                return ( $opts->{bulk_cats}, $opts->{bulk_placements} )
+                    if $opts->{bulk_cats};
+                my @entry_ids = map { $_->id } @$objs;
+                my @placements = MT->model('placement')->load(
+                    {   entry_id   => \@entry_ids,
+                        is_primary => 1,
+                    },
+                    {   fetchonly => {
+                            entry_id    => 1,
+                            category_id => 1,
+                        }
+                    }
+                );
+                unless ( scalar @placements ) {
+                    $opts->{bulk_placements} = {};
+                    $opts->{bulk_cats}       = {};
+                    return ( {}, {} );
+                }
+                my %placements
+                    = map { $_->entry_id => $_->category_id } @placements;
+                $opts->{bulk_placements} = \%placements;
+                my @cat_ids = map { $_->category_id } @placements;
+                my @categories = MT->model( $prop->category_class )->load(
+                    { id => \@cat_ids },
+                    {   fetchonly => {
+                            id    => 1,
+                            label => 1,
+                        }
+                    }
+                );
+                my %categories = map { $_->id => $_->label } @categories;
+                $opts->{bulk_cats} = \%categories;
+                return ( \%categories, \%placements );
+            },
+            bulk_html => sub {
+                my $prop = shift;
+                my ( $objs, $app, $opts ) = @_;
+                my ( $cats, $placs ) = $prop->bulk_cats(@_);
+                return map {
+                    MT::Util::encode_html(
+                        $cats->{ $placs->{ $_->id } || 0 } )
+                        || $prop->zero_state_label
+                } @$objs;
+            },
+            bulk_sort => sub {
+                my $prop = shift;
+                my ( $objs, $app, $opts ) = @_;
+                my ( $cats, $placs ) = $prop->bulk_cats(@_);
+                return sort {
+                    (          $cats->{ $placs->{ $a->id } || 0 }
+                            || $prop->zero_state_label )
+                        cmp(   $cats->{ $placs->{ $b->id } || 0 }
+                            || $prop->zero_state_label )
+                } @$objs;
+            },
+            raw => sub {
+                my ( $prop, $obj ) = @_;
+                my $cat = $obj->category;
+                return $cat ? $cat->label : '';
+            },
+
+            #condition => sub {
+            #    my $app = MT->app or return;
+            #    return !$app->blog         ? 0
+            #         : $app->blog->is_blog ? 1
+            #         :                       0
+            #         ;
+            #},
+            # single_select_options => sub {
+            #     my ($prop)     = shift;
+            #     my $blog       = MT->app->blog;
+            #     my @categories = MT->model( $prop->category_class )
+            #         ->load( { blog_id => $blog->id, } );
+            #     return [
+            #         {   label => MT->translate('NONE'),
+            #             value => 0,
+            #         },
+            #         map {
+            #             {   label => $_->label,
+            #                 value => $_->id,
+            #             }
+            #             } @categories
+            #     ];
+            # },
+            terms => sub {
+                my ( $prop, $args, $db_terms, $db_args ) = @_;
+                my $blog_id = MT->app->blog->id;
+                my $app = MT->instance;
                 my $option = $args->{option};
                 my $query  = $args->{string};
                 if ( 'contains' eq $option ) {
@@ -349,75 +474,238 @@ sub list_props {
                 elsif ( 'end' eq $option ) {
                     $query = { like => "%$query" };
                 }
-
-                ## FIXME: use join...
-                my $ds       = $prop->object_type;
-                my @tags     = MT->model('tag')->load({ name => $query }, { fetchonly => { id => 1 } });
-                my @object_tags = MT->model('objecttag')->load({
-                    object_datasource => $ds,
-                    tag_id            => [ map { $_->id } @tags ],
-                    }, {
-                    fetchonly => { object_id => 1 },
-                });
-                return { id => [ map { $_->object_id } @object_tags ] };
+                my $join_str1 = '= entry_id';
+                my $join_str2 = '= placement_category_id';
+                push @{ $db_args->{joins} },
+                    MT->model('placement')->join_on(
+                    undef,
+                    {   entry_id => \$join_str1,
+                        blog_id  => $blog_id,
+                    },
+                    {   unique => 1,
+                        join   => MT->model($prop->category_class)->join_on(
+                            undef,
+                            {   label   => $query,
+                                id      => \$join_str2,
+                                blog_id => $blog_id,
+                            },
+                            { unique => 1, }
+                        ),
+                    },
+                    );
+                return;
             },
-
         },
-        primary_category => {
-            label => 'Primary Category',
-            order => 400,
-            display   => 'default',
-            base  => '__common.single_select',
-            view_filter => 'blog',
-            category_class => 'category',
-            bulk_html => sub {
+        authored_on => {
+            auto       => 1,
+            display    => 'default',
+            label      => 'Publish Date',
+            use_future => 1,
+            order      => 600,
+        },
+        modified_on => {
+            base  => '__virtual.modified_on',
+            order => 700,
+        },
+        comment_count => {
+            auto         => 1,
+            display      => 'default',
+            label        => 'Comments',
+            filter_label => '__COMMENT_COUNT',
+            order        => 800,
+            html_link    => sub {
                 my $prop = shift;
-                my ( $objs ) = @_;
-                my @entry_ids  = map { $_->id } @$objs;
-                my @placements = MT->model('placement')->load({
-                    entry_id   => \@entry_ids,
-                    is_primary => 1, }, {
-                        fetchonly => {
-                            entry_id    => 1,
-                            category_id => 1,
-                        }});
-                my %placements = map { $_->entry_id => $_->category_id } @placements;
-                my @cat_ids    = map { $_->category_id } @placements;
-                my @categories = MT->model($prop->category_class)->load({ id => \@cat_ids }, {
-                    fetchonly => {
-                        id    => 1,
-                        label => 1,
-                    }});
-                my %categories = map { $_->id => $_->label } @categories;
-                return map { $categories{  $placements{$_->id} } || '' } @$objs;
+                my ( $obj, $app, $opts ) = @_;
+                return unless $app->can_do('access_to_comment_list');
+                return $app->uri(
+                    mode => 'list',
+                    args => {
+                        _type      => 'comment',
+                        filter     => 'entry',
+                        filter_val => $obj->id,
+                        blog_id    => $opts->{blog_id} || 0,
+                    },
+                );
             },
-            raw   => sub {
-                my ( $prop, $obj ) = @_;
-                my $cat = $obj->category;
-                return $cat ? $cat->label : '';
+        },
+        ping_count => {
+            auto         => 1,
+            display      => 'optional',
+            label        => 'Trackbacks',
+            filter_label => '__PING_COUNT',
+            order        => 900,
+            html_link    => sub {
+                my $prop = shift;
+                my ( $obj, $app, $opts ) = @_;
+                return unless $app->can_do('access_to_trackback_list');
+                return $app->uri(
+                    mode => 'list',
+                    args => {
+                        _type      => 'ping',
+                        filter     => 'entry_id',
+                        filter_val => $obj->id,
+                        blog_id    => $opts->{blog_id} || 0,
+                    },
+                );
             },
-#            condition => sub {
-#                my $app = MT->app or return;
-#                return $app->blog ? 1 : 0;
-#            },
-            single_select_options => sub {
-                my ( $prop ) = shift;
-                my $blog = MT->app->blog;
-                my @categories = MT->model($prop->category_class)->load({
-                    blog_id => $blog->id,
-                });
-                return [ map {{
-                    label => $_->label,
-                    value => $_->id,
-                }} @categories ];
+        },
+        text => {
+            auto    => 1,
+            display => 'none',
+            label   => 'Body',
+        },
+        text_more => {
+            auto    => 1,
+            display => 'none',
+            label   => 'Extended',
+        },
+        excerpt => {
+            auto    => 1,
+            display => 'none',
+            label   => 'Excerpt',
+        },
+        status => {
+            label                 => 'Status',
+            col                   => 'status',
+            display               => 'none',
+            col_class             => 'icon',
+            base                  => '__virtual.single_select',
+            single_select_options => [
+                { label => MT->translate('Draft'),     value => 1, },
+                { label => MT->translate('Published'), value => 2, },
+                { label => MT->translate('Reviewing'), value => 3, },
+                { label => MT->translate('Scheduled'), value => 4, },
+                { label => MT->translate('Junk'),      value => 5, },
+            ],
+        },
+        created_on => {
+            base    => '__virtual.created_on',
+            display => 'none',
+        },
+        basename => {
+            label   => 'Basename',
+            display => 'none',
+            auto    => 1,
+        },
+        commented_on => {
+            base          => '__virtual.date',
+            label         => 'Date Commented',
+            comment_class => 'comment',
+            display       => 'none',
+            terms         => sub {
+                my $prop = shift;
+                my ( $args, $db_terms, $db_args ) = @_;
+                my $option = $args->{option};
+                my $query;
+                my $blog = MT->app ? MT->app->blog : undef;
+                require MT::Util;
+                my $now = MT::Util::epoch2ts( $blog, time() );
+                my $from   = $args->{from}   || undef;
+                my $to     = $args->{to}     || undef;
+                my $origin = $args->{origin} || undef;
+                $from   =~ s/\D//g;
+                $to     =~ s/\D//g;
+                $origin =~ s/\D//g;
+                $from .= '000000' if $from;
+                $to   .= '235959' if $to;
+
+                if ( 'range' eq $option ) {
+                    $query = [
+                        '-and',
+                        { op => '>', value => $from },
+                        { op => '<', value => $to },
+                    ];
+                }
+                elsif ( 'days' eq $option ) {
+                    my $days   = $args->{days};
+                    my $origin = MT::Util::epoch2ts( $blog,
+                        time - $days * 60 * 60 * 24 );
+                    $query = [
+                        '-and',
+                        { op => '>', value => $origin },
+                        { op => '<', value => $now },
+                    ];
+                }
+                elsif ( 'before' eq $option ) {
+                    $query = { op => '<', value => $origin . '000000' };
+                }
+                elsif ( 'after' eq $option ) {
+                    $query = { op => '>', value => $origin . '235959' };
+                }
+                elsif ( 'future' eq $option ) {
+                    $query = { op => '>', value => $now };
+                }
+                elsif ( 'past' eq $option ) {
+                    $query = { op => '<', value => $now };
+                }
+                $db_args->{joins} ||= [];
+                my $join_str = '= entry_id';
+                push @{ $db_args->{joins} },
+                    MT->model( $prop->comment_class )->join_on(
+                    undef,
+                    { entry_id => \$join_str, created_on => $query },
+                    { unique   => 1, },
+                    );
+                return;
             },
+            sort => 0,
+        },
+        author_id => {
+            auto            => 1,
+            filter_editable => 0,
+            display         => 'none',
+            label           => 'Author ID',
+            label_via_param => sub {
+                my $prop = shift;
+                my ( $app, $val ) = @_;
+                my $author = MT->model('author')->load($val);
+                return MT->translate( 'Entries by [_1]', $author->nickname, );
+            },
+        },
+        tag          => { base => '__virtual.tag', },
+        current_user => {
+            base            => '__common.current_user',
+            label           => 'My Entries',
+            filter_editable => 1,
+        },
+        author_status => {
+            base                  => '__virtual.single_select',
+            display               => 'none',
+            label                 => 'Author Status',
+            single_select_options => [
+                { label => MT->translate('Deleted'),  value => 'deleted', },
+                { label => MT->translate('Enabled'),  value => 'enabled', },
+                { label => MT->translate('Disabled'), value => 'disabled', },
+            ],
             terms => sub {
-                my ( $prop, $args ) = @_;
-                my $cat_id = $args->{value};
-                ## FIXME: use join...
-                my @placements = MT->model('placement')->load({ category_id => $cat_id, is_primary => 1 });
-                return { id => [ map { $_->entry_id } @placements ] };
+                my $prop = shift;
+                my ( $args, $db_terms, $db_args ) = @_;
+                my $val = $args->{value};
+                if ( $val eq 'deleted' ) {
+                    my @all_authors = MT->model('author')
+                        ->load( undef, { fetchonly => { id => 1 }, }, );
+                    return { author_id =>
+                            { not => [ map { $_->id } @all_authors ] }, };
+                }
+                else {
+                    my $status
+                        = $val eq 'enabled'
+                        ? MT::Author::ACTIVE()
+                        : MT::Author::INACTIVE();
+                    $db_args->{joins} ||= [];
+                    my $join_str = '= entry_author_id';
+                    push @{ $db_args->{joins} }, MT->model('author')->join_on(
+                        undef,
+                        {   id     => \$join_str,
+                            status => $status,
+                        },
+                    );
+                }
             },
+        },
+        current_context => {
+            base      => '__common.current_context',
+            condition => sub {0},
         },
     };
 }

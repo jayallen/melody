@@ -1183,7 +1183,6 @@ sub rebuild_file {
     $url .= $map->{__saved_output_file};
 
     my $tmpl_id = $map->template_id;
-
     # template specific for this entry (or page, as the case may be)
     if ( $entry && $entry->template_id ) {
 
@@ -1196,7 +1195,8 @@ sub rebuild_file {
         }
     }
 
-    my $tmpl = MT::Template->load($tmpl_id);
+    my $tmpl = MT::Template->load($tmpl_id)
+        or return $mt->error( MT->translate( "Could not load template #[_1]", $tmpl_id ) );
     $tmpl->context($ctx);
 
     # From Here

@@ -640,10 +640,11 @@ sub list {
 
     # Validate scope
     if ( my $view = $screen_settings->{view} ) {
+        print STDERR "View: ".join(',',@$view)."\n";
         $view = [$view] unless ref $view;
         my %view = map { $_ => 1 } @$view;
         if ( !$view{$scope} ) {
-            return $app->return_to_dashboard( redirect => 1, );
+            return $app->return_to_dashboard( redirect => 1 );
         }
     }
 

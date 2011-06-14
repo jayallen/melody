@@ -145,7 +145,6 @@ sub core_methods {
           { code => "${pkg}Tools::new_password", requires_login => 0, },
 
         'view_rpt_log'         => "${pkg}RptLog::view",
-        'view_log'             => "${pkg}Log::view",
         'reset_rpt_log'        => "${pkg}RptLog::reset",
         'reset_log'            => "${pkg}Log::reset",
         'export_log'           => "${pkg}Log::export",
@@ -234,6 +233,7 @@ sub core_methods {
         'js_recent_entries_for_tag' => "${pkg}Tag::js_recent_entries_for_tag",
 
         ## DEPRECATED ##
+        'view_log'          => "${pkg}Log::view",
         'list_pings'        => "${pkg}TrackBack::list",
         'list_entries'      => "${pkg}Entry::list",
         'list_pages'        => "${pkg}Page::list",
@@ -1420,7 +1420,8 @@ sub core_menus {
         'tools:activity_log' => {
                                   label             => "Activity Log",
                                   order             => 200,
-                                  mode              => "view_log",
+                                  mode      => "list",
+                                  args      => { _type => 'log', },
                                   permission        => "view_blog_log",
                                   system_permission => "view_log",
         },

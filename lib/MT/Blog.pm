@@ -152,107 +152,143 @@ sub class_label_plural {
 
 sub list_props {
     return {
+        id => {
+            base  => '__virtual.id',
+            order => 100,
+        },
         name => {
-            auto => 1,
-            label => 'Name',
+            auto      => 1,
+            label     => 'Name',
+            order     => 200,
+            display   => 'force',
             html_link => sub {
                 my ( $prop, $obj, $app ) = @_;
                 return $app->uri(
                     mode => 'dashboard',
-                    args => {
-                        blog_id => $obj->id,
-                    },
+                    args => { blog_id => $obj->id, },
                 );
             },
         },
-        description => 'Description',
         entry_count => {
-            label => 'Entries',
-            count_class => 'entry',
-            raw   => sub {
-                my ( $prop, $obj ) = @_;
-                MT->model( $prop->count_class )->count({ blog_id => $obj->id });
-            },
-            html_link => sub {
-                my ( $prop, $obj, $app ) = @_;
-                return $app->uri(
-                    mode => 'list',
-                    args => {
-                        _type     => $prop->count_class,
-                        blog_id   => $obj->id,
-                        no_filter => 1,
-                    },
-                );
-            },
+            label              => 'Entries',
+            filter_label       => '__ENTRY_COUNT',
+            order              => 300,
+            base               => '__virtual.object_count',
+            display            => 'default',
+            count_class        => 'entry',
+            count_col          => 'blog_id',
+            filter_type        => 'blog_id',
+            list_screen        => 'entry',
+            permission         => 'manage_entries',
+#            list_permit_action => 'access_to_entry_list',
         },
         page_count => {
-            base  => 'blog.entry_count',
-            label => 'Pages',
-            count_class => 'page',
-        },
-        comment_count => {
-            base  => 'blog.entry_count',
-            label => 'Comments',
-            count_class => 'comment',
-        },
-        member_count => {
-            ## FIXME : bad link
-            base  => 'blog.entry_count',
-            label => 'Members',
-            count_class => 'permission',
+            label              => 'Pages',
+            filter_label       => '__PAGE_COUNT',
+            order              => 400,
+            base               => '__virtual.object_count',
+            display            => 'default',
+            count_class        => 'page',
+            count_col          => 'blog_id',
+            filter_type        => 'blog_id',
+            list_screen        => 'page',
+            permission         => 'manage_pages',
+#            list_permit_action => 'access_to_page_list',
         },
         asset_count => {
-            base  => 'blog.entry_count',
-            label => 'Assets',
-            raw   => sub {
-                my ( $prop, $obj ) = @_;
-                MT->model( $prop->count_class )->count({ blog_id => $obj->id, class => '*' });
-            },
-            count_class => 'asset',
+            label              => 'Assets',
+            filter_label       => '__ASSET_COUNT',
+            order              => 500,
+            base               => '__virtual.object_count',
+            count_class        => 'asset',
+            count_col          => 'blog_id',
+            filter_type        => 'blog_id',
+            list_screen        => 'asset',
+            count_args         => { no_class => 1 },
+            permission         => 'manage_assets',
+#            list_permit_action => 'access_to_asset_list',
         },
-        site_url => {
-            auto  => 1,
-            label => 'Blog URL',
-            html_link => sub {
-                my ( $prop, $obj, $app ) = @_;
-                return $obj->site_url;
-            },
+        comment_count => {
+            label              => 'Comments',
+            filter_label       => '__COMMENT_COUNT',
+            order              => 600,
+            base               => '__virtual.object_count',
+            count_class        => 'comment',
+            count_col          => 'blog_id',
+            filter_type        => 'blog_id',
+            list_screen        => 'comment',
+            permission         => 'manage_comments',
+#            list_permit_action => 'access_to_comment_list',
         },
-        site_path => 'Site Path',
-#        theme_id => {
-#            label => 'Theme',
-#            raw => sub {
-#                my ( $prop, $obj ) = @_;
-#                my $theme = $obj->theme
-#                    or return '-';
-#                return ref $theme->label ? $theme->label->() : $theme->label;
-#            },
-#        },
-#        theme_thumbnail => {
-#            label => 'Theme Thumbnail',
-#            raw => sub {
-#                my ( $prop, $obj ) = @_;
-#                my $theme = $obj->theme
-#                    or return '-';
-#                my ( $url ) = $theme->thumbnail( size => 'small' );
-#                return $url;
-#            },
-#            html => sub {
-#                my ( $prop, $obj ) = @_;
-#                my $theme = $obj->theme
-#                    or return '-';
-#                my ( $url ) = $theme->thumbnail( size => 'small' );
-#                return sprintf '<img src="%s" />', $url;
-#            },
-#        },
+
+        # not in use in 5.1
+        # member_count => {
+        #     label              => 'Members',
+        #     order              => 700,
+        #     base               => '__virtual.object_count',
+        #     count_class        => 'permission',
+        #     count_col          => 'blog_id',
+        #     filter_type        => 'blog_id',
+        #     list_screen        => 'member',
+        #     count_terms        => { author_id => { not => 0 } },
+        #     list_permit_action => 'access_to_member_list',
+        # },
 #        parent_website => {
-#            view => [ 'system' ],
-#            label => 'Website',
-#            raw => sub {
+#            view            => ['system'],
+#            label           => 'Website',
+#            order           => 800,
+#            display         => 'default',
+#            filter_editable => 0,
+#            raw             => sub {
 #                my ( $prop, $obj ) = @_;
 #                return $obj->website->name;
 #            },
+#            bulk_sort => sub {
+#                my $prop    = shift;
+#                my ($objs)  = @_;
+#                my %parents = map { $_->parent_id => 1 } @$objs;
+#                return @$objs if scalar keys %parents <= 1;
+#                my @parents = MT->model('website')
+#                    ->load( { id => [ keys %parents ] } );
+#                my %parent_names = map { $_->id => $_->name } @parents;
+#                return sort {
+#                    $parent_names{ $a->parent_id }
+#                        cmp $parent_names{ $b->parent_id }
+#                } @$objs;
+#            },
 #        },
+        created_on => {
+            base  => '__virtual.created_on',
+            order => 900,
+        },
+        description => {
+            auto    => 1,
+            label   => 'Description',
+            display => 'none',
+        },
+#        theme_id => {
+#            label                 => 'Theme',
+#            base                  => '__virtual.single_select',
+#            display               => 'none',
+#            col                   => 'theme_id',
+#            single_select_options => sub {
+#                my $prop = shift;
+#                require MT::Theme;
+#                my $themes = MT::Theme->load_all_themes;
+#                return [
+#                    map { { label => $_->label, value => $_->id } }
+#                        sort { $a->label cmp $b->label }
+#                        grep {
+#                               $_->{class} eq 'blog'
+#                            || $_->{class} eq 'both'
+#                        } values %$themes
+#                ];
+#            },
+#        },
+        modified_on => {
+            display => 'none',
+            base    => '__virtual.modified_on',
+        },
     };
 }
 
