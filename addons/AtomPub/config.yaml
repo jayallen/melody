@@ -30,10 +30,9 @@ tags:
         EntryAtomID: $AtomPub::AtomPub::Tags::hdlr_entry_atom_id
 
 object_types:
-    atom_id: 'string(255)'
+    entry:
+        atom_id: 'string(255)'
 
 applications:
     atom:
         handler: 'MT::AtomServer'
-
- 
