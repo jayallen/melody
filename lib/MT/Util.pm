@@ -29,6 +29,37 @@ our @EXPORT_OK
   weaken log_time make_string_csv sanitize_embed
   browser_language encode_json );
 
+# NOTE: The following are not made available for export (for some reason):
+#
+#   _pre_to_json
+#   addbin
+#   cc_image
+#   cc_name
+#   cc_rdf
+#   cc_url
+#   convert_word_chars
+#   divbindec
+#   encode_phphere
+#   get_newsbox_html
+#   init_sax
+#   is_leap_year
+#   iso_dirify
+#   leap_day
+#   leap_year
+#   make_basename
+#   make_unique_author_basename
+#   make_unique_basename
+#   make_unique_category_basename
+#   multbindec
+#   perl_sha1_digest_base64
+#   sanitize_input
+#   strip_index
+#   to_json
+#   translate_naughty_words
+#   utf8_dirify
+#   yday_from_ts
+
+
 {
     my $Has_Weaken;
 
@@ -2676,6 +2707,61 @@ sub to_json {
     return MT::I18N::encode( MT->config->PublishCharset, $js );
 }
 
+# Tested in t/99-utils.misc
+sub file_extension {
+    my $fname        = shift;
+    require File::Basename;
+    my @parts = split(/\./, File::Basename::basename($fname));
+    shift @parts while @parts > 1 and $parts[0] eq ''; # Skips empty dotfile element
+    return @parts > 1 ? pop @parts : ''
+}  ## end sub file_extension
+
+# Tested in t/99-utils.misc
+sub file_mime_type {
+    my $file               = shift;
+    # Probably best not to return a default value because it obscures failure
+    # my $default            = 'application/octet-stream';
+    my $default            = '';
+    my $external_lib_error = sub {
+        return MT->instance->translate(
+              "An non-fatal error occurred when trying "
+            . "to determine the files MIME type using the [_1] module: ",
+            +shift
+        )
+    };
+
+    my $lwp_mediatypes = sub {
+        my $type = eval {
+            require LWP::MediaTypes;
+            LWP::MediaTypes::guess_media_type($file);
+        };
+        return $type if $type;
+        $@ and warn $external_lib_error->('LWP::MediaTypes');
+    };
+
+    my $file_mmagic = sub {
+        my $type = eval {
+            require File::MMagic;
+            my $magic = File::MMagic->new();
+            $magic->checktype_filehandle($file);
+        };
+        return $type if $type;
+        $@ and warn $external_lib_error->('File::MMagic');
+    };
+
+    return ( $lwp_mediatypes->() || $file_mmagic->() || $default );
+} ## end sub get_mime_type
+
+
+# Tested in t/99-utils.misc
+sub mime_type_extension {
+    require LWP::MediaTypes;
+    my @exts = LWP::MediaTypes::media_suffix( shift )
+        or return;
+    return wantarray ? @exts : shift @exts;
+} ## end sub mime_type_extension
+
+
 1;
 
 __END__
@@ -2913,9 +2999,46 @@ and continuing to the end of the string. Does not remove spaces
 before newlines which appear before the last non-spaace character (i.e.
 inner-string spaces).
 
-=head2 L
+=head2 file_extension( $filename_or_path )
 
-=head2 M
+Given a file name (with or without preceding path), this function returns the
+terminal file extension, if one exists, or an empty string. To illustrate what
+that means, the following are the currently implemented and passing tests:
+
+    file.txt         txt
+    file.tar.gz      gz
+    file.0           0
+    .my.cnf          cnf
+    file.            empty string
+    file             empty string
+    .htaccess        empty string
+    .                empty string
+    ..               empty string
+
+=head2 file_mime_type( $filepath );
+
+This function takes a path to a file and tries to determine the MIME type of
+the file. To do this, it first uses the C<guess_media_type()> function from
+the bundled L<LWP::MediaTypes> module. If it fails to determine the MIME type,
+the function will attempt to load the L<File::MMagic> module and use its
+C<checktype_filehandle()> function.
+
+If neither of the above yield a MIME type, the function will return an empty
+string.
+
+=head2 mime_type_extension( $mime_type )
+
+This function takes a MIME type string as its single argument and returns one
+or more file extensions associated with the MIME type provided by the
+C<media_suffix()> function of the bundled L<LWP::MediaTypes> module.
+
+When called in a list context, an array of all extensions found is returned.
+When called in a scalar context, only the first is returned which is usually
+not what you want since it's often not the most common and recognizable
+variant.
+
+If no extensions are found for the specified MIME type, the function will
+return an empty array;
 
 =head2 addbin
 
