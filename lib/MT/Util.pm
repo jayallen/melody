@@ -2708,11 +2708,15 @@ sub to_json {
 }
 
 # Tested in t/99-utils.misc
+# TODO Move this to MT::FileMgr (perhaps?)
 sub file_extension {
     my $fname        = shift;
     require File::Basename;
     my @parts = split(/\./, File::Basename::basename($fname));
-    shift @parts while @parts > 1 and $parts[0] eq ''; # Skips empty dotfile element
+
+    shift @parts
+        while @parts > 1 and $parts[0] eq ''; # Skips empty dotfile element
+
     return @parts > 1 ? pop @parts : ''
 }  ## end sub file_extension
 
@@ -2760,6 +2764,18 @@ sub mime_type_extension {
         or return;
     return wantarray ? @exts : shift @exts;
 } ## end sub mime_type_extension
+
+
+# Tested in t/99-utils.misc
+# TODO Move this to MT::FileMgr (perhaps?)
+sub match_file_extension {
+    my $filename = shift;
+    my $exts     = ref $_[0] eq 'ARRAY' ? shift : [ @_ ];
+    require File::Basename;
+    my @exts     = map { m/^\./ ? qr/$_/i : qr/\.$_/i } @$exts;
+    my @ret      = File::Basename::fileparse( $filename, @exts );
+    return $ret[2] if @ret;
+} ## end sub match_file_extension
 
 
 1;
@@ -3039,6 +3055,23 @@ variant.
 
 If no extensions are found for the specified MIME type, the function will
 return an empty array;
+
+=head2 match_file_extension( $file, \@patterns )
+
+This function compares a file name (with or without preceding path) against an
+array of one or more patterns which represent possible file extensions or
+extensions of interest.  For example:
+
+    match_file_extension( 'file.txt',  [qw( rtf txt doc )] )  # Yields '.txt'
+    match_file_extension( 'file.php3', [qw( php[s\d]?   )] )  # Yields '.php3'
+
+If a pattern matches (case-insensitive, anchored to
+the right side of the string), the matched portion of the file name is
+returned. If no match is found, the function returns an empty string.
+
+The array of patterns can be supplied either as an array reference or an array. 
+
+See t/99-utils-misc.t for far more examples of usage.
 
 =head2 addbin
 

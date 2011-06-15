@@ -7,7 +7,7 @@ use strict;
 use warnings;
 
 use lib 't/lib', 'lib', 'extlib';
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 use MT;
 use MT::Util;
@@ -178,6 +178,44 @@ subtest "mime_type_extension()" => sub {
         my $ext        = $tests{$type};
         my @extensions = MT::Util::mime_type_extension( $type );
         ok(( grep { /^$ext$/ } @extensions ), "'$type' returns '$tests{$type}'" );
+    }
+};
+
+subtest "match_file_extension()" => sub {
+    my @tests = (
+        # FILE NAME         EXTENSION SEARCH ARRAY            EXPECTED RESULT
+        [ 'file.txt'     => ['txt']                        => '.txt'      ],
+        [ 'file.txt'     => [ qw( text doc rtf txt md ) ]  => '.txt'      ],
+        [ 'file.js'      => [ qw( html js php ) ]          => '.js'       ],
+        [ 'file.json'    => [ qw( html js php ) ]          => ''          ],
+        [ 'file.js'      => [ qw( html json php ) ]        => ''          ],
+        [ 'file.json'    => [ qw( html js.* php ) ]        => '.json'     ],
+        [ 'file.js'      => [ qw( html js.* php ) ]        => '.js'       ],
+        [ 'file.php'     => [ qw( html js.* php[s\d]? ) ]  => '.php'      ],
+        [ 'file.php3'    => [ qw( html js.* php[s\d]? ) ]  => '.php3'     ],
+        [ 'file.php5'    => [ qw( html js.* php[s\d]? ) ]  => '.php5'     ],
+        [ 'file.phps'    => [ qw( html js.* php[s\d]? ) ]  => '.phps'     ],
+        [ '.htaccess'    => [ qw( cnf conf htaccess ) ]    => '.htaccess' ],
+        [ '.my.cnf'      => [ qw( cnf conf htaccess ) ]    => '.cnf'      ],
+        [ 'file.tar.gz'  => [ qw( Z bz2 gz zip ) ]         => '.gz'       ],
+        [ 'file.tar.gz'  => [ qw( Z bz2 tar zip ) ]        => ''          ],
+        [ 'file.tar.gz'  => [ qw( Z bz2 tar\.gz zip ) ]    => '.tar.gz'   ],
+        [ '.'            => [ qw( cgi txt pl ) ]           => ''          ],
+        [ '..'           => [ qw( cgi txt pl ) ]           => ''          ],
+    );
+    plan tests => @tests * 2;
+
+    foreach my $test ( @tests ) {
+        my ($fname, $exts, $expected) = @$test;
+        foreach my $path ( '', '/tmp/' ) {
+            $fname = $path . $fname;
+            is(
+                MT::Util::match_file_extension( $fname, $exts ),
+                $expected,
+                sprintf( "Matching '%s' against (%s) returns '%s'",
+                        $fname, join(', ', @$exts), $expected )
+            );
+        }
     }
 };
 
