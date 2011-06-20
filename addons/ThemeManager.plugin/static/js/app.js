@@ -68,6 +68,42 @@ jQuery(document).ready( function($) {
             }
         });
     });
+
+    $('td.status a').click( function() {
+      var id = $(this).parents('tr').find('.cb input').val();
+      var link = $(this);
+      link.css('background','url('+StaticURI+'images/ani-rebuild.gif) no-repeat center -1px');
+      $.ajax({
+          url: ScriptURI+'?__mode=tm.rebuild_tmpl&amp;blog_id=<mt:var name="blog_id">&amp;id=' + id,
+          dataType: 'json',
+          error: function (xhr, status, error) {
+              link.css('background','url('+PluginStaticURI+'images/icon-error.gif) no-repeat center -1px');
+          },
+          success: function (data, status, xhr) {
+              if (data.success) {
+                  link.css('background','url('+StaticURI+'images/nav-icon-rebuild.gif) no-repeat center 0px');
+              } else {
+                  link.css('background','url('+PluginStaticURI+'images/icon-error.gif) no-repeat center -1px');
+              }
+          }
+      });
+  });
+  $('#template-filter li a').click( function() {
+      var tab = $(this).parents('li').attr('id');
+      var list = tab.replace(new RegExp('-tab', 'g'), '-listing');
+      jQuery( '.current-filter').removeClass('current-filter');
+      if (list == 'all-listing') {
+          jQuery( '.listing' ).show();
+          jQuery( '#all-tab').addClass('current-filter');
+      } else {
+          jQuery( '.listing' ).hide();
+          jQuery( '#'+list ).show();
+          jQuery( '#'+tab).addClass('current-filter');
+      }
+    });
+    var name = (window.location.hash && window.location.hash.match( /^#/ ) ) ? window.location.hash.substr(1) : "all";
+    $('#template-filter #'+name+'-tab a').trigger('click');
+
     $.history.init(function(hash){
         if (hash == "") hash = "about";
         $('#content-nav ul li.'+hash+'-tab a').click();

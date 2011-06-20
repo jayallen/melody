@@ -27,7 +27,7 @@ our @EXPORT_OK
   epoch2ts ts2epoch escape_unicode unescape_unicode
   sax_parser trim ltrim rtrim asset_cleanup caturl multi_iter
   weaken log_time make_string_csv sanitize_embed
-  browser_language encode_json );
+  browser_language encode_json deep_do deep_copy);
 
 {
     my $Has_Weaken;
@@ -2676,6 +2676,54 @@ sub to_json {
     return MT::I18N::encode( MT->config->PublishCharset, $js );
 }
 
+sub deep_do {
+    my ( $data, $sub ) = @_;
+    if ( ref $data eq 'HASH' ) {
+        deep_do( \$_, $sub ) for values %$data;
+    }
+    elsif ( ref $data eq 'ARRAY' ) {
+        deep_do( \$_, $sub ) for @$data;
+    }
+    elsif ( ref $data eq 'REF' ) {
+        deep_do( $$data, $sub );
+    }
+    elsif ( ref $data eq 'SCALAR' ) {
+        $sub->($data);
+    }
+    elsif ( !ref $data ) {
+        $sub->( \$data );
+    }
+}
+
+sub deep_copy {
+    my ( $limit, $depth ) = @_[ 1, 2 ];
+    $depth ||= 0;
+    if ( defined($limit) && $depth >= $limit ) {
+        return $_[0];
+    }
+
+    my $ref = ref $_[0];
+    if ( !$ref ) {
+        $_[0];
+    }
+    elsif ( $ref eq 'HASH' ) {
+        my $hash = $_[0];
+        +{
+            map( ( $_ => deep_copy( $hash->{$_}, $limit, $depth + 1 ) ),
+                keys(%$hash) )
+        };
+    }
+    elsif ( $ref eq 'ARRAY' ) {
+        [ map( deep_copy( $_, $limit, $depth + 1 ), @{ $_[0] } ) ];
+    }
+    elsif ( $ref eq 'SCALAR' ) {
+        \${ $_[0] };
+    }
+    else {
+        $_[0];
+    }
+}
+
 1;
 
 __END__
@@ -2913,9 +2961,10 @@ and continuing to the end of the string. Does not remove spaces
 before newlines which appear before the last non-spaace character (i.e.
 inner-string spaces).
 
-=head2 L
+=head2 deep_copy($value, $limit)
 
-=head2 M
+Returns the value recursively copied from I<value>.
+If I<limit> is specified, this subroutine is not recursively copied from it.
 
 =head2 addbin
 

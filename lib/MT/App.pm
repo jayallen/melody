@@ -135,7 +135,7 @@ sub filter_conditional_list {
         my ($item) = @_;
         if ( $system_perms && ( my $sp = $item->{system_permission} ) ) {
             my $allowed = 0;
-            my @sp = split /,/, $sp;
+            my @sp = split(/,/, $sp);
             foreach my $sp (@sp) {
                 my $perm = 'can_' . $sp;
                 $allowed = 1, last
@@ -148,7 +148,7 @@ sub filter_conditional_list {
         }
         if ( my $p = $item->{permission} ) {
             my $allowed = 0;
-            my @p = split /,/, $p;
+            my @p = split(/,/, $p);
             foreach my $p (@p) {
                 my $perm = 'can_' . $p;
                 $allowed = 1, last
@@ -244,6 +244,35 @@ sub list_actions {
     @$actions = sort { $a->{order} <=> $b->{order} } @$actions;
     return $actions;
 } ## end sub list_actions
+
+sub content_actions {
+    my $app = shift;
+    my ( $type, @param ) = @_;
+    my $actions = $app->registry( "content_actions", $type ) or return;
+    my @actions;
+    for my $key ( keys %$actions ) {
+        my $action = $actions->{$key};
+        $action->{key} = $key;
+        my %args = %{ $action->{args} || {} };
+        $args{_type} ||= $type;
+        $args{return_args} = $app->make_return_args if $action->{return_args};
+        $action->{url} = $app->uri(
+            mode => $action->{mode},
+            args => {
+                %args,
+                blog_id => ( $app->blog ? $app->blog->id : 0 ),
+                magic_token => $app->current_magic,
+            },
+        ) if $action->{mode};
+        $args{id} = $action->{id}
+            if $action->{id};
+        push @actions, $action;
+    }
+    $actions = $app->filter_conditional_list( \@actions, @param );
+    no warnings;
+    @$actions = sort { $a->{order} <=> $b->{order} } @$actions;
+    return $actions;
+}
 
 sub list_filters {
     my $app = shift;
@@ -528,7 +557,9 @@ sub json_result {
 
 sub json_error {
     my $app = shift;
-    my ($error) = @_;
+    my ($error, $status) = @_;
+    $app->response_code($status)
+        if defined $status;
     $app->send_http_header("text/javascript+json");
     $app->{no_print_body} = 1;
     $app->print( MT::Util::to_json( { error => $error } ) );
@@ -614,6 +645,12 @@ sub print {
     if ( $MT::DebugMode & 128 ) {
         CORE::print STDERR @_;
     }
+}
+
+sub print_encode {
+    my $app = shift;
+    my $enc = $app->charset || 'UTF-8';
+    $app->print( Encode::encode( $enc, $_[0] ) );
 }
 
 sub handler ($$) {
@@ -852,16 +889,16 @@ sub init_query {
                   MT::I18N::default->encode_text_encode( $d, $request_charset,
                                                          $charset )
                   if $transcode;
-                my $saved = $d;
-                eval { Encode::decode( $charset, $d, 1 ); };
-                return
-                  $app->errtrans(
-                    "Invalid request: corrupt character data for character set [_1]",
-                    $charset
-                  ) if $@;
-                push @param, $saved if $transcode;
+                unless ( ref($d) && ( 'Fh' eq ref($d) ) ) {
+                    eval { $d = Encode::decode( $charset, $d, 1 ); };
+                    return $app->errtrans(
+                        "Invalid request: corrupt character data for character set [_1]",
+                        $charset
+                    ) if $@;
+                }
+                push @param, $d;
             } ## end foreach my $d (@d)
-            if ( $transcode && @param ) {
+            if (@param) {
                 if ( 1 == scalar(@param) ) {
                     $params{$p} = $param[0];
                 }
@@ -871,11 +908,11 @@ sub init_query {
             }
         } ## end foreach my $p (@p)
         while ( my ( $key, $val ) = each %params ) {
-            if ( ref $val ) {
-                $q->param( $key, @{ $params{$key} } );
+            if ( ref($val) && ( 'ARRAY' eq ref($val) ) ) {
+                $app->param( $key, @{ $params{$key} } );
             }
             else {
-                $q->param( $key, $val );
+                $app->param( $key, $val );
             }
         }
 
@@ -1118,6 +1155,31 @@ sub user {
     my $app = shift;
     $app->{author} = $app->{ $app->user_cookie } = $_[0] if @_;
     return $app->{author};
+}
+
+sub can_do {
+    my $app = shift;
+    my ( $action, $perms ) = @_;
+    my $user = $app->user
+        or die $app->error(
+        $app->translate('Internal Error: Login user is not initialized.') );
+
+    ##TODO: is this always good behavior?
+    return 1 if $user->is_superuser;
+
+    if ( $perms ||= $app->permissions ) {
+        my $blog_result = $perms->can_do($action);
+        return $blog_result if defined $blog_result;
+    }
+    ## if there were no result from blog permission,
+    ## look for system level permission.
+    my $sys_perms = MT::Permission->load(
+        {   author_id => $user->id,
+            blog_id   => 0,
+        }
+    );
+
+    return $sys_perms ? $sys_perms->can_do($action) : undef;
 }
 
 sub permissions {
@@ -2001,16 +2063,9 @@ sub logout {
     }
 
     # Displaying the login box
-    $app->load_tmpl(
-                    'login.tmpl',
-                    {
-                      logged_out     => 1,
-                      no_breadcrumbs => 1,
-                      login_fields   => MT::Auth->login_form($app) || '',
-                      can_recover_password => MT::Auth->can_recover_password,
-                      delegate_auth        => $delegate || 0,
-                    }
-    );
+    $app->show_login({
+        logged_out => 1,
+    });
 } ## end sub logout
 
 sub create_user_pending {
@@ -2505,6 +2560,9 @@ sub show_error {
     my $mode    = $app->mode;
     my $url     = $app->uri;
     my $blog_id = $q->param('blog_id');
+    my $status  = $param->{status};
+    $app->response_code($status)
+        if defined $status;
 
     if ( ref $param ne 'HASH' ) {
 
@@ -2570,6 +2628,21 @@ sub show_error {
     return $app->l10n_filter($out);
 } ## end sub show_error
 
+sub show_login {
+    my $app = shift;
+    my ( $param ) = @_;
+    $param ||= {};
+    require MT::Auth;
+    $app->build_page('login.tmpl', {
+        error                => $app->errstr,
+        no_breadcrumbs       => 1,
+        login_fields         => MT::Auth->login_form($app),
+        can_recover_password => MT::Auth->can_recover_password,
+        delegate_auth        => MT::Auth->delegate_auth,
+        %$param,
+    });
+}
+
 sub pre_run {
     my $app = shift;
     my $q   = $app->query;
@@ -2611,7 +2684,7 @@ sub run {
         $timer->pause_partial();
     }
 
-    my ($body);
+    my ($body,$meth_info);
     eval {
 
         # line __LINE__ __FILE__
@@ -2654,9 +2727,12 @@ sub run {
             my @handlers = ref($code) eq 'ARRAY' ? @$code : ($code)
               if defined $code;
 
+            $meth_info = {};
+            $app->request( method_info => {} );
             foreach my $code (@handlers) {
                 if ( ref $code eq 'HASH' ) {
-                    my $meth_info = $code;
+                    $meth_info = $code;
+                    $app->request( method_info => $meth_info );
                     $requires_login
                       = $requires_login & $meth_info->{requires_login}
                       if exists $meth_info->{requires_login};
@@ -2669,17 +2745,7 @@ sub run {
                     $body
                       = ref($author) eq $app->user_class
                       ? $app->show_error( { error => $app->errstr } )
-                      : $app->build_page(
-                        'login.tmpl',
-                        {
-                           error          => $app->errstr,
-                           no_breadcrumbs => 1,
-                           login_fields => sub { MT::Auth->login_form($app) },
-                           can_recover_password =>
-                             sub { MT::Auth->can_recover_password },
-                           delegate_auth => sub { MT::Auth->delegate_auth },
-                        }
-                      );
+                      : $app->show_login();
                     last REQUEST;
                 }
             } ## end if ($requires_login)
@@ -2720,7 +2786,7 @@ sub run {
                               || (    $blog
                                    && $perms
                                    && $perms->can_administer_blog() );
-                            my @p = split /,/, $set;
+                            my @p = split(/,/, $set);
                             foreach my $p (@p) {
                                 my $perm = 'can_' . $p;
                                 $allowed = 1, last
@@ -2784,18 +2850,14 @@ sub run {
 
         # login again!
         require MT::Auth;
-        $body = $app->build_page(
-                    'login.tmpl',
-                    {
-                      error                => $app->errstr,
-                      no_breadcrumbs       => 1,
-                      login_fields         => MT::Auth->login_form($app),
-                      can_recover_password => MT::Auth->can_recover_password,
-                      delegate_auth        => MT::Auth->delegate_auth,
-                    }
-        ) or $body = $app->show_error( { error => $app->errstr } );
+        $body = $app->show_login
+            or $body = $app->show_error( { error => $app->errstr } );
     }
-    elsif ( !defined $body ) {
+    elsif ( !defined $body 
+            && !$app->{redirect}
+            && !$app->{login_again}
+            && !$app->{no_print_body} )
+    {
         my $err = $app->errstr || $@;
         $body = $app->show_error( { error => $err } );
     }
@@ -2887,7 +2949,15 @@ sub handlers_for_mode {
     }
 
     $code ||= $app->{vtbl}{$mode};
-
+    
+    if ( $code && ref $code eq 'HASH' && $code->{condition} ) {
+        my $cond = $code->{condition};
+        if ( !ref($cond) ) {
+            $cond = $code->{condition} = $app->handler_to_coderef($cond);
+        }
+        return undef unless $cond->( $app );
+    }
+    
     return $code;
 }
 
@@ -3043,6 +3113,71 @@ sub load_widgets {
     return $param;
 } ## end sub load_widgets
 
+sub render_widget {
+    my $app    = shift;
+    my %params = @_;
+    my ( $widget_id, $instance, $widget_set, $param, $widget, $widget_cfgs, $order,
+         $passthru_param, $scope )
+      = @params{qw( widget_id instance set param widget widget_cfgs order passthru_param scope )};
+    my $blog = $app->blog;
+    my $blog_id = $blog ? $blog->id : 0;
+    my $widget_inst = $widget_id . '-' . $instance;
+    my $widget_cfg = $widget_cfgs->{$widget_inst} || {};
+    my $widget_param = { %$param, %{ $widget_cfg->{param} || {} } };
+    foreach (@$passthru_param) {
+        $widget_param->{$_} = '';
+    }
+    my $tmpl_name = $widget->{template};
+    my $p = $widget->{plugin};
+    my $tmpl;
+        if ($p) {
+            $tmpl = $p->load_tmpl($tmpl_name);
+        }
+    else {
+        
+        # This is probably never used since all
+        # widgets in reality are provided through
+        # some sort of component/plugin.
+        $tmpl = $app->load_tmpl($tmpl_name);
+    }
+    next unless $tmpl;
+    $tmpl_name = '.' . $tmpl_name;
+    $tmpl_name =~ s/\.tmpl$//;
+    
+    my $set = $widget->{set} || $widget_cfg->{set} || 'main';
+    local $widget_param->{blog_id}         = $blog_id;
+    local $widget_param->{widget_block}    = $set;
+    local $widget_param->{widget_id}       = $widget_inst;
+    local $widget_param->{widget_scope}    = $scope;
+    local $widget_param->{widget_singular} = $widget->{singular} || 0;
+    local $widget_param->{magic_token}     = $app->current_magic;
+    if ( my $h = $widget->{code} || $widget->{handler} ) {
+        $h = $app->handler_to_coderef($h);
+        $h->( $app, $tmpl, $widget_param );
+    }
+    my $ctx = $tmpl->context;
+    if ($blog) {
+        $ctx->stash( 'blog_id', $blog_id );
+        $ctx->stash( 'blog',    $blog );
+    }
+    
+    $app->run_callbacks( 'template_param' . $tmpl_name,
+                         $app, $tmpl->param, $tmpl );
+    
+    my $content = $app->build_page( $tmpl, $widget_param );
+    
+    if ( !defined $content ) {
+        return $app->error(
+            "Error processing template for widget $widget_id: "
+            . $tmpl->errstr );
+    }
+    
+    $app->run_callbacks( 'template_output' . $tmpl_name,
+                         $app, \$content, $tmpl->param, $tmpl );
+    
+    return ($content,$tmpl);
+}
+
 sub build_widgets {
     my $app    = shift;
     my %params = @_;
@@ -3067,7 +3202,8 @@ sub build_widgets {
     # The actual widget id is this minus the instance number.
     foreach my $widget_inst (@$order) {
         my $widget_id = $widget_inst;
-        $widget_id =~ s/-\d+$//;
+        $widget_id =~ s/-(\d+)$//;
+        my $num = $1 || 1;
         my $widget = $widgets->{$widget_id};
         next unless $widget;
         my $widget_cfg = $widget_cfgs->{$widget_inst} || {};
@@ -3075,54 +3211,16 @@ sub build_widgets {
         foreach (@$passthru_param) {
             $widget_param->{$_} = '';
         }
-        my $tmpl_name = $widget->{template};
-
-        my $p = $widget->{plugin};
-        my $tmpl;
-        if ($p) {
-            $tmpl = $p->load_tmpl($tmpl_name);
-        }
-        else {
-
-            # This is probably never used since all
-            # widgets in reality are provided through
-            # some sort of component/plugin.
-            $tmpl = $app->load_tmpl($tmpl_name);
-        }
-        next unless $tmpl;
-        $tmpl_name = '.' . $tmpl_name;
-        $tmpl_name =~ s/\.tmpl$//;
-
         my $set = $widget->{set} || $widget_cfg->{set} || 'main';
-        local $widget_param->{blog_id}         = $blog_id;
-        local $widget_param->{widget_block}    = $set;
-        local $widget_param->{widget_id}       = $widget_inst;
-        local $widget_param->{widget_scope}    = $widget_set;
-        local $widget_param->{widget_singular} = $widget->{singular} || 0;
-        local $widget_param->{magic_token}     = $app->current_magic;
-        if ( my $h = $widget->{code} || $widget->{handler} ) {
-            $h = $app->handler_to_coderef($h);
-            $h->( $app, $tmpl, $widget_param );
-        }
-        my $ctx = $tmpl->context;
-        if ($blog) {
-            $ctx->stash( 'blog_id', $blog_id );
-            $ctx->stash( 'blog',    $blog );
-        }
-
-        $app->run_callbacks( 'template_param' . $tmpl_name,
-                             $app, $tmpl->param, $tmpl );
-
-        my $content = $app->build_page( $tmpl, $widget_param );
-
-        if ( !defined $content ) {
-            return $app->error(
-                           "Error processing template for widget $widget_id: "
-                             . $tmpl->errstr );
-        }
-
-        $app->run_callbacks( 'template_output' . $tmpl_name,
-                             $app, \$content, $tmpl->param, $tmpl );
+        my ($content,$tmpl) = $app->render_widget(
+            widget_id    => $widget_id,
+            widget       => $widget,
+            widget_cfgs  => $widget_cfg,
+            set          => $set,
+            scope        => $widget_set,
+            instance     => $num,
+            param        => $widget_param,
+            );
 
         $param->{$set} ||= '';
         $param->{$set} .= $content;
@@ -3168,15 +3266,31 @@ sub update_widget_prefs {
         my $all_widgets = $app->registry("widgets");
         if ( my $widget = $all_widgets->{$widget_id} ) {
             my $widget_inst = $widget_id;
+            my $num = 1;
             unless ( $widget->{singular} ) {
-                my $num = 1;
                 while ( exists $these_widgets->{$widget_inst} ) {
                     $widget_inst = $widget_id . '-' . $num;
                     $num++;
                 }
             }
             $these_widgets->{$widget_inst} = { set => $set };
+            my $param;
+            eval { require MT::Image; MT::Image->new or die; };
+            $param->{can_use_userpic} = $@ ? 0 : 1;
+            $param->{widget_id} = $widget_id;
+            $param->{widget_set} = $set;
+            my ($content,$tmpl) = $app->render_widget(
+                widget_id   => $widget_id,
+                widget      => $widget,
+                set         => $set,
+                scope       => $blog_id ? 'dashboard:blog:' . $blog_id : 'dashboard:system',
+                instance    => $num,
+                param       => $param,
+                ) or return;
+            $result->{'widget_html'} = $content;
         }
+
+        $result->{'widget_set'}  = $set;
         $resave_widgets = 1;
     }
     if ( ( $action eq 'save' ) && $these_widgets ) {
@@ -3271,8 +3385,12 @@ sub load_list_actions {
     if ( ref($all_actions) eq 'ARRAY' ) {
         my @plugin_actions;
         my @core_actions;
+        my @button_actions;
         foreach my $a (@$all_actions) {
-            if ( $a->{core} ) {
+            if ( $a->{button} ) {
+                push @button_actions, $a;
+            }
+            elsif ( $a->{core} ) {
                 push @core_actions, $a;
             }
             else {
@@ -3281,13 +3399,27 @@ sub load_list_actions {
         }
         $param->{more_list_actions} = \@plugin_actions;
         $param->{list_actions}      = \@core_actions;
-        $param->{has_list_actions}
-          = ( @plugin_actions || @core_actions ) ? 1 : 0;
+        $param->{button_actions}    = \@button_actions;
+        $param->{all_actions}       = $all_actions;
+        $param->{has_pulldown_actions}
+            = ( @plugin_actions || @core_actions ) ? 1 : 0;
+        $param->{has_list_actions} = scalar @$all_actions;
+
     }
     my $filters = $app->list_filters( $type, @p );
     $param->{list_filters} = $filters if $filters;
     return $param;
 } ## end sub load_list_actions
+
+sub load_content_actions {
+    my $app = shift;
+    my ( $type, $param, @p ) = @_;
+    my $all_actions = $app->content_actions( $type, @p );
+    if ( ref($all_actions) eq 'ARRAY' ) {
+        $param->{content_actions} = $all_actions;
+    }
+    return $param;
+}
 
 sub current_magic {
     my $app  = shift;
@@ -4160,6 +4292,10 @@ Handles the display of an application error.
 =head2 $app->envelope
 
 This method is deprecated.
+
+=head2 $app->show_login(\%param)
+
+Builds the log-in screen.
 
 =head2 $app->takedown
 

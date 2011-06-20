@@ -83,23 +83,23 @@
     </mt:if>
     <$MTApp:PageActions$>
 </mt:setvarblock>
-<mt:setvarblock name="html_head" append="1">
-    <script type="text/javascript">
-    /* <![CDATA[ */
-    function validate(form) {    
-        if (form.label.value.match(/\S/,''))
-            return true;
-        alert('<__trans phrase="You must specify a label for the asset." escape="singlequotes">');
-        form.label.focus();
-        return false;
+
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript">
+var tagList = <mt:var name="tags_js" default="[]"/>
+var mt;
+mt = { 
+  screen: {
+    trans: {
+      SPECIFY_LABEL: '<__trans phrase="You must specify a label for the asset." escape="singlequotes">'
     }
-    /* ]]> */
-    </script>
-    <script type="text/javascript">
-    var tagList = <mt:var name="tags_js" default="[]"/>
-    <mt:Include name="include/autocomplete_js.tmpl">
-    </script>
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/autocomplete.js"></script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/edit_asset.js"></script>
 </mt:setvarblock>
+
 <mt:include name="include/header.tmpl">
 <div id="asset" class="status-<mt:if name="file_is_missing">missing<mt:else>publish</mt:if><mt:unless name="file_is_missing"> <mt:if name="has_thumbnail">asset-thumbnail<mt:else>asset-no-thumbnail</mt:if></mt:unless>">
     <form method="post" action="<mt:var name="script_url">" onsubmit="return validate(this)">
@@ -132,7 +132,7 @@
 <mt:unless name="file_is_missing">
                     <div class="asset-embed">
                         <a href="javascript:void(0)" onclick="toggleHidden('asset-embed-input');toggleHidden('asset-embed-link');selectAll('asset-embed-input')" id="asset-embed-link"><__trans phrase="Embed Asset"></a>
-                        <input value="<mt:var name="url" escape="html">" id="asset-embed-input" class="hidden" />
+                        <input type="text" value="<mt:var name="url" escape="html">" id="asset-embed-input" class="hidden" />
                     </div>
 </mt:unless>
                 </div>
@@ -156,7 +156,7 @@
                 help_page="assets"
                 help_section="asset_label">
                 <div class="textarea-wrapper">
-                    <input name="label" id="label" maxlength="100" value="<mt:var name="label" escape="html">" class="full-width" />
+                    <input type="text" name="label" id="label" maxlength="100" value="<mt:var name="label" escape="html">" class="full-width" />
                 </div>
             </mtapp:setting>
 
@@ -172,7 +172,7 @@
                 label="<__trans phrase="Tags">"
                 label_class="text-top">
                 <div class="textarea-wrapper">
-                    <input name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" autocomplete="off" />
+                    <input type="text" name="tags" id="tags" class="full-width" value="<$mt:var name="tags" escape="html"$>" autocomplete="off" />
                 </div>
             </mtapp:setting>
         </div>
@@ -182,7 +182,7 @@
         type="submit"
         accesskey="s"
         title="<__trans phrase="Save changes to this asset (s)">"
-        class="primary-button"
+        class="primary button"
         ><__trans phrase="Save Changes"></button>
 </mt:setvarblock>
 <mt:include name="include/actions_bar.tmpl" bar_position="bottom" hide_pager="1">

@@ -1,0 +1,302 @@
+<mt:unless name="page_title">
+<mt:setvarblock name="page_title"><__trans phrase="Manage [_1]" params="<mt:var name="object_label_plural">"></mt:setvarblock>
+</mt:unless>
+
+<mt:if name="build_user_menus">
+<mt:setvarblock name="related_content">
+  <mtapp:widget
+     id="user-properties"
+     label="<__trans phrase="User properties">">
+    <mt:include name="include/users_content_nav.tmpl">
+  </mtapp:widget>
+</mt:setvarblock>
+</mt:if>
+
+<mt:if name="use_actions">
+  <mt:if name="content_actions">
+    <mt:setvarblock name="content_header">
+    <ul id="content-actions" class="action-link-list">
+    <mt:loop name="content_actions">
+      <li><a href="<mt:var name="url">" class="icon-left<mt:if name"class"> <mt:var name="class"></mt:if><mt:if name="dialog"> mt-open-dialog</mt:if>"<mt:if name="id">id=<mt:var name="id"></mt:if><mt:if name="confirm_msg"> onclick="return confirm('<mt:var name="confirm_msg" escape="js">')"</mt:if>><mt:var name="label"></a></li>
+    </mt:loop>
+    </ul>
+    </mt:setvarblock>
+  </mt:if>
+</mt:if>
+
+<mt:setvarblock name="listing_footer_content"><mt:if name="feed_url">
+  <mt:if name="object_type_feed">
+  <li class="footer-link-item"><a href="<$mt:var name="feed_url" escape="html"$>" class="icon-feed icon-left" title="<$mt:var name="feed_name" escape="html"$>" target="_blank"><$mt:var name="object_type_feed"$></a></li>
+  </mt:if>
+</mt:if></mt:setvarblock>
+
+<mt:loop name="list_headers">
+  <mt:include name="$__value__">
+</mt:loop>
+
+<mt:setvarblock name="system_msg" append="1">
+<div id="msg-block"></div>
+</mt:setvarblock>
+
+<mt:setvarblock name="display_options">
+<mt:setvar name="show_display_options_link" value="1">
+<div id="display-options-detail" class="display-options-detail detail">
+  <mtapp:setting
+     id="per_page"
+     label="<__trans phrase="_DISPLAY_OPTIONS_SHOW">"
+     label_class="top-label">
+    <select id="row" name="limit">
+      <option value="25"<mt:if name="limit_25"> selected="selected"</mt:if>><__trans phrase="25 rows"></option>
+      <option value="50"<mt:if name="limit_50"> selected="selected"</mt:if>><__trans phrase="50 rows"></option>
+      <option value="100"<mt:if name="limit_100"> selected="selected"</mt:if>><__trans phrase="100 rows"></option>
+      <option value="200"<mt:if name="limit_200"> selected="selected"</mt:if>><__trans phrase="200 rows"></option>
+    </select>
+  </mtapp:setting>
+  <mtapp:setting
+     id="display_columns"
+     label="<__trans phrase="Column">"
+     label_class="top-label">
+    <ul id="disp_cols" class="multiple-selection">
+    <mt:loop name="list_columns">
+      <li class="<mt:if name="force_display"> hidden</mt:if>">
+        <input
+	       type="checkbox"
+	       value="<mt:var name="id" escape="html">"
+	       name="custom_prefs"
+           class="main<mt:if name="is_default"> show-default</mt:if>"
+	       id="custom-prefs-<$mt:var name="id" escape="html"$>"
+	       <mt:if name="display">checked="checked"</mt:if> />
+          <label for="custom-prefs-<$mt:var name="id" escape="html"$>"><mt:var name="label"></label>
+      </li>
+      <mt:loop name="sub_fields">
+      <li class="sub-field">
+        <input
+	       type="checkbox"
+	       value="<mt:var name="class">"
+	       name="custom_prefs"
+           class="sub<mt:if name="is_default"> show-default</mt:if>"
+	       id="custom-prefs-<$mt:var name="id" escape="html"$>.<mt:var name="class">"
+	       <mt:if name="display">checked="checked"</mt:if> />
+          <label for="custom-prefs-<$mt:var name="id" escape="html"$>.<mt:var name="class">"><mt:var name="label"></label>
+      </li>
+      </mt:loop>
+    </mt:loop>
+    </ul>
+  </mtapp:setting>
+  <div class="actions-bar actions-bar-bottom">
+    <a href="#" id="reset-display-options"><__trans phrase="Reset defaults"></a>
+  </div>
+  </mtapp:setting>
+</div>
+</mt:setvarblock>
+
+<mt:if name="button_actions">
+    <mt:setvarblock name="button_actions">
+        <mt:loop name="button_actions">
+  <a href="#<mt:var name="key">" class="button<mt:if name="xhr"> xhr</mt:if>"><mt:var name="label"></a>
+        </mt:loop>
+    </mt:setvarblock>
+</mt:if>
+
+<mt:setvarblock name="list_actions">
+<mt:if name="use_actions">
+  <mt:if name="button_actions">
+        <div class="button-actions actions"><mt:var name="button_actions"></div>
+  </mt:if>
+  <mt:if name="has_list_actions">
+    <mt:include name="include/itemset_action_widget.tmpl">
+  </mt:if>
+</mt:if>
+        <div class="indicator"><img alt="<__trans phrase="Loading...">" src="<mt:var name="static_uri">images/indicator.white.gif" /> <__trans phrase="Loading..."></div>
+        <div class="pagination"></div>
+</mt:setvarblock>
+
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript">
+var mt;
+mt = { 
+  config: {
+    debug_mode: <mt:var name="config.debugmode" default="0">
+  },
+  screen: {
+    default_sort_key: '<mt:var name="default_sort_key">',
+    list_type: '<mt:var name="list_type">',
+    has_list_actions: <mt:var name="has_list_actions" default="0">,
+    open_filter_panel: <mt:var name="open_filter_panel" default="0">,
+    filters: <mt:var name="filters">,
+    initial_filter: <mt:var name="initial_filter">,
+    allpass_filter: <mt:var name="allpass_filter">,
+    zero_state: <mt:if name="zero_state">'<mt:var name="zero_state" escape="js">'<mt:else>null</mt:if>,
+    object_label_lc: '<mt:var name="object_label" lower_case="1" escape="js">',
+    object_label: '<mt:var name="object_label">',
+    system_messages: <mt:var name="system_messages">,
+    singular: '<mt:if name="action_label"><mt:var name="action_label"><mt:else><mt:var name="object_label" lower_case="1" escape="js"></mt:if>',
+    plural: '<mt:if name="action_label_plural"><mt:var name="action_label_plural"><mt:else><mt:var name="object_label_plural" lower_case="1" escape="js"></mt:if>',
+    button_messages: {
+<mt:loop name="button_actions"><mt:var name="key">: '<__trans phrase="<mt:var name="js_message">" escape="js">'<mt:unless name="__last__">, </mt:unless>
+</mt:loop>
+    },
+    filter_types: {<mt:loop name="filter_types">
+      '<mt:var name="type">': {
+        type: '<mt:var name="type">',
+        is_editable: <mt:var name="editable" default="0">,
+        base_type: '<mt:var name="base_type">',
+        field: '<mt:var name="field" mteval="1" regex_replace="/\n*/g":"">',
+        is_singleton: <mt:var name="singleton" default="0">
+      }<mt:unless name="__last__">, </mt:unless></mt:loop>
+    },
+    list_columns: Array(
+      <mt:loop name="list_columns">{
+        id: '<mt:var name="id">',
+        label: '<mt:var name="label" escape="js">',
+        is_primary: <mt:var name="primary" default="0">,
+        col_class: '<mt:var name="primary" default="">',
+        is_sortable: <mt:var name="sortable" default="0">,
+        default_sort: '<mt:var name="default_sort_order">'
+      }<mt:unless name="__last__">, </mt:unless></mt:loop>
+    ),
+    col_classes: {
+<mt:loop name="list_columns">      <mt:var name="id">: '<mt:var name="col_class">'<mt:unless name="__last__">, </mt:unless>
+</mt:loop>
+    },
+    trans: {
+      ADD: '<__trans phrase="Add" escape="js">',
+      REMOVE: '<__trans phrase="Remove" escape="js">',
+      CLOSE: '<__trans phrase="Close" escape="js">',
+      CONTINUE: '<__trans phrase="Continue" escape="js">',
+      INVALID_LOGIN: '<__trans phrase="Invalid login." escape="js">',
+      MY_FILTERS: '<__trans phrase="My Filters" escape="js">',
+      CREATE_NEW: '<__trans phrase="Create New" escape="js">',
+      BUILT_IN: '<__trans phrase="Built in Filters" escape="js">',
+      RENAME: '<__trans phrase="Rename" escape="js">',
+      DELETE: '<__trans phrase="Delete" escape="js">',
+      NEW_FILTER: '<__trans phrase="New Filter" escape="js">',
+      LOADING: '<__trans phrase="Loading..." escape="js">',
+      SAVE: '<__trans phrase="Save" escape="js">',
+      CANCEL: '<__trans phrase="Cancel" escape="js">',
+      FIRST: '<__trans phrase="First" escape="js">',
+      PREV: '<__trans phrase="Prev" escape="js">',
+      LAST: '<__trans phrase="Last" escape="js">',
+      NEXT: '<__trans phrase="Next" escape="js">',
+      DAY_NAMES: [<__trans phrase="_LOCALE_CALENDAR_HEADER_">],
+      REMOVE_ITEM: '<__trans phrase="Remove item" escape="js">',
+      UNKNOWN_FILTER: '<__trans phrase="Unknown Filter" escape="js">',
+      ACT_UPON: '<__trans phrase="act upon" escape="js">'
+    }
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/list_common.js"></script>
+</mt:setvarblock>
+
+<mt:include name="include/header.tmpl">
+<mt:include name="include/basic_filter_forms.tmpl">
+
+<div id="listing" class="listing line has-filter">
+  <div class="unit size1of1">
+    <form id="<mt:var name="object_type">-listing-form" method="post">
+      <input type="hidden" name="__mode" value="" />
+      <input type="hidden" name="_type" value="<mt:var name="object_type">" />
+      <input type="hidden" name="action_name" value="" />
+      <input type="hidden" name="itemset_action_input" value="" />
+      <input type="hidden" name="items" value="" />
+      <input type="hidden" name="magic_token" value="<mt:var name="magic_token">" />
+      <mt:if name="return_args"><input type="hidden" name="return_args" value="<mt:var name="return_args">" /></mt:if>
+      <mt:if name="blog_id"><input type="hidden" name="blog_id" value="<mt:var name="blog_id">" /></mt:if>
+
+      <div id="actions-bar-top" class="actions-bar actions-bar-top line">
+        <mt:var name="list_actions">
+      </div>
+
+<mt:if name="use_filters">
+      <div id="filter" class="filter-block">
+        <div id="filter-header">
+          <input type="hidden" id="filter_name" value="" />
+          <input type="hidden" id="filter_id" value="" />
+          <div class="mod filter-header">
+            <__trans phrase="Filter:"> <a href="#" id="opener" class="open-dialog-link current-filter icon-right-wide"><__trans phrase="Select Filter..."></a>
+            <a href="#" id="allpass-filter">[ <__trans phrase="Remove Filter"> ]</a>
+            <a href="#" id="toggle-filter-detail" class="toggle-button detail-link">
+              <img src="<$mt:var name="static_uri"$>images/arrow/arrow-toggle-big.png" />
+            </a>
+          </div>
+        </div>
+
+        <div id="filter-detail" class="detail">
+          <div id="filter-panel" class="mod selectfilter">
+            <select id="item_list">
+              <option value=""><__trans phrase="Select Filter Item..."></option>
+            <mt:loop name="filter_types">
+              <mt:if name="editable"><option value="<mt:var name="type">"><mt:var name="label"></option></mt:if>
+            </mt:loop>
+            </select>
+          </div>
+
+          <div id="filter-action" class="mod">
+            <button type="submit" id="apply" class="button action primary"><__trans phrase="Apply"></button>
+            <button type="button" id="save" class="button action"><__trans phrase="Save"></button>
+            <button type="button" id="saveas" class="button action"><__trans phrase="Save As"></button>
+          </div>
+        </div>
+      </div>
+</mt:if>
+
+      <div id="listing-table" class="listing-table-block">
+        <div id="listing-table-overlay" class="overlay"></div>
+        <table id="<mt:var name="object_type">-table" class="listing-table list-<mt:var name="object_type">">
+          <thead></thead>
+          <tfoot></tfoot>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="actions-bar-bottom" class="actions-bar actions-bar-bottom line">
+        <mt:var name="list_actions">
+      </div>
+
+    </form>
+
+  <mt:if name="listing_footer_content">
+    <div id="listing-footer" class="footer-links mod">
+      <ul>
+        <mt:var name="listing_footer_content">
+      </ul>
+    </div>
+  </mt:if>
+
+  </div>
+</div>
+
+<div id="dialog_save_filter" class="dialog">
+  <form method="post">
+    <div class="dialog-msg-block"></div>
+    <mtapp:setting
+       id="filter-label"
+       label="<__trans phrase="Filter Label">"
+       label_class="top-label">
+      <input type="hidden" name="filter_id" value="" />
+      <input type="text" class="text full required" name="filter_name" value="" />
+    </mtapp:setting>
+    <div class="dialog actions-bar">
+      <button
+         type="submit"
+         id="save-filter"
+         class="action primary button">
+        <__trans phrase="Save">
+      </button>
+      <button
+         type="button"
+         id="cancel-save-filter"
+         class="action button">
+        <__trans phrase="Cancel">
+      </button>
+    </div>
+  </form>
+</div>
+
+<div id="dialog_filter">
+  <div class="dialog-msg-block"></div>
+  <div id="dialog_filter_content"></div>
+</div>
+
+<mt:include name="include/footer.tmpl">

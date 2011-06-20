@@ -298,7 +298,17 @@ sub search_replace {
             $param->{publish_from_search} = 1;
         }
     }
-
+    if ($q->param('json')) {
+        my $loop = $param->{$q->param('_type')."_table"}[0]->{'object_loop'};
+        my @results;
+        foreach (@$loop) {
+            my $obj = $_->{'object'};
+            next unless $obj;
+            push @results, $obj->to_hash();
+        }
+        return $app->json_result( \@results );
+    }
+    # NOT a json request. Display results via template.
     my $tmpl = $app->load_tmpl( 'search_replace.tmpl', $param );
     my $placeholder = $tmpl->getElementById('search_results');
     $placeholder->innerHTML( delete $param->{results_template} );
@@ -360,14 +370,14 @@ sub do_search_replace {
     my @ids;
 
     if ($ids) {
-        @ids = split /,/, $ids;
+        @ids = split(/,/, $ids);
     }
     if ($is_limited) {
         @cols = $q->param('search_cols');
         my %search_api_cols
           = map { $_ => 1 } keys %{ $search_api->{$type}{search_cols} };
         if ( @cols && ( $cols[0] =~ /,/ ) ) {
-            @cols = split /,/, $cols[0];
+            @cols = split(/,/, $cols[0]);
         }
         @cols = grep { $search_api_cols{$_} } @cols;
     }
@@ -706,34 +716,40 @@ sub do_search_replace {
             }
         }
         $param{object_type} = $type;
-        if ( exists $api->{results_table_template} ) {
-            my $tmpl = _load_template(
-                             $app,
-                             $api->{results_table_template},
-                             exists( $api->{plugin} ) ? $api->{plugin} : undef
-            );
-            $param{results_template} = $tmpl;
-        }
-        else {
-            $param{results_template} =
-              _default_results_table_template( $app, $type, 1,
-                                               $class->class_label_plural );
-        }
+        # There is no need to load a template for JSON search
+        unless ($q->param('json')) {
+            if ( exists $api->{results_table_template} ) {
+                my $tmpl = _load_template(
+                    $app,
+                    $api->{results_table_template},
+                    exists( $api->{plugin} ) ? $api->{plugin} : undef
+                    );
+                $param{results_template} = $tmpl;
+            }
+            else {
+                $param{results_template} =
+                    _default_results_table_template( $app, $type, 1,
+                                                     $class->class_label_plural );
+            }
+        } ## end if ($q->param('json'))
     } ## end if (@data)
     else {
-        if ( exists $api->{no_results_template} ) {
-            my $tmpl = _load_template(
-                             $app,
-                             $api->{no_results_template},
-                             exists( $api->{plugin} ) ? $api->{plugin} : undef
-            );
-            $param{results_template} = $tmpl;
-        }
-        else {
-            $param{results_template} =
-              _default_results_table_template( $app, $type, 0,
-                                               $class->class_label_plural );
-        }
+        # There is no need to load a template for JSON search
+        unless ($q->param('json')) {
+            if ( exists $api->{no_results_template} ) {
+                my $tmpl = _load_template(
+                    $app,
+                    $api->{no_results_template},
+                    exists( $api->{plugin} ) ? $api->{plugin} : undef
+                    );
+                $param{results_template} = $tmpl;
+            }
+            else {
+                $param{results_template} =
+                    _default_results_table_template( $app, $type, 0,
+                                                     $class->class_label_plural );
+            }
+        } ## end if ($q->param('json'))
     }
     if ($is_dateranged) {
         ( $datefrom_year, $datefrom_month, $datefrom_day )

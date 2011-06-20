@@ -38,21 +38,20 @@
        </mt:if>
    </mt:if>
 </MTSetVarBlock>
-<mt:setvarblock name="html_head" append="1">
-    <script type="text/javascript">
-    /* <![CDATA[ */
 
-   var tableSelect = [];
-   function init() {
-     tableSelect.push(new TC.TableSelect( 'enabled-plugins-table' ));
-     tableSelect[tableSelect.length-1].rowSelect = true;
-     tableSelect.push(new TC.TableSelect( 'disabled-plugins-table' ));
-     tableSelect[tableSelect.length-1].rowSelect = true;
-   }
-   TC.attachLoadEvent(init);
-   /* ]]> */
-    </script>
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript">
+var mt;
+mt = { 
+  screen: {
+    trans: {
+    }
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/list_plugin.js"></script>
 </mt:setvarblock>
+
 <mt:include name="include/header.tmpl">
 
 <mt:setvartemplate name="plugin_table">
@@ -86,7 +85,7 @@
 <mt:setvarblock name="action_buttons">
   <a href="javascript:void(0)"
      onclick="doForMarkedInThisWindow(getByID('enabled-plugins-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'switch_plugins', {}, '<__trans phrase="to publish" escape="js">'); return false;"
-     accesskey="a"
+     accesskey="a" class="secondary button"
      title="<__trans phrase="Disable selected plugins (a)">"
   ><__trans phrase="Disable"></a>
 </mt:setvarblock>
@@ -96,7 +95,7 @@
 <mt:setvarblock name="action_buttons">
   <a href="javascript:void(0)"
      onclick="doForMarkedInThisWindow(getByID('disabled-plugins-form'), '<__trans phrase="plugin" escape="js">', '<__trans phrase="plugins" escape="js">', 'id', 'switch_plugins', {}, '<__trans phrase="to publish" escape="js">'); return false;"
-     accesskey="a"
+     accesskey="a" class="secondary button"
      title="<__trans phrase="Enable selected plugins (a)">"
   ><__trans phrase="Enable"></a>
 </mt:setvarblock>

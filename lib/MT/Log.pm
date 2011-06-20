@@ -8,6 +8,7 @@ package MT::Log;
 
 use strict;
 use base qw( MT::Object );
+use MT::Util qw( ts2epoch epoch2ts offset_time );
 
 # use constant is slow
 sub INFO ()     {1}
@@ -51,6 +52,258 @@ sub class_label {
 
 sub class_label_plural {
     return MT->translate('Log messages');
+}
+
+sub list_props {
+    return {
+        created_on => {
+            auto    => 1,
+            label   => 'Date Created',
+            order   => 100,
+            display => 'force',
+            raw     => sub {
+                my $prop = shift;
+                my ( $obj, $app, $opts ) = @_;
+                my $ts   = $obj->created_on;
+                my $blog = $opts->{blog};
+
+                ## All Log records are saved with GMT, so do trick here.
+                my $epoch = ts2epoch( undef, $ts, 1 )
+                    ;    # just get epoch with "no_offset" option
+                $epoch = offset_time( $epoch, $blog )
+                    ;    # from GMT to Blog( or system ) Timezone
+                return epoch2ts( $blog, $epoch, 1 );    # back to timestamp
+            },
+        },
+        message => {
+            auto    => 1,
+            label   => 'Message',
+            order   => 200,
+            display => 'force',
+            html    => sub {
+                my $prop = shift;
+                my ( $obj, $app ) = @_;
+                my $msg = $obj->message;
+                my $desc;
+                if ( 'MT::Log' eq ref $obj ) {
+                    $desc = MT::Util::encode_html( $obj->metadata ) || '';
+                }
+                else {
+                    $desc = $obj->description;
+                }
+                $desc = $desc->() if ref $desc eq 'CODE';
+                $desc = ''        if $msg      eq $desc;
+                $desc = MT::Util::encode_html($desc);
+                $msg  = MT::Util::encode_html($msg);
+                return $desc
+                    ? qq{
+                    <div class="log-message can-select">
+                      <a href="#" class="toggle-link icon-left icon-spinner detail-link">$msg</a>
+                      <div class="log-metadata detail">
+                        <pre>$desc</pre>
+                      </div>
+                    </div>
+                }
+                    : qq{
+                    <div class="log-message can-select">$msg</div>
+                };
+            },
+        },
+        blog_name => {
+            base    => '__common.blog_name',
+            order   => 300,
+            display => 'force',
+        },
+        by => {
+            base        => '__virtual.string',
+            label       => 'By',
+            view_filter => [],
+            order       => 400,
+            display     => 'force',
+            raw         => sub {
+                my $prop = shift;
+                my ( $obj, $app ) = shift;
+                if ( $obj->author_id ) {
+                    if ( my $user
+                        = MT->model('author')->load( $obj->author_id ) )
+                    {
+                        return $user->name;
+                    }
+                    else {
+                        return MT->translate('*User deleted*');
+                    }
+                }
+                return '';
+            },
+            sort => sub {
+                my $prop = shift;
+                my ( $terms, $args ) = @_;
+                $args->{joins} ||= [];
+                push @{ $args->{joins} }, MT->model('author')->join_on(
+                    undef, undef,
+                    {   sort      => 'nickname',
+                        condition => { id => \'= log_author_id', },
+                        direction => ( $args->{direction} || 'ascend' ),
+                        type      => 'left',
+                    },
+                );
+                $args->{sort} = [];
+                return;
+            },
+        },
+        class => {
+            label                 => 'Class',
+            col                   => 'class',
+            display               => 'none',
+            base                  => '__virtual.single_select',
+            single_select_options => sub {
+                my $prop  = shift;
+                my $app   = shift;
+                my $terms = {};
+                if ( my $blog_id = $app->param('blog_id') ) {
+                    my $blog = MT->model('blog')->load($blog_id);
+                    if ( $blog->is_blog ) {
+                        $terms->{blog_id} = $blog->id;
+                    }
+                    else {
+                        my $blogs = $blog->blogs;
+                        $terms->{blog_id}
+                            = [ map { $_->id } ( $blog, @$blogs ) ];
+                    }
+                }
+                my $iter = MT->model('log')->count_group_by(
+                    $terms,
+                    {   group    => ['class'],
+                        no_class => 1,
+                    },
+                );
+                my @options;
+                while ( my ( $count, $class ) = $iter->() ) {
+                    push @options,
+                        {
+                        label => $class ? MT->translate($class) : MT->translate('none'),
+                        value => $class ? $class : '',
+                        };
+                }
+                return \@options;
+            },
+            terms => sub {
+                my $prop = shift;
+                my ( $args, $db_terms, $db_args ) = @_;
+                delete $db_args->{no_class};
+                if ( $args->{value} ) {
+                    $prop->super(@_);
+                }
+                else {
+                    $db_terms->{class} = \' is null';
+                }
+            },
+        },
+
+        #category => {
+        #    label                 => 'Category',
+        #    col                   => 'category',
+        #    base                  => '__virtual.single_select',
+        #    single_select_options => sub {
+        #        my $iter = MT->model('log')->count_group_by(
+        #            undef,
+        #            {   group    => ['category'],
+        #                no_class => 1,
+        #            },
+        #        );
+        #        my @options;
+        #        while ( my ( $count, $cat ) = $iter->() ) {
+        #            next unless $cat;
+        #            my $label = $cat;
+        #            $label =~ s/_/ /g;
+        #            push @options,
+        #                {
+        #                label => MT->translate($cat),
+        #                value => $cat
+        #                };
+        #        }
+        #        return \@options;
+        #    },
+        #},
+        level => {
+            label   => 'Level',
+            base    => '__virtual.single_select',
+            display => 'none',
+            col     => 'level',
+            terms   => sub {
+                my $prop = shift;
+                my ($args) = @_;
+                my @types;
+                my $val = $args->{value};
+                for ( 1, 2, 4, 8, 16 ) {
+                    push @types, $_ if $val & $_;
+                }
+                return { level => \@types };
+            },
+            single_select_options => [
+                { label => MT->translate('Security'),    value => SECURITY() },
+                { label => MT->translate('Error'),       value => ERROR() },
+                { label => MT->translate('Warning'),     value => WARNING() },
+                { label => MT->translate('Information'), value => INFO() },
+                { label => MT->translate('Debug'),       value => DEBUG() },
+                {   label => MT->translate('Security or error'),
+                    value => SECURITY() | ERROR()
+                },
+                {   label => MT->translate('Security/error/warning'),
+                    value => SECURITY() | ERROR() | WARNING()
+                },
+                {   label => MT->translate('Not debug'),
+                    value => SECURITY() | ERROR() | WARNING() | INFO()
+                },
+                { label => MT->translate('Debug/error'), value => DEBUG() | ERROR() },
+            ],
+        },
+        metadata => {
+            auto    => 1,
+            label   => 'Metadata',
+            display => 'none',
+        },
+        modified_on => {
+            base    => '__virtual.modified_on',
+            display => 'none',
+        },
+        author_name => {
+            base    => '__virtual.author_name',
+            display => 'none',
+        },
+        ip => {
+            auto    => 1,
+            label   => 'IP Address',
+            display => 'default',
+        },
+        id => {
+            base            => '__virtual.id',
+            label_via_param => sub {
+                my $prop  = shift;
+                my ($app) = @_;
+                my $id    = $app->param('filter_val');
+                return MT->translate( 'Showing only ID: [_1]', $id );
+            },
+            display         => 'none',
+            filter_editable => 0,
+        },
+    };
+}
+
+sub system_filters {
+    return {
+        current_website => {
+            label => 'Logs on This Website',
+            items => [ { type => 'current_context' } ],
+            order => 100,
+            view  => 'website',
+        },
+        show_only_errors => {
+            label => 'Show only errors',
+            items => [ { type => 'level', args => { value => ERROR() } }, ],
+            order => 200,
+        },
+    };
 }
 
 sub init {

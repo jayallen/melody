@@ -11,6 +11,8 @@ var CMSScriptURI;
 var ScriptURI;
 var ScriptBaseURI;
 var StaticURI;
+var PluginStaticURI;
+var BlogId;
 var HelpBaseURI;
 var Lexicon = {};
 var itemset_options = {};
@@ -370,9 +372,6 @@ function openDialog(f, mode, params) {
     if (params) url += '&' + params;
     url += '&__type=dialog';
     if (window.app) window.app.closeFlyouts();
-    show("dialog-container");
-    // handle escape key for closing modal dialog
-    DOM.addEventListener( document.body, "keypress", dialogKeyPress, true );
     openDialogUrl(url);
     if ( document.all && DOM.getElement( "dialog-container" ) ) {
         DOM.addClassName( "dialog-container", "hidden" );
@@ -384,33 +383,42 @@ function openDialog(f, mode, params) {
 }
 
 function openDialogUrl(url) {
-    var iframe = getByID("dialog-iframe");
-    var frame_d = iframe.contentDocument;
-    if (!frame_d) {
-        // Sometimes the contentWindow is unavailable because we've just
-        // unhidden the container div that holds the iframe. If this happens
-        // we have to wait for the contentWindow object to be created
-        // before we can access the document within. This may take an extra
-        // try using a setTimeout on this window.
-        if (iframe.contentWindow)
-            frame_d = iframe.contentWindow.document || iframe.document;
+    // Create Dialog
+    var dlg = jQuery('body').find('#ajaxDialog');
+    if (!dlg.size()) {
+        // Init Dialog
+        jQuery('body').append('<div id="ajaxDialog"></div>');
+        dlg = jQuery('#ajaxDialog').dialog({
+            modal:true,
+            autoOpen:false,
+            width:900,
+            height:400,
+            position:['center','center'],
+            title: 'Loading...',
+            zIndex: 9999,
+            close:function(){ jQuery(this).empty(); }
+        });
     }
-    if (frame_d) {
-        frame_d.open();
-        frame_d.write("<html><head><style type=\"text/css\">\n"
-            + "#dialog-indicator {\nposition: relative;\ntop: 200px;\n"
-            + "background: url(" + StaticURI + "images/indicator.gif) "
-            + "no-repeat;\nwidth: 66px;\nheight: 66px;\nmargin: 0 auto;"
-            + "\n}\n</style><script type=\"text/javascript\">\n"
-            + "function init() {\ndocument.location = \"" + url + "\";\n}\n"
-            + "if (window.navigator.userAgent.match(/ AppleWebKit\\//))\n"
-            + "window.setTimeout(\"init()\", 1500);\n"
-            + "else window.onload = init;\n</scr"+"ipt></head><body>"
-            + "<div align=\"center\"><div id=\"dialog-indicator\"></div>"
-            + "</div></body></html>");
-        frame_d.close();
-    } else {
-        window.setTimeout("openDialogUrl('" + url + "')", 100);
+
+    // Load Dialog Content
+    jQuery('#ajaxDialog').load(url, function(){
+        var title = jQuery('#ajaxDialog #content-header h1').html();
+        jQuery('#ajaxDialog #content-header').remove();
+        dlg.dialog('option', 'title', title);
+        // TODO - bootstrap form
+        jQuery('#ajaxDialog form').ajaxForm({
+            'target':'#ajaxDialog',
+            'dataType':'script',
+            'success': function(html,status,xhr) {
+                jQuery('#ajaxDialog').html( html );
+            }
+        });
+    });
+    // the loaded information only shows the first click, other times show an empty dialog
+
+    // Open Dialog (or Reload)
+    if (!dlg.dialog('isOpen')){
+        dlg.dialog('open');
     }
 }
 
@@ -421,7 +429,7 @@ function closeDialog(url) {
     if (url)
         w.location = url;
     else
-        hide("dialog-container", w.document);
+        w.jQuery.fancybox.close();
     return false;
 }
 
@@ -588,14 +596,6 @@ function toggleDisable(id, state) {
         id.disabled="disabled";
     else
         id.disabled="";
-}
-
-function toggleDisplayOptions() {
-    return toggleActive('display-options');
-}
-
-function toggleEntryDisplayOptions() {
-    return toggleActive('display-options-widget');
 }
 
 function toggleActive( id ) {
@@ -1329,22 +1329,21 @@ Pager = new Class(Object, {
     render: function() {
         if (!this.element) return;
 
-        /*
-        This long method is concerned with creating the elements of
-        the pagination control. It refreshes the controls based on
-        the 'state' member of the Pager object. This control is
-        typically tied to a Datasource object. So the navigation
-        links of the control will influence the Datasource.
-        Likewise, upon navigating the Datasource, it will invoke
-        the pager to refresh when the data has been updated.
+        //This long method is concerned with creating the elements of
+        //the pagination control. It refreshes the controls based on
+        //the 'state' member of the Pager object. This control is
+        //typically tied to a Datasource object. So the navigation
+        //links of the control will influence the Datasource.
+        //Likewise, upon navigating the Datasource, it will invoke
+        //the pager to refresh when the data has been updated.
 
-        pager.rows (number of rows shown)
-        pager.listTotal (total number of rows in datasource)
-        pager.offset (offset currently used)
-        pager.chronological (boolean, whether the listing is chronological or not)
-        */
+        //pager.rows (number of rows shown)
+        //pager.listTotal (total number of rows in datasource)
+        //pager.offset (offset currently used)
+        //pager.chronological (boolean, whether the listing is chronological or not)
+
         var html = '';
-        /* TODO - this can all be replaced with a js template */
+        // TODO - this can all be replaced with a js template
         if (this.datasource && this.datasource.navigating) {
             // TODO: change this to use a CSS class instead.
             html = "<div>" + trans('Loading...') + " <img src=\"" + StaticURI + "images/indicator.white.gif\" height=\"10\" width=\"10\" alt=\"...\" /></div>";
@@ -2934,24 +2933,6 @@ extend( MT.App.CodePress, {
 
 
 
-function showMsg(message, id, type, rebuild, blogID) {
-    if (getByID(id)) {
-        msg = getByID(id);
-        msg.style.display = 'block';
-    } else {
-        var msg = document.createElement("div");
-        msg.setAttribute("id", id);
-        DOM.addClassName(msg, 'msg');
-        DOM.addClassName(msg, 'msg-'+type);
-    }
-    msg.innerHTML = "<a href=\"javascript:void(0)\" onclick=\"javascript:hide('"+id+"');\" class=\"close-me\"><span>close</span></a>"+message;
-    if (rebuild == 'all')
-        msg.innerHTML += ' ' + trans('[_1]Publish[_2] your site to see these changes take effect.', '<a href="javascript:void(0);" class="rebuild-link" onclick="doRebuild(\''+blogID+'\');">', '</a>');
-    if (rebuild == 'index')
-        msg.innerHTML += ' ' + trans('[_1]Publish[_2] your site to see these changes take effect.', '<a href="javascript:void(0);" class="rebuild-link" onclick="doRebuild(\''+blogID+'\', prompt=\'index\');">', '</a>');
-    getByID('msg-block').appendChild(msg);
-}
-
 function hideAllDropDown() { // hides SELECT lists under the nav on IE6
     if((/MSIE/.test(navigator.userAgent)) && parseInt(navigator.appVersion)==4) {
         var dd = document.getElementsByTagName('select');
@@ -2980,22 +2961,6 @@ function showDropDown(el) {
         }
     }
     return;
-}
-
-function setBarPosition(radio) {
-    var mode = radio.value ? radio.value.toLowerCase() : radio;
-    var c = TC.elementOrId('container-inner');
-    var s = "show-actions-bar-";
-    if (mode == 'bottom') {
-        TC.removeClassName(c, s + "top");
-        TC.addClassName(c, s + "bottom");
-    } else if (mode == 'both') {
-        TC.addClassName(c, s + "top");
-        TC.addClassName(c, s + "bottom");
-    } else if (mode == 'top') {
-        TC.addClassName(c, s + "top");
-        TC.removeClassName(c, s + "bottom");
-    }
 }
 
 function selectAll(id) {

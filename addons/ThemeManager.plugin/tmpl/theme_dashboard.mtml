@@ -15,16 +15,6 @@
     <script type="text/javascript">
       PluginStaticURI = '<$mt:PluginStaticWebPath component="ThemeManager"$>';
       BlogID = <$mt:BlogID$>;
-
-      var tableSelect = [];
-      function init() {
-<mt:loop name="template_type_loop">
-        tableSelect.push(new TC.TableSelect( '<mt:var name="template_type" escape="html">-listing-table' ));
-        tableSelect[tableSelect.length-1].rowSelect = true;
-</mt:loop>
-        var name = (window.location.hash && window.location.hash.match( /^#/ ) ) ? window.location.hash.substr(1) : "all";
-      }
-      TC.attachLoadEvent(init);
     </script>
     <mt:If name="mt_product_name" like="Movable Type">
     <style type="text/css">
@@ -72,8 +62,7 @@
 </mt:SetVarBlock>
 
 
-<mt:include name="include/header.tmpl">
-
+<mt:include name="include/header.tmpl" listing_screen="1">
 
 <mt:Ignore> The #theme-label is used with the page JS to create h2#page-title </mt:Ignore>
 <div id="theme-label"><mt:Var name="theme_label"></div>

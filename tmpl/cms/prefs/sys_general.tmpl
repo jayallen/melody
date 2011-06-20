@@ -5,16 +5,16 @@
     <mtapp:setting
         id="system_email_address"
         label="<__trans phrase="System Email">"
-        hint="<__trans phrase="The email address used in the From: header of each email sent from the system.  The address is used in password recovery, commenter registration, comment, trackback notification and a few other minor events.">"
+        hint="<__trans phrase='The email address all emails will be from. It is used in password recovery, commenter registration and other outbound system emails. To confirm your system is working properly, send a test email from the [_1]System Diagnostics[_2] area.' params='<a href="?__mode=sanity_check">%%</a>'>"
         show_hint="1">
         <div class="textarea-wrapper">
-            <input id="system_email_address" name="system_email_address"<mt:if name="system_email_address"> value="<mt:var name="system_email_address" escape="html">"</mt:if> class="full-width" />
+            <input type="text" id="system_email_address" name="system_email_address"<mt:if name="system_email_address"> value="<mt:var name="system_email_address" escape="html">"</mt:if> class="full-width" />
         </div>
     </mt:app:setting>
     <mtapp:setting
         id="system_debug_mode"
         label="<__trans phrase="Debug Mode">"
-        hint="<__trans phrase='You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>'>"
+        hint="<__trans phrase='You can find an explanation of the various debug modes in the <a href="http://openmelody.org/docs/ref-debug">documentation</a>.'>"
         show_hint="1">
         <input type="text" size="3" maxlength="3" id="system_debug_mode" name="system_debug_mode" value="<mt:var name="system_debug_mode" escape="html">" />
     </mt:app:setting>
@@ -31,7 +31,7 @@
         hint="<__trans phrase="Paths where logs are placed.">"
         show_hint="1">
         <div class="textarea-wrapper">
-            <input id="system_performance_logging_path" name="system_performance_logging_path"<mt:if name="system_performance_logging_path"> value="<mt:var name="system_performance_logging_path" escape="html">"</mt:if> class="full-width" />
+            <input type="text" id="system_performance_logging_path" name="system_performance_logging_path"<mt:if name="system_performance_logging_path"> value="<mt:var name="system_performance_logging_path" escape="html">"</mt:if> class="full-width" />
         </div>
     </mt:app:setting>
     <mtapp:setting

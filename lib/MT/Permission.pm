@@ -226,7 +226,7 @@ sub global_perms {
         unless (@Perms) {
             if ( my $perms = MT->registry("permissions") ) {
                 foreach my $pk (%$perms) {
-                    my ( $scope, $name ) = split /\./, $pk;
+                    my ( $scope, $name ) = split(/\./, $pk);
                     next unless $scope && $name;
                     my $label
                       = 'CODE' eq ref( $perms->{$pk}{label} )

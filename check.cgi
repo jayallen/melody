@@ -77,6 +77,7 @@ eval {
         MT::L10N->get_handle($lang);
     }
 };
+$lang ||= 'en_US';
 
 sub trans_templ {
     my($text) = @_;

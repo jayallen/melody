@@ -7,7 +7,7 @@ use warnings;
 use lib 't/lib', 'lib', 'extlib';
 use MT::Test;
 
-use Test::More tests => 178;
+use Test::More tests => 175;
 
 use_ok('MT::Bootstrap');
 use_ok('MT::ErrorHandler');
@@ -204,11 +204,6 @@ use_ok('MT::ArchiveType::Yearly');
 
 # XMLRPC support
 use_ok('MT::XMLRPC');
-use_ok('MT::XMLRPCServer');
-
-# Atom support
-use_ok('MT::Atom');
-use_ok('MT::AtomServer');
 
 # Backup/Restore
 use_ok('MT::BackupRestore');

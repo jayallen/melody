@@ -14,6 +14,14 @@ use vars qw( @ISA %Lexicon );
 sub ascii_only { ( ( ref $_[0] ) || $_[0] ) eq __PACKAGE__ }
 
 %Lexicon = (
+    '__STRING_FILTER_EQUAL' => 'is',
+    '__INTEGER_FILTER_EQUAL' => 'is',
+    '__INTEGER_FILTER_NOT_EQUAL' => 'is not',
+    '__DATE_FILTER_FUTURE' => 'past',
+    '__FILTER_DATE_ORIGIN' => '[_1]',
+    '_FILTER_DATE_DAYS' => '[_1] days',
+    '__SELECT_FILTER_VERB' => 'is',
+
     'AUTO DETECT'              => 'Auto-detect',
     '_USER_ENABLE'             => 'Enable',
     '_USER_DISABLE'            => 'Disable',
@@ -230,6 +238,23 @@ the address you provided is correct and belongs to you.',
     '_WARNING_REFRESH_TEMPLATES_FOR_BLOGS' =>
       'This action will restore the templates in the selected blog(s) to factory settings. Are you sure you want to refresh templates in the selected blog(s)?',
 
+    '_WEBMASTER_MT4' => 'Webmaster',
+    '_THEME_AUTHOR' => 'Author',
+    '_FILTER_FUTURE' => 'Future',
+    '_LOCALE_CALENDAR_HEADER_' => "'S', 'M', 'T', 'W', 'T', 'F', 'S'",
+    '__AUTHOR_STATUS' => 'Status',
+    '__BLOG_COUNT' => 'Blog Count',
+    '__ENTRY_COUNT' => 'Entry Count',
+    '__PAGE_COUNT' => 'Page Count',
+    '__ASSET_COUNT' => 'Asset Count',
+    '__COMMENT_COUNT' => 'Comment Count',
+    '__PING_COUNT' => 'Trackback Count',
+    '__ROLE_STATUS' => 'Status',
+    '__ROLE_ACTIVE' => 'In Use',
+    '__ROLE_INACTIVE' => 'Not in Use',
+    '__COMMENTER_APPROVED' => 'Approved',
+    '__ANONYMOUS_COMMENTER' => 'Anonymous',
+    '__WEBSITE_BLOG_NAME' => 'Website/Blog Name',
 );
 
 1;

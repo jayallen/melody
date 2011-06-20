@@ -38,7 +38,7 @@
         type="submit"
         accesskey="s"
         title="<__trans phrase="Save changes to this TrackBack (s)">"
-        class="primary-button"
+        class="primary button"
         ><__trans phrase="Save Changes"></button>
     <button
         onclick="doRemoveItems(this.form, '<__trans phrase="TrackBack" escape="js">', '<__trans phrase="TrackBack" escape="js">', false, { 'return_args' : '__mode=list_pings&blog_id=<mt:var name="blog_id">'})"
@@ -137,7 +137,7 @@
     label="<__trans phrase="Source Site">"
     hint=""
     show_hint="0">
-    <input name="blog_name" id="blog_name" value="<mt:var name="source_blog_name" escape="html">" class="width90" />
+    <input type="text" name="blog_name" id="blog_name" value="<mt:var name="source_blog_name" escape="html">" class="width90" />
     <a title="<__trans phrase="Search for other TrackBacks from this site">" href="<mt:var name="script_url">?__mode=search_replace&amp;blog_id=<mt:var name="blog_id">&amp;_type=ping&amp;search=<mt:var name="source_blog_name" escape="url">&amp;do_search=1"><img alt="" src="<mt:var name="static_uri">images/filter.gif" width="8" height="8" border="0" /></a>
 </mtapp:setting>
 
@@ -146,7 +146,7 @@
     label="<__trans phrase="Source Title">"
     hint=""
     show_hint="0">
-    <input name="title" id="title" value="<mt:var name="title" escape="html">" class="width90" />
+    <input type="text" name="title" id="title" value="<mt:var name="title" escape="html">" class="width90" />
     <a title="<__trans phrase="Search for other TrackBacks with this title">" href="<mt:var name="script_url">?__mode=search_replace&amp;_type=ping&amp;blog_id=<mt:var name="blog_id">&amp;search=<mt:var name="title" escape="url">&amp;do_search=1"><img alt="" src="<mt:var name="static_uri">images/filter.gif" width="8" height="8" border="0" /></a>
 </mtapp:setting>
 
@@ -155,7 +155,7 @@
     label="<__trans phrase="URL">"
     hint=""
     show_hint="0">
-    <input name="source_url" id="source_url" value="<mt:var name="source_url" escape="html">" class="width90" />
+    <input type="text" name="source_url" id="source_url" value="<mt:var name="source_url" escape="html">" class="width90" />
     <a title="<__trans phrase="Search for other TrackBacks with this status">" href="<mt:var name="script_url">?__mode=search_replace&amp;_type=ping&amp;blog_id=<mt:var name="blog_id">&amp;search=<mt:var name="source_url" escape="url">&amp;do_search=1"><img alt="" src="<mt:var name="static_uri">images/filter.gif" width="8" height="8" border="0" /></a>
 </mtapp:setting>
 

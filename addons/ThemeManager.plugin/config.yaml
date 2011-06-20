@@ -22,8 +22,7 @@ applications:
             setup_theme:      $ThemeManager::ThemeManager::Plugin::setup_theme
             theme_dashboard:  $ThemeManager::ThemeManager::Plugin::theme_dashboard
             theme_info:       $ThemeManager::ThemeManager::Plugin::theme_info
-
-page_actions: $ThemeManager::ThemeManager::Plugin::update_page_actions
+        page_actions: $ThemeManager::ThemeManager::Plugin::update_page_actions
 
 list_actions:
     blog:

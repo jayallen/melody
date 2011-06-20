@@ -260,6 +260,7 @@ sub core_tags {
             'App:ListFilters'        => \&_hdlr_app_list_filters,
             'App:ActionBar'          => \&_hdlr_app_action_bar,
             'App:Link'               => \&_hdlr_app_link,
+            'App:BlogSelector'       => \&_hdlr_app_blog_selector,
             Var                      => \&_hdlr_get_var,
             CGIPath                  => \&_hdlr_cgi_path,
             AdminCGIPath             => \&_hdlr_admin_cgi_path,
@@ -272,8 +273,6 @@ sub core_tags {
             CommentScript            => \&_hdlr_comment_script,
             TrackbackScript          => \&_hdlr_trackback_script,
             SearchScript             => \&_hdlr_search_script,
-            XMLRPCScript             => \&_hdlr_xmlrpc_script,
-            AtomScript               => \&_hdlr_atom_script,
             NotifyScript             => \&_hdlr_notify_script,
             Date                     => \&_hdlr_sys_date,
             Version                  => \&_hdlr_mt_version,
@@ -345,7 +344,6 @@ sub core_tags {
             EntryKeywords          => \&_hdlr_entry_keywords,
             EntryLink              => \&_hdlr_entry_link,
             EntryBasename          => \&_hdlr_entry_basename,
-            EntryAtomID            => \&_hdlr_entry_atom_id,
             EntryPermalink         => \&_hdlr_entry_permalink,
             EntryClass             => \&_hdlr_entry_class,
             EntryClassLabel        => \&_hdlr_entry_class_label,
@@ -1834,7 +1832,7 @@ sub _hdlr_app_listing {
       :                              ' compact';
 
     my $table = <<TABLE;
-        <table id="$id-table" class="$id-table$view" cellspacing="0">
+        <table id="$id-table" class="unit size1of1 listing $listing_class $id-table$view" cellspacing="0">
 $insides
         </table>
 TABLE
@@ -1842,7 +1840,7 @@ TABLE
     if ($show_actions) {
         local $ctx->{__stash}{vars}{__contents__} = $table;
         return $ctx->build(<<EOT);
-<div id="$id" class="listing $listing_class">
+<div id="$id" class="$listing_class line">
     <div class="listing-header">
         $listing_header
     </div>
@@ -2452,6 +2450,44 @@ sub _hdlr_app_setting_group {
     $insides
 </fieldset>
 EOT
+}
+
+###########################################################################
+
+=head2 App:BlogSelector
+
+This template tag typically lives in the header of the application. It is
+included on every page that has the blog selector pull down control and is
+responsible for rendering its contents. Different app themes may wish to 
+overload the default blog selector and can do so by registering one in this
+way:
+
+     id: MyPlugin
+     applications:
+       cms:
+         blog_selector:
+           handler: 'MT::App::CMS::build_blog_selector'
+
+See documentation for Pluggable Blog Selector.
+
+B<Attributes:>
+
+None by default. Each implemented blog_selector may support its own set of
+arguments. 
+
+=cut
+
+sub _hdlr_app_blog_selector {
+    my ( $ctx, $args, $cond ) = @_;
+    my $app = MT->instance;
+    my $sel = $app->registry('blog_selector');
+    if ( my $code = $sel->{code} ) {
+        if ( !ref($code) ) {
+            $code = $sel->{code} = $app->handler_to_coderef($code);
+        }
+        return $code->(@_);
+    }
+    return $ctx->error("No blog selector was registered or found. The app MUST have a blog selector.");
 }
 
 ###########################################################################
@@ -5281,10 +5317,20 @@ B<Example:> Passing Parameters to a Template Module
                || $arg->{key}
                || ( exists $arg->{ttl} )
                || ( $cache_expire_type != 0 ) ) ? 1 : 0;
-        my $cache_key
-          = ( $arg->{cache_key} || $arg->{key} )
-          ? $arg->{cache_key} || $arg->{key}
-          : 'blog::' . $blog_id . '::template_' . $type . '::' . $tmpl_name;
+        my $cache_key = $arg->{cache_key} || $arg->{key};
+        if ( !$cache_key ) {
+            require Digest::MD5;
+            $cache_key = Digest::MD5::md5_hex(
+                Encode::encode_utf8(
+                          'blog::' 
+                        . $blog_id
+                        . '::template_'
+                        . $type . '::'
+                        . $tmpl_name
+                )
+            );
+        }
+        
         my $ttl
           = exists $arg->{ttl}          ? $arg->{ttl}
           : ( $cache_expire_type == 1 ) ? $tmpl->cache_expire_interval
@@ -5367,7 +5413,7 @@ B<Example:> Passing Parameters to a Template Module
         }
 
         if ($cache_enabled) {
-            $cache_driver->replace( $cache_key, $ret, $ttl );
+            $cache_driver->set( $cache_key, $ret, $ttl );
         }
 
         if ($use_ssi) {
@@ -5497,11 +5543,13 @@ B<Example:> Passing Parameters to a Template Module
                 $tmpl_file =~ s/\.tmpl$//;
                 $tmpl_file = '.' . $tmpl_file;
             }
-            $mt->run_callbacks( 'template_param' . $tmpl_file,
-                                $mt, $tmpl->param, $tmpl );
 
             # propagate our context
             local $tmpl->{context} = $ctx;
+
+            $mt->run_callbacks( 'template_param' . $tmpl_file,
+                                $mt, $tmpl->param, $tmpl );
+
             my $out = $tmpl->output();
             return $ctx->error( $tmpl->errstr ) unless defined $out;
 
@@ -6855,68 +6903,6 @@ setting. Use C<SearchMaxResults> because MaxResults is considered deprecated.
 sub _hdlr_search_max_results {
     my ($ctx) = @_;
     return $ctx->{config}->MaxResults;
-}
-
-###########################################################################
-
-=head2 XMLRPCScript
-
-Returns the value of the C<XMLRPCScript> configuration setting. The
-default for this setting if unassigned is "xmlrpc.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example C<<$mt:XMLRPCScript url="1"$>>
-might give you http://example.com/m/xmlrpc.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:XMLRPCScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/m/xmlrpc.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_xmlrpc_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location( @_, 'XMLRPCScript' );
-}
-
-###########################################################################
-
-=head2 AtomScript
-
-Returns the value of the C<AtomScript> configuration setting. The
-default for this setting if unassigned is "atom.cgi".
-
-=over 4
-
-=item * url
-
-Returns the script as a URL value.  For example C<<$mt:AtomScript url="1"$>>
-might give you http://example.com/m/atom.cgi
-
-=item * filepath
-
-Returns the script as an absolute filesystem value.  For example
-C<<$mt:AtomScript filepath="1"$>> might give you
-C</var/www/example.com/htdocs/m/atom.cgi>
-
-=back
-
-=for tags configuration
-
-=cut
-
-sub _hdlr_atom_script {
-    my ($ctx) = shift;
-    return $ctx->_get_script_location( @_, 'AtomScript' );
 }
 
 ###########################################################################
@@ -8740,7 +8726,9 @@ sub _hdlr_entries {
 
     # for the case that we want to use mt:Entries with search.cgi
     # send to MT::Template::Search if searh results are found
-    if ( $ctx->stash('results') && $args->{search_results} == 1 ) {
+    if (    $ctx->stash('results')
+        and defined $args->{search_results}
+        and         $args->{search_results} == 1 ) {
         require MT::Template::Context::Search;
         return MT::Template::Context::Search::_hdlr_results( $ctx, $args,
                                                              $cond );
@@ -10690,24 +10678,6 @@ sub _hdlr_entry_basename {
         }
     }
     return $basename;
-}
-
-###########################################################################
-
-=head2 EntryAtomID
-
-Outputs the unique Atom ID for the current entry in context.
-
-=cut
-
-sub _hdlr_entry_atom_id {
-    my ( $ctx, $args, $cond ) = @_;
-    my $e = $ctx->stash('entry') or return $ctx->_no_entry_error();
-    return
-         $e->atom_id()
-      || $e->make_atom_id()
-      || $ctx->error(
-         MT->translate( "Could not create atom id for entry [_1]", $e->id ) );
 }
 
 ###########################################################################
@@ -21828,6 +21798,7 @@ sub _hdlr_pager_link {
     my $day          = $ctx->stash('search_day');
     my $archive_type = $ctx->stash('search_archive_type');
     my $template_id  = $ctx->stash('search_template_id');
+    my $blog_id      = $ctx->stash('search_blog_id');
 
     my $link = $ctx->context_script($args);
 
@@ -21842,14 +21813,15 @@ sub _hdlr_pager_link {
     $link .= "limit=" . encode_url($limit);
 
     #$link .= "&offset=$offset" if $offset;
-    $link .= "&category=" . encode_url($category)         if $category;
-    $link .= "&author=" . encode_url($author)             if $author;
-    $link .= "&page=" . encode_url($page)                 if $page;
-    $link .= "&year=" . encode_url($year)                 if $year;
-    $link .= "&month=" . encode_url($month)               if $month;
-    $link .= "&day=" . encode_url($day)                   if $day;
+    $link .= "&category="     . encode_url($category)     if $category;
+    $link .= "&author="       . encode_url($author)       if $author;
+    $link .= "&page="         . encode_url($page)         if $page;
+    $link .= "&year="         . encode_url($year)         if $year;
+    $link .= "&month="        . encode_url($month)        if $month;
+    $link .= "&day="          . encode_url($day)          if $day;
     $link .= "&archive_type=" . encode_url($archive_type) if $archive_type;
-    $link .= "&template_id=" . encode_url($template_id)   if $template_id;
+    $link .= "&template_id="  . encode_url($template_id)  if $template_id;
+    $link .= "&blog_id="      . encode_url($blog_id)      if $blog_id;
     return $link;
 } ## end sub _hdlr_pager_link
 

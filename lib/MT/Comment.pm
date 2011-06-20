@@ -78,6 +78,489 @@ sub is_not_junk {
     $_[0]->junk_status != JUNK;
 }
 
+sub list_props {
+    return {
+        comment => {
+            label   => 'Comment',
+            order   => 100,
+            display => 'force',
+            html    => sub {
+                my ( $prop, $obj, $app ) = @_;
+                my $text = MT::Util::remove_html( $obj->text );
+                ## FIXME: Hard coded...
+                my $len = 4000;
+                if ( $len < length($text) ) {
+                    $text = substr( $text, 0, $len );
+                    $text .= '...';
+                }
+                elsif ( !$text ) {
+                    $text = '...';
+                }
+                my $id   = $obj->id;
+                my $link = $app->uri(
+                    mode => 'view',
+                    args => {
+                        _type   => 'comment',
+                        id      => $id,
+                        blog_id => $obj->blog_id,
+                    }
+                );
+                my $status_img = MT->static_path . 'images/status_icons/';
+                $status_img .=
+                      $obj->is_junk      ? 'warning.gif'
+                    : $obj->is_published ? 'success.gif'
+                    :                      'draft.gif';
+                my $status_class
+                    = $obj->is_junk      ? 'Junk'
+                    : $obj->is_published ? 'Approved'
+                    :                      'Unapproved';
+                my $lc_status_class = lc $status_class;
+
+                my $blog = $app ? $app->blog : undef;
+                my $edit_str = MT->translate('Edit');
+                my $reply_link;
+                if ( $app->user->permissions( $obj->blog->id )
+                        ->can_manage_feedback
+                    and $obj->is_published )
+                {
+                    my $return_arg = $app->uri_params(
+                        mode => 'list',
+                        args => {
+                            _type   => 'comment',
+                            blog_id => $app->blog ? $app->blog->id : 0,
+                        }
+                    );
+                    my $reply_url = $app->uri(
+                        mode => 'dialog_post_comment',
+                        args => {
+                            reply_to    => $id,
+                            blog_id     => $obj->blog_id,
+                            return_args => $return_arg,
+                            magic_token => $app->current_magic,
+                        },
+                    );
+                    my $reply_str = MT->translate('Reply');
+                    $reply_link
+                        = qq{<a href="$reply_url" class="reply action-link open-dialog-link mt-open-dialog">$reply_str</a>};
+                }
+
+                return qq{
+                    <span class="icon comment status $lc_status_class">
+                      <img alt="$status_class" src="$status_img" />
+                    </span>
+                    <p class="comment-text content-text">$text</p>
+                    <div class="item-ctrl">
+                      <a href="$link" class="edit action-link">$edit_str</a>
+                      $reply_link
+                    </div>
+                };
+            },
+            default_sort_order => 'descend',
+        },
+        author => {
+            label   => 'Commenter',
+            order   => 200,
+            auto    => 1,
+            display => 'default',
+            html    => sub {
+                my ( $prop, $obj, $app, $opts ) = @_;
+                my $name = MT::Util::remove_html( $obj->author );
+                my ( $link, $status_img, $status_class, $lc_status_class,
+                    $auth_img, $auth_label );
+                my $id     = $obj->commenter_id;
+                my $static = MT->static_path;
+
+                if ( !$id ) {
+                    $link = $app->uri(
+                        mode => 'search_replace',
+                        args => {
+                            _type       => 'comment',
+                            search_cols => 'author',
+                            is_limited  => 1,
+                            do_search   => 1,
+                            search      => $name,
+                            blog_id     => $app->blog ? $app->blog->id : 0,
+                        }
+                    );
+                    $status_img      = '';
+                    $status_class    = 'Anonymous';
+                    $lc_status_class = lc $status_class;
+                    my $link_title
+                        = MT->translate(
+                        'Search other comments from this anonymous commenter'
+                        );
+                    return qq{
+                        <span class="commenter">
+                          <a href="$link" title="$link_title">$name</a>
+                        </span>
+                    };
+                }
+
+                $link = $app->uri(
+                    mode => 'view',
+                    args => {
+                        _type   => 'commenter',
+                        id      => $id,
+                        blog_id => $obj->blog_id,
+                    }
+                );
+                my $commenter = MT->model('author')->load($id);
+
+                if ($commenter) {
+                    $name ||= $commenter->name
+                        || '(' . MT->translate('Registered User') . ')';
+                }
+                else {
+                    $name ||= '('
+                        . MT->translate('__ANONYMOUS_COMMENTER') . ')';
+                    $link = $app->uri(
+                        mode => 'search_replace',
+                        args => {
+                            _type       => 'comment',
+                            search_cols => 'author',
+                            is_limited  => 1,
+                            do_search   => 1,
+                            search      => $name,
+                            blog_id     => $app->blog ? $app->blog->id : 0,
+                        }
+                    );
+                    $status_img      = '';
+                    $status_class    = 'Deleted';
+                    $lc_status_class = lc $status_class;
+                    my $link_title = MT->translate(
+                        'Search other comments from this deleted commenter');
+                    my $optional_status = MT->translate('(Deleted)');
+                    return qq{
+                        <span class="commenter">
+                          <a href="$link" title="$link_title">$name</a> $optional_status
+                        </span>
+                    };
+                }
+
+                my $status = $commenter->status;
+                my $status_icon;
+
+                if ( MT->config->SingleCommunity ) {
+                    if ( $commenter->type == MT::Author::AUTHOR() ) {
+                        $status_icon
+                            = $commenter->status == MT::Author::ACTIVE()
+                            ? 'user-enabled.gif'
+                            : $commenter->status == MT::Author::INACTIVE()
+                            ? 'user-disabled.gif'
+                            : 'user-pending.gif';
+                        $status_class
+                            = $commenter->status == MT::Author::ACTIVE()
+                            ? 'Enabled'
+                            : $commenter->status == MT::Author::INACTIVE()
+                            ? 'Disabled'
+                            : 'Pending';
+                    }
+                    else {
+                        $status_icon
+                            = $commenter->is_trusted(0) ? 'trusted.gif'
+                            : $commenter->is_banned(0)  ? 'banned.gif'
+                            :                             'authenticated.gif';
+                        $status_class
+                            = $commenter->is_trusted(0) ? 'Trusted'
+                            : $commenter->is_banned(0)  ? 'Banned'
+                            :                             'Authenticated';
+                    }
+                }
+                else {
+                    my $blog_id = $opts->{blog_id};
+                    $status_icon
+                        = $commenter->is_trusted($blog_id) ? 'trusted.gif'
+                        : $commenter->is_banned($blog_id)  ? 'banned.gif'
+                        :   'authenticated.gif';
+                    $status_class
+                        = $commenter->is_trusted($blog_id) ? 'Trusted'
+                        : $commenter->is_banned($blog_id)  ? 'Banned'
+                        :                                    'Authenticated';
+                }
+
+                $lc_status_class = lc $status_class;
+                my $status_url
+                    = $static . 'images/status_icons/' . $status_icon;
+                $status_img = qq{<img src="$status_url" />};
+
+                $auth_img = $static;
+                if (   $commenter->auth_type eq 'MT'
+                    || $commenter->auth_type eq 'LDAP' )
+                {
+                    $auth_img .= 'images/comment/mt_logo.png';
+                    $auth_label = 'Movable Type';
+                }
+                else {
+                    my $auth = MT->registry(
+                        commenter_authenticators => $commenter->auth_type );
+                    $auth_img .= $auth->{logo_small};
+                    $auth_label = $auth->{label};
+                    $auth_label = $auth_label->() if ref $auth_label;
+                }
+                my $link_title = MT->translate(
+                    'Edit this [_1] commenter.',
+                    MT->translate($status_class),
+                );
+
+                my $out = qq{
+                    <span class="auth-type">
+                      <img alt="$auth_label" src="$auth_img" class="auth-type-icon" />
+                    </span>
+                    <span class="commenter">
+                      <a href="$link" title="$link_title">$name</a>
+                    </span>
+                    <span class="status $lc_status_class">
+                      $status_img
+                    </span>
+                };
+            },
+        },
+        created_on => {
+            order   => 250,
+            base    => '__virtual.created_on',
+            display => 'default',
+        },
+        ip => {
+            auto      => 1,
+            order     => 300,
+            label     => 'IP Address',
+            condition => sub { MT->config->ShowIPInformation },
+        },
+        blog_name => {
+            base  => '__common.blog_name',
+            order => 400,
+        },
+        entry => {
+            label              => 'Entry/Page',
+            base               => '__virtual.integer',
+            col_class          => 'string',
+            filter_editable    => 0,
+            order              => 500,
+            display            => 'default',
+            default_sort_order => 'ascend',
+            filter_tmpl        => '<mt:Var name="filter_form_hidden">',
+            sort               => sub {
+                my $prop = shift;
+                my ( $terms, $args ) = @_;
+                $args->{joins} ||= [];
+                my $join_str = '= comment_entry_id';
+                push @{ $args->{joins} }, MT->model('entry')->join_on(
+                    undef,
+                    { id => \$join_str, },
+                    {   sort      => 'title',
+                        direction => $args->{direction} || 'ascend',
+                    },
+                );
+                $args->{sort} = [];
+                return;
+            },
+            terms => sub {
+                my ( $prop, $args, $db_terms, $db_args ) = @_;
+                $db_args->{joins} ||= [];
+                my $join_str = '= comment_entry_id';
+                push @{ $db_args->{joins} }, MT->model('entry')->join_on(
+                    undef,
+                    {   id =>
+                            [ '-and', $args->{value}, \$join_str ],
+                    },
+                );
+                return;
+            },
+            bulk_html => sub {
+                my $prop = shift;
+                my ( $objs, $app ) = @_;
+                my %entry_ids = map { $_->entry_id => 1 } @$objs;
+                my @entries
+                    = MT->model('entry')
+                    ->load( { id => [ keys %entry_ids ], },
+                    { no_class => 1, } );
+                my %entries = map { $_->id => $_ } @entries;
+                my @result;
+                for my $obj (@$objs) {
+                    my $id    = $obj->entry_id;
+                    my $entry = $entries{$id};
+                    if ( !$entry ) {
+                        push @result, MT->translate('Deleted');
+                        next;
+                    }
+                    my $type = $entry->class_type;
+                    my $img
+                        = MT->static_path
+                        . 'images/nav_icons/color/'
+                        . $type . '.gif';
+                    my $title_html
+                        = MT::ListProperty::make_common_label_html( $entry,
+                        $app, 'title', 'No title' );
+                    push @result, qq{
+                        <span class="icon target-type $type">
+                          <img src="$img" />
+                        </span>
+                        $title_html
+                    };
+                }
+                return @result;
+            },
+            raw => sub {
+                my ( $prop, $obj ) = @_;
+                my $entry_id = $obj->entry_id;
+                return $entry_id
+                    ? MT->model('entry')->load($entry_id)->title
+                    : '';
+            },
+            label_via_param => sub {
+                my $prop     = shift;
+                my $app      = shift;
+                my $entry_id = $app->param('filter_val');
+                my $entry    = MT->model('entry')->load($entry_id);
+                my $label    = MT->translate( 'Comments on [_1]: [_2]',
+                    $entry->class_label, $entry->title, );
+                $prop->{filter_label} = MT::Util::encode_html($label);
+                $label;
+            },
+            args_via_param => sub {
+                my $prop = shift;
+                my ( $app, $val ) = @_;
+                return { option => 'equal', value => $val };
+            },
+        },
+
+        modified_on => {
+            display => 'none',
+            base    => '__virtual.modified_on',
+        },
+        status => {
+            label   => 'Status',
+            base    => '__virtual.single_select',
+            col     => 'visible',
+            display => 'none',
+            terms   => sub {
+                my ( $prop, $args ) = @_;
+                return $args->{value} eq 'approved'
+                    ? { visible => 1, junk_status => NOT_JUNK() }
+                    : $args->{value} eq 'pending'
+                    ? { visible => 0, junk_status => NOT_JUNK() }
+                    : $args->{value} eq 'junk' ? { junk_status => JUNK() }
+                    :   { junk_status => NOT_JUNK() };
+            },
+            single_select_options => [
+                { label => MT->translate('Approved'),         value => 'approved', },
+                { label => MT->translate('Unapproved'),       value => 'pending', },
+                { label => MT->translate('Not spam'),         value => 'not_junk', },
+                { label => MT->translate('Reported as spam'), value => 'junk', },
+            ],
+        },
+        ## Hide default author_name.
+        author_name  => { view => 'none', },
+        commenter_id => {
+            auto            => 1,
+            filter_editable => 0,
+            display         => 'none',
+            label           => 'Commenter',
+            label_via_param => sub {
+                my $prop = shift;
+                my ( $app, $val ) = @_;
+                my $user = MT->model('author')->load($val);
+                return MT->translate(
+                    "All comments by [_1] '[_2]'",
+                    (     $user->type == MT::Author::COMMENTER()
+                        ? $app->translate("Commenter")
+                        : $app->translate("Author")
+                    ),
+                    (     $user->nickname
+                        ? $user->nickname . ' (' . $user->name . ')'
+                        : $user->name
+                    )
+                );
+            },
+        },
+        text => {
+            auto    => 1,
+            label   => 'Comment Text',
+            display => 'none',
+        },
+        for_current_user => {
+            base      => '__virtual.hidden',
+            label     => 'Comments on My Entries/Pages',
+            singleton => 1,
+            terms     => sub {
+                my ( $prop, $args, $db_terms, $db_args ) = @_;
+                my $user = MT->app->user;
+                $db_args->{joins} ||= [];
+                my $join_str = '= comment_entry_id';
+                push @{ $db_args->{joins} }, MT->model('entry')->join_on(
+                    undef,
+                    {   id        => \$join_str,
+                        author_id => $user->id,
+                    },
+                );
+            },
+        },
+        email => {
+            auto    => 1,
+            display => 'none',
+            label   => 'Email Address',
+            terms   => sub {
+                my $prop = shift;
+                my ( $args, $db_terms, $db_args ) = @_;
+                my $option = $args->{option};
+                my $query  = $args->{string};
+                if ( 'contains' eq $option ) {
+                    $query = { like => "%$query%" };
+                }
+                elsif ( 'not_contains' eq $option ) {
+                    $query = { not_like => "%$query%" };
+                }
+                elsif ( 'beginning' eq $option ) {
+                    $query = { like => "$query%" };
+                }
+                elsif ( 'end' eq $option ) {
+                    $query = { like => "%$query" };
+                }
+
+                my @users = MT->model('author')->load( { email => $query, },
+                    { fetchonly => { id => 1 }, } );
+                my @ids = map { $_->id } @users;
+                return [
+                    { commenter_id => \@ids },
+                    '-or',
+                    { 'email' => $query },
+                ];
+            },
+        },
+        url => {
+            auto    => 1,
+            display => 'none',
+            label   => 'URL',
+            terms   => sub {
+                my $prop = shift;
+                my ( $args, $db_terms, $db_args ) = @_;
+                my $option = $args->{option};
+                my $query  = $args->{string};
+                if ( 'contains' eq $option ) {
+                    $query = { like => "%$query%" };
+                }
+                elsif ( 'not_contains' eq $option ) {
+                    $query = { not_like => "%$query%" };
+                }
+                elsif ( 'beginning' eq $option ) {
+                    $query = { like => "$query%" };
+                }
+                elsif ( 'end' eq $option ) {
+                    $query = { like => "%$query" };
+                }
+
+                my @users = MT->model('author')->load( { url => $query, },
+                    { fetchonly => { id => 1 }, } );
+                my @ids = map { $_->id } @users;
+                return [
+                    { commenter_id => \@ids },
+                    '-or', { 'url' => $query },
+                ];
+            },
+        },
+    };
+}
+
 sub is_not_blocked {
     my ( $eh, $cmt ) = @_;
 

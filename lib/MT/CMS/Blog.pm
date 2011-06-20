@@ -13,7 +13,6 @@ sub edit {
 
     if ($id) {
 
-#        my $output = $param->{output} ||= 'cfg_prefs.tmpl';
         $param->{need_full_rebuild}  = 1 if $q->param('need_full_rebuild');
         $param->{need_index_rebuild} = 1 if $q->param('need_index_rebuild');
         $param->{use_plugins} = $cfg->UsePlugins;
@@ -492,88 +491,6 @@ sub save {
                       )
       );
 } ## end sub save
-
-sub list {
-    my $app = shift;
-    my $q   = $app->query;
-    $app->return_to_dashboard( redirect => 1 ) if $q->param('blog_id');
-
-    my $author    = $app->user;
-    my $list_pref = $app->list_pref('blog');
-
-    my $limit  = $list_pref->{rows};
-    my $offset = $q->param('offset') || 0;
-    my $args   = { offset => $offset, sort => 'name' };
-    $args->{limit} = $limit + 1;
-    unless ( $author->is_superuser ) {
-        $args->{join} =
-          MT::Permission->join_on( 'blog_id',
-                                   { author_id => $author->id },
-                                   { unique    => 1 } );
-    }
-    my $blog_class       = $app->model('blog');
-    my %param            = %$list_pref;
-    my @blogs            = $blog_class->load( undef, $args );
-    my $can_edit_authors = $author->is_superuser;
-    my $blog_loop        = make_blog_list( $app, \@blogs );
-
-    if ($blog_loop) {
-        ## We tried to load $limit + 1 entries above; if we actually got
-        ## $limit + 1 back, we know we have another page of entries.
-        my $have_next = @$blog_loop > $limit;
-        pop @$blog_loop while @$blog_loop > $limit;
-        if ($offset) {
-            $param{prev_offset}     = 1;
-            $param{prev_offset_val} = $offset - $limit;
-            $param{prev_offset_val} = 0 if $param{prev_offset_val} < 0;
-        }
-        if ($have_next) {
-            $param{next_offset}     = 1;
-            $param{next_offset_val} = $offset + $limit;
-        }
-    }
-    $param{offset}      = $offset;
-    $param{object_type} = 'blog';
-    $param{list_start}  = $offset + 1;
-    delete $args->{limit};
-    delete $args->{offset};
-    $param{list_total} = $blog_class->count( undef, $args );
-    $param{list_end} = $offset + ( $blog_loop ? scalar @$blog_loop : 0 );
-    $param{next_max} = $param{list_total} - $limit;
-    $param{next_max} = 0 if ( $param{next_max} || 0 ) < $offset + 1;
-    $param{can_create_blog} = $author->can_create_blog;
-    $param{saved_deleted}   = $q->param('saved_deleted');
-    $param{refreshed}       = $q->param('refreshed');
-    $param{nav_blogs}       = 1;
-    $param{list_noncron}    = 1;
-    $param{search_label}    = $app->translate('Blogs');
-
-    if ($blog_loop) {
-        $param{object_loop} = $param{blog_table}[0]{object_loop} = $blog_loop;
-        $app->load_list_actions( 'blog', \%param );
-    }
-
-    $param{page_actions} = $app->page_actions('list_blog');
-    $param{feed_name}    = $app->translate("Blog Activity Feed");
-    $param{feed_url}     = $app->make_feed_link('blog');
-    $app->add_breadcrumb( $app->translate("Blogs") );
-    $param{nav_weblogs}         = 1;
-    $param{object_label}        = $blog_class->class_label;
-    $param{object_label_plural} = $blog_class->class_label_plural;
-    $param{screen_class}        = "list-blog";
-    $param{screen_id}           = "list-blog";
-    $param{listing_screen}      = 1;
-    if ( my @blog_ids = split ',', $q->param('error_id') ) {
-        $param{error} = 1;
-        my @names;
-        foreach my $blog_id (@blog_ids) {
-            my ($blog) = grep { $_->{id} eq $blog_id } @$blog_loop;
-            push @names, $blog->{name} if $blog;
-        }
-        $param{blog_name} = join ',', @names;
-    }
-    return $app->load_tmpl( 'list_blog.tmpl', \%param );
-} ## end sub list
 
 sub cfg_blog_settings {
     my $app     = shift;
@@ -2070,14 +1987,6 @@ sub build_blog_table {
     \@data;
 } ## end sub build_blog_table
 
-sub cfg_blog {
-    my $app = shift;
-    my $q   = $app->query;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    $_[0]->forward( "view", { output => 'cfg_prefs.tmpl' } );
-}
-
 sub cfg_archives_save {
     my $app    = shift;
     my $q      = $app->query;
@@ -2561,138 +2470,6 @@ HTACCESS
 1;
 
 __END__
-
-The following subroutines were removed by Byrne Reese for Melody.
-They are rendered obsolete by the new cfg_blog_settings handler.
-
-sub cfg_web_services {
-    my $app     = shift;
-    my $q       = $app->param;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    scalar $q->param('blog_id') );
-    #
-    # User must have can_edit_config, can_administer_blog, or can_set_publish_paths
-    # in order to see the Web Services page.
-    #
-    my $perms      = $app->permissions;
-    return $app->error( $app->translate('Permission denied.') )
-      unless $app->user->is_superuser()
-      || (
-        $perms
-        && (   $perms->can_edit_config
-            || $perms->can_administer_blog
-            || $perms->can_set_publish_paths )
-      );    
-    $app->forward( "view",
-        {
-            output       => 'cfg_web_services.tmpl',
-            screen_class => 'settings-screen web-services-settings'
-        }
-    );
-}
-
-sub cfg_archives {
-    my $app = shift;
-    my %param;
-    %param = %{ $_[0] } if $_[0];
-    my $q = $app->param;
-
-    my $blog_id = $q->param('blog_id');
-
-    return $app->return_to_dashboard( redirect => 1 ) unless $blog_id;
-
-    my $blog = $app->model('blog')->load($blog_id)
-        or return $app->error($app->translate('Can\'t load blog #[_1].', $blog_id));    
-    #
-    # User must have can_edit_config, can_administer_blog, or can_set_publish_paths
-    # in order to see the Publishing Settings page.
-    #   
-    my $perms = $app->permissions;
-    return $app->error( $app->translate('Permission denied.') )
-      unless $app->user->is_superuser()
-          || (
-              $perms
-              && (   $perms->can_edit_config
-                  || $perms->can_administer_blog
-                  || $perms->can_set_publish_paths )
-             );
-
-   my @data;
-    for my $at ( split /\s*,\s*/, $blog->archive_type ) {
-        my $archiver = $app->publisher->archiver($at);
-        next unless $archiver;
-        next if 'entry' ne $archiver->entry_class;
-        my $archive_label = $archiver->archive_label;
-        $archive_label = $at unless $archive_label;
-        $archive_label = $archive_label->() if ( ref $archive_label ) eq 'CODE';
-        push @data,
-          {
-            archive_type_translated => $archive_label,
-            archive_type            => $at,
-            archive_type_is_preferred =>
-              ( $blog->archive_type_preferred eq $at ? 1 : 0 ),
-          };
-    }
-    @data = sort { MT::App::CMS::archive_type_sorter( $a, $b ) } @data;
-    $param{entry_archive_types} = \@data;
-    $param{saved_deleted}       = 1 if $q->param('saved_deleted');
-    $param{saved_added}         = 1 if $q->param('saved_added');
-    $param{archives_changed}    = 1 if $q->param('archives_changed');
-    $param{no_writedir}         = $q->param('no_writedir');
-    $param{no_cachedir}         = $q->param('no_cachedir');
-    $param{no_writecache}       = $q->param('no_writecache');
-    $param{include_system}      = $blog->include_system || '';
-
-    my $mtview_path = File::Spec->catfile( $blog->site_path(), "mtview.php" );
-
-    if ( -f $mtview_path ) {
-        open my ($fh), $mtview_path;
-        while ( my $line = <$fh> ) {
-            $param{dynamic_caching} = 1
-              if $line =~ m/^\s*\$mt->caching\s*=\s*true;/i;
-            $param{dynamic_conditional} = 1
-              if $line =~ /^\s*\$mt->conditional\s*=\s*true;/i;
-        }
-        close $fh;
-    }
-    $param{output} = 'cfg_archives.tmpl';
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    $blog_id );
-    $param{screen_class} = "settings-screen archive-settings";
-    $param{object_type}  = 'author';
-    $param{search_label} = $app->translate('Users');
-    $app->forward( "view", \%param );
-}
-
-sub cfg_prefs {
-    my $app     = shift;
-    my $q       = $app->param;
-    my $blog_id = scalar $q->param('blog_id');
-    return $app->return_to_dashboard( redirect => 1 )
-      unless $blog_id;
-    $q->param( '_type', 'blog' );
-    $q->param( 'id',    $blog_id );
-    my $blog_prefs = $app->user_blog_prefs;
-    my $perms      = $app->permissions;
-    return $app->error( $app->translate('Permission denied.') )
-      unless $app->user->is_superuser()
-      || (
-        $perms
-        && (   $perms->can_edit_config
-            || $perms->can_administer_blog
-            || $perms->can_set_publish_paths )
-      );
-    my $output = 'cfg_prefs.tmpl';
-    $app->forward("view",
-        {
-            output       => $output,
-            screen_class => 'settings-screen general-screen'
-        }
-    );
-}
 
 =head1 NAME
 

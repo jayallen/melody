@@ -91,7 +91,7 @@ MT.App = new Class( MT.App, {
                 this.categorySelector.close( event.commandElement );
                 break;
             
-            /* editor commands */
+            // editor commands
             case "setModeTextarea":
                 this.editor.setMode( "textarea" );
                 break;
@@ -101,7 +101,7 @@ MT.App = new Class( MT.App, {
                 break;
 
             case "doRemoveItems":
-                /* only used for entry edit */
+                // only used for entry edit
                 var form = DOM.getFirstAncestorByTagName( event.target, "form", true );
                 if ( !form )
                     return;

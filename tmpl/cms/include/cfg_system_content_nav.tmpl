@@ -1,26 +1,3 @@
-<script type="text/javascript">
-jQuery(document).ready( function($) {
-  var active = $('#content-nav ul li.active a').attr('title');
-  $('#'+active).show();
-  $('fieldset input, fieldset select, fieldset textarea').change( function () {
-    var sel = '#content-nav ul li a[title="'+active+'"]';
-    var e = $(sel).parent();
-    if (!e.hasClass('changed')) { 
-        e.find('b').html( e.find('b').html() + " *" );
-    }
-    e.addClass('changed');
-  });
-  $('#content-nav ul li a').click( function() {
-    var current = $(this).parent().parent().find('.active');
-    var newactive = $(this).attr('title');
-    current.removeClass('active');
-    $('#' + active).hide();
-    $(this).parent().addClass('active');
-    $('#' + newactive).show();
-    active = newactive;
-  });  
-});
-</script>
 <mt:if name="IS_ADMINISTRATOR">
     <mt:setvarblock id="more_items" name="more_items"></mt:setvarblock>
 <ul>

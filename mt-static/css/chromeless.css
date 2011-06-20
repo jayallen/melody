@@ -416,12 +416,12 @@ table.show-admin td {
 *:first-child+html button[type]{
     padding: 4px 10px 3px; /* IE7 */
 }
-.actions-bar .actions button.primary-button,
-.actions-bar .actions a.primary-button {
+.actions-bar .actions button.primary,
+.actions-bar .actions a.primary {
     background-image: url('../images/buttons/button-primary.gif');
 }
-.system .actions-bar .actions button.primary-button,
-.system .actions-bar .actions a.primary-button {
+.system .actions-bar .actions button.primary,
+.system .actions-bar .actions a.primary {
     background-image: url('../images/buttons/button-primary-system.gif');
 }
 .actions-bar .actions button.disabled-button,

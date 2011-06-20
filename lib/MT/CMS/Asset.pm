@@ -109,7 +109,7 @@ sub edit {
     1;
 } ## end sub edit
 
-sub list {
+sub dialog_list_asset {
     my $app     = shift;
     my $q       = $app->query;
     my $blog_id = $q->param('blog_id');
@@ -230,7 +230,6 @@ sub list {
     @class_loop
       = sort { $a->{class_label} cmp $b->{class_label} } @class_loop;
 
-    my $dialog_view = $q->param('dialog_view') ? 1 : 0;
     my $no_insert   = $q->param('no_insert')   ? 1 : 0;
     my $perms       = $app->permissions;
     my %carry_params
@@ -246,7 +245,7 @@ sub list {
            args     => \%args,
            type     => 'asset',
            code     => $hasher,
-           template => $dialog_view ? 'dialog/asset_list.tmpl' : '',
+           template => 'dialog/asset_list.tmpl',                                                                                                                  
            params   => { (
                   $blog
                   ? (
@@ -259,7 +258,7 @@ sub list {
                ),
                is_image => defined $class_filter
                  && $class_filter eq 'image' ? 1 : 0,
-               dialog_view      => $dialog_view,
+               dialog_view      => 1,
                no_insert        => $no_insert,
                search_label     => MT::Asset->class_label_plural,
                search_type      => 'asset',
@@ -274,7 +273,7 @@ sub list {
            },
         }
     );
-} ## end sub list
+} ## end sub dialog_list_asset
 
 sub insert {
     my $app  = shift;
@@ -525,8 +524,8 @@ sub complete_upload {
     return
       $app->redirect(
                     $app->uri(
-                        'mode' => 'list_assets',
-                        args => { 'blog_id' => $app->query->param('blog_id') }
+                        'mode' => 'list',
+                        args => { 'blog_id' => $app->query->param('blog_id'), '_type' => 'asset' }
                     )
       );
 } ## end sub complete_upload

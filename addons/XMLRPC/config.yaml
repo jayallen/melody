@@ -1,0 +1,16 @@
+id: XMLRPC
+name: XML-RPC Publishing Protocol
+description: This provides support to the ubiquitous XML-RPC blogger, mt, and weblog APIs supported by most blogging platforms.
+version: 1.0
+
+config_settings:
+  XMLRPCScript:
+    default: 'addons/XMLRPC/xmlrpc.cgi'
+
+applications:
+  xmlrpc: 
+    handler: $XMLRPC::XMLRPC::Server
+
+tags:
+  function:
+    XMLRPCScript: $XMLRPC::XMLRPC::Tags::hdlr_xmlrpc_script

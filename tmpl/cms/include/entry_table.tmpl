@@ -13,38 +13,38 @@
     <mt:if name="object_type" eq="entry">
         <mt:if name="is_power_edit">
                 <a href="javascript:void(0)" mt:command="submit" mt:mode="save_entries" accesskey="s"
-                    title="<$mt:var name="save_button_title"$>"
+                    title="<$mt:var name="save_button_title"$>" class="primary button"
                     ><__trans phrase="Save"></a>
         <mt:else>
             <mt:if name="can_republish">
                 <a href="javascript:void(0)"
                     onclick="doForMarkedInThisWindow(getByID('<$mt:var name="object_type"$>-listing-form'), '<mt:var name="object_label" lower_case="1" escape="js">', '<mt:var name="object_label_plural" lower_case="1" escape="js">', null, 'rebuild_new_phase', {<mt:if name="blog_id">'blog_id': '<mt:var name="blog_id">'</mt:if>}, '<__trans phrase="to republish" escape="js">'); return false;"
-                    accesskey="r"
+                    accesskey="r" class="secondary button"
                     title="<$mt:var name="republish_button_title"$>"
                     ><__trans phrase="Publish"></a>
             </mt:if>
                 <a href="javascript:void(0)"
                     onclick="doRemoveItems(getByID('<$mt:var name="object_type"$>-listing-form'), '<mt:var name="object_label" lower_case="1" escape="js">', '<mt:var name="object_label_plural" lower_case="1" escape="js">'); return false;"
-                    accesskey="x"
+                    accesskey="x" class="secondary button"
                     title="<$mt:var name="delete_button_title"$>"
                     ><__trans phrase="Delete"></a>
         </mt:if>
     <mt:else>
         <mt:if name="is_power_edit">
                 <a href="javascript:void(0)" mt:command="submit" mt:mode="save_pages" accesskey="s"
-                    title="<$mt:var name="save_button_title"$>"
+                    title="<$mt:var name="save_button_title"$>" class="primary button"
                     ><__trans phrase="Save"></a>
         <mt:else>
             <mt:if name="can_republish">
                 <a href="javascript:void(0)"
                     onclick="doForMarkedInThisWindow(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="page" escape="js">', '<__trans phrase="pages" escape="js">', null, 'rebuild_new_phase', {<mt:if name="blog_id">'blog_id': '<mt:var name="blog_id">'</mt:if>}, '<__trans phrase="to republish" escape="js">'); return false;"
-                    accesskey="r"
+                    accesskey="r" class="secondary button"
                     title="<$mt:var name="republish_button_title"$>"
                     ><__trans phrase="Publish"></a>
             </mt:if>
                 <a href="javascript:void(0)"
                     onclick="doRemoveItems(getByID('<$mt:var name="object_type"$>-listing-form'), '<__trans phrase="page" escape="js">', '<__trans phrase="pages" escape="js">'); return false;" name="delete_pages" value="<__trans phrase="Delete">"
-                    accesskey="x"
+                    accesskey="x" class="secondary button"
                     title="<$mt:var name="delete_button_title"$>"
                     ><__trans phrase="Delete"></a>
         </mt:if>
@@ -138,10 +138,10 @@
             <mt:if name="has_edit_access">
                 <mt:if name="is_power_edit">
                     <mt:if name="title">
-                    <input name="title_<$mt:var name="id"$>" value="<$mt:var name="title" escape="html"$>" />
+                    <input type="text" name="title_<$mt:var name="id"$>" value="<$mt:var name="title" escape="html"$>" />
                     <mt:else>
                     <input type="hidden" name="title_<$mt:var name="id"$>" value="" />
-                    <input name="no_title_<$mt:var name="id"$>" style="color:#999;" value="<$mt:var name="title_short" escape="html"$>" onfocus="if(this.value=='<$mt:var name="title_short" escape="js"$>'){this.value=''; this.style.color='#000';};" onblur="if((this.value=='<$mt:var name="title_short" escape="js"$>') || (this.value=='')){ this.value = '<$mt:var name="title_short" escape="js"$>'; this.style.color='#999'; }else{ title_<$mt:var name="id"$>.value=this.value; };" />
+                    <input type="text" name="no_title_<$mt:var name="id"$>" style="color:#999;" value="<$mt:var name="title_short" escape="html"$>" onfocus="if(this.value=='<$mt:var name="title_short" escape="js"$>'){this.value=''; this.style.color='#000';};" onblur="if((this.value=='<$mt:var name="title_short" escape="js"$>') || (this.value=='')){ this.value = '<$mt:var name="title_short" escape="js"$>'; this.style.color='#999'; }else{ title_<$mt:var name="id"$>.value=this.value; };" />
                     </mt:if>
                 <mt:else>
                     <a href="<$mt:var name="script_url"$>?__mode=view&amp;_type=<mt:var name="object_type">&amp;id=<$mt:var name="id"$>&amp;blog_id=<$mt:var name="blog_id"$>"><$mt:var name="title" escape="html" default="..."$></a>
@@ -194,7 +194,7 @@
         </mt:unless>
                 <td class="date tr">
         <mt:if name="has_publish_access">
-                    <input name="created_on_<$mt:var name="id"$>" value="<$mt:var name="created_on_time_formatted"$>" />
+                    <input type="text" name="created_on_<$mt:var name="id"$>" value="<$mt:var name="created_on_time_formatted"$>" />
         <mt:else>
                     <span title="<$mt:var name="created_on_time_formatted"$>">
             <mt:if name="created_on_relative">

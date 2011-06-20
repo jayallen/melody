@@ -15,7 +15,7 @@
             onclick="<mt:var name="goback">"
             type="submit"
             accesskey="s"
-            class="primary-button"
+            class="primary button"
             ><mt:var name="value"></button>
         <mt:if name="button_loop">
             <mt:loop name="button_loop">
@@ -45,7 +45,7 @@
 /* <![CDATA[ */
 // show the close button if error is in modal or popup
 if ( window != window.parent || window.opener )
-    document.getElementById("close-button").className = "";
+    jQuery('#close-button').attr('class','');
 /* ]]> */
 </script>
     </div>

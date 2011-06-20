@@ -27,6 +27,13 @@ table {
 fieldset,img,abbr,acronym {
     border:0;
 } 
+input, 
+label, 
+select, 
+button { 
+    vertical-align: middle;
+    margin: 0;
+}
 address,caption,cite,code,dfn,em,strong,b,u,s,i,th,var {
     font-style:normal;
     font-weight:normal;

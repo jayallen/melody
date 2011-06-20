@@ -40,106 +40,27 @@
 </mt:if>
 </mt:setvarblock>
 
-<mt:setvarblock name="html_head" append="1">
-    <script type="text/javascript" src="<$mt:var name="static_uri"$>js/tc/client.js"></script>
+<mt:setvarblock name="js_include" append="1">
+<script type="text/javascript" src="<mt:var name="static_uri">js/tc/client.js"></script>
+<script type="text/javascript">
+var mt;
+mt = { 
+  screen: {
+    username: '<mt:var name="name" escape="js">',
+    email: '<mt:var name="email" escape="js">',
+    user_id: '<mt:var name="id" escape="url">',
+    trans: {
+      YOUR_PASSWORD: '<__trans phrase="Your Web services password is currently">: ',
+      RESET_SINGLE: '<__trans phrase="_WARNING_PASSWORD_RESET_SINGLE" params="'+username+'%%'+email+'">',
+      ERROR_REMOVING_USERPIC: '<__trans phrase="Error occurred while removing userpic." escape="js">'
+    }
+  }
+};
+</script>
+<script type="text/javascript" src="<mt:var name="static_uri">js/screens/edit_author.js"></script>
 </mt:setvarblock>
 
 <mt:include name="include/header.tmpl">
-
-<script type="text/javascript">
-/* <![CDATA[ */
-function reveal_api_password() {
-    var pw = getByID("api_password");
-    alert("<__trans phrase="Your Web services password is currently">: " + pw.value);
-    return false;
-}
-function tagDelimChoice(sel) {
-    if (sel.selectedIndex == 2) {
-        show("tag_delim_input");
-        var el = getByID("tag_delim_input");
-        if (el) el.focus();
-    } else {
-        hide("tag_delim_input");
-    }
-}
-
-function togglePerms(c) {
-    var p = TC.getElementsByTagAndClassName("input", "subPerm", TC.elementOrId("permission-list"));
-    for (var i = 0; i < p.length; i++) {
-        var sc = p[i];
-        if (c.checked) {
-            sc.checked = true;
-            sc.disabled = true;
-        } else {
-            sc.checked = false;
-            sc.disabled = false;
-        }
-    }
-}
-function passwordResetConfirm() {
-    var username = '<mt:var name="name" escape="js">';
-    var email = '<mt:var name="email" escape="js">';
-    if (confirm('<__trans phrase="_WARNING_PASSWORD_RESET_SINGLE" params="'+username+'%%'+email+'">')) {
-        document.forms['recover'].submit();
-    }
-}
-function toggleDisabled( state ){
-    if (state == 1) {
-        state = false;
-    } else if (state == 2) {
-        state = true;
-    }
-    var elements = TC.getElementsByClassName('state_change');
-    for (var i=0; i < elements.length; i++) {
-        elements[i].disabled = state;
-    }
-}
-function togglePerms(c) {
-    var p = TC.getElementsByTagAndClassName("input", "subPerm", TC.elementOrId("permission-list"));
-    for (var i = 0; i < p.length; i++) {
-        var sc = p[i];
-        if (c.checked) {
-            sc.checked = true;
-            sc.disabled = true;
-        } else {
-            sc.checked = false;
-            sc.disabled = false;
-        }
-    }
-}
-
-function removeUserpic() {
-    var param = '__mode=remove_userpic'
-        + '&user_id=<mt:var name="id" escape="url">'
-        + '&magic_token=<mt:var name="magic_token">';
-    var params = { uri: '<mt:var name="script_url">', method: 'POST', arguments: param, load: removedUserpic };
-    TC.Client.call(params);
-}
-
-function removedUserpic(c) {
-    var res = c.responseText;
-    if (res != 'success') {
-        message = '<__trans phrase="Error occurred while removing userpic." escape="js">';
-        showMsg(message, 'ajax-message', 'error');
-    }
-
-    getByID('userpic_asset_id').value = '0';
-    if (!DOM.hasClassName('userpic-preview', 'hidden'))
-       toggleHidden('userpic-preview');
-    if (!DOM.hasClassName('remove-userpic', 'hidden'))
-       toggleHidden('remove-userpic');
-    return false
-}
-
-function init() {
-    var c = document.forms['profile'].elements['is_superuser'];
-    if (c.checked)
-        togglePerms(document.forms['profile'].elements['is_superuser']);
-}
-
-TC.attachLoadEvent(init);
-/* ]]> */
-</script>
 
         <form name="profile" id="profile" method="post" action="<mt:var name="script_url">">
             <input type="hidden" name="__mode" value="save" />
@@ -187,7 +108,7 @@ TC.attachLoadEvent(init);
     label="<__trans phrase="Username">"
     hint="<__trans phrase="The username used to login.">">
     <div class="textarea-wrapper">
-        <input name="name" id="name" class="full-width" value="<mt:var name="name" escape="html">" <mt:unless name="auth_mode_mt"><mt:unless name="new_user_external_auth">disabled="disabled"</mt:unless></mt:unless> /><mt:unless name="auth_mode_mt"><mt:unless name="new_user_external_auth"><input name="name" type="hidden" value="<mt:var name="name" escape="html">" /></mt:unless></mt:unless>
+        <input type="text" name="name" id="name" class="full-width" value="<mt:var name="name" escape="html">" <mt:unless name="auth_mode_mt"><mt:unless name="new_user_external_auth">disabled="disabled"</mt:unless></mt:unless> /><mt:unless name="auth_mode_mt"><mt:unless name="new_user_external_auth"><input name="name" type="hidden" value="<mt:var name="name" escape="html">" /></mt:unless></mt:unless>
     </div>
 </mtapp:setting>
 
@@ -208,7 +129,7 @@ TC.attachLoadEvent(init);
         label="<__trans phrase="Display Name">"
         hint="<__trans phrase="The name used when published.">">
         <div class="textarea-wrapper">
-            <input name="nickname" id="nickname" class="full-width" value="<mt:var name="nickname" escape="html">" />
+            <input type="text" name="nickname" id="nickname" class="full-width" value="<mt:var name="nickname" escape="html">" />
         </div>
     </mtapp:setting>
 
@@ -218,7 +139,7 @@ TC.attachLoadEvent(init);
         label="<__trans phrase="Email Address">"
         hint="<__trans phrase="The email address associated with this user.">">
         <div class="textarea-wrapper">
-            <input name="email" id="email" class="full-width" value="<mt:var name="email" escape="html">" />
+            <input type="text" name="email" id="email" class="full-width" value="<mt:var name="email" escape="html">" />
         </div>
     </mtapp:setting>
 
@@ -227,7 +148,7 @@ TC.attachLoadEvent(init);
         label="<__trans phrase="Website URL">"
         hint="<__trans phrase="The URL of the site associated with this user. eg. http://www.movabletype.com/">">
         <div class="textarea-wrapper">
-            <input name="url" id="url" class="full-width" value="<mt:var name="url" escape="html">" />
+            <input type="text" name="url" id="url" class="full-width" value="<mt:var name="url" escape="html">" />
         </div>
     </mtapp:setting>
 
@@ -312,7 +233,7 @@ TC.attachLoadEvent(init);
                     label="<__trans phrase="Password recovery word/phrase">"
                     hint="<__trans phrase="This word or phrase is not used in the password recovery.">">
                     <div class="textarea-wrapper">
-                        <input name="hint" id="hint" class="full-width" value="<mt:var name="hint" escape="html">" />
+                        <input type="text" name="hint" id="hint" class="full-width" value="<mt:var name="hint" escape="html">" />
                     </div>
                 </mtapp:setting>
             </mt:if>
@@ -342,6 +263,17 @@ TC.attachLoadEvent(init);
             <option value="<mt:var name="key">"<mt:if name="selected"> selected="selected"</mt:if>><mt:if name="key" eq="0"><__trans phrase="(Use Blog Default)"><mt:else><mt:var name="label" escape="html"></mt:if></option>
         </mt:loop>
         </select>
+    </mtapp:setting>
+
+    <mtapp:setting
+       id="date_format"
+       label="<__trans phrase="Date Format">"
+       show_hint="1"
+       hint="<__trans phrase="Default date formatting in the Movable Type interface.">">
+      <select name="date_format" id="date_format">
+        <option value="relative"<mt:if name="date_format" eq="relative"> selected="selected"</mt:if>><__trans phrase="Relative"></option>
+        <option value="full"<mt:if name="date_format" eq="full"> selected="selected"</mt:if>><__trans phrase="Full"></option>
+      </select>
     </mtapp:setting>
 
     <mtapp:setting
@@ -404,18 +336,20 @@ TC.attachLoadEvent(init);
         type="submit"
         accesskey="s"
         title="<__trans phrase="Create User (s)">"
-        class="primary-button"
+        class="primary button"
         ><__trans phrase="Create User"></button>
     <mt:else>
     <button
         type="submit"
         accesskey="s"
         title="<__trans phrase="Save changes to this author (s)">"
-        class="primary-button"
+        class="primary button"
         ><__trans phrase="Save Changes"></button>
     </mt:if>
 </mt:setvarblock>
+<fieldset>
 <mt:include name="include/actions_bar.tmpl" bar_position="bottom" hide_pager="1" settings_bar="1">
+</fieldset>
         </form>
 
 <mt:if name="auth_mode_mt">

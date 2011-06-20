@@ -108,7 +108,7 @@ function validate(f) {
                 type="submit"
                 accesskey="s"
                 title="<__trans phrase="Yes (s)">"
-                class="primary-button"
+                class="primary button"
                 ><__trans phrase="Yes"></button>
             <button
                 onclick="javascript:location.href='check.cgi'"
@@ -157,7 +157,7 @@ function validate(f) {
         label="<__trans phrase="Display Name">"
         label_class="top-label"
         hint="<__trans phrase="The name used when published.">">
-        <input name="admin_nickname" id="admin_nickname" class="ti" value="<mt:var name="admin_nickname" escape="html">" />
+        <input type="text" name="admin_nickname" id="admin_nickname" class="ti" value="<mt:var name="admin_nickname" escape="html">" />
     </mtapp:setting>
 
     <mtapp:setting
@@ -244,7 +244,7 @@ function validate(f) {
                 type="submit"
                 accesskey="s"
                 title="<__trans phrase="Continue (s)">"
-                class="primary-button"
+                class="primary button"
                 ><__trans phrase="Continue"></button>
         </div>
     </div>

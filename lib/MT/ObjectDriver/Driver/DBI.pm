@@ -29,6 +29,25 @@ sub init {
     $driver;
 }
 
+sub init_db {
+    my $driver = shift;
+    my $dbh;
+    eval { $dbh = $driver->SUPER::init_db(@_); };
+
+    if ( my $err = $@ ) {
+        require MT;
+        my $mt  = MT->instance;
+        my $cfg = $mt->config;
+
+        require MT::I18N;
+        my $from = MT::I18N::guess_encoding($err) || 'utf-8';
+        my $to   = $cfg->PublishCharset           || 'utf-8';
+        Encode::from_to( $err, $from, $to );
+        Carp::croak($err);
+    }
+    return $dbh;
+}
+
 sub start_query {
     my $driver = shift;
     my ( $sql, $bind ) = @_;
@@ -93,28 +112,34 @@ sub count {
     my $driver = shift;
     my ( $class, $terms, $args ) = @_;
 
-    my $join   = $args->{join};
+    my @joins = ( $args->{join}, @{ $args->{joins} || [] } );
     my $select = 'COUNT(*)';
-    if ( $join && $join->[3]->{unique} ) {
-        my $col;
-        if ( $join->[3]{unique} =~ m/\D/ ) {
-            $col = $args->{join}[3]{unique};
+    for my $join (@joins) {
+        if ( $join && $join->[3]->{unique} ) {
+            my $col;
+            if ( $join->[3]{unique} =~ m/\D/ ) {
+                $col = $args->{join}[3]{unique};
+            }
+            else {
+                $col = $class->properties->{primary_key};
+            }
+            my $dbcol =
+              $driver->dbd->db_column_name( $class->datasource, $col );
+            $select = "COUNT(DISTINCT $dbcol)";
         }
-        else {
-            $col = $class->properties->{primary_key};
-        }
-        my $dbcol = $driver->dbd->db_column_name( $class->datasource, $col );
-        $select = "COUNT(DISTINCT $dbcol)";
     }
 
-    return
-      $driver->_select_aggregate(
-                select   => $select,
-                class    => $class,
-                terms    => $terms,
-                args     => $args,
-                override => { order => '', limit => undef, offset => undef, },
-      );
+    return $driver->_select_aggregate(
+        select   => $select,
+        class    => $class,
+        terms    => $terms,
+        args     => $args,
+        override => {
+            order  => '',
+            limit  => undef,
+            offset => undef,
+        },
+    );
 } ## end sub count
 
 sub exist {
@@ -153,7 +178,7 @@ sub count_group_by {
     my $driver = shift;
     my ( $class, $terms, $args ) = @_;
 
-    $driver->_do_group_by( 'COUNT(*)', @_ );
+    $driver->_do_group_by( 'COUNT(*) as cnt', @_ );
 }
 
 sub sum_group_by {
@@ -208,8 +233,8 @@ sub _do_group_by {
         }
         $order = \@new_order if @new_order;
     }
-    my $limit  = exists $args->{limit}  ? delete $args->{limit}  : undef;
-    my $offset = exists $args->{offset} ? delete $args->{offset} : undef;
+    my $limit  = exists $args->{limit}  ? $args->{limit}  : undef;
+    my $offset = exists $args->{offset} ? $args->{offset} : undef;
     my $stmt = $driver->prepare_statement( $class, $terms, $args );
 
     ## Ugly. Maybe we need a clear_select method in D::OD::SQL?
@@ -264,19 +289,14 @@ sub _do_group_by {
     $sth->execute( @{ $stmt->bind } );
 
     my @bindvars;
-    for ( @{ $args->{group} } ) {
+    my $col_count = scalar @{ $stmt->select };
+    $col_count--;
+    for ( 1 .. $col_count ) {
+#    for ( @{ $args->{group} } ) {
         push @bindvars, \my ($var);
     }
     $sth->bind_columns( undef, \my ($count), @bindvars );
 
-    if ($offset) {
-        while ( $offset-- ) {
-            unless ( $sth->fetch ) {
-                $driver->end_query($sth);
-                return;
-            }
-        }
-    }
     my $i      = 0;
     my $finish = sub {
         return unless $sth;
@@ -367,6 +387,10 @@ sub prepare_statement {
     my ( $class, $terms, $orig_args ) = @_;
     my $args = defined $orig_args ? {%$orig_args} : {};
 
+    my @joins = (
+        ( $args->{join}  ? $args->{join}       : () ),
+        ( $args->{joins} ? @{ $args->{joins} } : () ),
+    );
     my %stmt_args;
 
     ## Statements don't know anything about table/column name decoration,
@@ -378,7 +402,7 @@ sub prepare_statement {
       )
     {
         if ( exists $args->{$arg} ) {
-            my %stmt_data = %{ delete $args->{$arg} };
+            my %stmt_data = %{ $args->{$arg} };
             $driver->_decorate_column_names_in( \%stmt_data, $class );
             $stmt_args{$arg} = \%stmt_data;
         }
@@ -400,7 +424,7 @@ sub prepare_statement {
         $stmt_args{lob_columns} = \%lob_columns_hash;
     }
 
-    my $join = delete $args->{join};
+    my $join = $args->{join};
 
     ## Convert fetchonly args from legacy hashes to Data::ObjectDriver's
     ## expected arrays.
@@ -436,7 +460,7 @@ sub prepare_statement {
         }
     } ## end if ( $join && $join->[...])
 
-    my $start_val = $args->{sort} ? delete $args->{start_val} : undef;
+    my $start_val = $args->{sort} ? $args->{start_val} : undef;
 
     my $stmt = $driver->dbd->sql_class->new(%stmt_args);
 
@@ -497,11 +521,12 @@ sub prepare_statement {
         ## Set statement's ORDER clause if any.
         if ( $args->{sort} || $args->{direction} ) {
             my $order = $args->{sort} || 'id';
+            my $pfx = $orig_args->{alias} ? $orig_args->{alias} . '.' : '';
             if ( !ref($order) ) {
                 my $dir = $args->{direction}
                   && $args->{direction} eq 'descend' ? 'DESC' : 'ASC';
                 $stmt->order( {
-                              column => $dbd->db_column_name( $tbl, $order ),
+                              column => $pfx . $dbd->db_column_name( $tbl, $order ),
                               desc   => $dir,
                             }
                 );
@@ -511,8 +536,7 @@ sub prepare_statement {
                 foreach my $ord (@$order) {
                     push @order,
                       {
-                        column =>
-                          $dbd->db_column_name( $tbl, $ord->{column} ),
+                        column => $pfx . $dbd->db_column_name( $tbl, $ord->{column} ),
                         desc => $ord->{desc},
                       };
                 }
@@ -520,7 +544,7 @@ sub prepare_statement {
             }
         } ## end if ( $args->{sort} || ...)
 
-        if ( my $ft_arg = delete $args->{'freetext'} ) {
+        if ( my $ft_arg = $args->{'freetext'} ) {
             my @columns = map { $dbd->db_column_name( $tbl, $_ ) }
               @{ $ft_arg->{'columns'} };
             $stmt->add_freetext_where( \@columns,
@@ -542,10 +566,10 @@ sub prepare_statement {
     my $major_stmt = $stmt;
 
     ## Implement `join` arg like MT::ObjectDriver, for compatibility.
-    if ($join) {
+    while ( my $join = shift @joins ) {
         my ( $j_class, $j_col, $j_terms, $j_args ) = @$join;
         my $j_unique;
-        if ( $j_unique = delete $j_args->{unique} ) {
+        if ( $j_unique = $j_args->{unique} ) {
             $stmt->distinct(1);
         }
 
@@ -565,6 +589,12 @@ sub prepare_statement {
         for my $field (qw( from where bind )) {
             push @{ $stmt->$field() }, @{ $join_stmt->$field() };
         }
+
+        ## Remove dupulicated from table.
+        my %count;
+        my @from = grep { !$count{$_}++ } @{ $stmt->from };
+        $stmt->from( \@from );
+
         $stmt->from_stmt( $join_stmt->from_stmt );
         $stmt->limit( $j_args->{limit} )   if exists $j_args->{limit};
         $stmt->offset( $j_args->{offset} ) if exists $j_args->{offset};
@@ -589,20 +619,95 @@ sub prepare_statement {
             }
         }
 
-        ## Join across the given column(s).
-        $j_col = [$j_col] unless ref $j_col;
-        my $tuple = $class->primary_key_tuple;
-      COLUMN: foreach my $i ( 0 .. $#$j_col ) {
-            next unless defined $j_col->[$i];
-            my $t = $tuple->[$i];
-            my $c = $j_col->[$i];
+        $stmt->{joins} =
+          [ @{ $stmt->{joins} || [] }, @{ $join_stmt->{joins} || [] } ]
+          if $join_stmt->{joins};
 
-            my $where_col = $driver->_decorate_column_name( $class,   $t );
-            my $dec_j_col = $driver->_decorate_column_name( $j_class, $c );
-            my $where_val = "= $dec_j_col";
-            $stmt->add_where( $where_col, \$where_val );
+        if ( $j_args->{type} ) {
+            my $cond = $j_args->{condition};
+            my $cond_query;
+            my $to_class =
+              $j_args->{to}
+              ? MT->model( $j_args->{to} )
+              : $class;
+            my $to_table = $driver->table_for($to_class);
+            my $j_table  = $driver->table_for($j_class);
+            if ( 'HASH' eq ref $cond ) {
+                my $dbh = $driver->rw_handle;
+                foreach my $cond_col ( keys %$cond ) {
+                    my $col =
+                      $driver->_decorate_column_name( $j_class, $cond_col );
+                    $cond_query .= ' AND ' if $cond_query;
+                    my $condition = $cond->{$cond_col};
+                    if ( 'SCALAR' eq ref $condition ) {
+                        $condition = $$condition;
+                    }
+                    else {
+                        $condition = ' = ' . $dbh->quote($condition);
+                    }
+                    $cond_query .= " $col " . $condition;
+                }
+            }
+            else {
+                $cond = [$cond] unless ref $cond;
+                my $tuple = $to_class->primary_key_tuple;
+                my $alias = $j_args->{alias};
+              COLUMN: foreach my $i ( 0 .. $#$cond ) {
+                    next unless defined $cond->[$i];
+                    my $t = $tuple->[$i];
+                    my $c = $cond->[$i];
+
+                    my $where_col =
+                      $driver->_decorate_column_name( $to_class, $t );
+                    my $dec_j_col =
+                        $alias
+                      ? $alias . '.'
+                      . $driver->_decorate_column_name( $j_class, $c )
+                      : $driver->_decorate_column_name( $j_class, $c );
+                    my $where_val = "$dec_j_col";
+                    $cond_query .= ' AND ' if $cond_query;
+                    $cond_query .= "$where_col = $where_val";
+                }
+            }
+
+            $stmt->add_join(
+                $to_table,
+                {
+                    table     => $j_table,
+                    condition => $cond_query,
+                    type      => $j_args->{type},
+                },
+            );
+
+            my @new_from =
+              grep { $_ ne $j_table and $_ ne $to_table } @{ $stmt->from };
+            $stmt->from( \@new_from );
         }
-    } ## end if ($join)
+        else {
+            ## Join across the given column(s).
+            $j_col = [$j_col] unless ref $j_col;
+            my $to_class =
+                $j_args->{to}
+            ? MT->model( $j_args->{to} )
+                : $class;
+            my $tuple = $to_class->primary_key_tuple;
+            my $alias = $j_args->{alias};
+          COLUMN: foreach my $i ( 0 .. $#$j_col ) {
+              next unless defined $j_col->[$i];
+              my $t = $tuple->[$i];
+              my $c = $j_col->[$i];
+
+              my $where_col = $driver->_decorate_column_name( $to_class, $t );
+              my $dec_j_col =
+                  $alias
+                  ? $alias . '.'
+                  . $driver->_decorate_column_name( $j_class, $c )
+                  : $driver->_decorate_column_name( $j_class, $c );
+              my $where_val = "= $dec_j_col";
+              $stmt->add_where( $where_col, \$where_val );
+          }
+        } ## end if ($join)
+    }
 
     if ($start_val) {
         ## TODO: support complex primary keys
