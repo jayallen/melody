@@ -379,14 +379,20 @@ sub start_upload {
 }
 
 sub upload_file {
-    my $app = shift;
-    my $q   = $app->query;
-    my ( $asset, $bytes )
-      = _upload_file(
-                      $app,
-                      require_type => ( $q->param('require_type') || '' ),
-                      @_,
-      );
+    my $app   = shift;
+    my $q     = $app->query;
+    my $perms = $app->permissions;
+
+    return $app->errtrans("Permission denied.")
+        unless $perms and $perms->can_upload;
+
+    $app->validate_magic() or return;
+
+    my ( $asset, $bytes ) = _upload_file(
+        $app,
+        require_type => ( $app->param('require_type') || '' ),
+        @_,
+    );
     return if !defined $asset;
     return $asset if !defined $bytes;    # whatever it is
 
@@ -986,18 +992,16 @@ sub _set_start_upload_params {
     $param;
 } ## end sub _set_start_upload_params
 
+# FIXME This 580-line method MUST be refactored!!!!
+# It needs to be broken up and ALL code NOT specifically unique to 
+# MT::App::CMS must be moved to MT::App or elsewhere so that other apps or 
+# command-line tools can use all of its functions individually AND so
+# that we run all uploads through a common set of security checks.
 sub _upload_file {
     my $app = shift;
     my (%upload_param) = @_;
     my $ext;
     require MT::Image;
-
-    if ( my $perms = $app->permissions ) {
-        return $app->error( $app->translate("Permission denied.") )
-          unless $perms->can_upload;
-    }
-
-    $app->validate_magic() or return;
 
     my $q = $app->query;
     my ( $fh, $info ) = $app->upload_info('file');
@@ -1140,14 +1144,6 @@ sub _upload_file {
         ## Local Archive Path setting. So we should be safe.
         ($local_file) = $local_file =~ /(.+)/s;
 
-        ###
-        #
-        # Look at new Movable Type configuration parameter AssetFileExtensions to
-        # see if the file that is being uploaded has a filename extension that is
-        # explicitly permitted.
-        #
-        ###
-
         my ($local_base) = $local_file;
         $local_base =~ s!\\!/!g;    ## Change backslashes to forward slashes
         $local_base =~ s!^.*/!!;    ## Get rid of full directory paths
@@ -1156,38 +1152,10 @@ sub _upload_file {
           ;   ## Save the filename so we can use it in the error message later
         $ext = $local_base;
         $ext =~ m!.*\.(.*)$!
-          ; ## Extract the characters to the right of the last dot delimiter / period
+            ; ## Extract the characters to the right of the last dot delimiter / period
         $ext = $1;    ## Those characters are the file extension
 
-        ###
-        #
-        # If AssetFileExtensions configuration directive is defined.
-        #
-        ###
-
-        if ( my $allow_exts = $app->config('AssetFileExtensions') ) {
-
-            # Split the parameters of the AssetFileExtensions configuration directive into items in an array
-            my @allowed = map {
-                if   ( $_ =~ m/^\./ ) {qr/$_/i}
-                else                  {qr/\.$_/i}
-            } split '\s?,\s?', $allow_exts;
-
-            # Find the extension in the array
-            my @found = grep( /\b$ext\b/, @allowed );
-
-            # If there is no extension or the extension wasn't found in the array
-            if ( ( length($ext) == 0 ) || ( !@found ) ) {
-                return
-                  $app->error(
-                           $app->translate(
-                               'The file ([_1]) you uploaded is not allowed.',
-                               $filename
-                           )
-                  );
-            }
-
-        } ## end if ( my $allow_exts = ...)
+        return unless $app->validate_upload({ filename => $filename });
 
         my $real_fh;
         unless ($has_overwrite) {
@@ -1416,18 +1384,19 @@ sub _upload_file {
       ;    ## Save the filename so we can use it in the error message later
     $ext = $local_base;
     $ext =~ m!.*\.(.*)$!
-      ; ## Extract the characters to the right of the last dot delimiter / period
+        ; ## Extract the characters to the right of the last dot delimiter / period
     $ext = $1;    ## Those characters are the file extension
 
-    my ( $w, $h, $id, $write_file )
-      = MT::Image->check_upload(
-                                 Fh     => $fh,
-                                 Fmgr   => $fmgr,
-                                 Local  => $local_file,
-                                 Max    => $upload_param{max_size},
-                                 MaxDim => $upload_param{max_image_dimension},
-                                 ext    => $ext,
-                                 LocalBase => $local_base
+    return unless $app->validate_upload({ filename => $filename });
+
+    my ( $w, $h, $id, $write_file ) = MT::Image->check_upload(
+        Fh        => $fh,
+        Fmgr      => $fmgr,
+        Local     => $local_file,
+        Max       => $upload_param{max_size},
+        MaxDim    => $upload_param{max_image_dimension},
+        ext       => $ext,
+        LocalBase => $local_base
       );
 
     return $app->error( MT::Image->errstr ) unless $write_file;

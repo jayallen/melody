@@ -349,22 +349,33 @@ sub do_signup {
     my $app = shift;
     my $q   = $app->query;
 
-    return $app->error( $app->translate("Invalid request") )
-      if $app->request_method() ne 'POST';
+    return $app->errtrans("Invalid request")
+        if $app->request_method() ne 'POST';
 
     my $param = {};
     $param->{$_} = $q->param($_)
       foreach
       qw(blog_id entry_id static email url username nickname email return_url );
 
+    return $app->errtrans("Invalid request")
+        unless int( $param->{blog_id} );
+
+    my $blog = $app->model('blog')->load( $param->{blog_id} || 0 )
+        or return $app->error(
+        $app->translate( 'Can\'t load blog #[_1].', $param->{blog_id} ) );
+
+    my $cfg = $app->config;
+    if ( my $registration = $cfg->CommenterRegistration ) {
+        return $app->handle_error(
+            $app->translate('Registration is not allowed.') )
+            unless $registration->{Allow} && $blog->allow_commenter_regist;
+    }
+
     my $filter_result = $app->run_callbacks( 'api_save_filter.author', $app );
 
     my $user;
     $user = $app->create_user_pending($param) if $filter_result;
     unless ($user) {
-        my $blog = $app->model('blog')->load( $param->{blog_id} )
-          or return $app->error(
-            $app->translate( 'Can\'t load blog #[_1].', $param->{blog_id} ) );
         if ( my $provider
              = MT->effective_captcha_provider( $blog->captcha_provider ) )
         {

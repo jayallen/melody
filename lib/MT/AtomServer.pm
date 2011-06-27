@@ -315,7 +315,7 @@ use MT::Entry;
 use MT::Util qw( encode_xml format_ts );
 use MT::Permission;
 use File::Spec;
-use File::Basename;
+use File::Basename qw( basename dirname );
 
 use constant NS_APP     => 'http://www.w3.org/2007/app';
 use constant NS_DC      => 'http://purl.org/dc/elements/1.1/';
@@ -926,158 +926,119 @@ sub delete_post {
     '';
 } ## end sub delete_post
 
-sub _upload_to_asset {
-    my $app  = shift;
-    my $atom = $app->atom_body or return;
-    my $blog = $app->{blog};
-    my $user = $app->{user};
-    my %MIME2EXT = (
-                     'text/plain'         => '.txt',
-                     'image/jpeg'         => '.jpg',
-                     'video/3gpp'         => '.3gp',
-                     'application/x-mpeg' => '.mpg',
-                     'video/mp4'          => '.mp4',
-                     'video/quicktime'    => '.mov',
-                     'audio/mpeg'         => '.mp3',
-                     'audio/x-wav'        => '.wav',
-                     'audio/ogg'          => '.ogg',
-                     'audio/ogg-vorbis'   => '.ogg',
-    );
+sub validate_upload {
+    my $app = shift;
 
-    return $app->error( 403, "Access denied" )
-      unless $app->{perms}->can_upload;
-    my $content = $atom->content;
-    my $type    = $content->type
-      or return $app->error( 400, "content \@type is required" );
-    my $fname = $atom->title
-      or return $app->error( 400, "title is required" );
-    $fname = basename($fname);
-    return $app->error( 400, "Invalid or empty filename" )
-      if $fname =~ m!/|\.\.|\0|\|!;
+    if ( @_ ) {
+        $app->SUPER::validate_upload( @_ )
+            or return $app->error( 500, $app->errstr );
+    }
+    else {   # Check Atom payload
 
-    # Copy the filename and extract the extension.
+        return $app->error( 403, "Access denied" )
+            unless $app->{perms}->can_upload;
 
-    my $ext = $fname;
-    $ext =~ m!.*\.(.*)$!
-      ; ## Extract the characters to the right of the last dot delimiter / period
-    $ext = $1;    ## Those characters are the file extension
+        my $atom    = $app->atom_body
+            or return $app->error( 400, "atom body is required" );
 
-    ###
-    #
-    # Look at new Movable Type configuration parameter AssetFileExtensions to
-    # see if the file that is being uploaded has a filename extension that is
-    # explicitly permitted.
-    #
-    # This code is very similar to the AssetFileExtensions check in XMLRPCServer.pm.
-    #
-    ###
+        my $content = $atom->content;
+        my $data    = $content->body;
 
-    if ( my $allow_exts = $app->config('AssetFileExtensions') ) {
+        my $type    = $content->type
+            or return $app->error( 400, "content \@type is required" );
 
-        # Split the parameters of the AssetFileExtensions configuration directive into items in an array
-        my @allowed = map {
-            if   ( $_ =~ m/^\./ ) {qr/$_/i}
-            else                  {qr/\.$_/i}
-        } split '\s?,\s?', $allow_exts;
+        my $fname   = $atom->title
+            or return $app->error( 400, "title is required" );
 
-        # Find the extension in the array
-        my @found = grep( /\b$ext\b/, @allowed );
-
-        # If there is no extension or the extension wasn't found in the array
-        if ( ( length($ext) == 0 ) || ( !@found ) ) {
-            return
-              $app->error(
-                           500,
-                           $app->translate(
-                               'The file ([_1]) you uploaded is not allowed.',
-                               $fname
-                           )
-              );
-        }
-    } ## end if ( my $allow_exts = ...)
-
-    my $local_relative = File::Spec->catfile( '%r',             $fname );
-    my $local          = File::Spec->catfile( $blog->site_path, $fname );
-    my $fmgr           = $blog->file_mgr;
-
-    ###
-    #
-    # Had to extract the declaration of $base and $path from the succeeding line
-    # because $ext is now declared in the code section above this comment.
-    #
-    ###
-
-    my ( $base, $path );
-    ( $base, $path, $ext ) = File::Basename::fileparse( $local, '\.[^\.]*' );
-    $ext = $MIME2EXT{$type} unless $ext;
-    my $base_copy = $base;
-    my $ext_copy  = $ext;
-    $ext_copy =~ s/\.//;
-    my $i = 1;
-    while ( $fmgr->exists( $path . $base . $ext ) ) {
-        $base = $base_copy . '_' . $i++;
+        # Call self to have $app->SUPER check the filename and data
+        $app->validate_upload({ filename => basename($fname), data => $data })
+            or return $app->error( 500, $app->errstr );
     }
 
-    $local = $path . $base . $ext;
-    my $local_basename = $base . $ext;
-    my $data           = $content->body;
+    1;  # Looks good
+}
 
-    ###
-    #
-    # Function to evaluate the first 1k of content in an image file to see if it contains HTML or JavaScript
-    # content in the body.  Image files that contain embedded HTML or JavaScript are
-    # prohibited in order to prevent a known IE 6 and 7 content-sniffing vulnerability.
-    #
-    # This code based on the ImageValidate plugin written by Six Apart.
-    #
-    ###
+sub _upload_to_asset {
+    my $app     = shift;
 
-    ## Make a copy of the body that only contains the first 1k bytes.
-    my $html_test_string = substr( $data, 0, 1024 );
+    return unless $app->validate_upload();
 
-    ## Using an error message format that already exists in all localizations of Movable Type 4.
-    return
-      $app->error(
-                   500,
-                   MT->translate(
-                                  "Saving [_1] failed: [_2]",
-                                  $local_basename,
-                                  "Invalid image file format."
-                   )
-      )
-      if ( $html_test_string =~ m/^\s*<[!?]/ )
-      || ( $html_test_string
-           =~ m/<(HTML|SCRIPT|TITLE|BODY|HEAD|PLAINTEXT|TABLE|IMG|PRE|A)/i )
-      || ( $html_test_string =~ m/text\/html/i )
-      || ( $html_test_string
-           =~ m/^\s*<(FRAMESET|IFRAME|LINK|BASE|STYLE|DIV|P|FONT|APPLET)/i )
-      || ( $html_test_string
-           =~ m/^\s*<(APPLET|META|CENTER|FORM|ISINDEX|H[123456]|B|BR)/i );
+    my $blog    = $app->{blog};
+    my $user    = $app->{user};
+    my $fmgr    = $blog->file_mgr;
+    my $atom    = $app->atom_body or return;
+    my $fname   = basename( $atom->title );
+    my $content = $atom->content;
+    my $type    = $content->type;
+    my $data    = $content->body;
+
+    my $local
+        = File::Spec->catfile( $blog->site_path, $fname );
+
+    my ( $base, $path, $ext )
+        = File::Basename::fileparse( $local, '\.[^\.]*' );
+
+    # FIXME Unnecessarily hard-coded hash of a handful of MIME types
+    # If there's no extension, look it up against a hash of arbitrarily
+    # chosen, sadly non-comprehensive list of popular MIME types.
+    if ( ! defined $ext or $ext eq '' ) {
+        my %MIME2EXT = (
+                         'text/plain'         => '.txt',
+                         'image/jpeg'         => '.jpg',
+                         'video/3gpp'         => '.3gp',
+                         'application/x-mpeg' => '.mpg',
+                         'video/mp4'          => '.mp4',
+                         'video/quicktime'    => '.mov',
+                         'audio/mpeg'         => '.mp3',
+                         'audio/x-wav'        => '.wav',
+                         'audio/ogg'          => '.ogg',
+                         'audio/ogg-vorbis'   => '.ogg',
+        );
+        ($ext) = $MIME2EXT{$type}
+              || MT::Util::mime_type_extension( $type );
+    }
+
+    my $i         = 1;
+    my $base_copy = $base;
+    while ( $fmgr->exists( join('', $path, $base, $ext) ) ) {
+        $base = join( '_', $base_copy, $i++ );
+    }
+    my $local_basename = join('', $base, $ext);
+    $local             = join('', $path, $local_basename);
+
+    # Re-check in case extension was added
+    $app->validate_upload({ filename => $local_basename })
+        or return $app->error( 500, $app->errstr );
 
     defined( my $bytes = $fmgr->put_data( $data, $local, 'upload' ) )
       or return $app->error( 500, "Error writing uploaded file" );
 
-    eval { require Image::Size; };
-    return
-      $app->error(
-                   500,
-                   MT->translate(
-                       "Perl module Image::Size is required to determine width and height of uploaded images."
-                   )
-      ) if $@;
-    my ( $w, $h, $id ) = Image::Size::imgsize($local);
-
     require MT::Asset;
     my $asset_pkg = MT::Asset->handler_for_file($local);
-    my $is_image  = 0;
-    if ( defined($w) && defined($h) ) {
-        $is_image = 1 if $asset_pkg->isa('MT::Asset::Image');
-    }
-    else {
 
+    my $is_image = 0;
+    if ( $asset_pkg eq 'MT::Asset::Image' ) {
+        eval { require Image::Size; };
+        if ( $@ ) {
+            $fmgr->delete( $local );
+            return $app->error(
+                500,
+                MT->translate(
+                    'Perl module Image::Size is required to determine '
+                    .'width and height of uploaded images.'
+                ).' Upload aborted.'
+            );
+        }
+        $is_image = 1;
+    }
+
+    my ( $w, $h, $id ) = Image::Size::imgsize($local);
+
+    unless ( defined($w) && defined($h) ) {
         # rebless to file type
         $asset_pkg = 'MT::Asset';
     }
+
     my $asset;
     if (
          !(
@@ -1088,24 +1049,25 @@ sub _upload_to_asset {
       )
     {
         $asset = $asset_pkg->new();
-        $asset->file_path($local_relative);
-        $asset->file_name( $base . $ext );
-        $asset->file_ext($ext_copy);
+        $asset->file_path( join('/', '%r', $local_basename ) );
+        $asset->file_name( $local_basename );
         $asset->blog_id( $blog->id );
         $asset->created_by( $user->id );
+        (my $ext_copy  = $ext) =~ s/\.//;
+        $asset->file_ext($ext_copy);
     }
     else {
         $asset->modified_by( $user->id );
     }
     my $original = $asset->clone;
-    my $url      = '%r/' . $base . $ext;
+    my $url      = join('/', '%r', $local_basename );
     $asset->url($url);
     if ($is_image) {
         $asset->image_width($w);
         $asset->image_height($h);
     }
     $asset->mime_type($type);
-    $asset->save;
+    $asset->save;    # FIXME No check?  No delete on failure?
 
     MT->run_callbacks(
                        'api_upload_file.' . $asset->class,

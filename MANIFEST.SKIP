@@ -36,6 +36,12 @@ addons/ConfigAssistant.pack/static/colorpicker/js/jquery.js
 tools/report-slow-request
 lib/MT/Util/LogProcessor
 
+# MT::App::NotifyList pulled in MT 4.361
+# Fogbugz case:  http://bugs.movabletype.org/?106276
+# Git commits: 75333270 99cacda7
+lib/MT/App/NotifyList.pm
+mt-add-notify.cgi
+
 ^schemas
 ^t/
 .*/t/

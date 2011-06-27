@@ -917,6 +917,10 @@ sub set_object_status {
 sub upload_userpic {
     my $app = shift;
 
+    $app->validate_magic() or return;
+    return $app->errtrans("Invalid request.")
+        if $app->param('blog_id');
+
     require MT::CMS::Asset;
     my ( $asset, $bytes )
       = MT::CMS::Asset::_upload_file( $app, @_, require_type => 'image', );

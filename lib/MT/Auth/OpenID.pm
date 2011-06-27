@@ -362,6 +362,7 @@ sub get_userpicasset {
     return _asset_from_url($url);
 } ## end sub get_userpicasset
 
+# FIXME This method must be refactored. See note for MT::CMS::Asset::_upload_file for further details
 sub _asset_from_url {
     my ($image_url) = @_;
     my $ua = _get_ua() or return;
@@ -369,7 +370,8 @@ sub _asset_from_url {
     return undef unless $resp->is_success;
     my $image = $resp->content;
     return undef unless $image;
-    my $mimetype = $resp->header('Content-Type');
+    my $mimetype = $resp->header('Content-Type')
+        or return undef;
     my $def_ext = {
                     'image/jpeg' => '.jpg',
                     'image/png'  => '.png',
@@ -413,7 +415,16 @@ sub _asset_from_url {
 
     require MT::Asset;
     my $asset_pkg = MT::Asset->handler_for_file($local);
-    return undef if $asset_pkg ne 'MT::Asset::Image';
+    if (   $asset_pkg ne 'MT::Asset::Image' ) {
+        unlink $local;
+        return undef;
+    }
+    
+    my $has_html = eval { MT::Image->has_html_signature( path => $local ) };
+    if ( $has_html || $@ ) {
+        unlink $local;
+        return undef;
+    }
 
     my $asset;
     $asset = $asset_pkg->new();
@@ -432,7 +443,10 @@ sub _asset_from_url {
     $asset->image_height($h);
     $asset->mime_type($mimetype);
 
-    $asset->save or return undef;
+    if ( !$asset->save ) {
+        unlink $local;
+        return undef;
+    }
 
     MT->run_callbacks(
                        'api_upload_file.' . $asset->class,
