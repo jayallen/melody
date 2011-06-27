@@ -552,6 +552,20 @@ BEGIN {
             'DefaultTemplateSet'   => { default => 'DePoClean_theme' },
 
             'AssetFileTypes' => { type => 'HASH' },
+            'AssetFileExtensions' => {
+                                   type    => 'ARRAY',
+                                   default => undef,
+            },
+            'DeniedAssetFileExtensions' => {
+                type    => 'ARRAY',
+                default => [ qw(
+                      ascx asis asp aspx bat cfc cfm cgi cmd com cpl dll
+                      exe htaccess html? inc jhtml js jsb jsp mht(ml)?
+                      msi php[s\d]? phtml? pif pl pwml py reg scr
+                      sh shtml? vbs vxd
+                      )
+                ],
+            },
 
             'FastCGIMaxTime'     => { default => 60 * 60 },    # 1 hour
             'FastCGIMaxRequests' => { default => 1000 },       # 1000 requests

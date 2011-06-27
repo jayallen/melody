@@ -12,7 +12,7 @@ use MT::Test;
 use Cwd;
 use File::Spec;
 use File::Temp qw( tempfile );
-use Test::More tests => 16;
+use Test::More tests => 17;
 
 use MT;
 use MT::ConfigMgr;
@@ -29,6 +29,8 @@ Database $db_dir/mt.db
 ObjectDriver DBI::SQLite 
 AltTemplate foo bar
 AltTemplate baz quux
+DeniedAssetFileExtensions DEFAULT
+DeniedAssetFileExtensions doc
 CFG
 close $fh;
 
@@ -56,6 +58,31 @@ is( $cfg->type('AltTemplate'), 'ARRAY', 'AltTemplate=ARRAY' );
 is( @paths,                    2,       'paths=2' );
 is( ( $cfg->AltTemplate )[0], 'foo bar',  'foo bar' );
 is( ( $cfg->AltTemplate )[1], 'baz quux', 'baz quux' );
+
+## Test that multiple settings (DeniedAssetFileExtensions) work plus the
+## DEFAULT value for adding default elements
+subtest "DeniedAssetFileExtensions ARRAY and DEFAULT value" => sub {
+
+    plan tests => 2,
+
+    my $default = [qw(
+        ascx asis asp aspx bat cfc cfm cgi cmd com cpl dll
+        exe htaccess html? inc jhtml js jsb jsp mht(ml)?
+        msi php[s\d]? phtml? pif pl pwml py reg scr
+        sh shtml? vbs vxd
+    )];
+    
+    is( $cfg->type('DeniedAssetFileExtensions'), 'ARRAY',
+        'DeniedAssetFileExtensions=ARRAY' );
+
+    my $exts         = $cfg->DeniedAssetFileExtensions;
+    my $default_plus = [ @$default, 'doc' ];
+
+    is_deeply( $exts, $default_plus, 
+                'DeniedAssetFileExtensions with DEFAULT' )
+        || diag explain $exts;
+};
+
 
 ## Test bug in early version of ConfigMgr where space was not
 ## stripped from the ends of values
