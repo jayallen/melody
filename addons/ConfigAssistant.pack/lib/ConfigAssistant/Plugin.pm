@@ -5,13 +5,12 @@ use warnings;
 use Carp qw( croak );
 use MT::Util
   qw( relative_date      offset_time    offset_time_list    epoch2ts
-  ts2epoch format_ts encode_html    decode_html         dirify );
+      ts2epoch format_ts encode_html    decode_html         dirify );
 use ConfigAssistant::Util
   qw( find_theme_plugin     find_template_def   find_option_def
-  find_option_plugin    process_file_upload
-  plugin_static_web_path plugin_static_file_path );
+      find_option_plugin    process_file_upload 
+      plugin_static_web_path plugin_static_file_path );
 use JSON;
-
 # use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
 our $logger;
 
@@ -22,12 +21,12 @@ sub tag_plugin_static_web_path {
     if ( !$obj ) {
         return
           $ctx->error(
-                   MT->translate(
-                                  "The plugin you specified '[_2]' in '[_1]' "
-                                    . "could not be found.",
-                                  $ctx->stash('tag'),
-                                  $sig
-                   )
+            MT->translate(
+                  "The plugin you specified '[_2]' in '[_1]' "
+                . "could not be found.",
+                $ctx->stash('tag'),
+                $sig
+            )
           );
     }
     elsif ( $obj->registry('static_version') ) {
@@ -38,13 +37,13 @@ sub tag_plugin_static_web_path {
         # TODO - perhaps this should default to: mt-static/plugins/$sig?
         return
           $ctx->error(
-               MT->translate(
-                           "The plugin you specified '[_2]' in '[_1]' has not"
-                             . "registered a static directory. Please use "
-                             . "<mt:StaticWebPath> instead.",
-                           $ctx->stash('tag'),
-                           $sig
-               )
+            MT->translate(
+                  "The plugin you specified '[_2]' in '[_1]' has not"
+                . "registered a static directory. Please use "
+                . "<mt:StaticWebPath> instead.",
+                $ctx->stash('tag'),
+                $sig
+            )
           );
     }
 } ## end sub tag_plugin_static_web_path
@@ -56,12 +55,12 @@ sub tag_plugin_static_file_path {
     if ( !$obj ) {
         return
           $ctx->error(
-                   MT->translate(
-                                  "The plugin you specified '[_2]' in '[_1]' "
-                                    . "could not be found.",
-                                  $ctx->stash('tag'),
-                                  $sig
-                   )
+            MT->translate(
+                 "The plugin you specified '[_2]' in '[_1]' "
+                . "could not be found.",
+                $ctx->stash('tag'),
+                $sig
+            )
           );
     }
     elsif ( $obj->registry('static_version') ) {
@@ -70,12 +69,12 @@ sub tag_plugin_static_file_path {
     else {
         return
           $ctx->error(
-                  MT->translate(
-                              "The plugin you specified in '[_1]' has not "
-                                . "registered a static directory. Please use "
-                                . "<mt:StaticFilePath> instead.",
-                              $_[0]->stash('tag')
-                  )
+            MT->translate(
+                  "The plugin you specified in '[_1]' has not "
+                . "registered a static directory. Please use "
+                . "<mt:StaticFilePath> instead.",
+                $_[0]->stash('tag')
+            )
           );
     }
 } ## end sub tag_plugin_static_file_path
@@ -312,7 +311,7 @@ sub save_config {
     return $app->errtrans("Permission denied.")
       unless $app->user->can_manage_plugins
           or (     $blog_id
-               and $app->user->permissions($blog_id)->can_administer_blog );
+               and $app->user->permissions($blog_id)->can_edit_templates );
 
     my $param;
     my @params = $q->param;
@@ -365,24 +364,25 @@ sub save_config {
                 if ( $result->{status} == ConfigAssistant::Util::ERROR() ) {
                     return $app->error(
                               "Error uploading file: " . $result->{message} );
-                }
-                elsif (
-                       $result->{status} == ConfigAssistant::Util::NO_UPLOAD )
-                {
-                    if ( $param->{ $var . '-clear' } && $data->{$var} ) {
+                } elsif ( $result->{status} == ConfigAssistant::Util::NO_UPLOAD ) {
+                    if ($param->{$var.'-clear'} && $data->{$var}) {
                         my $old = MT->model('asset')->load( $data->{$var} );
                         $old->remove if $old;
                         $param->{$var} = undef;
                     }
-                }
-                else {
+                    else {
+                        
+                        # The user hasn't changed the file--keep it.
+                        $param->{$var} = $data->{$var};
+                    }
+                } else {
                     if ( $data->{$var} ) {
                         my $old = MT->model('asset')->load( $data->{$var} );
                         $old->remove if $old;
                     }
                     $param->{$var} = $result->{asset}->{id};
                 }
-            } ## end if ( $opt->{type} eq 'file')
+            }
             my $old = $data->{$var};
             my $new = $param->{$var};
             my $has_changed 
@@ -391,7 +391,7 @@ sub save_config {
               || ( defined $new and $old ne $new );
             ###l4p $logger->debug('$has_changed: '.$has_changed);
 
-            # If the field data has changed, and if the field uses the
+            # If the field data has changed, and if the field uses the 
             # "republish" key, we want to republish the specified templates.
             # Add the specified templates to $repub_queue so that they can
             # be republished later.
@@ -402,7 +402,7 @@ sub save_config {
             }
             $data->{$var} = $new ? $new : undef;
             if ($has_changed) {
-
+                $opt->{'basename'} = $var;
                 #MT->log("Triggering: " . 'options_change.option.' . $var );
                 $app->run_callbacks( 'options_change.option.' . $var,
                                      $app, $opt, $old, $new );
@@ -417,51 +417,49 @@ sub save_config {
             $app->run_callbacks( 'options_change.plugin.' . $plugin->id,
                                  $app, $plugin );
         }
-
+        
         # Index templates that have been flagged should be republished.
         use MT::WeblogPublisher;
         foreach ( keys %$repub_queue ) {
             my $tmpl = MT->model('template')
               ->load( { blog_id => $blog_id, identifier => $_, } );
 
-            if ( !$tmpl ) {
+            if (!$tmpl) {
                 MT->log( {
                        blog_id => $blog_id,
-                       level   => '2',        # Warning
+                       level   => '2', # Warning
                        message => "Config Assistant could not find a "
-                         . "template with the identifier "
-                         . $_,
-                    }
+                                  . "template with the identifier " . $_,
+                     }
                 );
                 next;
             }
 
-            my $result =
-              $app->rebuild_indexes(
-                                     Blog     => $app->blog,
-                                     Template => $tmpl,
-                                     Force    => 1,
-              );
+            my $result = $app->rebuild_indexes(
+                                   Blog     => $app->blog,
+                                   Template => $tmpl,
+                                   Force    => 1,
+            );
 
             # Report on the success/failure of the template republishing.
-            my ( $message, $level );
+            my ($message, $level);
             if ($result) {
-                $message
-                  = "Config Assistant: Republishing template " . $tmpl->name;
-                $level = '1';    # Info
+                $message = "Config Assistant: Republishing template " 
+                           . $tmpl->name;
+                $level   = '1'; # Info
             }
             else {
-                $message = "Config Assistant could not republish template "
-                  . $tmpl->name;
-                $level = '4';    # Error
+                $message = "Config Assistant could not republish template " 
+                           . $tmpl->name;
+                $level   = '4'; # Error
             }
             MT->log( {
-                       blog_id => $blog_id,
-                       level   => $level,
-                       message => $message,
-                     }
+                   blog_id => $blog_id,
+                   level   => $level,
+                   message => $message,
+                 }
             );
-        } ## end foreach ( keys %$repub_queue)
+        }
         $pdata->data($data);
         MT->request( 'plugin_config.' . $plugin->id, undef );
         $pdata->save() or die $pdata->errstr;
@@ -502,19 +500,14 @@ sub type_file {
               . "\">view</a> | <a href=\"javascript:void(0)\" class=\"remove\">remove</a></p>";
         }
         else {
-            $html
-              .= "<p>Selected asset could not be found. <a href=\"javascript:void(0)\" class=\"remove\">reset</a></p>";
+            $html .= "<p>Selected asset could not be found. <a href=\"javascript:void(0)\" class=\"remove\">reset</a></p>";
         }
     }
-    $html
-      .= "      <input type=\"file\" name=\"$field_id\" class=\"full-width\" />\n"
-      . "      <input type=\"hidden\" name=\"$field_id-clear\" value=\"0\" class=\"clear-file\" />\n";
+    $html .= "      <input type=\"file\" name=\"$field_id\" class=\"full-width\" />\n" .
+             "      <input type=\"hidden\" name=\"$field_id-clear\" value=\"0\" class=\"clear-file\" />\n";
 
     $html .= "<script type=\"text/javascript\">\n";
-    $html
-      .= "  \$('#field-"
-      . $field_id
-      . " a.remove').click( handle_remove_file );\n";
+    $html .= "  jQuery('#field-".$field_id." a.remove').click( handle_remove_file );\n";
     $html .= "</script>\n";
 
     return $html;
@@ -527,19 +520,19 @@ sub type_colorpicker {
       "      <div id=\"$field_id-colorpicker\" class=\"colorpicker-container\"><div style=\"background-color: $value\"></div></div><input type=\"hidden\" id=\"$field_id\" name=\"$field_id\" value=\""
       . encode_html( $value, 1
       )    # The additional "1" will escape HTML entities properly
-      . "\" />\n<script type=\"text/javascript\">\$('#'+'$field_id-colorpicker').ColorPicker({
+      . "\" />\n<script type=\"text/javascript\">jQuery('#'+'$field_id-colorpicker').ColorPicker({
         color: '$value',
         onShow: function (colpkr) {
-            \$(colpkr).fadeIn(500);
+            jQuery(colpkr).fadeIn(500);
             return false;
         },
         onHide: function (colpkr) {
-            \$(colpkr).fadeOut(500);
+            jQuery(colpkr).fadeOut(500);
             return false;
         },
         onChange: function (hsb, hex, rgb) {
-            \$('#'+'$field_id-colorpicker div').css('backgroundColor', '#' + hex);
-            \$('#'+'$field_id').val('#' + hex).trigger('change');
+            jQuery('#'+'$field_id-colorpicker div').css('backgroundColor', '#' + hex);
+            jQuery('#'+'$field_id').val('#' + hex).trigger('change');
         }
     });</script>\n";
 } ## end sub type_colorpicker
@@ -556,45 +549,98 @@ sub type_link_group {
     if ($@) { $list = []; }
     my $html;
     $html
-      = "      <div id=\"$field_id-link-group\" class=\"link-group-container pkg\">"
-      . "<ul>";
+      = "<div id=\"$field_id-link-group\" class=\"link-group-container pkg\">\n"
+      . "    <ul>\n";
 
     foreach (@$list) {
         $html
-          .= '<li><a class="link" href="'
+          .= '        <li><a class="link" href="'
           . $_->{'url'} . '">'
           . $_->{'label'}
           . '</a> <a class="remove" href="javascript:void(0);"><img src="'
           . $static
-          . '/images/icon_close.png" alt="remove" title="remove" /></a> <a class="edit" href="javascript:void(0);">edit</a></li>';
+          . '/images/icon_close.png" alt="remove" title="remove" /></a> '
+          . '<a class="edit" href="javascript:void(0);">edit</a></li>' . "\n";
     }
     $html
-      .= "<li class=\"last\"><button class=\"add-link\">Add Link</button></li>"
-      . "</ul>"
-      . "</div>"
+      .= "          <li class=\"last\">"
+      . "<a href=\"javascript:void(0);\" class=\"add-link\">Add Link</a>"
+      . "</li>\n"
+      . "    </ul>\n"
+      . "</div>\n"
       . "<input type=\"hidden\" id=\"$field_id\" name=\"$field_id\" value=\""
       . encode_html( $value, 1
       )    # The additional "1" will escape HTML entities properly
-      . "\" />\n<script type=\"text/javascript\">\n";
-    $html
-      .= "  \$('#'+'$field_id-link-group button.add-link').click( handle_edit_click );\n";
-    $html
-      .= "  \$('#'+'$field_id-link-group').parents('form').submit( function (){
+      . "\" />\n<script type=\"text/javascript\">
+  jQuery('#'+'$field_id-link-group').parents('form').submit( function (){
     var struct = Array();
-    \$(this).find('#'+'$field_id-link-group ul li button').trigger('click');
-    \$(this).find('#'+'$field_id-link-group ul li a.link').each( function(i, e) {
-      var u = \$(this).attr('href');
-      var l = \$(this).html();
+    jQuery(this).find('#'+'$field_id-link-group ul li button').trigger('click');
+    jQuery(this).find('#'+'$field_id-link-group ul li a.link').each( function(i, e) {
+      var u = jQuery(this).attr('href');
+      var l = jQuery(this).html();
       struct.push( { 'url': u, 'label': l } );
     });
     var json = struct.toJSON().escapeJS();
-    \$('#'+'$field_id').val( json );
+    jQuery('#'+'$field_id').val( json );
   });
-  \$('#'+'$field_id-link-group ul li a.remove').click( handle_delete_click );
-  \$('#'+'$field_id-link-group ul li a.edit').click( handle_edit_click );
+  jQuery('#'+'$field_id-link-group ul li a.add-link').click( handle_edit_click );
+  jQuery('#'+'$field_id-link-group ul li a.remove').click( handle_delete_click );
+  jQuery('#'+'$field_id-link-group ul li a.edit').click( handle_edit_click );
 </script>\n";
     return $html;
 } ## end sub type_link_group
+
+sub type_text_group {
+    my $app = shift;
+    my ( $ctx, $field_id, $field, $value ) = @_;
+    my $static = $app->static_path;
+    $value = '"[]"' if ( !$value || $value eq '' );
+    eval "\$value = \"$value\"";
+    if ($@) { $value = '"[]"'; }
+    my $list;
+    eval { $list = JSON::from_json($value) };
+    if ($@) { $list = []; }
+    my $html;
+    $html
+      = "<div id=\"$field_id-text-group\" class=\"text-group-container pkg\">\n"
+      . "    <ul>\n";
+
+    foreach (@$list) {
+        $html
+          .= '        <li><span class="text">'
+          . $_->{'label'}
+          . '</span> <a class="remove" href="javascript:void(0);"><img src="'
+          . $static
+          . '/images/icon_close.png" alt="remove" title="remove" /></a> '
+          . '<a class="edit" href="javascript:void(0);">edit</a></li>' . "\n";
+    }
+    $html
+      .= "          <li class=\"last\">"
+      . "<a href=\"javascript:void(0);\" class=\"add-item\">Add Item</a>"
+      . "</li>\n"
+      . "    </ul>\n"
+      . "</div>\n"
+      . "<input type=\"hidden\" id=\"$field_id\" name=\"$field_id\" value=\""
+      . encode_html( $value, 1
+      )    # The additional "1" will escape HTML entities properly
+      . "\" />\n<script type=\"text/javascript\">
+  jQuery('#'+'$field_id-text-group').parents('form').submit( function (){
+    var struct = Array();
+    jQuery(this).find('#'+'$field_id-text-group ul li button').trigger('click');
+    jQuery(this).find('#'+'$field_id-text-group ul li span.text').each( function(i, e) {
+      var l = jQuery(this).html();
+      struct.push( { 'label': l } );
+    });
+    var json = struct.toJSON().escapeJS();
+    jQuery('#'+'$field_id').val( json );
+  });
+  jQuery('#'+'$field_id-text-group ul li a.add-item').click( text_handle_edit_click );
+  jQuery('#'+'$field_id-text-group ul li a.remove').click( text_handle_delete_click );
+  jQuery('#'+'$field_id-text-group ul li a.edit').click( text_handle_edit_click );
+</script>\n";
+    return $html;
+} ## end sub type_text_group
+
 
 sub type_textarea {
     my $app = shift;
@@ -622,7 +668,60 @@ sub type_entry {
     my ( $ctx, $field_id, $field, $value ) = @_;
     my $out;
     my $obj_class = $ctx->stash('object_class') || 'entry';
+    my ($obj, $obj_name, $obj_id);
+    
+    # The $value is the object ID. Only if $value exists should we try to 
+    # load the object. Otherwise, the most recent entry/page is loaded
+    # and the $obj_name is incorrectly populated with the most recent object
+    # title. This way, $obj_name is blank if there is no $value, which is
+    # clearer to the user.
+    if ($value) {
+        $obj       = MT->model($obj_class)->load($value);
+        $obj_name  = ( $obj ? $obj->title : '' ) || '';
+        $obj_id    = ( $obj ? $obj->id : 0 ) || '';
+    }
+    my $blog_id   = $field->{all_blogs} ? 0 : $app->blog->id;
+    unless ( $ctx->var('entry_chooser_js') ) {
+        $out .= <<EOH;
+    <script type="text/javascript">
+        function insertCustomFieldEntry(html, val, id) {
+            jQuery('#'+id).val(val);
+            try {
+                jQuery('#'+id+'_preview').html(html);
+            } catch(e) {
+                log.error(e);
+            };
+        }
+    </script>
+EOH
+        $ctx->var( 'entry_chooser_js', 1 );
+    }
+    my $class = MT->model($obj_class);
+    my $label = $class->class_label;
+    my $label_lc = lc($label);
+    $ctx->var( 'entry_class_label', $label );
+    $ctx->var( 'entry_class_labelp', $class->class_label_plural );
+    $out .= <<EOH;
+<div class="pkg">
+  <input name="$field_id" id="$field_id" class="hidden" type="hidden" value="$value" />
+  <button type="submit"
+          onclick="return openDialog(this.form, 'ca_config_entry', 'blog_id=$blog_id&edit_field=$field_id&status=2&class=$obj_class')">Choose $label</button>
+  <div id="${field_id}_preview" class="preview">
+    $obj_name
+    (<a href="?__mode=edit&_type=entry&blog_id=$blog_id&id=$obj_id">edit $label_lc</a>)
+  </div>
+</div>
+EOH
+    $ctx->stash('object_class','');
+    return $out;
+} ## end sub type_entry
+
+sub type_entry_or_page {
+    my $app = shift;
+    my ( $ctx, $field_id, $field, $value ) = @_;
+    my $out;
     my ( $obj, $obj_name );
+    my $obj_class = 'entry';
 
     # The $value is the object ID. Only if $value exists should we try to
     # load the object. Otherwise, the most recent entry/page is loaded
@@ -632,37 +731,45 @@ sub type_entry {
     if ($value) {
         $obj = MT->model($obj_class)->load($value);
         $obj_name = ( $obj ? $obj->title : '' ) || '';
+        $obj_class = $obj->class;
     }
     my $blog_id = $field->{all_blogs} ? 0 : $app->blog->id;
     unless ( $ctx->var('entry_chooser_js') ) {
         $out .= <<EOH;
-    <script type="text/javascript">
-        function insertCustomFieldEntry(html, val, id) {
-            \$('#'+id).val(val);
-            try {
-                \$('#'+id+'_preview').html(html);
-            } catch(e) {
-                log.error(e);
-            };
-        }
-    </script>
+        <script type="text/javascript">
+            function insertCustomFieldEntry(html, val, id) {
+                \$('#'+id).val(val);
+                try {
+                    \$('#'+id+'_preview').html(html);
+                } catch(e) {
+                    log.error(e);
+                };
+            }
+        </script>
 EOH
         $ctx->var( 'entry_chooser_js', 1 );
     }
-    my $label = MT->model($obj_class)->class_label;
+    my $class_label = $obj->class_label;
+    my $preview = $value ? "$obj_name ( $class_label )" : "";
+    my $class = MT->model($obj_class);
+    my $label = 'Entry or Page';
+    $ctx->var( 'entry_class_label', $label );
     $out .= <<EOH;
-<div class="pkg">
-  <input name="$field_id" id="$field_id" class="hidden" type="hidden" value="$value" />
-  <button type="submit"
-          onclick="return openDialog(this.form, 'ca_config_entry', 'blog_id=$blog_id&edit_field=$field_id&status=2&class=$obj_class')">Choose $label</button>
-  <div id="${field_id}_preview" class="preview">
-    $obj_name
-  </div>
-</div>
+    <div class="pkg">
+      <input name="$field_id" id="$field_id" class="hidden" type="hidden" value="$value" />
+      <button type="submit"
+              onclick="return openDialog(this.form, 'ca_config_entry_or_page', 'blog_id=$blog_id&edit_field=$field_id')">Choose $label</button>
+      <div id="${field_id}_preview" class="preview">
+        $preview
+      </div>
+    </div>
 EOH
-    $ctx->stash( 'object_class', '' );
+
+    # $ctx->stash('object_class','');
     return $out;
-} ## end sub type_entry
+
+}
+
 
 sub type_tagged_entry {
     my $app = shift;
@@ -1070,7 +1177,7 @@ sub _hdlr_field_category_list {
     my ( $ctx, $args, $cond ) = @_;
     my $field = $ctx->stash('field') or return _no_field($ctx);
     my $value = _get_field_value($ctx);
-    my @ids   = ref($value) eq 'ARRAY' ? @$value : ($value);
+    my @ids = ref($value) eq 'ARRAY' ? @$value : ($value);
     my $class = $ctx->stash('obj_class');
 
     my @categories = MT->model($class)->load( { id => \@ids } );
@@ -1144,6 +1251,34 @@ sub _hdlr_field_link_group {
         return MT::Template::Context::_hdlr_pass_tokens_else(@_);
     }
 } ## end sub _hdlr_field_link_group
+
+sub _hdlr_field_text_group {
+    my $plugin = shift;
+    my ( $ctx, $args, $cond ) = @_;
+    my $field = $ctx->stash('field') or return _no_field($ctx);
+    my $value = _get_field_value($ctx);
+    $value = '"[]"' if ( !$value || $value eq '' );
+    eval "\$value = \"$value\"";
+    if ($@) { $value = '[]'; }
+    my $list = JSON::from_json($value);
+
+    if ( @$list > 0 ) {
+        my $out   = '';
+        my $vars  = $ctx->{__stash}{vars};
+        my $count = 0;
+        foreach (@$list) {
+            local $vars->{'label'} = $_->{'label'};
+            local $vars->{'__first__'}  = ( $count++ == 0 );
+            local $vars->{'__last__'}   = ( $count == @$list );
+            defined( $out .= $ctx->slurp( $args, $cond ) ) or return;
+        }
+        return $out;
+    }
+    else {
+        require MT::Template::ContextHandlers;
+        return MT::Template::Context::_hdlr_pass_tokens_else(@_);
+    }
+} ## end sub _hdlr_field_text_group
 
 sub _hdlr_field_cond {
     my $plugin = shift;
@@ -1362,18 +1497,26 @@ sub plugin_options {
 } ## end sub plugin_options
 
 sub entry_search_api_prep {
+    return _search_api_prep('entry',@_);
+}
+sub page_search_api_prep {
+    return _search_api_prep('page',@_);
+}
+sub _search_api_prep {
+    my ( $type, $terms, $args, $blog_id ) = @_;
     my $app = MT->instance;
-    my ( $terms, $args, $blog_id ) = @_;
     my $q = $app->can('query') ? $app->query : $app->param;
-
-    $terms->{blog_id} = $blog_id            if $blog_id;
-    $terms->{status}  = $q->param('status') if ( $q->param('status') );
-
-    my $search_api = $app->registry("search_apis");
-    my $api        = $search_api->{entry};
-    my $date_col   = $api->{date_column} || 'created_on';
-    $args->{sort}      = $date_col;
-    $args->{direction} = 'descend';
+    $terms->{blog_id}  = $blog_id if $blog_id;
+    if ( $type ne 'template' ) {
+        my $search_api     = $app->registry("search_apis");
+        my $api            = $search_api->{$type};
+        my $date_col       = $api->{date_column} || 'created_on';
+        $args->{sort}      = $date_col;
+        $args->{direction} = 'descend';
+    }
+    return unless $app->mode eq 'ca_config_entry';
+    $terms->{status}   = $q->param('status') if ( $q->param('status') );
+    $terms->{class}    = $app->param('class');
 }
 
 #sub entry_search_api_prep {
@@ -1392,31 +1535,36 @@ sub list_entry_mini {
       or return "Invalid request: unknown class $obj_type";
 
     my $terms;
+    $terms->{class} = $obj_type;
     $terms->{blog_id} = $blog_id if $blog_id;
-    $terms->{status} = 2;
+    $terms->{status} = 2 if $obj_type eq 'entry' || $obj_type eq 'page';
 
     my %args = ( sort => 'authored_on', direction => 'descend', );
 
     my $plugin = MT->component('ConfigAssistant')
       or die "OMG NO COMPONENT!?!";
+
     my $tmpl = $plugin->load_tmpl('entry_list.mtml');
-    $tmpl->param( 'obj_type', $obj_type );
+    $tmpl->param('entry_class_labelp', $pkg->class_label_plural);
+    $tmpl->param('entry_class_label', $pkg->class_label);
+    $tmpl->param('obj_type', $obj_type);
     return $app->listing( {
            type     => $obj_type,
            template => $tmpl,
            params   => {
-                       panel_searchable => 1,
-                       edit_blog_id     => $blog_id,
-                       edit_field       => $q->param('edit_field'),
-                       search           => $q->param('search'),
-                       blog_id          => $blog_id,
+                       panel_searchable   => 1,
+                       edit_blog_id       => $blog_id,
+                       edit_field         => $q->param('edit_field'),
+                       search             => $q->param('search'),
+                       blog_id            => $blog_id,
+                       class              => $obj_type,
            },
            code => sub {
                my ( $obj, $row ) = @_;
                $row->{ 'status_' . lc MT::Entry::status_text( $obj->status ) }
                  = 1;
                $row->{entry_permalink} = $obj->permalink
-                 if $obj->status == MT::Entry->RELEASE();
+                 if $obj->status == MT->model('entry')->RELEASE();
                if ( my $ts = $obj->authored_on ) {
                    my $date_format = MT::App::CMS->LISTING_DATE_FORMAT();
                    my $datetime_format
@@ -1464,6 +1612,103 @@ sub select_entry {
     );
     return $tmpl;
 } ## end sub select_entry
+
+sub list_entry_or_page {
+    my $app      = shift;
+    my $blog_ids = $app->param('blog_ids');
+    my $type     = 'entry';
+    my $pkg      = $app->model($type) or return "Invalid request.";
+
+    my %terms = (
+        status => '2',
+        class  => '*',
+    );
+
+    my @blog_ids;
+    if ( $blog_ids == 'all' ) {
+
+        # @blog_ids should stay empty so all blogs are loaded.
+    }
+    else {
+
+        # Turn this into an array so that all specified blogs can be loaded.
+        @blog_ids = split( /,/, $blog_ids );
+        $terms{blog_id} = [@blog_ids];
+    }
+
+    my %args = (
+        sort      => 'authored_on',
+        direction => 'descend',
+    );
+
+    my $plugin = MT->component('ConfigAssistant')
+      or die "OMG NO COMPONENT!?!";
+    my $tmpl   = $plugin->load_tmpl('entry_or_page_list.mtml');
+    $tmpl->param( 'type', $type );
+
+    return $app->listing(
+        {   type     => 'entry',
+            template => $tmpl,
+            params   => {
+                panel_searchable => 1,
+                edit_blog_id     => $blog_ids,
+                edit_field       => $app->param('edit_field'),
+                search           => $app->param('search'),
+                blog_id          => $blog_ids,
+            },
+            code => sub {
+                my ( $obj, $row ) = @_;
+                $row->{ 'status_'
+                        . lc MT::Entry::status_text( $obj->status ) } = 1;
+                $row->{entry_permalink} = $obj->permalink
+                    if $obj->status == MT::Entry->RELEASE();
+                if ( my $ts = $obj->authored_on ) {
+                    my $date_format = MT::App::CMS->LISTING_DATE_FORMAT();
+                    my $datetime_format
+                        = MT::App::CMS->LISTING_DATETIME_FORMAT();
+                    $row->{created_on_formatted}
+                        = format_ts( $date_format, $ts, $obj->blog,
+                        $app->user ? $app->user->preferred_language : undef );
+                    $row->{created_on_time_formatted}
+                        = format_ts( $datetime_format, $ts, $obj->blog,
+                        $app->user ? $app->user->preferred_language : undef );
+                    $row->{created_on_relative}
+                        = relative_date( $ts, time, $obj->blog );
+                    $row->{kind} = ucfirst( $obj->class );
+                }
+                return $row;
+            },
+            terms => \%terms,
+            args  => \%args,
+            limit => 10,
+        }
+    );
+}
+
+sub select_entry_or_page {
+    my $app = shift;
+
+    my $entry_id = $app->param('id')
+        or return $app->errtrans('No id');
+    MT->log('boo');
+    my $entry = MT->model('entry')->load($entry_id)
+        or return $app->errtrans( 'No entry or page #[_1]', $entry_id );
+    my $edit_field = $app->param('edit_field')
+        or return $app->errtrans('No edit_field');
+
+    my $plugin = MT->component('ConfigAssistant')
+        or die "OMG NO COMPONENT!?!";
+    my $tmpl   = $plugin->load_tmpl(
+        'select_entry.mtml',
+        {   entry_id    => $entry->id,
+            entry_title => $entry->title,
+            entry_class => $entry->class_label,
+            edit_field  => $edit_field,
+        }
+    );
+    return $tmpl;
+}
+
 
 sub xfrm_cfg_plugin_param {
     my ( $cb, $app, $param, $tmpl ) = @_;
