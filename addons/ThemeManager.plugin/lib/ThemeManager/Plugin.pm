@@ -92,7 +92,7 @@ sub update_page_actions {
         list_templates => {
             refresh_fields => {
                 label      => "Refresh Custom Fields",
-                order      => 1010,
+                order      => 1,
                 permission => 'edit_templates',
                 condition  => sub {
                     MT->component('Commercial') && MT->app->blog;
@@ -104,6 +104,22 @@ sub update_page_actions {
                     ThemeManager::TemplateInstall::_refresh_system_custom_fields(
                                                                        $blog);
                     $app->add_return_arg( custom_fields_refreshed => 1 );
+                    $app->call_return;
+                },
+            },
+            refresh_fd_fields => {
+                label      => "Refresh Field Day fields",
+                order      => 2,
+                permission => 'edit_templates',
+                condition  => sub {
+                    MT->component('FieldDay') && MT->app->blog;
+                },
+                code => sub {
+                    my ($app) = @_;
+                    $app->validate_magic or return;
+                    my $blog = $app->blog;
+                    ThemeManager::TemplateInstall::_refresh_fd_fields($blog);
+                    $app->add_return_arg( fd_fields_refreshed => 1 );
                     $app->call_return;
                 },
             },
@@ -197,7 +213,7 @@ sub theme_dashboard {
 
             # Turn that YAML into a plain old string and save it.
             $blog->theme_meta( $yaml->write_string() );
-
+            
             # Upgraders likely also don't have the theme_mode switch set
             $blog->theme_mode('production');
             $blog->save;
@@ -230,12 +246,10 @@ sub theme_dashboard {
       = theme_docs( $theme_meta->{documentation}, $plugin );
 
     # Grab the template set language, or fall back to the blog language.
-    # FIXME Below looks like an inadvertent error: You assign to a variable and never use it but instead continue using the $blog->template_set_language
     my $template_set_language = $blog->template_set_language
       || $blog->language;
-    if ( $blog->language ne $blog->template_set_language ) {
-        $param->{template_set_language} = $blog->template_set_language;
-    }
+    $param->{template_set_language} = $template_set_language
+      if $blog->language ne $template_set_language;
 
     my $dest_path = theme_thumb_path();
     if ( -w $dest_path ) {
@@ -267,6 +281,7 @@ sub theme_dashboard {
     $param->{template_page_actions} = $app->page_actions('list_templates');
 
     $param->{custom_fields_refreshed} = $q->param('custom_fields_refreshed');
+    $param->{fd_fields_refreshed}     = $q->param('fd_fields_refreshed');
 
     my $tmpl = $tm->load_tmpl('theme_dashboard.mtml');
     return $app->listing( {
@@ -467,7 +482,6 @@ sub setup_theme {
     # Production Mode or Designer Mode.
     $param->{theme_mode} = $q->param('theme_mode');
     if ( $q->param('theme_mode') ) {
-
         # Save the theme mode selection
         foreach my $blog_id (@blog_ids) {
             my $blog = MT->model('blog')->load($blog_id);
@@ -476,7 +490,6 @@ sub setup_theme {
         }
     }
     else {
-
         # The desired theme mode hasn't been selected yet.
         return $app->load_tmpl( 'theme_mode.mtml', $param );
     }
@@ -607,7 +620,6 @@ sub setup_theme {
         return $app->load_tmpl( 'select_language.mtml', $param );
     } ## end if ( !$q->param('language'...))
     else {
-
         # Either a language has been set, or there is only one language: english.
         my $selected_lang
           = $q->param('language') ? $q->param('language') : $languages[0];
@@ -1351,12 +1363,32 @@ sub _populate_list_templates_context {
                                 type  => 'custom',
                                 order => 300,
                   },
-                  'system' => {
-                                label => $tm->translate("System Templates"),
-                                type  => [ keys %$sys_tmpl ],
-                                order => 400,
-                  },
             );
+
+            # If any email templates are part of this theme, display them under
+            # an "Email Templates" template area. Only show this area if a 
+            # theme requires it, because email templates can't be manually
+            # created anyway.
+            if ( MT->registry('template_sets', $set, 'templates', 'email') ) {
+                $types{'email'} = {
+                              label => $tm->translate("Email Templates"),
+                              type  => 'email',
+                              order => 400,
+                  };
+            }
+
+            # If any system templates are part of this theme, display them 
+            # under a "System Templates" template area. Only show this area if
+            # a theme requires it, because system templates can't be manually
+            # created anyway.
+            if ( MT->registry('template_sets', $set, 'templates', 'system') ) {
+                $types{'system'} = {
+                              label => $tm->translate("System Templates"),
+                              type  => [ keys %$sys_tmpl ],
+                              order => 401,
+                  };
+            }
+
         } ## end if ($blog)
         else {
 
