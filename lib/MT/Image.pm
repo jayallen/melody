@@ -79,6 +79,7 @@ sub check_upload {
     my $fh         = $params{Fh};
     my $ext        = $params{ext};
     my $local_base = $params{LocalBase};
+    my $local      = $params{Local};
 
     ###
     #
@@ -93,37 +94,19 @@ sub check_upload {
 
     if ( $ext =~ m/(jpe?g|png|gif|bmp|tiff?|ico)/i ) {
 
-        my $data = '';
+        my %sig_args = $fh      ? ( fh   => $fh )
+                     : $local   ? ( path => $local )
+                                : ();
+        die 'No filehandle or path provided'
+            unless keys %sig_args;
 
-        ## Read first 1k of image file
-        binmode($fh);
-        seek( $fh, 0, 0 );
-        read $fh, $data, 1024;
-        seek( $fh, 0, 0 );
+        my $has_html = $class->has_html_signature( %sig_args );
+        $has_html and return $class->errtrans( "Invalid upload file" );
 
-        ## Using an error message format that already exists in all localizations of Movable Type 4.
-        if (
-            ( $data =~ m/^\s*<[!?]/ )
-            || ( $data
-                =~ m/<(HTML|SCRIPT|TITLE|BODY|HEAD|PLAINTEXT|TABLE|IMG|PRE|A)/i
-            )
-            || ( $data =~ m/text\/html/i )
-            || ( $data
-                =~ m/^\s*<(FRAMESET|IFRAME|LINK|BASE|STYLE|DIV|P|FONT|APPLET)/i
-            )
-            || ( $data
-                =~ m/^\s*<(APPLET|META|CENTER|FORM|ISINDEX|H[123456]|B|BR)/i )
-          )
-        {
-            return
-              $class->error(
-                             MT->translate(
-                                            "Saving [_1] failed: [_2]",
-                                            $local_base,
-                                            "Invalid image file format."
-                             )
-              );
-        } ## end if ( ( $data =~ m/^\s*<[!?]/...))
+        unless ( defined($has_html) ) {
+            return $class->errtrans( 'Error reading image [_1]: [_2]',
+                                        $local_base, $class->errstr);
+        }
     } ## end if ( $ext =~ m/(jpe?g|png|gif|bmp|tiff?|ico)/i)
 
     ## Use Image::Size to check if the uploaded file is an image, and if so,
@@ -131,13 +114,11 @@ sub check_upload {
     ## filehandle $fh, then pass it in to imgsize.
     seek $fh, 0, 0;
     eval { require Image::Size; };
-    return
-      $class->error(
-                     MT->translate(
-                           "Perl module Image::Size is required to determine "
-                             . "width and height of uploaded images."
-                     )
-      ) if $@;
+    $@ and return $class->errtrans(
+       "Perl module Image::Size is required to determine "
+         . "width and height of uploaded images."
+    );
+
     my ( $w, $h, $id ) = Image::Size::imgsize($fh);
 
     my $write_file = sub {
@@ -194,6 +175,85 @@ sub check_upload {
 
     ( $w, $h, $id, $write_file );
 } ## end sub check_upload
+
+sub has_html_signature {
+    my $class              = shift;
+    my %args               = @_;
+    my ($fh, $data, $path) = @args{'fh','data','path'};
+
+    unless ( $data || $fh || $path ) {
+        return $class->errtrans(
+            "No valid arguments passed to MT::Image::has_html_signature");
+    }
+
+    # Convert path to filehandle if provided
+    if ( defined $path ) {
+        use Symbol;
+        $fh = gensym();
+        open $fh, $path
+            or return $class->errtrans(
+                    "Could not open $path for reading: $!");
+        binmode($fh);
+    }
+
+    die "No valid arguments passed to MT::Image::has_html_signature"
+        unless $data or $fh;
+
+    my @patterns = (
+        # NOTE: The following patterns will be matched against a string
+        # with all whitespace stripped to simplify HTML matching.
+        qr{
+            \A       # Start of string
+            <        # Opening angle bracket = HTML tag?
+            (        # First item below matches doctype and/or PHP
+                [!?]|frameset|iframe|link|base|style|div|p|font|
+                applet|meta|center|form|isindex|h[123456]|b|br
+            )
+        }ix,
+        qr{<(html|script|title|body|head|plaintext|table|img|pre|a)}i,
+        qr{text/html}i,
+    );
+
+    # Anonymous subroutine that reads N bytes from either the string in
+    # $data or the filehandle in $fh.
+    my $buffer_read;
+    my $read_buffer = sub {
+        my $buffer = shift;
+        defined $data and return substr( $data, 0, $buffer );
+        my $str;
+        seek( $fh, 0, 0 );
+        defined( $buffer_read = read( $fh, $str, $buffer) )
+            || die "Could not read filehandle: $!";
+        # print STDERR "read_buffer: $buffer, buffer_read: $buffer_read\n";
+        seek( $fh, 0, 0 );
+        return $str;
+    };
+
+    # Get 1024 bytes of whitespace-free content
+    my $buffer = 1024;
+    my $test_string;
+    while ( ! defined $test_string ) {
+        my $str =  $read_buffer->( $buffer );
+        $str    =~ s{\s}{}g;                    # Strip whitespace,
+
+        # If result string is long enough, trim down to 1024 and assign 
+        # to $test_string which will terminate the while loop
+        if ( length $str >= 1024 ) {                
+            $test_string = substr( $str, 0, 1024 ); 
+        }
+        # File is shorter than our buffer
+        elsif ( $buffer_read < 1024 ) {
+            $test_string = $str
+        }
+        # Otherwise, increase the buffer size by 1024 and repeat
+        else {
+            $buffer += 1024;
+        }
+    }
+
+    return scalar grep { $test_string =~ $_ } @patterns;
+
+} ## end sub has_html_signature
 
 package MT::Image::ImageMagick;
 @MT::Image::ImageMagick::ISA = qw( MT::Image );
@@ -851,6 +911,33 @@ location.
 
 If any error occurs from this routine, it will return 'undef', and
 assign the error message, accessible using the L<errstr> class method.
+
+=head2 MT::Image->has_html_signature( %param )
+
+This function looks at the first kilobyte (1024 bytes) of whitespace-stripped 
+data to see if it contains patterns indicative of embedded HTML.  This is used 
+by C<MT::Image::check_upload()> and C<MT::App::validate_upload> to test 
+whether an uploaded file's content has a malicious payload.
+
+The data to inspect is specified by the function's hash argument with keys:
+
+=over 4
+
+=item * C<data>
+
+This key indicates the value is a scalar data string.
+
+=item * C<fh>
+
+This key indicates the value is a filehandle to the file to be tested.
+
+=item * C<path>
+
+This key specifies the absolute path to the file to be tested.
+
+=back
+
+The function returns true or false and dies on any errors.
 
 =head1 AUTHOR & COPYRIGHT
 
