@@ -7,7 +7,8 @@
 package MT::Auth::OpenID;
 use strict;
 
-use MT::Util qw( decode_url is_valid_email escape_unicode ts2epoch );
+use MT::Util
+  qw( decode_url is_valid_email escape_unicode ts2epoch expat_parser );
 use MT::I18N qw( encode_text );
 
 sub NS_OPENID_AX   {"http://openid.net/srv/ax/1.0"}
@@ -296,7 +297,7 @@ sub _get_nickname {
         my $name;
 
         require XML::XPath;
-        my $xml = XML::XPath->new( xml => $foaf );
+        my $xml = XML::XPath->new( xml => $foaf, parser => expat_parser(), );
         $xml->set_namespace( 'RDF',
                              'http://www.w3.org/1999/02/22-rdf-syntax-ns#' );
         $xml->set_namespace( 'FOAF', 'http://xmlns.com/foaf/0.1/' );
@@ -319,7 +320,9 @@ sub _get_nickname {
                 my $name;
 
                 require XML::XPath;
-                my $xml = XML::XPath->new( xml => $resp->content );
+                my $xml =
+                  XML::XPath->new( xml    => $resp->content,
+                                   parser => expat_parser() );
                 if ( my ($name_el) = $xml->findnodes('/feed/author/name') ) {
                     $name = $name_el->string_value;
                 }
@@ -419,9 +422,8 @@ sub _asset_from_url {
         unlink $local;
         return undef;
     }
-    
-    my $has_html = eval { MT::Image->has_html_signature( path => $local ) };
-    if ( $has_html || $@ ) {
+
+    if ( MT::Image->has_html_signature( path => $local ) ) {
         unlink $local;
         return undef;
     }
