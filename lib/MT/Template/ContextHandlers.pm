@@ -22181,14 +22181,14 @@ sub _hdlr_widget_set_name {
 
 ###########################################################################
 
-=head2 WidgetSetId
-    
-Used within a WidgetSetLoop context. This returns the ID number of the widget set.
+=head2 WidgetSetID
+
+Used within a WidgetSetLoop context. This returns the ID number of the widget
+set.
 
 =for tags widgets
 
 =cut
-
 
 sub _hdlr_widget_set_id {
     my ( $ctx, $args ) = @_;

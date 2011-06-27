@@ -7,7 +7,7 @@ use warnings;
 use lib 't/lib', 'lib', 'extlib';
 use MT::Test;
 
-use Test::More tests => 178;
+use Test::More tests => 197;
 
 use_ok('MT::Bootstrap');
 use_ok('MT::ErrorHandler');
@@ -24,24 +24,26 @@ use_ok('MT::Component');
 # All CMS modules
 use_ok('MT::App::CMS');
 use_ok('MT::CMS::AddressBook');
-use_ok('MT::CMS::Dashboard');
-use_ok('MT::CMS::Plugin');
 use_ok('MT::CMS::Asset');
-use_ok('MT::CMS::Entry');
-use_ok('MT::CMS::Search');
-use_ok('MT::CMS::Export');
-use_ok('MT::CMS::Tag');
 use_ok('MT::CMS::Blog');
-use_ok('MT::CMS::Folder');
-use_ok('MT::CMS::Template');
 use_ok('MT::CMS::Category');
-use_ok('MT::CMS::Import');
-use_ok('MT::CMS::Tools');
 use_ok('MT::CMS::Comment');
-use_ok('MT::CMS::Log');
-use_ok('MT::CMS::TrackBack');
 use_ok('MT::CMS::Common');
+use_ok('MT::CMS::Dashboard');
+use_ok('MT::CMS::Entry');
+use_ok('MT::CMS::Export');
+use_ok('MT::CMS::Folder');
+use_ok('MT::CMS::Import');
+use_ok('MT::CMS::Log');
 use_ok('MT::CMS::Page');
+use_ok('MT::CMS::Plugin');
+use_ok('MT::CMS::RptLog');
+use_ok('MT::CMS::Search');
+use_ok('MT::CMS::System');
+use_ok('MT::CMS::Tag');
+use_ok('MT::CMS::Template');
+use_ok('MT::CMS::Tools');
+use_ok('MT::CMS::TrackBack');
 use_ok('MT::CMS::User');
 
 # Supporting applications
@@ -58,6 +60,9 @@ use_ok('MT::App::Search::FreeText');
 use_ok('MT::App::Search::Legacy');
 use_ok('MT::App::Search::TagSearch');
 
+# Viewer app
+# use_ok('MT::App::Viewer');
+
 # Auth framework
 use_ok('MT::Auth');
 use_ok('MT::Auth::MT');
@@ -65,6 +70,11 @@ use_ok('MT::Auth::BasicAuth');
 use_ok('MT::Auth::LiveJournal');
 use_ok('MT::Auth::OpenID');
 use_ok('MT::Auth::TypeKey');
+use_ok('MT::Auth::AIM');
+use_ok('MT::Auth::GoogleOpenId');
+use_ok('MT::Auth::Hatena');
+use_ok('MT::Auth::WordPress');
+use_ok('MT::Auth::Yahoo');
 
 # MT::Objects
 use_ok('MT::Object');
@@ -79,8 +89,10 @@ use_ok('MT::Role');
 use_ok('MT::Association');
 use_ok('MT::Placement');
 use_ok('MT::Category');
+use_ok('MT::Folder');
 use_ok('MT::Comment');
 use_ok('MT::Entry');
+use_ok('MT::Page');
 use_ok('MT::FileInfo');
 use_ok('MT::Config');
 use_ok('MT::Asset');
@@ -109,6 +121,9 @@ use_ok('MT::DateTime');
 use_ok('MT::DefaultTemplates');
 use_ok('MT::FileMgr');
 use_ok('MT::FileMgr::Local');
+# use_ok('MT::FileMgr::DAV');
+# use_ok('MT::FileMgr::FTP');
+# use_ok('MT::FileMgr::SFTP');
 use_ok('MT::Image');
 use_ok('MT::ImportExport');
 use_ok('MT::Import');
@@ -121,13 +136,15 @@ use_ok('MT::Serialize');
 use_ok('MT::Memcached');
 use_ok('MT::PublishOption');
 use_ok('MT::Scorable');
+use_ok('MT::Revisable');
+use_ok('MT::Revisable::Local');
 
 use_ok('MT::Util');
 use_ok('MT::Util::Archive');
 use_ok('MT::Util::Archive::Tgz');
 use_ok('MT::Util::Archive::Zip');
 use_ok('MT::Util::Captcha');
-
+# Temporarily removed from prod builds
 # use_ok('MT::Util::LogProcessor');
 use_ok('MT::Util::PerformanceData');
 use_ok('MT::Util::ReqTimer');
@@ -147,6 +164,7 @@ use_ok('MT::L10N::es');
 use_ok('MT::L10N::fr');
 use_ok('MT::L10N::ja');
 use_ok('MT::L10N::nl');
+use_ok('MT::L10N::ru');
 
 # I18N modules
 use_ok('MT::I18N');
@@ -162,6 +180,7 @@ use_ok('MT::ObjectDriver::DDL::SQLite');
 use_ok('MT::ObjectDriver::DDL::mysql');
 use_ok('MT::ObjectDriver::Driver::DBI');
 use_ok('MT::ObjectDriver::Driver::Cache::RAM');
+use_ok('MT::ObjectDriver::Driver::CacheWrapper');
 use_ok('MT::ObjectDriver::Driver::DBD::Legacy');
 use_ok('MT::ObjectDriver::Driver::DBD::mysql');
 use_ok('MT::ObjectDriver::Driver::DBD::Pg');
@@ -178,6 +197,7 @@ use_ok('MT::Plugin::L10N');
 use_ok('MT::Task');
 use_ok('MT::TaskMgr');
 use_ok('MT::Template::Context');
+use_ok('MT::Template::Context::Search');
 use_ok('MT::Template::ContextHandlers');
 use_ok('MT::Upgrade');
 use_ok('MT::WeblogPublisher');
@@ -226,7 +246,14 @@ use_ok('MT::Compat::v3');
 # Meta support
 use_ok('MT::Meta');
 use_ok('MT::Meta::Proxy');
+use_ok('MT::Summary');
+use_ok('MT::Summary::Author');
+use_ok('MT::Summary::Entry');
+use_ok('MT::Summary::Proxy');
+use_ok('MT::Summary::Triggers');
 
 # Job worker
 use_ok('MT::Worker::Publish');
 use_ok('MT::Worker::Sync');
+use_ok('MT::Worker::Summarize');
+use_ok('MT::Worker::SummaryWatcher');

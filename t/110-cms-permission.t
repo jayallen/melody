@@ -20,11 +20,9 @@ my $mt = MT->instance;
 make_data();
 
 # Now, Ready to start test
-my $test_count = 132;
-$test_count += 4
-    if $mt->component('commercial');
-$test_count += 4
-    if $mt->component('enterprise');
+my $test_count = 128;
+$test_count += 4 if $mt->component('commercial');
+$test_count += 4 if $mt->component('enterprise');
 
 use Test::More;
 plan tests => $test_count;
@@ -392,39 +390,6 @@ $app = _run_app(
 $out = delete $app->{__test_output};
 ok( $out, "Update an page" );
 ok( $out =~ m/Permission denied/i, "Update an Page: result" );
-
-# Create a new Banlist
-# __mode=save&_type=banlist&&blog_id=1&ip=1.1.1.1
-$app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'banlist',
-        blog_id          => 1,
-        ip               => '1.1.1.1'
-    }
-);
-$out = delete $app->{__test_output};
-ok( $out, "Create a new banlist" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Banlist: result" );
-
-# Delete Banlist
-# __mode=delete&_type=banlist&id=1&blog_id=1
-$app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'banlist',
-        id               => 1,
-        blog_id          => 1
-    }
-);
-$out = delete $app->{__test_output};
-ok( $out, "Delete banlist" );
-ok( $out =~ m/Permission denied/i, "Delete banlist: result" );
 
 # Create a new Notification
 # __mode=save&_type=notification&&blog_id=1
@@ -1372,17 +1337,6 @@ sub make_data {
     $assoc->role_id( $editor_role->id );
     $assoc->type(1);
     $assoc->save();
-
-    ### IPBanList
-    require MT::IPBanList;
-    my $banlist = MT::IPBanList->new();
-    $banlist->set_values(
-        {   blog_id => 1,
-            ip      => '1.2.3.4',
-        }
-    );
-    $banlist->save()
-        or die "Couldn't save ipbanlist record: 1" . $banlist->errstr;
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 

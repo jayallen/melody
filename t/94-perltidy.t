@@ -28,4 +28,4 @@ Sub::Install::reinstall_sub( {
 
 use Test::PerlTidy;
 
-run_tests();
+run_tests( perltidyrc => './.perltidyrc' );

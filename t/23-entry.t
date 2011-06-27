@@ -5,7 +5,7 @@ use warnings;
 
 use lib 't/lib', 'extlib', 'lib', '../lib', '../extlib';
 
-use Test::More tests => 47;
+use Test::More tests => 48;
 
 use MT;
 use MT::Blog;
@@ -77,8 +77,11 @@ $place2->category_id( $cat2->id );
 $place2->is_primary(0);
 $place2->save or die "Couldn't save placement record: " . $place2->errstr;
 
+$entry->clear_cache();
+
 my $category = $entry->category;
-ok( $category, "Primary category " . $category->label . " exists" );
+ok( $category, "Primary category exists" );
+is( eval { $category->label }, 'foo', "Primary category value" );
 
 my @categories = $entry->categories;
 ok( @categories, "Multiple cateogires exist " );

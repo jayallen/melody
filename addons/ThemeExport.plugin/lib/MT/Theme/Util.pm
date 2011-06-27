@@ -40,7 +40,7 @@ It requires that you have been given an API Key by PicApp.
 
 =head1 VERSION CONTROL
 
-L<http://github.com/byrnereese/mt-plugin-theme-export
+L<http://github.com/byrnereese/mt-plugin-theme-export>
 
 =head1 AUTHORS and CREDITS
 

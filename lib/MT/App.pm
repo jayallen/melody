@@ -4223,6 +4223,8 @@ C<MT::Image::has_html_signature>) for HTML-ish content within the first 1K of
 the data. Image files (in particular) that contain embedded HTML or JavaScript 
 are a known vector for an IE 6 and 7 content-sniffing vulnerability.
 
+=back
+
 =head2 $app->uri_params(%param)
 
 A utility method that assembles the query portion of a URI, taking

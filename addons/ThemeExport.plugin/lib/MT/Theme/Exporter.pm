@@ -660,16 +660,14 @@ B<Options:>
 
 =over 4
 
-id key pack_name pack_description pack_version dryrun verbose
-logger app author_name author_link basedir zip
-
 =item C<id>
 
 The ID of the plugin created. 
 
 =item C<key>
 
-The MT::PluginData key for the plugin. This will also be used for the plugin's plugin envelope name.
+The MT::PluginData key for the plugin. This will also be used for the plugin's
+plugin envelope name.
 
 =item C<pack_name>
 
@@ -685,8 +683,8 @@ The version number of the plugin generated.
 
 =item C<dryrun>
 
-If set to 1 (true) then the export operation will not actually do anything, but will instead
-simply log what it would have done.
+If set to 1 (true) then the export operation will not actually do anything,
+but will instead simply log what it would have done.
 
 =item C<verbose> 
 
@@ -718,9 +716,10 @@ The target directory of the plugin generated.
 
 =item C<basedir>
 
-The directory name into which all plugin files will be placed. The absolute path of where the theme will
-be exported can be found by appending C<outdir> and C<basedir>. The default value of C<basedir> is the 
-key plus the version number.
+The directory name into which all plugin files will be placed. The absolute
+path of where the theme will be exported can be found by appending C<outdir>
+and C<basedir>. The default value of C<basedir> is the key plus the version
+number.
 
 =item C<zip>
 
@@ -740,7 +739,7 @@ This method will do nothing if the "dryrun" option has been selected.
 
 =head1 VERSION CONTROL
 
-L<http://github.com/byrnereese/mt-tool-exportts
+L<http://github.com/byrnereese/mt-tool-exportts>
 
 =head1 AUTHORS and CREDITS
 
