@@ -1,7 +1,7 @@
 <mt:if name="blog_id">
     <mt:var
         name="page_title"
-        value="<__trans phrase="Refresh Template Set">">
+        value="<__trans phrase="Refresh Theme">">
 <mt:else>
     <mt:var
         name="page_title"
@@ -61,7 +61,7 @@ TC.attachLoadEvent(init);
 
     <mt:setvarblock name="refresh_label">
         <mt:if name="blog_id">
-            <mt:loop name="template_set_loop"><mt:if name="selected"><__trans phrase="Refresh [_1] template set" params="<mt:var name="label" escape="html">"></mt:if></mt:loop>
+            <mt:loop name="template_set_loop"><mt:if name="selected"><__trans phrase="Refresh [_1] theme" params="<mt:var name="label" escape="html">"></mt:if></mt:loop>
         <mt:else>
             <__trans phrase="Refresh global templates">
         </mt:if>
@@ -80,11 +80,11 @@ TC.attachLoadEvent(init);
     </mtapp:setting>
 
     <mt:if name="template_set_count" gt="1">
-    <mt:setvarblock name="new_label"><__trans phrase="Apply a new template set"></mt:setvarblock>
-    <mt:setvarblock name="new_hint"><__trans phrase="Deletes all existing templates and install the selected template set."></mt:setvarblock>
+    <mt:setvarblock name="new_label"><__trans phrase="Apply a new theme"></mt:setvarblock>
+    <mt:setvarblock name="new_hint"><__trans phrase="Deletes all existing templates and install the selected theme."></mt:setvarblock>
     <mt:else>
     <mt:setvarblock name="new_label"><__trans phrase="Reset to factory defaults"></mt:setvarblock>
-    <mt:setvarblock name="new_hint"><__trans phrase="Deletes all existing templates and installs factory default template set."></mt:setvarblock>
+    <mt:setvarblock name="new_hint"><__trans phrase="Deletes all existing templates and installs factory default theme."></mt:setvarblock>
     </mt:if>
 
     <mtapp:setting
@@ -141,7 +141,7 @@ TC.attachLoadEvent(init);
     <div id="confirm-panel" class="hidden panel">
         <div id="confirm-refresh">
             <mt:if name="blog_id">
-                <p><__trans phrase="You have requested to <strong>refresh the current template set</strong>. This action will:"></p>
+                <p><__trans phrase="You have requested to <strong>refresh the current theme</strong>. This action will:"></p>
             <mt:else>
                 <p><__trans phrase="You have requested to <strong>refresh the global templates</strong>. This action will:"></p>
             </mt:if>
@@ -155,7 +155,7 @@ TC.attachLoadEvent(init);
 
         <div id="confirm-clean" class="hidden">
             <mt:if name="blog_id">
-                <p><__trans phrase="You have requested to <strong>apply a new template set</strong>. This action will:"></p>
+                <p><__trans phrase="You have requested to <strong>apply a new theme</strong>. This action will:"></p>
             <mt:else>
                 <p><__trans phrase="You have requested to <strong>reset to the default global templates</strong>. This action will:"></p>
             </mt:if>
@@ -164,7 +164,7 @@ TC.attachLoadEvent(init);
                 <li id="backups-message-clean"><__trans phrase="make backups of your templates that can be accessed through your backup filter"></li>
                 <mt:if name="blog_id">
                     <li><__trans phrase="delete all of the templates in your blog"></li>
-                    <li><__trans phrase="install new templates from the selected template set"></li>
+                    <li><__trans phrase="install new templates from the selected theme"></li>
                 <mt:else>
                     <li><__trans phrase="delete all of your global templates"></li>
                     <li><__trans phrase="install new templates from the default global templates"></li>
