@@ -54,7 +54,7 @@ BEGIN {
         $PRODUCT_NAME    = 'Melody';
         $PRODUCT_CODE    = 'OM';
         $VERSION_ID      = '1.0.1';
-        $PORTAL_URL      = 'http://openmelody.org';
+        $PORTAL_URL = 'http://openmelody.org';
     } ## end if ( '__MAKE_ME__' eq ...)
     else {
 
@@ -1007,12 +1007,14 @@ sub init_config {
 
 
     if ( my @local_lib = $cfg->PERL5LIB ) {
-        eval sprintf "use local::lib qw( %s )", join(' ', @local_lib);
-        $@ and return $mt->errtrans(
-              'PERL5LIB: Error loading Perl local libraries: [_1]. '
-            . 'Please re-check your PERL5LIB configuration value: [_2]', 
-            $@, join( ', ', @local_lib )
-        );
+        eval sprintf "use local::lib qw( %s )", join( ' ', @local_lib );
+        $@ and return
+          $mt->errtrans(
+                'PERL5LIB: Error loading Perl local libraries: [_1]. '
+                  . 'Please re-check your PERL5LIB configuration value: [_2]',
+                $@,
+                join( ', ', @local_lib )
+          );
     }
 
     return $mt->trans_error("Bad ObjectDriver config")

@@ -5,12 +5,13 @@ use warnings;
 use Carp qw( croak );
 use MT::Util
   qw( relative_date      offset_time    offset_time_list    epoch2ts
-      ts2epoch format_ts encode_html    decode_html         dirify );
+  ts2epoch format_ts encode_html    decode_html         dirify );
 use ConfigAssistant::Util
   qw( find_theme_plugin     find_template_def   find_option_def
-      find_option_plugin    process_file_upload 
-      plugin_static_web_path plugin_static_file_path );
+  find_option_plugin    process_file_upload
+  plugin_static_web_path plugin_static_file_path );
 use JSON;
+
 # use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
 our $logger;
 
@@ -21,12 +22,12 @@ sub tag_plugin_static_web_path {
     if ( !$obj ) {
         return
           $ctx->error(
-            MT->translate(
-                  "The plugin you specified '[_2]' in '[_1]' "
-                . "could not be found.",
-                $ctx->stash('tag'),
-                $sig
-            )
+                   MT->translate(
+                                  "The plugin you specified '[_2]' in '[_1]' "
+                                    . "could not be found.",
+                                  $ctx->stash('tag'),
+                                  $sig
+                   )
           );
     }
     elsif ( $obj->registry('static_version') ) {
@@ -37,13 +38,13 @@ sub tag_plugin_static_web_path {
         # TODO - perhaps this should default to: mt-static/plugins/$sig?
         return
           $ctx->error(
-            MT->translate(
-                  "The plugin you specified '[_2]' in '[_1]' has not"
-                . "registered a static directory. Please use "
-                . "<mt:StaticWebPath> instead.",
-                $ctx->stash('tag'),
-                $sig
-            )
+               MT->translate(
+                           "The plugin you specified '[_2]' in '[_1]' has not"
+                             . "registered a static directory. Please use "
+                             . "<mt:StaticWebPath> instead.",
+                           $ctx->stash('tag'),
+                           $sig
+               )
           );
     }
 } ## end sub tag_plugin_static_web_path
@@ -55,12 +56,12 @@ sub tag_plugin_static_file_path {
     if ( !$obj ) {
         return
           $ctx->error(
-            MT->translate(
-                 "The plugin you specified '[_2]' in '[_1]' "
-                . "could not be found.",
-                $ctx->stash('tag'),
-                $sig
-            )
+                   MT->translate(
+                                  "The plugin you specified '[_2]' in '[_1]' "
+                                    . "could not be found.",
+                                  $ctx->stash('tag'),
+                                  $sig
+                   )
           );
     }
     elsif ( $obj->registry('static_version') ) {
@@ -69,12 +70,12 @@ sub tag_plugin_static_file_path {
     else {
         return
           $ctx->error(
-            MT->translate(
-                  "The plugin you specified in '[_1]' has not "
-                . "registered a static directory. Please use "
-                . "<mt:StaticFilePath> instead.",
-                $_[0]->stash('tag')
-            )
+                  MT->translate(
+                              "The plugin you specified in '[_1]' has not "
+                                . "registered a static directory. Please use "
+                                . "<mt:StaticFilePath> instead.",
+                              $_[0]->stash('tag')
+                  )
           );
     }
 } ## end sub tag_plugin_static_file_path
@@ -364,25 +365,29 @@ sub save_config {
                 if ( $result->{status} == ConfigAssistant::Util::ERROR() ) {
                     return $app->error(
                               "Error uploading file: " . $result->{message} );
-                } elsif ( $result->{status} == ConfigAssistant::Util::NO_UPLOAD ) {
-                    if ($param->{$var.'-clear'} && $data->{$var}) {
+                }
+                elsif (
+                       $result->{status} == ConfigAssistant::Util::NO_UPLOAD )
+                {
+                    if ( $param->{ $var . '-clear' } && $data->{$var} ) {
                         my $old = MT->model('asset')->load( $data->{$var} );
                         $old->remove if $old;
                         $param->{$var} = undef;
                     }
                     else {
-                        
+
                         # The user hasn't changed the file--keep it.
                         $param->{$var} = $data->{$var};
                     }
-                } else {
+                }
+                else {
                     if ( $data->{$var} ) {
                         my $old = MT->model('asset')->load( $data->{$var} );
                         $old->remove if $old;
                     }
                     $param->{$var} = $result->{asset}->{id};
                 }
-            }
+            } ## end if ( $opt->{type} eq 'file')
             my $old = $data->{$var};
             my $new = $param->{$var};
             my $has_changed 
@@ -391,7 +396,7 @@ sub save_config {
               || ( defined $new and $old ne $new );
             ###l4p $logger->debug('$has_changed: '.$has_changed);
 
-            # If the field data has changed, and if the field uses the 
+            # If the field data has changed, and if the field uses the
             # "republish" key, we want to republish the specified templates.
             # Add the specified templates to $repub_queue so that they can
             # be republished later.
@@ -403,6 +408,7 @@ sub save_config {
             $data->{$var} = $new ? $new : undef;
             if ($has_changed) {
                 $opt->{'basename'} = $var;
+
                 #MT->log("Triggering: " . 'options_change.option.' . $var );
                 $app->run_callbacks( 'options_change.option.' . $var,
                                      $app, $opt, $old, $new );
@@ -417,49 +423,51 @@ sub save_config {
             $app->run_callbacks( 'options_change.plugin.' . $plugin->id,
                                  $app, $plugin );
         }
-        
+
         # Index templates that have been flagged should be republished.
         use MT::WeblogPublisher;
         foreach ( keys %$repub_queue ) {
             my $tmpl = MT->model('template')
               ->load( { blog_id => $blog_id, identifier => $_, } );
 
-            if (!$tmpl) {
+            if ( !$tmpl ) {
                 MT->log( {
                        blog_id => $blog_id,
-                       level   => '2', # Warning
+                       level   => '2',        # Warning
                        message => "Config Assistant could not find a "
-                                  . "template with the identifier " . $_,
-                     }
+                         . "template with the identifier "
+                         . $_,
+                    }
                 );
                 next;
             }
 
-            my $result = $app->rebuild_indexes(
-                                   Blog     => $app->blog,
-                                   Template => $tmpl,
-                                   Force    => 1,
-            );
+            my $result =
+              $app->rebuild_indexes(
+                                     Blog     => $app->blog,
+                                     Template => $tmpl,
+                                     Force    => 1,
+              );
 
             # Report on the success/failure of the template republishing.
-            my ($message, $level);
+            my ( $message, $level );
             if ($result) {
-                $message = "Config Assistant: Republishing template " 
-                           . $tmpl->name;
-                $level   = '1'; # Info
+                $message
+                  = "Config Assistant: Republishing template " . $tmpl->name;
+                $level = '1';    # Info
             }
             else {
-                $message = "Config Assistant could not republish template " 
-                           . $tmpl->name;
-                $level   = '4'; # Error
+                $message = "Config Assistant could not republish template "
+                  . $tmpl->name;
+                $level = '4';    # Error
             }
             MT->log( {
-                   blog_id => $blog_id,
-                   level   => $level,
-                   message => $message,
-                 }
+                       blog_id => $blog_id,
+                       level   => $level,
+                       message => $message,
+                     }
             );
-        }
+        } ## end foreach ( keys %$repub_queue)
         $pdata->data($data);
         MT->request( 'plugin_config.' . $plugin->id, undef );
         $pdata->save() or die $pdata->errstr;
@@ -500,14 +508,19 @@ sub type_file {
               . "\">view</a> | <a href=\"javascript:void(0)\" class=\"remove\">remove</a></p>";
         }
         else {
-            $html .= "<p>Selected asset could not be found. <a href=\"javascript:void(0)\" class=\"remove\">reset</a></p>";
+            $html
+              .= "<p>Selected asset could not be found. <a href=\"javascript:void(0)\" class=\"remove\">reset</a></p>";
         }
     }
-    $html .= "      <input type=\"file\" name=\"$field_id\" class=\"full-width\" />\n" .
-             "      <input type=\"hidden\" name=\"$field_id-clear\" value=\"0\" class=\"clear-file\" />\n";
+    $html
+      .= "      <input type=\"file\" name=\"$field_id\" class=\"full-width\" />\n"
+      . "      <input type=\"hidden\" name=\"$field_id-clear\" value=\"0\" class=\"clear-file\" />\n";
 
     $html .= "<script type=\"text/javascript\">\n";
-    $html .= "  jQuery('#field-".$field_id." a.remove').click( handle_remove_file );\n";
+    $html
+      .= "  jQuery('#field-"
+      . $field_id
+      . " a.remove').click( handle_remove_file );\n";
     $html .= "</script>\n";
 
     return $html;
@@ -668,19 +681,19 @@ sub type_entry {
     my ( $ctx, $field_id, $field, $value ) = @_;
     my $out;
     my $obj_class = $ctx->stash('object_class') || 'entry';
-    my ($obj, $obj_name, $obj_id);
-    
-    # The $value is the object ID. Only if $value exists should we try to 
+    my ( $obj, $obj_name, $obj_id );
+
+    # The $value is the object ID. Only if $value exists should we try to
     # load the object. Otherwise, the most recent entry/page is loaded
     # and the $obj_name is incorrectly populated with the most recent object
     # title. This way, $obj_name is blank if there is no $value, which is
     # clearer to the user.
     if ($value) {
-        $obj       = MT->model($obj_class)->load($value);
-        $obj_name  = ( $obj ? $obj->title : '' ) || '';
-        $obj_id    = ( $obj ? $obj->id : 0 ) || '';
+        $obj      = MT->model($obj_class)->load($value);
+        $obj_name = ( $obj ? $obj->title : '' ) || '';
+        $obj_id   = ( $obj ? $obj->id : 0 ) || '';
     }
-    my $blog_id   = $field->{all_blogs} ? 0 : $app->blog->id;
+    my $blog_id = $field->{all_blogs} ? 0 : $app->blog->id;
     unless ( $ctx->var('entry_chooser_js') ) {
         $out .= <<EOH;
     <script type="text/javascript">
@@ -696,10 +709,10 @@ sub type_entry {
 EOH
         $ctx->var( 'entry_chooser_js', 1 );
     }
-    my $class = MT->model($obj_class);
-    my $label = $class->class_label;
+    my $class    = MT->model($obj_class);
+    my $label    = $class->class_label;
     my $label_lc = lc($label);
-    $ctx->var( 'entry_class_label', $label );
+    $ctx->var( 'entry_class_label',  $label );
     $ctx->var( 'entry_class_labelp', $class->class_label_plural );
     $out .= <<EOH;
 <div class="pkg">
@@ -712,7 +725,7 @@ EOH
   </div>
 </div>
 EOH
-    $ctx->stash('object_class','');
+    $ctx->stash( 'object_class', '' );
     return $out;
 } ## end sub type_entry
 
@@ -729,8 +742,8 @@ sub type_entry_or_page {
     # title. This way, $obj_name is blank if there is no $value, which is
     # clearer to the user.
     if ($value) {
-        $obj = MT->model($obj_class)->load($value);
-        $obj_name = ( $obj ? $obj->title : '' ) || '';
+        $obj       = MT->model($obj_class)->load($value);
+        $obj_name  = ( $obj ? $obj->title : '' ) || '';
         $obj_class = $obj->class;
     }
     my $blog_id = $field->{all_blogs} ? 0 : $app->blog->id;
@@ -750,9 +763,9 @@ EOH
         $ctx->var( 'entry_chooser_js', 1 );
     }
     my $class_label = $obj->class_label;
-    my $preview = $value ? "$obj_name ( $class_label )" : "";
-    my $class = MT->model($obj_class);
-    my $label = 'Entry or Page';
+    my $preview     = $value ? "$obj_name ( $class_label )" : "";
+    my $class       = MT->model($obj_class);
+    my $label       = 'Entry or Page';
     $ctx->var( 'entry_class_label', $label );
     $out .= <<EOH;
     <div class="pkg">
@@ -768,7 +781,7 @@ EOH
     # $ctx->stash('object_class','');
     return $out;
 
-}
+} ## end sub type_entry_or_page
 
 
 sub type_tagged_entry {
@@ -1177,7 +1190,7 @@ sub _hdlr_field_category_list {
     my ( $ctx, $args, $cond ) = @_;
     my $field = $ctx->stash('field') or return _no_field($ctx);
     my $value = _get_field_value($ctx);
-    my @ids = ref($value) eq 'ARRAY' ? @$value : ($value);
+    my @ids   = ref($value) eq 'ARRAY' ? @$value : ($value);
     my $class = $ctx->stash('obj_class');
 
     my @categories = MT->model($class)->load( { id => \@ids } );
@@ -1267,9 +1280,9 @@ sub _hdlr_field_text_group {
         my $vars  = $ctx->{__stash}{vars};
         my $count = 0;
         foreach (@$list) {
-            local $vars->{'label'} = $_->{'label'};
-            local $vars->{'__first__'}  = ( $count++ == 0 );
-            local $vars->{'__last__'}   = ( $count == @$list );
+            local $vars->{'label'}     = $_->{'label'};
+            local $vars->{'__first__'} = ( $count++ == 0 );
+            local $vars->{'__last__'}  = ( $count == @$list );
             defined( $out .= $ctx->slurp( $args, $cond ) ) or return;
         }
         return $out;
@@ -1497,26 +1510,28 @@ sub plugin_options {
 } ## end sub plugin_options
 
 sub entry_search_api_prep {
-    return _search_api_prep('entry',@_);
+    return _search_api_prep( 'entry', @_ );
 }
+
 sub page_search_api_prep {
-    return _search_api_prep('page',@_);
+    return _search_api_prep( 'page', @_ );
 }
+
 sub _search_api_prep {
     my ( $type, $terms, $args, $blog_id ) = @_;
     my $app = MT->instance;
     my $q = $app->can('query') ? $app->query : $app->param;
-    $terms->{blog_id}  = $blog_id if $blog_id;
+    $terms->{blog_id} = $blog_id if $blog_id;
     if ( $type ne 'template' ) {
-        my $search_api     = $app->registry("search_apis");
-        my $api            = $search_api->{$type};
-        my $date_col       = $api->{date_column} || 'created_on';
+        my $search_api = $app->registry("search_apis");
+        my $api        = $search_api->{$type};
+        my $date_col   = $api->{date_column} || 'created_on';
         $args->{sort}      = $date_col;
         $args->{direction} = 'descend';
     }
     return unless $app->mode eq 'ca_config_entry';
-    $terms->{status}   = $q->param('status') if ( $q->param('status') );
-    $terms->{class}    = $app->param('class');
+    $terms->{status} = $q->param('status') if ( $q->param('status') );
+    $terms->{class} = $app->param('class');
 }
 
 #sub entry_search_api_prep {
@@ -1535,9 +1550,9 @@ sub list_entry_mini {
       or return "Invalid request: unknown class $obj_type";
 
     my $terms;
-    $terms->{class} = $obj_type;
+    $terms->{class}   = $obj_type;
     $terms->{blog_id} = $blog_id if $blog_id;
-    $terms->{status} = 2 if $obj_type eq 'entry' || $obj_type eq 'page';
+    $terms->{status}  = 2 if $obj_type eq 'entry' || $obj_type eq 'page';
 
     my %args = ( sort => 'authored_on', direction => 'descend', );
 
@@ -1545,19 +1560,19 @@ sub list_entry_mini {
       or die "OMG NO COMPONENT!?!";
 
     my $tmpl = $plugin->load_tmpl('entry_list.mtml');
-    $tmpl->param('entry_class_labelp', $pkg->class_label_plural);
-    $tmpl->param('entry_class_label', $pkg->class_label);
-    $tmpl->param('obj_type', $obj_type);
+    $tmpl->param( 'entry_class_labelp', $pkg->class_label_plural );
+    $tmpl->param( 'entry_class_label',  $pkg->class_label );
+    $tmpl->param( 'obj_type',           $obj_type );
     return $app->listing( {
            type     => $obj_type,
            template => $tmpl,
            params   => {
-                       panel_searchable   => 1,
-                       edit_blog_id       => $blog_id,
-                       edit_field         => $q->param('edit_field'),
-                       search             => $q->param('search'),
-                       blog_id            => $blog_id,
-                       class              => $obj_type,
+                       panel_searchable => 1,
+                       edit_blog_id     => $blog_id,
+                       edit_field       => $q->param('edit_field'),
+                       search           => $q->param('search'),
+                       blog_id          => $blog_id,
+                       class            => $obj_type,
            },
            code => sub {
                my ( $obj, $row ) = @_;
@@ -1619,10 +1634,7 @@ sub list_entry_or_page {
     my $type     = 'entry';
     my $pkg      = $app->model($type) or return "Invalid request.";
 
-    my %terms = (
-        status => '2',
-        class  => '*',
-    );
+    my %terms = ( status => '2', class => '*', );
 
     my @blog_ids;
     if ( $blog_ids == 'all' ) {
@@ -1636,78 +1648,75 @@ sub list_entry_or_page {
         $terms{blog_id} = [@blog_ids];
     }
 
-    my %args = (
-        sort      => 'authored_on',
-        direction => 'descend',
-    );
+    my %args = ( sort => 'authored_on', direction => 'descend', );
 
     my $plugin = MT->component('ConfigAssistant')
       or die "OMG NO COMPONENT!?!";
-    my $tmpl   = $plugin->load_tmpl('entry_or_page_list.mtml');
+    my $tmpl = $plugin->load_tmpl('entry_or_page_list.mtml');
     $tmpl->param( 'type', $type );
 
-    return $app->listing(
-        {   type     => 'entry',
-            template => $tmpl,
-            params   => {
-                panel_searchable => 1,
-                edit_blog_id     => $blog_ids,
-                edit_field       => $app->param('edit_field'),
-                search           => $app->param('search'),
-                blog_id          => $blog_ids,
-            },
-            code => sub {
-                my ( $obj, $row ) = @_;
-                $row->{ 'status_'
-                        . lc MT::Entry::status_text( $obj->status ) } = 1;
-                $row->{entry_permalink} = $obj->permalink
-                    if $obj->status == MT::Entry->RELEASE();
-                if ( my $ts = $obj->authored_on ) {
-                    my $date_format = MT::App::CMS->LISTING_DATE_FORMAT();
-                    my $datetime_format
-                        = MT::App::CMS->LISTING_DATETIME_FORMAT();
-                    $row->{created_on_formatted}
-                        = format_ts( $date_format, $ts, $obj->blog,
+    return $app->listing( {
+           type     => 'entry',
+           template => $tmpl,
+           params   => {
+                       panel_searchable => 1,
+                       edit_blog_id     => $blog_ids,
+                       edit_field       => $app->param('edit_field'),
+                       search           => $app->param('search'),
+                       blog_id          => $blog_ids,
+           },
+           code => sub {
+               my ( $obj, $row ) = @_;
+               $row->{ 'status_' . lc MT::Entry::status_text( $obj->status ) }
+                 = 1;
+               $row->{entry_permalink} = $obj->permalink
+                 if $obj->status == MT::Entry->RELEASE();
+               if ( my $ts = $obj->authored_on ) {
+                   my $date_format = MT::App::CMS->LISTING_DATE_FORMAT();
+                   my $datetime_format
+                     = MT::App::CMS->LISTING_DATETIME_FORMAT();
+                   $row->{created_on_formatted}
+                     = format_ts( $date_format, $ts, $obj->blog,
                         $app->user ? $app->user->preferred_language : undef );
-                    $row->{created_on_time_formatted}
-                        = format_ts( $datetime_format, $ts, $obj->blog,
+                   $row->{created_on_time_formatted}
+                     = format_ts( $datetime_format, $ts, $obj->blog,
                         $app->user ? $app->user->preferred_language : undef );
-                    $row->{created_on_relative}
-                        = relative_date( $ts, time, $obj->blog );
-                    $row->{kind} = ucfirst( $obj->class );
-                }
-                return $row;
-            },
-            terms => \%terms,
-            args  => \%args,
-            limit => 10,
+                   $row->{created_on_relative}
+                     = relative_date( $ts, time, $obj->blog );
+                   $row->{kind} = ucfirst( $obj->class );
+               }
+               return $row;
+           },
+           terms => \%terms,
+           args  => \%args,
+           limit => 10,
         }
     );
-}
+} ## end sub list_entry_or_page
 
 sub select_entry_or_page {
     my $app = shift;
 
-    my $entry_id = $app->param('id')
-        or return $app->errtrans('No id');
+    my $entry_id = $app->param('id') or return $app->errtrans('No id');
     MT->log('boo');
     my $entry = MT->model('entry')->load($entry_id)
-        or return $app->errtrans( 'No entry or page #[_1]', $entry_id );
+      or return $app->errtrans( 'No entry or page #[_1]', $entry_id );
     my $edit_field = $app->param('edit_field')
-        or return $app->errtrans('No edit_field');
+      or return $app->errtrans('No edit_field');
 
     my $plugin = MT->component('ConfigAssistant')
-        or die "OMG NO COMPONENT!?!";
-    my $tmpl   = $plugin->load_tmpl(
-        'select_entry.mtml',
-        {   entry_id    => $entry->id,
-            entry_title => $entry->title,
-            entry_class => $entry->class_label,
-            edit_field  => $edit_field,
-        }
+      or die "OMG NO COMPONENT!?!";
+    my $tmpl = $plugin->load_tmpl(
+                                   'select_entry.mtml',
+                                   {
+                                      entry_id    => $entry->id,
+                                      entry_title => $entry->title,
+                                      entry_class => $entry->class_label,
+                                      edit_field  => $edit_field,
+                                   }
     );
     return $tmpl;
-}
+} ## end sub select_entry_or_page
 
 
 sub xfrm_cfg_plugin_param {

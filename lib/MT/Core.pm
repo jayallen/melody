@@ -314,12 +314,13 @@ BEGIN {
             'EnableArchivePaths' => { default => 0, },
             'SearchTemplatePath' =>
               { default => 'search_templates', path => 1, },
+
             # The following three are aliased, with the latter two being
             # deprecated in favor of the first.
             # LocalLib is included for people upgrading to Melody from MT 5.1+
-            'PERL5LIB'             => { path => 1, type => 'ARRAY' },
-            'PerlLocalLibPath'     => { alias => 'PERL5LIB' },  # Deprecated.
-            'LocalLib'             => { alias => 'PERL5LIB' },  # Deprecated.
+            'PERL5LIB'         => { path  => 1, type         => 'ARRAY' },
+            'PerlLocalLibPath' => { alias => 'PERL5LIB' }, # Deprecated.
+            'LocalLib'             => { alias   => 'PERL5LIB' }, # Deprecated.
             'SupportDirectoryPath' => { default => '' },
             'SupportDirectoryURL'  => { default => '' },
             'ObjectDriver'         => undef,
@@ -328,20 +329,20 @@ BEGIN {
             'DisableObjectCache'   => { default => 0, },
             'AllowedTextFilters'   => undef,
             'Serializer'           => { default => 'MT', },
-            'SendMailPath'         => { default => '/usr/lib/sendmail', },
-            'RsyncPath'            => undef,
-            'TimeOffset'           => { default => 0, },
-            'WSSETimeout'          => { default => 120, },
-            'StaticWebPath'        => { default => '', },
-            'StaticFilePath'       => undef,
-            'CGIPath'              => { default => '/cgi-bin/', },
-            'AdminCGIPath'         => undef,
-            'CookieDomain'         => undef,
-            'CookiePath'           => undef,
-            'MailEncoding'         => { default => 'ISO-8859-1', },
-            'MailTransfer'         => { default => 'sendmail' },
-            'SMTPServer'           => { default => 'localhost', },
-            'DebugEmailAddress'    => undef,
+            'SendMailPath'      => { default => '/usr/lib/sendmail', },
+            'RsyncPath'         => undef,
+            'TimeOffset'        => { default => 0, },
+            'WSSETimeout'       => { default => 120, },
+            'StaticWebPath'     => { default => '', },
+            'StaticFilePath'    => undef,
+            'CGIPath'           => { default => '/cgi-bin/', },
+            'AdminCGIPath'      => undef,
+            'CookieDomain'      => undef,
+            'CookiePath'        => undef,
+            'MailEncoding'      => { default => 'ISO-8859-1', },
+            'MailTransfer'      => { default => 'sendmail' },
+            'SMTPServer'        => { default => 'localhost', },
+            'DebugEmailAddress' => undef,
             'WeblogsPingURL' => { default => 'http://rpc.weblogs.com/RPC2', },
             'BlogsPingURL'   => { default => 'http://ping.blo.gs/', },
             'MTPingURL' =>
@@ -554,7 +555,7 @@ BEGIN {
             'SingleCommunity'      => { default => 1 },
             'DefaultTemplateSet'   => { default => 'DePoClean_theme' },
 
-            'AssetFileTypes' => { type => 'HASH' },
+            'AssetFileTypes'      => { type => 'HASH' },
             'AssetFileExtensions' => {
                                    type    => 'ARRAY',
                                    default => undef,

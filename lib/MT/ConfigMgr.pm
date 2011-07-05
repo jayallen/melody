@@ -34,8 +34,7 @@ sub define {
     my $mgr = shift;
     my ($vars);
 
-    if (    ref $_[0]
-        and grep { ref $_[0] eq $_ } qw( ARRAY HASH )) {
+    if ( ref $_[0] and grep { ref $_[0] eq $_ } qw( ARRAY HASH ) ) {
         $vars = shift;
     }
     else {
@@ -112,15 +111,16 @@ sub default {
     #       }
     #
     if ( 'ARRAY' eq $type ) {
-        $def = ! defined $def   ? []        # Now @$default works!
-             : ! ref $def       ? [ $def ]  # 1 element defined as scalar
-                                : $def      # No-op, fallback to self
+        $def = !defined $def
+          ? []    # Now @$default works!
+          : !ref $def ? [$def]    # 1 element defined as scalar
+          : $def                  # No-op, fallback to self
     }
     elsif ( 'HASH' eq $type ) {
-        $def = ! defined $def   ? {}    # Now %$default works
-                                            # Data folding: String to hashref
-             : ! ref $def       ? $mgr->_parse_stringy_hash($def)
-                                : $def;
+        $def = !defined $def
+          ? {}                    # Now %$default works
+                                  # Data folding: String to hashref
+          : !ref $def ? $mgr->_parse_stringy_hash($def) : $def;
     }
 
     # $ENV{CONFIGMGRDEBUG}
@@ -132,7 +132,7 @@ sub default {
     # Can be a scalar (either defined or not),
     # an array ref or a hash ref
     return $def;
-}
+} ## end sub default
 
 sub is_path {
     my $mgr = shift;
@@ -157,7 +157,8 @@ sub get_internal {
     if ( defined $alias ) {
         if ( $max_depth < $depth ) {
             die MT->translate(
-                'Alias for [_1] is looping in the configuration.', $alias );
+                            'Alias for [_1] is looping in the configuration.',
+                            $alias );
         }
         local $depth = $depth + 1;
         return $mgr->get($alias);
@@ -179,7 +180,7 @@ sub get_internal {
     $val = $val->() if ref $val eq 'CODE';
 
     return first { defined $_ }
-            ( $val, $dbval, ( my $default = $mgr->default($var) ));
+    ( $val, $dbval, ( my $default = $mgr->default($var) ) );
 
 } ## end sub get_internal
 
@@ -229,18 +230,19 @@ sub set {
 }
 
 sub set_internal {
-    my $mgr                     = shift;
+    my $mgr = shift;
     my ( $var, $val, $db_flag ) = @_;
-    my $set                     = $db_flag ? '__dbvar' : '__var';
-    $var                        = lc $var;
-    my $alias                   = $mgr->{__settings}{$var}{alias};
+    my $set = $db_flag ? '__dbvar' : '__var';
+    $var = lc $var;
+    my $alias = $mgr->{__settings}{$var}{alias};
 
     $mgr->set_dirty() if defined($db_flag) && $db_flag;
 
     if ( defined $alias ) {
         if ( $max_depth < $depth ) {
             die MT->translate(
-                'Alias for [_1] is looping in the configuration.', $alias );
+                            'Alias for [_1] is looping in the configuration.',
+                            $alias );
         }
         local $depth = $depth + 1;
         return $mgr->set( $alias, $val, $db_flag );
@@ -268,7 +270,7 @@ sub set_internal {
             push @{ $mgr->{$set}{$var} }, $val if defined $val;
         }
         return $mgr->{$set}{$var};
-    }
+    } ## end if ( $type eq 'ARRAY' )
     elsif ( $type eq 'HASH' ) {
         my $hash = $mgr->{$set}{$var};
         $hash = $mgr->default($var) unless defined $hash;
@@ -343,7 +345,7 @@ sub save_config {
             my $h = $settings->{$_};
             foreach my $k ( keys %$h ) {
                 $data
-                  .= $mgr->{__settings}{$_}{key} . ' '
+                  .= $mgr->{__settings}{$_}{key} . ' ' 
                   . $k . '='
                   . $h->{$k} . "\n";
             }
@@ -369,10 +371,9 @@ sub save_config {
              && ( ( $config->data || '' ) =~ m/^schemaversion/im ) )
         {
             require Carp;
-            MT->log(
-                "Caught attempt to clear SchemaVersion setting. "
-                ."New config settings were:\n$data ".longmess()
-            );
+            MT->log(   "Caught attempt to clear SchemaVersion setting. "
+                     . "New config settings were:\n$data "
+                     . longmess() );
             return;
         }
     }
@@ -421,12 +422,13 @@ sub read_config_file {
         $val =~ s/\s*$// if defined($val);
         next unless $var && defined($val);
         $mgr->set( $var, $val );
-        my $full = $mgr->{__var}{lc $var};
+        my $full = $mgr->{__var}{ lc $var };
+
         # $ENV{CONFIGMGRDEBUG}
         #     and diag ''.((caller(0))[3])
         #                .": Called set() with $var and $val. Current: "
         #                .( ref $full ? Dumper($full) : $full);
-    }
+    } ## end while (<FH>)
     close FH;
     1;
 } ## end sub read_config_file
@@ -458,7 +460,7 @@ sub read_config_db {
 } ## end sub read_config_db
 
 sub _parse_stringy_hash {
-    my $mgr   = shift;
+    my $mgr = shift;
     my ($def) = @_;
     ( my ($key), my ($val) ) = split( /=/, $def );
     return { $key => $val };

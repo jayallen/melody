@@ -1,7 +1,7 @@
 package Test::Output::Tie;
 use vars qw($VERSION);
 
-$VERSION='0.14';
+$VERSION = '0.14';
 
 use strict;
 use warnings;
@@ -29,11 +29,11 @@ The constructor for the class.
 =cut
 
 sub TIEHANDLE {
-  my $class = shift;
-  my $scalar = '';
-  my $obj = shift || \$scalar; 
+    my $class  = shift;
+    my $scalar = '';
+    my $obj    = shift || \$scalar;
 
-  bless( $obj, $class);
+    bless( $obj, $class );
 }
 
 =item PRINT
@@ -44,7 +44,7 @@ This method is called each time STDERR or STDOUT are printed to.
 
 sub PRINT {
     my $self = shift;
-    $$self .= join('', @_);
+    $$self .= join( '', @_ );
 }
 
 =item PRINTF
@@ -63,13 +63,13 @@ sub PRINTF {
 
 =cut
 
-sub FILENO {}
+sub FILENO { }
 
 =item BINMODE
 
 =cut
 
-sub BINMODE {}
+sub BINMODE { }
 
 =item read
 

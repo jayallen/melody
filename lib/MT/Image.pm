@@ -94,30 +94,28 @@ sub check_upload {
 
     if ( $ext =~ m/(jpe?g|png|gif|bmp|tiff?|ico)/i ) {
 
-        my %sig_args = $fh      ? ( fh   => $fh )
-                     : $local   ? ( path => $local )
-                                : ();
-        die 'No filehandle or path provided'
-            unless keys %sig_args;
+        my %sig_args = $fh ? ( fh => $fh ) : $local ? ( path => $local ) : ();
+        die 'No filehandle or path provided' unless keys %sig_args;
 
-        my $has_html = $class->has_html_signature( %sig_args );
-        $has_html and return $class->errtrans( "Invalid upload file" );
+        my $has_html = $class->has_html_signature(%sig_args);
+        $has_html and return $class->errtrans("Invalid upload file");
 
         unless ( defined($has_html) ) {
-            return $class->errtrans( 'Error reading image [_1]: [_2]',
-                                        $local_base, $class->errstr);
+            return
+              $class->errtrans( 'Error reading image [_1]: [_2]',
+                                $local_base, $class->errstr );
         }
-    } ## end if ( $ext =~ m/(jpe?g|png|gif|bmp|tiff?|ico)/i)
+    }
 
     ## Use Image::Size to check if the uploaded file is an image, and if so,
     ## record additional image info (width, height). We first rewind the
     ## filehandle $fh, then pass it in to imgsize.
     seek $fh, 0, 0;
     eval { require Image::Size; };
-    $@ and return $class->errtrans(
-       "Perl module Image::Size is required to determine "
-         . "width and height of uploaded images."
-    );
+    $@
+      and return $class->errtrans(
+                           "Perl module Image::Size is required to determine "
+                             . "width and height of uploaded images." );
 
     my ( $w, $h, $id ) = Image::Size::imgsize($fh);
 
@@ -177,13 +175,13 @@ sub check_upload {
 } ## end sub check_upload
 
 sub has_html_signature {
-    my $class              = shift;
-    my %args               = @_;
-    my ($fh, $data, $path) = @args{'fh','data','path'};
+    my $class = shift;
+    my %args  = @_;
+    my ( $fh, $data, $path ) = @args{ 'fh', 'data', 'path' };
 
     unless ( $data || $fh || $path ) {
         return $class->errtrans(
-            "No valid arguments passed to MT::Image::has_html_signature");
+                "No valid arguments passed to MT::Image::has_html_signature");
     }
 
     # Convert path to filehandle if provided
@@ -191,15 +189,16 @@ sub has_html_signature {
         use Symbol;
         $fh = gensym();
         open $fh, $path
-            or return $class->errtrans(
-                    "Could not open $path for reading: $!");
+          or return $class->errtrans("Could not open $path for reading: $!");
         binmode($fh);
     }
 
     die "No valid arguments passed to MT::Image::has_html_signature"
-        unless $data or $fh;
+      unless $data
+          or $fh;
 
     my @patterns = (
+
         # NOTE: The following patterns will be matched against a string
         # with all whitespace stripped to simplify HTML matching.
         qr{
@@ -209,8 +208,7 @@ sub has_html_signature {
                 [!?]|frameset|iframe|link|base|style|div|p|font|
                 applet|meta|center|form|isindex|h[123456]|b|br
             )
-        }ix,
-        qr{<(html|script|title|body|head|plaintext|table|img|pre|a)}i,
+        }ix, qr{<(html|script|title|body|head|plaintext|table|img|pre|a)}i,
         qr{text/html}i,
     );
 
@@ -222,8 +220,9 @@ sub has_html_signature {
         defined $data and return substr( $data, 0, $buffer );
         my $str;
         seek( $fh, 0, 0 );
-        defined( $buffer_read = read( $fh, $str, $buffer) )
-            || die "Could not read filehandle: $!";
+        defined( $buffer_read = read( $fh, $str, $buffer ) )
+          || die "Could not read filehandle: $!";
+
         # print STDERR "read_buffer: $buffer, buffer_read: $buffer_read\n";
         seek( $fh, 0, 0 );
         return $str;
@@ -232,24 +231,26 @@ sub has_html_signature {
     # Get 1024 bytes of whitespace-free content
     my $buffer = 1024;
     my $test_string;
-    while ( ! defined $test_string ) {
-        my $str =  $read_buffer->( $buffer );
-        $str    =~ s{\s}{}g;                    # Strip whitespace,
+    while ( !defined $test_string ) {
+        my $str = $read_buffer->($buffer);
+        $str =~ s{\s}{}g;    # Strip whitespace,
 
-        # If result string is long enough, trim down to 1024 and assign 
+        # If result string is long enough, trim down to 1024 and assign
         # to $test_string which will terminate the while loop
-        if ( length $str >= 1024 ) {                
-            $test_string = substr( $str, 0, 1024 ); 
+        if ( length $str >= 1024 ) {
+            $test_string = substr( $str, 0, 1024 );
         }
+
         # File is shorter than our buffer
         elsif ( $buffer_read < 1024 ) {
-            $test_string = $str
+            $test_string = $str;
         }
+
         # Otherwise, increase the buffer size by 1024 and repeat
         else {
             $buffer += 1024;
         }
-    }
+    } ## end while ( !defined $test_string)
 
     return scalar grep { $test_string =~ $_ } @patterns;
 

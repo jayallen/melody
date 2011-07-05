@@ -1015,7 +1015,7 @@ sub preview {
     }
 
     return $app->error( $app->translate("Permission denied.") )
-        unless $app->permissions->can_edit_entry( $entry, $app->user );
+      unless $app->permissions->can_edit_entry( $entry, $app->user );
 
     my $cat;
     my $names = $entry->column_names;

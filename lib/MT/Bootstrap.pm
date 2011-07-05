@@ -168,6 +168,8 @@ sub import {
                 $app->run;
             }
         };
+
+
         if ( my $err = $@ ) {
             if ( !$app && $err =~ m/Missing configuration file/ ) {
                 my $host = $ENV{SERVER_NAME} || $ENV{HTTP_HOST};
@@ -198,6 +200,7 @@ sub import {
                 } ## end if ( $uri =~ m/(\/index\.(f?cgi|f?pl)(\?.*)?)$/)
             } ## end if ( !$app && $err =~ ...)
 
+
             my $charset = 'utf-8';
             eval {
 
@@ -209,6 +212,7 @@ sub import {
                 $app->{cfg}->read_config($c);
                 $charset = $app->{cfg}->PublishCharset;
             };
+
             if (    $app
                  && UNIVERSAL::isa( $app, 'MT::App' )
                  && !UNIVERSAL::isa( $app, 'MT::App::Wizard' ) )
@@ -239,6 +243,7 @@ sub import {
                 };
                 $err = $@;
             } ## end if ( $app && UNIVERSAL::isa...)
+
             if ( !$MT::DebugMode
                  && ( $err =~ m/^(.+?)( at .+? line \d+)(.*)$/s ) )
             {
@@ -246,6 +251,7 @@ sub import {
                 my $dbmode = 'Enable DebugMode for more details.';
                 $err .= '. ' . ( $app ? $app->translate($dbmode) : $dbmode );
             }
+
             print "Content-Type: text/plain; charset=$charset\n\n";
             print $app
               ? $app->translate( "Got an error: [_1]", $err )

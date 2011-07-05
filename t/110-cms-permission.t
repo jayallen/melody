@@ -8,7 +8,7 @@ BEGIN {
 }
 
 use lib 't/lib', 'lib', 'extlib', 'addons/Commercial.pack/lib',
-    'addons/Enterprise.pack/lib';
+  'addons/Enterprise.pack/lib';
 
 use MT;
 use MT::Author;
@@ -35,13 +35,14 @@ my $other = MT::Author->load(998);    # ichikawa
 # Create a new Asset
 # __mode=save&_type=asset&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'asset',
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'asset',
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new asset" );
@@ -50,14 +51,15 @@ ok( $out =~ m!Permission denied!i, "Create a new Asset: result" );
 # Delete Asset
 # __mode=delete&_type=asset&blog_id=1&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'asset',
-        blog_id          => 1,
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'asset',
+                    blog_id          => 1,
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete asset" );
@@ -66,14 +68,15 @@ ok( $out =~ m/Permission denied/i, "Delete asset: result" );
 # Update an asset
 # __mode=save&_type=asset&blog_id=1&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $other,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'asset',
-        blog_id          => 1,
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $other,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'asset',
+                    blog_id          => 1,
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Update an asset" );
@@ -82,30 +85,31 @@ ok( $out =~ m!Permission denied!i, "Update an asset: result" );
 # Create a new Author
 # __mode=save&_type=author&name=new_author&type=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'author',
-        name             => 'new_author',
-        type             => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'author',
+                    name             => 'new_author',
+                    type             => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new author" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Author: result" );
+ok( $out =~ m/Permission denied/i, "Create a new Author: result" );
 
 # Delete Author
 # __mode=delete&_type=author&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'author',
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'author',
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete author" );
@@ -114,30 +118,30 @@ ok( $out =~ m/Permission denied/i, "Delete author: result" );
 # Create a new Association
 # __mode=save&_type=association&type=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'association',
-        type             => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'association',
+                    type             => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new association" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Association: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Association: result" );
 
 # Delete Association
 # __mode=delete&_type=association&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'association',
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'association',
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete association" );
@@ -146,13 +150,14 @@ ok( $out =~ m/Permission denied/i, "Delete association: result" );
 # Create a new Blog
 # __mode=save&_type=blog&name=BlogName
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'blog',
-        name             => 'BlogName'
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'blog',
+                    name             => 'BlogName'
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new blog" );
@@ -161,13 +166,14 @@ ok( $out =~ m/Permission denied/i, "Create a new Blog: result" );
 # Delete Blog
 # __mode=delete&_type=blog&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'blog',
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'blog',
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete blog" );
@@ -176,31 +182,32 @@ ok( $out =~ m/Permission denied/i, "Delete blog: result" );
 # Create a new Category
 # __mode=save&_type=category&label=CategoryName&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'category',
-        label            => 'CategoryName',
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'category',
+                    label            => 'CategoryName',
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new category" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Category: result" );
+ok( $out =~ m/Permission denied/i, "Create a new Category: result" );
 
 # Delete Category
 # __mode=delete&_type=category&id=1&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'category',
-        id               => 1,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'category',
+                    id               => 1,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete category" );
@@ -209,31 +216,32 @@ ok( $out =~ m/Permission denied/i, "Delete category: result" );
 # Create a new Folder
 # __mode=save&_type=folder&label=FolderName&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'folder',
-        label            => 'FolderName',
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'folder',
+                    label            => 'FolderName',
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new folder" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Folder: result" );
+ok( $out =~ m/Permission denied/i, "Create a new Folder: result" );
 
 # Delete Folder
 # __mode=delete&_type=folder&id=20&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'folder',
-        id               => 20,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'folder',
+                    id               => 20,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete folder" );
@@ -242,15 +250,16 @@ ok( $out =~ m/Permission denied/i, "Delete folder: result" );
 # Update Folder
 # __mode=save&_type=folder&label=FolderName&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $other,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'folder',
-        label            => 'FolderName',
-        blog_id          => 1,
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $other,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'folder',
+                    label            => 'FolderName',
+                    blog_id          => 1,
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Update a  folder" );
@@ -259,31 +268,32 @@ ok( $out =~ m/Permission denied/i, "Update a Folder: result" );
 # Create a new Comment
 # __mode=save&_type=comment&&blog_id=1&entry_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'comment',
-        blog_id          => 1,
-        entry_id         => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'comment',
+                    blog_id          => 1,
+                    entry_id         => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new comment" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Comment: result" );
+ok( $out =~ m/Permission denied/i, "Create a new Comment: result" );
 
 # Delete Comment
 # __mode=delete&_type=comment&id=1&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'comment',
-        id               => 1,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'comment',
+                    id               => 1,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete comment" );
@@ -292,15 +302,16 @@ ok( $out =~ m/Permission denied/i, "Delete comment: result" );
 # Create a new Entry
 # __mode=save&_type=entry&&blog_id=1&author_id=1&status=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'entry',
-        blog_id          => 1,
-        author_id        => 1,
-        status           => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'entry',
+                    blog_id          => 1,
+                    author_id        => 1,
+                    status           => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new entry" );
@@ -309,14 +320,15 @@ ok( $out =~ m/Permission denied/i, "Create a new Entry: result" );
 # Delete Entry
 # __mode=delete&_type=entry&id=1&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'entry',
-        id               => 1,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'entry',
+                    id               => 1,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete entry" );
@@ -325,16 +337,17 @@ ok( $out =~ m/Permission denied/i, "Delete entry: result" );
 # Update an Entry
 # __mode=save&_type=entry&&blog_id=1&author_id=1&status=1&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $other,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'entry',
-        blog_id          => 1,
-        author_id        => 1,
-        status           => 1,
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $other,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'entry',
+                    blog_id          => 1,
+                    author_id        => 1,
+                    status           => 1,
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Update an entry" );
@@ -343,15 +356,16 @@ ok( $out =~ m/Permission denied/i, "Update anEntry: result" );
 # Create a new Page
 # __mode=save&_type=page&&blog_id=1&author_id=1&status=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'page',
-        blog_id          => 1,
-        author_id        => 1,
-        status           => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'page',
+                    blog_id          => 1,
+                    author_id        => 1,
+                    status           => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new page" );
@@ -360,14 +374,15 @@ ok( $out =~ m/Permission denied/i, "Create a new Page: result" );
 # Delete Page
 # __mode=delete&_type=page&id=20&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'page',
-        id               => 20,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'page',
+                    id               => 20,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete page" );
@@ -376,16 +391,17 @@ ok( $out =~ m/Permission denied/i, "Delete page: result" );
 # Update a Page
 # __mode=save&_type=page&&blog_id=1&author_id=1&status=1&id=20
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $other,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'page',
-        blog_id          => 1,
-        author_id        => 1,
-        status           => 1,
-        id               => 20
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $other,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'page',
+                    blog_id          => 1,
+                    author_id        => 1,
+                    status           => 1,
+                    id               => 20
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Update an page" );
@@ -394,47 +410,47 @@ ok( $out =~ m/Permission denied/i, "Update an Page: result" );
 # Create a new Notification
 # __mode=save&_type=notification&&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'notification',
-        blog_id          => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'notification',
+                    blog_id          => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new notification" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Notification: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Notification: result" );
 
 # Delete Notification
 # __mode=delete&_type=notification&id=1&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'notification',
-        id               => 1,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'notification',
+                    id               => 1,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete notification" );
-ok( $out =~ m/Permission denied/i,
-    "Delete notification: result" );
+ok( $out =~ m/Permission denied/i, "Delete notification: result" );
 
 # Create a new Role
 # __mode=save&_type=role&&blog_id=1&name=NewRole
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'role',
-        name             => "NewRole"
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'role',
+                    name             => "NewRole"
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new role" );
@@ -443,13 +459,14 @@ ok( $out =~ m/Permission denied/i, "Create a new Role: result" );
 # Delete Role
 # __mode=delete&_type=role&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'role',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'role',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete role" );
@@ -458,28 +475,29 @@ ok( $out =~ m/Permission denied/i, "Delete role: result" );
 # Create a new Config
 # __mode=save&_type=config
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'config'
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'config'
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new config" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Config: result" );
+ok( $out =~ m/Permission denied/i, "Create a new Config: result" );
 
 # Delete Config
 # __mode=delete&_type=config&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'config',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'config',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete config" );
@@ -488,29 +506,30 @@ ok( $out =~ m/Permission denied/i, "Delete config: result" );
 # Create a new Fileinfo
 # __mode=save&_type=fileinfo&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'fileinfo',
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'fileinfo',
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new fileinfo" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Fileinfo: result" );
+ok( $out =~ m/Permission denied/i, "Create a new Fileinfo: result" );
 
 # Delete Fileinfo
 # __mode=delete&_type=fileinfo&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'fileinfo',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'fileinfo',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete fileinfo" );
@@ -519,13 +538,14 @@ ok( $out =~ m/Permission denied/i, "Delete fileinfo: result" );
 # Create a new Log
 # __mode=save&_type=log&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'log',
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'log',
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new log" );
@@ -534,13 +554,14 @@ ok( $out =~ m/Permission denied/i, "Create a new Log: result" );
 # Delete Log
 # __mode=delete&_type=log&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'log',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'log',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete log" );
@@ -549,32 +570,32 @@ ok( $out =~ m/Permission denied/i, "Delete log: result" );
 # Create a new ObjectAsset
 # __mode=save&_type=objectasset&asset_id=1&object_id=1&object_ds=entry
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'objectasset',
-        asset_id         => 1,
-        object_id        => 1,
-        object_ds        => 'entry'
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'objectasset',
+                    asset_id         => 1,
+                    object_id        => 1,
+                    object_ds        => 'entry'
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new objectasset" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Objectasset: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Objectasset: result" );
 
 # Delete Objectasset
 # __mode=delete&_type=objectasset&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'objectasset',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'objectasset',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete objectasset" );
@@ -583,31 +604,31 @@ ok( $out =~ m/Permission denied/i, "Delete objectasset: result" );
 # Create a new Objectscore
 # __mode=save&_type=objectscore&namespace=scope_name&object_ds=entry
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'objectscore',
-        namespace        => 'scope_name',
-        object_ds        => 'entry'
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'objectscore',
+                    namespace        => 'scope_name',
+                    object_ds        => 'entry'
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new objectscore" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Objectscore: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Objectscore: result" );
 
 # Delete Objectscore
 # __mode=delete&_type=objectscore&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'objectscore',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'objectscore',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete objectscore" );
@@ -616,32 +637,32 @@ ok( $out =~ m/Permission denied/i, "Delete objectscore: result" );
 # Create a new Objecttag
 # __mode=save&_type=objecttag&tag_id=1&object_datasource=entry&object_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user       => $user,
-        __request_method  => 'POST',
-        __mode            => 'save',
-        _type             => 'objecttag',
-        object_datasource => 'entry',
-        tag_id            => 1,
-        object_id         => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user       => $user,
+                    __request_method  => 'POST',
+                    __mode            => 'save',
+                    _type             => 'objecttag',
+                    object_datasource => 'entry',
+                    tag_id            => 1,
+                    object_id         => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new objecttag" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Objecttag: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Objecttag: result" );
 
 # Delete Objecttag
 # __mode=delete&_type=objecttag&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'objecttag',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'objecttag',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete objecttag" );
@@ -650,31 +671,31 @@ ok( $out =~ m/Permission denied/i, "Delete objecttag: result" );
 # Create a new Permission
 # __mode=save&_type=permission&blog_id=1&author_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'permission',
-        author_id        => 1,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'permission',
+                    author_id        => 1,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new permission" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Permission: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Permission: result" );
 
 # Delete Permission
 # __mode=delete&_type=permission&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'permission',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'permission',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete permission" );
@@ -683,33 +704,33 @@ ok( $out =~ m/Permission denied/i, "Delete permission: result" );
 # Create a new Placement
 # __mode=save&_type=placement&blog_id=1&category_id=1&entry_id=1&is_primary=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'placement',
-        blog_id          => 1,
-        category_id      => 1,
-        entry_id         => 1,
-        is_primary       => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'placement',
+                    blog_id          => 1,
+                    category_id      => 1,
+                    entry_id         => 1,
+                    is_primary       => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new placement" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Placement: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Placement: result" );
 
 # Delete Placement
 # __mode=delete&_type=placement&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'placement',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'placement',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete placement" );
@@ -718,30 +739,31 @@ ok( $out =~ m/Permission denied/i, "Delete placement: result" );
 # Create a new Session
 # __mode=save&_type=session&id=THIS_IS_A_FAKE_SESSION_2&start=currenttime
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'session',
-        id               => 'THIS_IS_A_FAKE_SESSION_2',
-        time             => time
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'session',
+                    id               => 'THIS_IS_A_FAKE_SESSION_2',
+                    time             => time
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new session" );
-ok( $out =~ m/Permisison denied/i,
-    "Create a new Session: result" );
+ok( $out =~ m/Permisison denied/i, "Create a new Session: result" );
 
 # Delete Session
 # __mode=delete&_type=session&id=THIS_IS_A_FAKE_SESSION
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'session',
-        id               => 'THIS_IS_A_FAKE_SESSION',
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'session',
+                    id               => 'THIS_IS_A_FAKE_SESSION',
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete session" );
@@ -750,13 +772,14 @@ ok( $out =~ m/Permission denied/i, "Delete session: result" );
 # Create a new Tag
 # __mode=save&_type=tag&name=NewTag
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'tag',
-        name             => 'NewTag'
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'tag',
+                    name             => 'NewTag'
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new tag" );
@@ -765,13 +788,14 @@ ok( $out =~ m/Permission denied/i, "Create a new Tag: result" );
 # Delete Tag
 # __mode=delete&_type=tag&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'tag',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'tag',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete tag" );
@@ -780,15 +804,16 @@ ok( $out =~ m/Permission denied/i, "Delete tag: result" );
 # Create a new Ping
 # __mode=save&_type=ping&blog_id=1&ip=1.1.1.1&tb_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'ping',
-        blog_id          => 1,
-        ip               => '1.1.1.1',
-        tb_id            => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'ping',
+                    blog_id          => 1,
+                    ip               => '1.1.1.1',
+                    tb_id            => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new ping" );
@@ -797,13 +822,14 @@ ok( $out =~ m/Permission denied/i, "Create a new Ping: result" );
 # Delete Ping
 # __mode=delete&_type=ping&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'ping',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'ping',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete ping" );
@@ -812,12 +838,13 @@ ok( $out =~ m/Permission denied/i, "Delete ping: result" );
 # Create a new Touch
 # __mode=save&_type=touch
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'touch',
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'touch',
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new touch" );
@@ -826,13 +853,14 @@ ok( $out =~ m/Permission denied/i, "Create a new Touch: result" );
 # Delete Touch
 # __mode=delete&_type=touch&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'touch',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'touch',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete touch" );
@@ -841,30 +869,30 @@ ok( $out =~ m/Permission denied/i, "Delete touch: result" );
 # Create a new Trackback
 # __mode=save&_type=trackback&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'trackback',
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'trackback',
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new trackback" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Trackback: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Trackback: result" );
 
 # Delete Trackback
 # __mode=delete&_type=trackback&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'trackback',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'trackback',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete trackback" );
@@ -873,32 +901,33 @@ ok( $out =~ m/Permission denied/i, "Delete trackback: result" );
 # Create a new Template
 # __mode=save&_type=template&blog_id=1&name=NewTemplate&type=custom
 $user = MT::Author->load(3);    # Bobd
-$app  = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'template',
-        blog_id          => 1,
-        name             => 'NewTemplate',
-        type             => 'custom'
-    }
+$app = _run_app(
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'template',
+                    blog_id          => 1,
+                    name             => 'NewTemplate',
+                    type             => 'custom'
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new template" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Template: result" );
+ok( $out =~ m/Permission denied/i, "Create a new Template: result" );
 
 # Delete Template
 # __mode=delete&_type=template&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'template',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'template',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete template" );
@@ -907,32 +936,32 @@ ok( $out =~ m/Permission denied/i, "Delete template: result" );
 # Create a new Templatemap
 # __mode=save&_type=templatemap&blog_id=1&archive_type=Author&template_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'templatemap',
-        blog_id          => 1,
-        archive_type     => 'Author',
-        template_id      => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'templatemap',
+                    blog_id          => 1,
+                    archive_type     => 'Author',
+                    template_id      => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Create a new templatemap" );
-ok( $out =~ m/Permission denied/i,
-    "Create a new Templatemap: result"
-);
+ok( $out =~ m/Permission denied/i, "Create a new Templatemap: result" );
 
 # Delete Templatemap
 # __mode=delete&_type=templatemap&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'templatemap',
-        id               => 1,
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'templatemap',
+                    id               => 1,
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete templatemap" );
@@ -945,73 +974,75 @@ if ( $mt->component('commercial') ) {
 # Create a new Field
 # __mode=save&_type=field&blog_id=1&name=NewField&object_type=entry&type=SingleLineText&tag=newtag
     $app = _run_app(
-        'MT::App::CMS',
-        {   __test_user      => $user,
-            __request_method => 'POST',
-            __mode           => 'save',
-            _type            => 'field',
-            blog_id          => 1,
-            name             => 'NewField',
-            object_type      => 'entry',
-            tag              => 'newtag',
-            type             => 'SingleLineText'
-        }
+                     'MT::App::CMS',
+                     {
+                        __test_user      => $user,
+                        __request_method => 'POST',
+                        __mode           => 'save',
+                        _type            => 'field',
+                        blog_id          => 1,
+                        name             => 'NewField',
+                        object_type      => 'entry',
+                        tag              => 'newtag',
+                        type             => 'SingleLineText'
+                     }
     );
     $out = delete $app->{__test_output};
     ok( $out, "Create a new field" );
-    ok( $out =~ m/Permission denied/i,
-        "Create a new Field: result" );
+    ok( $out =~ m/Permission denied/i, "Create a new Field: result" );
 
     # Delete Field
     # __mode=delete&_type=field&id=1&blog_id=1
     $app = _run_app(
-        'MT::App::CMS',
-        {   __test_user      => $user,
-            __request_method => 'POST',
-            __mode           => 'delete',
-            _type            => 'field',
-            id               => 1,
-            blog_id          => 1
-        }
+                     'MT::App::CMS',
+                     {
+                        __test_user      => $user,
+                        __request_method => 'POST',
+                        __mode           => 'delete',
+                        _type            => 'field',
+                        id               => 1,
+                        blog_id          => 1
+                     }
     );
     $out = delete $app->{__test_output};
     ok( $out, "Delete field" );
     ok( $out =~ m/Permission denied/i, "Delete field: result" );
-}
+} ## end if ( $mt->component('commercial'...))
 
 if ( $mt->component('enterprise') ) {
 
     # Create a new Group
     # __mode=save&_type=group&blog_id=1&name=NewGroup
     $app = _run_app(
-        'MT::App::CMS',
-        {   __test_user      => $user,
-            __request_method => 'POST',
-            __mode           => 'save',
-            _type            => 'group',
-            name             => 'NewGroup',
-        }
+                     'MT::App::CMS',
+                     {
+                        __test_user      => $user,
+                        __request_method => 'POST',
+                        __mode           => 'save',
+                        _type            => 'group',
+                        name             => 'NewGroup',
+                     }
     );
     $out = delete $app->{__test_output};
     ok( $out, "Create a new group" );
-    ok( $out =~ m/Permission denied/i,
-        "Create a new Group: result" );
+    ok( $out =~ m/Permission denied/i, "Create a new Group: result" );
 
     # Delete Group
     # __mode=delete&_type=group&id=1
     $app = _run_app(
-        'MT::App::CMS',
-        {   __test_user      => $user,
-            __request_method => 'POST',
-            __mode           => 'delete',
-            _type            => 'group',
-            id               => 1,
-        }
+                     'MT::App::CMS',
+                     {
+                        __test_user      => $user,
+                        __request_method => 'POST',
+                        __mode           => 'delete',
+                        _type            => 'group',
+                        id               => 1,
+                     }
     );
     $out = delete $app->{__test_output};
     ok( $out, "Delete group" );
     ok( $out =~ m/Permission denied/i, "Delete group: result" );
-}
+} ## end if ( $mt->component('enterprise'...))
 
 
 ### Different type
@@ -1020,273 +1051,264 @@ $user = MT::Author->load(994);    #kagawa
 # Update a Category
 # __mode=save&_type=category&label=CategoryName&blog_id=1&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'category',
-        label            => 'CategoryName',
-        blog_id          => 1,
-        id               => 20
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'category',
+                    label            => 'CategoryName',
+                    blog_id          => 1,
+                    id               => 20
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Update a category (different)" );
-ok( $out =~ m/Permission denied/i,
-    " Update a category (different): result"
-);
+ok( $out =~ m/Permission denied/i, " Update a category (different): result" );
 
 # Delete Category
 # __mode=delete&_type=category&id=20&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'category',
-        id               => 20,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'category',
+                    id               => 20,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete category (different)" );
-ok( $out =~ m/Permission denied/i,
-    "Delete category (different): result"
-);
+ok( $out =~ m/Permission denied/i, "Delete category (different): result" );
 
 $user = MT::Author->load(995);    #ogawa
 
 # Update a Folder
 # __mode=save&_type=category&label=CategoryName&blog_id=1&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'folder',
-        label            => 'CategoryName',
-        blog_id          => 1,
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'folder',
+                    label            => 'CategoryName',
+                    blog_id          => 1,
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Update a folder (different)" );
-ok( $out =~ m/Permission denied/i,
-    " Update a folder (different): result"
-);
+ok( $out =~ m/Permission denied/i, " Update a folder (different): result" );
 
 # Delete Folder
 # __mode=delete&_type=folder&id=1&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'folder',
-        id               => 1,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'folder',
+                    id               => 1,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete folfer (different)" );
-ok( $out =~ m/Permission denied/i,
-    "Delete folder (different): result"
-);
+ok( $out =~ m/Permission denied/i, "Delete folder (different): result" );
 
 $user = MT::Author->load(995);    #ogawa
 
 # Update a Page
 # __mode=save&_type=page&&blog_id=1&author_id=1&status=1&id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'page',
-        blog_id          => 1,
-        author_id        => 1,
-        status           => 1,
-        id               => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'page',
+                    blog_id          => 1,
+                    author_id        => 1,
+                    status           => 1,
+                    id               => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Update an page (different)" );
-ok( $out =~ m/Permission denied/i,
-    "Update an Page(different): result"
-);
+ok( $out =~ m/Permission denied/i, "Update an Page(different): result" );
 
 # Delete Page
 # __mode=delete&_type=page&id=1&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'page',
-        id               => 1,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'page',
+                    id               => 1,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete page (different)" );
-ok( $out =~ m/Permission denied/i,
-    "Delete page (different): result"
-);
+ok( $out =~ m/Permission denied/i, "Delete page (different): result" );
 
 $user = MT::Author->load(994);    #kagawa
 
 # Update an Entry
 # __mode=save&_type=entry&&blog_id=1&author_id=1&status=1&id=20
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'save',
-        _type            => 'entry',
-        blog_id          => 1,
-        author_id        => 1,
-        status           => 1,
-        id               => 20
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'save',
+                    _type            => 'entry',
+                    blog_id          => 1,
+                    author_id        => 1,
+                    status           => 1,
+                    id               => 20
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Update an entry (different)" );
-ok( $out =~ m/Permission denied/i,
-    "Update an Entry(different): result"
-);
+ok( $out =~ m/Permission denied/i, "Update an Entry(different): result" );
 
 # Delete Entry
 # __mode=delete&_type=entry&id=20&blog_id=1
 $app = _run_app(
-    'MT::App::CMS',
-    {   __test_user      => $user,
-        __request_method => 'POST',
-        __mode           => 'delete',
-        _type            => 'entry',
-        id               => 20,
-        blog_id          => 1
-    }
+                 'MT::App::CMS',
+                 {
+                    __test_user      => $user,
+                    __request_method => 'POST',
+                    __mode           => 'delete',
+                    _type            => 'entry',
+                    id               => 20,
+                    blog_id          => 1
+                 }
 );
 $out = delete $app->{__test_output};
 ok( $out, "Delete entry (different)" );
-ok( $out =~ m/Permission denied/i,
-    "Delete entry (different): result"
-);
+ok( $out =~ m/Permission denied/i, "Delete entry (different): result" );
 
 sub make_data {
 
     ### Author
     require MT::Author;
     my $aikawa = MT::Author->new();
-    $aikawa->set_values(
-        {   name         => 'aikawa',
-            nickname     => 'Ichiro Aikawa',
-            email        => 'aikawa@example.com',
-            url          => 'http://aikawa.com/',
-            api_password => 'seecret',
-            auth_type    => 'MT',
-            created_on   => '19780131074500',
-        }
+    $aikawa->set_values( {
+                           name         => 'aikawa',
+                           nickname     => 'Ichiro Aikawa',
+                           email        => 'aikawa@example.com',
+                           url          => 'http://aikawa.com/',
+                           api_password => 'seecret',
+                           auth_type    => 'MT',
+                           created_on   => '19780131074500',
+                         }
     );
     $aikawa->set_password("pass");
     $aikawa->type( MT::Author::AUTHOR() );
     $aikawa->id(999);
     $aikawa->save()
-        or die "Couldn't save author record 999: " . $aikawa->errstr;
+      or die "Couldn't save author record 999: " . $aikawa->errstr;
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
     my $ichikawa = MT::Author->new();
-    $ichikawa->set_values(
-        {   name         => 'ichikawa',
-            nickname     => 'Jiro Ichikawa',
-            email        => 'ichikawa@example.com',
-            url          => 'http://ichikawa.com/',
-            api_password => 'seecret',
-            auth_type    => 'MT',
-            created_on   => '19780131074500',
-        }
+    $ichikawa->set_values( {
+                             name         => 'ichikawa',
+                             nickname     => 'Jiro Ichikawa',
+                             email        => 'ichikawa@example.com',
+                             url          => 'http://ichikawa.com/',
+                             api_password => 'seecret',
+                             auth_type    => 'MT',
+                             created_on   => '19780131074500',
+                           }
     );
     $ichikawa->set_password("pass");
     $ichikawa->type( MT::Author::AUTHOR() );
     $ichikawa->id(998);
     $ichikawa->save()
-        or die "Couldn't save author record 998: " . $ichikawa->errstr;
+      or die "Couldn't save author record 998: " . $ichikawa->errstr;
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
     my $ukawa = MT::Author->new();
-    $ukawa->set_values(
-        {   name         => 'ukawa',
-            nickname     => 'Saburo Ukawa',
-            email        => 'ukawa@example.com',
-            url          => 'http://ukawa.com/',
-            api_password => 'seecret',
-            auth_type    => 'MT',
-            created_on   => '19780131074500',
-        }
+    $ukawa->set_values( {
+                          name         => 'ukawa',
+                          nickname     => 'Saburo Ukawa',
+                          email        => 'ukawa@example.com',
+                          url          => 'http://ukawa.com/',
+                          api_password => 'seecret',
+                          auth_type    => 'MT',
+                          created_on   => '19780131074500',
+                        }
     );
     $ukawa->set_password("pass");
     $ukawa->type( MT::Author::AUTHOR() );
     $ukawa->id(997);
     $ukawa->save()
-        or die "Couldn't save author record 997: " . $ukawa->errstr;
+      or die "Couldn't save author record 997: " . $ukawa->errstr;
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
     my $ogawa = MT::Author->new();
-    $ogawa->set_values(
-        {   name         => 'ogawa',
-            nickname     => 'Goro Ogawa',
-            email        => 'ogawa@example.com',
-            url          => 'http://ogawa.com/',
-            api_password => 'seecret',
-            auth_type    => 'MT',
-            created_on   => '19780131074500',
-        }
+    $ogawa->set_values( {
+                          name         => 'ogawa',
+                          nickname     => 'Goro Ogawa',
+                          email        => 'ogawa@example.com',
+                          url          => 'http://ogawa.com/',
+                          api_password => 'seecret',
+                          auth_type    => 'MT',
+                          created_on   => '19780131074500',
+                        }
     );
     $ogawa->set_password("pass");
     $ogawa->type( MT::Author::AUTHOR() );
     $ogawa->id(995);
     $ogawa->save()
-        or die "Couldn't save author record 995: " . $ogawa->errstr;
+      or die "Couldn't save author record 995: " . $ogawa->errstr;
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
     my $kagawa = MT::Author->new();
-    $kagawa->set_values(
-        {   name         => 'kagawa',
-            nickname     => 'Ichiro Kagawa',
-            email        => 'kagawa@example.com',
-            url          => 'http://kagawa.com/',
-            api_password => 'seecret',
-            auth_type    => 'MT',
-            created_on   => '19780131074500',
-        }
+    $kagawa->set_values( {
+                           name         => 'kagawa',
+                           nickname     => 'Ichiro Kagawa',
+                           email        => 'kagawa@example.com',
+                           url          => 'http://kagawa.com/',
+                           api_password => 'seecret',
+                           auth_type    => 'MT',
+                           created_on   => '19780131074500',
+                         }
     );
     $kagawa->set_password("pass");
     $kagawa->type( MT::Author::AUTHOR() );
     $kagawa->id(994);
     $kagawa->save()
-        or die "Couldn't save author record 994: " . $kagawa->errstr;
+      or die "Couldn't save author record 994: " . $kagawa->errstr;
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
     ### Role
     require MT::Role;
     my $role = MT::Role->new();
-    $role->set_values(
-        {   name  => 'Entry Editor',
-            perms => [
-                'create_post',  'edit_all_posts',
-                'edit_tags',    'edit_categories',
-                'publish_post', 'comment',
-            ],
-        }
+    $role->set_values( {
+                         name  => 'Entry Editor',
+                         perms => [
+                                    'create_post',  'edit_all_posts',
+                                    'edit_tags',    'edit_categories',
+                                    'publish_post', 'comment',
+                         ],
+                       }
     );
     $role->id(20);
-    $role->save
-        or die "Couldn't save role record 20: " . $role->errstr;
+    $role->save or die "Couldn't save role record 20: " . $role->errstr;
 
     ### Association
     my $designer_role = MT::Role->load( { name => 'Designer' } );
@@ -1343,15 +1365,15 @@ sub make_data {
     ### Notification
     require MT::Notification;
     my $address = MT::Notification->new();
-    $address->set_values(
-        {   blog_id => 1,
-            name    => 'Foo Bar',
-            email   => 'foo@example.com',
-            url     => 'http://foo.com',
-        }
+    $address->set_values( {
+                            blog_id => 1,
+                            name    => 'Foo Bar',
+                            email   => 'foo@example.com',
+                            url     => 'http://foo.com',
+                          }
     );
     $address->save()
-        or die "Couldn't save notification record: 1" . $address->errstr;
+      or die "Couldn't save notification record: 1" . $address->errstr;
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
@@ -1362,16 +1384,15 @@ sub make_data {
     $sess->kind('UD');
     $sess->start(time);
     $sess->set( 'remember', 1 );
-    $sess->save
-        or die "Couldn't save session record" . $sess->errstr;
+    $sess->save or die "Couldn't save session record" . $sess->errstr;
 
     ### Log
-    MT->log(
-        {   message  => 'This is a log message.',
-            class    => "system",
-            level    => MT::Log::ERROR(),
-            category => "test",
-        }
+    MT->log( {
+               message  => 'This is a log message.',
+               class    => "system",
+               level    => MT::Log::ERROR(),
+               category => "test",
+             }
     );
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
@@ -1380,17 +1401,17 @@ sub make_data {
     if ( $mt->component('commercial') ) {
         require CustomFields::Field;
         my $field = CustomFields::Field->new();
-        $field->set_values(
-            {   blog_id  => 1,
-                name     => 'SingleLine',
-                obj_type => 'entry',
-                type     => 'SingleLineText',
-                tag      => 'EntryDataSingleLine',
-                basename => 'singleline',
-            }
+        $field->set_values( {
+                              blog_id  => 1,
+                              name     => 'SingleLine',
+                              obj_type => 'entry',
+                              type     => 'SingleLineText',
+                              tag      => 'EntryDataSingleLine',
+                              basename => 'singleline',
+                            }
         );
         $field->save()
-            or die "Couldn't save custom field record: 1" . $field->errstr;
+          or die "Couldn't save custom field record: 1" . $field->errstr;
     }
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
@@ -1399,16 +1420,12 @@ sub make_data {
         require MT::Group;
         my $group = MT::Group->new();
         $group->set_values(
-            {   name         => 'New Group',
-                status       => 1,
-                display_name => 'Group',
-            }
-        );
+             { name => 'New Group', status => 1, display_name => 'Group', } );
         $group->save()
-            or die "Couldn't save group record: 1" . $group->errstr;
+          or die "Couldn't save group record: 1" . $group->errstr;
     }
 
     MT::ObjectDriver::Driver::Cache::RAM->clear_cache();
 
-}
+} ## end sub make_data
 

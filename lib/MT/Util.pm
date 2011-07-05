@@ -2741,28 +2741,30 @@ sub to_json {
 # Tested in t/99-utils.misc
 # TODO Move this to MT::FileMgr (perhaps?)
 sub file_extension {
-    my $fname        = shift;
+    my $fname = shift;
     require File::Basename;
-    my @parts = split(/\./, File::Basename::basename($fname));
+    my @parts = split( /\./, File::Basename::basename($fname) );
 
     shift @parts
-        while @parts > 1 and $parts[0] eq ''; # Skips empty dotfile element
+      while @parts > 1 and $parts[0] eq '';    # Skips empty dotfile element
 
-    return @parts > 1 ? pop @parts : ''
-}  ## end sub file_extension
+    return @parts > 1 ? pop @parts : '';
+}
 
 # Tested in t/99-utils.misc
 sub file_mime_type {
-    my $file               = shift;
+    my $file = shift;
+
     # Probably best not to return a default value because it obscures failure
     # my $default            = 'application/octet-stream';
     my $default            = '';
     my $external_lib_error = sub {
-        return MT->instance->translate(
-              "An non-fatal error occurred when trying "
-            . "to determine the files MIME type using the [_1] module: ",
-            +shift
-        )
+        return
+          MT->instance->translate(
+               "An non-fatal error occurred when trying "
+                 . "to determine the files MIME type using the [_1] module: ",
+               +shift
+          );
     };
 
     my $lwp_mediatypes = sub {
@@ -2785,28 +2787,27 @@ sub file_mime_type {
     };
 
     return ( $lwp_mediatypes->() || $file_mmagic->() || $default );
-} ## end sub get_mime_type
+} ## end sub file_mime_type
 
 
 # Tested in t/99-utils.misc
 sub mime_type_extension {
     require LWP::MediaTypes;
-    my @exts = LWP::MediaTypes::media_suffix( shift )
-        or return;
+    my @exts = LWP::MediaTypes::media_suffix(shift) or return;
     return wantarray ? @exts : shift @exts;
-} ## end sub mime_type_extension
+}
 
 
 # Tested in t/99-utils.misc
 # TODO Move this to MT::FileMgr (perhaps?)
 sub match_file_extension {
     my $filename = shift;
-    my $exts     = ref $_[0] eq 'ARRAY' ? shift : [ @_ ];
+    my $exts = ref $_[0] eq 'ARRAY' ? shift : [@_];
     require File::Basename;
-    my @exts     = map { m/^\./ ? qr/$_/i : qr/\.$_/i } @$exts;
-    my @ret      = File::Basename::fileparse( $filename, @exts );
+    my @exts = map { m/^\./ ? qr/$_/i : qr/\.$_/i } @$exts;
+    my @ret = File::Basename::fileparse( $filename, @exts );
     return $ret[2] if @ret;
-} ## end sub match_file_extension
+}
 
 
 package MT::Util::XML::SAX::LexicalHandler;

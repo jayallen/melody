@@ -23,12 +23,12 @@ unless ($new_config) {
 $old_config ||= '.';
 
 my @CLASSES = qw( MT::Author MT::Blog MT::Category MT::Comment MT::Entry
-                  MT::Log MT::Notification MT::Permission
-                  MT::Placement MT::Template MT::TemplateMap MT::Trackback
-                  MT::TBPing MT::Session MT::PluginData MT::Config MT::FileInfo
-                  MT::Tag MT::ObjectTag MT::Group MT::Role MT::Association
-                  MT::Asset
-                  );
+  MT::Log MT::Notification MT::Permission
+  MT::Placement MT::Template MT::TemplateMap MT::Trackback
+  MT::TBPing MT::Session MT::PluginData MT::Config MT::FileInfo
+  MT::Tag MT::ObjectTag MT::Group MT::Role MT::Association
+  MT::Asset
+);
 
 use File::Spec;
 

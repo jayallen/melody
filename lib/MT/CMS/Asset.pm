@@ -379,20 +379,19 @@ sub start_upload {
 }
 
 sub upload_file {
-    my $app   = shift;
-    my $q     = $app->query;
-    my $perms = $app->permissions;
+    my $app          = shift;
+    my $q            = $app->query;
+    my $require_type = $q->param('require_type') || '';
+    my $perms        = $app->permissions;
 
     return $app->errtrans("Permission denied.")
-        unless $perms and $perms->can_upload;
+      unless $perms and $perms->can_upload;
 
     $app->validate_magic() or return;
 
-    my ( $asset, $bytes ) = _upload_file(
-        $app,
-        require_type => ( $app->param('require_type') || '' ),
-        @_,
-    );
+    my ( $asset, $bytes )
+      = _upload_file( $app, require_type => $require_type, @_, );
+
     return if !defined $asset;
     return $asset if !defined $bytes;    # whatever it is
 
@@ -993,8 +992,8 @@ sub _set_start_upload_params {
 } ## end sub _set_start_upload_params
 
 # FIXME This 580-line method MUST be refactored!!!!
-# It needs to be broken up and ALL code NOT specifically unique to 
-# MT::App::CMS must be moved to MT::App or elsewhere so that other apps or 
+# It needs to be broken up and ALL code NOT specifically unique to
+# MT::App::CMS must be moved to MT::App or elsewhere so that other apps or
 # command-line tools can use all of its functions individually AND so
 # that we run all uploads through a common set of security checks.
 sub _upload_file {
@@ -1152,10 +1151,10 @@ sub _upload_file {
           ;   ## Save the filename so we can use it in the error message later
         $ext = $local_base;
         $ext =~ m!.*\.(.*)$!
-            ; ## Extract the characters to the right of the last dot delimiter / period
+          ; ## Extract the characters to the right of the last dot delimiter / period
         $ext = $1;    ## Those characters are the file extension
 
-        return unless $app->validate_upload({ filename => $filename });
+        return unless $app->validate_upload( { filename => $filename } );
 
         my $real_fh;
         unless ($has_overwrite) {
@@ -1384,19 +1383,20 @@ sub _upload_file {
       ;    ## Save the filename so we can use it in the error message later
     $ext = $local_base;
     $ext =~ m!.*\.(.*)$!
-        ; ## Extract the characters to the right of the last dot delimiter / period
+      ; ## Extract the characters to the right of the last dot delimiter / period
     $ext = $1;    ## Those characters are the file extension
 
-    return unless $app->validate_upload({ filename => $filename });
+    return unless $app->validate_upload( { filename => $filename } );
 
-    my ( $w, $h, $id, $write_file ) = MT::Image->check_upload(
-        Fh        => $fh,
-        Fmgr      => $fmgr,
-        Local     => $local_file,
-        Max       => $upload_param{max_size},
-        MaxDim    => $upload_param{max_image_dimension},
-        ext       => $ext,
-        LocalBase => $local_base
+    my ( $w, $h, $id, $write_file )
+      = MT::Image->check_upload(
+                                 Fh     => $fh,
+                                 Fmgr   => $fmgr,
+                                 Local  => $local_file,
+                                 Max    => $upload_param{max_size},
+                                 MaxDim => $upload_param{max_image_dimension},
+                                 ext    => $ext,
+                                 LocalBase => $local_base
       );
 
     return $app->error( MT::Image->errstr ) unless $write_file;

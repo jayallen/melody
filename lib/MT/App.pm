@@ -2442,19 +2442,20 @@ sub upload_info {
 } ## end sub upload_info
 
 sub validate_upload {
-    my $app        = shift;
-    my $args       = shift;
+    my $app  = shift;
+    my $args = shift;
 
     my $INVALID = sub {
         my $desc = $app->translate( @_ ? @_ : 'Reason unspecified' );
         require MT::Log;
-        $app->log({
-            level    => MT::Log::SECURITY(),
-            class    => 'asset',
-            category => 'invalid',
-            message
-                => $app->translate('Blocked invalid upload: [_1]', $desc),
-        });
+        $app->log( {
+                  level    => MT::Log::SECURITY(),
+                  class    => 'asset',
+                  category => 'invalid',
+                  message =>
+                    $app->translate( 'Blocked invalid upload: [_1]', $desc ),
+                }
+        );
         return $app->errtrans('Invalid upload file');
     };
 
@@ -2465,15 +2466,18 @@ sub validate_upload {
     if ( defined $args->{filename} ) {
         require File::Basename;
         my ($file) = File::Basename::fileparse( $args->{filename} );
-        my $cfg    = $app->config();
+        my $cfg = $app->config();
 
         defined $file
-            or return $INVALID->( 'Could not parse filepath [_1]',
-                                    $args->{filename} );
+          or return $INVALID->( 'Could not parse filepath [_1]',
+                                $args->{filename} );
 
-        return $INVALID->(
-            'Invalid characters in filename: [_1]', $args->{filename})
-            if $file =~ m{
+        return
+          $INVALID->(
+                      'Invalid characters in filename: [_1]',
+                      $args->{filename}
+          )
+          if $file =~ m{
                 /       | # Filename shouldn't have slash; indicates directory
                 \.\.    | # No upward traversal allowed
                 \0      | # No NULL bytes allowed
@@ -2482,26 +2486,29 @@ sub validate_upload {
             }x;
 
         my $deny_exts = $cfg->DeniedAssetFileExtensions || [];
-        if ( @$deny_exts ) {
+        if (@$deny_exts) {
             my $match = MT::Util::match_file_extension( $file, $deny_exts );
             if ( defined $match and $match ne '' ) {
-                return $INVALID->(
-                    'Blacklisted file extension ([_1]) found for file [_2]',
-                    $match, $file
-                );
+                return
+                  $INVALID->(
+                      'Blacklisted file extension ([_1]) found for file [_2]',
+                      $match, $file
+                  );
             }
         }
 
         my $allow_exts = $cfg->AssetFileExtensions || [];
-        if ( @$allow_exts ) {
+        if (@$allow_exts) {
             my $match = MT::Util::match_file_extension( $file, $allow_exts );
             unless ( defined $match and $match ne '' ) {
-                return $INVALID->(
-                    'File does not have whitelisted extension: [_1]', $file
-                );
+                return
+                  $INVALID->(
+                             'File does not have whitelisted extension: [_1]',
+                             $file
+                  );
             }
         }
-    }
+    } ## end if ( defined $args->{filename...})
 
     ###
     # Evaluation of a binary data to see if it contains HTML or
@@ -2509,21 +2516,24 @@ sub validate_upload {
     # files (in particular) that contain embedded HTML or JavaScript are
     # a known vector for an IE 6 and 7 content-sniffing vulnerability.
     ###
-    if ( defined( my $data = $args->{data} )) {
+    if ( defined( my $data = $args->{data} ) ) {
         require MT::Image;
         my $has_html = MT::Image->has_html_signature( data => $data );
 
         defined $has_html
-            or return $INVALID->(
-                'Error reading image [_1]: [_2]', 'data', MT::Image->errstr );
+          or return
+          $INVALID->(
+                      'Error reading image [_1]: [_2]',
+                      'data', MT::Image->errstr
+          );
 
         $has_html
-            or return $INVALID->(
-                'Image file contains suspicious filetype signature');
+          or return $INVALID->(
+                         'Image file contains suspicious filetype signature');
     }
 
     1;
-}
+} ## end sub validate_upload
 
 sub cookie_val {
     my $app     = shift;
@@ -3689,15 +3699,13 @@ sub query {
 }
 
 sub blog {
-    my $app   = shift;
-    my $blog  = shift || $app->{_blog};
-    $blog   ||= eval {
-                    no warnings;
-                    my $blog_id
-                        = int( $app->query->param('blog_id') || 0 );
-                    return $blog_id ? $app->model('blog')->load( $blog_id )
-                                    : undef;
-               };
+    my $app = shift;
+    my $blog = shift || $app->{_blog};
+    $blog ||= eval {
+        no warnings;
+        my $blog_id = int( $app->query->param('blog_id') || 0 );
+        return $blog_id ? $app->model('blog')->load($blog_id) : undef;
+    };
     return $app->{_blog} = $blog;
 }
 

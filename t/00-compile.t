@@ -121,6 +121,7 @@ use_ok('MT::DateTime');
 use_ok('MT::DefaultTemplates');
 use_ok('MT::FileMgr');
 use_ok('MT::FileMgr::Local');
+
 # use_ok('MT::FileMgr::DAV');
 # use_ok('MT::FileMgr::FTP');
 # use_ok('MT::FileMgr::SFTP');
@@ -144,6 +145,7 @@ use_ok('MT::Util::Archive');
 use_ok('MT::Util::Archive::Tgz');
 use_ok('MT::Util::Archive::Zip');
 use_ok('MT::Util::Captcha');
+
 # Temporarily removed from prod builds
 # use_ok('MT::Util::LogProcessor');
 use_ok('MT::Util::PerformanceData');

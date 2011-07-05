@@ -373,8 +373,7 @@ sub _asset_from_url {
     return undef unless $resp->is_success;
     my $image = $resp->content;
     return undef unless $image;
-    my $mimetype = $resp->header('Content-Type')
-        or return undef;
+    my $mimetype = $resp->header('Content-Type') or return undef;
     my $def_ext = {
                     'image/jpeg' => '.jpg',
                     'image/png'  => '.png',
@@ -418,7 +417,7 @@ sub _asset_from_url {
 
     require MT::Asset;
     my $asset_pkg = MT::Asset->handler_for_file($local);
-    if (   $asset_pkg ne 'MT::Asset::Image' ) {
+    if ( $asset_pkg ne 'MT::Asset::Image' ) {
         unlink $local;
         return undef;
     }

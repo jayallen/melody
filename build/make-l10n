@@ -166,7 +166,7 @@ sub wanted_app {
                                          . '::Lexicon{$phrase}'
                                  )
             );
-        } ## end while (...)
+        } ## end while ( ...)
     } ## end else [ if ( $file =~ m/\.js/ )]
 } ## end sub wanted_app
 

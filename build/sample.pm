@@ -190,9 +190,9 @@ sub encoding {"iso-8859-1"}    # Latin-1
 
     ## Blog Config: Navigation
     'Configuration' => '',
-    'Core Setup' => '',
-    'Preferences' => '',
-    'Archiving' => '',
+    'Core Setup'    => '',
+    'Preferences'   => '',
+    'Archiving'     => '',
 
     ## Add a Category screen (category_add.tmpl)
     'Add a Category'                                           => '',

@@ -12,7 +12,8 @@ use Test::More tests => 4;
 use MT;
 use MT::Util;
 
-use MT::Log::Log4perl qw( l4mtdump ); use Log::Log4perl qw( :resurrect );
+use MT::Log::Log4perl qw( l4mtdump );
+use Log::Log4perl qw( :resurrect );
 ###l4p our $logger = MT::Log::Log4perl->new(); $logger->trace();
 
 # Initialize app and plugins
@@ -116,104 +117,110 @@ use MT::Test qw( :app :db );
 subtest 'file_extension()' => sub {
 
     my %tests = (
-        'file.txt'        => 'txt',
-        'file.tar.gz'     => 'gz',
-        'file.'           => '',
-        'file.0'          => 0,
-        'file'            => '',
-        '.htaccess'       => '',
-        '.my.cnf'         => 'cnf',
-        '.'               => '',
-        '..'              => '',
+                  'file.txt'    => 'txt',
+                  'file.tar.gz' => 'gz',
+                  'file.'       => '',
+                  'file.0'      => 0,
+                  'file'        => '',
+                  '.htaccess'   => '',
+                  '.my.cnf'     => 'cnf',
+                  '.'           => '',
+                  '..'          => '',
     );
     plan tests => scalar keys %tests;
 
-    is( MT::Util::file_extension( $_ ), $tests{$_},
-        "'$_' returns '$tests{$_}'" )
-            foreach keys %tests;
+    is( MT::Util::file_extension($_),
+        $tests{$_}, "'$_' returns '$tests{$_}'" )
+      foreach keys %tests;
 };
 
 
 subtest 'file_mime_type()' => sub {
     my %tests = (
-        'COPYING'              => 'text/plain',
-        'readme.html'          => 'text/html',
-        'mt-static/styles.css' => 'text/css',
-        'mt-static/mt.js'      => 'application/javascript',
-        't/images/test.gif'    => 'image/gif',
-        't/images/test.jpg'    => 'image/jpeg',
+                  'COPYING'              => 'text/plain',
+                  'readme.html'          => 'text/html',
+                  'mt-static/styles.css' => 'text/css',
+                  'mt-static/mt.js'      => 'application/javascript',
+                  't/images/test.gif'    => 'image/gif',
+                  't/images/test.jpg'    => 'image/jpeg',
     );
     plan tests => scalar keys %tests;
 
     require File::Spec;
     foreach my $key ( keys %tests ) {
         is(
-            MT::Util::file_mime_type( File::Spec->catfile( $ENV{MT_HOME}, $key )),
+            MT::Util::file_mime_type(
+                                    File::Spec->catfile( $ENV{MT_HOME}, $key )
+            ),
             $tests{$key},
             "'$key' returns '$tests{$key}'"
-        )
+        );
     }
 };
 
 subtest "mime_type_extension()" => sub {
     my %tests = (
-        'text/plain'              => 'txt',
-        'text/html',              => 'html',
-        'text/css',               => 'css',
-        'application/javascript', => 'js',
-        'image/gif',              => 'gif',
-        'image/jpeg',             => 'jpeg',
-        'video/3gpp'              => '3gp',
-        'video/mpeg'              => 'mpeg',
-        'video/mp4'               => 'mp4',
-        'video/quicktime'         => 'mov',
-        'audio/mpeg'              => 'mp3',
-        'audio/x-wav'             => 'wav',
-        'audio/ogg'               => 'ogg',
+                  'text/plain'              => 'txt',
+                  'text/html',              => 'html',
+                  'text/css',               => 'css',
+                  'application/javascript', => 'js',
+                  'image/gif',              => 'gif',
+                  'image/jpeg',             => 'jpeg',
+                  'video/3gpp'              => '3gp',
+                  'video/mpeg'              => 'mpeg',
+                  'video/mp4'               => 'mp4',
+                  'video/quicktime'         => 'mov',
+                  'audio/mpeg'              => 'mp3',
+                  'audio/x-wav'             => 'wav',
+                  'audio/ogg'               => 'ogg',
     );
 
     plan tests => scalar keys %tests;
 
     foreach my $type ( keys %tests ) {
         my $ext        = $tests{$type};
-        my @extensions = MT::Util::mime_type_extension( $type );
-        ok(( grep { /^$ext$/ } @extensions ), "'$type' returns '$tests{$type}'" );
+        my @extensions = MT::Util::mime_type_extension($type);
+        ok( ( grep {/^$ext$/} @extensions ),
+            "'$type' returns '$tests{$type}'" );
     }
 };
 
 subtest "match_file_extension()" => sub {
     my @tests = (
+
         # FILE NAME         EXTENSION SEARCH ARRAY            EXPECTED RESULT
-        [ 'file.txt'     => ['txt']                        => '.txt'      ],
-        [ 'file.txt'     => [ qw( text doc rtf txt md ) ]  => '.txt'      ],
-        [ 'file.js'      => [ qw( html js php ) ]          => '.js'       ],
-        [ 'file.json'    => [ qw( html js php ) ]          => ''          ],
-        [ 'file.js'      => [ qw( html json php ) ]        => ''          ],
-        [ 'file.json'    => [ qw( html js.* php ) ]        => '.json'     ],
-        [ 'file.js'      => [ qw( html js.* php ) ]        => '.js'       ],
-        [ 'file.php'     => [ qw( html js.* php[s\d]? ) ]  => '.php'      ],
-        [ 'file.php3'    => [ qw( html js.* php[s\d]? ) ]  => '.php3'     ],
-        [ 'file.php5'    => [ qw( html js.* php[s\d]? ) ]  => '.php5'     ],
-        [ 'file.phps'    => [ qw( html js.* php[s\d]? ) ]  => '.phps'     ],
-        [ '.htaccess'    => [ qw( cnf conf htaccess ) ]    => '.htaccess' ],
-        [ '.my.cnf'      => [ qw( cnf conf htaccess ) ]    => '.cnf'      ],
-        [ 'file.tar.gz'  => [ qw( Z bz2 gz zip ) ]         => '.gz'       ],
-        [ 'file.tar.gz'  => [ qw( Z bz2 tar zip ) ]        => ''          ],
-        [ 'file.tar.gz'  => [ qw( Z bz2 tar\.gz zip ) ]    => '.tar.gz'   ],
-        [ '.'            => [ qw( cgi txt pl ) ]           => ''          ],
-        [ '..'           => [ qw( cgi txt pl ) ]           => ''          ],
+        [ 'file.txt'    => ['txt']                     => '.txt' ],
+        [ 'file.txt'    => [qw( text doc rtf txt md )] => '.txt' ],
+        [ 'file.js'     => [qw( html js php )]         => '.js' ],
+        [ 'file.json'   => [qw( html js php )]         => '' ],
+        [ 'file.js'     => [qw( html json php )]       => '' ],
+        [ 'file.json'   => [qw( html js.* php )]       => '.json' ],
+        [ 'file.js'     => [qw( html js.* php )]       => '.js' ],
+        [ 'file.php'    => [qw( html js.* php[s\d]? )] => '.php' ],
+        [ 'file.php3'   => [qw( html js.* php[s\d]? )] => '.php3' ],
+        [ 'file.php5'   => [qw( html js.* php[s\d]? )] => '.php5' ],
+        [ 'file.phps'   => [qw( html js.* php[s\d]? )] => '.phps' ],
+        [ '.htaccess'   => [qw( cnf conf htaccess )]   => '.htaccess' ],
+        [ '.my.cnf'     => [qw( cnf conf htaccess )]   => '.cnf' ],
+        [ 'file.tar.gz' => [qw( Z bz2 gz zip )]        => '.gz' ],
+        [ 'file.tar.gz' => [qw( Z bz2 tar zip )]       => '' ],
+        [ 'file.tar.gz' => [qw( Z bz2 tar\.gz zip )]   => '.tar.gz' ],
+        [ '.'           => [qw( cgi txt pl )]          => '' ],
+        [ '..'          => [qw( cgi txt pl )]          => '' ],
     );
     plan tests => @tests * 2;
 
-    foreach my $test ( @tests ) {
-        my ($fname, $exts, $expected) = @$test;
+    foreach my $test (@tests) {
+        my ( $fname, $exts, $expected ) = @$test;
         foreach my $path ( '', '/tmp/' ) {
             $fname = $path . $fname;
             is(
                 MT::Util::match_file_extension( $fname, $exts ),
                 $expected,
-                sprintf( "Matching '%s' against (%s) returns '%s'",
-                        $fname, join(', ', @$exts), $expected )
+                sprintf(
+                         "Matching '%s' against (%s) returns '%s'",
+                         $fname, join( ', ', @$exts ), $expected
+                )
             );
         }
     }

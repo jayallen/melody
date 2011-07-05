@@ -47,8 +47,8 @@ is( $ref_o->my_meta_hash->{something}, 'else',
     "New meta column has the right HASH value ({'something' => 'else'}) after update"
 );
 
-$ref_o->clear_cache
-  ;    # reset ramcache to make sure data is coming from memcached
+$ref_o
+  ->clear_cache;   # reset ramcache to make sure data is coming from memcached
 
 $ref_o->my_meta_hash( { a_new => 'hash' } );
 $ref_o->meta_obj->save;

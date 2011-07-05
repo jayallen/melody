@@ -27,7 +27,7 @@ BEGIN {
             * scalar @drivers
             * 19 )               # 19 tests each for every image and driver
       + 1                        # has_html_signature
-    ;
+      ;
 }
 
 MT->set_language('en-us');
@@ -51,11 +51,9 @@ for my $rec (@Img) {
         $cfg->ImageDriver($driver);
 
         my $img = MT::Image->new( Filename => $img_file )
-            or diag explain 
-                sprintf(
-                    "%s: Could not instantiate MT::Image object from %s: %s",
-                     $driver, $img_file, MT::Image->errstr()
-                );
+          or diag explain
+          sprintf( "%s: Could not instantiate MT::Image object from %s: %s",
+                   $driver, $img_file, MT::Image->errstr() );
 
       SKIP: {
             skip( "no $driver image", 19 ) unless $img;
@@ -142,18 +140,16 @@ for my $rec (@Img) {
 } ## end for my $rec (@Img)
 
 subtest "MT::Image::has_html_signature" => sub {
-    my $images = File::Spec->catdir( $ENV{MT_HOME}, qw( t images ));
+    my $images = File::Spec->catdir( $ENV{MT_HOME}, qw( t images ) );
     my $real = MT::Image->has_html_signature(
-        path => File::Spec->catfile( $images, 'test.jpg' )
-    );
+                         path => File::Spec->catfile( $images, 'test.jpg' ) );
 
     is( $real, 0, 'has_html_signature with real image' );
-    defined $real or diag "Err: ".MT::Image->errstr;
+    defined $real or diag "Err: " . MT::Image->errstr;
 
     my $fake = MT::Image->has_html_signature(
-        path => File::Spec->catfile( $images, 'fake.jpg' )
-    );
+                         path => File::Spec->catfile( $images, 'fake.jpg' ) );
     is( $fake, 1, 'has_html_signature with fake image' )
-        or diag MT::Image->errstr;
-    defined $fake or diag "Err: ".MT::Image->errstr;
+      or diag MT::Image->errstr;
+    defined $fake or diag "Err: " . MT::Image->errstr;
 };

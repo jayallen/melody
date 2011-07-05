@@ -7,50 +7,44 @@ use strict;
 use Test::Builder;
 use Test::Output::Tie;
 use Sub::Exporter -setup => {
-  exports => [
-    qw(output_is output_isnt output_like output_unlike
-      stderr_is stderr_isnt stderr_like stderr_unlike
-      stdout_is stdout_isnt stdout_like stdout_unlike
-      combined_is combined_isnt combined_like combined_unlike
-      output_from stderr_from stdout_from combined_from
-      )
-  ],
-  groups => {
-    stdout => [
-      qw(
-        stdout_is stdout_isnt stdout_like stdout_unlike
-        )
+    exports => [
+        qw(output_is output_isnt output_like output_unlike
+          stderr_is stderr_isnt stderr_like stderr_unlike
+          stdout_is stdout_isnt stdout_like stdout_unlike
+          combined_is combined_isnt combined_like combined_unlike
+          output_from stderr_from stdout_from combined_from
+          )
     ],
-    stderr => [
-      qw(
-        stderr_is stderr_isnt stderr_like stderr_unlike
-        )
-    ],
-    output => [
-      qw(
-        output_is output_isnt output_like output_unlike
-        )
-    ],
-    combined => [
-      qw(
-        combined_is combined_isnt combined_like combined_unlike
-        )
-    ],
-    functions => [
-      qw(
-        output_from stderr_from stdout_from combined_from
-        )
-    ],
-    tests => [
-      qw(
-        output_is output_isnt output_like output_unlike
-        stderr_is stderr_isnt stderr_like stderr_unlike
-        stdout_is stdout_isnt stdout_like stdout_unlike
-        combined_is combined_isnt combined_like combined_unlike
-        )
-    ],
-    default => [ '-tests' ],
-  },
+    groups => {
+        stdout => [ qw(
+              stdout_is stdout_isnt stdout_like stdout_unlike
+              )
+        ],
+        stderr => [ qw(
+              stderr_is stderr_isnt stderr_like stderr_unlike
+              )
+        ],
+        output => [ qw(
+              output_is output_isnt output_like output_unlike
+              )
+        ],
+        combined => [ qw(
+              combined_is combined_isnt combined_like combined_unlike
+              )
+        ],
+        functions => [ qw(
+              output_from stderr_from stdout_from combined_from
+              )
+        ],
+        tests => [ qw(
+              output_is output_isnt output_like output_unlike
+              stderr_is stderr_isnt stderr_like stderr_unlike
+              stdout_is stdout_isnt stdout_like stdout_unlike
+              combined_is combined_isnt combined_like combined_unlike
+              )
+        ],
+        default => ['-tests'],
+    },
 };
 
 my $Test = Test::Builder->new;
@@ -140,35 +134,35 @@ stdout_isnt() passes if STDOUT is not equal to $expected.
 =cut
 
 sub stdout_is (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my $stdout = stdout_from($test);
+    my $stdout = stdout_from($test);
 
-  my $ok = ( $stdout eq $expected );
+    my $ok = ( $stdout eq $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag("STDOUT is:\n$stdout\nnot:\n$expected\nas expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag("STDOUT is:\n$stdout\nnot:\n$expected\nas expected");
 
-  return $ok;
+    return $ok;
 }
 
 sub stdout_isnt (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my $stdout = stdout_from($test);
+    my $stdout = stdout_from($test);
 
-  my $ok = ( $stdout ne $expected );
+    my $ok = ( $stdout ne $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag("STDOUT:\n$stdout\nmatching:\n$expected\nnot expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag("STDOUT:\n$stdout\nmatching:\n$expected\nnot expected");
 
-  return $ok;
+    return $ok;
 }
 
 =item B<stdout_like>
@@ -190,43 +184,44 @@ stdout_unlike() passes if STDOUT does not match the regex.
 =cut
 
 sub stdout_like (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  unless ( my $regextest = _chkregex( 'stdout_like' => $expected ) ) {
-    return $regextest;
-  }
+    unless ( my $regextest = _chkregex( 'stdout_like' => $expected ) ) {
+        return $regextest;
+    }
 
-  my $stdout = stdout_from($test);
+    my $stdout = stdout_from($test);
 
-  my $ok = ( $stdout =~ $expected );
+    my $ok = ( $stdout =~ $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag("STDOUT:\n$stdout\ndoesn't match:\n$expected\nas expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag(
+                  "STDOUT:\n$stdout\ndoesn't match:\n$expected\nas expected");
 
-  return $ok;
-}
+    return $ok;
+} ## end sub stdout_like (&$;$$)
 
 sub stdout_unlike (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  unless ( my $regextest = _chkregex( 'stdout_unlike' => $expected ) ) {
-    return $regextest;
-  }
+    unless ( my $regextest = _chkregex( 'stdout_unlike' => $expected ) ) {
+        return $regextest;
+    }
 
-  my $stdout = stdout_from($test);
+    my $stdout = stdout_from($test);
 
-  my $ok = ( $stdout !~ $expected );
+    my $ok = ( $stdout !~ $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag("STDOUT:\n$stdout\nmatches:\n$expected\nnot expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag("STDOUT:\n$stdout\nmatches:\n$expected\nnot expected");
 
-  return $ok;
+    return $ok;
 }
 
 =head2 STDERR
@@ -250,35 +245,35 @@ stderr_isnt() passes if STDERR is not equal to $expected.
 =cut
 
 sub stderr_is (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my $stderr = stderr_from($test);
+    my $stderr = stderr_from($test);
 
-  my $ok = ( $stderr eq $expected );
+    my $ok = ( $stderr eq $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag("STDERR is:\n$stderr\nnot:\n$expected\nas expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag("STDERR is:\n$stderr\nnot:\n$expected\nas expected");
 
-  return $ok;
+    return $ok;
 }
 
 sub stderr_isnt (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my $stderr = stderr_from($test);
+    my $stderr = stderr_from($test);
 
-  my $ok = ( $stderr ne $expected );
+    my $ok = ( $stderr ne $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag("STDERR:\n$stderr\nmatches:\n$expected\nnot expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag("STDERR:\n$stderr\nmatches:\n$expected\nnot expected");
 
-  return $ok;
+    return $ok;
 }
 
 =item B<stderr_like>
@@ -301,43 +296,44 @@ stderr_unlike() passes if STDERR does not match the regex.
 =cut
 
 sub stderr_like (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  unless ( my $regextest = _chkregex( 'stderr_like' => $expected ) ) {
-    return $regextest;
-  }
+    unless ( my $regextest = _chkregex( 'stderr_like' => $expected ) ) {
+        return $regextest;
+    }
 
-  my $stderr = stderr_from($test);
+    my $stderr = stderr_from($test);
 
-  my $ok = ( $stderr =~ $expected );
+    my $ok = ( $stderr =~ $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag("STDERR:\n$stderr\ndoesn't match:\n$expected\nas expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag(
+                  "STDERR:\n$stderr\ndoesn't match:\n$expected\nas expected");
 
-  return $ok;
-}
+    return $ok;
+} ## end sub stderr_like (&$;$$)
 
 sub stderr_unlike (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  unless ( my $regextest = _chkregex( 'stderr_unlike' => $expected ) ) {
-    return $regextest;
-  }
+    unless ( my $regextest = _chkregex( 'stderr_unlike' => $expected ) ) {
+        return $regextest;
+    }
 
-  my $stderr = stderr_from($test);
+    my $stderr = stderr_from($test);
 
-  my $ok = ( $stderr !~ $expected );
+    my $ok = ( $stderr !~ $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag("STDERR:\n$stderr\nmatches:\n$expected\nnot expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag("STDERR:\n$stderr\nmatches:\n$expected\nnot expected");
 
-  return $ok;
+    return $ok;
 }
 
 =head2 COMBINED OUTPUT
@@ -363,37 +359,37 @@ to $expected.
 =cut
 
 sub combined_is (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my $combined = combined_from($test);
+    my $combined = combined_from($test);
 
-  my $ok = ( $combined eq $expected );
+    my $ok = ( $combined eq $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag(
-    "STDOUT & STDERR are:\n$combined\nnot:\n$expected\nas expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag(
+             "STDOUT & STDERR are:\n$combined\nnot:\n$expected\nas expected");
 
-  return $ok;
+    return $ok;
 }
 
 sub combined_isnt (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my $combined = combined_from($test);
+    my $combined = combined_from($test);
 
-  my $ok = ( $combined ne $expected );
+    my $ok = ( $combined ne $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag(
-    "STDOUT & STDERR:\n$combined\nmatching:\n$expected\nnot expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag(
+           "STDOUT & STDERR:\n$combined\nmatching:\n$expected\nnot expected");
 
-  return $ok;
+    return $ok;
 }
 
 =item B<combined_like>
@@ -417,46 +413,46 @@ the regex.
 =cut
 
 sub combined_like (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  unless ( my $regextest = _chkregex( 'combined_like' => $expected ) ) {
-    return $regextest;
-  }
+    unless ( my $regextest = _chkregex( 'combined_like' => $expected ) ) {
+        return $regextest;
+    }
 
-  my $combined = combined_from($test);
+    my $combined = combined_from($test);
 
-  my $ok = ( $combined =~ $expected );
+    my $ok = ( $combined =~ $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag(
-    "STDOUT & STDERR:\n$combined\ndon't match:\n$expected\nas expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag(
+         "STDOUT & STDERR:\n$combined\ndon't match:\n$expected\nas expected");
 
-  return $ok;
-}
+    return $ok;
+} ## end sub combined_like (&$;$$)
 
 sub combined_unlike (&$;$$) {
-  my $test        = shift;
-  my $expected    = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expected    = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  unless ( my $regextest = _chkregex( 'combined_unlike' => $expected ) ) {
-    return $regextest;
-  }
+    unless ( my $regextest = _chkregex( 'combined_unlike' => $expected ) ) {
+        return $regextest;
+    }
 
-  my $combined = combined_from($test);
+    my $combined = combined_from($test);
 
-  my $ok = ( $combined !~ $expected );
+    my $ok = ( $combined !~ $expected );
 
-  $Test->ok( $ok, $description )
-    || $Test->diag(
-    "STDOUT & STDERR:\n$combined\nmatching:\n$expected\nnot expected");
+    $Test->ok( $ok, $description )
+      || $Test->diag(
+           "STDOUT & STDERR:\n$combined\nmatching:\n$expected\nnot expected");
 
-  return $ok;
-}
+    return $ok;
+} ## end sub combined_unlike (&$;$$)
 
 =head2 OUTPUT
 
@@ -516,100 +512,100 @@ is the same as
 =cut
 
 sub output_is (&$$;$$) {
-  my $test        = shift;
-  my $expout      = shift;
-  my $experr      = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expout      = shift;
+    my $experr      = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my ( $stdout, $stderr ) = output_from($test);
+    my ( $stdout, $stderr ) = output_from($test);
 
-  my $ok = 1;
-  my $diag;
+    my $ok = 1;
+    my $diag;
 
-  if ( defined($experr) && defined($expout) ) {
-    unless ( $stdout eq $expout ) {
-      $ok = 0;
-      $diag .= "STDOUT is:\n$stdout\nnot:\n$expout\nas expected";
+    if ( defined($experr) && defined($expout) ) {
+        unless ( $stdout eq $expout ) {
+            $ok = 0;
+            $diag .= "STDOUT is:\n$stdout\nnot:\n$expout\nas expected";
+        }
+        unless ( $stderr eq $experr ) {
+            $diag .= "\n" unless ($ok);
+            $ok = 0;
+            $diag .= "STDERR is:\n$stderr\nnot:\n$experr\nas expected";
+        }
     }
-    unless ( $stderr eq $experr ) {
-      $diag .= "\n" unless ($ok);
-      $ok = 0;
-      $diag .= "STDERR is:\n$stderr\nnot:\n$experr\nas expected";
+    elsif ( defined($expout) ) {
+        $ok = ( $stdout eq $expout );
+        $diag .= "STDOUT is:\n$stdout\nnot:\n$expout\nas expected";
     }
-  }
-  elsif ( defined($expout) ) {
-    $ok = ( $stdout eq $expout );
-    $diag .= "STDOUT is:\n$stdout\nnot:\n$expout\nas expected";
-  }
-  elsif ( defined($experr) ) {
-    $ok = ( $stderr eq $experr );
-    $diag .= "STDERR is:\n$stderr\nnot:\n$experr\nas expected";
-  }
-  else {
-    unless ( $stdout eq '' ) {
-      $ok = 0;
-      $diag .= "STDOUT is:\n$stdout\nnot:\n\nas expected";
+    elsif ( defined($experr) ) {
+        $ok = ( $stderr eq $experr );
+        $diag .= "STDERR is:\n$stderr\nnot:\n$experr\nas expected";
     }
-    unless ( $stderr eq '' ) {
-      $diag .= "\n" unless ($ok);
-      $ok = 0;
-      $diag .= "STDERR is:\n$stderr\nnot:\n\nas expected";
+    else {
+        unless ( $stdout eq '' ) {
+            $ok = 0;
+            $diag .= "STDOUT is:\n$stdout\nnot:\n\nas expected";
+        }
+        unless ( $stderr eq '' ) {
+            $diag .= "\n" unless ($ok);
+            $ok = 0;
+            $diag .= "STDERR is:\n$stderr\nnot:\n\nas expected";
+        }
     }
-  }
 
-  $Test->ok( $ok, $description ) || $Test->diag($diag);
+    $Test->ok( $ok, $description ) || $Test->diag($diag);
 
-  return $ok;
-}
+    return $ok;
+} ## end sub output_is (&$$;$$)
 
 sub output_isnt (&$$;$$) {
-  my $test        = shift;
-  my $expout      = shift;
-  my $experr      = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expout      = shift;
+    my $experr      = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my ( $stdout, $stderr ) = output_from($test);
+    my ( $stdout, $stderr ) = output_from($test);
 
-  my $ok = 1;
-  my $diag;
+    my $ok = 1;
+    my $diag;
 
-  if ( defined($experr) && defined($expout) ) {
-    if ( $stdout eq $expout ) {
-      $ok = 0;
-      $diag .= "STDOUT:\n$stdout\nmatching:\n$expout\nnot expected";
+    if ( defined($experr) && defined($expout) ) {
+        if ( $stdout eq $expout ) {
+            $ok = 0;
+            $diag .= "STDOUT:\n$stdout\nmatching:\n$expout\nnot expected";
+        }
+        if ( $stderr eq $experr ) {
+            $diag .= "\n" unless ($ok);
+            $ok = 0;
+            $diag .= "STDERR:\n$stderr\nmatching:\n$experr\nnot expected";
+        }
     }
-    if ( $stderr eq $experr ) {
-      $diag .= "\n" unless ($ok);
-      $ok = 0;
-      $diag .= "STDERR:\n$stderr\nmatching:\n$experr\nnot expected";
+    elsif ( defined($expout) ) {
+        $ok = ( $stdout ne $expout );
+        $diag = "STDOUT:\n$stdout\nmatching:\n$expout\nnot expected";
     }
-  }
-  elsif ( defined($expout) ) {
-    $ok = ( $stdout ne $expout );
-    $diag = "STDOUT:\n$stdout\nmatching:\n$expout\nnot expected";
-  }
-  elsif ( defined($experr) ) {
-    $ok = ( $stderr ne $experr );
-    $diag = "STDERR:\n$stderr\nmatching:\n$experr\nnot expected";
-  }
-  else {
-    if ( $stdout eq '' ) {
-      $ok   = 0;
-      $diag = "STDOUT:\n$stdout\nmatching:\n\nnot expected";
+    elsif ( defined($experr) ) {
+        $ok = ( $stderr ne $experr );
+        $diag = "STDERR:\n$stderr\nmatching:\n$experr\nnot expected";
     }
-    if ( $stderr eq '' ) {
-      $diag .= "\n" unless ($ok);
-      $ok = 0;
-      $diag .= "STDERR:\n$stderr\nmatching:\n\nnot expected";
+    else {
+        if ( $stdout eq '' ) {
+            $ok   = 0;
+            $diag = "STDOUT:\n$stdout\nmatching:\n\nnot expected";
+        }
+        if ( $stderr eq '' ) {
+            $diag .= "\n" unless ($ok);
+            $ok = 0;
+            $diag .= "STDERR:\n$stderr\nmatching:\n\nnot expected";
+        }
     }
-  }
 
-  $Test->ok( $ok, $description ) || $Test->diag($diag);
+    $Test->ok( $ok, $description ) || $Test->diag($diag);
 
-  return $ok;
-}
+    return $ok;
+} ## end sub output_isnt (&$$;$$)
 
 =item B<output_like>
 
@@ -647,109 +643,105 @@ $regex_stdout and $regex_stderr.
 =cut
 
 sub output_like (&$$;$$) {
-  my $test        = shift;
-  my $expout      = shift;
-  my $experr      = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expout      = shift;
+    my $experr      = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my ( $stdout, $stderr ) = output_from($test);
+    my ( $stdout, $stderr ) = output_from($test);
 
-  my $ok = 1;
+    my $ok = 1;
 
-  unless (
-    my $regextest = _chkregex(
-      'output_like_STDERR' => $experr,
-      'output_like_STDOUT' => $expout
-    )
-    )
-  {
-    return $regextest;
-  }
-
-  my $diag;
-  if ( defined($experr) && defined($expout) ) {
-    unless ( $stdout =~ $expout ) {
-      $ok = 0;
-      $diag .= "STDOUT:\n$stdout\ndoesn't match:\n$expout\nas expected";
+    unless (
+             my $regextest = _chkregex( 'output_like_STDERR' => $experr,
+                                        'output_like_STDOUT' => $expout )
+      )
+    {
+        return $regextest;
     }
-    unless ( $stderr =~ $experr ) {
-      $diag .= "\n" unless ($ok);
-      $ok = 0;
-      $diag .= "STDERR:\n$stderr\ndoesn't match:\n$experr\nas expected";
-    }
-  }
-  elsif ( defined($expout) ) {
-    $ok = ( $stdout =~ $expout );
-    $diag .= "STDOUT:\n$stdout\ndoesn't match:\n$expout\nas expected";
-  }
-  elsif ( defined($experr) ) {
-    $ok = ( $stderr =~ $experr );
-    $diag .= "STDERR:\n$stderr\ndoesn't match:\n$experr\nas expected";
-  }
-  else {
-    unless ( $stdout eq '' ) {
-      $ok = 0;
-      $diag .= "STDOUT is:\n$stdout\nnot:\n\nas expected";
-    }
-    unless ( $stderr eq '' ) {
-      $diag .= "\n" unless ($ok);
-      $ok = 0;
-      $diag .= "STDERR is:\n$stderr\nnot:\n\nas expected";
-    }
-  }
 
-  $Test->ok( $ok, $description ) || $Test->diag($diag);
+    my $diag;
+    if ( defined($experr) && defined($expout) ) {
+        unless ( $stdout =~ $expout ) {
+            $ok = 0;
+            $diag .= "STDOUT:\n$stdout\ndoesn't match:\n$expout\nas expected";
+        }
+        unless ( $stderr =~ $experr ) {
+            $diag .= "\n" unless ($ok);
+            $ok = 0;
+            $diag .= "STDERR:\n$stderr\ndoesn't match:\n$experr\nas expected";
+        }
+    }
+    elsif ( defined($expout) ) {
+        $ok = ( $stdout =~ $expout );
+        $diag .= "STDOUT:\n$stdout\ndoesn't match:\n$expout\nas expected";
+    }
+    elsif ( defined($experr) ) {
+        $ok = ( $stderr =~ $experr );
+        $diag .= "STDERR:\n$stderr\ndoesn't match:\n$experr\nas expected";
+    }
+    else {
+        unless ( $stdout eq '' ) {
+            $ok = 0;
+            $diag .= "STDOUT is:\n$stdout\nnot:\n\nas expected";
+        }
+        unless ( $stderr eq '' ) {
+            $diag .= "\n" unless ($ok);
+            $ok = 0;
+            $diag .= "STDERR is:\n$stderr\nnot:\n\nas expected";
+        }
+    }
 
-  return $ok;
-}
+    $Test->ok( $ok, $description ) || $Test->diag($diag);
+
+    return $ok;
+} ## end sub output_like (&$$;$$)
 
 sub output_unlike (&$$;$$) {
-  my $test        = shift;
-  my $expout      = shift;
-  my $experr      = shift;
-  my $options     = shift if ( ref( $_[0] ) );
-  my $description = shift;
+    my $test        = shift;
+    my $expout      = shift;
+    my $experr      = shift;
+    my $options     = shift if ( ref( $_[0] ) );
+    my $description = shift;
 
-  my ( $stdout, $stderr ) = output_from($test);
+    my ( $stdout, $stderr ) = output_from($test);
 
-  my $ok = 1;
+    my $ok = 1;
 
-  unless (
-    my $regextest = _chkregex(
-      'output_unlike_STDERR' => $experr,
-      'output_unlike_STDOUT' => $expout
-    )
-    )
-  {
-    return $regextest;
-  }
-
-  my $diag;
-  if ( defined($experr) && defined($expout) ) {
-    if ( $stdout =~ $expout ) {
-      $ok = 0;
-      $diag .= "STDOUT:\n$stdout\nmatches:\n$expout\nnot expected";
+    unless (
+             my $regextest = _chkregex( 'output_unlike_STDERR' => $experr,
+                                        'output_unlike_STDOUT' => $expout )
+      )
+    {
+        return $regextest;
     }
-    if ( $stderr =~ $experr ) {
-      $diag .= "\n" unless ($ok);
-      $ok = 0;
-      $diag .= "STDERR:\n$stderr\nmatches:\n$experr\nnot expected";
+
+    my $diag;
+    if ( defined($experr) && defined($expout) ) {
+        if ( $stdout =~ $expout ) {
+            $ok = 0;
+            $diag .= "STDOUT:\n$stdout\nmatches:\n$expout\nnot expected";
+        }
+        if ( $stderr =~ $experr ) {
+            $diag .= "\n" unless ($ok);
+            $ok = 0;
+            $diag .= "STDERR:\n$stderr\nmatches:\n$experr\nnot expected";
+        }
     }
-  }
-  elsif ( defined($expout) ) {
-    $ok = ( $stdout !~ $expout );
-    $diag .= "STDOUT:\n$stdout\nmatches:\n$expout\nnot expected";
-  }
-  elsif ( defined($experr) ) {
-    $ok = ( $stderr !~ $experr );
-    $diag .= "STDERR:\n$stderr\nmatches:\n$experr\nnot expected";
-  }
+    elsif ( defined($expout) ) {
+        $ok = ( $stdout !~ $expout );
+        $diag .= "STDOUT:\n$stdout\nmatches:\n$expout\nnot expected";
+    }
+    elsif ( defined($experr) ) {
+        $ok = ( $stderr !~ $experr );
+        $diag .= "STDERR:\n$stderr\nmatches:\n$experr\nnot expected";
+    }
 
-  $Test->ok( $ok, $description ) || $Test->diag($diag);
+    $Test->ok( $ok, $description ) || $Test->diag($diag);
 
-  return $ok;
-}
+    return $ok;
+} ## end sub output_unlike (&$$;$$)
 
 =head1 EXPORTS
 
@@ -817,18 +809,18 @@ stdout_from() executes $coderef and captures STDOUT.
 =cut
 
 sub stdout_from (&) {
-  my $test = shift;
+    my $test = shift;
 
-  select( ( select(STDOUT), $| = 1 )[0] );
-  my $out = tie *STDOUT, 'Test::Output::Tie';
+    select( ( select(STDOUT), $| = 1 )[0] );
+    my $out = tie *STDOUT, 'Test::Output::Tie';
 
-  &$test;
-  my $stdout = $out->read;
+    &$test;
+    my $stdout = $out->read;
 
-  undef $out;
-  untie *STDOUT;
+    undef $out;
+    untie *STDOUT;
 
-  return $stdout;
+    return $stdout;
 }
 
 =head2 stderr_from
@@ -841,21 +833,21 @@ stderr_from() executes $coderef and captures STDERR.
 =cut
 
 sub stderr_from (&) {
-  my $test = shift;
+    my $test = shift;
 
-  local $SIG{__WARN__} = sub { print STDERR @_ }
-    if $] < 5.008;
-  
-  select( ( select(STDERR), $| = 1 )[0] );
-  my $err = tie *STDERR, 'Test::Output::Tie';
+    local $SIG{__WARN__} = sub { print STDERR @_ }
+      if $] < 5.008;
 
-  &$test;
-  my $stderr = $err->read;
+    select( ( select(STDERR), $| = 1 )[0] );
+    my $err = tie *STDERR, 'Test::Output::Tie';
 
-  undef $err;
-  untie *STDERR;
+    &$test;
+    my $stderr = $err->read;
 
-  return $stderr;
+    undef $err;
+    untie *STDERR;
+
+    return $stderr;
 }
 
 =head2 output_from
@@ -868,23 +860,23 @@ output_from() executes $coderef one time capturing both STDOUT and STDERR.
 =cut
 
 sub output_from (&) {
-  my $test = shift;
+    my $test = shift;
 
-  select( ( select(STDOUT), $| = 1 )[0] );
-  select( ( select(STDERR), $| = 1 )[0] );
-  my $out = tie *STDOUT, 'Test::Output::Tie';
-  my $err = tie *STDERR, 'Test::Output::Tie';
+    select( ( select(STDOUT), $| = 1 )[0] );
+    select( ( select(STDERR), $| = 1 )[0] );
+    my $out = tie *STDOUT, 'Test::Output::Tie';
+    my $err = tie *STDERR, 'Test::Output::Tie';
 
-  &$test;
-  my $stdout = $out->read;
-  my $stderr = $err->read;
+    &$test;
+    my $stdout = $out->read;
+    my $stderr = $err->read;
 
-  undef $out;
-  undef $err;
-  untie *STDOUT;
-  untie *STDERR;
+    undef $out;
+    undef $err;
+    untie *STDOUT;
+    untie *STDERR;
 
-  return ( $stdout, $stderr );
+    return ( $stdout, $stderr );
 }
 
 =head2 combined_from
@@ -898,47 +890,49 @@ captures them. combined_from() is equivalent to using 2>&1 in UNIX.
 =cut
 
 sub combined_from (&) {
-  my $test = shift;
+    my $test = shift;
 
-  select( ( select(STDOUT), $| = 1 )[0] );
-  select( ( select(STDERR), $| = 1 )[0] );
+    select( ( select(STDOUT), $| = 1 )[0] );
+    select( ( select(STDERR), $| = 1 )[0] );
 
-  open( STDERR, ">&STDOUT" );
+    open( STDERR, ">&STDOUT" );
 
-  my $out = tie *STDOUT, 'Test::Output::Tie';
-  tie *STDERR, 'Test::Output::Tie', $out;
+    my $out = tie *STDOUT, 'Test::Output::Tie';
+    tie *STDERR, 'Test::Output::Tie', $out;
 
-  &$test;
-  my $combined = $out->read;
+    &$test;
+    my $combined = $out->read;
 
-  undef $out;
-  {
-  no warnings;
-  untie *STDOUT;
-  untie *STDERR;
-  }
-  
-  return ($combined);
-}
+    undef $out;
+    {
+        no warnings;
+        untie *STDOUT;
+        untie *STDERR;
+    }
+
+    return ($combined);
+} ## end sub combined_from (&)
 
 sub _chkregex {
-  my %regexs = @_;
+    my %regexs = @_;
 
-  foreach my $test ( keys(%regexs) ) {
-    next unless ( defined( $regexs{$test} ) );
+    foreach my $test ( keys(%regexs) ) {
+        next unless ( defined( $regexs{$test} ) );
 
-    my $usable_regex = $Test->maybe_regex( $regexs{$test} );
-    unless ( defined($usable_regex) ) {
-      my $ok = $Test->ok( 0, $test );
+        my $usable_regex = $Test->maybe_regex( $regexs{$test} );
+        unless ( defined($usable_regex) ) {
+            my $ok = $Test->ok( 0, $test );
 
-      $Test->diag("'$regexs{$test}' doesn't look much like a regex to me.");
+            $Test->diag(
+                    "'$regexs{$test}' doesn't look much like a regex to me.");
+
 #       unless $ok;
 
-      return $ok;
+            return $ok;
+        }
     }
-  }
-  return 1;
-}
+    return 1;
+} ## end sub _chkregex
 
 =head1 AUTHOR
 
