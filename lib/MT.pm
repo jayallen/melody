@@ -1005,13 +1005,14 @@ sub init_config {
         }
     } ## end for my $meth (@mt_paths)
 
-    if ( my $local_lib = $cfg->PERL5LIB || $cfg->PerlLocalLibPath ) {
-        $local_lib = [$local_lib] if !'ARRAY' eq ref $local_lib;
-        eval "use local::lib qw( @{$local_lib} )";
-        return
-          $mt->trans_error( 'Can\'t load local lib from path [_1]: ',
-                            join( ', ', @$local_lib ), $@, )
-          if $@;
+
+    if ( my @local_lib = $cfg->PERL5LIB ) {
+        eval sprintf "use local::lib qw( %s )", join(' ', @local_lib);
+        $@ and return $mt->errtrans(
+              'PERL5LIB: Error loading Perl local libraries: [_1]. '
+            . 'Please re-check your PERL5LIB configuration value: [_2]', 
+            $@, join( ', ', @local_lib )
+        );
     }
 
     return $mt->trans_error("Bad ObjectDriver config")
