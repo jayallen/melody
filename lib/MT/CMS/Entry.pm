@@ -2152,7 +2152,7 @@ sub build_entry_table {
       = const('DISPLAY_LENGTH_EDIT_ENTRY_TEXT_FROM_EXCERPT');
     my $text_max_len = const('DISPLAY_LENGTH_EDIT_ENTRY_TEXT_BREAK_UP');
     my %blog_perms;
-    $blog_perms{ $perms->blog_id } = $perms if $perms;
+    $blog_perms{ $perms->blog_id } = $perms if $perms and $perms->blog_id;
 
     while ( my $obj = $iter->() ) {
         my $blog_perms;
