@@ -4,7 +4,7 @@ key: ThemeManager
 author_link: http://endevver.com/
 author_name: Endevver
 description: 'A comprehensive theme management plugin!'
-version: 0.10.23
+version: 0.10.24
 schema_version: 7
 static_version: 7
 l10n_class: ThemeManager::L10N
@@ -42,7 +42,7 @@ callbacks:
     template_param.edit_blog:      $ThemeManager::ThemeManager::TemplateInstall::xfrm_param_add_language
 
 init_app: $ThemeManager::ThemeManager::Init::init_app
-    
+
 object_types:
     theme: ThemeManager::Theme
     blog:

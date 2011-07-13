@@ -5,7 +5,7 @@ use ConfigAssistant::Util qw( find_theme_plugin );
 use ThemeManager::Util qw( theme_label theme_thumbnail_url theme_preview_url
   theme_description theme_author_name theme_author_link
   theme_paypal_email theme_version theme_link theme_doc_link
-  theme_about_designer theme_docs theme_thumb_path theme_thumb_url
+  theme_about_designer theme_documentation theme_thumb_path theme_thumb_url
   prepare_theme_meta );
 use MT::Util qw(caturl dirify offset_time_list);
 use MT;
@@ -41,7 +41,27 @@ sub update_menus {
                                       order      => 1,
                                       mode       => 'theme_dashboard',
                                       view       => 'blog',
-                                      permission => 'edit_templates',
+        },
+
+        # Add the theme documentation to the menu to make it more prominent,
+        # if documentation is provided with this theme.
+        'design:theme_documentation' => {
+            label => 'Theme Documentation',
+            order => 2,
+            view => 'blog',
+            link       => sub {
+
+                # @_ contains... something. It's not an $app
+                # reference, and doesn't appear to directly have
+                # a blog object or the blog ID available. So, grab
+                # a new instance.
+                my $app = MT->instance;
+                return
+                  $app->uri(
+                             mode => 'theme_dashboard',
+                             args => { blog_id => $app->blog->id, },
+                  ) . '#docs';    # Go to Documentation.
+            },
         },
 
         # Add the new template menu option, which is actually a link to the
@@ -225,25 +245,7 @@ sub theme_dashboard {
     # use because it was previously sanitized through the Util methods (such
     # as theme_label and theme_description). But if the user is in Designer
     # Mode, we want to ensure that fallback values are used if necessary.
-    # TODO Refactor this into a single method call where you pass in $theme_meta and get out a parameter hash ref.
-    $param->{theme_label} = theme_label( $theme_meta->{label}, $plugin );
-    $param->{theme_description}
-      = theme_description( $theme_meta->{description}, $plugin );
-    $param->{theme_author_name}
-      = theme_author_name( $theme_meta->{author_name}, $plugin );
-    $param->{theme_author_link}
-      = theme_author_link( $theme_meta->{author_link}, $plugin );
-    $param->{theme_link} = theme_link( $theme_meta->{link}, $plugin );
-    $param->{theme_doc_link}
-      = theme_doc_link( $theme_meta->{doc_link}, $plugin );
-    $param->{theme_version}
-      = theme_version( $theme_meta->{version}, $plugin );
-    $param->{paypal_email}
-      = theme_paypal_email( $theme_meta->{paypal_email}, $plugin );
-    $param->{about_designer}
-      = theme_about_designer( $theme_meta->{about_designer}, $plugin );
-    $param->{theme_docs}
-      = theme_docs( $theme_meta->{documentation}, $plugin );
+    $param = _populate_theme_dashboard($param, $theme_meta, $plugin);
 
     # Grab the template set language, or fall back to the blog language.
     my $template_set_language = $blog->template_set_language
@@ -283,6 +285,17 @@ sub theme_dashboard {
     $param->{custom_fields_refreshed} = $q->param('custom_fields_refreshed');
     $param->{fd_fields_refreshed}     = $q->param('fd_fields_refreshed');
 
+    # Grab the user's permissions to decide what tabs and content to display 
+    # on the theme dashboard.
+    my $perms = $app->blog ? $app->permissions : $app->user->permissions;
+    return $app->return_to_dashboard( redirect => 1 )
+        unless $perms || $app->user->is_superuser;
+    
+    # If adequate permissions, return true; else false.
+    $param->{has_permission} = ( $perms && $perms->can_edit_templates )
+        ? 1 : 0;
+
+
     my $tmpl = $tm->load_tmpl('theme_dashboard.mtml');
     return $app->listing( {
            type     => 'theme',
@@ -293,14 +306,13 @@ sub theme_dashboard {
                my ( $theme, $row ) = @_;
 
                # Use the plugin sig to grab the plugin.
-               # FIXME $app->component($theme->plugin_sig) ???
-               my $plugin = $MT::Plugins{ $theme->plugin_sig }->{object};
+               my $plugin = $app->component( $theme->plugin_sig );
                if ( !$plugin ) {
 
                    # This plugin couldn't be loaded! That must mean the theme has
                    # been uninstalled, so remove the entry in the table.
                    $theme->remove;
-                   $theme->save;
+                   $theme->save or die $theme->errstr;
                    next;
                }
                $row->{id}         = $theme->ts_id;
@@ -467,11 +479,9 @@ sub setup_theme {
     # set up. If there are, we want them to look good (including being sorted)
     # into alphabeticized fieldsets and to be ordered correctly with in each
     # fieldset, just like on the Theme Options page.
-    # FIXME Use MT->component
-    my $plugin = $MT::Plugins{$plugin_sig}->{object};
+    my $plugin = MT->component($plugin_sig);
 
-    # FIXME Use $plugin->registry('template_sets', $ts_id);
-    my $ts = $plugin->{registry}->{'template_sets'}->{$ts_id};
+    my $ts = $plugin->registry('template_sets', $ts_id);
 
     # Convert the saved YAML back into a hash.
     my $theme_meta
@@ -1548,6 +1558,34 @@ sub _find_supported_languages {
     }
     return @ts_langs;
 } ## end sub _find_supported_languages
+
+# Add all the necessary values to $param to populate the theme dashboard.
+sub _populate_theme_dashboard {
+    my ($param)      = shift;
+    my ($theme_meta) = shift;
+    my ($plugin)     = shift;
+
+    $param->{theme_label} = theme_label( $theme_meta->{label}, $plugin );
+    $param->{theme_description}
+      = theme_description( $theme_meta->{description}, $plugin );
+    $param->{theme_author_name}
+      = theme_author_name( $theme_meta->{author_name}, $plugin );
+    $param->{theme_author_link}
+      = theme_author_link( $theme_meta->{author_link}, $plugin );
+    $param->{theme_link} = theme_link( $theme_meta->{link}, $plugin );
+    $param->{theme_doc_link}
+      = theme_doc_link( $theme_meta->{doc_link}, $plugin );
+    $param->{theme_version}
+      = theme_version( $theme_meta->{version}, $plugin );
+    $param->{theme_paypal_email}
+      = theme_paypal_email( $theme_meta->{paypal_email}, $plugin );
+    $param->{theme_about_designer}
+      = theme_about_designer( $theme_meta->{about_designer}, $plugin );
+    $param->{theme_documentation}
+      = theme_documentation( $theme_meta->{documentation}, $plugin );
+
+    return $param;
+}
 
 1;
 
