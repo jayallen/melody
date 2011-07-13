@@ -204,10 +204,11 @@ sub get {
     }
     elsif ( $type eq 'HASH' ) {
         $val ||= {};
-        $val = {
-            delete $val->{__DEFAULT__} ? ( %{ $defaults->() }, %$val )
-                                       : %$val
-        };
+        $val
+          = {
+              delete $val->{__DEFAULT__}
+              ? ( %{ $defaults->() }, %$val )
+              : %$val };
         return wantarray ? %$val : $val;
     }
     else {

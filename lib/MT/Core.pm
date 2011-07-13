@@ -556,10 +556,7 @@ BEGIN {
             'DefaultTemplateSet'   => { default => 'DePoClean_theme' },
 
             'AssetFileTypes'      => { type => 'HASH' },
-            'AssetFileExtensions' => {
-                                   type    => 'ARRAY',
-                                   default => undef,
-            },
+            'AssetFileExtensions' => { type => 'ARRAY', default => undef, },
             'DeniedAssetFileExtensions' => {
                 type    => 'ARRAY',
                 default => [ qw(

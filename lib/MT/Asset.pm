@@ -53,7 +53,7 @@ sub extensions {
     return \@$ext unless MT->config('AssetFileTypes');
 
     my $file_types = MT->config('AssetFileTypes')->{$this_pkg} || '';
-    my @custom_ext = map { qr/$_/i } split( /\s*,\s*/, $file_types );
+    my @custom_ext = map {qr/$_/i} split( /\s*,\s*/, $file_types );
     my %seen;
     my ($new_ext) = grep { ++$seen{$_} < 2 }[ @$ext, @custom_ext ];
 
