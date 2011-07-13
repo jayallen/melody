@@ -1,7 +1,4 @@
-[12:56:01] t/00-compile.t .............. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+[12:20:24] t/00-compile.t .............. 
 
 1..197
 ok 1 - use MT::Bootstrap;
@@ -201,12 +198,9 @@ ok 194 - use MT::Worker::Publish;
 ok 195 - use MT::Worker::Sync;
 ok 196 - use MT::Worker::Summarize;
 ok 197 - use MT::Worker::SummaryWatcher;
-ok     1896 ms
-[12:56:01] t/01-serialize.t ............ 
+ok     6631 ms
+[12:20:24] t/01-serialize.t ............ 
 1..73
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - use MT::Serialize;
 ok 2 - with Storable isa MT::Serialize
@@ -281,11 +275,8 @@ ok 70 - REF
 ok 71 - HASH
 ok 72 - 'baz' values
 ok 73 - 'foo' values
-ok      396 ms
-[12:56:06] t/02-meta-new.t ............. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok      455 ms
+[12:20:29] t/02-meta-new.t ............. 
 
 1..7
 ok 1 - page_layout meta column is correct
@@ -299,11 +290,8 @@ ok 4 - New meta column has the right HASH value ({'something' => 'other'})
 ok 5 - New meta column has the right HASH value ({'something' => 'else'}) after update
 ok 6 - Meta column has a new key in its hash
 ok 7 - get_collection retrieves multiple field meta objects
-ok     4428 ms
-[12:56:10] t/03-meta-new-author.t ...... 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     5373 ms
+[12:20:34] t/03-meta-new-author.t ...... 
 
 1..6
 ok 1 - New meta column isn't defined yet
@@ -316,35 +304,45 @@ ok 3 - New meta column has the right HASH value ({'something' => 'other'})
 ok 4 - New meta column has the right HASH value ({'something' => 'else'}) after update
 ok 5 - Meta column has a new key in its hash
 ok 6 - get_collection retrieves multiple field meta objects
-ok     4546 ms
-[12:56:10] t/04-config.t ............... 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     4995 ms
+[12:20:35] t/04-config.t ............... 
+1..4
 
-1..17
-ok 1 - The object isa MT::ConfigMgr
-ok 2 - read '/var/folders/4c/4csSp4aZHTG9d6BEzxw6QE+++TM/-Tmp-/sEciqWldYI'
-ok 3 - get(DataSource)=/Users/jay/code/omt/openmelody/t/db/
-ok 4 - get(DataSource)=./db2
-ok 5 - autoloaded DataSource=./db2
-ok 6 - autoloaded DataSource=./db2
-ok 7 - Serializer=MT
-ok 8 - TimeOffset=0
-ok 9 - AltTemplate=ARRAY
-ok 10 - paths=2
-ok 11 - foo bar
-ok 12 - baz quux
-    1..2
-    ok 1 - DeniedAssetFileExtensions=ARRAY
-    ok 2 - DeniedAssetFileExtensions with DEFAULT
-ok 13 - DeniedAssetFileExtensions ARRAY and DEFAULT value
-ok 14 - ObjectDriver=SQLite
-ok 15 - The object isa MT
-ok 16 - The object isa MT::ConfigMgr
-ok 17 - DataSource=/Users/jay/code/omt/openmelody/t/db/
-ok      428 ms
-[12:56:11] t/05-errorhandler.t ......... 
+    1..3
+    ok 1 - The object isa MT
+    ok 2 - The object isa MT::ConfigMgr
+    ok 3 - Database file
+ok 1 - Read config test for MT constructor
+    1..6
+    ok 1 - get(DataSource)=./db2
+    ok 2 - autoloaded DataSource=./db2
+    ok 3 - autoloaded DataSource=./db2
+    ok 4 - Serializer=MT
+    ok 5 - TimeOffset=0
+    ok 6 - ObjectDriver=SQLite
+ok 2 - MT::ConfigMgr API - accessors/mutators/defaults
+    1..12
+    ok 1 - MT::ConfigMgr::type: AssetFileExtensions is ARRAY
+    ok 2 - MT::ConfigMgr::type: PluginPath is ARRAY
+    ok 3 - MT::ConfigMgr::type: DeniedAssetFileExtensions is ARRAY
+    ok 4 - MT::ConfigMgr::get: Contextual return values
+    ok 5 - MT::ConfigMgr::get ARRAY directive defaults: AssetFileExtensions undefined
+    ok 6 - MT::ConfigMgr::get ARRAY directive defaults: PluginPath is populated
+    ok 7 - MT::ConfigMgr::get ARRAY directive defaults: DeniedAssetFileExtensions is heavily populated
+    ok 8 - MT::ConfigMgr::default: Method matches value for AssetFileExtensions
+    ok 9 - MT::ConfigMgr::default: Method matches value for PluginPath
+    ok 10 - MT::ConfigMgr::default: Method matches value for DeniedAssetFileExtensions
+    ok 11 - MT::ConfigMgr::set: Scalar value arg appends to ARRAY directive
+    ok 12 - MT::ConfigMgr::set: Arrayref value arg overwrites ARRAY directive
+ok 3 - MT::ConfigMgr API - accessors/mutators/defaults for ARRAY directives
+    1..4
+    ok 1 - AltTemplate=ARRAY
+    ok 2 - AltTemplate: Config file overrides defaults # TODO Search app hack overrides default behavior and prepends the default value to the array
+    ok 3 - DeniedAssetFileExtensions: Config file overrides default
+    ok 4 - DeniedAssetFileExtensions: Config file with __DEFAULT__ appends
+ok 4 - Config file assignment of ARRAY directives
+ok      526 ms
+[12:20:35] t/05-errorhandler.t ......... 
 1..9
 ok 1 - The object isa MT::ErrorHandler
 ok 2 - val undef
@@ -355,11 +353,8 @@ ok 6 - val undef
 ok 7 - foo bar
 ok 8 - val size=0
 ok 9 - foo
-ok       30 ms
-[12:56:11] t/07-builder.t .............. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok       23 ms
+[12:20:35] t/07-builder.t .............. 
 
 1..116
 ok 1
@@ -478,16 +473,13 @@ ok 113
 ok 114
 ok 115
 ok 116
-ok      435 ms
-[12:56:11] t/08-util.t ................. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok      503 ms
+[12:20:36] t/08-util.t ................. 
 
 1..212
 # Running under perl version 5.010001 for darwin
-# Current time local: Mon Jun 27 12:56:11 2011
-# Current time GMT:   Mon Jun 27 19:56:11 2011
+# Current time local: Wed Jul 13 12:20:35 2011
+# Current time GMT:   Wed Jul 13 19:20:35 2011
 # Using Test.pm version 1.25_02
 ok 1
 ok 2
@@ -701,13 +693,10 @@ ok 209
 ok 210
 ok 211
 ok 212
-ok      402 ms
-[12:56:12] t/09-image.t ................ 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok      571 ms
+[12:20:39] t/09-image.t ................ 
 
-1..154
+1..155
 ok 1 - /Users/jay/code/omt/openmelody/t/images/test.gif looks like a binary file
 ok 2 - driver ImageMagick with image /Users/jay/code/omt/openmelody/t/images/test.gif is an MT::Image::ImageMagick isa MT::Image::ImageMagick
 ok 3 - ImageMagick says test.gif is 233 px wide
@@ -728,44 +717,45 @@ ok 17 - ImageMagick says test.gif from blob is 233 px wide
 ok 18 - ImageMagick says test.gif from blob is 68 px high
 ok 19 - ImageMagick's get_dimensions says test.gif from blob is 233 px wide
 ok 20 - ImageMagick's get_dimensions says test.gif from blob is 68 px high
-ok 21 # SKIP no NetPBM image
-ok 22 # SKIP no NetPBM image
-ok 23 # SKIP no NetPBM image
-ok 24 # SKIP no NetPBM image
-ok 25 # SKIP no NetPBM image
-ok 26 # SKIP no NetPBM image
-ok 27 # SKIP no NetPBM image
-ok 28 # SKIP no NetPBM image
-ok 29 # SKIP no NetPBM image
-ok 30 # SKIP no NetPBM image
-ok 31 # SKIP no NetPBM image
-ok 32 # SKIP no NetPBM image
-ok 33 # SKIP no NetPBM image
-ok 34 # SKIP no NetPBM image
-ok 35 # SKIP no NetPBM image
-ok 36 # SKIP no NetPBM image
-ok 37 # SKIP no NetPBM image
-ok 38 # SKIP no NetPBM image
-ok 39 # SKIP no NetPBM image
-ok 40 # SKIP no GD image
-ok 41 # SKIP no GD image
-ok 42 # SKIP no GD image
-ok 43 # SKIP no GD image
-ok 44 # SKIP no GD image
-ok 45 # SKIP no GD image
-ok 46 # SKIP no GD image
-ok 47 # SKIP no GD image
-ok 48 # SKIP no GD image
-ok 49 # SKIP no GD image
-ok 50 # SKIP no GD image
-ok 51 # SKIP no GD image
-ok 52 # SKIP no GD image
-ok 53 # SKIP no GD image
-ok 54 # SKIP no GD image
-ok 55 # SKIP no GD image
-ok 56 # SKIP no GD image
-ok 57 # SKIP no GD image
-ok 58 # SKIP no GD image
+ok 21 - driver NetPBM with image /Users/jay/code/omt/openmelody/t/images/test.gif is an MT::Image::NetPBM isa MT::Image::NetPBM
+ok 22 - NetPBM says test.gif is 233 px wide
+ok 23 - NetPBM says test.gif is 68 px high
+ok 24 - NetPBM's get_dimensions says test.gif is 233 px wide
+ok 25 - NetPBM's get_dimensions says test.gif is 68 px high
+ok 26 - NetPBM says test.gif at 50% scale is 116 px wide
+ok 27 - NetPBM says test.gif at 50% scale is 34 px high
+ok 28 - NetPBM's get_dimensions says test.gif is still 233 px wide after theoretical scaling
+ok 29 - NetPBM's get_dimensions says test.gif is still 68 px high after theoretical scaling
+ok 30 - NetPBM says test.gif scaled to 50 px wide is 50 px wide
+ok 31 - NetPBM says test.gif scaled to 50x100 is 50 px wide
+ok 32 - NetPBM says test.gif scaled to 50x100 is 100 px high
+ok 33 - result of scaling test.gif to 50% with NetPBM is 116 px wide
+ok 34 - result of scaling test.gif to 50% with NetPBM is 34 px high
+ok 35 - The object isa MT::Image::NetPBM
+ok 36 - NetPBM says test.gif from blob is 233 px wide
+ok 37 - NetPBM says test.gif from blob is 68 px high
+ok 38 - NetPBM's get_dimensions says test.gif from blob is 233 px wide
+ok 39 - NetPBM's get_dimensions says test.gif from blob is 68 px high
+ok 40 - driver GD with image /Users/jay/code/omt/openmelody/t/images/test.gif is an MT::Image::GD isa MT::Image::GD
+ok 41 - GD says test.gif is 233 px wide
+ok 42 - GD says test.gif is 68 px high
+ok 43 - GD's get_dimensions says test.gif is 233 px wide
+ok 44 - GD's get_dimensions says test.gif is 68 px high
+ok 45 - GD says test.gif at 50% scale is 116 px wide
+ok 46 - GD says test.gif at 50% scale is 34 px high
+ok 47 - GD's get_dimensions says test.gif is still 233 px wide after theoretical scaling
+ok 48 - GD's get_dimensions says test.gif is still 68 px high after theoretical scaling
+ok 49 - GD says test.gif scaled to 50 px wide is 50 px wide
+ok 50 - GD says test.gif scaled to 50x100 is 50 px wide
+ok 51 - GD says test.gif scaled to 50x100 is 100 px high
+ok 52 - result of scaling test.gif to 50% with GD is 116 px wide
+ok 53 - result of scaling test.gif to 50% with GD is 34 px high
+ok 54 - The object isa MT::Image::GD
+ok 55 - GD says test.gif from blob is 233 px wide
+ok 56 - GD says test.gif from blob is 68 px high
+ok 57 - GD's get_dimensions says test.gif from blob is 233 px wide
+ok 58 - GD's get_dimensions says test.gif from blob is 68 px high
+# Imager: Could not instantiate MT::Image object from /Users/jay/code/omt/openmelody/t/images/test.gif: Unsupported image file type: gif
 ok 59 # SKIP no Imager image
 ok 60 # SKIP no Imager image
 ok 61 # SKIP no Imager image
@@ -805,69 +795,70 @@ ok 94 - ImageMagick says test.jpg from blob is 640 px wide
 ok 95 - ImageMagick says test.jpg from blob is 480 px high
 ok 96 - ImageMagick's get_dimensions says test.jpg from blob is 640 px wide
 ok 97 - ImageMagick's get_dimensions says test.jpg from blob is 480 px high
-ok 98 # SKIP no NetPBM image
-ok 99 # SKIP no NetPBM image
-ok 100 # SKIP no NetPBM image
-ok 101 # SKIP no NetPBM image
-ok 102 # SKIP no NetPBM image
-ok 103 # SKIP no NetPBM image
-ok 104 # SKIP no NetPBM image
-ok 105 # SKIP no NetPBM image
-ok 106 # SKIP no NetPBM image
-ok 107 # SKIP no NetPBM image
-ok 108 # SKIP no NetPBM image
-ok 109 # SKIP no NetPBM image
-ok 110 # SKIP no NetPBM image
-ok 111 # SKIP no NetPBM image
-ok 112 # SKIP no NetPBM image
-ok 113 # SKIP no NetPBM image
-ok 114 # SKIP no NetPBM image
-ok 115 # SKIP no NetPBM image
-ok 116 # SKIP no NetPBM image
-ok 117 # SKIP no GD image
-ok 118 # SKIP no GD image
-ok 119 # SKIP no GD image
-ok 120 # SKIP no GD image
-ok 121 # SKIP no GD image
-ok 122 # SKIP no GD image
-ok 123 # SKIP no GD image
-ok 124 # SKIP no GD image
-ok 125 # SKIP no GD image
-ok 126 # SKIP no GD image
-ok 127 # SKIP no GD image
-ok 128 # SKIP no GD image
-ok 129 # SKIP no GD image
-ok 130 # SKIP no GD image
-ok 131 # SKIP no GD image
-ok 132 # SKIP no GD image
-ok 133 # SKIP no GD image
-ok 134 # SKIP no GD image
-ok 135 # SKIP no GD image
-ok 136 # SKIP no Imager image
-ok 137 # SKIP no Imager image
-ok 138 # SKIP no Imager image
-ok 139 # SKIP no Imager image
-ok 140 # SKIP no Imager image
-ok 141 # SKIP no Imager image
-ok 142 # SKIP no Imager image
-ok 143 # SKIP no Imager image
-ok 144 # SKIP no Imager image
-ok 145 # SKIP no Imager image
-ok 146 # SKIP no Imager image
-ok 147 # SKIP no Imager image
-ok 148 # SKIP no Imager image
-ok 149 # SKIP no Imager image
-ok 150 # SKIP no Imager image
-ok 151 # SKIP no Imager image
-ok 152 # SKIP no Imager image
-ok 153 # SKIP no Imager image
-ok 154 # SKIP no Imager image
-ok      573 ms
-[12:56:12] t/10-filemgr.t .............. 
+ok 98 - driver NetPBM with image /Users/jay/code/omt/openmelody/t/images/test.jpg is an MT::Image::NetPBM isa MT::Image::NetPBM
+ok 99 - NetPBM says test.jpg is 640 px wide
+ok 100 - NetPBM says test.jpg is 480 px high
+ok 101 - NetPBM's get_dimensions says test.jpg is 640 px wide
+ok 102 - NetPBM's get_dimensions says test.jpg is 480 px high
+ok 103 - NetPBM says test.jpg at 50% scale is 320 px wide
+ok 104 - NetPBM says test.jpg at 50% scale is 240 px high
+ok 105 - NetPBM's get_dimensions says test.jpg is still 640 px wide after theoretical scaling
+ok 106 - NetPBM's get_dimensions says test.jpg is still 480 px high after theoretical scaling
+ok 107 - NetPBM says test.jpg scaled to 50 px wide is 50 px wide
+ok 108 - NetPBM says test.jpg scaled to 50x100 is 50 px wide
+ok 109 - NetPBM says test.jpg scaled to 50x100 is 100 px high
+ok 110 - result of scaling test.jpg to 50% with NetPBM is 320 px wide
+ok 111 - result of scaling test.jpg to 50% with NetPBM is 240 px high
+ok 112 - The object isa MT::Image::NetPBM
+ok 113 - NetPBM says test.jpg from blob is 640 px wide
+ok 114 - NetPBM says test.jpg from blob is 480 px high
+ok 115 - NetPBM's get_dimensions says test.jpg from blob is 640 px wide
+ok 116 - NetPBM's get_dimensions says test.jpg from blob is 480 px high
+ok 117 - driver GD with image /Users/jay/code/omt/openmelody/t/images/test.jpg is an MT::Image::GD isa MT::Image::GD
+ok 118 - GD says test.jpg is 640 px wide
+ok 119 - GD says test.jpg is 480 px high
+ok 120 - GD's get_dimensions says test.jpg is 640 px wide
+ok 121 - GD's get_dimensions says test.jpg is 480 px high
+ok 122 - GD says test.jpg at 50% scale is 320 px wide
+ok 123 - GD says test.jpg at 50% scale is 240 px high
+ok 124 - GD's get_dimensions says test.jpg is still 640 px wide after theoretical scaling
+ok 125 - GD's get_dimensions says test.jpg is still 480 px high after theoretical scaling
+ok 126 - GD says test.jpg scaled to 50 px wide is 50 px wide
+ok 127 - GD says test.jpg scaled to 50x100 is 50 px wide
+ok 128 - GD says test.jpg scaled to 50x100 is 100 px high
+ok 129 - result of scaling test.jpg to 50% with GD is 320 px wide
+ok 130 - result of scaling test.jpg to 50% with GD is 240 px high
+ok 131 - The object isa MT::Image::GD
+ok 132 - GD says test.jpg from blob is 640 px wide
+ok 133 - GD says test.jpg from blob is 480 px high
+ok 134 - GD's get_dimensions says test.jpg from blob is 640 px wide
+ok 135 - GD's get_dimensions says test.jpg from blob is 480 px high
+ok 136 - driver Imager with image /Users/jay/code/omt/openmelody/t/images/test.jpg is an MT::Image::Imager isa MT::Image::Imager
+ok 137 - Imager says test.jpg is 640 px wide
+ok 138 - Imager says test.jpg is 480 px high
+ok 139 - Imager's get_dimensions says test.jpg is 640 px wide
+ok 140 - Imager's get_dimensions says test.jpg is 480 px high
+ok 141 - Imager says test.jpg at 50% scale is 320 px wide
+ok 142 - Imager says test.jpg at 50% scale is 240 px high
+ok 143 - Imager's get_dimensions says test.jpg is still 640 px wide after theoretical scaling
+ok 144 - Imager's get_dimensions says test.jpg is still 480 px high after theoretical scaling
+ok 145 - Imager says test.jpg scaled to 50 px wide is 50 px wide
+ok 146 - Imager says test.jpg scaled to 50x100 is 50 px wide
+ok 147 - Imager says test.jpg scaled to 50x100 is 100 px high
+ok 148 - result of scaling test.jpg to 50% with Imager is 320 px wide
+ok 149 - result of scaling test.jpg to 50% with Imager is 240 px high
+ok 150 - The object isa MT::Image::Imager
+ok 151 - Imager says test.jpg from blob is 640 px wide
+ok 152 - Imager says test.jpg from blob is 480 px high
+ok 153 - Imager's get_dimensions says test.jpg from blob is 640 px wide
+ok 154 - Imager's get_dimensions says test.jpg from blob is 480 px high
+    ok 1 - has_html_signature with real image
+    ok 2 - has_html_signature with fake image
+    1..2
+ok 155 - MT::Image::has_html_signature
+ok     2534 ms
+[12:20:39] t/10-filemgr.t .............. 
 1..13
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - The object isa MT::FileMgr
 ok 2 - can_write
@@ -882,11 +873,9 @@ ok 10 - bj淡rn is bj淡rn
 ok 11 - test.file is a regular file
 ok 12 - delete(test.file)
 ok 13 - test.file is gone
-ok      372 ms
-[12:56:20] t/100-cms_search.t .......... 
+ok      399 ms
+[12:20:47] t/100-cms_search.t .......... 
 1..40
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Global template search results are present
 ok 2 - No Publish templates button is present for global template search results
@@ -951,10 +940,8 @@ ok 40 - Unban commenter dropdown is present
 # Looks like you failed 4 tests of 40.
 Dubious, test returned 4 (wstat 1024, 0x400)
 Failed 4/40 subtests 
-[12:56:28] t/101-email.t ............... 
+[12:20:54] t/101-email.t ............... 
 1..5
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Global template search results are present
 not ok 2 - Send email to label is present
@@ -973,11 +960,8 @@ not ok 4 - Send test email button is present
 # Looks like you failed 3 tests of 4 run.
 Dubious, test returned 3 (wstat 768, 0x300)
 Failed 4/5 subtests 
-[12:56:28] t/11-sanitize.t ............. 
+[12:20:54] t/11-sanitize.t ............. 
 1..54
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - The reference isa HASH
 ok 2 - {ok}
@@ -1033,15 +1017,22 @@ ok 51 - <a href="javascript&5(null)8;alert('boo')">click</a>
 ok 52 - <p><i style="x:expression:alert('xss')"
 ok 53 - php cloaking attempt
 ok 54 - <a>boo</a>
-ok      590 ms
-[12:57:15] t/110-cms-permission.t ...... 
+ok      442 ms
+[12:21:33] t/110-cms-permission.t ...... 
 You are using a plugin (BetterFileUploader.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (MTBooter.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (mt-template_set_exporter.pl) that uses a deprecated plugin file format (.pl)
+Message: You are using a plugin (BetterFileUploader.pl) that uses a deprecated plugin file format (.pl)
+Message: You are using a plugin (MTBooter.pl) that uses a deprecated plugin file format (.pl)
+Message: You are using a plugin (mt-template_set_exporter.pl) that uses a deprecated plugin file format (.pl)
+Message: This is a log message.
 1..128
 You are using a plugin (BetterFileUploader.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (MTBooter.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (mt-template_set_exporter.pl) that uses a deprecated plugin file format (.pl)
+Message: You are using a plugin (BetterFileUploader.pl) that uses a deprecated plugin file format (.pl)
+Message: You are using a plugin (MTBooter.pl) that uses a deprecated plugin file format (.pl)
+Message: You are using a plugin (mt-template_set_exporter.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (BetterFileUploader.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (MTBooter.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (mt-template_set_exporter.pl) that uses a deprecated plugin file format (.pl)
@@ -1173,12 +1164,9 @@ ok 125 - Update an entry (different)
 ok 126 - Update an Entry(different): result
 ok 127 - Delete entry (different)
 ok 128 - Delete entry (different): result
-ok    46413 ms
-[12:57:16] t/12-dsa.t .................. 
+ok    38439 ms
+[12:21:35] t/12-dsa.t .................. 
 1..8
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - perl_sha1_digest_hex(abc)
 ok 2 - perl_sha1_digest_hex(abcd...)
@@ -1191,11 +1179,8 @@ ok 5 - dsa_verify()
 ok 6 - blessed dsa_verify()
 ok 7 - not(dsa_verify)
 ok 8 # SKIP Math::Pari not installed
-ok     1221 ms
-[12:57:16] t/13-dirify.t ............... 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     2766 ms
+[12:21:36] t/13-dirify.t ............... 
 
 ok 1 - String 'Siegfried & Roy' iso_dirifies correctly
 ok 2 - String 'Siegfried & Roy' utf8_dirifies correctly
@@ -1220,12 +1205,9 @@ ok 20 - String 'foo - bar' utf8_dirifies correctly with hypen as sep
 ok 21 - String 'foo_-_bar' iso_dirifies correctly with hypen as sep
 ok 22 - String 'foo_-_bar' utf8_dirifies correctly with hypen as sep
 1..22
-ok      423 ms
-[12:57:17] t/14-archive.t .............. 
+ok      381 ms
+[12:21:37] t/14-archive.t .............. 
 1..38
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Type not registered
 ok 2 - Empty zip archive created
@@ -1272,13 +1254,10 @@ ok 35 - The name of the file 1 is correct
 ok 36 - Extracted successfully
 ok 37 - Contents are the same
 ok 38 - Contents are the same
-ok      584 ms
-[12:57:17] t/15-import-export.t ........ 
+ok      770 ms
+[12:21:37] t/15-import-export.t ........ 
 No subtests run 
-[12:57:19] t/20-setup.t ................ 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+[12:21:38] t/20-setup.t ................ 
 
 ok 1 - The object isa MT::Blog
 Failed to execute INSERT INTO mt_blog
@@ -1289,25 +1268,17 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
 # Looks like your test exited with 2 just after 1.
 Dubious, test returned 2 (wstat 512, 0x200)
 All 1 subtests passed 
-[12:57:24] t/21-app-callbacks.t ........ 
+[12:21:44] t/21-app-callbacks.t ........ 
 1..4
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
 ok 1 - The object isa MT::Entry
 Can't locate object method "param" via package "MT" at /Users/jay/code/omt/openmelody/addons/ThemeManager.plugin/lib/ThemeManager/Init.pm line 54.
 # Looks like you planned 4 tests but ran 1.
 # Looks like your test exited with 2 just after 1.
 Dubious, test returned 2 (wstat 512, 0x200)
 Failed 3/4 subtests 
-[12:57:27] t/21-callbacks.t ............ 
+[12:21:47] t/21-callbacks.t ............ 
 1..5
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 * Upgrading table for MT::Entry::Meta records...
 * Upgrading table for MT::Entry::Summary records...
@@ -1380,12 +1351,9 @@ ok 2 - in-mem object altered
 ok 3 - new entry has an id
 ok 4 - post-load callback was called
 ok 5 - on-disk obj altered
-ok     2900 ms
-[12:57:31] t/22-author.t ............... 
+ok     3338 ms
+[12:21:53] t/22-author.t ............... 
 1..64
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - The object isa MT
 ok 2 - The object isa MT::Author
@@ -1394,7 +1362,7 @@ ok 4 - wrong is invalid
 ok 5 - can create blog
 ok 6 - can view log
 ok 7 - can manage plugins
-ok 8 - MT::Author=HASH(0x10239b278)->blog_perm(1)
+ok 8 - MT::Author=HASH(0x10237c058)->blog_perm(1)
 ok 9 - Chuck D can edit entry \#1
 ok 10 - Chuck D can edit entry \#2
 ok 11 - can_comment
@@ -1428,7 +1396,7 @@ ok 37 - Author's widgets survived being saved accurately
 ok 38 - Modified author has favorite blogs
 ok 39 - Author's favorite blogs survived being saved accurately
 ok 40 - The object isa MT::Author
-ok 41 - MT::Author=HASH(0x1023b86f0)->blog_perm(1)
+ok 41 - MT::Author=HASH(0x102670998)->blog_perm(1)
 ok 42 - can_create_blog
 ok 43 - can_view_log
 ok 44 - can manage plugins
@@ -1452,12 +1420,9 @@ ok 61 - can_administer_blog
 ok 62 - can_edit_assets
 ok 63 - can_save_image_defaults
 ok 64 - can_manage_feedback
-ok     4769 ms
-[12:57:36] t/23-entry.t ................ 
+ok     5771 ms
+[12:21:58] t/23-entry.t ................ 
 1..48
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - The object isa MT
 ok 2 - The object isa MT::Blog
@@ -1557,11 +1522,8 @@ ok 47 - set_defaults(): Only Blog
     ok 8 - $entry->ping_count
     ok 9 - $entry->status
 ok 48 - set_defaults(): Only User
-ok     4726 ms
-[12:57:40] t/24-meta-entry-save.t ...... 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     4996 ms
+[12:22:03] t/24-meta-entry-save.t ...... 
 
 1..13
 ok 1 - New meta column isn't defined yet
@@ -1583,7 +1545,7 @@ WARN> Subroutine MT::ObjectDriver::Driver::DBI::start_query redefined at t/24-me
 #   SELECT author_id, author_api_password, author_auth_type, author_basename, author_can_create_blog, author_can_view_log, author_created_by, author_created_on, author_email, author_entry_prefs, author_external_id, author_hint, author_is_superuser, author_modified_by, author_modified_on, author_name, author_nickname, author_password, author_preferred_language, author_public_key, author_remote_auth_token, author_remote_auth_username, author_status, author_text_format, author_type, author_url, author_userpic_asset_id FROM mt_author WHERE (author_id = ?) LIMIT 1  [2]
 #   SELECT 1 FROM mt_trackback WHERE (trackback_id = ?)  [1]
 #   SELECT blog_id, blog_allow_anon_comments, blog_allow_comment_html, blog_allow_commenter_regist, blog_allow_comments_default, blog_allow_pings, blog_allow_pings_default, blog_allow_reg_comments, blog_allow_unreg_comments, blog_archive_path, blog_archive_tmpl_category, blog_archive_tmpl_daily, blog_archive_tmpl_individual, blog_archive_tmpl_monthly, blog_archive_tmpl_weekly, blog_archive_type, blog_archive_type_preferred, blog_archive_url, blog_autodiscover_links, blog_autolink_urls, blog_basename_limit, blog_cc_license, blog_children_modified_on, blog_convert_paras, blog_convert_paras_comments, blog_created_by, blog_created_on, blog_custom_dynamic_templates, blog_days_on_index, blog_description, blog_email_new_comments, blog_email_new_pings, blog_entries_on_index, blog_file_extension, blog_google_api_key, blog_internal_autodiscovery, blog_is_dynamic, blog_junk_folder_expiry, blog_junk_score_threshold, blog_language, blog_manual_approve_commenters, blog_moderate_pings, blog_moderate_unreg_comments, blog_modified_by, blog_modified_on, blog_name, blog_old_style_archive_links, blog_ping_blogs, blog_ping_google, blog_ping_others, blog_ping_weblogs, blog_remote_auth_token, blog_require_comment_emails, blog_sanitize_spec, blog_server_offset, blog_site_path, blog_site_url, blog_sort_order_comments, blog_sort_order_posts, blog_status_default, blog_use_comment_confirmation, blog_use_revision, blog_welcome_msg, blog_words_in_excerpt FROM mt_blog WHERE (blog_id = ?) LIMIT 1  [1]
-#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-06-27 17:27:38 created_on 2011-06-27 17:27:38 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
+#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-07-13 16:52:00 created_on 2011-07-13 16:52:00 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
 ok 2 - mt_entry_meta is inserted once
 ok 3 - mt_entry is not updated
 #   SELECT entry_id, entry_allow_comments, entry_allow_pings, entry_atom_id, entry_author_id, entry_authored_on, entry_basename, entry_blog_id, entry_category_id, entry_class, entry_comment_count, entry_convert_breaks, entry_created_by, entry_created_on, entry_excerpt, entry_keywords, entry_modified_by, entry_modified_on, entry_ping_count, entry_pinged_urls, entry_status, entry_tangent_cache, entry_template_id, entry_text, entry_text_more, entry_title, entry_to_ping_urls, entry_week_number, entry_current_revision FROM mt_entry WHERE (entry_id = ?) LIMIT 1  [1]
@@ -1602,7 +1564,7 @@ ok 3 - mt_entry is not updated
 #   SELECT author_summary_author_id, author_summary_type, author_summary_class, author_summary_vchar_idx, author_summary_vinteger_idx, author_summary_vblob, author_summary_vclob, author_summary_expired FROM mt_author_summary WHERE (author_summary_author_id = ?) AND (author_summary_type = ?)  [2 entry_count]
 #   SELECT 1 FROM mt_trackback WHERE (trackback_id = ?)  [1]
 #   SELECT blog_id, blog_allow_anon_comments, blog_allow_comment_html, blog_allow_commenter_regist, blog_allow_comments_default, blog_allow_pings, blog_allow_pings_default, blog_allow_reg_comments, blog_allow_unreg_comments, blog_archive_path, blog_archive_tmpl_category, blog_archive_tmpl_daily, blog_archive_tmpl_individual, blog_archive_tmpl_monthly, blog_archive_tmpl_weekly, blog_archive_type, blog_archive_type_preferred, blog_archive_url, blog_autodiscover_links, blog_autolink_urls, blog_basename_limit, blog_cc_license, blog_children_modified_on, blog_convert_paras, blog_convert_paras_comments, blog_created_by, blog_created_on, blog_custom_dynamic_templates, blog_days_on_index, blog_description, blog_email_new_comments, blog_email_new_pings, blog_entries_on_index, blog_file_extension, blog_google_api_key, blog_internal_autodiscovery, blog_is_dynamic, blog_junk_folder_expiry, blog_junk_score_threshold, blog_language, blog_manual_approve_commenters, blog_moderate_pings, blog_moderate_unreg_comments, blog_modified_by, blog_modified_on, blog_name, blog_old_style_archive_links, blog_ping_blogs, blog_ping_google, blog_ping_others, blog_ping_weblogs, blog_remote_auth_token, blog_require_comment_emails, blog_sanitize_spec, blog_server_offset, blog_site_path, blog_site_url, blog_sort_order_comments, blog_sort_order_posts, blog_status_default, blog_use_comment_confirmation, blog_use_revision, blog_welcome_msg, blog_words_in_excerpt FROM mt_blog WHERE (blog_id = ?) LIMIT 1  [1]
-#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-06-27 17:27:38 created_on 2011-06-27 17:27:38 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
+#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-07-13 16:52:00 created_on 2011-07-13 16:52:00 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
 ok 4 - mt_entry_meta is updated once
 ok 5 - mt_entry is not updated
 # update meta field and do obj->meta_obj->save
@@ -1622,7 +1584,7 @@ ok 7 - mt_entry is not updated
 #   SELECT author_summary_author_id, author_summary_type, author_summary_class, author_summary_vchar_idx, author_summary_vinteger_idx, author_summary_vblob, author_summary_vclob, author_summary_expired FROM mt_author_summary WHERE (author_summary_author_id = ?) AND (author_summary_type = ?)  [2 entry_count]
 #   SELECT 1 FROM mt_trackback WHERE (trackback_id = ?)  [1]
 #   SELECT blog_id, blog_allow_anon_comments, blog_allow_comment_html, blog_allow_commenter_regist, blog_allow_comments_default, blog_allow_pings, blog_allow_pings_default, blog_allow_reg_comments, blog_allow_unreg_comments, blog_archive_path, blog_archive_tmpl_category, blog_archive_tmpl_daily, blog_archive_tmpl_individual, blog_archive_tmpl_monthly, blog_archive_tmpl_weekly, blog_archive_type, blog_archive_type_preferred, blog_archive_url, blog_autodiscover_links, blog_autolink_urls, blog_basename_limit, blog_cc_license, blog_children_modified_on, blog_convert_paras, blog_convert_paras_comments, blog_created_by, blog_created_on, blog_custom_dynamic_templates, blog_days_on_index, blog_description, blog_email_new_comments, blog_email_new_pings, blog_entries_on_index, blog_file_extension, blog_google_api_key, blog_internal_autodiscovery, blog_is_dynamic, blog_junk_folder_expiry, blog_junk_score_threshold, blog_language, blog_manual_approve_commenters, blog_moderate_pings, blog_moderate_unreg_comments, blog_modified_by, blog_modified_on, blog_name, blog_old_style_archive_links, blog_ping_blogs, blog_ping_google, blog_ping_others, blog_ping_weblogs, blog_remote_auth_token, blog_require_comment_emails, blog_sanitize_spec, blog_server_offset, blog_site_path, blog_site_url, blog_sort_order_comments, blog_sort_order_posts, blog_status_default, blog_use_comment_confirmation, blog_use_revision, blog_welcome_msg, blog_words_in_excerpt FROM mt_blog WHERE (blog_id = ?) LIMIT 1  [1]
-#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-06-27 17:27:38 created_on 2011-06-27 17:27:38 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
+#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-07-13 16:52:00 created_on 2011-07-13 16:52:00 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
 ok 8 - mt_entry_meta is not updated
 ok 9 - mt_entry is not updated
 # update one of direct fields and do obj->save
@@ -1638,7 +1600,7 @@ ok 9 - mt_entry is not updated
 #   SELECT author_summary_author_id, author_summary_type, author_summary_class, author_summary_vchar_idx, author_summary_vinteger_idx, author_summary_vblob, author_summary_vclob, author_summary_expired FROM mt_author_summary WHERE (author_summary_author_id = ?) AND (author_summary_type = ?)  [2 entry_count]
 #   SELECT 1 FROM mt_trackback WHERE (trackback_id = ?)  [1]
 #   SELECT blog_id, blog_allow_anon_comments, blog_allow_comment_html, blog_allow_commenter_regist, blog_allow_comments_default, blog_allow_pings, blog_allow_pings_default, blog_allow_reg_comments, blog_allow_unreg_comments, blog_archive_path, blog_archive_tmpl_category, blog_archive_tmpl_daily, blog_archive_tmpl_individual, blog_archive_tmpl_monthly, blog_archive_tmpl_weekly, blog_archive_type, blog_archive_type_preferred, blog_archive_url, blog_autodiscover_links, blog_autolink_urls, blog_basename_limit, blog_cc_license, blog_children_modified_on, blog_convert_paras, blog_convert_paras_comments, blog_created_by, blog_created_on, blog_custom_dynamic_templates, blog_days_on_index, blog_description, blog_email_new_comments, blog_email_new_pings, blog_entries_on_index, blog_file_extension, blog_google_api_key, blog_internal_autodiscovery, blog_is_dynamic, blog_junk_folder_expiry, blog_junk_score_threshold, blog_language, blog_manual_approve_commenters, blog_moderate_pings, blog_moderate_unreg_comments, blog_modified_by, blog_modified_on, blog_name, blog_old_style_archive_links, blog_ping_blogs, blog_ping_google, blog_ping_others, blog_ping_weblogs, blog_remote_auth_token, blog_require_comment_emails, blog_sanitize_spec, blog_server_offset, blog_site_path, blog_site_url, blog_sort_order_comments, blog_sort_order_posts, blog_status_default, blog_use_comment_confirmation, blog_use_revision, blog_welcome_msg, blog_words_in_excerpt FROM mt_blog WHERE (blog_id = ?) LIMIT 1  [1]
-#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-06-27 17:27:38 created_on 2011-06-27 17:27:38 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
+#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-07-13 16:52:00 created_on 2011-07-13 16:52:00 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
 ok 10 - mt_entry_meta is not updated
 ok 11 - mt_entry is updated once
 # do obj->save
@@ -1653,16 +1615,13 @@ ok 11 - mt_entry is updated once
 #   SELECT author_summary_author_id, author_summary_type, author_summary_class, author_summary_vchar_idx, author_summary_vinteger_idx, author_summary_vblob, author_summary_vclob, author_summary_expired FROM mt_author_summary WHERE (author_summary_author_id = ?) AND (author_summary_type = ?)  [2 entry_count]
 #   SELECT 1 FROM mt_trackback WHERE (trackback_id = ?)  [1]
 #   SELECT blog_id, blog_allow_anon_comments, blog_allow_comment_html, blog_allow_commenter_regist, blog_allow_comments_default, blog_allow_pings, blog_allow_pings_default, blog_allow_reg_comments, blog_allow_unreg_comments, blog_archive_path, blog_archive_tmpl_category, blog_archive_tmpl_daily, blog_archive_tmpl_individual, blog_archive_tmpl_monthly, blog_archive_tmpl_weekly, blog_archive_type, blog_archive_type_preferred, blog_archive_url, blog_autodiscover_links, blog_autolink_urls, blog_basename_limit, blog_cc_license, blog_children_modified_on, blog_convert_paras, blog_convert_paras_comments, blog_created_by, blog_created_on, blog_custom_dynamic_templates, blog_days_on_index, blog_description, blog_email_new_comments, blog_email_new_pings, blog_entries_on_index, blog_file_extension, blog_google_api_key, blog_internal_autodiscovery, blog_is_dynamic, blog_junk_folder_expiry, blog_junk_score_threshold, blog_language, blog_manual_approve_commenters, blog_moderate_pings, blog_moderate_unreg_comments, blog_modified_by, blog_modified_on, blog_name, blog_old_style_archive_links, blog_ping_blogs, blog_ping_google, blog_ping_others, blog_ping_weblogs, blog_remote_auth_token, blog_require_comment_emails, blog_sanitize_spec, blog_server_offset, blog_site_path, blog_site_url, blog_sort_order_comments, blog_sort_order_posts, blog_status_default, blog_use_comment_confirmation, blog_use_revision, blog_welcome_msg, blog_words_in_excerpt FROM mt_blog WHERE (blog_id = ?) LIMIT 1  [1]
-#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-06-27 17:27:38 created_on 2011-06-27 17:27:38 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
+#   UPDATE mt_trackback SET trackback_is_disabled = ?, trackback_url = ?, trackback_title = ?, trackback_description = ? WHERE (trackback_id = ?)  {rss_file undef description A story of a stroll. entry_id 1 is_disabled 0 category_id 0 modified_on 2011-07-13 16:52:00 created_on 2011-07-13 16:52:00 url http://narnia.na/nana/archives/1978/01/a-rainy-day.html modified_by undef title A Rainy Day passphrase undef id 1 blog_id 1 created_by undef}
 ok 12 - mt_entry_meta is not updated
 ok 13 - mt_entry is not updated
-ok     4437 ms
-[12:57:41] t/26-pings.t ................ skipped: Needs rewrite and/or mt-test-rpc.cgi script from 6A.
-[12:57:46] t/27-context.t .............. 
+ok     5603 ms
+[12:22:05] t/26-pings.t ................ skipped: Needs rewrite and/or mt-test-rpc.cgi script from 6A.
+[12:22:12] t/27-context.t .............. 
 1..55
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - The object isa MT
 ok 2 - The object isa MT::Blog
@@ -1719,16 +1678,14 @@ ok 52 - MTEntryBody
 ok 53 - The object isa MT::Comment
 ok 54 - This is not a comment
 ok 55 - MTEntryCommentCount
-ok     4499 ms
-[12:57:46] t/28-xmlrpc.t ............... skipped: Broken test. This functionality should probably get moved to a plugin.
-[12:57:46] t/29-cleanup.t .............. 
+ok     6797 ms
+[12:22:12] t/28-xmlrpc.t ............... skipped: Broken test. This functionality should probably get moved to a plugin.
+[12:22:12] t/29-cleanup.t .............. 
 1..1
 ok 1 - cleanup
-ok       36 ms
-[12:57:47] t/30-support-files.t ........ 
+ok       35 ms
+[12:22:14] t/30-support-files.t ........ 
 1..7
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 # Now testing default SupportDirectoryPath and SupportDirectoryURL
 ok 1 - Default SupportDirectoryPath config
@@ -1739,11 +1696,8 @@ ok 4 - Default $app->support_directory_url()
 ok 5 - Updated $app->support_directory_path()
 ok 6 - Updated $app->support_directory_path()
 ok 7 - <$mt:SupportDirectoryURL$>
-ok     1594 ms
-[12:57:48] t/32-ddl.t .................. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     1796 ms
+[12:22:14] t/32-ddl.t .................. 
 
 # 
 # Test::DDL->_00_table_does_not_exist
@@ -1873,12 +1827,9 @@ ok 98 - Ddltest modified_by column def is correct
 ok 99 - Drop Table SQL for Ddltest is available
 ok 100 - Driver could perform Drop Table SQL for Ddltest
 ok 101 - Ddltest table no longer exists
-ok      661 ms
-[12:57:48] t/33-driver.t ............... skipped: Configuration file  not found
-[12:57:54] t/35-tags.t ................. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok      833 ms
+[12:22:15] t/33-driver.t ............... skipped: Configuration file  not found
+[12:22:23] t/35-tags.t ................. 
 
 1..434
 ok 1 - 'blog-name' template found
@@ -2316,17 +2267,17 @@ ok 431 - perl test 428
 ok 432 - perl test 429
 ok 433 - perl test 430
 ok 434 - perl test 431
-ok     6348 ms
-[12:57:54] t/41-atom.t ................. skipped: Broken test. XML::Atom requires XML::LibXML which is not a listed as a prerequisite of MT and requires compiling. This functionality should probably get moved to a plugin and/or an alternative with a pure Perl fallback.
-[12:57:55] t/43-localua.t .............. 
+ok     8538 ms
+[12:22:23] t/41-atom.t ................. skipped: Broken test. XML::Atom requires XML::LibXML which is not a listed as a prerequisite of MT and requires compiling. This functionality should probably get moved to a plugin and/or an alternative with a pure Perl fallback.
+[12:22:24] t/43-localua.t .............. 
 1..1
 You are using a plugin (BetterFileUploader.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (MTBooter.pl) that uses a deprecated plugin file format (.pl)
 You are using a plugin (mt-template_set_exporter.pl) that uses a deprecated plugin file format (.pl)
 ok 1 - resp->content
-ok      635 ms
-[12:57:55] t/44-spider.t ............... skipped: Enable spider test with MT_TEST_SPIDER environment variable
-[12:57:57] t/45-datetime.t ............. 
+ok      817 ms
+[12:22:24] t/44-spider.t ............... skipped: Enable spider test with MT_TEST_SPIDER environment variable
+[12:22:26] t/45-datetime.t ............. 
 1..2025
 ok 1
 ok 2
@@ -4351,14 +4302,11 @@ ok 2020 - the same time is equal to each other
 ok 2021 - the same time is equal to each other
 ok 2022 - today is larger than Jan 1st 23:59:59, 2008
 ok 2023 - today is larger than Jan 1st 23:59:59, 2008
-ok 2024 - 2001-12-28 10:30:15 -03:00 is the future from 2000-01-01 00:58:45 -01:00
-ok 2025 - 2000-01-01 00:58:45 -01:00 is the past from 2001-12-28 10:30:15 -03:00
-ok     1695 ms
-[12:57:57] t/46-i18n-en.t .............. 
+ok 2024 - 2001-12-28 21:10:45 +03:00 is the future from 2000-01-01 15:28:45 -02:00
+ok 2025 - 2000-01-01 15:28:45 -02:00 is the past from 2001-12-28 21:10:45 +03:00
+ok     1568 ms
+[12:22:26] t/46-i18n-en.t .............. 
 1..16
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1
 ok 2
@@ -4376,12 +4324,9 @@ ok 13
 ok 14
 ok 15
 ok 16
-ok      403 ms
-[12:57:58] t/47-i18n-ja.t .............. 
+ok      419 ms
+[12:22:26] t/47-i18n-ja.t .............. 
 1..35
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1
 ok 2
@@ -4418,12 +4363,9 @@ ok 32
 ok 33
 ok 34
 ok 35
-ok      425 ms
-[12:58:02] t/48-cache.t ................ 
+ok      511 ms
+[12:22:32] t/48-cache.t ................ 
 1..8
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - category cache exists for blog id 1
 ok 2 - category id is 2
@@ -4433,11 +4375,8 @@ ok 5 - tag cache exists for blog id 1
 ok 6 - number of tags in cache is 5
 ok 7 - newtag is in cache
 ok 8 - category cache count incremented
-ok     4460 ms
-[12:58:02] t/49-tagsplit.t ............. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     5064 ms
+[12:22:32] t/49-tagsplit.t ............. 
 
 1..42
 ok 1 -       (,): 0 tags
@@ -4482,14 +4421,11 @@ ok 39 - single tag ( ): 2 tags
 ok 40 - this 'is,' a test ( ): 4 tags
 ok 41 - this is a test ( ): 4 tags
 ok 42 - this is, a test ( ): 4 tags
-ok      406 ms
-[12:58:03] t/54-usersgroupsroles.t ..... skipped: Groups are unavailable for testing.
-[12:58:03] t/61-to_from_xml.t .......... skipped: These tests are so broken that we have to skip them for now. Really this functionality should be re-implemented in some form that is more effective and reliable than what exists.
-[12:58:07] t/62-asset.t ................ 
+ok      447 ms
+[12:22:32] t/54-usersgroupsroles.t ..... skipped: Groups are unavailable for testing.
+[12:22:32] t/61-to_from_xml.t .......... skipped: These tests are so broken that we have to skip them for now. Really this functionality should be re-implemented in some form that is more effective and reliable than what exists.
+[12:22:38] t/62-asset.t ................ 
 1..60
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Is MT isa MT
 ok 2 - Is MT::Asset::Image isa MT::Asset::Image
@@ -4552,12 +4488,9 @@ ok 57 - parent
 ok 58 - remove
 ok 59 - remove success
 ok 60 - file remove
-ok     4583 ms
-[12:58:08] t/63-objectclasses.t ........ 
+ok     5317 ms
+[12:22:38] t/63-objectclasses.t ........ 
 1..14
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - file has title column
 ok 2 - image has title column
@@ -4573,12 +4506,9 @@ ok 11 - generic image asset class type is image
 ok 12 - Object re-inflated okay
 ok 13 - Package name matches
 ok 14 - Title restored okay
-ok      425 ms
-[12:58:09] t/64-objectmeta.t ........... 
+ok      478 ms
+[12:22:40] t/64-objectmeta.t ........... 
 1..26
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - adding mime_type metadata field reports mime_type as a meta column
 ok 2 - adding mime_type metadata field reports mime_type as a column
@@ -4608,11 +4538,8 @@ ok 23 - metadata value as retrieved with auto-installed method is correct on loa
 ok 24 - MT::Asset::Image has an image_width meta column.
 ok 25 - MT::Entry has a meta support.
 ok 26 - MT::Page has a meta support.
-ok     1543 ms
-[12:58:14] t/65-ssi.t .................. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     1671 ms
+[12:22:45] t/65-ssi.t .................. 
 
 ok 1 - The object isa MT
 ok 2 - test template built
@@ -4634,22 +4561,17 @@ ok 17 - test template included template by ssi without 'key'
 ok 18 - test template built
 ok 19 - test template included template by ssi with 'key' absolute path
 1..19
-ok     4494 ms
-[12:58:19] t/66-templatecache.t ........ 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     5181 ms
+[12:22:51] t/66-templatecache.t ........ 
 
 ok 1 - Test template successfully built
 ok 2 - Test template should be the same
 Rebuild error: Publish error in template 'Stylesheet': Unknown tag found: PluginStaticWebPath
 ok 3 - Test template should be different
 1..3
-ok     5264 ms
-[12:58:24] t/70-app-query.t ............ 
+ok     5749 ms
+[12:22:58] t/70-app-query.t ............ 
 1..44
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Current app isa MT::App::CMS
 ok 2 - MT::App::CMS->can('query')
@@ -4707,11 +4629,8 @@ ok 42 - Deprecation warning for $app->param( KEY, VAL )
 DEPRECATION WARNING: Use of $app->param to get/set query object properties in main at line 210 will break in the future. Use $app->query->param() instead.
 ok 43 - Deprecation warning for $app->param( KEY, VAL )
 ok 44 - Backcompat of $app->param(KEY, VAL)
-ok     5277 ms
-[12:58:25] t/80-serialize.t ............ 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     6664 ms
+[12:22:58] t/80-serialize.t ............ 
 
 1..100
 ok 1 - Default version is v5
@@ -4820,9 +4739,9 @@ ok 97 - Returns the structure that matches Data::Dumper's
 ok 98 - Serialize with MT2, deserialize with MT, which provides backward compatibility
 ok 99 - Serialize with MTJ, deserialize with MT, which provides backward compatibility
 ok 100 - Serialize with MTS, deserialize with MT, which provides backward compatibility
-ok      535 ms
-[12:58:25] t/81-pagination.t ........... skipped: (no reason given)
-[12:58:27] t/89-pod.t .................. 
+ok      531 ms
+[12:22:58] t/81-pagination.t ........... skipped: (no reason given)
+[12:23:04] t/89-pod.t .................. 
 1..459
 ok 1 - POD test for lib/MT.pm
 ok 2 - POD test for lib/MT/App.pm
@@ -5196,7 +5115,11 @@ ok 357 - POD test for addons/Markdown.plugin/lib/MT/Plugin/Markdown.pm
 ok 358 - POD test for addons/Markdown.plugin/lib/MT/Plugin/SmartyPants.pm
 ok 359 - POD test for addons/MultiBlog.plugin/lib/MultiBlog/L10N/en_us.pm (no pod)
 ok 360 - POD test for addons/MultiBlog.plugin/lib/MultiBlog/L10N/ja.pm (no pod)
-ok 361 - POD test for addons/ThemeExport.plugin/lib/MT/Theme/Exporter.pm
+not ok 361 - POD test for addons/ThemeExport.plugin/lib/MT/Theme/Exporter.pm
+
+#   Failed test 'POD test for addons/ThemeExport.plugin/lib/MT/Theme/Exporter.pm'
+#   at /opt/local/lib/perl5/vendor_perl/5.10.1/Test/Pod.pm line 182.
+# addons/ThemeExport.plugin/lib/MT/Theme/Exporter.pm (765): You can't have =items (as at line 770) unless the first thing after the =over is an =item
 ok 362 - POD test for addons/ThemeExport.plugin/lib/MT/Theme/Util.pm
 ok 363 - POD test for addons/ThemeManager.plugin/extlib/String/CRC/Cksum.pm
 ok 364 - POD test for addons/ThemeManager.plugin/lib/ThemeManager/L10N/en_us.pm (no pod)
@@ -5226,7 +5149,7 @@ not ok 387 - POD test for plugins/ImageCropper/lib/MT/Object/LegacyFactory.pm
 
 #   Failed test 'POD test for plugins/ImageCropper/lib/MT/Object/LegacyFactory.pm'
 #   at /opt/local/lib/perl5/vendor_perl/5.10.1/Test/Pod.pm line 182.
-# plugins/ImageCropper/lib/MT/Object/LegacyFactory.pm (117): You forgot a '=back' before '=head2'
+# plugins/ImageCropper/lib/MT/Object/LegacyFactory.pm (116): You forgot a '=back' before '=head2'
 ok 388 - POD test for plugins/MTBooter/lib/MTBooter/App/CMS.pm (no pod)
 ok 389 - POD test for plugins/MTBooter/lib/MTBooter/Data/Random.pm (no pod)
 ok 390 - POD test for plugins/PQFullSync-dist/plugins/PQFullSync/lib/PQFullSync.pm (no pod)
@@ -5308,14 +5231,11 @@ ok 456 - POD test for addons/Log4MT.plugin/extlib/MT/Log/Log4perl/Config/file.pm
 ok 457 - POD test for addons/Log4MT.plugin/extlib/MT/Log/Log4perl/Config/mtconfig.pm (no pod)
 ok 458 - POD test for addons/Log4MT.plugin/extlib/MT/Log/Log4perl/Config/webui.pm (no pod)
 ok 459 - POD test for plugins/PQFullSync-dist/plugins/PQFullSync/lib/MT/Worker/Sync/Recursive.pm
-# Looks like you failed 5 tests of 459.
-Dubious, test returned 5 (wstat 1280, 0x500)
-Failed 5/459 subtests 
-[12:58:27] t/90-podcoverage.t .......... skipped: Skipping to reduce unit testing failure noise for now.
-[12:58:28] t/91-tagcoverage.t .......... 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+# Looks like you failed 6 tests of 459.
+Dubious, test returned 6 (wstat 1536, 0x600)
+Failed 6/459 subtests 
+[12:23:04] t/90-podcoverage.t .......... skipped: Skipping to reduce unit testing failure noise for now.
+[12:23:04] t/91-tagcoverage.t .......... 
 
 1..523
 # Checking for tag documentation for component core
@@ -5847,12 +5767,9 @@ ok 520 - component multiblog, block tag Blogs (extends core tag)
 ok 521 - component multiblog, block tag Pings (extends core tag)
 ok 522 - component multiblog, block tag Folders (extends core tag)
 ok 523 - component multiblog, block tag Tags (extends core tag)
-ok      489 ms
-[12:58:37] t/92-pubqueue.t ............. 
+ok      636 ms
+[12:23:17] t/92-pubqueue.t ............. 
 1..68
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Templates exist for this blog
 ok 2 - Template i : 0 id: 1 name: Trackbacks
@@ -5916,8 +5833,6 @@ ok 59 - Priority is correct
 ok 60 - Priority is correct
 ok 61 - Future post saves correctly
 ok 62 - Future post has status FUTURE
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
 WARN> Use of uninitialized value $type_id in string ne at lib/MT/Summary.pm line 273. (in MT::Summarizable::summarize() lib/MT/Summary.pm, line 273)
 WARN> Use of uninitialized value in join or string at (eval 1688) line 2. (in Locale::Maketext::__ANON__() (eval 1688), line 2)
 WARN> Use of uninitialized value $type_id in string ne at lib/MT/Summary.pm line 273. (in MT::Summarizable::summarize() lib/MT/Summary.pm, line 273)
@@ -5935,7 +5850,7 @@ ok 67 - There are no new jobs
 # Looks like you failed 1 test of 67 run.
 Dubious, test returned 1 (wstat 256, 0x100)
 Failed 2/68 subtests 
-[12:58:39] t/93-init_plugin.t .......... 
+[12:23:19] t/93-init_plugin.t .......... 
 1..11
 ok 1 - Deprecation warning for perl-init plugins
     1..2
@@ -5985,11 +5900,9 @@ ok 9 - stray.yaml
     ok 2 - A Subfoldered Plugin base class is MT::Plugin::Subfoldered
 ok 10 - subfoldered/subfoldered.pl
 ok 11 - IDontExist tag from ignored perl plugin
-ok     1918 ms
-[12:58:41] t/93-plugins.t .............. 
+ok     2113 ms
+[12:23:21] t/93-plugins.t .............. 
 1..11
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
     1..2
     ok 1 - ClassicBlogThemePack.plugin/config.yaml exists
@@ -6045,28 +5958,15 @@ ok 11 - WXRImporter.plugin/config.yaml
 # 	* Rebless/config.yaml
 # 	* TwoYAMLs/config.yaml
 # 	* subfoldered/subfoldered.pl
-ok     1813 ms
-[13:01:11] t/94-perltidy.t ............. 
+ok     1863 ms
+[12:26:10] t/94-perltidy.t ............. 
 1..284
 ok 1 - 'lib/MT/Sanitize.pm'
 ok 2 - 'addons/WXRImporter.plugin/lib/WXRImporter/L10N.pm'
 ok 3 - 'lib/MT/Compat/v3.pm'
 ok 4 - 'lib/MT/App/Search/TagSearch.pm'
 ok 5 - 'addons/DePoClean.plugin/lib/DePoCleanTheme/L10N/de.pm'
-# The file 'addons/ConfigAssistant.pack/lib/ConfigAssistant/Util.pm' is not tidy
-# +----+---------------------------------------------------------+---------------------------------------------------------+
-# | 467|        my $obj    = $MT::Plugins{$sig}{object};         |        my $obj    = $MT::Plugins{$sig}{object};         |
-# | 468|        my $r      = $obj->{registry};                   |        my $r      = $obj->{registry};                   |
-# | 469|        my @sets   = keys %{ $r->{'template_sets'} };    |        my @sets   = keys %{ $r->{'template_sets'} };    |
-# * 470|        foreach ( @sets ) {                              |        foreach (@sets) {                                *
-# | 471|            return $obj if defined $set and $set eq $_;  |            return $obj if defined $set and $set eq $_;  |
-# | 472|        }                                                |        }                                                |
-# | 473|    }                                                    |    }                                                    |
-# +----+---------------------------------------------------------+---------------------------------------------------------+
-not ok 6 - 'addons/ConfigAssistant.pack/lib/ConfigAssistant/Util.pm'
-
-#   Failed test ''addons/ConfigAssistant.pack/lib/ConfigAssistant/Util.pm''
-#   at t/94-perltidy.t line 31.
+ok 6 - 'addons/ConfigAssistant.pack/lib/ConfigAssistant/Util.pm'
 ok 7 - 'lib/MT/WeblogPublisher.pm'
 ok 8 - 'lib/MT/Summary/Proxy.pm'
 ok 9 - 'lib/MT/XMLRPC.pm'
@@ -6455,195 +6355,7 @@ ok 166 - 'addons/Markdown.plugin/lib/MT/Plugin/SmartyPants.pm'
 ok 167 - 'lib/MT/Auth/Hatena.pm'
 ok 168 - 'addons/WXRImporter.plugin/lib/HTML/Entities/Numbered/Table.pm'
 ok 169 - 'lib/MT/Task.pm'
-# The file 'addons/ThemeManager.plugin/extlib/String/CRC/Cksum.pm' is not tidy
-# +----+-----------------------------------------------------------------------------------------------------------------------------+----+------------------------------------------------------------------------+
-# |   8|use integer;                                                                                                                 |   8|use integer;                                                            |
-# |   9|                                                                                                                             |   9|                                                                        |
-# |  10|require Exporter;                                                                                                            |  10|require Exporter;                                                       |
-# *  11|our @ISA = qw(Exporter);                                                                                                     *  11|our @ISA       = qw(Exporter);                                          *
-# |  12|our @EXPORT_OK = qw(cksum);                                                                                                  |  12|our @EXPORT_OK = qw(cksum);                                             |
-# *  13|our @EXPORT = qw();                                                                                                          *  13|our @EXPORT    = qw();                                                  *
-# *  14|our $VERSION = '0.91';                                                                                                       *  14|our $VERSION   = '0.91';                                                *
-# |  15|                                                                                                                             |  15|                                                                        |
-# |  16|use fields qw(cksum size);                                                                                                   |  16|use fields qw(cksum size);                                              |
-# |  17|                                                                                                                             |  17|                                                                        |
-# |  18|my @crctab = (                                                                                                               |  18|my @crctab = (                                                          |
-# *  19|    0x00000000,                                                                                                              *  19|               0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9,          *
-# *  20|    0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b, 0x1a864db2, 0x1e475005, 0x2608edb8, 0x22c9f00f, 0x2f8ad6d6,  *  20|               0x130476dc, 0x17c56b6b, 0x1a864db2, 0x1e475005,          *
-# *  21|    0x2b4bcb61, 0x350c9b64, 0x31cd86d3, 0x3c8ea00a, 0x384fbdbd, 0x4c11db70, 0x48d0c6c7, 0x4593e01e, 0x4152fda9, 0x5f15adac,  *  21|               0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61,          *
-# *  22|    0x5bd4b01b, 0x569796c2, 0x52568b75, 0x6a1936c8, 0x6ed82b7f, 0x639b0da6, 0x675a1011, 0x791d4014, 0x7ddc5da3, 0x709f7b7a,  *  22|               0x350c9b64, 0x31cd86d3, 0x3c8ea00a, 0x384fbdbd,          *
-# *  23|    0x745e66cd, 0x9823b6e0, 0x9ce2ab57, 0x91a18d8e, 0x95609039, 0x8b27c03c, 0x8fe6dd8b, 0x82a5fb52, 0x8664e6e5, 0xbe2b5b58,  *  23|               0x4c11db70, 0x48d0c6c7, 0x4593e01e, 0x4152fda9,          *
-# *  24|    0xbaea46ef, 0xb7a96036, 0xb3687d81, 0xad2f2d84, 0xa9ee3033, 0xa4ad16ea, 0xa06c0b5d, 0xd4326d90, 0xd0f37027, 0xddb056fe,  *  24|               0x5f15adac, 0x5bd4b01b, 0x569796c2, 0x52568b75,          *
-# *  25|    0xd9714b49, 0xc7361b4c, 0xc3f706fb, 0xceb42022, 0xca753d95, 0xf23a8028, 0xf6fb9d9f, 0xfbb8bb46, 0xff79a6f1, 0xe13ef6f4,  *  25|               0x6a1936c8, 0x6ed82b7f, 0x639b0da6, 0x675a1011,          *
-# *  26|    0xe5ffeb43, 0xe8bccd9a, 0xec7dd02d, 0x34867077, 0x30476dc0, 0x3d044b19, 0x39c556ae, 0x278206ab, 0x23431b1c, 0x2e003dc5,  *  26|               0x791d4014, 0x7ddc5da3, 0x709f7b7a, 0x745e66cd,          *
-# *  27|    0x2ac12072, 0x128e9dcf, 0x164f8078, 0x1b0ca6a1, 0x1fcdbb16, 0x018aeb13, 0x054bf6a4, 0x0808d07d, 0x0cc9cdca, 0x7897ab07,  *  27|               0x9823b6e0, 0x9ce2ab57, 0x91a18d8e, 0x95609039,          *
-# *  28|    0x7c56b6b0, 0x71159069, 0x75d48dde, 0x6b93dddb, 0x6f52c06c, 0x6211e6b5, 0x66d0fb02, 0x5e9f46bf, 0x5a5e5b08, 0x571d7dd1,  *  28|               0x8b27c03c, 0x8fe6dd8b, 0x82a5fb52, 0x8664e6e5,          *
-# *  29|    0x53dc6066, 0x4d9b3063, 0x495a2dd4, 0x44190b0d, 0x40d816ba, 0xaca5c697, 0xa864db20, 0xa527fdf9, 0xa1e6e04e, 0xbfa1b04b,  *  29|               0xbe2b5b58, 0xbaea46ef, 0xb7a96036, 0xb3687d81,          *
-# *  30|    0xbb60adfc, 0xb6238b25, 0xb2e29692, 0x8aad2b2f, 0x8e6c3698, 0x832f1041, 0x87ee0df6, 0x99a95df3, 0x9d684044, 0x902b669d,  *  30|               0xad2f2d84, 0xa9ee3033, 0xa4ad16ea, 0xa06c0b5d,          *
-# *  31|    0x94ea7b2a, 0xe0b41de7, 0xe4750050, 0xe9362689, 0xedf73b3e, 0xf3b06b3b, 0xf771768c, 0xfa325055, 0xfef34de2, 0xc6bcf05f,  *  31|               0xd4326d90, 0xd0f37027, 0xddb056fe, 0xd9714b49,          *
-# *  32|    0xc27dede8, 0xcf3ecb31, 0xcbffd686, 0xd5b88683, 0xd1799b34, 0xdc3abded, 0xd8fba05a, 0x690ce0ee, 0x6dcdfd59, 0x608edb80,  *  32|               0xc7361b4c, 0xc3f706fb, 0xceb42022, 0xca753d95,          *
-# *  33|    0x644fc637, 0x7a089632, 0x7ec98b85, 0x738aad5c, 0x774bb0eb, 0x4f040d56, 0x4bc510e1, 0x46863638, 0x42472b8f, 0x5c007b8a,  *  33|               0xf23a8028, 0xf6fb9d9f, 0xfbb8bb46, 0xff79a6f1,          *
-# *  34|    0x58c1663d, 0x558240e4, 0x51435d53, 0x251d3b9e, 0x21dc2629, 0x2c9f00f0, 0x285e1d47, 0x36194d42, 0x32d850f5, 0x3f9b762c,  *  34|               0xe13ef6f4, 0xe5ffeb43, 0xe8bccd9a, 0xec7dd02d,          *
-# *  35|    0x3b5a6b9b, 0x0315d626, 0x07d4cb91, 0x0a97ed48, 0x0e56f0ff, 0x1011a0fa, 0x14d0bd4d, 0x19939b94, 0x1d528623, 0xf12f560e,  *  35|               0x34867077, 0x30476dc0, 0x3d044b19, 0x39c556ae,          *
-# *  36|    0xf5ee4bb9, 0xf8ad6d60, 0xfc6c70d7, 0xe22b20d2, 0xe6ea3d65, 0xeba91bbc, 0xef68060b, 0xd727bbb6, 0xd3e6a601, 0xdea580d8,  *  36|               0x278206ab, 0x23431b1c, 0x2e003dc5, 0x2ac12072,          *
-# *  37|    0xda649d6f, 0xc423cd6a, 0xc0e2d0dd, 0xcda1f604, 0xc960ebb3, 0xbd3e8d7e, 0xb9ff90c9, 0xb4bcb610, 0xb07daba7, 0xae3afba2,  *  37|               0x128e9dcf, 0x164f8078, 0x1b0ca6a1, 0x1fcdbb16,          *
-# *  38|    0xaafbe615, 0xa7b8c0cc, 0xa379dd7b, 0x9b3660c6, 0x9ff77d71, 0x92b45ba8, 0x9675461f, 0x8832161a, 0x8cf30bad, 0x81b02d74,  *  38|               0x018aeb13, 0x054bf6a4, 0x0808d07d, 0x0cc9cdca,          *
-# *  39|    0x857130c3, 0x5d8a9099, 0x594b8d2e, 0x5408abf7, 0x50c9b640, 0x4e8ee645, 0x4a4ffbf2, 0x470cdd2b, 0x43cdc09c, 0x7b827d21,  *  39|               0x7897ab07, 0x7c56b6b0, 0x71159069, 0x75d48dde,          *
-# *  40|    0x7f436096, 0x7200464f, 0x76c15bf8, 0x68860bfd, 0x6c47164a, 0x61043093, 0x65c52d24, 0x119b4be9, 0x155a565e, 0x18197087,  *  40|               0x6b93dddb, 0x6f52c06c, 0x6211e6b5, 0x66d0fb02,          *
-# *  41|    0x1cd86d30, 0x029f3d35, 0x065e2082, 0x0b1d065b, 0x0fdc1bec, 0x3793a651, 0x3352bbe6, 0x3e119d3f, 0x3ad08088, 0x2497d08d,  *  41|               0x5e9f46bf, 0x5a5e5b08, 0x571d7dd1, 0x53dc6066,          *
-# *  42|    0x2056cd3a, 0x2d15ebe3, 0x29d4f654, 0xc5a92679, 0xc1683bce, 0xcc2b1d17, 0xc8ea00a0, 0xd6ad50a5, 0xd26c4d12, 0xdf2f6bcb,  *  42|               0x4d9b3063, 0x495a2dd4, 0x44190b0d, 0x40d816ba,          *
-# *  43|    0xdbee767c, 0xe3a1cbc1, 0xe760d676, 0xea23f0af, 0xeee2ed18, 0xf0a5bd1d, 0xf464a0aa, 0xf9278673, 0xfde69bc4, 0x89b8fd09,  *  43|               0xaca5c697, 0xa864db20, 0xa527fdf9, 0xa1e6e04e,          *
-# *  44|    0x8d79e0be, 0x803ac667, 0x84fbdbd0, 0x9abc8bd5, 0x9e7d9662, 0x933eb0bb, 0x97ffad0c, 0xafb010b1, 0xab710d06, 0xa6322bdf,  *  44|               0xbfa1b04b, 0xbb60adfc, 0xb6238b25, 0xb2e29692,          *
-# *  45|    0xa2f33668, 0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4                                                               *  45|               0x8aad2b2f, 0x8e6c3698, 0x832f1041, 0x87ee0df6,          *
-# |    |                                                                                                                             *  46|               0x99a95df3, 0x9d684044, 0x902b669d, 0x94ea7b2a,          *
-# |    |                                                                                                                             *  47|               0xe0b41de7, 0xe4750050, 0xe9362689, 0xedf73b3e,          *
-# |    |                                                                                                                             *  48|               0xf3b06b3b, 0xf771768c, 0xfa325055, 0xfef34de2,          *
-# |    |                                                                                                                             *  49|               0xc6bcf05f, 0xc27dede8, 0xcf3ecb31, 0xcbffd686,          *
-# |    |                                                                                                                             *  50|               0xd5b88683, 0xd1799b34, 0xdc3abded, 0xd8fba05a,          *
-# |    |                                                                                                                             *  51|               0x690ce0ee, 0x6dcdfd59, 0x608edb80, 0x644fc637,          *
-# |    |                                                                                                                             *  52|               0x7a089632, 0x7ec98b85, 0x738aad5c, 0x774bb0eb,          *
-# |    |                                                                                                                             *  53|               0x4f040d56, 0x4bc510e1, 0x46863638, 0x42472b8f,          *
-# |    |                                                                                                                             *  54|               0x5c007b8a, 0x58c1663d, 0x558240e4, 0x51435d53,          *
-# |    |                                                                                                                             *  55|               0x251d3b9e, 0x21dc2629, 0x2c9f00f0, 0x285e1d47,          *
-# |    |                                                                                                                             *  56|               0x36194d42, 0x32d850f5, 0x3f9b762c, 0x3b5a6b9b,          *
-# |    |                                                                                                                             *  57|               0x0315d626, 0x07d4cb91, 0x0a97ed48, 0x0e56f0ff,          *
-# |    |                                                                                                                             *  58|               0x1011a0fa, 0x14d0bd4d, 0x19939b94, 0x1d528623,          *
-# |    |                                                                                                                             *  59|               0xf12f560e, 0xf5ee4bb9, 0xf8ad6d60, 0xfc6c70d7,          *
-# |    |                                                                                                                             *  60|               0xe22b20d2, 0xe6ea3d65, 0xeba91bbc, 0xef68060b,          *
-# |    |                                                                                                                             *  61|               0xd727bbb6, 0xd3e6a601, 0xdea580d8, 0xda649d6f,          *
-# |    |                                                                                                                             *  62|               0xc423cd6a, 0xc0e2d0dd, 0xcda1f604, 0xc960ebb3,          *
-# |    |                                                                                                                             *  63|               0xbd3e8d7e, 0xb9ff90c9, 0xb4bcb610, 0xb07daba7,          *
-# |    |                                                                                                                             *  64|               0xae3afba2, 0xaafbe615, 0xa7b8c0cc, 0xa379dd7b,          *
-# |    |                                                                                                                             *  65|               0x9b3660c6, 0x9ff77d71, 0x92b45ba8, 0x9675461f,          *
-# |    |                                                                                                                             *  66|               0x8832161a, 0x8cf30bad, 0x81b02d74, 0x857130c3,          *
-# |    |                                                                                                                             *  67|               0x5d8a9099, 0x594b8d2e, 0x5408abf7, 0x50c9b640,          *
-# |    |                                                                                                                             *  68|               0x4e8ee645, 0x4a4ffbf2, 0x470cdd2b, 0x43cdc09c,          *
-# |    |                                                                                                                             *  69|               0x7b827d21, 0x7f436096, 0x7200464f, 0x76c15bf8,          *
-# |    |                                                                                                                             *  70|               0x68860bfd, 0x6c47164a, 0x61043093, 0x65c52d24,          *
-# |    |                                                                                                                             *  71|               0x119b4be9, 0x155a565e, 0x18197087, 0x1cd86d30,          *
-# |    |                                                                                                                             *  72|               0x029f3d35, 0x065e2082, 0x0b1d065b, 0x0fdc1bec,          *
-# |    |                                                                                                                             *  73|               0x3793a651, 0x3352bbe6, 0x3e119d3f, 0x3ad08088,          *
-# |    |                                                                                                                             *  74|               0x2497d08d, 0x2056cd3a, 0x2d15ebe3, 0x29d4f654,          *
-# |    |                                                                                                                             *  75|               0xc5a92679, 0xc1683bce, 0xcc2b1d17, 0xc8ea00a0,          *
-# |    |                                                                                                                             *  76|               0xd6ad50a5, 0xd26c4d12, 0xdf2f6bcb, 0xdbee767c,          *
-# |    |                                                                                                                             *  77|               0xe3a1cbc1, 0xe760d676, 0xea23f0af, 0xeee2ed18,          *
-# |    |                                                                                                                             *  78|               0xf0a5bd1d, 0xf464a0aa, 0xf9278673, 0xfde69bc4,          *
-# |    |                                                                                                                             *  79|               0x89b8fd09, 0x8d79e0be, 0x803ac667, 0x84fbdbd0,          *
-# |    |                                                                                                                             *  80|               0x9abc8bd5, 0x9e7d9662, 0x933eb0bb, 0x97ffad0c,          *
-# |    |                                                                                                                             *  81|               0xafb010b1, 0xab710d06, 0xa6322bdf, 0xa2f33668,          *
-# |    |                                                                                                                             *  82|               0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4           *
-# |  46|);                                                                                                                           |  83|);                                                                      |
-# |  47|                                                                                                                             |  84|                                                                        |
-# |  48|                                                                                                                             |  85|                                                                        |
-# |  49|sub new {                                                                                                                    |  86|sub new {                                                               |
-# |  50|    my $class = shift;                                                                                                       |  87|    my $class = shift;                                                  |
-# *  51|    my String::CRC::Cksum $self = fields::new(ref $class || $class);                                                         *  88|    my String::CRC::Cksum $self = fields::new( ref $class || $class );  *
-# |  52|    return $self->reset;                                                                                                     |  89|    return $self->reset;                                                |
-# *  53|}   # new                                                                                                                    *  90|}    # new                                                              *
-# |  54|                                                                                                                             |  91|                                                                        |
-# |  55|                                                                                                                             |  92|                                                                        |
-# |  56|sub reset {                                                                                                                  |  93|sub reset {                                                             |
-# |  57|    my String::CRC::Cksum $self = shift;                                                                                     |  94|    my String::CRC::Cksum $self = shift;                                |
-# |  58|    $self->{cksum} = $self->{size} = 0;                                                                                      |  95|    $self->{cksum} = $self->{size} = 0;                                 |
-# |  59|    return $self;                                                                                                            |  96|    return $self;                                                       |
-# *  60|}   # reset                                                                                                                  *  97|}    # reset                                                            *
-# |  61|                                                                                                                             |  98|                                                                        |
-# |  62|                                                                                                                             |  99|                                                                        |
-# |  63|sub add {                                                                                                                    | 100|sub add {                                                               |
-# |  64|    my String::CRC::Cksum $self = shift;                                                                                     | 101|    my String::CRC::Cksum $self = shift;                                |
-# *  65|    my $cksum = $self->{cksum};                                                                                              * 102|    my $cksum                   = $self->{cksum};                       *
-# *  66|    my $size = $self->{size};                                                                                                * 103|    my $size                    = $self->{size};                        *
-# |  67|                                                                                                                             | 104|                                                                        |
-# *  68|    while(@_) {                                                                                                              * 105|    while (@_) {                                                        *
-# |  69|        my $n = length $_[0];                                                                                                | 106|        my $n = length $_[0];                                           |
-# |  70|                                                                                                                             | 107|                                                                        |
-# *  71|        for(my $i = 0; $i < $n; ++$i) {                                                                                      * 108|        for ( my $i = 0; $i < $n; ++$i ) {                              *
-# |  72|            my $c = unpack 'C', substr $_[0], $i, 1;                                                                         | 109|            my $c = unpack 'C', substr $_[0], $i, 1;                    |
-# *  73|            $cksum = (0xFFFFFFFF & ($cksum << 8)) ^ $crctab[(0xFF & ($cksum >> 24)) ^ $c];                                   * 110|            $cksum = ( 0xFFFFFFFF & ( $cksum << 8 ) )                   *
-# |    |                                                                                                                             * 111|              ^ $crctab[ ( 0xFF & ( $cksum >> 24 ) ) ^ $c ];            *
-# |  74|            ++$size;                                                                                                         | 112|            ++$size;                                                    |
-# |  75|        }                                                                                                                    | 113|        }                                                               |
-# |  76|                                                                                                                             | 114|                                                                        |
-# |  77|    }                                                                                                                        | 115|    }                                                                   |
-# *  78|    continue { shift }                                                                                                       * 116|    continue {shift}                                                    *
-# |  79|                                                                                                                             | 117|                                                                        |
-# |  80|    $self->{cksum} = $cksum;                                                                                                 | 118|    $self->{cksum} = $cksum;                                            |
-# *  81|    $self->{size} = $size;                                                                                                   * 119|    $self->{size}  = $size;                                             *
-# |  82|                                                                                                                             | 120|                                                                        |
-# |  83|    return $self;                                                                                                            | 121|    return $self;                                                       |
-# *  84|}   # add                                                                                                                    * 122|}    # add                                                              *
-# |  85|                                                                                                                             | 123|                                                                        |
-# |  86|                                                                                                                             | 124|                                                                        |
-# |  87|sub addfile {                                                                                                                | 125|sub addfile {                                                           |
-# +----+-----------------------------------------------------------------------------------------------------------------------------+----+------------------------------------------------------------------------+
-# |  89|    my $stat;                                                                                                                | 127|    my $stat;                                                           |
-# |  90|                                                                                                                             | 128|                                                                        |
-# |  91|    local $_;                                                                                                                | 129|    local $_;                                                           |
-# *  92|    while(my $ifd = shift) {                                                                                                 * 130|    while ( my $ifd = shift ) {                                         *
-# |  93|        $self->add($_) while $stat = read $ifd, $_, 4096;                                                                    | 131|        $self->add($_) while $stat = read $ifd, $_, 4096;               |
-# |  94|                                                                                                                             | 132|                                                                        |
-# *  95|        if(! defined $stat) {                                                                                                * 133|        if ( !defined $stat ) {                                         *
-# |  96|            croak "error reading from filehandle: $!";                                                                       | 134|            croak "error reading from filehandle: $!";                  |
-# |  97|        }                                                                                                                    | 135|        }                                                               |
-# |  98|    }                                                                                                                        | 136|    }                                                                   |
-# |  99|                                                                                                                             | 137|                                                                        |
-# | 100|    return $self;                                                                                                            | 138|    return $self;                                                       |
-# * 101|}   # addfile                                                                                                                * 139|}    # addfile                                                          *
-# | 102|                                                                                                                             | 140|                                                                        |
-# | 103|                                                                                                                             | 141|                                                                        |
-# | 104|sub peek {                                                                                                                   | 142|sub peek {                                                              |
-# | 105|    my String::CRC::Cksum $self = shift;                                                                                     | 143|    my String::CRC::Cksum $self = shift;                                |
-# * 106|    my $cksum = $self->{cksum};                                                                                              * 144|    my $cksum                   = $self->{cksum};                       *
-# * 107|    my $size = $self->{size};                                                                                                * 145|    my $size                    = $self->{size};                        *
-# | 108|                                                                                                                             | 146|                                                                        |
-# | 109|    # Extend with the length of the data                                                                                     | 147|    # Extend with the length of the data                                |
-# * 110|    while($size != 0) {                                                                                                      * 148|    while ( $size != 0 ) {                                              *
-# | 111|        my $c = $size & 0xFF;                                                                                                | 149|        my $c = $size & 0xFF;                                           |
-# | 112|        $size >>= 8;                                                                                                         | 150|        $size >>= 8;                                                    |
-# * 113|        $cksum = (0xFFFFFFFF & ($cksum << 8)) ^ $crctab[(0xFF & ($cksum >> 24)) ^ $c];                                       * 151|        $cksum = ( 0xFFFFFFFF & ( $cksum << 8 ) )                       *
-# |    |                                                                                                                             * 152|          ^ $crctab[ ( 0xFF & ( $cksum >> 24 ) ) ^ $c ];                *
-# | 114|    }                                                                                                                        | 153|    }                                                                   |
-# * 115|    $cksum = ~ $cksum;                                                                                                       * 154|    $cksum = ~$cksum;                                                   *
-# | 116|                                                                                                                             | 155|                                                                        |
-# | 117|    # positivise the result even on a 32 bit processor                                                                       | 156|    # positivise the result even on a 32 bit processor                  |
-# | 118|    no integer;                                                                                                              | 157|    no integer;                                                         |
-# | 119|    my $crc = $cksum;                                                                                                        | 158|    my $crc = $cksum;                                                   |
-# | 120|    $crc += 4294967296 if $crc < 0;                                                                                          | 159|    $crc += 4294967296 if $crc < 0;                                     |
-# | 121|                                                                                                                             | 160|                                                                        |
-# * 122|    return wantarray ? ($crc, $self->{size}) : $crc;                                                                         * 161|    return wantarray ? ( $crc, $self->{size} ) : $crc;                  *
-# | 123|                                                                                                                             | 162|                                                                        |
-# * 124|}   # addfile                                                                                                                * 163|}    # addfile                                                          *
-# | 125|                                                                                                                             | 164|                                                                        |
-# | 126|                                                                                                                             | 165|                                                                        |
-# | 127|sub result {                                                                                                                 | 166|sub result {                                                            |
-# | 128|    my String::CRC::Cksum $self = shift;                                                                                     | 167|    my String::CRC::Cksum $self = shift;                                |
-# * 129|    my ($cksum, $size) = $self->peek;                                                                                        * 168|    my ( $cksum, $size ) = $self->peek;                                 *
-# | 130|    $self->reset;                                                                                                            | 169|    $self->reset;                                                       |
-# * 131|    return wantarray ? ($cksum, $size) : $cksum;                                                                             * 170|    return wantarray ? ( $cksum, $size ) : $cksum;                      *
-# * 132|}   # result                                                                                                                 * 171|}    # result                                                           *
-# | 133|                                                                                                                             | 172|                                                                        |
-# | 134|                                                                                                                             | 173|                                                                        |
-# | 135|sub cksum(@) {                                                                                                               | 174|sub cksum(@) {                                                          |
-# | 136|    my $sum = String::CRC::Cksum->new;                                                                                       | 175|    my $sum = String::CRC::Cksum->new;                                  |
-# | 137|                                                                                                                             | 176|                                                                        |
-# * 138|    while(@_) {                                                                                                              * 177|    while (@_) {                                                        *
-# * 139|        if(ref $_[0])                                                                                                        * 178|        if   ( ref $_[0] ) { $sum->addfile( $_[0] ) }                   *
-# * 140|            { $sum->addfile($_[0]) }                                                                                         * 179|        else               { $sum->add( $_[0] ) }                       *
-# * 141|        else                                                                                                                 *    |                                                                        |
-# * 142|            { $sum->add($_[0]) }                                                                                             *    |                                                                        |
-# | 143|    }                                                                                                                        | 180|    }                                                                   |
-# * 144|    continue { shift }                                                                                                       * 181|    continue {shift}                                                    *
-# | 145|                                                                                                                             | 182|                                                                        |
-# | 146|    return $sum->result;                                                                                                     | 183|    return $sum->result;                                                |
-# * 147|}   # cksum                                                                                                                  * 184|}    # cksum                                                            *
-# | 148|                                                                                                                             | 185|                                                                        |
-# | 149|1;                                                                                                                           | 186|1;                                                                      |
-# | 150|                                                                                                                             | 187|                                                                        |
-# +----+-----------------------------------------------------------------------------------------------------------------------------+----+------------------------------------------------------------------------+
-not ok 170 - 'addons/ThemeManager.plugin/extlib/String/CRC/Cksum.pm'
-
-#   Failed test ''addons/ThemeManager.plugin/extlib/String/CRC/Cksum.pm''
-#   at t/94-perltidy.t line 31.
+ok 170 - 'addons/ThemeManager.plugin/extlib/String/CRC/Cksum.pm'
 ok 171 - 'addons/TypePadAntiSpam.plugin/lib/TypePadAntiSpam/L10N/nl.pm'
 ok 172 - 'lib/MT/Request.pm'
 ok 173 - 'addons/WXRImporter.plugin/lib/WXRImporter/WXRHandler.pm'
@@ -6658,13 +6370,13 @@ ok 179 - 'lib/MT/ArchiveType/Monthly.pm'
 # | 42|        die MT->translate(                                                      | 42|        die MT->translate(                                                      |
 # | 43|            'Uploaded file was not a valid Movable Type backup manifest file.'  | 43|            'Uploaded file was not a valid Movable Type backup manifest file.'  |
 # | 44|          )                                                                     | 44|          )                                                                     |
-# * 45|          if !(                                                                 * 45|          if !(    ( 'movabletype' eq $name )                                   *
-# * 46|                    ( 'movabletype' eq $name )                                  * 46|                && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) );            *
-# * 47|                 && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns )              *   |                                                                                |
-# * 48|          );                                                                    *   |                                                                                |
-# | 49|                                                                                | 47|                                                                                |
-# | 50|        #unless ($self->{ignore_schema_conflicts}) {                            | 48|        #unless ($self->{ignore_schema_conflicts}) {                            |
-# | 51|        my $schema = $attrs->{'{}schema_version'}->{Value};                     | 49|        my $schema = $attrs->{'{}schema_version'}->{Value};                     |
+# * 45|          if !(    ( 'movabletype' eq $name )                                   * 45|          if !(                                                                 *
+# * 46|                && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) );            * 46|                    ( 'movabletype' eq $name )                                  *
+# |   |                                                                                * 47|                 && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns )              *
+# |   |                                                                                * 48|          );                                                                    *
+# | 47|                                                                                | 49|                                                                                |
+# | 48|        #unless ($self->{ignore_schema_conflicts}) {                            | 50|        #unless ($self->{ignore_schema_conflicts}) {                            |
+# | 49|        my $schema = $attrs->{'{}schema_version'}->{Value};                     | 51|        my $schema = $attrs->{'{}schema_version'}->{Value};                     |
 # +---+--------------------------------------------------------------------------------+---+--------------------------------------------------------------------------------+
 not ok 180 - 'lib/MT/BackupRestore/BackupFileHandler.pm'
 
@@ -6697,13 +6409,13 @@ ok 202 - 'lib/MT/I18N/en_us.pm'
 # | 51|        die MT->translate(                                                      | 51|        die MT->translate(                                                      |
 # | 52|            "Uploaded file was not a valid Movable Type backup manifest file."  | 52|            "Uploaded file was not a valid Movable Type backup manifest file."  |
 # | 53|          )                                                                     | 53|          )                                                                     |
-# * 54|          if !(                                                                 * 54|          if !(    ( 'manifest' eq $name )                                      *
-# * 55|                    ( 'manifest' eq $name )                                     * 55|                && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) );            *
-# * 56|                 && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns )              *   |                                                                                |
-# * 57|          );                                                                    *   |                                                                                |
-# | 58|        $self->{start} = 0;                                                     | 56|        $self->{start} = 0;                                                     |
-# | 59|    }                                                                           | 57|    }                                                                           |
-# | 60|    if ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) {                         | 58|    if ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) {                         |
+# * 54|          if !(    ( 'manifest' eq $name )                                      * 54|          if !(                                                                 *
+# * 55|                && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) );            * 55|                    ( 'manifest' eq $name )                                     *
+# |   |                                                                                * 56|                 && ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns )              *
+# |   |                                                                                * 57|          );                                                                    *
+# | 56|        $self->{start} = 0;                                                     | 58|        $self->{start} = 0;                                                     |
+# | 57|    }                                                                           | 59|    }                                                                           |
+# | 58|    if ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) {                         | 60|    if ( MT::BackupRestore::NS_MOVABLETYPE() eq $ns ) {                         |
 # +---+--------------------------------------------------------------------------------+---+--------------------------------------------------------------------------------+
 not ok 203 - 'lib/MT/BackupRestore/ManifestFileHandler.pm'
 
@@ -7458,21 +7170,7 @@ ok 263 - 'lib/MT/App/Search/FreeText.pm'
 ok 264 - 'lib/MT/Entry.pm'
 ok 265 - 'addons/DePoClean.plugin/lib/DePoCleanTheme/L10N/en_us.pm'
 ok 266 - 'lib/MT.pm'
-# The file 'lib/MT/Core.pm' is not tidy
-# +-----+----------------------------------------------------------+-----------------------------------------------------------------------------+
-# | 1113|    my $defaults = $cfg->default($var) || [];             |    my $defaults = $cfg->default($var) || [];                                |
-# | 1114|                                                          |                                                                             |
-# | 1115|    # See POD below and also tests in t/04-config.t       |    # See POD below and also tests in t/04-config.t                          |
-# * 1116|    my @exts = map { $_ eq 'DEFAULT' ? @$defaults : $_ }  |    my @exts                                                                 *
-# * 1117|        $cfg->get_internal($var);                         |      = map { $_ eq 'DEFAULT' ? @$defaults : $_ } $cfg->get_internal($var);  *
-# | 1118|                                                          |                                                                             |
-# | 1119|    return \@exts;                                        |    return \@exts;                                                           |
-# | 1120|}                                                         |}                                                                            |
-# +-----+----------------------------------------------------------+-----------------------------------------------------------------------------+
-not ok 267 - 'lib/MT/Core.pm'
-
-#   Failed test ''lib/MT/Core.pm''
-#   at t/94-perltidy.t line 31.
+ok 267 - 'lib/MT/Core.pm'
 ok 268 - 'lib/MT/Worker/Summarize.pm'
 ok 269 - 'addons/ThemeExport.plugin/lib/ThemeExport/Plugin.pm'
 ok 270 - 'lib/MT/ArchiveType/Author.pm'
@@ -7493,28 +7191,22 @@ ok 281 - 'lib/MT/TheSchwartz/ExitStatus.pm'
 ok 282 - 'lib/MT/App/NotifyList.pm'
 ok 283 - 'lib/MT/I18N/ja.pm'
 ok 284 - 'addons/ThemeManager.plugin/lib/ThemeManager/TemplateInstall.pm'
-# Looks like you failed 10 tests of 284.
-Dubious, test returned 10 (wstat 2560, 0xa00)
-Failed 10/284 subtests 
-[13:01:16] t/95-templateset.t .......... 
+# Looks like you failed 7 tests of 284.
+Dubious, test returned 7 (wstat 1792, 0x700)
+Failed 7/284 subtests 
+[12:26:16] t/95-templateset.t .......... 
 1..2
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Template sets exist
 ok 2 - Blog template set exists
-ok     5247 ms
-[13:01:22] t/96-static.t ............... 
+ok     6231 ms
+[12:26:22] t/96-static.t ............... 
 1..1
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Static path exists: /Users/jay/code/omt/openmelody/mt-static
-ok     5359 ms
-[13:01:28] t/97-impexp.t ............... 
+ok     5811 ms
+[12:26:32] t/97-impexp.t ............... 
 1..6
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Export data is present
 ok 2 - Failed as expected
@@ -7575,13 +7267,10 @@ ok 4 - Got rid of all comments
 
 ok 5 - We have entries again
 ok 6 - We have comments again
-ok     6429 ms
-[13:01:29] t/98-check.t ................ skipped: These tests should be run before the rest of the testing suite since
-[13:01:33] t/99-includeblogs.t ......... 
+ok    10434 ms
+[12:26:33] t/98-check.t ................ skipped: These tests should be run before the rest of the testing suite since
+[12:26:40] t/99-includeblogs.t ......... 
 1..8
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - New entry was created: A Rainy Day 2
 ok 2 - New tags were created: 3
@@ -7591,11 +7280,9 @@ ok 5 - Got entries correctly: A Rainy Day 2, A Rainy Day, Verse 5, Verse 4, Vers
 ok 6 - Got comments correctly: <p>Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma - which is living with the results of other people's thinking. Don't let the noise of others' opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become. Everything else is secondary.</p>, <p>Comment for entry 8, visible</p>, <p>This is a boring comment.</p>, <p>Comment reply for comment 11</p>, <p>Comment reply for comment 1</p>, <p>All your comments are belonged to us MT Authors.</p>, <p>All your comments are belonged to me.</p>, <p>Comment for entry 6, visible</p>, <p>Comment for entry 5, visible</p>,
 ok 7 - Template tag works correctly: Chuck D, Bob D, Paolo,
 ok 8 - Template tag works correctly: anemones, grandpa, grandpa2, rain, rain2, strolling, strolling2, verse,
-ok     4745 ms
-[13:01:35] t/99-utils-misc.t ........... 
+ok     6787 ms
+[12:26:42] t/99-utils-misc.t ........... 
 1..4
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
     1..9
     ok 1 - 'file.0' returns '0'
@@ -7669,12 +7356,9 @@ ok 3 - mime_type_extension()
     ok 35 - Matching '..' against (cgi, txt, pl) returns ''
     ok 36 - Matching '/tmp/..' against (cgi, txt, pl) returns ''
 ok 4 - match_file_extension()
-ok     1703 ms
-[13:01:42] t/meta.t .................... 
+ok     1911 ms
+[12:26:47] t/meta.t .................... 
 1..6
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - Initial template set is undef
 ok 2 - $blog->touch doesn't change any meta value
@@ -7682,11 +7366,8 @@ ok 3 - Captcha provider meta value saved successfully
 ok 4 - $blog->captcha_provider update touches one meta value
 ok 5 - Multiple meta values saved successfully
 ok 6 - Multiple meta value saves correctly identify number of saved meta columns
-ok     6978 ms
-[13:01:50] t/mt_cms_blog.t ............. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     5771 ms
+[12:26:53] t/mt_cms_blog.t ............. 
 
 1..25
 # test MT::CMS::Blog::_update_finfos
@@ -7735,9 +7416,7 @@ ok 25 - 30 other fileinfos are virtual
 # Looks like you failed 3 tests of 25.
 Dubious, test returned 3 (wstat 768, 0x300)
 Failed 3/25 subtests 
-[13:01:55] t/mt_cms_tag.t .............. 
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+[12:26:59] t/mt_cms_tag.t .............. 
 
 1..10
 # test MT::CMS::Blog::list_tag_for()
@@ -7751,19 +7430,12 @@ ok 7 - result object_loop has six objects
 ok 8 - first tag in loop is anemones
 ok 9 - third tag in loop is grandpa
 ok 10 - fourth tag in loop is rain
-ok     5461 ms
-[13:02:06] t/mt_cms_tools.t ............ 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     6164 ms
+[12:27:06] t/mt_cms_tools.t ............ 
 
 1..8
 # test MT::CMS::Tools::upgrade
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 # Object types are: entry, page, placement, ts_exitstatus, file, asset.image, objectasset, asset.file, templatemap, session, user, category, ping_cat, tag, asset, tbping, plugindata, awesome, log.ping, ts_funcmap, video, template, permission, awesome_image, ping, log.entry, fileinfo, touch, custom_field, role, asset.video, objectscore, trackback, asset.audio, entry.page, author, log.comment, category.folder, folder, audio, ts_error, log, association, theme, ts_job, blog, image, log.system, notification, comment, objecttag, commenter, config
 ok 1 - result of upgrade() is not page content
@@ -7774,34 +7446,21 @@ ok 5 - result of upgrade() is not page content
 ok 6 - upgrade() did not error
 ok 7 - app has a redirect url
 ok 8 - app's redirect url does not use install mode
-ok    10726 ms
-[13:02:06] t/plugin-melody-feedback.t .. 
-Plugins without envelopes are no longer loaded in Melody: /Users/jay/code/omt/openmelody/t/plugins/stray.pl at lib/MT.pm line 1755.
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
+ok     7121 ms
+[12:27:07] t/plugin-melody-feedback.t .. 
 
 1..4
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
-You are using a plugin (subfoldered.pl) that uses a deprecated plugin file format (.pl)
-Message: Internal callback died with: Can't call method "execute" on an undefined value at /Users/jay/code/omt/openmelody/extlib/Data/ObjectDriver/Driver/DBI.pm line 161.
 
 ok 1 - use Melody::Feedback;
 ok 2 - Injects GS widget in to CMS app template
 ok 3 - Does not inject GS widget in to CMS popup app template
 ok 4 - Does not inject GS widget in to comments app template
-ok      596 ms
-[13:02:06]
+ok      691 ms
+[12:27:07]
 
 Test Summary Report
 -------------------
@@ -7819,19 +7478,18 @@ t/20-setup.t              (Wstat: 512 Tests: 1 Failed: 0)
 t/21-app-callbacks.t      (Wstat: 512 Tests: 1 Failed: 0)
   Non-zero exit status: 2
   Parse errors: Bad plan.  You planned 4 tests but ran 1.
-t/89-pod.t                (Wstat: 1280 Tests: 459 Failed: 5)
-  Failed tests:  310, 325, 387, 402-403
-  Non-zero exit status: 5
+t/89-pod.t                (Wstat: 1536 Tests: 459 Failed: 6)
+  Failed tests:  310, 325, 361, 387, 402-403
+  Non-zero exit status: 6
 t/92-pubqueue.t           (Wstat: 256 Tests: 67 Failed: 1)
   Failed test:  66
   Non-zero exit status: 1
   Parse errors: Bad plan.  You planned 68 tests but ran 67.
-t/94-perltidy.t           (Wstat: 2560 Tests: 284 Failed: 10)
-  Failed tests:  6, 22, 103, 164, 170, 180, 203, 212, 218
-                267
-  Non-zero exit status: 10
+t/94-perltidy.t           (Wstat: 1792 Tests: 284 Failed: 7)
+  Failed tests:  22, 103, 164, 180, 203, 212, 218
+  Non-zero exit status: 7
 t/mt_cms_blog.t           (Wstat: 768 Tests: 25 Failed: 3)
   Failed tests:  2, 10-11
   Non-zero exit status: 3
-Files=68, Tests=5650, 367 wallclock secs ( 1.03 usr  0.28 sys + 300.74 cusr 11.44 csys = 313.49 CPU)
+Files=68, Tests=5638, 410 wallclock secs ( 1.10 usr  0.31 sys + 336.09 cusr 12.95 csys = 350.45 CPU)
 Result: FAIL
