@@ -22,7 +22,7 @@ sub init_app {
     # been merged with Config Assistant, so is not needed anymore.)
     my $switch = $cfg->PluginSwitch || {};
     $switch->{'AutoPrefs/config.yaml'} = $switch->{'AutoPrefs'} = 0;
-    $cfg->PluginSwitch($switch);
+    $cfg->PluginSwitch( $switch );
 
     # FIXME This needs some commentary...
     init_options($app);
@@ -32,16 +32,14 @@ sub init_app {
 
     # Static files only get copied during an upgrade.
     if ( $app->id eq 'upgrade' ) {
-
         # Because no schema version is set, the upgrade process does nothing
         # during the plugin's initial install.  So, in order to copy static
         # files on first run, we set an initial schema version which triggers
         # the framework.
-        my $schemas = $cfg->PluginSchemaVersion || {};
+        my $schemas                 = $cfg->PluginSchemaVersion || {};
         $schemas->{ $plugin->id } ||= '0.1';
-
         # $schemas->{$plugin->id}   = '0.1';  ## UNCOMMENT TO TEST UPGRADE ##
-        $cfg->PluginSchemaVersion($schemas);
+        $cfg->PluginSchemaVersion( $schemas );
     }
 
     # TODO - This should not have to reinstall a subroutine. It should invoke
@@ -81,9 +79,9 @@ sub init_options {
                     my $option
                       = $r->{'template_sets'}->{$set}->{'options'}->{$opt};
 
-                    # To avoid option names that may collide with other
-                    # options in other template sets settings are derived
-                    # by combining the name of the template set and the
+                    # To avoid option names that may collide with other 
+                    # options in other template sets settings are derived 
+                    # by combining the name of the template set and the 
                     # option's key.
                     my $optname = $set . '_' . $opt;
                     if ( _option_exists( $sig, $optname ) ) {
@@ -93,7 +91,7 @@ sub init_options {
                     else {
 
                         # if ( my $default = $option->{default} ) {
-                        #     if (   !ref($default)
+                        #     if (   !ref($default) 
                         #         && (   $default =~ /^\s*sub/
                         #             || $default =~ /^\$/)) {
                         #         $default
@@ -112,7 +110,7 @@ sub init_options {
                             $obj->{'registry'}->{'settings'}->{$optname}
                               = { scope => 'blog', %$option, };
                         }
-                    } ## end else [ if ( _option_exists( $sig...))]
+                    }
                 } ## end foreach my $opt ( keys %{ $r...})
             } ## end if ( $r->{'template_sets'...})
         }    # end foreach (@sets)
@@ -186,7 +184,7 @@ sub load_tags {
                    class    => 'system',
                    category => 'plugin',
                    level    => MT::Log::ERROR(),
-                 }
+                }
             );
         }
     }
@@ -309,15 +307,20 @@ sub load_tags {
                                 $_[0]->stash( 'plugin_ns',
                                               find_theme_plugin($bset)->id );
                                 $_[0]->stash( 'scope', 'blog' );
-                                $_[0]->stash(
-                                           'show_children',
-                                           (
-                                             defined $option->{show_children}
-                                             ? $option->{show_children}
-                                             : 1
-                                           )
-                                );
                                 runner( '_hdlr_field_text_group',
+                                        'ConfigAssistant::Plugin', @_ );
+                            };
+                        } ## end elsif ( $option->{'type'}...)
+                        elsif ( $option->{'type'} eq 'datetime' ) {
+                            $tags->{function}->{ $tag } = sub {
+                                my $blog = $_[0]->stash('blog');
+                                my $bset = $blog->template_set;
+                                $_[0]->stash( 'field', $bset . '_' . $opt );
+                                $_[0]->stash( 'plugin_ns',
+                                              find_theme_plugin($bset)->id );
+                                $_[0]->stash( 'scope', 'blog' );
+                                $_[0]->stash( 'format', $option->{format} );
+                                runner( '_hdlr_field_datetime',
                                         'ConfigAssistant::Plugin', @_ );
                             };
                         } ## end elsif ( $option->{'type'}...)
@@ -339,6 +342,13 @@ sub load_tags {
                                 $_[0]->stash( 'plugin_ns',
                                               find_theme_plugin($bset)->id );
                                 $_[0]->stash( 'scope', 'blog' );
+                                $_[0]->stash(
+                                           'show_children',
+                                           (
+                                             defined $option->{show_children}
+                                             ? $option->{show_children}
+                                             : 1
+                                           ));
                                 runner( '_hdlr_field_category_list',
                                         'ConfigAssistant::Plugin', @_ );
                             };
@@ -428,6 +438,20 @@ sub load_tags {
                     };
 
                 }
+                        elsif ( $option->{'type'} eq 'datetime' ) {
+                            $tags->{function}->{ $tag } = sub {
+                                my $blog = $_[0]->stash('blog');
+                                my $bset = $blog->template_set;
+                                $_[0]->stash( 'field', $bset . '_' . $opt );
+                                $_[0]->stash( 'plugin_ns',
+                                              find_theme_plugin($bset)->id );
+                                $_[0]->stash( 'scope', 'blog' );
+                                $_[0]->stash( 'format', $option->{format} );
+                                runner( '_hdlr_field_datetime',
+                                        'ConfigAssistant::Plugin', @_ );
+                    };
+                } ## end elsif ( $option->{'type'}...)
+
                 elsif (    $option->{'type'} eq 'category_list'
                         or $option->{'type'} eq 'folder_list' )
                 {
