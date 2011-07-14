@@ -871,7 +871,7 @@ sub core_upgrade_functions {
             priority      => 3.2,
             updater       => {
                 type      => 'blog',
-                label     => 'Assigning blog template set...',
+                label     => 'Assigning blog theme...',
                 condition => sub {
                     !$_[0]->template_set;
                 },
