@@ -8,6 +8,7 @@ package MT;
 
 use strict;
 use base qw( MT::ErrorHandler );
+use Melody::Deprecated;
 use File::Spec;
 use File::Basename;
 use MT::Util qw( weaken );

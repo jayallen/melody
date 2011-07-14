@@ -326,7 +326,11 @@ sub init_core_registry {
                       'link' => 'http://search.cpan.org/dist/Algorithm-Diff/',
                       'version' => '1.1902'
              },
-             'CGI' => {
+            'Attribute::Handlers' => {
+                'link' => 'http://search.cpan.org/dist/Attribute-Handlers/',
+                'version' => '0.88'
+            },
+            'CGI' => {
                         'link'    => 'http://search.cpan.org/dist/CGI/',
                         'version' => '3.5'
              },

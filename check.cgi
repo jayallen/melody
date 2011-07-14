@@ -181,6 +181,7 @@ my (@REQ, @DATA, @OPT);
 
 my @CORE_REQ = (
     [ 'Algorithm::Diff', 1.1902, 1, '', 'http://search.cpan.org/dist/Algorithm-Diff/'],
+    [ 'Attribute::Handlers', 0.88, 1, '', 'http://search.cpan.org/dist/Attribute-Handlers/'],
     [ 'Cache', 2.04, 1, '', 'http://search.cpan.org/dist/Cache/'],
     [ 'CGI', 3.50, 1, '', 'http://search.cpan.org/dist/CGI/'],
     [ 'Class::Accessor', 0.22, 1, '', 'http://search.cpan.org/dist/Class-Accessor/'],
