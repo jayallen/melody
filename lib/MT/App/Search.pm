@@ -703,13 +703,13 @@ sub prepare_context {
                 || $q->param('archive_type') =~ /Monthly/i
                 || $q->param('archive_type') =~ /Yearly/i )
       );
-    if ($q->param('author')  && $q->param('author') =~ /^[0-9]*$/) {
-        if ( my $author = MT::Author->load($q->param('author')) ) {
-            $ctx->stash('author', $author);
-            $ctx->var('author_archive', 1);
+    if ( $q->param('author') && $q->param('author') =~ /^[0-9]*$/ ) {
+        if ( my $author = MT::Author->load( $q->param('author') ) ) {
+            $ctx->stash( 'author', $author );
+            $ctx->var( 'author_archive', 1 );
         }
     }
-    if ($q->param('category') && $q->param('category') =~ /^[0-9]*$/) {
+    if ( $q->param('category') && $q->param('category') =~ /^[0-9]*$/ ) {
         require MT::Category;
         my $category = MT::Category->load( $q->param('category') );
         $ctx->stash( 'category', $category );

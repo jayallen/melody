@@ -21,13 +21,13 @@ sub _local {
 sub _syserr {
     if ( $^O eq 'MSWin32' ) {
         return Encode::is_utf8( $_[0] )
-            ? $_[0]
-            : Encode::decode( 'Shift_JIS', $_[0] );
+          ? $_[0]
+          : Encode::decode( 'Shift_JIS', $_[0] );
     }
     else {
         return Encode::is_utf8( $_[0] )
-            ? $_[0]
-            : Encode::decode_utf8( $_[0] );
+          ? $_[0]
+          : Encode::decode_utf8( $_[0] );
     }
 }
 
@@ -39,12 +39,13 @@ sub get_data {
     if ( !$is_handle ) {
         $fh = gensym();
         open $fh, _local($from)
-            or return $fmgr->error(
-            MT->translate(
-                "Opening local file '[_1]' failed: [_2]", $from,
-                _syserr("$!")
-            )
-            );
+          or return
+          $fmgr->error(
+               MT->translate(
+                              "Opening local file '[_1]' failed: [_2]", $from,
+                              _syserr("$!")
+               )
+          );
     }
     else {
         $fh = $from;
@@ -60,7 +61,7 @@ sub get_data {
         $data = Encode::decode_utf8($data);
     }
     $data;
-}
+} ## end sub get_data
 
 ## $type is either 'upload' or 'output'
 sub put {
@@ -70,12 +71,13 @@ sub put {
     if ( !$fmgr->is_handle($from) ) {
         my $fh = gensym();
         open $fh, $from
-            or return $fmgr->error(
-            MT->translate(
-                "Opening local file '[_1]' failed: [_2]", $from,
-                _syserr("$!")
-            )
-            );
+          or return
+          $fmgr->error(
+               MT->translate(
+                              "Opening local file '[_1]' failed: [_2]", $from,
+                              _syserr("$!")
+               )
+          );
         $rv = _write_file( $fmgr, $fh, $to, $type );
         close $fh;
     }
@@ -83,7 +85,7 @@ sub put {
         $rv = _write_file( $fmgr, $from, $to, $type );
     }
     $rv;
-}
+} ## end sub put
 
 *put_data = \&_write_file;
 
@@ -106,12 +108,13 @@ sub _write_file {
 
     my $old = umask( oct $umask );
     sysopen FH, $to, O_RDWR | O_CREAT | O_TRUNC, oct $perms
-        or return $fmgr->error(
-        MT->translate(
-            "Opening local file '[_1]' failed: [_2]",
-            $to, _syserr("$!")
-        )
-        );
+      or return
+      $fmgr->error(
+                 MT->translate(
+                                "Opening local file '[_1]' failed: [_2]", $to,
+                                _syserr("$!")
+                 )
+      );
     if ( $type && $type eq 'upload' ) {
         binmode(FH);
         binmode($from) if $fmgr->is_handle($from);
@@ -136,7 +139,7 @@ sub _write_file {
     close FH;
     umask($old);
     $bytes;
-}
+} ## end sub _write_file
 
 sub exists { -e _local( $_[1] ) }
 
@@ -159,12 +162,13 @@ sub rename {
     my $fmgr = shift;
     my ( $from, $to ) = @_;
     rename $from, $to
-        or return $fmgr->error(
-        MT->translate(
-            "Renaming '[_1]' to '[_2]' failed: [_3]", $from,
-            $to,                                      _syserr("$!")
-        )
-        );
+      or return
+      $fmgr->error(
+                    MT->translate(
+                                   "Renaming '[_1]' to '[_2]' failed: [_3]",
+                                   $from, $to, _syserr("$!")
+                    )
+      );
     1;
 }
 
@@ -224,7 +228,7 @@ sub content_is_updated {
         close $fh;
         return $$content ne $data;
     }
-}
+} ## end sub content_is_updated
 
 sub delete {
     my $fmgr = shift;
@@ -232,9 +236,9 @@ sub delete {
     $file = _local($file);
     return 1 unless -e $file or -l $file;
     unlink $file
-        or return $fmgr->error(
-        MT->translate( "Deleting '[_1]' failed: [_2]", $file, _syserr("$!") )
-        );
+      or return $fmgr->error(
+         MT->translate( "Deleting '[_1]' failed: [_2]", $file, _syserr("$!") )
+      );
     1;
 }
 

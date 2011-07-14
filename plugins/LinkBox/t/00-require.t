@@ -1,4 +1,4 @@
 
 use Test::More tests => 1;
 
-require_ok ('LinkBox.pl');
+require_ok('LinkBox.pl');

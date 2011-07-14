@@ -334,8 +334,8 @@ sub _pre_search_scope_terms_to_class {
     $terms ||= {};
     return if ( ref $terms eq 'HASH' ) && exists( $terms->{id} );
 
-    my $props = $class->properties;
-    my $col = $props->{class_column} or return;
+    my $props    = $class->properties;
+    my $col      = $props->{class_column} or return;
     my $no_class = 0;
     if ( $args->{no_class} ) {
         delete $args->{no_class};
@@ -364,20 +364,27 @@ sub _pre_search_scope_terms_to_class {
         $terms->{$col} = $props->{class_type} unless $no_class;
     } ## end if ( ref $terms eq 'HASH')
     elsif ( ref $terms eq 'ARRAY' ) {
-        if ( my @class_terms = grep { ref $_ eq 'HASH' && exists $_->{$col} } @$terms) {
-            for my $term ( @$terms ) {
-                if ( ref $term eq 'HASH' && exists $term->{$col} && $term->{$col} eq '*' ) {
+        if ( my @class_terms
+             = grep { ref $_ eq 'HASH' && exists $_->{$col} } @$terms )
+        {
+            for my $term (@$terms) {
+                if (    ref $term eq 'HASH'
+                     && exists $term->{$col}
+                     && $term->{$col} eq '*' )
+                {
                     delete $term->{$col};
                 }
             }
+
             # Remove empty hashrefs.
             @$terms = grep { ref $_ ne 'HASH' || scalar keys %$_ } @$terms;
+
             # The class column has been explicitly given or removed, so don't
             # add one.
             return;
         }
         @$terms = ( { $col => $props->{class_type} } => 'AND' => [@$terms] )
-            unless $no_class;
+          unless $no_class;
     } ## end elsif ( ref $terms eq 'ARRAY')
 } ## end sub _pre_search_scope_terms_to_class
 
@@ -398,8 +405,7 @@ sub contents_label { return '' }
 
 sub contents_label_plural {
     my $pkg = shift;
-    my $label = $pkg->contents_label
-        or return '';
+    my $label = $pkg->contents_label or return '';
     $label =~ s/y$/ie/;
     $label .= 's';
     return MT->translate($label);
@@ -409,8 +415,7 @@ sub container_label { return '' }
 
 sub container_label_plural {
     my $pkg = shift;
-    my $label = $pkg->container_label
-        or return '';
+    my $label = $pkg->container_label or return '';
     $label =~ s/y$/ie/;
     $label .= 's';
     return MT->translate($label);

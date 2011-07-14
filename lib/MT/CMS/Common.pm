@@ -590,11 +590,11 @@ sub edit {
 } ## end sub edit
 
 sub list {
-    my $app  = shift;
-    my $q    = $app->query;
-    my $type = $q->param('_type');
-    my $blog_id = $app->blog ? $app->blog->id : 0;
-    my $scope = $app->blog ? 'blog' : !$blog_id ? 'system' : 'user';
+    my $app       = shift;
+    my $q         = $app->query;
+    my $type      = $q->param('_type');
+    my $blog_id   = $app->blog ? $app->blog->id : 0;
+    my $scope     = $app->blog ? 'blog' : !$blog_id ? 'system' : 'user';
     my $list_mode = 'list_' . $type;
     if ( my $hdlrs = $app->handlers_for_mode($list_mode) ) {
         return $app->forward($list_mode);
@@ -614,21 +614,20 @@ sub list {
     my @list_headers;
     push @list_headers,
       File::Spec->catfile( MT->config->TemplatePath, $app->{template_dir},
-        'listing', $type . '_list_header.tmpl' );
+                           'listing', $type . '_list_header.tmpl' );
     for my $c (@list_components) {
         my $f = File::Spec->catfile( $c->path, 'tmpl', 'listing',
-            $type . '_list_header.tmpl' );
+                                     $type . '_list_header.tmpl' );
         push @list_headers, $f if -e $f;
     }
 
     my $screen_settings = MT->registry( listing_screens => $type )
       or return $app->error(
-        $app->translate( 'Unknown action [_1]', $list_mode ) );
+                       $app->translate( 'Unknown action [_1]', $list_mode ) );
 
     # Condition check
     if ( my $cond = $screen_settings->{condition} ) {
-        $cond = MT->handler_to_coderef($cond)
-          if 'CODE' ne ref $cond;
+        $cond = MT->handler_to_coderef($cond) if 'CODE' ne ref $cond;
         $app->error();
         unless ( $cond->($app) ) {
             if ( $app->errstr ) {
@@ -640,7 +639,7 @@ sub list {
 
     # Validate scope
     if ( my $view = $screen_settings->{view} ) {
-        print STDERR "View: ".join(',',@$view)."\n";
+        print STDERR "View: " . join( ',', @$view ) . "\n";
         $view = [$view] unless ref $view;
         my %view = map { $_ => 1 } @$view;
         if ( !$view{$scope} ) {
@@ -651,10 +650,10 @@ sub list {
 #    my $screen_settings = MT->registry( 'listing_screens' => $type );
     my $initial_filter;
 
-    my $list_prefs  = $app->user->list_prefs         || {};
-    my $list_pref   = $list_prefs->{$type}{$blog_id} || {};
-    my $rows        = $list_pref->{rows}             || 50;  ## FIXME: Hardcoded
-    my $last_filter = $list_pref->{last_filter}      || '';
+    my $list_prefs = $app->user->list_prefs         || {};
+    my $list_pref  = $list_prefs->{$type}{$blog_id} || {};
+    my $rows       = $list_pref->{rows}             || 50; ## FIXME: Hardcoded
+    my $last_filter = $list_pref->{last_filter} || '';
     $last_filter = '' if $last_filter eq '_allpass';
     my $last_items = $list_pref->{last_items} || [];
     my $initial_sys_filter = $q->param('filter_key');
@@ -687,9 +686,10 @@ sub list {
                             push @messages,
                               {
                                 cls => 'alert',
-                                msg => MT->translate(
-                                    q{Invalid filter: [_1]}, $errstr
-                                )
+                                msg =>
+                                  MT->translate(
+                                              q{Invalid filter: [_1]}, $errstr
+                                  )
                               };
                         }
                         next;
@@ -702,21 +702,18 @@ sub list {
                             push @messages,
                               {
                                 cls => 'alert',
-                                msg => MT->translate(
-                                    q{Invalid filter: [_1]}, $errstr,
-                                )
+                                msg =>
+                                  MT->translate(
+                                             q{Invalid filter: [_1]}, $errstr,
+                                  )
                               };
                         }
                         next;
                     }
                 }
-                push @items,
-                  {
-                    type => $col,
-                    args => ( $args || {} ),
-                  };
+                push @items, { type => $col, args => ( $args || {} ), };
                 push @labels, ( $label || $prop->label );
-            }
+            } ## end if ( my $prop = $list_props...)
             else {
                 push @messages,
                   {
@@ -724,21 +721,19 @@ sub list {
                     msg => MT->translate( q{Invalid filter: [_1]}, $col, )
                   };
             }
-        }
+        } ## end for my $col (@cols)
         if ( scalar @items ) {
-            $initial_filter = {
-                label => join( ', ', @labels ),
-                items => \@items,
-            };
+            $initial_filter
+              = { label => join( ', ', @labels ), items => \@items, };
         }
         else {
             $initial_filter = undef;
         }
-    }
+    } ## end elsif ( my @cols = $app->query...)
     elsif ($initial_sys_filter) {
         require MT::CMS::Filter;
-        $initial_filter =
-          MT::CMS::Filter::filter( $app, $type, $initial_sys_filter );
+        $initial_filter
+          = MT::CMS::Filter::filter( $app, $type, $initial_sys_filter );
     }
     elsif ($last_filter) {
         my $filter = MT->model('filter')->load($last_filter);
@@ -746,15 +741,14 @@ sub list {
     }
     elsif ( scalar @$last_items && $app->query->param('does_act') ) {
         my $filter = MT->model('filter')->new;
-        $filter->set_values(
-            {
-                object_ds => $obj_type,
-                items     => $last_items,
-                author_id => $app->user->id,
-                blog_id   => $blog_id || 0,
-                label     => $app->translate('New Filter'),
-                can_edit  => 1,
-            }
+        $filter->set_values( {
+                               object_ds => $obj_type,
+                               items     => $last_items,
+                               author_id => $app->user->id,
+                               blog_id   => $blog_id || 0,
+                               label     => $app->translate('New Filter'),
+                               can_edit  => 1,
+                             }
         );
         $initial_filter = $filter->to_hash if $filter;
         $param{open_filter_panel} = 1;
@@ -767,8 +761,8 @@ sub list {
     $primary_col ||= [ @{ $screen_settings->{columns} || [] } ]->[0];
     $primary_col = [$primary_col] unless ref $primary_col;
     my %primary_col = map { $_ => 1 } @$primary_col;
-    my $default_sort =
-      defined( $screen_settings->{default_sort_key} )
+    my $default_sort
+      = defined( $screen_settings->{default_sort_key} )
       ? $screen_settings->{default_sort_key}
       : '';
 
@@ -778,8 +772,8 @@ sub list {
         my $col;
         my $id = $prop->id;
         my $disp = $prop->display || 'optional';
-        my $show =
-            $disp eq 'force' ? 1
+        my $show
+          = $disp eq 'force' ? 1
           : $disp eq 'none'  ? 0
           : scalar %cols ? $cols{$id}
           : $disp eq 'default' ? 1
@@ -817,53 +811,49 @@ sub list {
             order              => $prop->order,
             sub_fields         => \@subfields,
           };
-    }
+    } ## end for my $prop ( values %$list_props)
     @list_columns = sort {
             !$a->{order} ? 1
           : !$b->{order} ? -1
           : $a->{order} <=> $b->{order}
     } @list_columns;
 
-    my @filter_types = map {
-        {
-            prop                  => $_,
-            id                    => $_->id,
-            type                  => $_->type,
-            label                 => $_->filter_label || $_->label,
-            field                 => $_->filter_tmpl,
-            single_select_options => $_->single_select_options($app),
-            verb                  => defined $_->verb ? $_->verb
-            : $app->translate('__SELECT_FILTER_VERB'),
-            singleton => $_->singleton ? 1
-            : $_->has('filter_editable') ? !$_->filter_editable
-            : 0,
-            editable => $_->has('filter_editable') ? $_->filter_editable : 1,
-            base_type => $_->base_type,
+    my @filter_types = map { {
+           prop                  => $_,
+           id                    => $_->id,
+           type                  => $_->type,
+           label                 => $_->filter_label || $_->label,
+           field                 => $_->filter_tmpl,
+           single_select_options => $_->single_select_options($app),
+           verb                  => defined $_->verb ? $_->verb
+           : $app->translate('__SELECT_FILTER_VERB'),
+           singleton => $_->singleton ? 1
+           : $_->has('filter_editable') ? !$_->filter_editable
+           : 0,
+           editable => $_->has('filter_editable') ? $_->filter_editable : 1,
+           base_type => $_->base_type,
         }
-      }
-      sort {
-        ( $a->item_order && $b->item_order ) ? $a->item_order <=> $b->item_order
+      } sort {
+        ( $a->item_order && $b->item_order )
+          ? $a->item_order <=> $b->item_order
           : ( !$a->item_order && $b->item_order )  ? 1
           : ( $a->item_order  && !$b->item_order ) ? -1
           : (
-            defined $a->filter_label
-            ? (
-                ref $a->filter_label
-                ? $a->filter_label->($screen_settings)
-                : $a->filter_label
-              )
-            : ( ref $a->label ? $a->label->($screen_settings) : $a->label )
+              defined $a->filter_label
+              ? (
+                  ref $a->filter_label
+                  ? $a->filter_label->($screen_settings)
+                  : $a->filter_label )
+              : ( ref $a->label ? $a->label->($screen_settings) : $a->label )
           ) cmp(
-            defined $b->filter_label
-            ? (
-                ref $b->filter_label
-                ? $b->filter_label->($screen_settings)
-                : $b->filter_label
-              )
-            : ( ref $b->label ? $b->label->($screen_settings) : $b->label )
+               defined $b->filter_label
+               ? (
+                   ref $b->filter_label
+                   ? $b->filter_label->($screen_settings)
+                   : $b->filter_label )
+               : ( ref $b->label ? $b->label->($screen_settings) : $b->label )
           );
-      }
-      grep { $_->can_filter($scope) } values %$list_props;
+      } grep { $_->can_filter($scope) } values %$list_props;
 
 #for my $filter_type ( @filter_types ) {
 #    if ( my $options = $filter_type->{single_select_options} ) {
@@ -883,19 +873,19 @@ sub list {
     my $filters = MT::CMS::Filter::filters( $app, $type, encode_html => 1 );
 
     my $allpass_filter = {
-        label => MT->translate(
-            'All [_1]',
-            $screen_settings->{object_label_plural}
-            ? $screen_settings->{object_label_plural}
-            : $obj_class->class_label_plural
-        ),
-        items    => [],
-        id       => '_allpass',
-        can_edit => 0,
-        can_save => 0,
+                           label =>
+                             MT->translate(
+                                     'All [_1]',
+                                     $screen_settings->{object_label_plural}
+                                     ? $screen_settings->{object_label_plural}
+                                     : $obj_class->class_label_plural
+                             ),
+                           items    => [],
+                           id       => '_allpass',
+                           can_edit => 0,
+                           can_save => 0,
     };
-    $initial_filter = $allpass_filter
-      unless $initial_filter;
+    $initial_filter = $allpass_filter unless $initial_filter;
     ## Encode all HTML in complex structure.
     MT::Util::deep_do(
         $initial_filter,
@@ -926,8 +916,8 @@ sub list {
     $param{use_actions}      = 1;
     $param{object_label}     = $screen_settings->{object_label}
       || $obj_class->class_label;
-    $param{object_label_plural} =
-        $screen_settings->{object_label_plural}
+    $param{object_label_plural}
+      = $screen_settings->{object_label_plural}
       ? $screen_settings->{object_label_plural}
       : $obj_class->class_label_plural;
     $param{action_label} = $screen_settings->{action_label}
@@ -940,10 +930,11 @@ sub list {
       || $obj_class->contents_label_plural;
     $param{container_label} = $screen_settings->{container_label}
       || $obj_class->container_label;
-    $param{container_label_plural} = $screen_settings->{container_label_plural}
+    $param{container_label_plural}
+      = $screen_settings->{container_label_plural}
       || $obj_class->container_label_plural;
-    $param{zero_state} =
-        $screen_settings->{zero_state}
+    $param{zero_state}
+      = $screen_settings->{zero_state}
       ? $app->translate( $screen_settings->{zero_state} )
       : '',
 
@@ -960,14 +951,13 @@ sub list {
     my $template = $screen_settings->{template} || 'list_common.tmpl';
 
     my $feed_link = $screen_settings->{feed_link};
-    $feed_link = $feed_link->($app)
-      if 'CODE' eq ref $feed_link;
+    $feed_link = $feed_link->($app) if 'CODE' eq ref $feed_link;
     if ($feed_link) {
         $param{feed_url} =
           $app->make_feed_link( $type,
-            $blog_id ? { blog_id => $blog_id } : undef );
-        $param{object_type_feed} =
-            $screen_settings->{feed_label}
+                                $blog_id ? { blog_id => $blog_id } : undef );
+        $param{object_type_feed}
+          = $screen_settings->{feed_label}
           ? $screen_settings->{feed_label}
           : $app->translate( "[_1] Feed", $obj_class->class_label );
     }
@@ -983,27 +973,26 @@ sub list {
         title     => 'CommonListing',
         nav_title => 'CommonListing',
         content =>
-'<pre id="listing-debug-block" style="border: 1px solid #000; background-color: #eee; font-family: Courier;"></pre>',
+          '<pre id="listing-debug-block" style="border: 1px solid #000; background-color: #eee; font-family: Courier;"></pre>',
       }
       if $MT::DebugMode;
 
-    my $tmpl = $app->load_tmpl( $template, \%param )
-      or return;
+    my $tmpl = $app->load_tmpl( $template, \%param ) or return;
     $app->run_callbacks( 'list_template_param.' . $type,
-        $app, $tmpl->param, $tmpl );
+                         $app, $tmpl->param, $tmpl );
     return $tmpl;
-}
+} ## end sub list
 
 sub filtered_list {
-    my $app  = shift;
-    my ( %forward_params ) = @_;
-    my $q    = $app->query;
-    my $blog_id = $q->param('blog_id') || 0;
+    my $app              = shift;
+    my (%forward_params) = @_;
+    my $q                = $app->query;
+    my $blog_id          = $q->param('blog_id') || 0;
     my $filter_id        = $q->param('fid') || $forward_params{saved_fid};
-    my $blog = $blog_id ? $app->blog : undef;
-    my $scope
-        = !$blog         ? 'system' : 'blog';
-    my $blog_ids = !$blog         ? undef : $blog_id;
+    my $blog             = $blog_id ? $app->blog : undef;
+    my $scope            = !$blog ? 'system' : 'blog';
+    my $blog_ids         = !$blog ? undef : $blog_id;
+
 #                 : $blog->is_blog ? $blog_id
 #                 :                  [ $blog->id, map { $_->id } @{$blog->blogs} ];
     my $debug = {};
@@ -1019,11 +1008,11 @@ sub filtered_list {
         $debug->{section}            = sub {
             my ($section) = @_;
             push @{ $debug->{sections} },
-                [
+              [
                 $section,
                 Time::HiRes::tv_interval( $debug->{timer} ),
                 Data::ObjectDriver->profiler->report_query_frequency(),
-                ];
+              ];
             $debug->{timer} = [ Time::HiRes::gettimeofday() ];
             Data::ObjectDriver->profiler->reset;
         };
@@ -1032,18 +1021,17 @@ sub filtered_list {
         };
         $debug->{timer} = $debug->{total} = [ Time::HiRes::gettimeofday() ];
         Data::ObjectDriver->profiler->reset;
-    }
+    } ## end if ($MT::DebugMode)
     else {
         $debug->{section} = sub { };
     }
 
     my $ds = $q->param('datasource');
     my $setting = MT->registry( listing_screens => $ds )
-        or return $app->json_error( $app->translate('Unknown list type') );
+      or return $app->json_error( $app->translate('Unknown list type') );
 
     if ( my $cond = $setting->{condition} ) {
-        $cond = MT->handler_to_coderef($cond)
-            if 'CODE' ne ref $cond;
+        $cond = MT->handler_to_coderef($cond) if 'CODE' ne ref $cond;
         $app->error();
         unless ( $cond->($app) ) {
             if ( $app->errstr ) {
@@ -1078,23 +1066,24 @@ sub filtered_list {
             my $prop = $props->{ $item->{type} };
             if ( $prop->has('validate_item') ) {
                 $prop->validate_item($item)
-                    or return $app->json_error(
-                    MT->translate(
-                        'Invalid filter terms: [_1]',
-                        $prop->errstr
-                    )
-                    );
+                  or return
+                  $app->json_error(
+                                    MT->translate(
+                                                 'Invalid filter terms: [_1]',
+                                                 $prop->errstr
+                                    )
+                  );
             }
         }
     }
 
     my $filter = MT->model('filter')->new;
-    $filter->set_values(
-        {   object_ds => $ds,
-            items     => $filteritems,
-            author_id => $app->user->id,
-            blog_id   => $blog_id || 0,
-        }
+    $filter->set_values( {
+                           object_ds => $ds,
+                           items     => $filteritems,
+                           author_id => $app->user->id,
+                           blog_id   => $blog_id || 0,
+                         }
     );
     my $limit = $q->param('limit') || 50;    # FIXME: hard coded.
     my $page = $q->param('page');
@@ -1102,7 +1091,7 @@ sub filtered_list {
     my $offset = ( $page - 1 ) * $limit;
 
     $MT::DebugMode
-        && $debug->{print}->("LIMIT: $limit PAGE: $page OFFSET: $offset");
+      && $debug->{print}->("LIMIT: $limit PAGE: $page OFFSET: $offset");
     $MT::DebugMode && $debug->{section}->('initialize');
 
     ## FIXME: take identifical column from column defs.
@@ -1112,46 +1101,46 @@ sub filtered_list {
     $MT::DebugMode && $debug->{print}->("COLUMNS: $cols");
 
     my $scope_mode = $setting->{scope_mode} || 'wide';
-    my @blog_id_term = (
-         !$blog_id ? ()
-        : $scope_mode eq 'none' ? ()
-        : $scope_mode eq 'this' ? ( blog_id => $blog_id )
-        : ( blog_id => $blog_ids )
-    );
+    my @blog_id_term
+      = (  !$blog_id ? ()
+          : $scope_mode eq 'none' ? ()
+          : $scope_mode eq 'this' ? ( blog_id => $blog_id )
+          :                         ( blog_id => $blog_ids ) );
 
     my %load_options = (
-        terms      => {@blog_id_term},
-        args       => {},
-        sort_by    => $q->param('sort_by') || '',
-        sort_order => $q->param('sort_order') || '',
-        limit      => $limit,
-        offset     => $offset,
-        scope      => $scope,
-        blog       => $blog,
-        blog_id    => $blog_id,
-        blog_ids   => $blog_ids,
+                         terms      => {@blog_id_term},
+                         args       => {},
+                         sort_by    => $q->param('sort_by') || '',
+                         sort_order => $q->param('sort_order') || '',
+                         limit      => $limit,
+                         offset     => $offset,
+                         scope      => $scope,
+                         blog       => $blog,
+                         blog_id    => $blog_id,
+                         blog_ids   => $blog_ids,
     );
 
     my %count_options = (
-        terms    => {@blog_id_term},
-        args     => {},
-        scope    => $scope,
-        blog     => $blog,
-        blog_id  => $blog_id,
-        blog_ids => $blog_ids,
+                          terms    => {@blog_id_term},
+                          args     => {},
+                          scope    => $scope,
+                          blog     => $blog,
+                          blog_id  => $blog_id,
+                          blog_ids => $blog_ids,
     );
 
     MT->run_callbacks( 'cms_pre_load_filtered_list.' . $ds,
-        $app, $filter, \%count_options, \@cols );
+                       $app, $filter, \%count_options, \@cols );
 
     my $count_result = $filter->count_objects(%count_options);
     if ( !defined $count_result ) {
-        return $app->error(
-            MT->translate(
-                "An error occured while counting objects: [_1]",
-                $filter->errstr
-            )
-        );
+        return
+          $app->error(
+               MT->translate(
+                              "An error occured while counting objects: [_1]",
+                              $filter->errstr
+               )
+          );
     }
     my ( $count, $editable_count ) = @$count_result;
 
@@ -1161,16 +1150,17 @@ sub filtered_list {
     my ( $objs, @data );
     if ($count) {
         MT->run_callbacks( 'cms_pre_load_filtered_list.' . $ds,
-            $app, $filter, \%load_options, \@cols );
+                           $app, $filter, \%load_options, \@cols );
 
         $objs = $filter->load_objects(%load_options);
         if ( !defined $objs ) {
-            return $app->error(
-                MT->translate(
-                    "An error occured while loading objects: [_1]",
-                    $filter->errstr
-                )
-            );
+            return
+              $app->error(
+                           MT->translate(
+                               "An error occured while loading objects: [_1]",
+                               $filter->errstr
+                           )
+              );
         }
 
         $MT::DebugMode && $debug->{section}->('load objects');
@@ -1216,9 +1206,10 @@ sub filtered_list {
             elsif ( $prop->has('html_link') ) {
                 for my $obj (@$objs) {
                     my $link = $prop->html_link( $obj, $app, \%load_options );
-                    my $raw = MT::Util::encode_html($prop->raw( $obj, $app, \%load_options ));
+                    my $raw = MT::Util::encode_html(
+                                   $prop->raw( $obj, $app, \%load_options ) );
                     push @result,
-                        ( $link ? qq{<a href="$link">$raw</a>} : $raw );
+                      ( $link ? qq{<a href="$link">$raw</a>} : $raw );
                 }
             }
             elsif ( $prop->has('raw') ) {
@@ -1226,17 +1217,18 @@ sub filtered_list {
                     my $out = $prop->raw( $obj, $app, \%load_options );
                     push @result, MT::Util::encode_html($out);
                 }
-            } else {
+            }
+            else {
             }
 
             push @results, \@result;
             $MT::DebugMode && $debug->{section}->("prepare col $col");
-        }
+        } ## end for my $col (@cols)
 
         for my $i ( 0 .. scalar @$objs - 1 ) {
             push @data, [ map { $_->[$i] } @results ];
         }
-    }
+    } ## end if ($count)
 
     ## Save user list prefs.
     my $list_prefs = $app->user->list_prefs || {};
@@ -1244,7 +1236,7 @@ sub filtered_list {
     $list_pref->{rows} = $limit;
     $list_pref->{columns} = [ split ',', $cols ];
     $list_pref->{last_filter}
-        = $filter_id ? $filter_id : $allpass ? '_allpass' : '';
+      = $filter_id ? $filter_id : $allpass ? '_allpass' : '';
     $list_pref->{last_items} = $filteritems;
     $app->user->list_prefs($list_prefs);
     ## FIXME: should handle errors..
@@ -1263,7 +1255,7 @@ sub filtered_list {
     $res{page_max}       = POSIX::ceil( $count / $limit );
     $res{id}             = $filter_id;
     $res{label} = MT::Util::encode_html( $forward_params{saved_label} )
-        if $forward_params{saved_label};
+      if $forward_params{saved_label};
     $res{filters}  = $filters;
     $res{messages} = \@messages;
     %res = ( %forward_params, %res );
@@ -1274,13 +1266,11 @@ sub filtered_list {
         my $total = Time::HiRes::tv_interval( $debug->{total} );
         my $out   = $debug->{out};
         for my $section ( @{ $debug->{sections} } ) {
-            $out .= sprintf(
-                "%s  : %0.2f ms ( %0.2f %% )\n%s\n",
-                $section->[0],
-                $section->[1] * 1000,
-                $section->[1] / $total * 100,
-                $section->[2],
-            );
+            $out .= sprintf( "%s  : %0.2f ms ( %0.2f %% )\n%s\n",
+                             $section->[0],
+                             $section->[1] * 1000,
+                             $section->[1] / $total * 100,
+                             $section->[2], );
         }
         $out .= sprintf "TOTAL: %0.2f ms\n",    $total * 1000;
         $out .= sprintf "Matched %i Objects\n", $count;
@@ -1288,7 +1278,7 @@ sub filtered_list {
         $Data::ObjectDriver::PROFILE = $debug->{original_prof};
     }
     return $app->json_result( \%res );
-}
+} ## end sub filtered_list
 
 sub _list {
     my $app  = shift;
@@ -1511,7 +1501,7 @@ sub _list {
     $param{screen_id}    ||= "list-$type";
     $param{listing_screen} = 1;
     $app->load_tmpl( "list_${type}.tmpl", \%param );
-} ## end sub list
+} ## end sub _list
 
 sub save_list_prefs {
     my $app     = shift;
@@ -1519,24 +1509,20 @@ sub save_list_prefs {
     my $ds      = $q->param('datasource');
     my $blog_id = $q->param('blog_id') || 0;
     my $blog    = $blog_id ? $app->blog : undef;
-    my $scope
-        = !$blog         ? 'system'
-        : $blog->is_blog ? 'blog'
-        :                  'website';
-    my $limit      = $q->param('limit')   || 50;    # FIXME: hard coded.
+    my $scope   = !$blog ? 'system' : $blog->is_blog ? 'blog' : 'website';
+    my $limit      = $q->param('limit') || 50;            # FIXME: hard coded.
     my $cols       = $q->param('columns') || '';
     my $list_prefs = $app->user->list_prefs || {};
-    my $list_pref = $list_prefs->{$ds}{$blog_id} ||= {};
+    my $list_pref  = $list_prefs->{$ds}{$blog_id} ||= {};
     $list_pref->{rows} = $limit;
     $list_pref->{columns} = [ split ',', $cols ];
 
 #$list_pref->{last_filter} = $filter_id ? $filter_id : $allpass ? '_allpass' : '';
 #$list_pref->{last_items} = $filteritems;
     $app->user->list_prefs($list_prefs);
-    $app->user->save
-        or return $app->json_error( $app->user->errstr );
+    $app->user->save or return $app->json_error( $app->user->errstr );
     return $app->json_result( { success => 1 } );
-}
+} ## end sub save_list_prefs
 
 sub delete {
     my $app  = shift;

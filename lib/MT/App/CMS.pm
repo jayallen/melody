@@ -46,18 +46,14 @@ sub core_methods {
         'admin'     => "${pkg}Dashboard::dashboard",
 
         ## Generic handlers
-        'save'           => "${pkg}Common::save",
-        'edit'           => "${pkg}Common::edit",
-        'view'           => "${pkg}Common::edit",
-        'list'           => "${pkg}Common::list",
-        'filtered_list'  => {
-            code => "${pkg}Common::filtered_list",
-            app_mode => 'JSON',
-        },
-        'save_list_prefs' => {
-            code     => "${pkg}Common::save_list_prefs",
-            app_mode => 'JSON',
-        },
+        'save' => "${pkg}Common::save",
+        'edit' => "${pkg}Common::edit",
+        'view' => "${pkg}Common::edit",
+        'list' => "${pkg}Common::list",
+        'filtered_list' =>
+          { code => "${pkg}Common::filtered_list", app_mode => 'JSON', },
+        'save_list_prefs' =>
+          { code => "${pkg}Common::save_list_prefs", app_mode => 'JSON', },
         'delete'         => "${pkg}Common::delete",
         'search_replace' => "${pkg}Search::search_replace",
         'list_revision'  => "${pkg}Common::list_revision",
@@ -68,16 +64,16 @@ sub core_methods {
         'edit_widget' => "${pkg}Template::edit_widget",
 
         ## Listing methods
-        'list_template'    => "${pkg}Template::list",
-        'list_widget'      => "${pkg}Template::list_widget",
-        'list_commenter'   => "${pkg}Comment::list_commenter",
-        'list_asset'       => {
-            code => "${pkg}Asset::dialog_list_asset",
+        'list_template'  => "${pkg}Template::list",
+        'list_widget'    => "${pkg}Template::list_widget",
+        'list_commenter' => "${pkg}Comment::list_commenter",
+        'list_asset'     => {
+            code      => "${pkg}Asset::dialog_list_asset",
             condition => sub {
                 my $app = shift;
                 return 0 unless $app->param('dialog_view');
                 return 1;
-            }
+              }
         },
         'list_association' => "${pkg}User::list_association",
         'list_role'        => "${pkg}User::list_role",
@@ -281,11 +277,11 @@ sub core_widgets {
                           set      => 'sidebar',
         },
         melody_docs => {
-                          label    => 'Documentation Updates',
-                          template => 'widget/melody_docs.tmpl',
-                          handler  => "${pkg}Dashboard::melody_docs_widget",
-                          singular => 1,
-                          set      => 'sidebar',
+                         label    => 'Documentation Updates',
+                         template => 'widget/melody_docs.tmpl',
+                         handler  => "${pkg}Dashboard::melody_docs_widget",
+                         singular => 1,
+                         set      => 'sidebar',
         },
         melody_news => {
                          label    => 'Melody News',
@@ -1246,14 +1242,14 @@ sub core_menus {
         'manage:blog' => {
                            label => "Blogs",
                            mode  => "list",
-                           args => { _type => "blog" },
+                           args  => { _type => "blog" },
                            order => 100,
                            view  => "system",
         },
         'manage:user' => {
                            label      => "Users",
                            mode       => "list",
-                           args => { _type => "author" },
+                           args       => { _type => "author" },
                            order      => 200,
                            permission => "administer",
                            view       => "system",
@@ -1261,7 +1257,7 @@ sub core_menus {
         'manage:entry' => {
             label     => "Entries",
             mode      => 'list',
-            args => { _type => "entry" },
+            args      => { _type => "entry" },
             order     => 1000,
             condition => sub {
                 return 1 if $app->user->is_superuser;
@@ -1291,7 +1287,7 @@ sub core_menus {
         'manage:comment' => {
             label     => "Comments",
             mode      => 'list',
-            args => { _type => "comment" },
+            args      => { _type => "comment" },
             order     => 2000,
             condition => sub {
                 return 1 if $app->user->is_superuser;
@@ -1316,21 +1312,21 @@ sub core_menus {
         'manage:asset' => {
                             label      => "Assets",
                             mode       => 'list',
-                            args => { _type => "asset" },
+                            args       => { _type => "asset" },
                             order      => 3000,
                             permission => 'edit_assets',
         },
         'manage:page' => {
                            label      => "Pages",
                            mode       => 'list',
-                           args => { _type => "page" },
+                           args       => { _type => "page" },
                            order      => 4000,
                            permission => 'manage_pages',
         },
         'manage:ping' => {
                    label      => "TrackBacks",
                    mode       => 'list',
-                   args => { _type => "ping" },
+                   args       => { _type => "ping" },
                    order      => 5000,
                    permission => 'create_post,edit_all_posts,manage_feedback',
         },
@@ -1420,8 +1416,8 @@ sub core_menus {
         'tools:activity_log' => {
                                   label             => "Activity Log",
                                   order             => 200,
-                                  mode      => "list",
-                                  args      => { _type => 'log', },
+                                  mode              => "list",
+                                  args              => { _type => 'log', },
                                   permission        => "view_blog_log",
                                   system_permission => "view_log",
         },
@@ -1463,11 +1459,11 @@ sub core_menus {
                            permission        => 'administer_blog',
                            system_permission => 'administer',
         },
-        'system:blog' => { 
-                           label  => "Blogs", 
-                           mode   => 'list', 
-                           args   => { _type => "blog" },
-                           order  => 200, 
+        'system:blog' => {
+                           label => "Blogs",
+                           mode  => 'list',
+                           args  => { _type => "blog" },
+                           order => 200,
         },
         'system:template' => {
                                label             => "Global Templates",
@@ -1549,12 +1545,11 @@ sub init_core_callbacks {
             $pkg . 'post_delete.author' => "${pfx}User::post_delete",
             $pkg . 'pre_load_filtered_list.member' => sub {
                 my ( $cb, $app, $filter, $opts, $cols ) = @_;
-                $filter->append_item({
-                    type => 'permission',
-                    args => {
-                        blog_id => $opts->{blog_id},
-                    },
-                });
+                $filter->append_item( {
+                                    type => 'permission',
+                                    args => { blog_id => $opts->{blog_id}, },
+                                  }
+                );
                 if ( exists $opts->{blog_id} ) {
                     delete $opts->{blog_id};
                 }
@@ -1566,10 +1561,10 @@ sub init_core_callbacks {
             $pkg . 'save_permission_filter.blog' => "${pfx}Blog::can_save",
             $pkg
               . 'delete_permission_filter.blog' => "${pfx}Blog::can_delete",
-            $pkg . 'pre_save.blog'    => "${pfx}Blog::pre_save",
-            $pkg . 'post_save.blog'   => "${pfx}Blog::post_save",
-            $pkg . 'save_filter.blog' => "${pfx}Blog::save_filter",
-            $pkg . 'post_delete.blog' => "${pfx}Blog::post_delete",
+            $pkg . 'pre_save.blog'               => "${pfx}Blog::pre_save",
+            $pkg . 'post_save.blog'              => "${pfx}Blog::post_save",
+            $pkg . 'save_filter.blog'            => "${pfx}Blog::save_filter",
+            $pkg . 'post_delete.blog'            => "${pfx}Blog::post_delete",
             $pkg . 'pre_load_filtered_list.blog' => sub {
                 my ( $cb, $app, $filter, $opts, $cols ) = @_;
                 if ( exists $opts->{blog_id} ) {
@@ -1606,14 +1601,18 @@ sub init_core_callbacks {
             $pkg . 'post_save.category'   => "${pfx}Category::post_save",
             $pkg . 'save_filter.category' => "${pfx}Category::save_filter",
             $pkg . 'post_delete.category' => "${pfx}Category::post_delete",
-            $pkg . 'pre_load_filtered_list.category'
-                => "${pfx}Category::pre_load_filtered_list",
-            $pkg . 'filtered_list_param.category'
-                => "${pfx}Category::filtered_list_param",
-            $pkg . 'pre_load_filtered_list.folder'
-                => "${pfx}Category::pre_load_filtered_list",
-            $pkg . 'filtered_list_param.folder'
-                => "${pfx}Category::filtered_list_param",
+            $pkg
+              . 'pre_load_filtered_list.category' =>
+              "${pfx}Category::pre_load_filtered_list",
+            $pkg
+              . 'filtered_list_param.category' =>
+              "${pfx}Category::filtered_list_param",
+            $pkg
+              . 'pre_load_filtered_list.folder' =>
+              "${pfx}Category::pre_load_filtered_list",
+            $pkg
+              . 'filtered_list_param.folder' =>
+              "${pfx}Category::filtered_list_param",
 
             # comment callbacks
             $pkg . 'edit.comment' => "${pfx}Comment::edit",
@@ -1691,9 +1690,10 @@ sub init_core_callbacks {
             },
             $pkg . 'delete_permission_filter.tag' => "${pfx}Tag::can_delete",
             $pkg . 'post_delete.tag'              => "${pfx}Tag::post_delete",
-            $pkg . 'pre_load_filtered_list.tag' => sub {
+            $pkg . 'pre_load_filtered_list.tag'   => sub {
                 my ( $cb, $app, $filter, $opts, $cols ) = @_;
                 if ( exists $opts->{blog_id} ) {
+
                     #$filter->append_item({
                     #    type => 'blog',
                     #    args => {
@@ -2028,9 +2028,9 @@ sub build_page {
 } ## end sub build_page
 
 sub build_blog_selector {
-    my ($ctx, $args, $cond) = @_;
-    my $app     = MT->instance;
-    my $q       = $app->query;
+    my ( $ctx, $args, $cond ) = @_;
+    my $app = MT->instance;
+    my $q   = $app->query;
 
     my $param = {};
 
@@ -2054,14 +2054,13 @@ sub build_blog_selector {
     $app->add_to_favorite_blogs($blog_id) if $blog_id;
 
     my %args;
-    $args{join} =
-      MT->model('permission')->join_on(
-                               'blog_id',
-                               {
-                                  author_id   => $auth->id,
-                                  permissions => { not => "'comment'" }
-                               }
-      );
+    $args{join} = MT->model('permission')->join_on(
+                                      'blog_id',
+                                      {
+                                        author_id   => $auth->id,
+                                        permissions => { not => "'comment'" }
+                                      }
+    );
     $args{limit} = 11;    # don't load more than 11
     my @blogs = $blog_class->load( undef, \%args );
 
@@ -2069,7 +2068,7 @@ sub build_blog_selector {
     @fav_blogs = grep { $_ != $blog_id } @fav_blogs if $blog_id;
 
     # Special case for when a user only has access to a single blog.
-    if (    ( !defined( $blog_id ) )
+    if (    ( !defined($blog_id) )
          && ( @blogs == 1 )
          && ( scalar @fav_blogs <= 1 ) )
     {
@@ -2095,7 +2094,7 @@ sub build_blog_selector {
                 $blog_id   = undef;
             }
         }
-    } ## end if ( ( !defined( $q->param...)))
+    } ## end if ( ( !defined($blog_id...)))
     elsif ( @blogs && ( @blogs <= 10 ) ) {
 
         # This user only has visibility to 10 or fewer blogs;
@@ -2142,8 +2141,8 @@ sub build_blog_selector {
     if (@blogs) {
         my @perms
           = grep { !$_->is_empty }
-          MT->model('permission')->load(
-                        { author_id => $auth->id, blog_id => \@fav_blogs, } );
+          MT->model('permission')
+          ->load( { author_id => $auth->id, blog_id => \@fav_blogs, } );
         my %perms = map { $_->blog_id => $_ } @perms;
         for my $blog (@blogs) {
             my $perm = $perms{ $blog->id };
@@ -2161,7 +2160,7 @@ sub build_blog_selector {
         $param->{no_submenu} = 1;
     }
     my $tmpl = $app->load_tmpl( 'include/blog_selector.tmpl', $param );
-    return $tmpl->output( );
+    return $tmpl->output();
 } ## end sub build_blog_selector
 
 sub build_menus {
@@ -2219,7 +2218,7 @@ sub build_menus {
              : $menu->{system_permission} || $menu->{permission} )
         {
             my $allowed = 0;
-            my @p = split(/,/, $p);
+            my @p = split( /,/, $p );
             foreach my $p (@p) {
                 my $perm = 'can_' . $p;
                 $allowed = 1, last if ( $perms && $perms->$perm() ) || $admin;
@@ -2273,7 +2272,7 @@ sub build_menus {
                       )
                     {
                         my $allowed = 0;
-                        my @p = split(/,/, $p);
+                        my @p = split( /,/, $p );
                         foreach my $p (@p) {
                             my $perm = 'can_' . $p;
                             $allowed = 1, last
@@ -2306,7 +2305,8 @@ sub build_menus {
                              }
                   );
             }
-            @sub = sort { ($a->{order} || 0) <=> ($b->{order} || 0) } @sub;
+            @sub
+              = sort { ( $a->{order} || 0 ) <=> ( $b->{order} || 0 ) } @sub;
 
             @sub = grep { $_->{allowed} } @sub if $hide_disabled_options;
             if ( !$menu->{mode} ) {
@@ -2380,13 +2380,13 @@ sub list_pref {
                        dates => $default{DateFormat} || 'relative',
         };
     }
-    my @list_prefs = split(/;/, $cookie);
+    my @list_prefs = split( /;/, $cookie );
     my $new_cookie = '';
     foreach my $pref (@list_prefs) {
         my ( $name, $prefs ) = $pref =~ m/^(\w+):(.*)$/;
         next unless $name && $prefs;
         if ( $name eq $list ) {
-            my @prefs = split(/,/, $prefs);
+            my @prefs = split( /,/, $prefs );
             foreach (@prefs) {
                 my ( $k, $v ) = split(/=/);
                 $list_pref->{$k} = $v if exists $list_pref->{$k};
@@ -2564,17 +2564,17 @@ sub show_error {
             $param->{goback} ||= qq{window.location='$url'};
         }
         $param->{value} ||= $app->{value} || $app->translate('Go Back');
-    } ## end if ( $mode eq 'rebuild')
+    } ## end elsif ( $mode eq 'rebuild')
 
     return $app->SUPER::show_error($param);
 } ## end sub show_error
 
 sub show_login {
-    my $app   = shift;
+    my $app = shift;
     my $method_info = MT->request('method_info') || {};
     if ( $method_info->{app_mode} eq 'JSON' ) {
         $app->{login_again} = 1;
-        return $app->show_error({ error => 'Unauthorized', status => 401 });
+        return $app->show_error( { error => 'Unauthorized', status => 401 } );
     }
     return $app->SUPER::show_login;
 }
@@ -2631,7 +2631,7 @@ sub load_template_prefs {
     if ( !$prefs ) {
         $prefs = '';
     }
-    my @p = split(/,/, $prefs);
+    my @p = split( /,/, $prefs );
     for my $p (@p) {
         if ( $p =~ m/^(.+?):(\d+)$/ ) {
             $param{ 'disp_prefs_height_' . $1 } = $2;
@@ -2644,7 +2644,7 @@ sub _parse_entry_prefs {
     my $app = shift;
     my ( $prefs, $param, $fields ) = @_;
 
-    my @p = split(/,/, $prefs);
+    my @p = split( /,/, $prefs );
     for my $p (@p) {
         if ( $p =~ m/^(.+?):(\d+)$/ ) {
             my ( $name, $num ) = ( $1, $2 );
@@ -2690,18 +2690,18 @@ sub load_entry_prefs {
     # defaults:
     if ( !$prefs ) {
         $prefs = $app->load_default_entry_prefs;
-        ( $prefs, $pos ) = split(/\|/, $prefs);
+        ( $prefs, $pos ) = split( /\|/, $prefs );
         $is_from_db = 0;
         $app->_parse_entry_prefs( $prefs, \%param, \my @fields );
         $param{disp_prefs_default_fields} = \@fields;
     }
     else {
-        ( $prefs, $pos ) = split(/\|/, $prefs);
+        ( $prefs, $pos ) = split( /\|/, $prefs );
     }
     $app->_parse_entry_prefs( $prefs, \%param, \my @custom_fields );
     if ($is_from_db) {
         my $default_prefs = $app->load_default_entry_prefs;
-        ( $default_prefs, my ($default_pos) ) = split(/\|/, $default_prefs);
+        ( $default_prefs, my ($default_pos) ) = split( /\|/, $default_prefs );
         $pos ||= $default_pos;
         $app->_parse_entry_prefs(
                                   $default_prefs,
@@ -2842,7 +2842,7 @@ sub user_blog_prefs {
 
     my $perms = $app->permissions;
     return {} unless $perms;
-    my @prefs = split(/,/, $perms->blog_prefs || '');
+    my @prefs = split( /,/, $perms->blog_prefs || '' );
     my %prefs;
     foreach (@prefs) {
         my ( $name, $value ) = split /=/, $_, 2;
@@ -3021,7 +3021,7 @@ sub _entry_prefs_from_params {
         $prefs .= ':' . $fields{$_} if $fields{$_} > 1;
     }
     if ( $type && lc $type eq 'custom' ) {
-        my @fields = split(/,/, $q->param('custom_prefs'));
+        my @fields = split( /,/, $q->param('custom_prefs') );
         foreach (@fields) {
             $prefs .= ',' if $prefs ne '';
             $prefs .= $_;

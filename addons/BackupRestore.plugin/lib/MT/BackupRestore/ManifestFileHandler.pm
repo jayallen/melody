@@ -24,10 +24,7 @@ sub start_document {
 
     $self->{start} = 1;
 
-    my $backups = {
-        files  => [],
-        assets => [],
-    };
+    my $backups = { files => [], assets => [], };
 
     $self->{backups} = $backups;
 
@@ -41,18 +38,18 @@ sub start_element {
     my $name  = $data->{LocalName};
     my %attrs = map {
         $data->{Attributes}->{$_}->{LocalName} =>
-            $data->{Attributes}->{$_}->{Value}
+          $data->{Attributes}->{$_}->{Value}
     } keys( %{ $data->{Attributes} } );
     my $ns = $data->{NamespaceURI};
 
     if ( $self->{start} ) {
 
-        if (   $name ne 'manifest'
-            or $ns   ne MT::BackupRestore::NS_MOVABLETYPE() ) {
-                die MT->translate(
-                      'Uploaded file was not a valid Movable Type backup '
-                    . 'manifest file.'
-                );
+        if (    $name ne 'manifest'
+             or $ns ne MT::BackupRestore::NS_MOVABLETYPE() )
+        {
+            die MT->translate(
+                          'Uploaded file was not a valid Movable Type backup '
+                            . 'manifest file.' );
         }
 
         $self->{start} = 0;
@@ -64,15 +61,12 @@ sub start_element {
         }
         elsif ( ( 'file' eq $name ) && ( 'asset' eq $attrs{type} ) ) {
             push @{ $backups->{assets} },
-                {
-                name     => $attrs{name},
-                asset_id => $attrs{'asset_id'},
-                };
+              { name => $attrs{name}, asset_id => $attrs{'asset_id'}, };
         }
         $self->{backups} = $backups;
     }
     1;
-}
+} ## end sub start_element
 
 sub characters {
     my $self = shift;

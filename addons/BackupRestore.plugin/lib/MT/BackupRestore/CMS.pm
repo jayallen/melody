@@ -10,8 +10,7 @@ sub start_backup {
     my $blog_id = $app->query->param('blog_id');
     my $perms   = $app->permissions;
 
-    return $app->permission_denied()
-        unless $app->can_do('start_backup');
+    return $app->permission_denied() unless $app->can_do('start_backup');
 
     my %param = ();
     if ( defined($blog_id) ) {
@@ -46,12 +45,12 @@ sub start_backup {
     my $tmp = $app->config('TempDir');
     unless ( ( -d $tmp ) && ( -w $tmp ) ) {
         $param{error}
-            = $app->translate(
+          = $app->translate(
             'Temporary directory needs to be writable for backup to work correctly.  Please check TempDir configuration directive.'
-            );
+          );
     }
     $app->load_tmpl( 'backup.tmpl', \%param );
-}
+} ## end sub start_backup
 
 sub start_restore {
     my $app     = shift;
@@ -59,11 +58,9 @@ sub start_restore {
     my $blog_id = $app->query->param('blog_id');
     my $perms   = $app->permissions;
 
-    return $app->permission_denied()
-        unless $app->can_do('start_restore');
+    return $app->permission_denied() unless $app->can_do('start_restore');
 
-    return $app->return_to_dashboard( redirect => 1 )
-        if $blog_id;
+    return $app->return_to_dashboard( redirect => 1 ) if $blog_id;
 
     my %param = ();
     if ( defined($blog_id) ) {
@@ -83,19 +80,19 @@ sub start_restore {
     my $tmp = $app->config('TempDir');
     unless ( ( -d $tmp ) && ( -w $tmp ) ) {
         $param{error}
-            = $app->translate(
+          = $app->translate(
             'Temporary directory needs to be writable for restore to work correctly.  Please check TempDir configuration directive.'
-            );
+          );
     }
 
     my $website_class = $app->model('website');
     unless ( my $count = $website_class->count() ) {
         $param{error} = $app->translate(
-            'No website could be found. You must create a website first.');
+               'No website could be found. You must create a website first.');
     }
 
     $app->load_tmpl( 'restore.tmpl', \%param );
-}
+} ## end sub start_restore
 
 sub backup {
     my $app     = shift;
@@ -105,7 +102,7 @@ sub backup {
     my $perms   = $app->permissions;
     unless ( $user->is_superuser ) {
         return $app->permission_denied()
-            unless defined($blog_id) && $perms->can_do('backup_blog');
+          unless defined($blog_id) && $perms->can_do('backup_blog');
     }
     $app->validate_magic() or return;
 
@@ -113,9 +110,10 @@ sub backup {
 
     my $size = $q->param('size_limit') || 0;
     return $app->errtrans( '[_1] is not a number.', encode_html($size) )
-        if $size !~ /^\d+$/;
+      if $size !~ /^\d+$/;
 
-    my @blog_ids = split(',', $blog_ids);
+    my @blog_ids = split( ',', $blog_ids );
+
 #    if (@blog_ids) {
 #        my @child_ids;
 #        my $blog_class = $app->model('blog');
@@ -133,16 +131,13 @@ sub backup {
     my $enc     = $app->charset || 'utf-8';
     my @ts      = gmtime(time);
     my $ts      = sprintf "%04d-%02d-%02d-%02d-%02d-%02d", $ts[5] + 1900,
-        $ts[4] + 1,
-        @ts[ 3, 2, 1, 0 ];
+      $ts[4] + 1, @ts[ 3, 2, 1, 0 ];
     my $file = "Movable_Type-$ts" . '-Backup';
 
     my $param = { return_args => '__mode=start_backup' };
     $app->{no_print_body} = 1;
-    $app->add_breadcrumb(
-        $app->translate('Backup & Restore'),
-        $app->uri( mode => 'start_backup' )
-    );
+    $app->add_breadcrumb( $app->translate('Backup & Restore'),
+                          $app->uri( mode => 'start_backup' ) );
     $app->add_breadcrumb( $app->translate('Backup') );
     $param->{system_overview_nav} = 1 if defined($blog_ids) && $blog_ids;
     $param->{blog_id}  = $blog_id  if $blog_id;
@@ -153,7 +148,7 @@ sub backup {
     $app->send_http_header('text/html');
     eval {
         $app->print_encode(
-            $app->build_page( 'include/backup_start.tmpl', $param ) );
+                    $app->build_page( 'include/backup_start.tmpl', $param ) );
     };
     print STDERR "Error: $@" if $@;
     require File::Temp;
@@ -163,9 +158,9 @@ sub backup {
 
     require MT::BackupRestore;
     my $count_term
-        = @blog_ids ? { class => '*', blog_id => [ [0], @blog_ids ] }
-        : $blog_id ? { class => '*', blog_id => [ 0, $blog_id ] }
-        :            { class => '*' };
+      = @blog_ids ? { class => '*', blog_id => [ [0], @blog_ids ] }
+      : $blog_id ? { class => '*', blog_id => [ 0, $blog_id ] }
+      :            { class => '*' };
     my $num_assets = $app->model('asset')->count($count_term);
     my $printer;
     my $splitter;
@@ -180,7 +175,7 @@ sub backup {
 
         if ( '0' eq $archive ) {
             ( $fh, my $filepath )
-                = File::Temp::tempfile( 'xml.XXXXXXXX', DIR => $temp_dir );
+              = File::Temp::tempfile( 'xml.XXXXXXXX', DIR => $temp_dir );
             ( my $vol, my $dir, $fname ) = File::Spec->splitpath($filepath);
             $printer = sub {
                 my ($data) = @_;
@@ -203,41 +198,37 @@ sub backup {
                 require MT::Util::Archive;
                 my ($asset_files) = @_;
                 ( my $fh, my $filepath )
-                    = File::Temp::tempfile( $archive . '.XXXXXXXX',
-                    DIR => $temp_dir );
+                  = File::Temp::tempfile( $archive . '.XXXXXXXX',
+                                          DIR => $temp_dir );
                 ( my $vol, my $dir, $fname )
-                    = File::Spec->splitpath($filepath);
+                  = File::Spec->splitpath($filepath);
                 close $fh;
                 unlink $filepath;
                 my $arc = MT::Util::Archive->new( $archive, $filepath );
                 $arc->add_string( Encode::encode_utf8($arc_buf),
-                    "$file.xml" );
+                                  "$file.xml" );
                 $arc->add_string(
                     "<manifest xmlns='"
-                        . MT::BackupRestore::NS_MOVABLETYPE()
-                        . "'><file type='backup' name='$file.xml' /></manifest>",
+                      . MT::BackupRestore::NS_MOVABLETYPE()
+                      . "'><file type='backup' name='$file.xml' /></manifest>",
                     "$file.manifest"
                 );
                 $arc->close;
                 _backup_finisher( $app, $fname, $param );
             };
-        }
-    }
+        } ## end else [ if ( '0' eq $archive )]
+    } ## end if ( !( $size || $num_assets...))
     else {
         my @files;
         my $filename = File::Spec->catfile( $temp_dir, $file . "-1.xml" );
         $fh = gensym();
         open $fh, ">$filename";
         my $url
-            = $app->uri
-            . "?__mode=backup_download&name=$file-1.xml&magic_token="
-            . $app->current_magic;
+          = $app->uri
+          . "?__mode=backup_download&name=$file-1.xml&magic_token="
+          . $app->current_magic;
         $url .= "&blog_id=$blog_id" if defined($blog_id);
-        push @files,
-            {
-            url      => $url,
-            filename => $file . "-1.xml"
-            };
+        push @files, { url => $url, filename => $file . "-1.xml" };
         $printer = sub {
             require bytes;
             my ($data) = @_;
@@ -250,19 +241,15 @@ sub backup {
             print $fh '</movabletype>';
             close $fh;
             my $filename
-                = File::Spec->catfile( $temp_dir, $file . "-$findex.xml" );
+              = File::Spec->catfile( $temp_dir, $file . "-$findex.xml" );
             $fh = gensym();
             open $fh, ">$filename";
             my $url
-                = $app->uri
-                . "?__mode=backup_download&name=$file-$findex.xml&magic_token="
-                . $app->current_magic;
+              = $app->uri
+              . "?__mode=backup_download&name=$file-$findex.xml&magic_token="
+              . $app->current_magic;
             $url .= "&blog_id=$blog_id" if defined($blog_id);
-            push @files,
-                {
-                url      => $url,
-                filename => $file . "-$findex.xml"
-                };
+            push @files, { url => $url, filename => $file . "-$findex.xml" };
             print $fh $header;
         };
         $finisher = sub {
@@ -272,72 +259,69 @@ sub backup {
             $fh = gensym();
             open $fh, ">$filename";
             print $fh "<manifest xmlns='"
-                . MT::BackupRestore::NS_MOVABLETYPE() . "'>\n";
+              . MT::BackupRestore::NS_MOVABLETYPE() . "'>\n";
             for my $file (@files) {
                 my $name = $file->{filename};
                 print $fh "<file type='backup' name='$name' />\n";
             }
             require MT::FileMgr::Local;
             for my $id ( keys %$asset_files ) {
-                my $name = $id . '-' . $asset_files->{$id}->[2];
-                my $tmp = File::Spec->catfile( $temp_dir, $name );
-                my $src = $asset_files->{$id}->[1];
+                my $name   = $id . '-' . $asset_files->{$id}->[2];
+                my $tmp    = File::Spec->catfile( $temp_dir, $name );
+                my $src    = $asset_files->{$id}->[1];
                 my $result = 0;
                 eval {
                     $result = copy( MT::FileMgr::Local::_local($src),
                                     MT::FileMgr::Local::_local($tmp) );
                 };
-                if (!$result || $@) {
-                    $app->log(
-                        {   message => $app->translate(
-                                'Copying file [_1] to [_2] failed: [_3]',
-                                $src, $tmp, $@
-                            ),
-                            level    => MT::Log::WARNING(),
-                            class    => 'system',
-                            category => 'backup'
-                        }
+                if ( !$result || $@ ) {
+                    $app->log( {
+                                message =>
+                                  $app->translate(
+                                     'Copying file [_1] to [_2] failed: [_3]',
+                                     $src, $tmp, $@
+                                  ),
+                                level    => MT::Log::WARNING(),
+                                class    => 'system',
+                                category => 'backup'
+                              }
                     );
                     next;
                 }
                 my $xml_name = $asset_files->{$id}->[2];
                 $xml_name =~ s/'/&apos;/g;
                 print $fh "<file type='asset' name='"
-                    . $xml_name
-                    . "' asset_id='"
-                    . $id
-                    . "' />\n";
+                  . $xml_name
+                  . "' asset_id='"
+                  . $id
+                  . "' />\n";
                 my $url
-                    = $app->uri
-                    . "?__mode=backup_download&assetname="
-                    . MT::Util::encode_url($name)
-                    . "&magic_token="
-                    . $app->current_magic;
+                  = $app->uri
+                  . "?__mode=backup_download&assetname="
+                  . MT::Util::encode_url($name)
+                  . "&magic_token="
+                  . $app->current_magic;
                 $url .= "&blog_id=$blog_id" if defined($blog_id);
                 push @files,
-                    {
+                  {
                     url      => $url,
                     filename => MT::FileMgr::Local::_local($name),
-                    };
-            }
+                  };
+            } ## end for my $id ( keys %$asset_files)
             print $fh "</manifest>\n";
             close $fh;
             my $url
-                = $app->uri
-                . "?__mode=backup_download&name=$file.manifest&magic_token="
-                . $app->current_magic;
+              = $app->uri
+              . "?__mode=backup_download&name=$file.manifest&magic_token="
+              . $app->current_magic;
             $url .= "&blog_id=$blog_id" if defined($blog_id);
-            push @files,
-                {
-                url      => $url,
-                filename => "$file.manifest"
-                };
+            push @files, { url => $url, filename => "$file.manifest" };
             if ( '0' eq $archive ) {
                 for my $f (@files) {
                     $f->{filename}
-                        = MT::FileMgr::Local::_syserr( $f->{filename} )
-                        if ( $f->{filename}
-                        && !Encode::is_utf8( $f->{filename} ) );
+                      = MT::FileMgr::Local::_syserr( $f->{filename} )
+                      if ( $f->{filename}
+                           && !Encode::is_utf8( $f->{filename} ) );
                 }
                 $param->{files_loop} = \@files;
                 $param->{tempdir}    = $temp_dir;
@@ -346,10 +330,10 @@ sub backup {
             }
             else {
                 my ( $fh_arc, $filepath )
-                    = File::Temp::tempfile( $archive . '.XXXXXXXX',
-                    DIR => $temp_dir );
+                  = File::Temp::tempfile( $archive . '.XXXXXXXX',
+                                          DIR => $temp_dir );
                 ( my $vol, my $dir, $fname )
-                    = File::Spec->splitpath($filepath);
+                  = File::Spec->splitpath($filepath);
                 require MT::Util::Archive;
                 close $fh_arc;
                 unlink $filepath;
@@ -364,27 +348,28 @@ sub backup {
                     unlink File::Spec->catfile( $temp_dir, $f->{filename} );
                 }
                 _backup_finisher( $app, $fname, $param );
-            }
+            } ## end else [ if ( '0' eq $archive )]
         };
-    }
+    } ## end else [ if ( !( $size || $num_assets...))]
 
-    my @tsnow    = gmtime(time);
+    my @tsnow = gmtime(time);
     my $metadata = {
-        backup_by => MT::Util::encode_xml( $app->user->name, 1 ) . '(ID: '
-            . $app->user->id . ')',
-        backup_on => sprintf(
-            "%04d-%02d-%02dT%02d:%02d:%02d",
-            $tsnow[5] + 1900,
-            $tsnow[4] + 1,
-            @tsnow[ 3, 2, 1, 0 ]
-        ),
-        backup_what    => join( ',', @blog_ids ),
-        schema_version => $app->config('SchemaVersion'),
+            backup_by => MT::Util::encode_xml( $app->user->name, 1 ) . '(ID: '
+              . $app->user->id . ')',
+            backup_on =>
+              sprintf(
+                       "%04d-%02d-%02dT%02d:%02d:%02d",
+                       $tsnow[5] + 1900,
+                       $tsnow[4] + 1,
+                       @tsnow[ 3, 2, 1, 0 ]
+              ),
+            backup_what    => join( ',', @blog_ids ),
+            schema_version => $app->config('SchemaVersion'),
     };
     MT::BackupRestore->backup( \@blog_ids, $printer, $splitter, $finisher,
-        $progress, $size * 1024,
-        $enc, $metadata );
-}
+                               $progress, $size * 1024,
+                               $enc, $metadata );
+} ## end sub backup
 
 sub backup_download {
     my $app     = shift;
@@ -393,7 +378,7 @@ sub backup_download {
     unless ( $user->is_superuser ) {
         my $perms = $app->permissions;
         return $app->permission_denied()
-            unless defined($blog_id) && $perms->can_do('backup_download');
+          unless defined($blog_id) && $perms->can_do('backup_download');
     }
     $app->validate_magic() or return;
     my $filename  = $app->query->param('filename');
@@ -418,15 +403,15 @@ sub backup_download {
         }
         my @ts = gmtime( $sess->start );
         my $ts = sprintf "%04d-%02d-%02d-%02d-%02d-%02d", $ts[5] + 1900,
-            $ts[4] + 1, @ts[ 3, 2, 1, 0 ];
+          $ts[4] + 1, @ts[ 3, 2, 1, 0 ];
         $newfilename = "Movable_Type-$ts" . '-Backup';
         $sess->remove;
     }
     else {
         $newfilename = $app->query->param('name');
         return
-            if $newfilename
-                !~ /Movable_Type-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-Backup(?:-\d+)?\.\w+/;
+          if $newfilename
+              !~ /Movable_Type-\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-Backup(?:-\d+)?\.\w+/;
         $filename = $newfilename;
     }
 
@@ -457,9 +442,9 @@ sub backup_download {
     if ( open( my $fh, "<", MT::FileMgr::Local::_local($fname) ) ) {
         binmode $fh;
         $app->{no_print_body} = 1;
-        $app->set_header( "Content-Disposition" => 'attachment; filename="'
-                . $newfilename
-                . '"' );
+        $app->set_header(   "Content-Disposition" => 'attachment; filename="'
+                          . $newfilename
+                          . '"' );
         $app->send_http_header($contenttype);
         my $data;
         while ( read $fh, my ($chunk), 8192 ) {
@@ -467,28 +452,28 @@ sub backup_download {
         }
         close $fh;
         $app->print($data);
-        $app->log(
-            {   message => $app->translate(
-                    '[_1] successfully downloaded backup file ([_2])',
-                    $app->user->name, $fname
-                ),
-                level    => MT::Log::INFO(),
-                class    => 'system',
-                category => 'restore'
-            }
+        $app->log( {
+                     message =>
+                       $app->translate(
+                            '[_1] successfully downloaded backup file ([_2])',
+                            $app->user->name, $fname
+                       ),
+                     level    => MT::Log::INFO(),
+                     class    => 'system',
+                     category => 'restore'
+                   }
         );
         MT::FileMgr::Local->delete($fname);
-    }
+    } ## end if ( open( my $fh, "<"...))
     else {
         $app->errtrans('Specified file was not found.');
     }
-}
+} ## end sub backup_download
 
 sub restore {
     my $app  = shift;
     my $user = $app->user;
-    return $app->permission_denied()
-        unless $app->can_do('restore_blog');
+    return $app->permission_denied() unless $app->can_do('restore_blog');
     $app->validate_magic() or return;
 
     my $q = $app->query;
@@ -496,21 +481,19 @@ sub restore {
     my ($fh) = $app->upload_info('file');
     my $uploaded = $q->param('file');
     my ( $volume, $directories, $uploaded_filename )
-        = File::Spec->splitpath($uploaded)
-        if defined($uploaded);
+      = File::Spec->splitpath($uploaded)
+      if defined($uploaded);
     $app->mode('start_restore');
     if ( defined($uploaded_filename)
-        && ( $uploaded_filename =~ /^.+\.manifest$/i ) )
+         && ( $uploaded_filename =~ /^.+\.manifest$/i ) )
     {
         return restore_upload_manifest( $app, $fh );
     }
 
     my $param = { return_args => '__mode=dashboard' };
 
-    $app->add_breadcrumb(
-        $app->translate('Backup & Restore'),
-        $app->uri( mode => 'start_restore' )
-    );
+    $app->add_breadcrumb( $app->translate('Backup & Restore'),
+                          $app->uri( mode => 'start_restore' ) );
     $app->add_breadcrumb( $app->translate('Restore') );
     $param->{system_overview_nav} = 1;
     $param->{nav_backup}          = 1;
@@ -530,12 +513,12 @@ sub restore {
         $param->{restore_upload} = 0;
         my $dir = $app->config('ImportPath');
         my ( $blog_ids, $asset_ids )
-            = restore_directory( $app, $dir, \$error );
+          = restore_directory( $app, $dir, \$error );
         if ( defined $blog_ids ) {
             $param->{open_dialog} = 1;
             $param->{blog_ids}    = join( ',', @$blog_ids );
             $param->{asset_ids}   = join( ',', @$asset_ids )
-                if defined $asset_ids;
+              if defined $asset_ids;
             $param->{tmp_dir} = $dir;
         }
         elsif ( defined $asset_ids ) {
@@ -545,25 +528,25 @@ sub restore {
             if (%error_assets) {
                 my $data;
                 while ( my ( $key, $value ) = each %error_assets ) {
-                    $data .= $app->translate( 'MT::Asset#[_1]: ', $key )
-                        . $value . "\n";
+                    $data .= $app->translate( 'MT::Asset#[_1]: ', $key ) 
+                      . $value . "\n";
                 }
                 my $message
-                    = $app->translate(
+                  = $app->translate(
                     'Some of the actual files for assets could not be restored.'
-                    );
-                $app->log(
-                    {   message  => $message,
-                        level    => MT::Log::WARNING(),
-                        class    => 'system',
-                        category => 'restore',
-                        metadata => $data,
-                    }
+                  );
+                $app->log( {
+                             message  => $message,
+                             level    => MT::Log::WARNING(),
+                             class    => 'system',
+                             category => 'restore',
+                             metadata => $data,
+                           }
                 );
                 $error .= $message;
-            }
-        }
-    }
+            } ## end if (%error_assets)
+        } ## end elsif ( defined $asset_ids)
+    } ## end if ( !$fh )
     else {
         $param->{restore_upload} = 1;
         if ( $uploaded_filename =~ /^.+\.xml$/i ) {
@@ -584,9 +567,9 @@ sub restore {
             }
             else {
                 $error
-                    = $app->translate(
+                  = $app->translate(
                     'Please use xml, tar.gz, zip, or manifest as a file extension.'
-                    );
+                  );
             }
             unless ($arc) {
                 $result = 0;
@@ -596,136 +579,136 @@ sub restore {
                 }
                 else {
                     $error = MT->translate('Unknown file format');
-                    $app->log(
-                        {   message  => $error . ":$uploaded_filename",
-                            level    => MT::Log::WARNING(),
-                            class    => 'system',
-                            category => 'restore',
-                            metadata => MT::Util::Archive->errstr,
-                        }
+                    $app->log( {
+                                 message  => $error . ":$uploaded_filename",
+                                 level    => MT::Log::WARNING(),
+                                 class    => 'system',
+                                 category => 'restore',
+                                 metadata => MT::Util::Archive->errstr,
+                               }
                     );
                 }
                 $app->print_encode($error);
                 $app->print_encode(
-                    $app->build_page( "restore_end.tmpl", $param ) );
+                             $app->build_page( "restore_end.tmpl", $param ) );
                 close $fh if $fh;
                 return 1;
-            }
+            } ## end unless ($arc)
             my $temp_dir = $app->config('TempDir');
             require File::Temp;
             my $tmp = File::Temp::tempdir( $uploaded_filename . 'XXXX',
-                DIR => $temp_dir );
+                                           DIR => $temp_dir );
             $tmp = Encode::decode( MT->config->PublishCharset, $tmp );
             $arc->extract($tmp);
             $arc->close;
             my ( $blog_ids, $asset_ids )
-                = restore_directory( $app, $tmp, \$error );
+              = restore_directory( $app, $tmp, \$error );
 
             if ( defined $blog_ids ) {
                 $param->{open_dialog} = 1;
                 $param->{blog_ids} = join( ',', @$blog_ids )
-                    if defined $blog_ids;
+                  if defined $blog_ids;
                 $param->{asset_ids} = join( ',', @$asset_ids )
-                    if defined $asset_ids;
+                  if defined $asset_ids;
                 $param->{tmp_dir} = $tmp;
             }
             elsif ( defined $asset_ids ) {
                 my %asset_ids = @$asset_ids;
                 my %error_assets;
                 _restore_non_blog_asset( $app, $tmp, \%asset_ids,
-                    \%error_assets );
+                                         \%error_assets );
                 if (%error_assets) {
                     my $data;
                     while ( my ( $key, $value ) = each %error_assets ) {
                         $data .= $app->translate( 'MT::Asset#[_1]: ', $key )
-                            . $value . "\n";
+                          . $value . "\n";
                     }
                     my $message
-                        = $app->translate(
+                      = $app->translate(
                         'Some of the actual files for assets could not be restored.'
-                        );
-                    $app->log(
-                        {   message  => $message,
-                            level    => MT::Log::WARNING(),
-                            class    => 'system',
-                            category => 'restore',
-                            metadata => $data,
-                        }
+                      );
+                    $app->log( {
+                                 message  => $message,
+                                 level    => MT::Log::WARNING(),
+                                 class    => 'system',
+                                 category => 'restore',
+                                 metadata => $data,
+                               }
                     );
                     $error .= $message;
-                }
-            }
-        }
-    }
+                } ## end if (%error_assets)
+            } ## end elsif ( defined $asset_ids)
+        } ## end else [ if ( $uploaded_filename...)]
+    } ## end else [ if ( !$fh ) ]
     $param->{restore_success} = !$error;
     $param->{error} = $error if $error;
     if ( ( exists $param->{open_dialog} ) && ( $param->{open_dialog} ) ) {
         $param->{dialog_mode} = 'dialog_adjust_sitepath';
         $param->{dialog_params}
-            = 'magic_token='
-            . $app->current_magic
-            . '&amp;blog_ids='
-            . $param->{blog_ids}
-            . '&amp;asset_ids='
-            . $param->{asset_ids}
-            . '&amp;tmp_dir='
-            . encode_url( $param->{tmp_dir} );
+          = 'magic_token='
+          . $app->current_magic
+          . '&amp;blog_ids='
+          . $param->{blog_ids}
+          . '&amp;asset_ids='
+          . $param->{asset_ids}
+          . '&amp;tmp_dir='
+          . encode_url( $param->{tmp_dir} );
         if ( ( $param->{restore_upload} ) && ( $param->{restore_upload} ) ) {
             $param->{dialog_params} .= '&amp;restore_upload=1';
         }
         if ( ( $param->{error} ) && ( $param->{error} ) ) {
             $param->{dialog_params}
-                .= '&amp;error=' . encode_url( $param->{error} );
+              .= '&amp;error=' . encode_url( $param->{error} );
         }
     }
 
     $app->print_encode( $app->build_page( "restore_end.tmpl", $param ) );
     close $fh if $fh;
     1;
-}
+} ## end sub restore
 
 sub restore_premature_cancel {
     my $app  = shift;
     my $user = $app->user;
-    return $app->permission_denied()
-        if !$user->is_superuser;
+    return $app->permission_denied() if !$user->is_superuser;
     $app->validate_magic() or return;
 
     require JSON;
     my $deferred = JSON::from_json( $app->query->param('deferred_json') )
-        if $app->query->param('deferred_json');
+      if $app->query->param('deferred_json');
     my $param = { restore_success => 1 };
     if ( defined $deferred && ( scalar( keys %$deferred ) ) ) {
         _log_dirty_restore( $app, $deferred );
         my $log_url
-            = $app->uri( mode => 'list', args => { '_type' => 'log' } );
+          = $app->uri( mode => 'list', args => { '_type' => 'log' } );
         $param->{restore_success} = 0;
         my $message
-            = $app->translate(
+          = $app->translate(
             'Some objects were not restored because their parent objects were not restored.'
-            );
+          );
         $param->{error} 
-            = $message . '  '
-            . $app->translate(
+          = $message . '  '
+          . $app->translate(
             "Detailed information is in the <a href='javascript:void(0)' onclick='closeDialog(\"[_1]\")'>activity log</a>.",
             $log_url
-            );
+          );
     }
     else {
-        $app->log(
-            {   message => $app->translate(
-                    '[_1] has canceled the multiple files restore operation prematurely.',
-                    $app->user->name
-                ),
-                level    => MT::Log::WARNING(),
-                class    => 'system',
-                category => 'restore',
+        $app->log( {
+               message =>
+                 $app->translate(
+                   '[_1] has canceled the multiple files restore operation prematurely.',
+                   $app->user->name
+                 ),
+               level    => MT::Log::WARNING(),
+               class    => 'system',
+               category => 'restore',
             }
         );
     }
     $app->redirect(
-        $app->uri( mode => 'list', args => { '_type' => 'log' } ) );
-}
+                  $app->uri( mode => 'list', args => { '_type' => 'log' } ) );
+} ## end sub restore_premature_cancel
 
 sub _restore_non_blog_asset {
     my ( $app, $tmp_dir, $asset_ids, $error_assets ) = @_;
@@ -738,15 +721,14 @@ sub _restore_non_blog_asset {
         my $filename = $old_id . '-' . $asset->file_name;
         my $file     = File::Spec->catfile( $tmp_dir, $filename );
         MT::BackupRestore->restore_asset( $file, $asset, $old_id, $fmgr,
-            $error_assets, sub { $app->print_encode(@_); } );
+                             $error_assets, sub { $app->print_encode(@_); } );
     }
 }
 
 sub adjust_sitepath {
     my $app  = shift;
     my $user = $app->user;
-    return $app->permission_denied()
-        if !$user->is_superuser;
+    return $app->permission_denied() if !$user->is_superuser;
     $app->validate_magic() or return;
 
     require MT::BackupRestore;
@@ -771,20 +753,20 @@ sub adjust_sitepath {
         next unless $p =~ /^site_path_(\d+)/;
         my $id   = $1;
         my $blog = $app->model('blog')->load($id)
-            or return $app->error(
-            $app->translate( 'Can\'t load blog #[_1].', $id ) );
+          or return $app->error(
+                          $app->translate( 'Can\'t load blog #[_1].', $id ) );
         my $old_site_path      = scalar $q->param("old_site_path_$id");
         my $old_site_url       = scalar $q->param("old_site_url_$id");
         my $site_path          = scalar $q->param("site_path_$id") || q();
         my $site_url           = scalar $q->param("site_url_$id") || q();
         my $site_url_path      = scalar $q->param("site_url_path_$id") || q();
         my $site_url_subdomain = scalar $q->param("site_url_subdomain_$id")
-            || q();
+          || q();
         $site_url_subdomain .= '.'
-            if $site_url_subdomain && $site_url_subdomain !~ /\.$/;
+          if $site_url_subdomain && $site_url_subdomain !~ /\.$/;
         my $parent_id = scalar $q->param("parent_id_$id") || undef;
         my $site_path_absolute = scalar $q->param("site_path_absolute_$id")
-            || q();
+          || q();
         my $use_absolute = scalar $q->param("use_absolute_$id") || q();
 
         if ($use_absolute) {
@@ -792,8 +774,7 @@ sub adjust_sitepath {
         }
         $blog->site_path($site_path);
 
-        $blog->parent_id($parent_id)
-            if $blog->is_blog() && $parent_id;
+        $blog->parent_id($parent_id) if $blog->is_blog() && $parent_id;
         if ($site_url_path) {
             $blog->site_url("$site_url_subdomain/::/$site_url_path");
         }
@@ -803,18 +784,18 @@ sub adjust_sitepath {
 
         if ( $site_url || $site_url_path || $site_path ) {
             $app->print_encode(
-                $app->translate(
-                    "Changing Site Path for the blog '[_1]' (ID:[_2])...",
-                    encode_html( $blog->name ), $blog->id
-                )
+                    $app->translate(
+                        "Changing Site Path for the blog '[_1]' (ID:[_2])...",
+                        encode_html( $blog->name ), $blog->id
+                    )
             );
         }
         else {
             $app->print_encode(
-                $app->translate(
-                    "Removing Site Path for the blog '[_1]' (ID:[_2])...",
-                    encode_html( $blog->name ), $blog->id
-                )
+                    $app->translate(
+                        "Removing Site Path for the blog '[_1]' (ID:[_2])...",
+                        encode_html( $blog->name ), $blog->id
+                    )
             );
         }
         my $old_archive_path = scalar $q->param("old_archive_path_$id");
@@ -822,15 +803,15 @@ sub adjust_sitepath {
         my $archive_path     = scalar $q->param("archive_path_$id") || q();
         my $archive_url      = scalar $q->param("archive_url_$id") || q();
         my $archive_url_path = scalar $q->param("archive_url_path_$id")
-            || q();
+          || q();
         my $archive_url_subdomain
-            = scalar $q->param("archive_url_subdomain_$id") || q();
+          = scalar $q->param("archive_url_subdomain_$id") || q();
         $archive_url_subdomain .= '.'
-            if $archive_url_subdomain && $archive_url_subdomain !~ /\.$/;
+          if $archive_url_subdomain && $archive_url_subdomain !~ /\.$/;
         my $archive_path_absolute
-            = scalar $q->param("archive_path_absolute_$id") || q();
+          = scalar $q->param("archive_path_absolute_$id") || q();
         my $use_absolute_archive
-            = scalar $q->param("use_absolute_archive_$id") || q();
+          = scalar $q->param("use_absolute_archive_$id") || q();
 
         if ($use_absolute_archive) {
             $archive_path = $archive_path_absolute;
@@ -843,41 +824,41 @@ sub adjust_sitepath {
         else {
             $blog->archive_url($archive_url);
         }
-        if (   ( $old_archive_url && ( $archive_url || $archive_url_path ) )
-            || ( $old_archive_path && $archive_path ) )
+        if (    ( $old_archive_url && ( $archive_url || $archive_url_path ) )
+             || ( $old_archive_path && $archive_path ) )
         {
             $app->print_encode(
-                "\n"
-                    . $app->translate(
-                    "Changing Archive Path for the blog '[_1]' (ID:[_2])...",
-                    encode_html( $blog->name ),
-                    $blog->id
-                    )
+                 "\n"
+                   . $app->translate(
+                     "Changing Archive Path for the blog '[_1]' (ID:[_2])...",
+                     encode_html( $blog->name ),
+                     $blog->id
+                   )
             );
         }
         elsif ( $old_archive_url || $old_archive_path ) {
             $app->print_encode(
-                "\n"
-                    . $app->translate(
-                    "Removing Archive Path for the blog '[_1]' (ID:[_2])...",
-                    encode_html( $blog->name ),
-                    $blog->id
-                    )
+                 "\n"
+                   . $app->translate(
+                     "Removing Archive Path for the blog '[_1]' (ID:[_2])...",
+                     encode_html( $blog->name ),
+                     $blog->id
+                   )
             );
         }
         $blog->save
-            or $app->print_encode( $app->translate("failed") . "\n" ), next;
+          or $app->print_encode( $app->translate("failed") . "\n" ), next;
         $app->print_encode( $app->translate("ok") . "\n" );
 
         $blogs_meta{$id} = {
-            'old_archive_path' => $old_archive_path,
-            'old_archive_url'  => $old_archive_url,
-            'archive_path'     => $blog->archive_path,
-            'archive_url'      => $blog->archive_url,
-            'old_site_path'    => $old_site_path,
-            'old_site_url'     => $old_site_url,
-            'site_path'        => $blog->site_path,
-            'site_url'         => $blog->site_url,
+                             'old_archive_path' => $old_archive_path,
+                             'old_archive_url'  => $old_archive_url,
+                             'archive_path'     => $blog->archive_path,
+                             'archive_url'      => $blog->archive_url,
+                             'old_site_path'    => $old_site_path,
+                             'old_site_url'     => $old_site_url,
+                             'site_path'        => $blog->site_path,
+                             'site_url'         => $blog->site_url,
         };
         next unless %asset_ids;
 
@@ -905,43 +886,42 @@ sub adjust_sitepath {
                 $asset->url($url);
             }
             $app->print_encode(
-                $app->translate(
-                    "Changing file path for the asset '[_1]' (ID:[_2])...",
-                    encode_html( $asset->label ), $asset->id
-                )
+                   $app->translate(
+                       "Changing file path for the asset '[_1]' (ID:[_2])...",
+                       encode_html( $asset->label ), $asset->id
+                   )
             );
             $asset->save
-                or $app->print_encode( $app->translate("failed") . "\n" ),
-                next;
+              or $app->print_encode( $app->translate("failed") . "\n" ), next;
             $app->print_encode( $app->translate("ok") . "\n" );
             unless ( $q->param('redirect') ) {
                 my $old_id   = delete $asset_ids{ $asset->id };
                 my $filename = "$old_id-" . $asset->file_name;
                 my $file     = File::Spec->catfile( $tmp_dir, $filename );
                 MT::BackupRestore->restore_asset( $file, $asset, $old_id,
-                    $fmgr, \%error_assets, sub { $app->print_encode(@_); } );
+                     $fmgr, \%error_assets, sub { $app->print_encode(@_); } );
             }
-        }
-    }
+        } ## end foreach my $asset (@assets)
+    } ## end foreach my $p (@p)
     unless ( $q->param('redirect') ) {
         _restore_non_blog_asset( $app, $tmp_dir, \%asset_ids,
-            \%error_assets );
+                                 \%error_assets );
     }
     if (%error_assets) {
         my $data;
         while ( my ( $key, $value ) = each %error_assets ) {
-            $data .= $app->translate( 'MT::Asset#[_1]: ', $key ) 
-                . $value . "\n";
+            $data
+              .= $app->translate( 'MT::Asset#[_1]: ', $key ) . $value . "\n";
         }
         my $message = $app->translate(
-            'Some of the actual files for assets could not be restored.');
-        $app->log(
-            {   message  => $message,
-                level    => MT::Log::WARNING(),
-                class    => 'system',
-                category => 'restore',
-                metadata => $data,
-            }
+                'Some of the actual files for assets could not be restored.');
+        $app->log( {
+                     message  => $message,
+                     level    => MT::Log::WARNING(),
+                     class    => 'system',
+                     category => 'restore',
+                     metadata => $data,
+                   }
         );
         $error .= $message;
     }
@@ -954,7 +934,7 @@ sub adjust_sitepath {
     my $param = {};
     if ( scalar $q->param('redirect') && $q->param('current_file') ) {
         $param->{restore_end}
-            = 0;    # redirect=1 means we are from multi-uploads
+          = 0;    # redirect=1 means we are from multi-uploads
         $param->{blogs_meta} = MT::Util::to_json( \%blogs_meta );
         $param->{next_mode}  = 'dialog_restore_upload';
     }
@@ -964,24 +944,23 @@ sub adjust_sitepath {
     if ($error) {
         $param->{error}     = $error;
         $param->{error_url} = $app->base
-            . $app->uri( mode => 'list', args => { '_type' => 'log' } );
+          . $app->uri( mode => 'list', args => { '_type' => 'log' } );
     }
     for my $key (
-        qw(files last redirect is_dirty is_asset objects_json deferred_json))
+         qw(files last redirect is_dirty is_asset objects_json deferred_json))
     {
         $param->{$key} = scalar $q->param($key);
     }
     $param->{name}   = $q->param('current_file');
     $param->{assets} = encode_html( $q->param('assets') );
     $app->print_encode(
-        $app->build_page( 'dialog/restore_end.tmpl', $param ) );
-}
+                      $app->build_page( 'dialog/restore_end.tmpl', $param ) );
+} ## end sub adjust_sitepath
 
 sub dialog_restore_upload {
     my $app  = shift;
     my $user = $app->user;
-    return $app->permission_denied()
-        if !$user->is_superuser;
+    return $app->permission_denied() if !$user->is_superuser;
     $app->validate_magic() or return;
 
     my $q = $app->query;
@@ -992,7 +971,7 @@ sub dialog_restore_upload {
     my $assets_json    = $q->param('assets');
     my $is_asset       = $q->param('is_asset') || 0;
     my $schema_version = $q->param('schema_version')
-        || $app->config('SchemaVersion');
+      || $app->config('SchemaVersion');
     my $overwrite_template = $q->param('overwrite_templates') ? 1 : 0;
 
     my $objects  = {};
@@ -1000,7 +979,7 @@ sub dialog_restore_upload {
     require JSON;
     my $objects_json = $q->param('objects_json') if $q->param('objects_json');
     $deferred = JSON::from_json( $q->param('deferred_json') )
-        if $q->param('deferred_json');
+      if $q->param('deferred_json');
 
     my ($fh) = $app->upload_info('file');
 
@@ -1015,7 +994,7 @@ sub dialog_restore_upload {
     $param->{is_dirty}      = $q->param('is_dirty');
     $param->{objects_json}  = $objects_json if defined($objects_json);
     $param->{deferred_json} = MT::Util::to_json($deferred)
-        if defined($deferred);
+      if defined($deferred);
     $param->{blogs_meta}          = $q->param('blogs_meta');
     $param->{schema_version}      = $schema_version;
     $param->{overwrite_templates} = $overwrite_template;
@@ -1026,27 +1005,27 @@ sub dialog_restore_upload {
         $uploaded =~ s!^.*/!!;    ## Get rid of full directory paths
         if ( $uploaded =~ m!\.\.|\0|\|! ) {
             $param->{error}
-                = $app->translate( "Invalid filename '[_1]'", $uploaded );
+              = $app->translate( "Invalid filename '[_1]'", $uploaded );
             return $app->load_tmpl( 'dialog/restore_upload.tmpl', $param );
         }
         $uploaded
-            = Encode::is_utf8($uploaded)
-            ? $uploaded
-            : Encode::decode( $app->charset, $uploaded );
+          = Encode::is_utf8($uploaded)
+          ? $uploaded
+          : Encode::decode( $app->charset, $uploaded );
     }
     if ( defined($uploaded) ) {
         if ( $current ne $uploaded ) {
             close $fh if $uploaded;
             $param->{error}
-                = $app->translate( 'Please upload [_1] in this page.',
-                $current );
+              = $app->translate( 'Please upload [_1] in this page.',
+                                 $current );
             return $app->load_tmpl( 'dialog/restore_upload.tmpl', $param );
         }
     }
 
     if ( !$fh ) {
         $param->{error} = $app->translate('File was not uploaded.')
-            if !( $q->param('redirect') );
+          if !( $q->param('redirect') );
         return $app->load_tmpl( 'dialog/restore_upload.tmpl', $param );
     }
 
@@ -1056,7 +1035,7 @@ sub dialog_restore_upload {
     $app->send_http_header('text/html');
 
     $app->print_encode(
-        $app->build_page( 'dialog/restore_start.tmpl', $param ) );
+                    $app->build_page( 'dialog/restore_start.tmpl', $param ) );
 
     if ( defined $objects_json ) {
         my $objects_tmp = JSON::from_json($objects_json);
@@ -1070,14 +1049,13 @@ sub dialog_restore_upload {
                 push @$newids, $objects_tmp->{$key};
                 my $keymaps = $class2ids{$class}->{keymaps};
                 push @$keymaps,
-                    { newid => $objects_tmp->{$key}, oldid => $old_id };
+                  { newid => $objects_tmp->{$key}, oldid => $old_id };
             }
             else {
                 $class2ids{$class} = {
-                    newids  => [ $objects_tmp->{$key} ],
-                    keymaps => [
-                        { newid => $objects_tmp->{$key}, oldid => $old_id }
-                    ]
+                     newids => [ $objects_tmp->{$key} ],
+                     keymaps =>
+                       [ { newid => $objects_tmp->{$key}, oldid => $old_id } ]
                 };
             }
         }
@@ -1093,10 +1071,10 @@ sub dialog_restore_upload {
                 $objects->{"$class#$old_id"} = $obj;
             }
         }
-    }
+    } ## end if ( defined $objects_json)
 
     my $assets = JSON::from_json( decode_html($assets_json) )
-        if ( defined($assets_json) && $assets_json );
+      if ( defined($assets_json) && $assets_json );
     $assets = [] if !defined($assets);
     my $asset;
     my @errors;
@@ -1110,23 +1088,23 @@ sub dialog_restore_upload {
         $asset->{fh} = $fh;
         my $blogs_meta = JSON::from_json( $q->param('blogs_meta') || '{}' );
         MT::BackupRestore->_restore_asset_multi( $asset, $objects,
-            $error_assets, sub { $app->print_encode(@_); }, $blogs_meta );
+                $error_assets, sub { $app->print_encode(@_); }, $blogs_meta );
         if ( defined( $error_assets->{ $asset->{asset_id} } ) ) {
-            $app->log(
-                {   message => $app->translate('Restoring a file failed: ')
+            $app->log( {
+                      message => $app->translate('Restoring a file failed: ')
                         . $error_assets->{ $asset->{asset_id} },
-                    level    => MT::Log::WARNING(),
-                    class    => 'system',
-                    category => 'restore',
-                }
+                      level    => MT::Log::WARNING(),
+                      class    => 'system',
+                      category => 'restore',
+                    }
             );
         }
     }
     else {
         ( $blog_ids, $asset_ids ) = eval {
             MT::BackupRestore->restore_process_single_file( $fh, $objects,
-                $deferred, \@errors, $schema_version, $overwrite_template,
-                sub { _progress( $app, @_ ) } );
+                    $deferred, \@errors, $schema_version, $overwrite_template,
+                    sub { _progress( $app, @_ ) } );
         };
         if ($@) {
             $last = 1;
@@ -1160,49 +1138,49 @@ sub dialog_restore_upload {
         $param->{error}     = join( '; ', @errors );
         $param->{next_mode} = 'dialog_adjust_sitepath';
         $param->{blog_ids}  = join( ',', @$blog_ids );
-        $param->{asset_ids} = join( ',', @$asset_ids )
-            if defined($asset_ids);
+        $param->{asset_ids} = join( ',', @$asset_ids ) if defined($asset_ids);
     }
     elsif ($last) {
         $param->{restore_end} = 1;
         if ( $param->{is_dirty} ) {
             _log_dirty_restore( $app, $deferred );
             my $log_url = $app->base
-                . $app->uri( mode => 'list', args => { '_type' => 'log' } );
+              . $app->uri( mode => 'list', args => { '_type' => 'log' } );
             $param->{error}
-                = $app->translate(
+              = $app->translate(
                 'Some objects were not restored because their parent objects were not restored.'
-                );
+              );
             $param->{error_url} = $log_url;
         }
         elsif ( scalar( keys %$error_assets ) ) {
             $param->{error} = $app->translate(
-                'Some of the files were not restored correctly.');
+                            'Some of the files were not restored correctly.');
             my $log_url
-                = $app->uri( mode => 'list', args => { '_type' => 'log' } );
+              = $app->uri( mode => 'list', args => { '_type' => 'log' } );
             $param->{error_url} = $log_url;
         }
         elsif ( scalar @errors ) {
             $param->{error} = join '; ', @errors;
             my $log_url
-                = $app->uri( mode => 'list', args => { '_type' => 'log' } );
+              = $app->uri( mode => 'list', args => { '_type' => 'log' } );
             $param->{error_url} = $log_url;
         }
         else {
-            $app->log(
-                {   message => $app->translate(
-                        "Successfully restored objects to Movable Type system by user '[_1]'",
-                        $app->user->name
-                    ),
-                    level    => MT::Log::INFO(),
-                    class    => 'system',
-                    category => 'restore'
+            $app->log( {
+                   message =>
+                     $app->translate(
+                       "Successfully restored objects to Movable Type system by user '[_1]'",
+                       $app->user->name
+                     ),
+                   level    => MT::Log::INFO(),
+                   class    => 'system',
+                   category => 'restore'
                 }
             );
             $param->{ok_url}
-                = $app->uri( mode => 'start_restore', args => {} );
+              = $app->uri( mode => 'start_restore', args => {} );
         }
-    }
+    } ## end elsif ($last)
     else {
         my %objects_json;
         %objects_json = map { $_ => $objects->{$_}->id } keys %$objects;
@@ -1214,25 +1192,24 @@ sub dialog_restore_upload {
             $param->{next_mode} = 'dialog_adjust_sitepath';
             $param->{blog_ids}  = join( ',', @$blog_ids );
             $param->{asset_ids} = join( ',', @$asset_ids )
-                if defined($asset_ids);
+              if defined($asset_ids);
         }
         else {
             $param->{next_mode} = 'dialog_restore_upload';
         }
     }
     MT->run_callbacks( 'restore', $objects, $deferred, \@errors,
-        sub { _progress( $app, @_ ) } );
+                       sub { _progress( $app, @_ ) } );
 
     $app->print_encode(
-        $app->build_page( 'dialog/restore_end.tmpl', $param ) );
+                      $app->build_page( 'dialog/restore_end.tmpl', $param ) );
     close $fh if $fh;
-}
+} ## end sub dialog_restore_upload
 
 sub dialog_adjust_sitepath {
     my $app  = shift;
     my $user = $app->user;
-    return $app->permission_denied()
-        if !$user->is_superuser;
+    return $app->permission_denied() if !$user->is_superuser;
     $app->validate_magic() or return;
 
     my $q          = $app->query;
@@ -1243,28 +1220,27 @@ sub dialog_adjust_sitepath {
     my $asset_ids  = $q->param('asset_ids');
     my $blog_class = $app->model('blog');
     my @blogs      = $blog_class->load( { id => \@blog_ids } );
-    my ( @blogs_loop );
+    my (@blogs_loop);
     my $param = {};
 
     foreach my $blog (@blogs) {
         my $params = {
-            name          => $blog->name,
-            id            => $blog->id,
-            old_site_path => $blog->column('site_path'),
-            $blog->column('archive_path')
+                name          => $blog->name,
+                id            => $blog->id,
+                old_site_path => $blog->column('site_path'),
+                $blog->column('archive_path')
                 ? ( old_archive_path => $blog->column('archive_path') )
                 : (),
                 $blog->column('parent_id') ? ( parent_id => $blog->parent_id )
                 : (),
         };
         $params->{site_path_absolute} = 1
-            if $blog_class->is_site_path_absolute(
-                $blog->column('site_path') );
+          if $blog_class->is_site_path_absolute( $blog->column('site_path') );
         $params->{archive_path_absolute} = 1
-            if exists( $params->{old_archive_path} )
-            && $blog_class->is_site_path_absolute(
-                $blog->column('archive_path')
-            );
+          if exists( $params->{old_archive_path} )
+              && $blog_class->is_site_path_absolute(
+                                                 $blog->column('archive_path')
+              );
         $params->{old_site_url} = $blog->site_url;
         my @raw_site_url = $blog->raw_site_url;
         if ( 2 == @raw_site_url ) {
@@ -1274,7 +1250,7 @@ sub dialog_adjust_sitepath {
             $params->{old_site_url_path}      = $raw_site_url[1];
         }
         $params->{old_archive_url} = $blog->archive_url
-            if $blog->column('archive_url');
+          if $blog->column('archive_url');
         my @raw_archive_url = $blog->raw_archive_url;
         if ( 2 == @raw_archive_url ) {
             my $subdomain = $raw_archive_url[0];
@@ -1283,28 +1259,28 @@ sub dialog_adjust_sitepath {
             $params->{old_archive_url_path}      = $raw_archive_url[1];
         }
         $param->{enabled_archives} = 1
-            if $params->{old_archive_url}
-        || $params->{old_archive_url_subdomain}
-        || $params->{old_archive_url_path}
-        || $params->{old_archive_path};
+          if $params->{old_archive_url}
+              || $params->{old_archive_url_subdomain}
+              || $params->{old_archive_url_path}
+              || $params->{old_archive_path};
         push @blogs_loop, $params;
-    }
+    } ## end foreach my $blog (@blogs)
 
     $param = { blogs_loop => \@blogs_loop, tmp_dir => $tmp_dir, %$param };
-    $param->{error}          = $error         if $error;
-    $param->{restore_upload} = $uploaded      if $uploaded;
-    $param->{asset_ids}      = $asset_ids     if $asset_ids;
+    $param->{error}          = $error     if $error;
+    $param->{restore_upload} = $uploaded  if $uploaded;
+    $param->{asset_ids}      = $asset_ids if $asset_ids;
     $param->{path_separator} = MT::Util->dir_separator;
     for my $key (
         qw(files assets last redirect is_dirty is_asset objects_json deferred_json)
-        )
+      )
     {
         $param->{$key} = $q->param($key) if $q->param($key);
     }
     $param->{name}      = $q->param('current_file');
     $param->{screen_id} = "adjust-sitepath";
     $app->load_tmpl( 'dialog/adjust_sitepath.tmpl', $param );
-}
+} ## end sub dialog_adjust_sitepath
 
 sub restore_file {
     my $app = shift;
@@ -1320,13 +1296,13 @@ sub restore_file {
 
     require MT::BackupRestore;
     my ( $deferred, $blogs )
-        = MT::BackupRestore->restore_file( $fh, $errormsg, $schema_version,
-        $overwrite_template, sub { _progress( $app, @_ ); } );
+      = MT::BackupRestore->restore_file( $fh, $errormsg, $schema_version,
+                        $overwrite_template, sub { _progress( $app, @_ ); } );
 
     if ( !defined($deferred) || scalar( keys %$deferred ) ) {
         _log_dirty_restore( $app, $deferred );
         my $log_url
-            = $app->uri( mode => 'list', args => { '_type' => 'log' } );
+          = $app->uri( mode => 'list', args => { '_type' => 'log' } );
         $$errormsg .= '; ' if $$errormsg;
         $$errormsg .= $app->translate(
             'Some objects were not restored because their parent objects were not restored.  Detailed information is in the <a href="javascript:void(0);" onclick="closeDialog(\'[_1]\');">activity log</a>.',
@@ -1335,29 +1311,30 @@ sub restore_file {
         return $blogs;
     }
     if ($$errormsg) {
-        $app->log(
-            {   message  => $$errormsg,
-                level    => MT::Log::ERROR(),
-                class    => 'system',
-                category => 'restore',
-            }
+        $app->log( {
+                     message  => $$errormsg,
+                     level    => MT::Log::ERROR(),
+                     class    => 'system',
+                     category => 'restore',
+                   }
         );
         return $blogs;
     }
 
-    $app->log(
-        {   message => $app->translate(
-                "Successfully restored objects to Movable Type system by user '[_1]'",
-                $app->user->name
-            ),
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            category => 'restore'
+    $app->log( {
+           message =>
+             $app->translate(
+               "Successfully restored objects to Movable Type system by user '[_1]'",
+               $app->user->name
+             ),
+           level    => MT::Log::INFO(),
+           class    => 'system',
+           category => 'restore'
         }
     );
 
     $blogs;
-}
+} ## end sub restore_file
 
 sub restore_directory {
     my $app = shift;
@@ -1382,19 +1359,19 @@ sub restore_directory {
     my %error_assets;
     require MT::BackupRestore;
     my ( $deferred, $blogs, $assets )
-        = MT::BackupRestore->restore_directory( $dir, \@errors,
-        \%error_assets, $schema_version, $overwrite_template,
-        sub { _progress( $app, @_ ); } );
+      = MT::BackupRestore->restore_directory( $dir, \@errors, \%error_assets,
+                                         $schema_version, $overwrite_template,
+                                         sub { _progress( $app, @_ ); } );
 
     if ( scalar @errors ) {
         $$error = $app->translate('Error occured during restore process.');
-        $app->log(
-            {   message  => $$error,
-                level    => MT::Log::WARNING(),
-                class    => 'system',
-                category => 'restore',
-                metadata => join( '; ', @errors ),
-            }
+        $app->log( {
+                     message  => $$error,
+                     level    => MT::Log::WARNING(),
+                     class    => 'system',
+                     category => 'restore',
+                     metadata => join( '; ', @errors ),
+                   }
         );
     }
     return ( $blogs, $assets ) unless ( defined($deferred) && %$deferred );
@@ -1402,17 +1379,17 @@ sub restore_directory {
     if ( scalar( keys %error_assets ) ) {
         my $data;
         while ( my ( $key, $value ) = each %error_assets ) {
-            $data .= $app->translate( 'MT::Asset#[_1]: ', $key ) 
-                . $value . "\n";
+            $data
+              .= $app->translate( 'MT::Asset#[_1]: ', $key ) . $value . "\n";
         }
         my $message = $app->translate('Some of files could not be restored.');
-        $app->log(
-            {   message  => $message,
-                level    => MT::Log::WARNING(),
-                class    => 'system',
-                category => 'restore',
-                metadata => $data,
-            }
+        $app->log( {
+                     message  => $message,
+                     level    => MT::Log::WARNING(),
+                     class    => 'system',
+                     category => 'restore',
+                     metadata => $data,
+                   }
         );
         $$error .= $message;
     }
@@ -1420,7 +1397,7 @@ sub restore_directory {
     if ( scalar( keys %$deferred ) ) {
         _log_dirty_restore( $app, $deferred );
         my $log_url
-            = $app->uri( mode => 'list', args => { '_type' => 'log' } );
+          = $app->uri( mode => 'list', args => { '_type' => 'log' } );
         $$error = $app->translate(
             'Some objects were not restored because their parent objects were not restored.  Detailed information is in the <a href="javascript:void(0);" onclick="closeDialog(\'[_1]\');">activity log</a>.',
             $log_url
@@ -1430,25 +1407,25 @@ sub restore_directory {
 
     return ( $blogs, $assets ) if $$error;
 
-    $app->log(
-        {   message => $app->translate(
-                "Successfully restored objects to Movable Type system by user '[_1]'",
-                $app->user->name
-            ),
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            category => 'restore'
+    $app->log( {
+           message =>
+             $app->translate(
+               "Successfully restored objects to Movable Type system by user '[_1]'",
+               $app->user->name
+             ),
+           level    => MT::Log::INFO(),
+           class    => 'system',
+           category => 'restore'
         }
     );
     return ( $blogs, $assets );
-}
+} ## end sub restore_directory
 
 sub restore_upload_manifest {
     my $app  = shift;
     my ($fh) = @_;
     my $user = $app->user;
-    return $app->permission_denied()
-        if !$user->is_superuser;
+    return $app->permission_denied() if !$user->is_superuser;
     $app->validate_magic() or return;
 
     my $q = $app->query;
@@ -1456,8 +1433,8 @@ sub restore_upload_manifest {
     require MT::BackupRestore;
     my $backups = MT::BackupRestore->process_manifest($fh);
     return $app->errtrans(
-        "Uploaded file was not a valid Movable Type backup manifest file.")
-        if !defined($backups);
+           "Uploaded file was not a valid Movable Type backup manifest file.")
+      if !defined($backups);
 
     my $files     = $backups->{files};
     my $assets    = $backups->{assets};
@@ -1473,7 +1450,7 @@ sub restore_upload_manifest {
         }
     }
     $assets_json = encode_url( MT::Util::to_json($assets) )
-        if scalar(@$assets) > 0;
+      if scalar(@$assets) > 0;
     $param->{files}    = join( ',', @$files );
     $param->{assets}   = $assets_json;
     $param->{filename} = $file_next;
@@ -1486,39 +1463,40 @@ sub restore_upload_manifest {
     #  ? 'ignore'
     #  : $app->config('SchemaVersion');
     $param->{overwrite_templates}
-        = $q->param('overwrite_global_templates') ? 1 : 0;
+      = $q->param('overwrite_global_templates') ? 1 : 0;
 
     $param->{dialog_mode} = 'dialog_restore_upload';
     $param->{dialog_params}
-        = 'start=1'
-        . '&amp;magic_token='
-        . $app->current_magic
-        . '&amp;files='
-        . $param->{files}
-        . '&amp;assets='
-        . $param->{assets}
-        . '&amp;current_file='
-        . $param->{filename}
-        . '&amp;last='
-        . $param->{'last'}
-        . '&amp;schema_version='
-        . $param->{schema_version}
-        . '&amp;overwrite_templates='
-        . $param->{overwrite_templates}
-        . '&amp;redirect=1';
+      = 'start=1'
+      . '&amp;magic_token='
+      . $app->current_magic
+      . '&amp;files='
+      . $param->{files}
+      . '&amp;assets='
+      . $param->{assets}
+      . '&amp;current_file='
+      . $param->{filename}
+      . '&amp;last='
+      . $param->{'last'}
+      . '&amp;schema_version='
+      . $param->{schema_version}
+      . '&amp;overwrite_templates='
+      . $param->{overwrite_templates}
+      . '&amp;redirect=1';
     if ( length $param->{dialog_params} > 2083 )
     {    # 2083 is Maximum URL length in IE
-        $param->{error} = $app->translate(
+        $param->{error} =
+          $app->translate(
             "Manifest file '[_1]' is too large. Please use import direcotry for restore.",
             $param->{filename}
-        );
+          );
         $param->{open_dialog} = 0;
         $app->mode('start_restore');
     }
     $app->load_tmpl( 'restore.tmpl', $param );
 
     #close $fh if $fh;
-}
+} ## end sub restore_upload_manifest
 
 sub _backup_finisher {
     my $app = shift;
@@ -1547,20 +1525,20 @@ sub _backup_finisher {
     }
     else {
         $message
-            = $app->translate(
-            "Movable Type system was successfully backed up by user '[_1]'",
-            $app->user->name );
+          = $app->translate(
+              "Movable Type system was successfully backed up by user '[_1]'",
+              $app->user->name );
     }
-    $app->log(
-        {   message  => $message,
-            level    => MT::Log::INFO(),
-            class    => 'system',
-            category => 'restore'
-        }
+    $app->log( {
+                 message  => $message,
+                 level    => MT::Log::INFO(),
+                 class    => 'system',
+                 category => 'restore'
+               }
     );
     $app->print_encode(
-        $app->build_page( 'include/backup_end.tmpl', $param ) );
-}
+                      $app->build_page( 'include/backup_end.tmpl', $param ) );
+} ## end sub _backup_finisher
 
 sub _progress {
     my $app = shift;
@@ -1581,7 +1559,7 @@ sub _progress {
     }
 
     $app->request( 'progress_ids', $ids );
-}
+} ## end sub _progress
 
 sub _log_dirty_restore {
     my $app = shift;
@@ -1602,17 +1580,17 @@ sub _log_dirty_restore {
             'Some [_1] were not restored because their parent objects were not restored.',
             $class_name
         );
-        $app->log(
-            {   message  => $message,
-                level    => MT::Log::WARNING(),
-                class    => 'system',
-                category => 'restore',
-                metadata => join( ', ', @$ids ),
-            }
+        $app->log( {
+                     message  => $message,
+                     level    => MT::Log::WARNING(),
+                     class    => 'system',
+                     category => 'restore',
+                     metadata => join( ', ', @$ids ),
+                   }
         );
     }
     1;
-}
+} ## end sub _log_dirty_restore
 
 1;
 __END__

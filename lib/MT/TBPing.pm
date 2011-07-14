@@ -79,35 +79,36 @@ sub list_props {
                     $text = '...';
                 }
 
-                my $id        = $obj->id;
-                my $edit_link = $app->uri(
-                    mode => 'view',
-                    args => {
-                        _type   => 'ping',
-                        id      => $id,
-                        blog_id => $obj->blog_id,
-                    }
-                );
+                my $id = $obj->id;
+                my $edit_link =
+                  $app->uri(
+                             mode => 'view',
+                             args => {
+                                       _type   => 'ping',
+                                       id      => $id,
+                                       blog_id => $obj->blog_id,
+                             }
+                  );
                 my $status
-                    = $obj->is_junk      ? 'Junk'
-                    : $obj->is_published ? 'Published'
-                    :                      'Moderated';
+                  = $obj->is_junk      ? 'Junk'
+                  : $obj->is_published ? 'Published'
+                  :                      'Moderated';
                 my $lc_status  = lc $status;
                 my $status_img = MT->static_path . 'images/status_icons/';
-                $status_img .=
-                      $status eq 'Junk'      ? 'warning.gif'
-                    : $status eq 'Published' ? 'success.gif'
-                    :                          'draft.gif';
+                $status_img
+                  .= $status eq 'Junk'      ? 'warning.gif'
+                  : $status  eq 'Published' ? 'success.gif'
+                  :                           'draft.gif';
 
-                my $blog_name = MT::Util::encode_html( $obj->blog_name  || '' );
-                my $title     = MT::Util::encode_html( $obj->title      || '' );
-                my $url       = MT::Util::encode_html( $obj->source_url || '' );
+                my $blog_name
+                  = MT::Util::encode_html( $obj->blog_name || '' );
+                my $title = MT::Util::encode_html( $obj->title      || '' );
+                my $url   = MT::Util::encode_html( $obj->source_url || '' );
                 my $view_img
-                    = MT->static_path . 'images/status_icons/view.gif';
-                my $ping_from
-                    = MT->translate(
-                    '<a href="[_1]">Ping from: [_2] - [_3]</a>',
-                    $edit_link, $blog_name, $title );
+                  = MT->static_path . 'images/status_icons/view.gif';
+                my $ping_from =
+                  MT->translate( '<a href="[_1]">Ping from: [_2] - [_3]</a>',
+                                 $edit_link, $blog_name, $title );
 
                 return qq{
                     <span class="icon status $lc_status">
@@ -124,15 +125,15 @@ sub list_props {
             },
         },
         ip => {
-            label     => 'IP Address',
-            auto      => 1,
-            order     => 200,
-            condition => sub { MT->config->ShowIPInformation },
+                label     => 'IP Address',
+                auto      => 1,
+                order     => 200,
+                condition => sub { MT->config->ShowIPInformation },
         },
         blog_name => {
-            base    => '__common.blog_name',
-            display => 'default',
-            order   => 300,
+                       base    => '__common.blog_name',
+                       display => 'default',
+                       order   => 300,
         },
         target => {
             label       => 'Target',
@@ -144,20 +145,20 @@ sub list_props {
                 my ( $prop, $objs, $app ) = @_;
                 my %tbs = map { $_->tb_id => 1 } @$objs;
                 my @tbs
-                    = MT->model('trackback')->load( { id => [ keys %tbs ] } );
+                  = MT->model('trackback')->load( { id => [ keys %tbs ] } );
                 my %tb_map = map { $_->id => $_ } @tbs;
                 my %entries
-                    = map { $_->entry_id => 1 } grep { $_->entry_id } @tbs;
+                  = map { $_->entry_id => 1 } grep { $_->entry_id } @tbs;
                 my @entries
-                    = MT->model('entry')->load( { id => [ keys %entries ] } )
-                    if scalar keys %entries;
+                  = MT->model('entry')->load( { id => [ keys %entries ] } )
+                  if scalar keys %entries;
                 my %entry_map  = map { $_->id          => $_ } @entries;
                 my %categories = map { $_->category_id => 1 }
-                    grep { $_->category_id } @tbs;
+                  grep { $_->category_id } @tbs;
                 my @categories
-                    = MT->model('category')
-                    ->load( { id => [ keys %categories ] } )
-                    if scalar keys %categories;
+                  = MT->model('category')
+                  ->load( { id => [ keys %categories ] } )
+                  if scalar keys %categories;
                 my %category_map = map { $_->id => $_ } @categories;
                 my ( $title_col, $alt_label );
                 my @res;
@@ -175,22 +176,22 @@ sub list_props {
                         $title_col = 'label';
                         $alt_label = 'No label';
                     }
-                    my $title_html
-                        = MT::ListProperty::make_common_label_html( $obj,
-                        $app, $title_col, $alt_label );
+                    my $title_html =
+                      MT::ListProperty::make_common_label_html( $obj, $app,
+                                                     $title_col, $alt_label );
                     my $type = $obj->class_type;
                     $type = 'categories' if $type eq 'category';
                     my $img
-                        = MT->static_path
-                        . 'images/nav_icons/color/'
-                        . $type . '.gif';
+                      = MT->static_path
+                      . 'images/nav_icons/color/'
+                      . $type . '.gif';
                     push @res, qq{
                         <span class="icon target-type $type">
                           <img src="$img" />
                         </span>
                         $title_html
                     };
-                }
+                } ## end for my $obj (@$objs)
                 @res;
             },
             sort => sub {
@@ -199,42 +200,44 @@ sub list_props {
                 $args->{joins} ||= [];
                 push @{ $args->{joins} }, MT->model('trackback')->join_on(
                     undef, undef,
-                    {   condition => { id => \'= tbping_tb_id' },
-                        type      => 'Left',
+                    {
+                       condition => { id => \'= tbping_tb_id' },
+                       type      => 'Left',
                     },
 
-                    ),
-                    MT->model('entry')->join_on(
-                    undef, undef,
-                    {   sort      => 'title',
-                        condition => { id => \'= trackback_entry_id', },
-                        direction => ( $args->{direction} || 'ascend' ),
-                        type      => 'left',
-                    },
-                    ),
-                    MT->model('category')->join_on(
-                    undef, undef,
-                    {   sort      => 'label',
-                        condition => { id => \'= trackback_category_id', },
-                        direction => ( $args->{direction} || 'ascend' ),
-                        type      => 'left',
-                    },
-                    );
+                  ),
+                  MT->model('entry')->join_on(
+                                      undef, undef,
+                                      {
+                                         sort => 'title',
+                                         condition =>
+                                           { id => \'= trackback_entry_id', },
+                                         direction =>
+                                           ( $args->{direction} || 'ascend' ),
+                                         type => 'left',
+                                      },
+                  ),
+                  MT->model('category')->join_on(
+                        undef, undef,
+                        {
+                          sort      => 'label',
+                          condition => { id => \'= trackback_category_id', },
+                          direction => ( $args->{direction} || 'ascend' ),
+                          type      => 'left',
+                        },
+                  );
 
                 $args->{sort} = [];
                 return;
             },
         },
         created_on => {
-            base    => '__virtual.created_on',
-            display => 'default',
-            order   => 500,
+                        base    => '__virtual.created_on',
+                        display => 'default',
+                        order   => 500,
         },
-        modified_on => {
-            auto    => 1,
-            label   => 'Date Modified',
-            display => 'none'
-        },
+        modified_on =>
+          { auto => 1, label => 'Date Modified', display => 'none' },
         from => {
             label       => 'From',
             view_filter => [],
@@ -243,29 +246,21 @@ sub list_props {
                 my ( $terms, $args ) = @_;
                 my $dir = $args->{direction} eq 'descend' ? 'DESC' : 'ASC';
                 $args->{sort} = [
-                    { column => 'blog_name', desc => $dir },
-                    { column => 'title',     desc => $dir },
+                                  { column => 'blog_name', desc => $dir },
+                                  { column => 'title',     desc => $dir },
                 ];
             },
         },
         author_name      => { condition => sub {0}, },
         source_blog_name => {
-            label   => 'Source Site',
-            col     => 'blog_name',
-            display => 'none',
-            base    => '__virtual.string',
+                              label   => 'Source Site',
+                              col     => 'blog_name',
+                              display => 'none',
+                              base    => '__virtual.string',
         },
-        source_url => {
-            auto    => 1,
-            label   => 'URL',
-            display => 'none',
-        },
-        status => { base => 'comment.status', },
-        title  => {
-            label   => 'Source Title',
-            auto    => 1,
-            display => 'none',
-        },
+        source_url => { auto => 1, label => 'URL', display => 'none', },
+        status => { base  => 'comment.status', },
+        title  => { label => 'Source Title', auto => 1, display => 'none', },
         entry_id => {
             base            => '__virtual.integer',
             label           => 'Entry/Page',
@@ -276,20 +271,18 @@ sub list_props {
                 my ( $args, $db_terms, $db_args ) = @_;
                 my $entry_id = $args->{value};
                 $db_args->{joins} ||= [];
-                push @{ $db_args->{joins} }, MT->model('trackback')->join_on(
-                    undef,
-                    {   entry_id => $entry_id,
-                        id       => \'= tbping_tb_id',
-                    },
-                );
+                push @{ $db_args->{joins} },
+                  MT->model('trackback')->join_on( undef,
+                       { entry_id => $entry_id, id => \'= tbping_tb_id', }, );
             },
             label_via_param => sub {
                 my ( $prop, $app ) = @_;
                 my $entry_id = $app->param('filter_val');
                 my $entry    = MT->model('entry')->load($entry_id);
                 my $type     = $entry->class_label || '';
-                return MT->translate( 'Trackbacks on [_1]: [_2]',
-                    $type, $entry->title, );
+                return
+                  MT->translate( 'Trackbacks on [_1]: [_2]',
+                                 $type, $entry->title, );
             },
         },
         category_id => {
@@ -302,23 +295,21 @@ sub list_props {
                 my ( $args, $db_terms, $db_args ) = @_;
                 my $cat_id = $args->{value};
                 $db_args->{joins} ||= [];
-                push @{ $db_args->{joins} }, MT->model('trackback')->join_on(
-                    undef,
-                    {   category_id => $cat_id,
-                        id          => \'= tbping_tb_id',
-                    },
-                );
+                push @{ $db_args->{joins} },
+                  MT->model('trackback')->join_on( undef,
+                      { category_id => $cat_id, id => \'= tbping_tb_id', }, );
             },
             label_via_param => sub {
                 my ( $prop, $app ) = @_;
                 my $cat_id = $app->param('filter_val');
                 my $cat    = MT->model('category')->load($cat_id);
                 my $type
-                    = $cat->class eq 'category' ? 'Category'
-                    : $cat->class eq 'folder'   ? 'Folder'
-                    :                             '';
-                return MT->translate( 'Trackbacks on [_1]: [_2]',
-                    $type, $cat->label, );
+                  = $cat->class eq 'category' ? 'Category'
+                  : $cat->class eq 'folder'   ? 'Folder'
+                  :                             '';
+                return
+                  MT->translate( 'Trackbacks on [_1]: [_2]',
+                                 $type, $cat->label, );
             },
         },
         for_current_user => {
@@ -330,48 +321,47 @@ sub list_props {
                 my $user = MT->app->user;
                 $db_args->{joins} ||= [];
                 push @{ $db_args->{joins} }, MT->model('trackback')->join_on(
-                    undef,
-                    {   id       => \"= tbping_tb_id",
-                        entry_id => \"= entry_id",
-                    },
-                    {   join => MT->model('entry')
-                            ->join_on( undef, { author_id => $user->id, } ),
-                    },
+                      undef,
+                      { id => \"= tbping_tb_id", entry_id => \"= entry_id", },
+                      {
+                        join => MT->model('entry')
+                          ->join_on( undef, { author_id => $user->id, } ),
+                      },
                 );
             },
         },
 
     };
-}
+} ## end sub list_props
 
 sub system_filters {
     return {
         not_spam => {
-            label => 'Non-spam trackbacks',
-            items =>
-                [ { type => 'status', args => { value => 'not_junk' }, }, ],
-            order => 100,
+                label => 'Non-spam trackbacks',
+                items =>
+                  [ { type => 'status', args => { value => 'not_junk' }, }, ],
+                order => 100,
         },
         not_spam_in_this_website => {
-            label => 'Non-spam trackbacks on this website',
-            view  => 'website',
-            items => [
-                { type => 'current_context' },
-                { type => 'status', args => { value => 'not_junk' }, },
-            ],
-            order => 200,
+              label => 'Non-spam trackbacks on this website',
+              view  => 'website',
+              items => [
+                       { type => 'current_context' },
+                       { type => 'status', args => { value => 'not_junk' }, },
+              ],
+              order => 200,
         },
         pending => {
-            label => 'Pending trackbacks',
-            items =>
-                [ { type => 'status', args => { value => 'pending' }, }, ],
-            order => 300,
+                 label => 'Pending trackbacks',
+                 items =>
+                   [ { type => 'status', args => { value => 'pending' }, }, ],
+                 order => 300,
         },
         published => {
-            label => 'Published trackbacks',
-            items =>
-                [ { type => 'status', args => { value => 'approved' }, }, ],
-            order => 400,
+                label => 'Published trackbacks',
+                items =>
+                  [ { type => 'status', args => { value => 'approved' }, }, ],
+                order => 400,
         },
         on_my_entry => {
             label => 'Trackbacks on my entries/pages',
@@ -384,17 +374,18 @@ sub system_filters {
         in_last_7_days => {
             label => 'Trackbacks in the last 7 days',
             items => [
-                { type => 'status', args => { value => 'not_junk' }, },
-                {   type => 'created_on',
-                    args => { option => 'days', days => 7 }
-                }
+                       { type => 'status', args => { value => 'not_junk' }, },
+                       {
+                          type => 'created_on',
+                          args => { option => 'days', days => 7 }
+                       }
             ],
             order => 600,
         },
         spam => {
-            label => 'Spam trackbacks',
-            items => [ { type => 'status', args => { value => 'junk' }, }, ],
-            order => 700,
+             label => 'Spam trackbacks',
+             items => [ { type => 'status', args => { value => 'junk' }, }, ],
+             order => 700,
         },
         _trackbacks_by_entry => {
             label => sub {
@@ -406,15 +397,15 @@ sub system_filters {
             items => sub {
                 my $app = MT->app;
                 my $id  = $app->param('filter_val');
-                return [
-                    {   type => 'entry',
-                        args => { option => 'equal', value => $id }
-                    }
+                return [ {
+                           type => 'entry',
+                           args => { option => 'equal', value => $id }
+                         }
                 ];
             },
         },
     };
-}
+} ## end sub system_filters
 
 sub is_junk {
     $_[0]->junk_status == JUNK;

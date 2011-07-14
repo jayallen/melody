@@ -236,7 +236,7 @@ sub drop_index_sql {
     }
 
     return "DROP INDEX ${table_name}_$key ON $table_name";
-}
+} ## end sub drop_index_sql
 
 sub create_table_as_sql {
     my $ddl        = shift;

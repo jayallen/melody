@@ -2710,7 +2710,7 @@ sub deep_copy {
         my $hash = $_[0];
         +{
             map( ( $_ => deep_copy( $hash->{$_}, $limit, $depth + 1 ) ),
-                keys(%$hash) )
+                 keys(%$hash) )
         };
     }
     elsif ( $ref eq 'ARRAY' ) {
@@ -2722,7 +2722,7 @@ sub deep_copy {
     else {
         $_[0];
     }
-}
+} ## end sub deep_copy
 
 1;
 

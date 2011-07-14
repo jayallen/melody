@@ -24,7 +24,8 @@ package XMLRPC::Transport::TCP::Server;
 
 @XMLRPC::Transport::TCP::Server::ISA = qw(SOAP::Transport::TCP::Server);
 
-sub initialize; *initialize = \&XMLRPC::Server::initialize;
+sub initialize;
+*initialize = \&XMLRPC::Server::initialize;
 
 # ======================================================================
 

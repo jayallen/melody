@@ -18,29 +18,30 @@ sub authenticate {
     my ($app) = shift;
 
     my $header = $app->get_header('Authorization')
-        or return $class->auth_failure($app, 401, 'Basic authentication required');
+      or return $class->auth_failure( $app, 401,
+                                      'Basic authentication required' );
     $header =~ s{ \A Basic \s }{}xms;
 
-    my ($username, $password) = split q{:}, decode_base64($header), 2;
+    my ( $username, $password ) = split q{:}, decode_base64($header), 2;
 
-    my $user = MT::Author->load({ name => $username, type => 1 })
-        or return $class->auth_failure($app, 403, 'Invalid login');
-    return $class->auth_failure($app, 403, 'Invalid login')
-        unless $user->is_active;
+    my $user = MT::Author->load( { name => $username, type => 1 } )
+      or return $class->auth_failure( $app, 403, 'Invalid login' );
+    return $class->auth_failure( $app, 403, 'Invalid login' )
+      unless $user->is_active;
     my $expected_password = $user->api_password
-        or return $class->auth_failure($app, 403, 'Invalid login');
-    
-    return $class->auth_failure($app, 403, 'Invalid login')
-        if $expected_password ne $password;
+      or return $class->auth_failure( $app, 403, 'Invalid login' );
+
+    return $class->auth_failure( $app, 403, 'Invalid login' )
+      if $expected_password ne $password;
 
     $app->{user} = $user;
     return 1;
-}
+} ## end sub authenticate
 
 sub auth_failure {
     my $class = shift;
-    my $app = shift;
-    $app->set_header('WWW-Authenticate', 'Basic realm="AtomPub"');
+    my $app   = shift;
+    $app->set_header( 'WWW-Authenticate', 'Basic realm="AtomPub"' );
     return $app->error(@_);
 }
 

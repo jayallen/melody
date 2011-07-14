@@ -47,7 +47,7 @@ sub _hdlr_entry_atom_id {
     my $e = $ctx->stash('entry') or return $ctx->_no_entry_error();
     return
          $e->atom_id()
-      || make_atom_id( $e )
+      || make_atom_id($e)
       || $ctx->error(
          MT->translate( "Could not create atom id for entry [_1]", $e->id ) );
 }

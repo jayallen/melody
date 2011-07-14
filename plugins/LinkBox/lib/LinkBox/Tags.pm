@@ -20,8 +20,8 @@ sub _hdlr_linkbox {
     my @links = $list->links;
 
     #get settings
-    my $settings = MT->component('LinkBox')->get_config_hash(
-        'blog:' . $blog_id );
+    my $settings
+      = MT->component('LinkBox')->get_config_hash( 'blog:' . $blog_id );
     my $liststyle = $args->{list_style} || $settings->{liststyle};
     my $sortorder = $args->{sort_order} || $settings->{sortorder};
 
@@ -33,12 +33,12 @@ sub _hdlr_linkbox {
     $out = "<$liststyle class=\"linkbox\">\n";
     for my $l (@links) {
         $out
-            .= "<li><a href=\"" . $l->link . "\">" . $l->name . "</a></li>\n";
+          .= "<li><a href=\"" . $l->link . "\">" . $l->name . "</a></li>\n";
     }
     $out .= "</$liststyle>\n";
 
     return $out;
-}
+} ## end sub _hdlr_linkbox
 
 sub _hdlr_linkbox_iterator {
     my ( $ctx, $args, $cond ) = @_;
@@ -60,9 +60,9 @@ sub _hdlr_linkbox_iterator {
     }
 
     return $ctx->error("Unable to find linkbox list") unless ($list);
-    my @links    = $list->links;
-    my $settings = MT->component('LinkBox')->get_config_hash(
-        'blog:' . $blog_id );
+    my @links = $list->links;
+    my $settings
+      = MT->component('LinkBox')->get_config_hash( 'blog:' . $blog_id );
     my $sortorder = $args->{sort_order} || $settings->{sortorder};
 
     if ( $sortorder && $sortorder eq "alpha" ) {
@@ -80,7 +80,7 @@ sub _hdlr_linkbox_iterator {
         $out .= $builder->build( $ctx, $tokens, $cond );
     }
     return $out;
-}
+} ## end sub _hdlr_linkbox_iterator
 
 sub _hdlr_linkbox_link_url {
     return $_[0]->stash('linkbox_link_link');
@@ -100,7 +100,7 @@ sub _hdlr_link_boxes {
     my $blog_id = $ctx->stash('blog_id');
     require LinkBox::LinkList;
     my @lists = LinkBox::LinkList->load( { blog_id => $blog_id },
-        { sort => 'name', direction => 'ascend' } );
+                                  { sort => 'name', direction => 'ascend' } );
 
     my $res = '';
     for my $list (@lists) {
@@ -108,12 +108,12 @@ sub _hdlr_link_boxes {
         local $ctx->{__stash}{linkbox_list_name} = $list->name;
 
         defined( my $out = $ctx->slurp( $args, $cond ) )
-            or return $ctx->error( $ctx->errstr );
+          or return $ctx->error( $ctx->errstr );
         $res .= $out;
     }
 
     $res;
-}
+} ## end sub _hdlr_link_boxes
 
 sub _hdlr_link_box_name {
     return $_[0]->stash('linkbox_list_name');

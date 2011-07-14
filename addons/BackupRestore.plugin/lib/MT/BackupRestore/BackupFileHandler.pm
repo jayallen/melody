@@ -25,7 +25,7 @@ sub start_document {
 
     $self->{start} = 1;
     *_decode = sub { $_[0] }
-        unless $self->{is_pp};
+      unless $self->{is_pp};
 
     1;
 }
@@ -42,12 +42,12 @@ sub start_element {
 
     if ( $self->{start} ) {
 
-        if (   $name ne 'movabletype'
-            or $ns   ne MT::BackupRestore::NS_MOVABLETYPE() ) {
-                die MT->translate(
-                      'Uploaded file was not a valid Movable Type backup '
-                    . 'manifest file.'
-                );
+        if (    $name ne 'movabletype'
+             or $ns ne MT::BackupRestore::NS_MOVABLETYPE() )
+        {
+            die MT->translate(
+                          'Uploaded file was not a valid Movable Type backup '
+                            . 'manifest file.' );
         }
 
         #unless ($self->{ignore_schema_conflicts}) {
@@ -60,12 +60,12 @@ sub start_element {
                 'Uploaded file was backed up from Movable Type but the different schema version ([_1]) from the one in this system ([_2]).  It is not safe to restore the file to this version of Movable Type.',
                 $schema, $self->{schema_version}
             );
-            MT->log(
-                {   message  => $message,
-                    level    => MT::Log::ERROR(),
-                    class    => 'system',
-                    category => 'restore',
-                }
+            MT->log( {
+                       message  => $message,
+                       level    => MT::Log::ERROR(),
+                       class    => 'system',
+                       category => 'restore',
+                     }
             );
             die $message;
         }
@@ -73,7 +73,7 @@ sub start_element {
         #}
         $self->{start} = 0;
         return 1;
-    }
+    } ## end if ( $self->{start} )
 
     my $objects  = $self->{objects};
     my $deferred = $self->{deferred};
@@ -89,9 +89,9 @@ sub start_element {
             my $class = MT->model($name);
             unless ($class) {
                 push @{ $self->{errors} },
-                    MT->translate(
-                    '[_1] is not a subject to be restored by Movable Type.',
-                    $name );
+                  MT->translate(
+                      '[_1] is not a subject to be restored by Movable Type.',
+                      $name );
             }
             else {
                 if ( $self->{current_class} ne $class ) {
@@ -99,125 +99,128 @@ sub start_element {
                         my $state   = $self->{state};
                         my $records = $self->{records};
                         $callback->(
-                            $state . " "
-                                . MT->translate(
-                                "[_1] records restored.", $records
-                                ),
-                            $c->class_type || $c->datasource
+                                     $state . " "
+                                       . MT->translate(
+                                            "[_1] records restored.", $records
+                                       ),
+                                     $c->class_type || $c->datasource
                         );
                     }
                     $self->{records}       = 0;
                     $self->{current_class} = $class;
                     my $state
-                        = MT->translate( 'Restoring [_1] records:', $class );
+                      = MT->translate( 'Restoring [_1] records:', $class );
                     $callback->( $state, $name );
                     $self->{state} = $state;
                 }
                 my %column_data
-                    = map { $attrs->{$_}->{LocalName} => $attrs->{$_}->{Value} }
-                    keys(%$attrs);
+                  = map { $attrs->{$_}->{LocalName} => $attrs->{$_}->{Value} }
+                  keys(%$attrs);
                 my $obj;
                 if ( 'author' eq $name ) {
                     $obj = $class->load( { name => $column_data{name} } );
                     if ($obj) {
                         if ( UNIVERSAL::isa( MT->instance, 'MT::App' )
-                            && ( $obj->id == MT->instance->user->id ) )
+                             && ( $obj->id == MT->instance->user->id ) )
                         {
-                            MT->log(
-                                {   message => MT->translate(
-                                        "User with the same name as the name of the currently logged in ([_1]) found.  Skipped the record.",
-                                        $obj->name
-                                    ),
-                                    level => MT::Log::INFO(),
-                                    metadata =>
-                                        'Permissions and Associations have been restored.',
-                                    class    => 'system',
-                                    category => 'restore',
+                            MT->log( {
+                                   message =>
+                                     MT->translate(
+                                       "User with the same name as the name of the currently logged in ([_1]) found.  Skipped the record.",
+                                       $obj->name
+                                     ),
+                                   level => MT::Log::INFO(),
+                                   metadata =>
+                                     'Permissions and Associations have been restored.',
+                                   class    => 'system',
+                                   category => 'restore',
                                 }
                             );
                             $objects->{ "$class#" . $column_data{id} } = $obj;
                             $objects->{ "$class#" . $column_data{id} }
-                                ->{no_overwrite} = 1;
+                              ->{no_overwrite} = 1;
                             $self->{current} = $obj;
                             $self->{loaded}  = 1;
                             $self->{skip} += 1;
-                        }
+                        } ## end if ( UNIVERSAL::isa( MT...))
                         else {
-                            MT->log(
-                                {   message => MT->translate(
-                                        "User with the same name '[_1]' found (ID:[_2]).  Restore replaced this user with the data backed up.",
-                                        $obj->name,
-                                        $obj->id
-                                    ),
-                                    level => MT::Log::INFO(),
-                                    metadata =>
-                                        'Permissions and Associations have been restored as well.',
-                                    class    => 'system',
-                                    category => 'restore',
+                            MT->log( {
+                                   message =>
+                                     MT->translate(
+                                       "User with the same name '[_1]' found (ID:[_2]).  Restore replaced this user with the data backed up.",
+                                       $obj->name,
+                                       $obj->id
+                                     ),
+                                   level => MT::Log::INFO(),
+                                   metadata =>
+                                     'Permissions and Associations have been restored as well.',
+                                   class    => 'system',
+                                   category => 'restore',
                                 }
                             );
                             my $old_id = delete $column_data{id};
                             $objects->{"$class#$old_id"} = $obj;
                             $objects->{"$class#$old_id"}->{no_overwrite} = 1;
                             delete $column_data{userpic_asset_id}
-                                if exists $column_data{userpic_asset_id};
+                              if exists $column_data{userpic_asset_id};
 
                             my $child_classes
-                                = $obj->properties->{child_classes} || {};
+                              = $obj->properties->{child_classes} || {};
                             for my $class ( keys %$child_classes ) {
                                 eval "use $class;";
                                 $class->remove(
-                                    { author_id => $obj->id, blog_id => '0' }
+                                     { author_id => $obj->id, blog_id => '0' }
                                 );
                             }
                             my $success
-                                = $obj->restore_parent_ids( \%column_data,
-                                $objects );
+                              = $obj->restore_parent_ids( \%column_data,
+                                                          $objects );
                             if ($success) {
                                 my %realcolumns = map {
                                     $_ =>
-                                        _decode( delete( $column_data{$_} ) )
+                                      _decode( delete( $column_data{$_} ) )
                                 } @{ $obj->column_names };
                                 $obj->set_values( \%realcolumns );
                                 $obj->$_( $column_data{$_} )
-                                    foreach keys(%column_data);
+                                  foreach keys(%column_data);
                                 $obj->column( 'external_id',
-                                    $realcolumns{external_id} )
-                                    if defined $realcolumns{external_id};
+                                              $realcolumns{external_id} )
+                                  if defined $realcolumns{external_id};
                                 $self->{current} = $obj;
                             }
                             else {
                                 $deferred->{ $class . '#' . $column_data{id} }
-                                    = 1;
+                                  = 1;
                                 $self->{deferred} = $deferred;
                                 $self->{skip} += 1;
                             }
                             $self->{loaded} = 1;
-                        }
-                    }
-                }
+                        } ## end else [ if ( UNIVERSAL::isa( MT...))]
+                    } ## end if ($obj)
+                } ## end if ( 'author' eq $name)
                 elsif ( 'template' eq $name ) {
                     if ( !$column_data{blog_id} ) {
-                        $obj = $class->load(
-                            {   blog_id => 0,
-                                (   $column_data{identifier}
-                                    ? ( identifier =>
-                                            $column_data{identifier} )
-                                    : ( name => $column_data{name} )
-                                ),
+                        $obj =
+                          $class->load( {
+                               blog_id => 0,
+                               (
+                                  $column_data{identifier}
+                                  ? ( identifier => $column_data{identifier} )
+                                  : ( name => $column_data{name} )
+                               ),
                             }
-                        );
+                          );
                         if ($obj) {
                             my $old_id = delete $column_data{id};
                             $objects->{"$class#$old_id"} = $obj;
                             if ( $self->{overwrite_template} ) {
                                 my %realcolumns = map {
                                     $_ =>
-                                        _decode( delete( $column_data{$_} ) )
+                                      _decode( delete( $column_data{$_} ) )
                                 } @{ $obj->column_names };
                                 $obj->set_values( \%realcolumns );
                                 $obj->$_( $column_data{$_} )
-                                    foreach keys(%column_data);
+                                  foreach keys(%column_data);
                                 $self->{current} = $obj;
                                 $self->{loaded}  = 1;
                             }
@@ -225,21 +228,23 @@ sub start_element {
                                 $self->{skip} += 1;
                             }
                         }
-                    }
-                }
+                    } ## end if ( !$column_data{blog_id...})
+                } ## end elsif ( 'template' eq $name)
                 elsif ( 'filter' eq $name ) {
-                    if ($objects->{ "MT::Author#"
-                                . $column_data{author_id} } )
+                    if (
+                         $objects->{ "MT::Author#"
+                               . $column_data{author_id} } )
                     {
-                        $obj = $class->load(
-                            {   author_id => $column_data{author_id},
-                                label     => $column_data{label},
-                                object_ds => $column_data{object_ds},
-                            }
-                        );
+                        $obj =
+                          $class->load( {
+                                        author_id => $column_data{author_id},
+                                        label     => $column_data{label},
+                                        object_ds => $column_data{object_ds},
+                                      }
+                          );
                         if ($obj) {
                             $obj->restore_parent_ids( \%column_data,
-                                $objects );
+                                                      $objects );
                             my $old_id = $column_data{id};
                             $objects->{"$class#$old_id"} = $obj;
                             $self->{current}             = $obj;
@@ -247,8 +252,8 @@ sub start_element {
 
                             $self->{skip} += 1;
                         }
-                    }
-                }
+                    } ## end if ( $objects->{ "MT::Author#"...})
+                } ## end elsif ( 'filter' eq $name)
 
                 unless ($obj) {
                     $obj = $class->new;
@@ -258,18 +263,18 @@ sub start_element {
                     # Pass through even if an blog doesn't restore
                     # the parent object
                     my $success
-                        = $obj->restore_parent_ids( \%column_data, $objects );
+                      = $obj->restore_parent_ids( \%column_data, $objects );
                     if ( $success || ( !$success && 'blog' eq $name ) ) {
                         require MT::Meta;
                         my @metacolumns
-                            = MT::Meta->metadata_by_class( ref($obj) );
+                          = MT::Meta->metadata_by_class( ref($obj) );
                         my %metacolumns
-                            = map { $_->{name} => $_->{type} } @metacolumns;
+                          = map { $_->{name} => $_->{type} } @metacolumns;
                         $self->{metacolumns}{ ref($obj) } = \%metacolumns;
                         my %realcolumn_data
-                            = map { $_ => _decode( $column_data{$_} ) }
-                            grep { !exists( $metacolumns{$_} ) }
-                            keys %column_data;
+                          = map { $_ => _decode( $column_data{$_} ) }
+                          grep { !exists( $metacolumns{$_} ) }
+                          keys %column_data;
 
                         if ( !$success && 'blog' eq $name ) {
                             $realcolumn_data{parent_id} = undef;
@@ -277,33 +282,33 @@ sub start_element {
 
                         $obj->set_values( \%realcolumn_data );
                         $obj->column( 'external_id',
-                            $realcolumn_data{external_id} )
-                            if $name eq 'author'
-                                && defined $realcolumn_data{external_id};
+                                      $realcolumn_data{external_id} )
+                          if $name eq 'author'
+                              && defined $realcolumn_data{external_id};
                         foreach my $metacol ( keys %metacolumns ) {
                             next
-                                if ( 'vclob' eq $metacolumns{$metacol} )
-                                || ( 'vblob' eq $metacolumns{$metacol} );
+                              if ( 'vclob' eq $metacolumns{$metacol} )
+                              || ( 'vblob' eq $metacolumns{$metacol} );
                             $obj->$metacol( $column_data{$metacol} );
                         }
                         $self->{current} = $obj;
-                    }
+                    } ## end if ( $success || ( !$success...))
                     else {
                         $deferred->{ $class . '#' . $column_data{id} } = 1;
                         $self->{deferred} = $deferred;
                         $self->{skip} += 1;
                     }
-                }
-            }
-        }
+                } ## end unless ( $obj->id )
+            } ## end else
+        } ## end if ( MT::BackupRestore::NS_MOVABLETYPE...)
         else {
             my $obj = MT->run_callbacks( "Restore.$name:$ns",
-                $data, $objects, $deferred, $callback );
+                                      $data, $objects, $deferred, $callback );
             $self->{current} = $obj if defined($obj) && ( '1' ne $obj );
         }
-    }
+    } ## end else [ if ( my $current = $self...)]
     1;
-}
+} ## end sub start_element
 
 sub characters {
     my $self = shift;
@@ -362,17 +367,17 @@ sub end_element {
                     }
                 }
             }
-        }
+        } ## end if ( my $text_data = delete...)
         else {
             my $old_id = $obj->id;
-            unless (
-                (      ( 'author' eq $name )
-                    || ( 'template'   eq $name )
-                    || ( 'filter'     eq $name )
-                    || ( 'plugindata' eq $name )
-                )
-                && ( exists $self->{loaded} )
-                )
+            unless ( (
+                          ( 'author' eq $name )
+                       || ( 'template'   eq $name )
+                       || ( 'filter'     eq $name )
+                       || ( 'plugindata' eq $name )
+                     )
+                     && ( exists $self->{loaded} )
+              )
             {
                 delete $obj->{column_values}->{id};
                 delete $obj->{changed_cols}->{id};
@@ -382,19 +387,20 @@ sub end_element {
             }
             my $exists = 0;
             if ( 'tag' eq $name ) {
-                if (my $tag = MT::Tag->load(
-                        { name   => $obj->name },
-                        { binary => { name => 1 } }
-                    )
-                    )
+                if (
+                     my $tag =
+                     MT::Tag->load( { name   => $obj->name },
+                                    { binary => { name => 1 } } )
+                  )
                 {
                     $exists = 1;
                     $self->{objects}->{"$class#$old_id"} = $tag;
                     $self->{callback}->("\n");
                     $self->{callback}->(
-                        MT->translate(
-                            "Tag '[_1]' exists in the system.", $obj->name
-                        )
+                            MT->translate(
+                                           "Tag '[_1]' exists in the system.",
+                                           $obj->name
+                            )
                     );
                 }
             }
@@ -422,30 +428,32 @@ sub end_element {
                     $self->{objects}->{"$class#$old_id"} = $tb;
                     my $records = $self->{records};
                     $self->{callback}->(
-                        $self->{state} . " "
-                            . MT->translate(
-                            "[_1] records restored...", $records
-                            ),
-                        $data->{LocalName}
+                                      $self->{state} . " "
+                                        . MT->translate(
+                                          "[_1] records restored...", $records
+                                        ),
+                                      $data->{LocalName}
                     ) if $records && ( $records % 10 == 0 );
                     $self->{records} = $records + 1;
-                }
-            }
+                } ## end if ( my $tb = $class->load...)
+            } ## end elsif ( 'trackback' eq $name)
             elsif ( 'permission' eq $name ) {
-                my $perm = $class->exist(
-                    {   author_id => $obj->author_id,
-                        blog_id   => $obj->blog_id
-                    }
-                );
+                my $perm =
+                  $class->exist( {
+                                   author_id => $obj->author_id,
+                                   blog_id   => $obj->blog_id
+                                 }
+                  );
                 $exists = 1 if $perm;
             }
             elsif ( 'objectscore' eq $name ) {
-                my $score = $class->exist(
-                    {   author_id => $obj->author_id,
-                        object_id => $obj->object_id,
-                        object_ds => $obj->object_ds,
-                    }
-                );
+                my $score =
+                  $class->exist( {
+                                   author_id => $obj->author_id,
+                                   object_id => $obj->object_id,
+                                   object_ds => $obj->object_ds,
+                                 }
+                  );
                 $exists = 1 if $score;
             }
             elsif ( 'field' eq $name ) {
@@ -453,10 +461,7 @@ sub end_element {
                 # Available in propack only
                 if ( $obj->blog_id == 0 ) {
                     my $field = $class->exist(
-                        {   blog_id  => 0,
-                            basename => $obj->basename,
-                        }
-                    );
+                              { blog_id => 0, basename => $obj->basename, } );
                     $exists = 1 if $field;
                 }
             }
@@ -464,9 +469,9 @@ sub end_element {
                 my $role = $class->load( { name => $obj->name } );
                 if ($role) {
                     my $old_perms = join '',
-                        sort { $a <=> $b } split( ',', $obj->permissions );
+                      sort { $a <=> $b } split( ',', $obj->permissions );
                     my $cur_perms = join '',
-                        sort { $a <=> $b } split( ',', $role->permissions );
+                      sort { $a <=> $b } split( ',', $role->permissions );
                     if ( $old_perms eq $cur_perms ) {
                         $self->{objects}->{"$class#$old_id"} = $role;
                         $exists = 1;
@@ -480,26 +485,27 @@ sub end_element {
                             $new_name = $obj->name . ' (' . ++$i . ')';
                         }
                         $obj->name($new_name);
-                        MT->log(
-                            {   message => MT->translate(
-                                    "The role '[_1]' has been renamed to '[_2]' because a role with the same name already exists.",
-                                    $role->name,
-                                    $new_name
-                                ),
-                                level    => MT::Log::INFO(),
-                                class    => 'system',
-                                category => 'restore',
+                        MT->log( {
+                               message =>
+                                 MT->translate(
+                                   "The role '[_1]' has been renamed to '[_2]' because a role with the same name already exists.",
+                                   $role->name,
+                                   $new_name
+                                 ),
+                               level    => MT::Log::INFO(),
+                               class    => 'system',
+                               category => 'restore',
                             }
                         );
-                    }
-                }
-            }
+                    } ## end else [ if ( $old_perms eq $cur_perms)]
+                } ## end if ($role)
+            } ## end elsif ( 'role' eq $name )
             elsif ( 'filter' eq $name ) {
                 my $objects = $self->{objects};
 
                 # Callback for restoring ID in the filter items
                 MT->run_callbacks( 'restore_filter_item_ids', $obj, undef,
-                    $objects );
+                                   $objects );
             }
             elsif ( 'plugindata' eq $name ) {
 
@@ -508,8 +514,8 @@ sub end_element {
 
                 if ( $obj->key !~ /^configuration:blog:(\d+)$/i ) {
                     if ( my $obj
-                        = MT->model('plugindata')
-                        ->load( { key => $obj->key, } ) )
+                         = MT->model('plugindata')
+                         ->load( { key => $obj->key, } ) )
                     {
                         $exists = 1;
                         $self->{callback}->("\n");
@@ -521,7 +527,7 @@ sub end_element {
                         );
                     }
                 }
-            }
+            } ## end elsif ( 'plugindata' eq $name)
             unless ($exists) {
                 my $result;
                 if ( $obj->id ) {
@@ -537,28 +543,28 @@ sub end_element {
                     $self->{objects}->{"$class#$old_id"} = $obj;
                     my $records = $self->{records};
                     $self->{callback}->(
-                        $self->{state} . " "
-                            . MT->translate(
-                            "[_1] records restored...", $records
-                            ),
-                        $data->{LocalName}
+                                      $self->{state} . " "
+                                        . MT->translate(
+                                          "[_1] records restored...", $records
+                                        ),
+                                      $data->{LocalName}
                     ) if $records && ( $records % 10 == 0 );
                     $self->{records} = $records + 1;
                     my $cb = "restored.$name";
                     $cb .= ":$ns"
-                        if MT::BackupRestore::NS_MOVABLETYPE() ne $ns;
+                      if MT::BackupRestore::NS_MOVABLETYPE() ne $ns;
                     MT->run_callbacks( $cb, $obj, $self->{callback} );
                     $obj->call_trigger( 'post_save', $obj );
-                }
+                } ## end if ($result)
                 else {
                     push @{ $self->{errors} }, $obj->errstr;
                     $self->{callback}->( $obj->errstr );
                 }
-            }
+            } ## end unless ($exists)
             delete $self->{current};
-        }
-    }
-}
+        } ## end else [ if ( my $text_data = delete...)]
+    } ## end if ( my $obj = $self->...)
+} ## end sub end_element
 
 sub end_document {
     my $self = shift;
@@ -568,9 +574,11 @@ sub end_document {
         my $state   = $self->{state};
         my $records = $self->{records};
         $self->{callback}->(
-            $state . " "
-                . MT->translate( "[_1] records restored.", $records ),
-            $c->class_type || $c->datasource
+                             $state . " "
+                               . MT->translate(
+                                            "[_1] records restored.", $records
+                               ),
+                             $c->class_type || $c->datasource
         );
     }
 
@@ -578,8 +586,7 @@ sub end_document {
 }
 
 sub _decode {
-    Encode::decode_utf8( $_[0] )
-      unless Encode::is_utf8( $_[0] );
+    Encode::decode_utf8( $_[0] ) unless Encode::is_utf8( $_[0] );
 }
 
 1;

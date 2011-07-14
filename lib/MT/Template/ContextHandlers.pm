@@ -47,7 +47,7 @@ sub core_tags {
             'Else'    => \&_hdlr_else,
             'ElseIf'  => \&_hdlr_elseif,
 
-            'IfImageSupport?' => \&_hdlr_if_image_support,
+            'IfImageSupport?'    => \&_hdlr_if_image_support,
             'IfPluginInstalled?' => \&_hdlr_if_plugin_installed,
 
             'EntryIfTagged?' => \&_hdlr_entry_if_tagged,
@@ -2487,7 +2487,9 @@ sub _hdlr_app_blog_selector {
         }
         return $code->(@_);
     }
-    return $ctx->error("No blog selector was registered or found. The app MUST have a blog selector.");
+    return $ctx->error(
+        "No blog selector was registered or found. The app MUST have a blog selector."
+    );
 }
 
 ###########################################################################
@@ -3853,12 +3855,16 @@ Example:
 sub _hdlr_if_plugin_installed {
     my ( $ctx, $args, $cond ) = @_;
 
-    my $name = $args->{plugin}
-        || return $ctx->error( MT->translate('No plugin attribute specified in <mt:IfPluginInstalled/>') );
-    my $plugin = MT->component( $name )
-        || return 0;
-    return 0 if ( $args->{version_min} && $plugin->version < $args->{version_min} );
-    return 0 if ( $args->{version_max} && $plugin->version > $args->{version_max} );
+    my $name = $args->{plugin} || return
+      $ctx->error(
+               MT->translate(
+                   'No plugin attribute specified in <mt:IfPluginInstalled/>')
+      );
+    my $plugin = MT->component($name) || return 0;
+    return 0
+      if ( $args->{version_min} && $plugin->version < $args->{version_min} );
+    return 0
+      if ( $args->{version_max} && $plugin->version > $args->{version_max} );
 
     return 1;
 }
@@ -5320,17 +5326,18 @@ B<Example:> Passing Parameters to a Template Module
         my $cache_key = $arg->{cache_key} || $arg->{key};
         if ( !$cache_key ) {
             require Digest::MD5;
-            $cache_key = Digest::MD5::md5_hex(
-                Encode::encode_utf8(
-                          'blog::' 
-                        . $blog_id
-                        . '::template_'
-                        . $type . '::'
-                        . $tmpl_name
-                )
-            );
+            $cache_key =
+              Digest::MD5::md5_hex(
+                                    Encode::encode_utf8(
+                                                             'blog::' 
+                                                           . $blog_id
+                                                           . '::template_'
+                                                           . $type . '::'
+                                                           . $tmpl_name
+                                    )
+              );
         }
-        
+
         my $ttl
           = exists $arg->{ttl}          ? $arg->{ttl}
           : ( $cache_expire_type == 1 ) ? $tmpl->cache_expire_interval
@@ -8726,9 +8733,10 @@ sub _hdlr_entries {
 
     # for the case that we want to use mt:Entries with search.cgi
     # send to MT::Template::Search if searh results are found
-    if (    $ctx->stash('results')
-        and defined $args->{search_results}
-        and         $args->{search_results} == 1 ) {
+    if (     $ctx->stash('results')
+         and defined $args->{search_results}
+         and $args->{search_results} == 1 )
+    {
         require MT::Template::Context::Search;
         return MT::Template::Context::Search::_hdlr_results( $ctx, $args,
                                                              $cond );
@@ -21734,8 +21742,8 @@ sub _hdlr_pager_block {
         local $vars->{__even__}    = ( $i % 2 ) == 0;
         local $vars->{__counter__} = $i;
         local $vars->{__value__}   = $i;
-        local $vars->{__end__} = $pages;
-        local $vars->{__current__} =  $limit ? $offset / $limit + 1 : 1 ;
+        local $vars->{__end__}     = $pages;
+        local $vars->{__current__} = $limit ? $offset / $limit + 1 : 1;
 
         defined(
                my $out =
@@ -21813,15 +21821,15 @@ sub _hdlr_pager_link {
     $link .= "limit=" . encode_url($limit);
 
     #$link .= "&offset=$offset" if $offset;
-    $link .= "&category="     . encode_url($category)     if $category;
-    $link .= "&author="       . encode_url($author)       if $author;
-    $link .= "&page="         . encode_url($page)         if $page;
-    $link .= "&year="         . encode_url($year)         if $year;
-    $link .= "&month="        . encode_url($month)        if $month;
-    $link .= "&day="          . encode_url($day)          if $day;
+    $link .= "&category=" . encode_url($category)         if $category;
+    $link .= "&author=" . encode_url($author)             if $author;
+    $link .= "&page=" . encode_url($page)                 if $page;
+    $link .= "&year=" . encode_url($year)                 if $year;
+    $link .= "&month=" . encode_url($month)               if $month;
+    $link .= "&day=" . encode_url($day)                   if $day;
     $link .= "&archive_type=" . encode_url($archive_type) if $archive_type;
-    $link .= "&template_id="  . encode_url($template_id)  if $template_id;
-    $link .= "&blog_id="      . encode_url($blog_id)      if $blog_id;
+    $link .= "&template_id=" . encode_url($template_id)   if $template_id;
+    $link .= "&blog_id=" . encode_url($blog_id)           if $blog_id;
     return $link;
 } ## end sub _hdlr_pager_link
 

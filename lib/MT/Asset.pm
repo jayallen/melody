@@ -40,17 +40,14 @@ __PACKAGE__->install_properties( {
                 }
 );
 
-sub list_default_terms {{
-    class => '*',
-}}
+sub list_default_terms {
+    { class => '*', };
+}
 
 sub list_props {
     return {
-        id => {
-            base    => '__virtual.id',
-            display => 'optional',
-            order   => 100,
-        },
+        id =>
+          { base => '__virtual.id', display => 'optional', order => 100, },
         label => {
             auto      => 1,
             label     => 'Label',
@@ -59,41 +56,41 @@ sub list_props {
             bulk_html => sub {
                 my $prop = shift;
                 my ( $objs, $app ) = @_;
-                my @userpics = MT->model('objecttag')->load(
-                    {   blog_id           => 0,
-                        object_datasource => 'asset',
-                        object_id         => [ map { $_->id } @$objs ],
-                    },
-                    {   fetchonly => { object_id => 1 },
-                        join      => MT->model('tag')->join_on(
-                            undef,
-                            {   name => '@userpic',
-                                id   => \'= objecttag_tag_id'
-                            }
-                        ),
-                    }
+                my @userpics = MT->model('objecttag')->load( {
+                                      blog_id           => 0,
+                                      object_datasource => 'asset',
+                                      object_id => [ map { $_->id } @$objs ],
+                                    },
+                                    {
+                                      fetchonly => { object_id => 1 },
+                                      join => MT->model('tag')->join_on(
+                                                undef,
+                                                {
+                                                  name => '@userpic',
+                                                  id => \'= objecttag_tag_id'
+                                                }
+                                      ),
+                                    }
                 );
                 my %is_userpic = map { $_->object_id => 1 } @userpics;
                 my @rows;
                 for my $obj (@$objs) {
                     my $id = $obj->id;
                     my $label
-                        = MT::Util::remove_html( $obj->label
-                            || $obj->file_name
-                            || 'Untitled' );
+                      = MT::Util::remove_html(    $obj->label
+                                               || $obj->file_name
+                                               || 'Untitled' );
                     my $blog_id
-                        = $obj->has_column('blog_id') ? $obj->blog_id
-                        : $app->blog                  ? $app->blog->id
-                        :                               0;
-                    my $type      = $prop->object_type;
-                    my $edit_link = $app->uri(
+                      = $obj->has_column('blog_id') ? $obj->blog_id
+                      : $app->blog                  ? $app->blog->id
+                      :                               0;
+                    my $type = $prop->object_type;
+                    my $edit_link =
+                      $app->uri(
                         mode => 'view',
-                        args => {
-                            _type   => $type,
-                            id      => $id,
-                            blog_id => $blog_id,
-                        },
-                    );
+                        args =>
+                          { _type => $type, id => $id, blog_id => $blog_id, },
+                      );
                     my $class_type = $obj->class_type;
 
                     require MT::FileMgr;
@@ -102,59 +99,62 @@ sub list_props {
                     ## FIXME: Hardcoded
                     my $thumb_size = 45;
                     my $userpic_sticker
-                        = $is_userpic{ $obj->id }
-                        ? q{<span class="inuse-userpic sticky-label">Userpic</span>}
-                        : '';
+                      = $is_userpic{ $obj->id }
+                      ? q{<span class="inuse-userpic sticky-label">Userpic</span>}
+                      : '';
 
                     if ( $file_path && $fmgr->exists($file_path) ) {
                         my $img
-                            = MT->static_path
-                            . 'images/asset/'
-                            . $class_type
-                            . '-45.png';
+                          = MT->static_path
+                          . 'images/asset/'
+                          . $class_type
+                          . '-45.png';
                         if ( $obj->has_thumbnail ) {
                             my ( $orig_width, $orig_height )
-                                = ( $obj->image_width, $obj->image_height );
+                              = ( $obj->image_width, $obj->image_height );
                             my ( $thumbnail_url, $thumbnail_width,
-                                $thumbnail_height );
-                            if (   $orig_width > $thumb_size
-                                && $orig_height > $thumb_size )
+                                 $thumbnail_height );
+                            if (    $orig_width > $thumb_size
+                                 && $orig_height > $thumb_size )
                             {
-                                (   $thumbnail_url, $thumbnail_width,
-                                    $thumbnail_height
-                                    )
-                                    = $obj->thumbnail_url(
-                                    Height => $thumb_size,
-                                    Width  => $thumb_size,
-                                    Square => 1
-                                    );
+                                (
+                                   $thumbnail_url, $thumbnail_width,
+                                   $thumbnail_height
+                                  )
+                                  = $obj->thumbnail_url(
+                                                        Height => $thumb_size,
+                                                        Width  => $thumb_size,
+                                                        Square => 1
+                                  );
                             }
                             elsif ( $orig_width > $thumb_size ) {
-                                (   $thumbnail_url, $thumbnail_width,
-                                    $thumbnail_height
-                                    )
-                                    = $obj->thumbnail_url(
-                                    Width => $thumb_size, );
+                                (
+                                   $thumbnail_url, $thumbnail_width,
+                                   $thumbnail_height
+                                  )
+                                  = $obj->thumbnail_url( Width => $thumb_size,
+                                  );
                             }
                             elsif ( $orig_height > $thumb_size ) {
-                                (   $thumbnail_url, $thumbnail_width,
-                                    $thumbnail_height
-                                    )
-                                    = $obj->thumbnail_url(
-                                    Height => $thumb_size, );
+                                (
+                                   $thumbnail_url, $thumbnail_width,
+                                   $thumbnail_height
+                                  )
+                                  = $obj->thumbnail_url(
+                                                     Height => $thumb_size, );
                             }
                             else {
-                                (   $thumbnail_url, $thumbnail_width,
-                                    $thumbnail_height
-                                    )
-                                    = ( $obj->url, $orig_width,
-                                    $orig_height );
+                                (
+                                   $thumbnail_url, $thumbnail_width,
+                                   $thumbnail_height
+                                  )
+                                  = ( $obj->url, $orig_width, $orig_height );
                             }
 
-                            my $thumbnail_width_offset = int(
-                                ( $thumb_size - $thumbnail_width ) / 2 );
+                            my $thumbnail_width_offset
+                              = int( ( $thumb_size - $thumbnail_width ) / 2 );
                             my $thumbnail_height_offset = int(
-                                ( $thumb_size - $thumbnail_height ) / 2 );
+                                    ( $thumb_size - $thumbnail_height ) / 2 );
 
                             push @rows, qq{
                                 <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker
@@ -162,7 +162,7 @@ sub list_props {
                                   <img alt="" src="$thumbnail_url" style="padding: ${thumbnail_height_offset}px ${thumbnail_width_offset}px" />
                                 </div>
                             };
-                        }
+                        } ## end if ( $obj->has_thumbnail)
                         else {
                             push @rows, qq{
                                 <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker
@@ -171,13 +171,13 @@ sub list_props {
                                 </div>
                             };
                         }
-                    }
+                    } ## end if ( $file_path && $fmgr...)
                     else {
                         my $img
-                            = MT->static_path
-                            . 'images/asset/'
-                            . $class_type
-                            . '-warning-45.png';
+                          = MT->static_path
+                          . 'images/asset/'
+                          . $class_type
+                          . '-warning-45.png';
                         push @rows, qq{
                             <span class="title"><a href="$edit_link">$label</a></span>$userpic_sticker
                             <div class="file-type missing picture small">
@@ -185,29 +185,24 @@ sub list_props {
                             </div>
                         };
                     }
-                }
+                } ## end for my $obj (@$objs)
                 @rows;
             },
         },
-        author_name => {
-            base  => '__virtual.author_name',
-            order => 300,
-        },
-        blog_name => {
-            base    => '__virtual.blog_name',
-            order   => 400,
-            display => 'default',
+        author_name => { base => '__virtual.author_name', order => 300, },
+        blog_name   => {
+                       base    => '__virtual.blog_name',
+                       order   => 400,
+                       display => 'default',
         },
         created_on => {
-            base    => '__virtual.created_on',
-            order   => 500,
-            display => 'default',
+                        base    => '__virtual.created_on',
+                        order   => 500,
+                        display => 'default',
         },
 
-        modified_on => {
-            base    => '__virtual.modified_on',
-            display => 'none',
-        },
+        modified_on =>
+          { base => '__virtual.modified_on', display => 'none', },
         class => {
             label   => 'Type',
             col     => 'class',
@@ -222,28 +217,29 @@ sub list_props {
                 return;
             },
             ## FIXME: Get these values from registry or somewhere...
-            single_select_options => [
-                { label => MT->translate('Image'), value => 'image', },
-                { label => MT->translate('Audio'), value => 'audio', },
-                { label => MT->translate('Video'), value => 'video', },
-                { label => MT->translate('File'),  value => 'file', },
+            single_select_options => [ {
+                                          label => MT->translate('Image'),
+                                          value => 'image',
+                                       },
+                                       {
+                                          label => MT->translate('Audio'),
+                                          value => 'audio',
+                                       },
+                                       {
+                                          label => MT->translate('Video'),
+                                          value => 'video',
+                                       },
+                                       {
+                                          label => MT->translate('File'),
+                                          value => 'file',
+                                       },
             ],
         },
-        description => {
-            auto    => 1,
-            display => 'none',
-            label   => 'Description',
-        },
-        file_name => {
-            auto    => 1,
-            display => 'none',
-            label   => 'Filename',
-        },
-        file_ext => {
-            auto    => 1,
-            display => 'none',
-            label   => 'File Extension',
-        },
+        description =>
+          { auto => 1, display => 'none', label => 'Description', },
+        file_name => { auto => 1, display => 'none', label => 'Filename', },
+        file_ext =>
+          { auto => 1, display => 'none', label => 'File Extension', },
         image_width => {
             label     => 'Pixel width',
             base      => '__virtual.integer',
@@ -262,24 +258,22 @@ sub list_props {
                 my $super_terms = $prop->super(@_);
                 $db_args->{joins} ||= [];
                 push @{ $db_args->{joins} },
-                    MT->model('asset')->meta_pkg->join_on(
-                    undef,
-                    {   type     => $prop->meta_type,
-                        asset_id => \"= asset_id",
-                        %$super_terms,
-                    },
-                    );
+                  MT->model('asset')->meta_pkg->join_on(
+                                                 undef,
+                                                 {
+                                                   type => $prop->meta_type,
+                                                   asset_id => \"= asset_id",
+                                                   %$super_terms,
+                                                 },
+                  );
             },
         },
         image_height => {
-            base      => 'asset.image_width',
-            label     => 'Pixel height',
-            meta_type => 'image_height',
+                          base      => 'asset.image_width',
+                          label     => 'Pixel height',
+                          meta_type => 'image_height',
         },
-        tag => {
-            base         => '__virtual.tag',
-            tagged_class => '*',
-        },
+        tag            => { base => '__virtual.tag', tagged_class => '*', },
         except_userpic => {
             base      => '__virtual.hidden',
             label     => 'Except Userpic',
@@ -291,34 +285,37 @@ sub list_props {
                 my ( $args, $db_terms, $db_args ) = @_;
 
                 my $tag = MT->model('tag')->load(
-                    { name => '@userpic', },
-                    {   fetchonly => { id   => 1, },
-                        binary    => { name => 1 },
-                    }
+                                                 { name => '@userpic', },
+                                                 {
+                                                   fetchonly => { id => 1, },
+                                                   binary => { name => 1 },
+                                                 }
                 );
 
                 if ($tag) {
                     $db_args->{joins} ||= [];
                     push @{ $db_args->{joins} },
-                        MT->model('objecttag')->join_on(
-                        undef,
-                        [   [   { tag_id => { not => $tag->id }, },
-                                '-or',
-                                { tag_id => \'IS NULL', },
-                            ],
-                            '-and',
-                            [   {   object_datasource => MT::Asset->datasource
-                                },
-                                '-or',
-                                { object_datasource => \'IS NULL' },
-                            ],
-                        ],
-                        {   unique    => 1,
-                            type      => 'left',
-                            condition => 'object_id',
-                        }
-                        );
-                }
+                      MT->model('objecttag')->join_on(
+                         undef,
+                         [ [
+                              { tag_id => { not => $tag->id }, },
+                              '-or',
+                              { tag_id => \'IS NULL', },
+                           ],
+                           '-and',
+                           [
+                              { object_datasource => MT::Asset->datasource },
+                              '-or',
+                              { object_datasource => \'IS NULL' },
+                           ],
+                         ],
+                         {
+                           unique    => 1,
+                           type      => 'left',
+                           condition => 'object_id',
+                         }
+                      );
+                } ## end if ($tag)
             },
         },
         author_status => {
@@ -332,39 +329,45 @@ sub list_props {
                 if ( $val eq 'deleted' ) {
                     $base_args->{joins} ||= [];
                     push @{ $base_args->{joins} },
-                        MT->model('author')->join_on(
-                        undef,
-                        { id => \'is null', },
-                        {   type      => 'left',
-                            condition => { id => \'= asset_created_by' },
-                        },
-                        );
+                      MT->model('author')->join_on(
+                              undef,
+                              { id => \'is null', },
+                              {
+                                type      => 'left',
+                                condition => { id => \'= asset_created_by' },
+                              },
+                      );
                 }
                 else {
                     my %statuses = (
-                        active   => MT::Author::ACTIVE(),
-                        disabled => MT::Author::INACTIVE(),
-                        pending  => MT::Author::PENDING(),
+                                     active   => MT::Author::ACTIVE(),
+                                     disabled => MT::Author::INACTIVE(),
+                                     pending  => MT::Author::PENDING(),
                     );
                     my $status = $statuses{ $args->{value} };
                     $base_args->{joins} ||= [];
                     push @{ $base_args->{joins} },
-                        MT->model('author')->join_on(
-                        undef,
-                        {   id     => \'= asset_created_by',
-                            status => $status,
-                        },
-                        );
+                      MT->model('author')->join_on( undef,
+                          { id => \'= asset_created_by', status => $status, },
+                      );
                 }
             },
-            single_select_options => [
-                { label => MT->translate('Deleted'),  value => 'deleted', },
-                { label => MT->translate('Enabled'),  value => 'active', },
-                { label => MT->translate('Disabled'), value => 'disabled', },
+            single_select_options => [ {
+                                          label => MT->translate('Deleted'),
+                                          value => 'deleted',
+                                       },
+                                       {
+                                          label => MT->translate('Enabled'),
+                                          value => 'active',
+                                       },
+                                       {
+                                          label => MT->translate('Disabled'),
+                                          value => 'disabled',
+                                       },
             ],
         },
     };
-}
+} ## end sub list_props
 
 require MT::Asset::Image;
 require MT::Asset::Audio;

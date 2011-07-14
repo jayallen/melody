@@ -163,42 +163,47 @@ sub edit_role {
     } ## end if ($id)
 
     my $all_perm_flags = MT::Permission->perms('blog');
-    my $param_groups = {};
+    my $param_groups   = {};
     foreach my $perm (@$all_perm_flags) {
-        $param_groups->{$perm->[3] } = [] unless $param_groups->{$perm->[3] };
+        $param_groups->{ $perm->[3] } = []
+          unless $param_groups->{ $perm->[3] };
         my $p = {
-            'have_access-' . $perm->[0] => ( $role && $role->has( $perm->[0] ) ) ? 1 : 0,
-            'prompt-' .      $perm->[0] => $perm->[1]
+              'have_access-'
+                . $perm->[0] => ( $role && $role->has( $perm->[0] ) ) ? 1 : 0,
+              'prompt-' . $perm->[0] => $perm->[1]
         };
-        push (@{ $param_groups->{$perm->[3]} }, $p );
+        push( @{ $param_groups->{ $perm->[3] } }, $p );
     }
 
     my $groups = $app->registry('permission_groups');
-    my @keys = keys(%$groups);
+    my @keys   = keys(%$groups);
     my @param_groups;
     foreach my $k (@keys) {
         next if $groups->{$k}->{system};
-        push (@param_groups, {
-            group_id => $k,
-            group_label => $groups->{$k}->{label}(),
-            group_perms => [],
-            group_order => $groups->{$k}->{order} || 0
-        });
+        push(
+              @param_groups,
+              {
+                 group_id    => $k,
+                 group_label => $groups->{$k}->{label}(),
+                 group_perms => [],
+                 group_order => $groups->{$k}->{order} || 0
+              }
+        );
     }
 
     foreach my $p (@param_groups) {
-        my @grepped_perms = grep {
-            $_ if $_->[3] eq $p->{group_id}
-        } @$all_perm_flags;
-        
+        my @grepped_perms
+          = grep { $_ if $_->[3] eq $p->{group_id} } @$all_perm_flags;
+
         @grepped_perms = sort { $a->[2] <=> $b->[2] } @grepped_perms;
 
-        my @perms = map {
-            {
-                 perm_id => $_->[0],
-                 perm_label => $_->[1],
-                 'have_access-' . $_->[0] => ( $role && $role->has( $_->[0] ) ) ? 1 : 0
-                 
+        my @perms = map { {
+               perm_id    => $_->[0],
+               perm_label => $_->[1],
+               'have_access-' . $_->[0] => ( $role && $role->has( $_->[0] ) )
+               ? 1
+               : 0
+
             }
         } @grepped_perms;
         $p->{group_perms} = \@perms;

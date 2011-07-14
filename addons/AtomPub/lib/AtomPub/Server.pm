@@ -22,15 +22,13 @@ use MT::Author;
 sub init {
     my $app = shift;
     $app->{no_read_body} = 1
-        if $app->request_method eq 'POST' || $app->request_method eq 'PUT';
+      if $app->request_method eq 'POST' || $app->request_method eq 'PUT';
     $app->SUPER::init(@_) or return $app->error("Initialization failed");
     $app->request_content
-        if $app->request_method eq 'POST' || $app->request_method eq 'PUT';
-    $app->add_methods(
-        handle => \&handle,
-    );
-    $app->{default_mode} = 'handle';
-    $app->{is_admin} = 0;
+      if $app->request_method eq 'POST' || $app->request_method eq 'PUT';
+    $app->add_methods( handle => \&handle, );
+    $app->{default_mode}  = 'handle';
+    $app->{is_admin}      = 0;
     $app->{warning_trace} = 0;
     $app;
 }
@@ -39,17 +37,17 @@ sub handle {
     my $app = shift;
 
     my $out = eval {
-        (my $pi = $app->path_info) =~ s!^/!!;
-        my($subapp, @args) = split /\//, $pi;
+        ( my $pi = $app->path_info ) =~ s!^/!!;
+        my ( $subapp, @args ) = split /\//, $pi;
         $app->{param} = {};
         for my $arg (@args) {
-            my($k, $v) = split /=/, $arg, 2;
+            my ( $k, $v ) = split /=/, $arg, 2;
             $app->{param}{$k} = $v;
         }
 
         my $apps = $app->config->AtomApp;
 
-        if (my $class = $apps->{$subapp}) {
+        if ( my $class = $apps->{$subapp} ) {
             eval "require $class;";
             bless $app, $class;
         }
@@ -57,12 +55,12 @@ sub handle {
         return unless defined $out;
         return $out;
     };
-    if (my $e = $@) {
-        $app->error(500, $e);
+    if ( my $e = $@ ) {
+        $app->error( 500, $e );
         $app->show_error("Internal Error");
     }
     return $out;
-}
+} ## end sub handle
 
 sub handle_request {
     1;
@@ -70,14 +68,14 @@ sub handle_request {
 
 sub error {
     my $app = shift;
-    my($code, $msg) = @_;
+    my ( $code, $msg ) = @_;
     return unless ref($app);
-    if ($code && $msg) {
-        chomp($msg = encode_xml($msg)); 
+    if ( $code && $msg ) {
+        chomp( $msg = encode_xml($msg) );
         $app->response_code($code);
         $app->response_message($msg);
-        $app->response_content_type('text/xml'); 
-        $app->response_content("<error>$msg</error>"); 
+        $app->response_content_type('text/xml');
+        $app->response_content("<error>$msg</error>");
     }
     elsif ($code) {
         return $app->SUPER::error($code);
@@ -87,45 +85,46 @@ sub error {
 
 sub show_error {
     my $app = shift;
-    my($err) = @_;
-    chomp($err = encode_xml($err));
+    my ($err) = @_;
+    chomp( $err = encode_xml($err) );
     return <<ERR;
 <error>$err</error>
 ERR
 }
 
 sub authenticate {
-    my $app = shift;
+    my $app         = shift;
     my $auth_module = $app->config->AtomAppAuthentication;
     eval "require $auth_module;";
 
-    $auth_module->authenticate($app)
-        or return;
+    $auth_module->authenticate($app) or return;
 
     ## update session so the user will be counted as active
     require MT::Session;
     my $user = $app->{user};
-    my $sess_active = MT::Session->load( { kind => 'UA', name => $user->id } );
-    if (!$sess_active) {
+    my $sess_active
+      = MT::Session->load( { kind => 'UA', name => $user->id } );
+    if ( !$sess_active ) {
         $sess_active = MT::Session->new;
-        $sess_active->id($app->make_magic_token());
-        $sess_active->kind('UA'); # UA == User Activation
-        $sess_active->name($user->id);
+        $sess_active->id( $app->make_magic_token() );
+        $sess_active->kind('UA');    # UA == User Activation
+        $sess_active->name( $user->id );
     }
     $sess_active->start(time);
     $sess_active->save;
     return 1;
-}
+} ## end sub authenticate
 
 sub xml_body {
     my $app = shift;
-    unless (exists $app->{xml_body}) {
+    unless ( exists $app->{xml_body} ) {
         if (LIBXML) {
             my $parser = XML::LibXML->new;
-            $app->{xml_body} = $parser->parse_string($app->request_content);
-        } else {
-            my $xp = XML::XPath->new(xml => $app->request_content);
-            $app->{xml_body} = ($xp->find('/')->get_nodelist)[0];
+            $app->{xml_body} = $parser->parse_string( $app->request_content );
+        }
+        else {
+            my $xp = XML::XPath->new( xml => $app->request_content );
+            $app->{xml_body} = ( $xp->find('/')->get_nodelist )[0];
         }
     }
     $app->{xml_body};
@@ -133,47 +132,52 @@ sub xml_body {
 
 sub atom_body {
     my $app = shift;
-    return AtomPub::Atom::Entry->new(Stream => \$app->request_content)
-        or $app->error(500, AtomPub::Atom::Entry->errstr);
+    return AtomPub::Atom::Entry->new( Stream => \$app->request_content )
+      or $app->error( 500, AtomPub::Atom::Entry->errstr );
 }
 
 # $target_zone is expected to be a number of hours from GMT
 sub iso2ts {
     my $app = shift;
-    my($ts, $target_zone) = @_;
-    return unless $ts =~ /^(\d{4})(?:-?(\d{2})(?:-?(\d\d?)(?:T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-]\d{2}:\d{2}))?)?)?)?/;
-    my($y, $mo, $d, $h, $m, $s, $zone) =
-        ($1, $2 || 1, $3 || 1, $4 || 0, $5 || 0, $6 || 0, $7);
+    my ( $ts, $target_zone ) = @_;
+    return
+      unless $ts
+          =~ /^(\d{4})(?:-?(\d{2})(?:-?(\d\d?)(?:T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-]\d{2}:\d{2}))?)?)?)?/;
+    my ( $y, $mo, $d, $h, $m, $s, $zone )
+      = ( $1, $2 || 1, $3 || 1, $4 || 0, $5 || 0, $6 || 0, $7 );
     if ($zone) {
-        my ($zh, $zm) = $zone =~ /([+-]\d\d):(\d\d)/;
+        my ( $zh, $zm ) = $zone =~ /([+-]\d\d):(\d\d)/;
         use Time::Local qw( timegm );
         my $ts = timegm( $s, $m, $h, $d, $mo - 1, $y - 1900 );
-        if ($zone ne 'Z') {
+        if ( $zone ne 'Z' ) {
             require MT::DateTime;
             my $tz_secs = MT::DateTime->tz_offset_as_seconds($zone);
             $ts -= $tz_secs;
         }
         if ($target_zone) {
-            my $tz_secs = (3600 * int($target_zone) + 
-                           60 * abs($target_zone - int($target_zone)));
+            my $tz_secs = (   3600 * int($target_zone)
+                            + 60 * abs( $target_zone - int($target_zone) ) );
             $ts += $tz_secs;
         }
-        ($s, $m, $h, $d, $mo, $y) = gmtime( $ts );
-        $y += 1900; $mo++;
+        ( $s, $m, $h, $d, $mo, $y ) = gmtime($ts);
+        $y += 1900;
+        $mo++;
     }
-    sprintf("%04d%02d%02d%02d%02d%02d", $y, $mo, $d, $h, $m, $s);
-}
+    sprintf( "%04d%02d%02d%02d%02d%02d", $y, $mo, $d, $h, $m, $s );
+} ## end sub iso2ts
 
 sub iso2epoch {
     my $app = shift;
-    my($ts) = @_;
-    return unless $ts =~ /^(\d{4})(?:-?(\d{2})(?:-?(\d\d?)(?:T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-]\d{2}:\d{2}))?)?)?)?/;
-    my($y, $mo, $d, $h, $m, $s, $zone) =
-        ($1, $2 || 1, $3 || 1, $4 || 0, $5 || 0, $6 || 0, $7);
+    my ($ts) = @_;
+    return
+      unless $ts
+          =~ /^(\d{4})(?:-?(\d{2})(?:-?(\d\d?)(?:T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-]\d{2}:\d{2}))?)?)?)?/;
+    my ( $y, $mo, $d, $h, $m, $s, $zone )
+      = ( $1, $2 || 1, $3 || 1, $4 || 0, $5 || 0, $6 || 0, $7 );
 
     use Time::Local;
-    my $dt = timegm($s, $m, $h, $d, $mo-1, $y);
-    if ($zone && $zone ne 'Z') {
+    my $dt = timegm( $s, $m, $h, $d, $mo - 1, $y );
+    if ( $zone && $zone ne 'Z' ) {
         require MT::DateTime;
         my $tz_secs = MT::DateTime->tz_offset_as_seconds($zone);
         $dt -= $tz_secs;

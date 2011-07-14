@@ -45,35 +45,35 @@ __PACKAGE__->install_properties( {
 
 sub list_props {
     return {
-        parent => {
-            auto  => 1,
-            label => 'Parent',
-        },
+        parent      => { auto => 1, label => 'Parent', },
         entry_count => {
-            base    => '__common.integer',
+            base  => '__common.integer',
             label => 'Entry count',
-            raw => sub {
+            raw   => sub {
                 my ( $prop, $obj ) = @_;
-                return MT->model('placement')->count({ category_id => $obj->id });
+                return MT->model('placement')
+                  ->count( { category_id => $obj->id } );
             },
         },
         custom_sort => {
-            class => 'category',
+            class     => 'category',
             bulk_sort => sub {
                 my ( $prop, $objs ) = @_;
                 require MT::Category;
                 require MT::Blog;
-                my $rep  = $objs->[0] or return;
-                my $blog = MT::Blog->load({ id => $rep->blog_id }, { no_class => 1 });
+                my $rep = $objs->[0] or return;
+                my $blog = MT::Blog->load( { id => $rep->blog_id },
+                                           { no_class => 1 } );
                 my $meta = $prop->class . '_order';
                 my $text = $blog->$meta || '';
                 my @cats = _sort_by_id_list( $text, $objs );
-                @cats = grep { ref $_ } MT::Category::_flattened_category_hierarchy( \@cats );
+                @cats = grep { ref $_ }
+                  MT::Category::_flattened_category_hierarchy( \@cats );
                 return @cats;
             },
         },
     };
-}
+} ## end sub list_props
 
 sub class_label {
     MT->translate("Category");

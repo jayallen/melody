@@ -62,27 +62,27 @@ srand(1);
 
 # these are all the numbers that control how many of what are generated
 
-sub weighted { +shift * $weight_factor  }
-sub randint  { int(rand( +shift ))      }
-my $notifications_per_blog = sub {        3 + randint( 20 )             };
-my $blog_count             = sub { weighted( $blogs )                   };
-my $authors_per_blog       = sub { weighted( $authors )                 };
-my $categories_per_blog    = sub { weighted( $cats    + randint( 10 ))  };
-my $entries_per_blog       = sub { weighted( $entries + randint( 30 ))  };
-my $comments_per_entry     = sub { weighted( randint( 10 ) )            };
-my $tags_per_entry         = sub { weighted( randint( 5 ) )             };
-my $pings_per_trackback    = sub { weighted( randint( 10 ) )            };
+sub weighted { +shift *$weight_factor }
+sub randint  { int( rand( +shift ) ) }
+my $notifications_per_blog = sub { 3 + randint(20) };
+my $blog_count             = sub { weighted($blogs) };
+my $authors_per_blog       = sub { weighted($authors) };
+my $categories_per_blog    = sub { weighted( $cats + randint(10) ) };
+my $entries_per_blog       = sub { weighted( $entries + randint(30) ) };
+my $comments_per_entry     = sub { weighted( randint(10) ) };
+my $tags_per_entry         = sub { weighted( randint(5) ) };
+my $pings_per_trackback    = sub { weighted( randint(10) ) };
 
 my %defs = (
     'MT::Blog' => {
         table => 'blog',
         as_of => 1.0,
         needs => [
-            'MT::Author'       => $authors_per_blog,
-            'MT::Category'     => $categories_per_blog,
-            'MT::Entry'        => $entries_per_blog,
-            'MT::Template'     => \&template_loader,
-            'MT::Notification' => $notifications_per_blog
+                   'MT::Author'       => $authors_per_blog,
+                   'MT::Category'     => $categories_per_blog,
+                   'MT::Entry'        => $entries_per_blog,
+                   'MT::Template'     => \&template_loader,
+                   'MT::Notification' => $notifications_per_blog
         ],
         fields => [
             field( 'name', \&random_blog_name ),
@@ -396,11 +396,8 @@ my %defs = (
 #            field('build_dynamic', [], 3.1),
 #        ],
     },
-    'MT::TemplateMap' => {
-        table => 'templatemap',
-        as_of => 2.0,
-    },
-    'MT::Log' => {
+    'MT::TemplateMap' => { table => 'templatemap', as_of => 2.0, },
+    'MT::Log'         => {
         table => 'log',
         as_of => 1.0,
 

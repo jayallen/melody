@@ -14,20 +14,19 @@ use Gravatar::URL qw( gravatar_url );
 my $DEBUG = 0;
 
 sub opt_spec {
-    return (
-        [ 
-            "start|s=s",
-            "refspec for starting commit (usually the last release tag)"
-        ],
-        [ "end|e=s", "refspec for the ending tag, defaults to HEAD"   ],
-        [ "melody_dir|m=s", "The path to the Melody directory"        ],
-        [ "output|o=s", "Output filename" ],
+    return ( [
+               "start|s=s",
+               "refspec for starting commit (usually the last release tag)"
+             ],
+             [ "end|e=s", "refspec for the ending tag, defaults to HEAD" ],
+             [ "melody_dir|m=s", "The path to the Melody directory" ],
+             [ "output|o=s",     "Output filename" ],
     );
 }
 
 sub options {
     my $self = shift;
-    if ( @_ ) {
+    if (@_) {
         $self->{options} = shift;
     }
     return wantarray ? %{ $self->{options} } : $self->{options};
@@ -38,19 +37,18 @@ sub option {
     my $opt  = $self->{options} || {};
     my $key  = shift;
     my $val  = shift;
-    return defined $val                         ? ( $opt->{key} = $val )
-         : defined $key and exists $opt->{$key} ? $opt->{$key}
-                                                : undef;
+    return defined $val ? ( $opt->{key} = $val ) : defined $key
+      and exists $opt->{$key} ? $opt->{$key} : undef;
 }
 
 sub fh {
     my $self = shift;
-    if ( @_ ) {
+    if (@_) {
         my $out = shift;
         require FileHandle;
-        my $fh  = FileHandle->new( $out, 'w' );
-        die "Error opening ".$out.": $!" unless defined $fh;
-        select( $fh );
+        my $fh = FileHandle->new( $out, 'w' );
+        die "Error opening " . $out . ": $!" unless defined $fh;
+        select($fh);
         return $self->{fh} = $fh;
     }
     $self->{fh};
@@ -69,19 +67,19 @@ sub debug {
 
 sub out {
     my $self = shift;
-    print join("\n", @_);
+    print join( "\n", @_ );
 }
 
 sub verify_git_directory {
-    my ($self, $dir ) = @_;
-    my @loc = grep { defined }
-        ( $dir,  '.', dirname("$0/.."), $ENV{MT_HOME} );
+    my ( $self, $dir ) = @_;
+    my @loc = grep {defined} ( $dir, '.', dirname("$0/.."), $ENV{MT_HOME} );
     my $repo;
-    foreach my $loc ( @loc ) {
+    foreach my $loc (@loc) {
+
         # $self->debug( "Testing $loc\n" );
-        my $path = realpath( $loc );
+        my $path = realpath($loc);
         next unless $path and -d $path;
-        if ( $repo = Git->repository( Directory => $path )) {
+        if ( $repo = Git->repository( Directory => $path ) ) {
             $dir = $path;
             last;
         }
@@ -89,10 +87,10 @@ sub verify_git_directory {
     $repo;
 }
 
-sub validate_args { 
-    my $self      = shift;
-    my $opt       = shift;
-    my $args      = shift;
+sub validate_args {
+    my $self = shift;
+    my $opt  = shift;
+    my $args = shift;
     $opt->{end} ||= 'master';
 
     # no args allowed but options!
@@ -100,7 +98,7 @@ sub validate_args {
 
     # Check that we're in the Melody directory
     $self->{repo} = $self->verify_git_directory( $opt->{melody_dir} )
-        or return $self->usage_error("Couldn't find repo");
+      or return $self->usage_error("Couldn't find repo");
 
     $self->fh( $opt->{output} ) if $opt->{output};
 
@@ -110,34 +108,29 @@ sub validate_args {
     # Ask for display name for end refspec
     my $term = Term::ReadLine->new(__PACKAGE__);
     foreach my $ref (qw( start end )) {
-print STDERR 'show-ref', $opt->{$ref}."\n";
+        print STDERR 'show-ref', $opt->{$ref} . "\n";
 
-        return $self->usage_error("Invalid refspec: ".$opt->{$ref})
-            unless $self->{repo}->command( 'show-ref', $opt->{$ref} );
+        return $self->usage_error( "Invalid refspec: " . $opt->{$ref} )
+          unless $self->{repo}->command( 'show-ref', $opt->{$ref} );
         my $prompt = sprintf( "Choose a display name to use for release %s: ",
-                                $opt->{$ref});
+                              $opt->{$ref} );
         my $OUT = $term->OUT || \*STDOUT;
         defined( my $resp = $term->readline($prompt) )
-            or return $self->usage_error("Aborting");
-        $term->addhistory( $opt->{$ref.'_label'} = $resp );
+          or return $self->usage_error("Aborting");
+        $term->addhistory( $opt->{ $ref . '_label' } = $resp );
     }
     $self->{arguments} = $args;
-    $self->options( $opt );
-}
+    $self->options($opt);
+} ## end sub validate_args
 
 sub run {
     my $self = shift;
     my $repo = $self->{repo};
     my $opt  = $self->options();
     $self->out( $self->boilerplate );
-    my ($fh, $c) = $repo->command_output_pipe(
-        'log',
-        '--abbrev-commit',
-        '--no-merges',
-        '--topo-order',
-        '--reverse',
-        '--date=iso',
-        q(--format=START commit %H
+    my ( $fh, $c ) = $repo->command_output_pipe(
+        'log', '--abbrev-commit', '--no-merges', '--topo-order', '--reverse',
+        '--date=iso', q(--format=START commit %H
 SHA             = %h
 Tree            = %t
 Parents         = %p
@@ -150,59 +143,60 @@ Committer Date  = %cd
 Subject         = %s
 Message         = %-b
 Note            = %N
-END commit),
-        join('..', $opt->{start}, $opt->{end})
+END commit), join( '..', $opt->{start}, $opt->{end} )
     );
+
     # %n: newline
     my ( @log, %buffer );
     while ( my $lastrev = <$fh> ) {
         chomp $lastrev;
         if ( $lastrev =~ m{^START commit (\w+)} ) {
-            $self->debug( "FOUND $lastrev\n" );
+            $self->debug("FOUND $lastrev\n");
             %buffer = ( commit => $1 );
         }
         elsif ( $lastrev =~ m{^END commit} ) {
-            $self->debug( "FOUND $lastrev\n" );
+            $self->debug("FOUND $lastrev\n");
             delete $buffer{multiline_key};
-            $self->out( $self->format_commit( \%buffer ));
-            push( @log, { %buffer } );
+            $self->out( $self->format_commit( \%buffer ) );
+            push( @log, {%buffer} );
             %buffer = ();
             next;
         }
-        elsif ( $lastrev =~ m{^(Note|Message)\s+= (.*)}) {
-            my ( $key, $val )      = ( lc($1), $2 );
+        elsif ( $lastrev =~ m{^(Note|Message)\s+= (.*)} ) {
+            my ( $key, $val ) = ( lc($1), $2 );
             $buffer{multiline_key} = $key;
-            $buffer{$key}          = $val;
-            $self->debug( "Set $key to $val\n" );
+            $buffer{$key} = $val;
+            $self->debug("Set $key to $val\n");
         }
         else {
             my ( $key, $val );
             if ( $key = $buffer{multiline_key} ) {
-                $buffer{$key} .= "\n".$lastrev;
-                $self->debug( "Added to $key: $lastrev\n" );
+                $buffer{$key} .= "\n" . $lastrev;
+                $self->debug("Added to $key: $lastrev\n");
             }
             else {
-                ( $key, $val ) = split(/\s+=\s+/, $lastrev, 2 );
-                my @keys = split(/\s+/, lc($key) );
+                ( $key, $val ) = split( /\s+=\s+/, $lastrev, 2 );
+                my @keys = split( /\s+/, lc($key) );
                 if ( @keys == 1 ) {
-                    $buffer{$keys[0]} = $val;
+                    $buffer{ $keys[0] } = $val;
                 }
                 else {
-                    ($key, (my $subkey)) = @keys;
+                    ( $key, ( my $subkey ) ) = @keys;
                     $buffer{$key}{$subkey} = $val;
                 }
-                $self->debug( "Set @keys to $val\n" );
+                $self->debug("Set @keys to $val\n");
             }
         }
-    }
-    $repo->command_close_pipe($fh, $c);
+    } ## end while ( my $lastrev = <$fh>)
+    $repo->command_close_pipe( $fh, $c );
+
     # $self->out( Dumper(\@log) );
 #  | perl -lape '
 #         if ( ! m{^\[[a-z0-9]{6}} ) {
 #             s{^\s+$}{}g;
 #             s{^([^\[\s])}{   $1};
 #             s{\[#(\d+)}{\[[#$1](https://openmelody.lighthouseapp.com/projects/26604/tickets/$1)}g;
-}
+} ## end sub run
 
 sub boilerplate {
     my $self            = shift;
@@ -214,7 +208,7 @@ sub boilerplate {
     return <<"EOF";
 # Release Notes for $release_name #
 
-_The following are notable changes introduced since [the release of $prev_name][]. You can view the [all $release_name milestone tickets](https://openmelody.lighthouseapp.com/projects/26604/milestones/EDIT_ME_PLEASE) in Lighthouse._
+_The following are notable changes introduced since [the release of $prev_name][]. You can view the [all $release_name milestone tickets][] in Lighthouse._
 
 [The release of $prev_name]: https://github.com/openmelody/melody/wiki/release-$prev_refspec
 [All $release_name milestone tickets]: https://openmelody.lighthouseapp.com/projects/26604/milestones/EDIT_ME_PLEASE
@@ -231,30 +225,29 @@ _The following are notable changes introduced since [the release of $prev_name][
 The following are the raw commits introduced in $release_name, listed in the order in which they were introduced into the [openmelody/melody master repo](http://github.com/openmelody/melody).
 
 EOF
-    
-}
+
+} ## end sub boilerplate
 
 sub format_commit {
     my $self    = shift;
     my $buffer  = shift;
     my $gh_base = 'http://github.com/openmelody/melody/commit';
     my $lh_base
-        = 'http://openmelody.lighthouseapp.com/projects/26604-melody/tickets';
+      = 'http://openmelody.lighthouseapp.com/projects/26604-melody/tickets';
 
-    my $sha        = delete $buffer->{sha}             || '';
-    my $date       = delete $buffer->{committer}{date} || '';
-    my $author     = delete $buffer->{author}{name}    || '';
-    my $author_img = gravatar_url(
-        email => delete $buffer->{author}{email}, 
-        size => 30
-    );
-    my $author_url = $self->author_url_lookup( $author ) || '';
+    my $sha    = delete $buffer->{sha}             || '';
+    my $date   = delete $buffer->{committer}{date} || '';
+    my $author = delete $buffer->{author}{name}    || '';
+    my $author_img
+      = gravatar_url( email => delete $buffer->{author}{email}, size => 30 );
+    my $author_url = $self->author_url_lookup($author) || '';
     my $subject    = delete $buffer->{subject}         || '';
     my $note       = delete $buffer->{note}            || '';
     my $msg        = delete $buffer->{message}         || '';
     my $tree       = delete $buffer->{tree}            || '';
-    $subject    =~ s{\[\#(\d+)(\s*state:.*?)?\]}{[Case \#$1]($lh_base/$1) - }g;
-    $subject  = "\n\n> $subject";
+    $subject =~ s{\[\#(\d+)(\s*state:.*?)?\]}{[Case \#$1]($lh_base/$1) - }g;
+    $subject = "\n\n> $subject";
+
     foreach my $k ( $msg, $note ) {
         next unless defined $k and $k ne '';
         $k =~ s{^([^>])}{> $1}gsm;
@@ -262,27 +255,26 @@ sub format_commit {
     }
     my $output_fmt = <<EOF;
 
-**[<img src="$author_img" width="30" /> $author]($author_url) &#8212; [$date &#8212; $sha]($gh_base/$sha)** ([tree]($gh_base/$tree)) $subject
+**[<img src="$author_img" width="30" /> $author]($author_url)** &#8212; **[$date &#8212; $sha]($gh_base/$sha)** ([tree]($gh_base/$tree)) $subject
 EOF
     $output_fmt =~ s{[\s\n]+\Z}{}gsm;
-    return $output_fmt."\n\n";
-}
+    return $output_fmt . "\n\n";
+} ## end sub format_commit
 
 sub author_url_lookup {
-    my $self   = shift;
+    my $self = shift;
     my $name = shift;
-    my $url    = 'http://github.com/';
+    my $url  = 'http://github.com/';
     my %authors = (
-        'Jay Allen'      => 'jayallen',
-        'Byrne Reese'    => 'byrnereese',
-        'Dan Wolfgang'   => 'danwolfgang',
-        'Mike Thomsen'   => 'mikert',
-        'Timothy Appnel' => 'tima',
-        'David Phillips' => 'dphillips',
-        'Sabine'         => 'sabine',
+                    'Jay Allen'      => 'jayallen',
+                    'Byrne Reese'    => 'byrnereese',
+                    'Dan Wolfgang'   => 'danwolfgang',
+                    'Mike Thomsen'   => 'mikert',
+                    'Timothy Appnel' => 'tima',
+                    'David Phillips' => 'dphillips',
+                    'Sabine'         => 'sabine',
     );
-    $url .= $authors{$name} ? $authors{$name}
-                            : 'UNKNOWN';
+    $url .= $authors{$name} ? $authors{$name} : 'UNKNOWN';
 }
 
 1;

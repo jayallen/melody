@@ -20,7 +20,7 @@ sub save {
 
     if ( !$label ) {
         return $app->json_error(
-            $app->translate('Failed to save filter: label is required.') );
+               $app->translate('Failed to save filter: label is required.') );
     }
     my $items;
     if ( my $items_json = $q->param('items') ) {
@@ -42,9 +42,9 @@ sub save {
         my $prop = MT::ListProperty->instance( $ds, $item->{type} );
         if ( $prop->has('validate_item') ) {
             $prop->validate_item($item)
-                or return $app->json_error(
-                MT->translate( 'Invalid filter terms: [_1]', $prop->errstr )
-                );
+              or return $app->json_error(
+                  MT->translate( 'Invalid filter terms: [_1]', $prop->errstr )
+              );
         }
     }
 
@@ -52,44 +52,44 @@ sub save {
     my $filter_class = MT->model('filter');
 
     # Search duplicate.
-    if (my $dupe = $filter_class->load(
-            {   author_id => $app->user->id,
-                object_ds => $ds,
-                label     => $label,
-                ( $fid ? ( id => { not => $fid } ) : () ),
-            },
-            {   limit      => 1,
-                fetch_only => { id => 1 },
-            }
-        )
-        )
+    if (
+         my $dupe = $filter_class->load( {
+                                   author_id => $app->user->id,
+                                   object_ds => $ds,
+                                   label     => $label,
+                                   ( $fid ? ( id => { not => $fid } ) : () ),
+                                 },
+                                 { limit => 1, fetch_only => { id => 1 }, }
+         )
+      )
     {
-        return $app->json_error(
-            $app->translate(
-                'Failed to save filter: label "[_1]" is duplicated.', $label
-            )
-        );
+        return
+          $app->json_error(
+              $app->translate(
+                  'Failed to save filter: label "[_1]" is duplicated.', $label
+              )
+          );
     }
     if ($fid) {
         $filter = $filter_class->load($fid)
-            or return $app->json_error( $app->translate('No such filter') );
+          or return $app->json_error( $app->translate('No such filter') );
     }
     else {
         $filter = $filter_class->new;
     }
 
-    $filter->set_values(
-        {   author_id => $author_id,
-            blog_id   => $blog_id,
-            label     => $label,
-            object_ds => $ds,
-            items     => $items,
-        }
+    $filter->set_values( {
+                           author_id => $author_id,
+                           blog_id   => $blog_id,
+                           label     => $label,
+                           object_ds => $ds,
+                           items     => $items,
+                         }
     );
     $filter->modified_by( $app->user->id );
     $filter->save
-        or return $app->json_error(
-        $app->translate( 'Failed to save filter: [_1]', $filter->errstr ) );
+      or return $app->json_error(
+          $app->translate( 'Failed to save filter: [_1]', $filter->errstr ) );
 
     my $list = $q->param('list');
     if ( defined $list && !$list ) {
@@ -103,14 +103,14 @@ sub save {
 
         # Forward to MT::Common::filterd_list
         $app->forward(
-            'filtered_list',
-            saved       => 1,
-            saved_fid   => $filter->id,
-            saved_label => $filter->label,
-            validated   => 1,
+                       'filtered_list',
+                       saved       => 1,
+                       saved_fid   => $filter->id,
+                       saved_label => $filter->label,
+                       validated   => 1,
         );
     }
-}
+} ## end sub save
 
 sub delete {
     my $app          = shift;
@@ -118,7 +118,7 @@ sub delete {
     my $id           = $q->param('id');
     my $filter_class = MT->model('filter');
     my $filter       = $filter_class->load($id)
-        or return $app->json_error( $app->translate('No such filter') );
+      or return $app->json_error( $app->translate('No such filter') );
     my $blog_id = $q->param('blog_id') || 0;
     my $ds      = $q->param('datasource');
     my $user    = $app->user;
@@ -126,8 +126,12 @@ sub delete {
         return $app->json_error( $app->translate('Permission denied') );
     }
     $filter->remove
-        or return $app->json_error(
-        $app->translate( 'Failed to delete filter(s): [_1]', $filter->errstr ) );
+      or return
+      $app->json_error(
+                       $app->translate(
+                           'Failed to delete filter(s): [_1]', $filter->errstr
+                       )
+      );
     my %res;
     my $list = $q->param('list');
     if ( defined $list && !$list ) {
@@ -142,34 +146,34 @@ sub delete {
         # Forward to MT::Common::filterd_list
         $app->forward('filtered_list');
     }
-}
+} ## end sub delete
 
 sub delete_filters {
     my $app = shift;
     my $id  = $app->query->param('id');
     my @ids = split ',', $id;
     my $res = MT->model('filter')->remove( { id => \@ids } )
-        or return $app->json_error(
-        MT->translate(
-            'Failed to delete filter(s): [_1]',
-            MT->model('filter')->errstr,
-        )
-        );
+      or return
+      $app->json_error(
+                        MT->translate(
+                                       'Failed to delete filter(s): [_1]',
+                                       MT->model('filter')->errstr,
+                        )
+      );
     unless ( $res > 0 ) {
         ## if $res is 0E0 ( zero but true )
         return $app->json_error( MT->translate( 'No such filter', ) );
     }
     $app->forward(
         'filtered_list',
-        messages => [
-            {   cls => 'success',
-                msg => MT->translate(
-                    'Removed [_1] filters successfully.', $res,
-                ),
+        messages => [ {
+               cls => 'success',
+               msg =>
+                 MT->translate( 'Removed [_1] filters successfully.', $res, ),
             }
         ]
     );
-}
+} ## end sub delete_filters
 
 ## Note that these filter loading methods below NOT return instances of MT::Filter class.
 ## they returns a simple hash structure good to encode to JSON.
@@ -183,18 +187,18 @@ sub filter {
             return if !$app->user->is_superuser;
             my $owner = MT->model('author')->load( $filter->author_id );
             $hash->{label} = MT->translate( '[_1] ( created by [_2] )',
-                $hash->{label}, $owner->name, );
+                                            $hash->{label}, $owner->name, );
         }
         return $hash;
     }
     return system_filter( $app, $type, $id )
-        || legacy_filter( $app, $type, $id );
+      || legacy_filter( $app, $type, $id );
 }
 
 sub system_filter {
     my ( $app, $type, $sys_id ) = @_;
     my $sys_filter = MT->registry( system_filters => $type => $sys_id )
-        or return;
+      or return;
 
     if ( my $cond = $sys_filter->{condition} ) {
         $cond = MT->handler_to_coderef($cond);
@@ -209,26 +213,26 @@ sub system_filter {
     }
 
     my $hash = {
-        id         => $sys_id,
-        label      => $sys_filter->{label},
-        items      => $sys_filter->{items},
-        order      => $sys_filter->{order},
-        can_edit   => 0,
-        can_save   => 0,
-        can_delete => 0,
+                 id         => $sys_id,
+                 label      => $sys_filter->{label},
+                 items      => $sys_filter->{items},
+                 order      => $sys_filter->{order},
+                 can_edit   => 0,
+                 can_save   => 0,
+                 can_delete => 0,
     };
     for my $val ( values %$hash ) {
         $val = $val->() if 'CODE' eq ref $val;
     }
     $hash;
-}
+} ## end sub system_filter
 
 sub legacy_filter {
     my ( $app, $type, $legacy_id ) = @_;
     my $legacy_filter
-        = MT->registry(
-        applications => cms => list_filters => $type => $legacy_id )
-        or return;
+      = MT->registry(
+                  applications => cms => list_filters => $type => $legacy_id )
+      or return;
     if ( my $cond = $legacy_filter->{condition} ) {
         $cond = MT->handler_to_coderef($cond);
         return unless $cond->();
@@ -236,56 +240,51 @@ sub legacy_filter {
     my $label = $legacy_filter->{label};
     $label = $label->() if 'CODE' eq ref $label;
     my $args = {
-        filter_key => $legacy_id,
-        ds         => $type,
-        filter_val => ( $app->query->param('filter_val') || '' ),
+                 filter_key => $legacy_id,
+                 ds         => $type,
+                 filter_val => ( $app->query->param('filter_val') || '' ),
     };
     $args->{label} = "($label)";
 
     my $hash = {
-        id     => $legacy_id,
-        label  => '(Legacy) ' . $label,
-        legacy => 1,
-        items  => [
-            {   type => '__legacy',
-                args => $args
-            }
-        ],
-        can_edit   => 0,
-        can_save   => 0,
-        can_delete => 0,
+                 id         => $legacy_id,
+                 label      => '(Legacy) ' . $label,
+                 legacy     => 1,
+                 items      => [ { type => '__legacy', args => $args } ],
+                 can_edit   => 0,
+                 can_save   => 0,
+                 can_delete => 0,
     };
     for my $val ( values %$hash ) {
         $val = $val->() if 'CODE' eq ref $val;
     }
     $hash;
-}
+} ## end sub legacy_filter
 
 sub filters {
     my ( $app, $type, %opts ) = @_;
     my $obj_class    = MT->model($type);
     my @user_filters = MT->model('filter')
-        ->load( { author_id => $app->user->id, object_ds => $type } );
+      ->load( { author_id => $app->user->id, object_ds => $type } );
     @user_filters = map { $_->to_hash } @user_filters;
 
     my @sys_filters;
     my $sys_filters = MT->registry( system_filters => $type );
     for my $sys_id ( keys %$sys_filters ) {
         next if $sys_id =~ /^_/;
-        my $sys_filter = system_filter( $app, $type, $sys_id )
-            or next;
+        my $sys_filter = system_filter( $app, $type, $sys_id ) or next;
         push @sys_filters, $sys_filter;
     }
-    @sys_filters = sort { ($a->{order} || 0) <=> ($b->{order} || 0) } @sys_filters;
+    @sys_filters
+      = sort { ( $a->{order} || 0 ) <=> ( $b->{order} || 0 ) } @sys_filters;
 
     #FIXME: Is this always right path to get it?
     my @legacy_filters;
     my $legacy_filters
-        = MT->registry( applications => cms => list_filters => $type );
+      = MT->registry( applications => cms => list_filters => $type );
     for my $legacy_id ( keys %$legacy_filters ) {
         next if $legacy_id =~ /^_/;
-        my $legacy_filter = legacy_filter( $app, $type, $legacy_id )
-            or next;
+        my $legacy_filter = legacy_filter( $app, $type, $legacy_id ) or next;
         push @legacy_filters, $legacy_filter;
     }
 
@@ -306,6 +305,6 @@ sub filters {
         }
     }
     return \@filters;
-}
+} ## end sub filters
 
 1;

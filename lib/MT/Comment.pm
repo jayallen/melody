@@ -96,53 +96,54 @@ sub list_props {
                 elsif ( !$text ) {
                     $text = '...';
                 }
-                my $id   = $obj->id;
+                my $id = $obj->id;
                 my $link = $app->uri(
-                    mode => 'view',
-                    args => {
-                        _type   => 'comment',
-                        id      => $id,
-                        blog_id => $obj->blog_id,
-                    }
+                                      mode => 'view',
+                                      args => {
+                                                _type   => 'comment',
+                                                id      => $id,
+                                                blog_id => $obj->blog_id,
+                                      }
                 );
                 my $status_img = MT->static_path . 'images/status_icons/';
-                $status_img .=
-                      $obj->is_junk      ? 'warning.gif'
-                    : $obj->is_published ? 'success.gif'
-                    :                      'draft.gif';
+                $status_img
+                  .= $obj->is_junk     ? 'warning.gif'
+                  : $obj->is_published ? 'success.gif'
+                  :                      'draft.gif';
                 my $status_class
-                    = $obj->is_junk      ? 'Junk'
-                    : $obj->is_published ? 'Approved'
-                    :                      'Unapproved';
+                  = $obj->is_junk      ? 'Junk'
+                  : $obj->is_published ? 'Approved'
+                  :                      'Unapproved';
                 my $lc_status_class = lc $status_class;
 
                 my $blog = $app ? $app->blog : undef;
                 my $edit_str = MT->translate('Edit');
                 my $reply_link;
                 if ( $app->user->permissions( $obj->blog->id )
-                        ->can_manage_feedback
-                    and $obj->is_published )
+                     ->can_manage_feedback and $obj->is_published )
                 {
-                    my $return_arg = $app->uri_params(
-                        mode => 'list',
-                        args => {
-                            _type   => 'comment',
-                            blog_id => $app->blog ? $app->blog->id : 0,
-                        }
-                    );
-                    my $reply_url = $app->uri(
-                        mode => 'dialog_post_comment',
-                        args => {
-                            reply_to    => $id,
-                            blog_id     => $obj->blog_id,
-                            return_args => $return_arg,
-                            magic_token => $app->current_magic,
-                        },
-                    );
+                    my $return_arg =
+                      $app->uri_params(
+                               mode => 'list',
+                               args => {
+                                   _type   => 'comment',
+                                   blog_id => $app->blog ? $app->blog->id : 0,
+                               }
+                      );
+                    my $reply_url =
+                      $app->uri(
+                                 mode => 'dialog_post_comment',
+                                 args => {
+                                           reply_to    => $id,
+                                           blog_id     => $obj->blog_id,
+                                           return_args => $return_arg,
+                                           magic_token => $app->current_magic,
+                                 },
+                      );
                     my $reply_str = MT->translate('Reply');
                     $reply_link
-                        = qq{<a href="$reply_url" class="reply action-link open-dialog-link mt-open-dialog">$reply_str</a>};
-                }
+                      = qq{<a href="$reply_url" class="reply action-link open-dialog-link mt-open-dialog">$reply_str</a>};
+                } ## end if ( $app->user->permissions...)
 
                 return qq{
                     <span class="icon comment status $lc_status_class">
@@ -166,76 +167,76 @@ sub list_props {
                 my ( $prop, $obj, $app, $opts ) = @_;
                 my $name = MT::Util::remove_html( $obj->author );
                 my ( $link, $status_img, $status_class, $lc_status_class,
-                    $auth_img, $auth_label );
+                     $auth_img, $auth_label );
                 my $id     = $obj->commenter_id;
                 my $static = MT->static_path;
 
                 if ( !$id ) {
                     $link = $app->uri(
-                        mode => 'search_replace',
-                        args => {
-                            _type       => 'comment',
-                            search_cols => 'author',
-                            is_limited  => 1,
-                            do_search   => 1,
-                            search      => $name,
-                            blog_id     => $app->blog ? $app->blog->id : 0,
-                        }
+                               mode => 'search_replace',
+                               args => {
+                                   _type       => 'comment',
+                                   search_cols => 'author',
+                                   is_limited  => 1,
+                                   do_search   => 1,
+                                   search      => $name,
+                                   blog_id => $app->blog ? $app->blog->id : 0,
+                               }
                     );
                     $status_img      = '';
                     $status_class    = 'Anonymous';
                     $lc_status_class = lc $status_class;
                     my $link_title
-                        = MT->translate(
-                        'Search other comments from this anonymous commenter'
-                        );
+                      = MT->translate(
+                         'Search other comments from this anonymous commenter'
+                      );
                     return qq{
                         <span class="commenter">
                           <a href="$link" title="$link_title">$name</a>
                         </span>
                     };
-                }
+                } ## end if ( !$id )
 
                 $link = $app->uri(
-                    mode => 'view',
-                    args => {
-                        _type   => 'commenter',
-                        id      => $id,
-                        blog_id => $obj->blog_id,
-                    }
+                                   mode => 'view',
+                                   args => {
+                                             _type   => 'commenter',
+                                             id      => $id,
+                                             blog_id => $obj->blog_id,
+                                   }
                 );
                 my $commenter = MT->model('author')->load($id);
 
                 if ($commenter) {
                     $name ||= $commenter->name
-                        || '(' . MT->translate('Registered User') . ')';
+                      || '(' . MT->translate('Registered User') . ')';
                 }
                 else {
-                    $name ||= '('
-                        . MT->translate('__ANONYMOUS_COMMENTER') . ')';
+                    $name
+                      ||= '(' . MT->translate('__ANONYMOUS_COMMENTER') . ')';
                     $link = $app->uri(
-                        mode => 'search_replace',
-                        args => {
-                            _type       => 'comment',
-                            search_cols => 'author',
-                            is_limited  => 1,
-                            do_search   => 1,
-                            search      => $name,
-                            blog_id     => $app->blog ? $app->blog->id : 0,
-                        }
+                               mode => 'search_replace',
+                               args => {
+                                   _type       => 'comment',
+                                   search_cols => 'author',
+                                   is_limited  => 1,
+                                   do_search   => 1,
+                                   search      => $name,
+                                   blog_id => $app->blog ? $app->blog->id : 0,
+                               }
                     );
                     $status_img      = '';
                     $status_class    = 'Deleted';
                     $lc_status_class = lc $status_class;
                     my $link_title = MT->translate(
-                        'Search other comments from this deleted commenter');
+                         'Search other comments from this deleted commenter');
                     my $optional_status = MT->translate('(Deleted)');
                     return qq{
                         <span class="commenter">
                           <a href="$link" title="$link_title">$name</a> $optional_status
                         </span>
                     };
-                }
+                } ## end else [ if ($commenter) ]
 
                 my $status = $commenter->status;
                 my $status_icon;
@@ -243,64 +244,63 @@ sub list_props {
                 if ( MT->config->SingleCommunity ) {
                     if ( $commenter->type == MT::Author::AUTHOR() ) {
                         $status_icon
-                            = $commenter->status == MT::Author::ACTIVE()
-                            ? 'user-enabled.gif'
-                            : $commenter->status == MT::Author::INACTIVE()
-                            ? 'user-disabled.gif'
-                            : 'user-pending.gif';
+                          = $commenter->status == MT::Author::ACTIVE()
+                          ? 'user-enabled.gif'
+                          : $commenter->status == MT::Author::INACTIVE()
+                          ? 'user-disabled.gif'
+                          : 'user-pending.gif';
                         $status_class
-                            = $commenter->status == MT::Author::ACTIVE()
-                            ? 'Enabled'
-                            : $commenter->status == MT::Author::INACTIVE()
-                            ? 'Disabled'
-                            : 'Pending';
+                          = $commenter->status == MT::Author::ACTIVE()
+                          ? 'Enabled'
+                          : $commenter->status == MT::Author::INACTIVE()
+                          ? 'Disabled'
+                          : 'Pending';
                     }
                     else {
                         $status_icon
-                            = $commenter->is_trusted(0) ? 'trusted.gif'
-                            : $commenter->is_banned(0)  ? 'banned.gif'
-                            :                             'authenticated.gif';
+                          = $commenter->is_trusted(0) ? 'trusted.gif'
+                          : $commenter->is_banned(0)  ? 'banned.gif'
+                          :                             'authenticated.gif';
                         $status_class
-                            = $commenter->is_trusted(0) ? 'Trusted'
-                            : $commenter->is_banned(0)  ? 'Banned'
-                            :                             'Authenticated';
+                          = $commenter->is_trusted(0) ? 'Trusted'
+                          : $commenter->is_banned(0)  ? 'Banned'
+                          :                             'Authenticated';
                     }
-                }
+                } ## end if ( MT->config->SingleCommunity)
                 else {
                     my $blog_id = $opts->{blog_id};
                     $status_icon
-                        = $commenter->is_trusted($blog_id) ? 'trusted.gif'
-                        : $commenter->is_banned($blog_id)  ? 'banned.gif'
-                        :   'authenticated.gif';
+                      = $commenter->is_trusted($blog_id) ? 'trusted.gif'
+                      : $commenter->is_banned($blog_id)  ? 'banned.gif'
+                      :   'authenticated.gif';
                     $status_class
-                        = $commenter->is_trusted($blog_id) ? 'Trusted'
-                        : $commenter->is_banned($blog_id)  ? 'Banned'
-                        :                                    'Authenticated';
+                      = $commenter->is_trusted($blog_id) ? 'Trusted'
+                      : $commenter->is_banned($blog_id)  ? 'Banned'
+                      :                                    'Authenticated';
                 }
 
                 $lc_status_class = lc $status_class;
                 my $status_url
-                    = $static . 'images/status_icons/' . $status_icon;
+                  = $static . 'images/status_icons/' . $status_icon;
                 $status_img = qq{<img src="$status_url" />};
 
                 $auth_img = $static;
-                if (   $commenter->auth_type eq 'MT'
-                    || $commenter->auth_type eq 'LDAP' )
+                if (    $commenter->auth_type eq 'MT'
+                     || $commenter->auth_type eq 'LDAP' )
                 {
                     $auth_img .= 'images/comment/mt_logo.png';
                     $auth_label = 'Movable Type';
                 }
                 else {
                     my $auth = MT->registry(
-                        commenter_authenticators => $commenter->auth_type );
+                          commenter_authenticators => $commenter->auth_type );
                     $auth_img .= $auth->{logo_small};
                     $auth_label = $auth->{label};
                     $auth_label = $auth_label->() if ref $auth_label;
                 }
-                my $link_title = MT->translate(
-                    'Edit this [_1] commenter.',
-                    MT->translate($status_class),
-                );
+                my $link_title =
+                  MT->translate( 'Edit this [_1] commenter.',
+                                 MT->translate($status_class), );
 
                 my $out = qq{
                     <span class="auth-type">
@@ -316,21 +316,18 @@ sub list_props {
             },
         },
         created_on => {
-            order   => 250,
-            base    => '__virtual.created_on',
-            display => 'default',
+                        order   => 250,
+                        base    => '__virtual.created_on',
+                        display => 'default',
         },
         ip => {
-            auto      => 1,
-            order     => 300,
-            label     => 'IP Address',
-            condition => sub { MT->config->ShowIPInformation },
+                auto      => 1,
+                order     => 300,
+                label     => 'IP Address',
+                condition => sub { MT->config->ShowIPInformation },
         },
-        blog_name => {
-            base  => '__common.blog_name',
-            order => 400,
-        },
-        entry => {
+        blog_name => { base => '__common.blog_name', order => 400, },
+        entry     => {
             label              => 'Entry/Page',
             base               => '__virtual.integer',
             col_class          => 'string',
@@ -345,11 +342,13 @@ sub list_props {
                 $args->{joins} ||= [];
                 my $join_str = '= comment_entry_id';
                 push @{ $args->{joins} }, MT->model('entry')->join_on(
-                    undef,
-                    { id => \$join_str, },
-                    {   sort      => 'title',
-                        direction => $args->{direction} || 'ascend',
-                    },
+                                            undef,
+                                            { id => \$join_str, },
+                                            {
+                                              sort      => 'title',
+                                              direction => $args->{direction}
+                                                || 'ascend',
+                                            },
                 );
                 $args->{sort} = [];
                 return;
@@ -359,10 +358,13 @@ sub list_props {
                 $db_args->{joins} ||= [];
                 my $join_str = '= comment_entry_id';
                 push @{ $db_args->{joins} }, MT->model('entry')->join_on(
-                    undef,
-                    {   id =>
-                            [ '-and', $args->{value}, \$join_str ],
-                    },
+                                                undef,
+                                                {
+                                                  id => [
+                                                      '-and', $args->{value},
+                                                      \$join_str
+                                                  ],
+                                                },
                 );
                 return;
             },
@@ -371,9 +373,9 @@ sub list_props {
                 my ( $objs, $app ) = @_;
                 my %entry_ids = map { $_->entry_id => 1 } @$objs;
                 my @entries
-                    = MT->model('entry')
-                    ->load( { id => [ keys %entry_ids ], },
-                    { no_class => 1, } );
+                  = MT->model('entry')
+                  ->load( { id => [ keys %entry_ids ], },
+                          { no_class => 1, } );
                 my %entries = map { $_->id => $_ } @entries;
                 my @result;
                 for my $obj (@$objs) {
@@ -385,27 +387,27 @@ sub list_props {
                     }
                     my $type = $entry->class_type;
                     my $img
-                        = MT->static_path
-                        . 'images/nav_icons/color/'
-                        . $type . '.gif';
-                    my $title_html
-                        = MT::ListProperty::make_common_label_html( $entry,
-                        $app, 'title', 'No title' );
+                      = MT->static_path
+                      . 'images/nav_icons/color/'
+                      . $type . '.gif';
+                    my $title_html =
+                      MT::ListProperty::make_common_label_html( $entry, $app,
+                                                        'title', 'No title' );
                     push @result, qq{
                         <span class="icon target-type $type">
                           <img src="$img" />
                         </span>
                         $title_html
                     };
-                }
+                } ## end for my $obj (@$objs)
                 return @result;
             },
             raw => sub {
                 my ( $prop, $obj ) = @_;
                 my $entry_id = $obj->entry_id;
                 return $entry_id
-                    ? MT->model('entry')->load($entry_id)->title
-                    : '';
+                  ? MT->model('entry')->load($entry_id)->title
+                  : '';
             },
             label_via_param => sub {
                 my $prop     = shift;
@@ -413,7 +415,7 @@ sub list_props {
                 my $entry_id = $app->param('filter_val');
                 my $entry    = MT->model('entry')->load($entry_id);
                 my $label    = MT->translate( 'Comments on [_1]: [_2]',
-                    $entry->class_label, $entry->title, );
+                                        $entry->class_label, $entry->title, );
                 $prop->{filter_label} = MT::Util::encode_html($label);
                 $label;
             },
@@ -424,10 +426,8 @@ sub list_props {
             },
         },
 
-        modified_on => {
-            display => 'none',
-            base    => '__virtual.modified_on',
-        },
+        modified_on =>
+          { display => 'none', base => '__virtual.modified_on', },
         status => {
             label   => 'Status',
             base    => '__virtual.single_select',
@@ -436,17 +436,30 @@ sub list_props {
             terms   => sub {
                 my ( $prop, $args ) = @_;
                 return $args->{value} eq 'approved'
-                    ? { visible => 1, junk_status => NOT_JUNK() }
-                    : $args->{value} eq 'pending'
-                    ? { visible => 0, junk_status => NOT_JUNK() }
-                    : $args->{value} eq 'junk' ? { junk_status => JUNK() }
-                    :   { junk_status => NOT_JUNK() };
+                  ? { visible => 1, junk_status => NOT_JUNK() }
+                  : $args->{value} eq 'pending'
+                  ? { visible => 0, junk_status => NOT_JUNK() }
+                  : $args->{value} eq 'junk' ? { junk_status => JUNK() }
+                  :                            { junk_status => NOT_JUNK() };
             },
-            single_select_options => [
-                { label => MT->translate('Approved'),         value => 'approved', },
-                { label => MT->translate('Unapproved'),       value => 'pending', },
-                { label => MT->translate('Not spam'),         value => 'not_junk', },
-                { label => MT->translate('Reported as spam'), value => 'junk', },
+            single_select_options => [ {
+                                          label => MT->translate('Approved'),
+                                          value => 'approved',
+                                       },
+                                       {
+                                          label =>
+                                            MT->translate('Unapproved'),
+                                          value => 'pending',
+                                       },
+                                       {
+                                          label => MT->translate('Not spam'),
+                                          value => 'not_junk',
+                                       },
+                                       {
+                                          label =>
+                                            MT->translate('Reported as spam'),
+                                          value => 'junk',
+                                       },
             ],
         },
         ## Hide default author_name.
@@ -460,24 +473,24 @@ sub list_props {
                 my $prop = shift;
                 my ( $app, $val ) = @_;
                 my $user = MT->model('author')->load($val);
-                return MT->translate(
-                    "All comments by [_1] '[_2]'",
-                    (     $user->type == MT::Author::COMMENTER()
-                        ? $app->translate("Commenter")
-                        : $app->translate("Author")
-                    ),
-                    (     $user->nickname
-                        ? $user->nickname . ' (' . $user->name . ')'
-                        : $user->name
-                    )
-                );
+                return
+                  MT->translate(
+                                 "All comments by [_1] '[_2]'",
+                                 (
+                                     $user->type == MT::Author::COMMENTER()
+                                   ? $app->translate("Commenter")
+                                   : $app->translate("Author")
+                                 ),
+                                 (
+                                     $user->nickname
+                                   ? $user->nickname . ' ('
+                                     . $user->name . ')'
+                                   : $user->name
+                                 )
+                  );
             },
         },
-        text => {
-            auto    => 1,
-            label   => 'Comment Text',
-            display => 'none',
-        },
+        text => { auto => 1, label => 'Comment Text', display => 'none', },
         for_current_user => {
             base      => '__virtual.hidden',
             label     => 'Comments on My Entries/Pages',
@@ -488,10 +501,11 @@ sub list_props {
                 $db_args->{joins} ||= [];
                 my $join_str = '= comment_entry_id';
                 push @{ $db_args->{joins} }, MT->model('entry')->join_on(
-                    undef,
-                    {   id        => \$join_str,
-                        author_id => $user->id,
-                    },
+                                                    undef,
+                                                    {
+                                                      id        => \$join_str,
+                                                      author_id => $user->id,
+                                                    },
                 );
             },
         },
@@ -518,12 +532,12 @@ sub list_props {
                 }
 
                 my @users = MT->model('author')->load( { email => $query, },
-                    { fetchonly => { id => 1 }, } );
+                                              { fetchonly => { id => 1 }, } );
                 my @ids = map { $_->id } @users;
                 return [
-                    { commenter_id => \@ids },
-                    '-or',
-                    { 'email' => $query },
+                         { commenter_id => \@ids },
+                         '-or',
+                         { 'email' => $query },
                 ];
             },
         },
@@ -549,17 +563,18 @@ sub list_props {
                     $query = { like => "%$query" };
                 }
 
-                my @users = MT->model('author')->load( { url => $query, },
-                    { fetchonly => { id => 1 }, } );
+                my @users = MT->model('author')
+                  ->load( { url => $query, }, { fetchonly => { id => 1 }, } );
                 my @ids = map { $_->id } @users;
                 return [
-                    { commenter_id => \@ids },
-                    '-or', { 'url' => $query },
+                         { commenter_id => \@ids },
+                         '-or',
+                         { 'url' => $query },
                 ];
             },
         },
     };
-}
+} ## end sub list_props
 
 sub is_not_blocked {
     my ( $eh, $cmt ) = @_;

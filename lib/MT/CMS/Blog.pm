@@ -976,14 +976,15 @@ sub start_rebuild_pages {
     my $start_time = $q->param('start_time');
 
     if ( !$start_time ) {
+
         # If purge_cache checkbox is checked, purge all cached objects
-        if ( $q->param('purge_cache')) {
+        if ( $q->param('purge_cache') ) {
             my $blog_id = $app->blog->id;
-            MT->model('session')->remove({
-                id   => { like => 'blog::' . $blog_id },
-                kind => 'CO',
-            });
+            MT->model('session')
+              ->remove(
+                   { id => { like => 'blog::' . $blog_id }, kind => 'CO', } );
         }
+
         # start of build; invoke callback
         $app->run_callbacks('pre_build');
         $start_time = time;

@@ -564,17 +564,11 @@ sub filtered_list_param {
         ':',
         $app->blog->$meta,
         map {
-            join(
-                ':',
-                $_->id,
-                $_->parent,
-                Encode::encode_utf8($_->label),
-            )
-        }
-        sort { $a->id <=> $b->id } @$objs
+            join( ':', $_->id, $_->parent, Encode::encode_utf8( $_->label ), )
+          } sort { $a->id <=> $b->id } @$objs
     );
     require Digest::MD5;
-    $param->{checksum} = Digest::MD5::md5_hex( $text );
+    $param->{checksum} = Digest::MD5::md5_hex($text);
 }
 
 1;

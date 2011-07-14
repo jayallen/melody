@@ -69,9 +69,9 @@ sub list_props {
 
                 ## All Log records are saved with GMT, so do trick here.
                 my $epoch = ts2epoch( undef, $ts, 1 )
-                    ;    # just get epoch with "no_offset" option
+                  ;    # just get epoch with "no_offset" option
                 $epoch = offset_time( $epoch, $blog )
-                    ;    # from GMT to Blog( or system ) Timezone
+                  ;    # from GMT to Blog( or system ) Timezone
                 return epoch2ts( $blog, $epoch, 1 );    # back to timestamp
             },
         },
@@ -96,7 +96,7 @@ sub list_props {
                 $desc = MT::Util::encode_html($desc);
                 $msg  = MT::Util::encode_html($msg);
                 return $desc
-                    ? qq{
+                  ? qq{
                     <div class="log-message can-select">
                       <a href="#" class="toggle-link icon-left icon-spinner detail-link">$msg</a>
                       <div class="log-metadata detail">
@@ -104,16 +104,13 @@ sub list_props {
                       </div>
                     </div>
                 }
-                    : qq{
+                  : qq{
                     <div class="log-message can-select">$msg</div>
                 };
             },
         },
-        blog_name => {
-            base    => '__common.blog_name',
-            order   => 300,
-            display => 'force',
-        },
+        blog_name =>
+          { base => '__common.blog_name', order => 300, display => 'force', },
         by => {
             base        => '__virtual.string',
             label       => 'By',
@@ -125,7 +122,7 @@ sub list_props {
                 my ( $obj, $app ) = shift;
                 if ( $obj->author_id ) {
                     if ( my $user
-                        = MT->model('author')->load( $obj->author_id ) )
+                         = MT->model('author')->load( $obj->author_id ) )
                     {
                         return $user->name;
                     }
@@ -140,12 +137,13 @@ sub list_props {
                 my ( $terms, $args ) = @_;
                 $args->{joins} ||= [];
                 push @{ $args->{joins} }, MT->model('author')->join_on(
-                    undef, undef,
-                    {   sort      => 'nickname',
-                        condition => { id => \'= log_author_id', },
-                        direction => ( $args->{direction} || 'ascend' ),
-                        type      => 'left',
-                    },
+                           undef, undef,
+                           {
+                             sort      => 'nickname',
+                             condition => { id => \'= log_author_id', },
+                             direction => ( $args->{direction} || 'ascend' ),
+                             type      => 'left',
+                           },
                 );
                 $args->{sort} = [];
                 return;
@@ -168,22 +166,20 @@ sub list_props {
                     else {
                         my $blogs = $blog->blogs;
                         $terms->{blog_id}
-                            = [ map { $_->id } ( $blog, @$blogs ) ];
+                          = [ map { $_->id } ( $blog, @$blogs ) ];
                     }
                 }
-                my $iter = MT->model('log')->count_group_by(
-                    $terms,
-                    {   group    => ['class'],
-                        no_class => 1,
-                    },
-                );
+                my $iter = MT->model('log')->count_group_by( $terms,
+                                    { group => ['class'], no_class => 1, }, );
                 my @options;
                 while ( my ( $count, $class ) = $iter->() ) {
                     push @options,
-                        {
-                        label => $class ? MT->translate($class) : MT->translate('none'),
+                      {
+                          label => $class
+                        ? MT->translate($class)
+                        : MT->translate('none'),
                         value => $class ? $class : '',
-                        };
+                      };
                 }
                 return \@options;
             },
@@ -240,42 +236,52 @@ sub list_props {
                 }
                 return { level => \@types };
             },
-            single_select_options => [
-                { label => MT->translate('Security'),    value => SECURITY() },
-                { label => MT->translate('Error'),       value => ERROR() },
-                { label => MT->translate('Warning'),     value => WARNING() },
-                { label => MT->translate('Information'), value => INFO() },
-                { label => MT->translate('Debug'),       value => DEBUG() },
-                {   label => MT->translate('Security or error'),
-                    value => SECURITY() | ERROR()
-                },
-                {   label => MT->translate('Security/error/warning'),
-                    value => SECURITY() | ERROR() | WARNING()
-                },
-                {   label => MT->translate('Not debug'),
-                    value => SECURITY() | ERROR() | WARNING() | INFO()
-                },
-                { label => MT->translate('Debug/error'), value => DEBUG() | ERROR() },
+            single_select_options => [ {
+                                 label => MT->translate('Security'),
+                                 value => SECURITY()
+                               },
+                               {
+                                 label => MT->translate('Error'),
+                                 value => ERROR()
+                               },
+                               {
+                                 label => MT->translate('Warning'),
+                                 value => WARNING()
+                               },
+                               {
+                                 label => MT->translate('Information'),
+                                 value => INFO()
+                               },
+                               {
+                                 label => MT->translate('Debug'),
+                                 value => DEBUG()
+                               },
+                               {
+                                 label => MT->translate('Security or error'),
+                                 value => SECURITY() | ERROR()
+                               },
+                               {
+                                 label =>
+                                   MT->translate('Security/error/warning'),
+                                 value => SECURITY() | ERROR() | WARNING()
+                               },
+                               {
+                                 label => MT->translate('Not debug'),
+                                 value => SECURITY() | ERROR() | WARNING()
+                                   | INFO()
+                               },
+                               {
+                                 label => MT->translate('Debug/error'),
+                                 value => DEBUG() | ERROR()
+                               },
             ],
         },
-        metadata => {
-            auto    => 1,
-            label   => 'Metadata',
-            display => 'none',
-        },
-        modified_on => {
-            base    => '__virtual.modified_on',
-            display => 'none',
-        },
-        author_name => {
-            base    => '__virtual.author_name',
-            display => 'none',
-        },
-        ip => {
-            auto    => 1,
-            label   => 'IP Address',
-            display => 'default',
-        },
+        metadata => { auto => 1, label => 'Metadata', display => 'none', },
+        modified_on =>
+          { base => '__virtual.modified_on', display => 'none', },
+        author_name =>
+          { base => '__virtual.author_name', display => 'none', },
+        ip => { auto => 1, label => 'IP Address', display => 'default', },
         id => {
             base            => '__virtual.id',
             label_via_param => sub {
@@ -288,21 +294,21 @@ sub list_props {
             filter_editable => 0,
         },
     };
-}
+} ## end sub list_props
 
 sub system_filters {
     return {
-        current_website => {
-            label => 'Logs on This Website',
-            items => [ { type => 'current_context' } ],
-            order => 100,
-            view  => 'website',
-        },
-        show_only_errors => {
-            label => 'Show only errors',
-            items => [ { type => 'level', args => { value => ERROR() } }, ],
-            order => 200,
-        },
+          current_website => {
+                               label => 'Logs on This Website',
+                               items => [ { type => 'current_context' } ],
+                               order => 100,
+                               view  => 'website',
+          },
+          show_only_errors => {
+              label => 'Show only errors',
+              items => [ { type => 'level', args => { value => ERROR() } }, ],
+              order => 200,
+          },
     };
 }
 

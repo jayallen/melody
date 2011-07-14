@@ -384,8 +384,8 @@ sub as_aggregate {
     my ($set) = @_;
 
     if ( my $attribute = $stmt->$set() ) {
-        my $elements =
-          ( ref($attribute) eq 'ARRAY' ) ? $attribute : [$attribute];
+        my $elements
+          = ( ref($attribute) eq 'ARRAY' ) ? $attribute : [$attribute];
         foreach (@$elements) {
 
             # Remove column alias
@@ -393,16 +393,16 @@ sub as_aggregate {
                 $_->{column} = $1;
             }
         }
-        return
-          uc($set) . ' BY '
-          . join( ', ',
-            map { $_->{column} . ( $_->{desc} ? ( ' ' . $_->{desc} ) : '' ) }
-              @$elements )
-          . "\n";
+        return uc($set) . ' BY ' . join(
+            ', ',
+            map {
+                $_->{column} . ( $_->{desc} ? ( ' ' . $_->{desc} ) : '' )
+              } @$elements
+        ) . "\n";
     }
 
     return '';
-}
+} ## end sub as_aggregate
 
 1;
 __END__

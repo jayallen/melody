@@ -5,7 +5,7 @@ use HTML::Entities::Numbered::Table;
 use base qw(Exporter);
 use vars qw($VERSION @EXPORT %DECIMALS %ENTITIES);
 @EXPORT = qw(
-    name2decimal name2hex name2decimal_xml name2hex_xml decimal2name hex2name
+  name2decimal name2hex name2decimal_xml name2hex_xml decimal2name hex2name
 );
 
 $VERSION = '0.04';
@@ -53,18 +53,20 @@ sub hex2name {
 sub _convert2num {
     my ( $reference, $format ) = @_;
     my ($name) = $reference =~ /^&([a-z0-9]+);$/i;
-    return exists $DECIMALS{$name}
-        ? sprintf( $format, $DECIMALS{$name} )
-        : $reference;
+    return
+      exists $DECIMALS{$name}
+      ? sprintf( $format, $DECIMALS{$name} )
+      : $reference;
 }
 
 sub _convert2name {
     my $reference = shift;
     my ( $is_hex, $decimal ) = $reference =~ /^&#(x?)([a-f0-9]+);$/i;
     $decimal = sprintf( '%d', ( $is_hex ? hex($decimal) : $decimal ) );
-    return exists $ENTITIES{$decimal}
-        ? sprintf( '&%s;', $ENTITIES{$decimal} )
-        : $reference;
+    return
+      exists $ENTITIES{$decimal}
+      ? sprintf( '&%s;', $ENTITIES{$decimal} )
+      : $reference;
 }
 
 1;

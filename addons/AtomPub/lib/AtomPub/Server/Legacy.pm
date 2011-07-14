@@ -10,32 +10,32 @@ use strict;
 use base qw( AtomPub::Server::Weblog );
 
 use MT::I18N qw( encode_text );
-use XML::Atom;  # for LIBXML
+use XML::Atom;    # for LIBXML
 use XML::Atom::Feed;
 use MT::Blog;
 use MT::Permission;
 
 use constant NS_CATEGORY => 'http://sixapart.com/atom/category#';
-use constant NS_DC => AtomPub::Server::Weblog->NS_DC();
-use constant NS_SOAP => 'http://schemas.xmlsoap.org/soap/envelope/';
-use constant NS_WSSE => 'http://schemas.xmlsoap.org/ws/2002/07/secext';
-use constant NS_WSU => 'http://schemas.xmlsoap.org/ws/2002/07/utility';
+use constant NS_DC       => AtomPub::Server::Weblog->NS_DC();
+use constant NS_SOAP     => 'http://schemas.xmlsoap.org/soap/envelope/';
+use constant NS_WSSE     => 'http://schemas.xmlsoap.org/ws/2002/07/secext';
+use constant NS_WSU      => 'http://schemas.xmlsoap.org/ws/2002/07/utility';
 
 sub script { $_[0]->{cfg}->AtomScript . '/weblog' }
 
-sub atom_content_type   { 'application/xml' }
-sub atom_x_content_type { 'application/x.atom+xml' }
+sub atom_content_type   {'application/xml'}
+sub atom_x_content_type {'application/x.atom+xml'}
 
-sub edit_link_rel { 'service.edit' }
-sub get_posts_order_field { 'authored_on' }
+sub edit_link_rel         {'service.edit'}
+sub get_posts_order_field {'authored_on'}
 
 sub atom_body {
     my $app = shift;
     return $app->SUPER::atom_body(@_) if !$app->{is_soap};
 
     my $xml = $app->xml_body;
-    return AtomPub::Atom::Entry->new(Elem => first($xml, NS_SOAP, 'Body'))
-        or $app->error(500, AtomPub::Atom::Entry->errstr);
+    return AtomPub::Atom::Entry->new( Elem => first( $xml, NS_SOAP, 'Body' ) )
+      or $app->error( 500, AtomPub::Atom::Entry->errstr );
 }
 
 sub get_auth_info {
@@ -44,28 +44,27 @@ sub get_auth_info {
 
     my %param;
     my $xml = $app->xml_body;
-    my $auth = first($xml, NS_WSSE, 'UsernameToken');
-    $param{Username} = textValue($auth, NS_WSSE, 'Username');
-    $param{PasswordDigest} = textValue($auth, NS_WSSE, 'Password');
-    $param{Nonce} = textValue($auth, NS_WSSE, 'Nonce');
-    $param{Created} = textValue($auth, NS_WSU, 'Created');
+    my $auth = first( $xml, NS_WSSE, 'UsernameToken' );
+    $param{Username}       = textValue( $auth, NS_WSSE, 'Username' );
+    $param{PasswordDigest} = textValue( $auth, NS_WSSE, 'Password' );
+    $param{Nonce}          = textValue( $auth, NS_WSSE, 'Nonce' );
+    $param{Created}        = textValue( $auth, NS_WSU,  'Created' );
     return \%param;
 }
 
 sub handle {
     my $app = shift;
 
-    if (my $action = $app->get_header('SOAPAction')) {
+    if ( my $action = $app->get_header('SOAPAction') ) {
         $app->{is_soap} = 1;
-        $action =~ s/"//g; # "
-        my($method) = $action =~ m!/([^/]+)$!;
+        $action =~ s/"//g;    # "
+        my ($method) = $action =~ m!/([^/]+)$!;
         $app->request_method($method);
     }
 
-    my $out = $app->SUPER::handle(@_)
-        or return;
+    my $out = $app->SUPER::handle(@_) or return;
 
-    if ($app->{is_soap}) {
+    if ( $app->{is_soap} ) {
         $out =~ s!^(<\?xml.*?\?>)!!;
         $out = <<SOAP;
 $1
@@ -76,16 +75,16 @@ SOAP
     }
 
     return $out;
-}
+} ## end sub handle
 
 sub show_error {
     my $app = shift;
     return $app->SUPER::show_error(@_) if !$app->{is_soap};
 
-    my($err) = @_;
-    chomp($err = encode_xml($err));
+    my ($err) = @_;
+    chomp( $err = encode_xml($err) );
     my $code = $app->response_code;
-    if ($code >= 400) {
+    if ( $code >= 400 ) {
         $app->response_code(500);
         $app->response_message($err);
     }
@@ -99,7 +98,7 @@ sub show_error {
   </soap:Body>
 </soap:Envelope>
 FAULT
-}
+} ## end sub show_error
 
 sub new_feed {
     my $app = shift;
@@ -112,56 +111,91 @@ sub new_with_entry {
     AtomPub::Atom::Entry->new_with_entry($entry);
 }
 
-sub apply_basename {}
+sub apply_basename { }
 
 sub get_weblogs {
-    my $app = shift;
+    my $app  = shift;
     my $user = $app->{user};
-    my $iter = $user->is_superuser
-        ? MT::Blog->load_iter()
-        : MT::Permission->load_iter({ author_id => $user->id });
+    my $iter
+      = $user->is_superuser
+      ? MT::Blog->load_iter()
+      : MT::Permission->load_iter( { author_id => $user->id } );
     my $feed = $app->new_feed();
     my $base = $app->base . $app->uri;
     require URI;
     my $uri = URI->new($base);
-    if ( $uri ) {
-        my $created = MT::Util::format_ts('%Y-%m-%d', $user->created_on, undef, 'en', 0);
-        my $id = 'tag:'.$uri->host.','.$created.':'.$uri->path.'/weblogs-'.$user->id;
+    if ($uri) {
+        my $created
+          = MT::Util::format_ts( '%Y-%m-%d', $user->created_on, undef, 'en',
+                                 0 );
+        my $id
+          = 'tag:'
+          . $uri->host . ','
+          . $created . ':'
+          . $uri->path
+          . '/weblogs-'
+          . $user->id;
         $feed->id($id);
     }
-    while (my $thing = $iter->()) {
-        if ($thing->isa('MT::Permission')) {
+    while ( my $thing = $iter->() ) {
+        if ( $thing->isa('MT::Permission') ) {
             next unless $thing->can_create_post;
         }
-        my $blog = $thing->isa('MT::Blog') ? $thing
-            : MT::Blog->load($thing->blog_id);
+        my $blog
+          = $thing->isa('MT::Blog')
+          ? $thing
+          : MT::Blog->load( $thing->blog_id );
         next unless $blog;
         my $uri = $base . '/blog_id=' . $blog->id;
-        my $blogname = encode_text($blog->name . ' #' . $blog->id, undef, 'utf-8');
-        $feed->add_link({ rel => 'service.post', title => $blogname,
-                          href => $uri, type => 'application/x.atom+xml' });
-        $feed->add_link({ rel => 'service.feed', title => $blogname,
-                          href => $uri, type => 'application/x.atom+xml' });
-        $feed->add_link({ rel => 'service.upload', title => $blogname,
-                          href => $uri . '/svc=upload',
-                          type => 'application/x.atom+xml' });
-        $feed->add_link({ rel => 'service.categories', title => $blogname,
-                          href => $uri . '/svc=categories',
-                          type => 'application/x.atom+xml' });
-        $feed->add_link({ rel => 'alternate', title => $blogname,
-                          href => $blog->site_url,
-                          type => 'text/html' });
-    }
+        my $blogname
+          = encode_text( $blog->name . ' #' . $blog->id, undef, 'utf-8' );
+        $feed->add_link( {
+                           rel   => 'service.post',
+                           title => $blogname,
+                           href  => $uri,
+                           type  => 'application/x.atom+xml'
+                         }
+        );
+        $feed->add_link( {
+                           rel   => 'service.feed',
+                           title => $blogname,
+                           href  => $uri,
+                           type  => 'application/x.atom+xml'
+                         }
+        );
+        $feed->add_link( {
+                           rel   => 'service.upload',
+                           title => $blogname,
+                           href  => $uri . '/svc=upload',
+                           type  => 'application/x.atom+xml'
+                         }
+        );
+        $feed->add_link( {
+                           rel   => 'service.categories',
+                           title => $blogname,
+                           href  => $uri . '/svc=categories',
+                           type  => 'application/x.atom+xml'
+                         }
+        );
+        $feed->add_link( {
+                           rel   => 'alternate',
+                           title => $blogname,
+                           href  => $blog->site_url,
+                           type  => 'text/html'
+                         }
+        );
+    } ## end while ( my $thing = $iter...)
     $app->response_code(200);
     $app->response_content_type('application/x.atom+xml');
     $feed->as_xml;
-}
+} ## end sub get_weblogs
 
 sub new_asset_inline {
     my $app = shift;
 
     # Text content types used to mean plain posts, so still make entries out of them.
-    if ($app->atom_body->content->type =~ m{ \A text/ }xms) {
+    if ( $app->atom_body->content->type =~ m{ \A text/ }xms ) {
+
         # TODO: but make sure text/plain LifeBlog Notes and SMSes are handled as assets
         #my $format = $atom->get(NS_DC, 'format');
         #if ($format && ($format eq 'Note' || $format eq 'SMS')) {
@@ -175,41 +209,46 @@ sub new_asset_inline {
 }
 
 sub get_categories {
-    my $app = shift;
+    my $app  = shift;
     my $blog = $app->{blog};
-    my $iter = MT::Category->load_iter({ blog_id => $blog->id });
+    my $iter = MT::Category->load_iter( { blog_id => $blog->id } );
     my $doc;
     if (LIBXML) {
-        $doc = XML::LibXML::Document->createDocument('1.0', 'utf-8');
-        my $root = $doc->createElementNS(NS_CATEGORY, 'categories');
+        $doc = XML::LibXML::Document->createDocument( '1.0', 'utf-8' );
+        my $root = $doc->createElementNS( NS_CATEGORY, 'categories' );
         $doc->setDocumentElement($root);
-    } else {
+    }
+    else {
         $doc = XML::XPath::Node::Element->new('categories');
-        my $ns = XML::XPath::Node::Namespace->new('#default' => NS_CATEGORY);
+        my $ns
+          = XML::XPath::Node::Namespace->new( '#default' => NS_CATEGORY );
         $doc->appendNamespace($ns);
     }
-    while (my $cat = $iter->()) {
-        my $catlabel = encode_text($cat->label, undef, 'utf-8');
+    while ( my $cat = $iter->() ) {
+        my $catlabel = encode_text( $cat->label, undef, 'utf-8' );
         if (LIBXML) {
-            my $elem = $doc->createElementNS(NS_DC, 'subject');
+            my $elem = $doc->createElementNS( NS_DC, 'subject' );
             $doc->getDocumentElement->appendChild($elem);
-            $elem->appendChild(XML::LibXML::Text->new($catlabel));
-        } else {
+            $elem->appendChild( XML::LibXML::Text->new($catlabel) );
+        }
+        else {
             my $elem = XML::XPath::Node::Element->new('subject');
-            my $ns = XML::XPath::Node::Namespace->new('#default' => NS_DC);
+            my $ns = XML::XPath::Node::Namespace->new( '#default' => NS_DC );
             $elem->appendNamespace($ns);
             $doc->appendChild($elem);
-            $elem->appendChild(XML::XPath::Node::Text->new($catlabel));
+            $elem->appendChild( XML::XPath::Node::Text->new($catlabel) );
         }
     }
     $app->response_code(200);
     $app->response_content_type('application/x.atom+xml');
     if (LIBXML) {
         $doc->toString(1);
-    } else {
-        return '<?xml version="1.0" encoding="utf-8"?>' . "\n" . $doc->toString;
     }
-}
+    else {
+        return '<?xml version="1.0" encoding="utf-8"?>' . "\n"
+          . $doc->toString;
+    }
+} ## end sub get_categories
 
 
 1;

@@ -14,7 +14,7 @@ sub instance {
     my $pkg = shift;
     my ( $cls, $id ) = @_;
     if ( !defined $id && $cls =~ m/\./ ) {
-        ( $cls, $id ) = split(/\./, $cls, 2);
+        ( $cls, $id ) = split( /\./, $cls, 2 );
     }
     my $prop = $pkg->new( $cls, $id );
     $prop->_get('init') if $prop->has('init');
@@ -30,7 +30,7 @@ sub init {
     my $self = shift;
     my ( $cls, $id ) = @_;
     if ( !defined $id && $cls =~ m/\./ ) {
-        ( $cls, $id ) = split(/\./, $cls, 2);
+        ( $cls, $id ) = split( /\./, $cls, 2 );
     }
     die 'Object type and Property ID are required' if ( !$cls || !$id );
 
@@ -59,12 +59,13 @@ sub _init_core {
     if ( !defined $prop && $cls ne '__common' ) {
         my $common_props = MT->registry( list_properties => '__common' );
         $prop = $common_props->{$id};
+
 #        use Data::Dumper;
 #        print STDERR Dumper($prop);
         # Property is undefined
         die MT->translate( q{Can't initialize list property [_1].[_2].},
-            $cls, $id )
-            if !$prop;
+                           $cls, $id )
+          if !$prop;
     }
 
     delete $prop->{plugin};
@@ -72,7 +73,7 @@ sub _init_core {
         $self->{$key} = $prop->{$key};
     }
     $self;
-}
+} ## end sub _init_core
 
 sub AUTOLOAD {
     my $obj = $_[0];
@@ -95,7 +96,7 @@ sub AUTOLOAD {
         my $attr     = shift;
         my $orig_obj = shift || $obj;
         my ( $attr_val, $attr_owner ) = _get_attr( $obj, $attr, $orig_obj )
-            or return undef;
+          or return undef;
 
         my $code;
         if ( 'CODE' eq ref $attr_val ) {
@@ -111,14 +112,13 @@ sub AUTOLOAD {
             return $code->( $orig_obj, @_ );
         }
         $attr_val;
-    }
+    } ## end sub _get
 
     sub super {
         my $obj = shift;
         return if !$ATTR_OWNER;
         return if !$ATTR_NAME;
-        my $super = $ATTR_OWNER->base
-            or return;
+        my $super = $ATTR_OWNER->base or return;
         $super->_get( $ATTR_NAME, $obj, @_ );
     }
 }
@@ -209,14 +209,14 @@ sub base {
         }
         my $column_type = $def->{type};
         my $auto_type   = $AUTO{$column_type}
-            or die MT->translate(
+          or die MT->translate(
             'Failed to init auto list property [_1].[_2]: unsupported column type.',
             $prop_class, $id
-            );
+          );
         $orig_obj->{col} = $id;
         my $prop = __PACKAGE__->instance( '__virtual', $auto_type );
         return $prop;
-    }
+    } ## end sub _auto_base
 }
 
 sub join_meta {
@@ -250,17 +250,15 @@ sub join_meta {
 
     $to_args->{joins} ||= [];
     push @{ $to_args->{joins} },
-        $prop->datasource->meta_pkg->join_on( undef, [ \%j_terms ], \%j_args,
-        );
+      $prop->datasource->meta_pkg->join_on( undef, [ \%j_terms ], \%j_args, );
     return;
-}
+} ## end sub join_meta
 
 sub _scope_filter {
     my $prop = shift;
     my ( $area, $scope ) = @_;
     my $area_view = "view_$area";
-    my $view = $prop->$area_view || $prop->view
-        or return 1;
+    my $view = $prop->$area_view || $prop->view or return 1;
     my %hash;
     $view = [$view] if !ref $view;
     if ( 'ARRAY' eq ref $view ) {
@@ -296,36 +294,37 @@ sub list_properties {
         }
     }
     return \%props;
-}
+} ## end sub list_properties
 
 sub can_display {
     my $prop = shift;
-    return (   $prop->has('bulk_html')
-            || $prop->has('html')
-            || $prop->has('raw') )
-        && ( 'none' ne ( $prop->display || 'optional' ) )
-        && $prop->_scope_filter( 'column', @_ );
+    return (    $prop->has('bulk_html')
+             || $prop->has('html')
+             || $prop->has('raw') )
+      && ( 'none' ne ( $prop->display || 'optional' ) )
+      && $prop->_scope_filter( 'column', @_ );
 }
 
 sub can_sort {
     my $prop = shift;
-    return (   $prop->has('sort')
-            || $prop->has('sort_method')
-            || $prop->has('bulk_sort') )
-        && $prop->_scope_filter( 'sort', @_ );
+    return (    $prop->has('sort')
+             || $prop->has('sort_method')
+             || $prop->has('bulk_sort') )
+      && $prop->_scope_filter( 'sort', @_ );
 }
 
 sub can_filter {
     my $prop = shift;
     return ( $prop->has('terms') || $prop->has('grep') )
-        && $prop->_scope_filter( 'filter', @_ );
+      && $prop->_scope_filter( 'filter', @_ );
 }
 
 sub common_label_html {
     my $prop = shift;
     my ( $obj, $app ) = @_;
-    return make_common_label_html( $obj, $app, $prop->col,
-        $prop->alternative_label );
+    return
+      make_common_label_html( $obj, $app, $prop->col,
+                              $prop->alternative_label );
 }
 
 sub make_common_label_html {
@@ -333,29 +332,24 @@ sub make_common_label_html {
     my $id    = $obj->id;
     my $label = $obj->$col;
     my $blog_id
-        = $obj->has_column('blog_id') ? $obj->blog_id
-        : $app->blog                  ? $app->blog->id
-        :                               0;
-    my $type      = $obj->class_type;
+      = $obj->has_column('blog_id') ? $obj->blog_id
+      : $app->blog                  ? $app->blog->id
+      :                               0;
+    my $type = $obj->class_type;
     my $edit_link = $app->uri(
-        mode => 'view',
-        args => {
-            _type   => $type,
-            id      => $id,
-            blog_id => $blog_id,
-        },
+                  mode => 'view',
+                  args => { _type => $type, id => $id, blog_id => $blog_id, },
     );
     if ($label) {
         $label = MT::Util::encode_html($label);
         return qq{<a href="$edit_link">$label</a>};
     }
     else {
-        return MT->translate(
-            qq{[_1] (<a href="[_2]">id:[_3]</a>)},
-            $alt_label ? $alt_label : 'No ' . $label,
-            $edit_link, $id,
-        );
+        return
+          MT->translate( qq{[_1] (<a href="[_2]">id:[_3]</a>)},
+                         $alt_label ? $alt_label : 'No ' . $label,
+                         $edit_link, $id, );
     }
-}
+} ## end sub make_common_label_html
 
 1;

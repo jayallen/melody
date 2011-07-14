@@ -89,6 +89,7 @@ for my $c_id (@components) {
                 $res = $c->translate( $key,
                                   qw( 111 222 333 444 555 666 777 888 999 ) );
             };
+
             if ( $@ || !defined $res ) {
                 $e++;
                 $total_errors++;

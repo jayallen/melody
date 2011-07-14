@@ -152,10 +152,7 @@ sub class_label_plural {
 
 sub list_props {
     return {
-        id => {
-            base  => '__virtual.id',
-            order => 100,
-        },
+        id   => { base => '__virtual.id', order => 100, },
         name => {
             auto      => 1,
             label     => 'Name',
@@ -163,61 +160,64 @@ sub list_props {
             display   => 'force',
             html_link => sub {
                 my ( $prop, $obj, $app ) = @_;
-                return $app->uri(
-                    mode => 'dashboard',
-                    args => { blog_id => $obj->id, },
-                );
+                return
+                  $app->uri( mode => 'dashboard',
+                             args => { blog_id => $obj->id, }, );
             },
         },
         entry_count => {
-            label              => 'Entries',
-            filter_label       => '__ENTRY_COUNT',
-            order              => 300,
-            base               => '__virtual.object_count',
-            display            => 'default',
-            count_class        => 'entry',
-            count_col          => 'blog_id',
-            filter_type        => 'blog_id',
-            list_screen        => 'entry',
-            permission         => 'manage_entries',
+            label        => 'Entries',
+            filter_label => '__ENTRY_COUNT',
+            order        => 300,
+            base         => '__virtual.object_count',
+            display      => 'default',
+            count_class  => 'entry',
+            count_col    => 'blog_id',
+            filter_type  => 'blog_id',
+            list_screen  => 'entry',
+            permission   => 'manage_entries',
+
 #            list_permit_action => 'access_to_entry_list',
         },
         page_count => {
-            label              => 'Pages',
-            filter_label       => '__PAGE_COUNT',
-            order              => 400,
-            base               => '__virtual.object_count',
-            display            => 'default',
-            count_class        => 'page',
-            count_col          => 'blog_id',
-            filter_type        => 'blog_id',
-            list_screen        => 'page',
-            permission         => 'manage_pages',
+            label        => 'Pages',
+            filter_label => '__PAGE_COUNT',
+            order        => 400,
+            base         => '__virtual.object_count',
+            display      => 'default',
+            count_class  => 'page',
+            count_col    => 'blog_id',
+            filter_type  => 'blog_id',
+            list_screen  => 'page',
+            permission   => 'manage_pages',
+
 #            list_permit_action => 'access_to_page_list',
         },
         asset_count => {
-            label              => 'Assets',
-            filter_label       => '__ASSET_COUNT',
-            order              => 500,
-            base               => '__virtual.object_count',
-            count_class        => 'asset',
-            count_col          => 'blog_id',
-            filter_type        => 'blog_id',
-            list_screen        => 'asset',
-            count_args         => { no_class => 1 },
-            permission         => 'manage_assets',
+            label        => 'Assets',
+            filter_label => '__ASSET_COUNT',
+            order        => 500,
+            base         => '__virtual.object_count',
+            count_class  => 'asset',
+            count_col    => 'blog_id',
+            filter_type  => 'blog_id',
+            list_screen  => 'asset',
+            count_args   => { no_class => 1 },
+            permission   => 'manage_assets',
+
 #            list_permit_action => 'access_to_asset_list',
         },
         comment_count => {
-            label              => 'Comments',
-            filter_label       => '__COMMENT_COUNT',
-            order              => 600,
-            base               => '__virtual.object_count',
-            count_class        => 'comment',
-            count_col          => 'blog_id',
-            filter_type        => 'blog_id',
-            list_screen        => 'comment',
-            permission         => 'manage_comments',
+            label        => 'Comments',
+            filter_label => '__COMMENT_COUNT',
+            order        => 600,
+            base         => '__virtual.object_count',
+            count_class  => 'comment',
+            count_col    => 'blog_id',
+            filter_type  => 'blog_id',
+            list_screen  => 'comment',
+            permission   => 'manage_comments',
+
 #            list_permit_action => 'access_to_comment_list',
         },
 
@@ -257,15 +257,10 @@ sub list_props {
 #                } @$objs;
 #            },
 #        },
-        created_on => {
-            base  => '__virtual.created_on',
-            order => 900,
-        },
-        description => {
-            auto    => 1,
-            label   => 'Description',
-            display => 'none',
-        },
+        created_on => { base => '__virtual.created_on', order => 900, },
+        description =>
+          { auto => 1, label => 'Description', display => 'none', },
+
 #        theme_id => {
 #            label                 => 'Theme',
 #            base                  => '__virtual.single_select',
@@ -285,12 +280,10 @@ sub list_props {
 #                ];
 #            },
 #        },
-        modified_on => {
-            display => 'none',
-            base    => '__virtual.modified_on',
-        },
+        modified_on =>
+          { display => 'none', base => '__virtual.modified_on', },
     };
-}
+} ## end sub list_props
 
 {
     my $default_text_format;

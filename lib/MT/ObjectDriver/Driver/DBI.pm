@@ -123,23 +123,20 @@ sub count {
             else {
                 $col = $class->properties->{primary_key};
             }
-            my $dbcol =
-              $driver->dbd->db_column_name( $class->datasource, $col );
+            my $dbcol
+              = $driver->dbd->db_column_name( $class->datasource, $col );
             $select = "COUNT(DISTINCT $dbcol)";
         }
     }
 
-    return $driver->_select_aggregate(
-        select   => $select,
-        class    => $class,
-        terms    => $terms,
-        args     => $args,
-        override => {
-            order  => '',
-            limit  => undef,
-            offset => undef,
-        },
-    );
+    return
+      $driver->_select_aggregate(
+                select   => $select,
+                class    => $class,
+                terms    => $terms,
+                args     => $args,
+                override => { order => '', limit => undef, offset => undef, },
+      );
 } ## end sub count
 
 sub exist {
@@ -292,6 +289,7 @@ sub _do_group_by {
     my $col_count = scalar @{ $stmt->select };
     $col_count--;
     for ( 1 .. $col_count ) {
+
 #    for ( @{ $args->{group} } ) {
         push @bindvars, \my ($var);
     }
@@ -388,8 +386,8 @@ sub prepare_statement {
     my $args = defined $orig_args ? {%$orig_args} : {};
 
     my @joins = (
-        ( $args->{join}  ? $args->{join}       : () ),
-        ( $args->{joins} ? @{ $args->{joins} } : () ),
+                  ( $args->{join}  ? $args->{join}       : () ),
+                  ( $args->{joins} ? @{ $args->{joins} } : () ),
     );
     my %stmt_args;
 
@@ -526,9 +524,9 @@ sub prepare_statement {
                 my $dir = $args->{direction}
                   && $args->{direction} eq 'descend' ? 'DESC' : 'ASC';
                 $stmt->order( {
-                              column => $pfx . $dbd->db_column_name( $tbl, $order ),
-                              desc   => $dir,
-                            }
+                       column => $pfx . $dbd->db_column_name( $tbl, $order ),
+                       desc   => $dir,
+                     }
                 );
             }
             else {
@@ -536,7 +534,8 @@ sub prepare_statement {
                 foreach my $ord (@$order) {
                     push @order,
                       {
-                        column => $pfx . $dbd->db_column_name( $tbl, $ord->{column} ),
+                        column => $pfx
+                          . $dbd->db_column_name( $tbl, $ord->{column} ),
                         desc => $ord->{desc},
                       };
                 }
@@ -619,24 +618,22 @@ sub prepare_statement {
             }
         }
 
-        $stmt->{joins} =
-          [ @{ $stmt->{joins} || [] }, @{ $join_stmt->{joins} || [] } ]
+        $stmt->{joins}
+          = [ @{ $stmt->{joins} || [] }, @{ $join_stmt->{joins} || [] } ]
           if $join_stmt->{joins};
 
         if ( $j_args->{type} ) {
             my $cond = $j_args->{condition};
             my $cond_query;
-            my $to_class =
-              $j_args->{to}
-              ? MT->model( $j_args->{to} )
-              : $class;
+            my $to_class
+              = $j_args->{to} ? MT->model( $j_args->{to} ) : $class;
             my $to_table = $driver->table_for($to_class);
             my $j_table  = $driver->table_for($j_class);
             if ( 'HASH' eq ref $cond ) {
                 my $dbh = $driver->rw_handle;
                 foreach my $cond_col ( keys %$cond ) {
-                    my $col =
-                      $driver->_decorate_column_name( $j_class, $cond_col );
+                    my $col
+                      = $driver->_decorate_column_name( $j_class, $cond_col );
                     $cond_query .= ' AND ' if $cond_query;
                     my $condition = $cond->{$cond_col};
                     if ( 'SCALAR' eq ref $condition ) {
@@ -657,10 +654,10 @@ sub prepare_statement {
                     my $t = $tuple->[$i];
                     my $c = $cond->[$i];
 
-                    my $where_col =
-                      $driver->_decorate_column_name( $to_class, $t );
-                    my $dec_j_col =
-                        $alias
+                    my $where_col
+                      = $driver->_decorate_column_name( $to_class, $t );
+                    my $dec_j_col
+                      = $alias
                       ? $alias . '.'
                       . $driver->_decorate_column_name( $j_class, $c )
                       : $driver->_decorate_column_name( $j_class, $c );
@@ -668,46 +665,45 @@ sub prepare_statement {
                     $cond_query .= ' AND ' if $cond_query;
                     $cond_query .= "$where_col = $where_val";
                 }
-            }
+            } ## end else [ if ( 'HASH' eq ref $cond)]
 
             $stmt->add_join(
-                $to_table,
-                {
-                    table     => $j_table,
-                    condition => $cond_query,
-                    type      => $j_args->{type},
-                },
+                             $to_table,
+                             {
+                                table     => $j_table,
+                                condition => $cond_query,
+                                type      => $j_args->{type},
+                             },
             );
 
-            my @new_from =
-              grep { $_ ne $j_table and $_ ne $to_table } @{ $stmt->from };
+            my @new_from
+              = grep { $_ ne $j_table and $_ ne $to_table } @{ $stmt->from };
             $stmt->from( \@new_from );
-        }
+        } ## end if ( $j_args->{type} )
         else {
             ## Join across the given column(s).
             $j_col = [$j_col] unless ref $j_col;
-            my $to_class =
-                $j_args->{to}
-            ? MT->model( $j_args->{to} )
-                : $class;
+            my $to_class
+              = $j_args->{to} ? MT->model( $j_args->{to} ) : $class;
             my $tuple = $to_class->primary_key_tuple;
             my $alias = $j_args->{alias};
           COLUMN: foreach my $i ( 0 .. $#$j_col ) {
-              next unless defined $j_col->[$i];
-              my $t = $tuple->[$i];
-              my $c = $j_col->[$i];
+                next unless defined $j_col->[$i];
+                my $t = $tuple->[$i];
+                my $c = $j_col->[$i];
 
-              my $where_col = $driver->_decorate_column_name( $to_class, $t );
-              my $dec_j_col =
-                  $alias
+                my $where_col
+                  = $driver->_decorate_column_name( $to_class, $t );
+                my $dec_j_col
+                  = $alias
                   ? $alias . '.'
                   . $driver->_decorate_column_name( $j_class, $c )
                   : $driver->_decorate_column_name( $j_class, $c );
-              my $where_val = "= $dec_j_col";
-              $stmt->add_where( $where_col, \$where_val );
-          }
-        } ## end if ($join)
-    }
+                my $where_val = "= $dec_j_col";
+                $stmt->add_where( $where_col, \$where_val );
+            }
+        } ## end else [ if ( $j_args->{type} )]
+    } ## end while ( my $join = shift ...)
 
     if ($start_val) {
         ## TODO: support complex primary keys

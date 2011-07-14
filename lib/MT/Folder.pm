@@ -34,16 +34,9 @@ sub contents_label_plural {
 
 sub list_props {
     return {
-        parent => {
-            base => 'category.parent',
-        },
-        entry_count => {
-            base => 'category.entry_count',
-        },
-        custom_sort => {
-            class => 'folder',
-            base => 'category.custom_sort',
-        },
+        parent      => { base  => 'category.parent', },
+        entry_count => { base  => 'category.entry_count', },
+        custom_sort => { class => 'folder', base => 'category.custom_sort', },
     };
 }
 

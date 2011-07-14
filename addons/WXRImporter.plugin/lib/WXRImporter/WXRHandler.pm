@@ -30,7 +30,7 @@ sub start_document {
     $self->{start}          = 1;
     $self->{basename_limit} = 255;    # max length of the column
     *_decoder = sub { $_[0]; }
-        unless $self->{is_pp};
+      unless $self->{is_pp};
 
     1;
 }
@@ -56,13 +56,13 @@ sub start_element {
 
     if ( exists $self->{in_wp_comment_content} ) {
 
-  # wordpress's comment content consists of mixed contents (tags and texts)...
+        # wordpress's comment content consists of mixed contents (tags and texts)...
         my $element_data = '<' . $data->{Name};
         for my $attr ( keys %$attrs ) {
             $element_data
-                .= ' '
-                . $attrs->{$attr}->{Name} . '='
-                . $attrs->{$attr}->{Value};
+              .= ' '
+              . $attrs->{$attr}->{Name} . '='
+              . $attrs->{$attr}->{Value};
         }
         $element_data .= '>';
         $data->{Data} = $element_data;
@@ -72,39 +72,39 @@ sub start_element {
 
     if ( $self->{start} ) {
         die $plugin->translate("File is not in WXR format.")
-            unless ( ( 'rss' eq $name )
-            && ( '2.0' eq $attrs->{'{}version'}->{Value} ) )
-            ;    ## FIXME: This is checking RSS2.
+          unless (    ( 'rss' eq $name )
+                   && ( '2.0' eq $attrs->{'{}version'}->{Value} ) )
+          ;    ## FIXME: This is checking RSS2.
         $self->{start} = 0;
         $self->{'bucket'} = [];
         return 1;
     }
 
     my %values
-        = map { $attrs->{$_}->{LocalName} => _decoder( $attrs->{$_}->{Value} ) }
-        keys(%$attrs);
+      = map { $attrs->{$_}->{LocalName} => _decoder( $attrs->{$_}->{Value} ) }
+      keys(%$attrs);
 
     $self->{in_wp_comment_content} = 1
-        if ( 'wp' eq $prefix ) && ( 'comment_content' eq $name );
+      if ( 'wp' eq $prefix ) && ( 'comment_content' eq $name );
 
     if ( scalar(%values) ) {
         push @{ $self->{'bucket'} },
-            { $prefix . '_' . $name => undef, _a => \%values };
+          { $prefix . '_' . $name => undef, _a => \%values };
     }
     else {
         push @{ $self->{'bucket'} }, $prefix . '_' . $name;
     }
     1;
-}
+} ## end sub start_element
 
 sub characters {
     my $self = shift;
     my $data = shift;
 
     return
-        unless ( $data->{Data} !~ /^\s+$/ )
-        || ( exists $self->{in_wp_comment_content} )
-        ;    # see if we need to process whitespaces
+      unless ( $data->{Data} !~ /^\s+$/ )
+      || ( exists $self->{in_wp_comment_content} )
+      ;    # see if we need to process whitespaces
 
     my $element = pop @{ $self->{'bucket'} };
     return unless $element;
@@ -122,7 +122,7 @@ sub characters {
     }
     push @{ $self->{'bucket'} }, $element;
     1;
-}
+} ## end sub characters
 
 sub end_element {
     my $self = shift;
@@ -131,11 +131,11 @@ sub end_element {
     my $name   = $data->{LocalName};
     my $prefix = $data->{Prefix};
 
-    if (   ( exists $self->{in_wp_comment_content} )
-        && ( 'wp:comment_content' ne $data->{Name} ) )
+    if (    ( exists $self->{in_wp_comment_content} )
+         && ( 'wp:comment_content' ne $data->{Name} ) )
     {
 
-  # wordpress's comment content consists of mixed contents (tags and texts)...
+        # wordpress's comment content consists of mixed contents (tags and texts)...
         my $element_data = '</' . $data->{Name} . '>';
         $data->{Data} = $element_data;
         $self->characters($data);
@@ -144,8 +144,8 @@ sub end_element {
     my $element = pop @{ $self->{'bucket'} };
     if ( 'HASH' eq ref($element) ) {
         $element->{ $prefix . '_' . $name }
-            = _decoder( $element->{ $prefix . '_' . $name } )
-            if exists $element->{ $prefix . '_' . $name };
+          = _decoder( $element->{ $prefix . '_' . $name } )
+          if exists $element->{ $prefix . '_' . $name };
     }
     push @{ $self->{'bucket'} }, $element;
     my $name_element = $prefix . '_' . $name;
@@ -173,7 +173,7 @@ sub end_element {
     }
 
     1;
-}
+} ## end sub end_element
 
 sub _setup_metadata {
     my $self = shift;
@@ -203,7 +203,7 @@ sub _setup_metadata {
         }
     }
     push @{ $self->{'bucket'} }, { 'wp_postmeta' => $meta };
-}
+} ## end sub _setup_metadata
 
 sub _update_blog {
     my $self = shift;
@@ -231,7 +231,7 @@ sub _update_blog {
         }
     }
     $blog->save;
-}
+} ## end sub _update_blog
 
 sub _create_category {
     my $self   = shift;
@@ -254,19 +254,17 @@ sub _create_category {
         if ( 'wp_category_nicename' eq $key ) {
             my $dash = MT->instance->config('CategoryNameNodash') ? '' : '-';
             my $base = MT::Util::dirify( MT::Util::decode_url($value) )
-                || ( "cat" . $dash . $cat->id );
+              || ( "cat" . $dash . $cat->id );
             $base = substr( $base, 0, $self->{basename_limit} );
             $base =~ s/_+$//;
             $base = 'cat' if $base eq '';
             my $i         = 1;
             my $base_copy = $base;
             while (
-                MT::Category->count(
-                    {   blog_id  => $blog->id,
-                        basename => $base
-                    }
-                )
-                )
+                    MT::Category->count(
+                                   { blog_id => $blog->id, basename => $base }
+                    )
+              )
             {
                 $base = $base_copy . '_' . $i++;
             }
@@ -274,10 +272,7 @@ sub _create_category {
         }
         elsif ( 'wp_category_parent' eq $key ) {
             my $parent = MT::Category->load(
-                {   label   => $value,
-                    blog_id => $self->{blog}->id
-                }
-            );
+                          { label => $value, blog_id => $self->{blog}->id } );
             $cat->parent( $parent->id ) if defined $parent;
         }
         elsif ( 'wp_posts_private' eq $key ) {
@@ -295,7 +290,7 @@ sub _create_category {
         elsif ( 'wp_category_description' eq $key ) {
             $cat->description($value);
         }
-    }
+    } ## end while ( my $hash = pop @{...})
     if ( defined $cat ) {
         if ( exists $self->{author} ) {
             $cat->author_id( $self->{author}->id );
@@ -304,21 +299,22 @@ sub _create_category {
             $cat->author_id( $self->{parent}->id );
         }
         $cb->(
-            $plugin->translate(
-                "Creating new category ('[_1]')...",
-                $cat->label
-            )
+               $plugin->translate(
+                                   "Creating new category ('[_1]')...",
+                                   $cat->label
+               )
         );
         if ( $cat->save ) {
             $cb->( $plugin->translate("ok") . "\n" );
         }
         else {
             $cb->( $plugin->translate("failed") . "\n" );
-            return die $plugin->translate( "Saving category failed: [_1]",
-                $cat->errstr );
+            return
+              die $plugin->translate( "Saving category failed: [_1]",
+                                      $cat->errstr );
         }
-    }
-}
+    } ## end if ( defined $cat )
+} ## end sub _create_category
 
 sub _create_tag {
     my $self   = shift;
@@ -347,8 +343,7 @@ sub _create_tag {
     if ($name) {
         return if ( MT::Tag->load( { name => $name } ) );
         $tag->name($name);
-        $cb->(
-            $plugin->translate( "Creating new tag ('[_1]')...", $tag->name )
+        $cb->($plugin->translate( "Creating new tag ('[_1]')...", $tag->name )
         );
         if ( $tag->save ) {
             $cb->( $plugin->translate("ok") . "\n" );
@@ -356,11 +351,11 @@ sub _create_tag {
         else {
             $cb->( $plugin->translate("failed") . "\n" );
             return
-                die $plugin->translate( "Saving tag failed: [_1]",
-                $tag->errstr );
+              die $plugin->translate( "Saving tag failed: [_1]",
+                                      $tag->errstr );
         }
     }
-}
+} ## end sub _create_tag
 
 sub _create_feedback {
     my $self = shift;
@@ -385,7 +380,7 @@ sub _create_feedback {
         }
     }
     push @{ $self->{'bucket'} }, { $type => $feedback_data };
-}
+} ## end sub _create_feedback
 
 sub _create_item {
     my $self = shift;
@@ -397,7 +392,7 @@ sub _create_item {
         last if '_item' eq $hash;
         next if 'HASH' ne ref $hash;
         $post_type = $hash->{'wp_post_type'}, next
-            if exists $hash->{'wp_post_type'};
+          if exists $hash->{'wp_post_type'};
         push @hashes, $hash if 'HASH' eq ref($hash);
     }
 
@@ -410,11 +405,11 @@ sub _create_item {
     elsif ( 'page' eq $post_type ) {
         $self->_create_post( 'page', \@hashes );
     }
-    elsif ('attachment' eq $post_type) {
+    elsif ( 'attachment' eq $post_type ) {
         $self->_create_asset( \@hashes );
     }
     1;
-}
+} ## end sub _create_item
 
 sub _create_asset {
     my $self     = shift;
@@ -444,7 +439,7 @@ sub _create_asset {
         }
         elsif ( 'dc_creator' eq $key ) {
             $asset_values->{'created_by'}
-                = $self->_get_author_id( $cb, $value );
+              = $self->_get_author_id( $cb, $value );
         }
         elsif ( '_category' eq $key ) {
 
@@ -471,7 +466,7 @@ sub _create_asset {
         }
         elsif ( 'wp_post_date_gmt' eq $key ) {
             $asset_values->{'created_on'}
-                = $self->_gmt2blogtime( $value, $blog );
+              = $self->_gmt2blogtime( $value, $blog );
         }
         elsif ( 'wp_comment_status' eq $key ) {
 
@@ -503,7 +498,7 @@ sub _create_asset {
                     # only parse width and height
                     my $serialized = $value->{$meta_key};
                     if ( $serialized
-                        =~ m!s:5:"width";i:(\d+);s:6:"height";i:(\d+);!i )
+                         =~ m!s:5:"width";i:(\d+);s:6:"height";i:(\d+);!i )
                     {
                         $asset_values->{'image_width'}  = $1;
                         $asset_values->{'image_height'} = $2;
@@ -513,9 +508,9 @@ sub _create_asset {
                 else {
                     $meta_hash{$meta_key} = $value->{$meta_key};
                 }
-            }
-        }
-    }
+            } ## end for my $meta_key ( keys...)
+        } ## end elsif ( 'wp_postmeta' eq ...)
+    } ## end for my $hash (@$hashes)
 
     my $wp_path = $self->{'wp_path'};
     my $mt_path = $self->{'mt_path'};
@@ -537,19 +532,20 @@ sub _create_asset {
     require MT::Asset;
 
     # Check dupe
-    if (MT::Asset->count(
-            {   blog_id   => $asset_values->{blog_id},
-                label     => $asset_values->{label},
-                file_path => $asset_values->{file_path},
-            }
-        )
-        )
+    if (
+         MT::Asset->count( {
+                             blog_id   => $asset_values->{blog_id},
+                             label     => $asset_values->{label},
+                             file_path => $asset_values->{file_path},
+                           }
+         )
+      )
     {
         $cb->(
-            $plugin->translate(
-                "Duplicate asset ('[_1]') found.  Skipping.",
-                $asset_values->{label}
-            )
+               $plugin->translate(
+                                 "Duplicate asset ('[_1]') found.  Skipping.",
+                                 $asset_values->{label}
+               )
         );
         $cb->("\n");
         return 1;
@@ -574,10 +570,10 @@ sub _create_asset {
     $cb->( $plugin->translate( "Saving asset ('[_1]')...", $asset->label ) );
     $asset->add_tags(@tags) if 0 < scalar(@tags);
     $cb->(
-        $plugin->translate(
-            " and asset will be tagged ('[_1]')...",
-            join( ',', @tags )
-        )
+           $plugin->translate(
+                               " and asset will be tagged ('[_1]')...",
+                               join( ',', @tags )
+           )
     );
     if ( $asset->save ) {
         $cb->( $plugin->translate( "ok (ID [_1])", $asset->id ) . "\n" );
@@ -589,7 +585,7 @@ sub _create_asset {
         $cb->( $plugin->translate("failed") . "\n" );
         die $plugin->translate( "Saving entry failed: [_1]", $asset->errstr );
     }
-}
+} ## end sub _create_asset
 
 sub _create_post {
     my $self = shift;
@@ -601,10 +597,7 @@ sub _create_post {
 
     my %cat_ids;
     my $primary_cat_id;
-    my $feedbacks = {
-        'comments'   => [],
-        'trackbacks' => [],
-    };
+    my $feedbacks = { 'comments' => [], 'trackbacks' => [], };
     my %meta_hash;
     my @tags;
 
@@ -639,7 +632,7 @@ sub _create_post {
             if ( $hash->{_a} ) {
                 if ( $hash->{_a}->{domain} eq 'tag' ) {
                     $value = MT::Util::decode_url( $hash->{_a}->{nicename} )
-                        if !$value;
+                      if !$value;
                     push @tags, $value if $value;
                 }
             }
@@ -647,18 +640,15 @@ sub _create_post {
 
                 # previous category definition
                 my $cat_class = MT->model(
-                    $class_type eq 'entry' ? 'category' : 'folder' );
+                             $class_type eq 'entry' ? 'category' : 'folder' );
                 my $cat = $cat_class->load(
-                    {   label   => $value,
-                        blog_id => $self->{blog}->id
-                    }
-                );
+                          { label => $value, blog_id => $self->{blog}->id } );
                 if ( defined $cat ) {
                     $cat_ids{ $cat->id } = 1;
                     $primary_cat_id = $cat->id unless $primary_cat_id;
                 }
             }
-        }
+        } ## end elsif ( '_category' eq $key)
         elsif ( '_guid' eq $key ) {
 
             # skip;
@@ -675,7 +665,7 @@ sub _create_post {
             else {
                 $post->text( substr $value, 0, $pos );
                 $post->text_more( substr $value,
-                    $pos + length( POST_SEPARATOR() ) );
+                                  $pos + length( POST_SEPARATOR() ) );
             }
         }
         elsif ( 'wp_post_id' eq $key ) {
@@ -704,12 +694,7 @@ sub _create_post {
             my $i         = 1;
             my $base_copy = $base;
             while (
-                $class->count(
-                    {   blog_id  => $blog->id,
-                        basename => $base
-                    }
-                )
-                )
+                $class->count( { blog_id => $blog->id, basename => $base } ) )
             {
                 $base = $base_copy . '_' . $i++;
             }
@@ -734,17 +719,17 @@ sub _create_post {
             my $cmt = MT::Comment->new;
             $cmt->blog_id( $blog->id );
             $cmt->author( $value->{'wp_comment_author'} )
-                if exists $value->{'wp_comment_author'};
+              if exists $value->{'wp_comment_author'};
             $cmt->email( $value->{'wp_comment_author_email'} )
-                if exists $value->{'wp_comment_author_email'};
+              if exists $value->{'wp_comment_author_email'};
             $cmt->url( $value->{'wp_comment_author_url'} )
-                if exists $value->{'wp_comment_author_url'};
+              if exists $value->{'wp_comment_author_url'};
             $cmt->ip( $value->{'wp_comment_author_IP'} )
-                if exists $value->{'wp_comment_author_IP'};
+              if exists $value->{'wp_comment_author_IP'};
             my $date = $value->{'wp_comment_date_gmt'};
             $cmt->created_on( $self->_gmt2blogtime( $date, $blog ) );
             $cmt->text( $value->{'wp_comment_content'} )
-                if exists $value->{'wp_comment_content'};
+              if exists $value->{'wp_comment_content'};
             my $status = $value->{'wp_comment_approved'};
 
             if ( $status eq '1' ) {
@@ -757,18 +742,18 @@ sub _create_post {
             # skip wp:comment_id
             # skip wp:comment_parent
             push @{ $feedbacks->{comments} }, $cmt;
-        }
+        } ## end elsif ( 'comment' eq $key)
         elsif ( ( 'trackback' eq $key ) || ( 'pingback' eq $key ) ) {
 
             # TODO: are trackback and pingback the same in its data structure?
             my $ping = MT::TBPing->new;
             $ping->blog_id( $blog->id );
             $ping->blog_name( $value->{'wp_comment_author'} )
-                if exists $value->{'wp_comment_author'};
+              if exists $value->{'wp_comment_author'};
             $ping->source_url( $value->{'wp_comment_author_url'} )
-                if exists $value->{'wp_comment_author_url'};
+              if exists $value->{'wp_comment_author_url'};
             $ping->ip( $value->{'wp_comment_author_IP'} )
-                if exists $value->{'wp_comment_author_IP'};
+              if exists $value->{'wp_comment_author_IP'};
             my $date = $value->{'wp_comment_date_gmt'};
             $ping->created_on( $self->_gmt2blogtime( $date, $blog ) );
 
@@ -776,7 +761,7 @@ sub _create_post {
                 my $content = $value->{'wp_comment_content'};
                 if ( $content =~ m!^<strong>(.+)</strong>\n*(.+)$!m ) {
 
- # this is exactly how wordpress stores trackbacks in its database as of v2.1.
+                    # this is exactly how wordpress stores trackbacks in its database as of v2.1.
                     $ping->title($1);
                     $ping->excerpt($2);
                 }
@@ -789,24 +774,25 @@ sub _create_post {
                 $ping->junk;
             }
             push @{ $feedbacks->{trackbacks} }, $ping;
-        }
-    }
+        } ## end elsif ( ( 'trackback' eq ...))
+    } ## end for my $hash (@$hashes)
 
     # Check dupe
-    if ($class->count(
-            {   class       => $class_type,
-                blog_id     => $post->blog_id,
-                title       => $post->title,
-                authored_on => $post->authored_on
-            }
-        )
-        )
+    if (
+         $class->count( {
+                          class       => $class_type,
+                          blog_id     => $post->blog_id,
+                          title       => $post->title,
+                          authored_on => $post->authored_on
+                        }
+         )
+      )
     {
         $cb->(
-            $plugin->translate(
-                "Duplicate entry ('[_1]') found.  Skipping.",
-                $post->title
-            )
+               $plugin->translate(
+                                 "Duplicate entry ('[_1]') found.  Skipping.",
+                                 $post->title
+               )
         );
         $cb->("\n");
         return 1;
@@ -820,11 +806,11 @@ sub _create_post {
     # Now save the entry/page.
     if ( 'entry' eq $class_type ) {
         $cb->(
-            $plugin->translate( "Saving entry ('[_1]')...", $post->title ) );
+             $plugin->translate( "Saving entry ('[_1]')...", $post->title ) );
     }
     elsif ( 'page' eq $class_type ) {
         $cb->(
-            $plugin->translate( "Saving page ('[_1]')...", $post->title ) );
+              $plugin->translate( "Saving page ('[_1]')...", $post->title ) );
     }
     if ( $post->save ) {
         $cb->( $plugin->translate( "ok (ID [_1])", $post->id ) . "\n" );
@@ -843,8 +829,8 @@ sub _create_post {
         $place->blog_id( $self->{blog}->id );
         $place->category_id($primary_cat_id);
         $place->save
-            or die $plugin->translate( "Saving placement failed: [_1]",
-            $place->errstr );
+          or die $plugin->translate( "Saving placement failed: [_1]",
+                                     $place->errstr );
         delete $cat_ids{$primary_cat_id};
     }
 
@@ -855,27 +841,27 @@ sub _create_post {
         $place->blog_id( $self->{blog}->id );
         $place->category_id($cat_id);
         $place->save
-            or die $plugin->translate( "Saving placement failed: [_1]",
-            $place->errstr );
+          or die $plugin->translate( "Saving placement failed: [_1]",
+                                     $place->errstr );
     }
 
     # Associate comments to the entry.
     for my $comment ( @{ $feedbacks->{comments} } ) {
         $comment->entry_id( $post->id );
         $cb->(
-            $plugin->translate(
-                "Creating new comment (from '[_1]')...",
-                $comment->author
-            )
+               $plugin->translate(
+                                   "Creating new comment (from '[_1]')...",
+                                   $comment->author
+               )
         );
         if ( $comment->save ) {
             $cb->(
-                $plugin->translate( "ok (ID [_1])", $comment->id ) . "\n" );
+                  $plugin->translate( "ok (ID [_1])", $comment->id ) . "\n" );
         }
         else {
             $cb->( $plugin->translate("failed") . "\n" );
             die $plugin->translate( "Saving comment failed: [_1]",
-                $comment->errstr );
+                                    $comment->errstr );
         }
     }
 
@@ -900,24 +886,24 @@ sub _create_post {
         for my $ping ( @{ $feedbacks->{trackbacks} } ) {
             $ping->tb_id( $tb->id );
             $cb->(
-                $plugin->translate(
-                    "Creating new ping ('[_1]')...",
-                    $ping->title
-                )
+                   $plugin->translate(
+                                       "Creating new ping ('[_1]')...",
+                                       $ping->title
+                   )
             );
             if ( $ping->save ) {
                 $cb->(
-                    $plugin->translate( "ok (ID [_1])", $ping->id ) . "\n" );
+                     $plugin->translate( "ok (ID [_1])", $ping->id ) . "\n" );
             }
             else {
                 $cb->( $plugin->translate("failed") . "\n" );
                 die $plugin->translate( "Saving ping failed: [_1]",
-                    $ping->errstr );
+                                        $ping->errstr );
             }
         }
-    }
+    } ## end if ( scalar @{ $feedbacks...})
     1;
-}
+} ## end sub _create_post
 
 sub _get_author_id {
     my $self = shift;
@@ -933,7 +919,7 @@ sub _get_author_id {
             my $pass          = $self->{pass};
             $author = MT::Author->new;
             $author->created_by( $parent_author->id )
-                if defined $parent_author;
+              if defined $parent_author;
             $author->name($value);
             $author->email('');
             $author->type( MT::Author::AUTHOR() );
@@ -944,7 +930,7 @@ sub _get_author_id {
                 $author->password('(none)');
             }
             $cb->(
-                $plugin->translate( "Creating new user ('[_1]')...", $value )
+                 $plugin->translate( "Creating new user ('[_1]')...", $value )
             );
             if ( $author->save ) {
                 $cb->( $plugin->translate("ok") . "\n" );
@@ -952,7 +938,7 @@ sub _get_author_id {
             else {
                 $cb->( $plugin->translate("failed") . "\n" );
                 die $plugin->translate( "Saving user failed: [_1]",
-                    $author->errstr );
+                                        $author->errstr );
             }
             $cb->(
                 $plugin->translate("Assigning permissions for new user...") );
@@ -961,23 +947,24 @@ sub _get_author_id {
             my $role = MT::Role->load_by_permission('post');
             if ($role) {
                 my $assoc;
-                if ($assoc = MT::Association->link(
-                        $author => $role => $self->{blog}
-                    )
-                    )
+                if (
+                     $assoc =
+                     MT::Association->link( $author => $role => $self->{blog}
+                     )
+                  )
                 {
                     $cb->( $plugin->translate("ok") . "\n" );
                 }
                 else {
                     $cb->( $plugin->translate("failed") . "\n" );
                     die $plugin->translate( "Saving permission failed: [_1]",
-                        $assoc->errstr );
+                                            $assoc->errstr );
                 }
             }
-        }
-    }
+        } ## end unless ( defined $author )
+    } ## end unless ($author)
     defined $author ? $author->id : undef;
-}
+} ## end sub _get_author_id
 
 sub _gmt2blogtime {
     my $self = shift;
@@ -985,9 +972,9 @@ sub _gmt2blogtime {
     if ( $datetime =~ /^(\d{4})-?(\d{2})-?(\d{2})\s?(\d{2}):(\d{2}):(\d{2})/ )
     {
         my ( $y, $mo, $d, $h, $m, $s )
-            = ( $1, $2 || 1, $3 || 1, $4 || 0, $5 || 0, $6 || 0 );
+          = ( $1, $2 || 1, $3 || 1, $4 || 0, $5 || 0, $6 || 0 );
         my $time = eval { timegm( $s, $m, $h, $d, $mo - 1, $y ); }
-            or return undef;
+          or return undef;
         ( $s, $m, $h, $d, $mo, $y ) = offset_time_list( $time, $blog );
         $y += 1900;
         $mo++;

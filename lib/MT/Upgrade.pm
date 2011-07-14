@@ -1825,7 +1825,7 @@ sub run_callbacks {
     my ( $cb, @param ) = @_;
     local $MT::CallbacksEnabled = 1;
     MT->run_callbacks( 'MT::Upgrade::' . $cb, $self, @param )
-        or return $self->error( MT->callback_errstr );
+      or return $self->error( MT->callback_errstr );
     1;
 }
 

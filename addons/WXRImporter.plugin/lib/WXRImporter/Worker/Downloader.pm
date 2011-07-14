@@ -21,11 +21,11 @@ sub work {
     push @jobs, $job;
     if ( my $key = $job->coalesce ) {
         while (
-            my $job
-            = MT::TheSchwartz->instance->find_job_with_coalescing_value(
-                $class, $key
-            )
-            )
+                my $job =
+                MT::TheSchwartz->instance->find_job_with_coalescing_value(
+                                                                  $class, $key
+                )
+          )
         {
             push @jobs, $job;
         }
@@ -55,26 +55,26 @@ sub work {
 
                 my $path = File::Basename::dirname($asset_file);
                 $path =~ s!/$!!
-                    unless $path eq
-                        '/';    ## OS X doesn't like / at the end in mkdir().
+                  unless $path eq
+                      '/';    ## OS X doesn't like / at the end in mkdir().
                 unless ( $filemgr->exists($path) ) {
                     $filemgr->mkpath($path);
                 }
                 $filemgr->put_data( $content, $asset_file, 'upload' )
-                    or $job->failed(
+                  or $job->failed(
                     "Failed to save content of the file $asset_file via: $url"
-                    );
+                  );
                 $job->completed();
             }
             else {
                 $job->failed("Error downloading $url");
             }
-        }
+        } ## end if ( $asset && $url )
         else {
             $job->completed();
         }
-    }
-}
+    } ## end foreach $job (@jobs)
+} ## end sub work
 
 sub grab_for    {60}
 sub max_retries {100000}

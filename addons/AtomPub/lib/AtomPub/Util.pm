@@ -4,8 +4,7 @@ use strict;
 
 use base 'Exporter';
 
-our @EXPORT_OK
-    = qw( make_atom_id );
+our @EXPORT_OK = qw( make_atom_id );
 
 # TBD: Write a test for this routine
 sub make_atom_id {

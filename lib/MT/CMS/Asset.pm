@@ -98,9 +98,9 @@ sub edit {
         $param->{next_entry_id}     = $next_asset->id if $next_asset;
         my $tags_js = MT::Util::to_json(
                                          MT::Tag->cache(
-                                                         blog_id => $obj->blog_id,
-                                                         class => ref($obj),
-                                                         private => 1
+                                                     blog_id => $obj->blog_id,
+                                                     class   => ref($obj),
+                                                     private => 1
                                          )
         );
         $tags_js =~ s!/!\\/!g;
@@ -230,8 +230,8 @@ sub dialog_list_asset {
     @class_loop
       = sort { $a->{class_label} cmp $b->{class_label} } @class_loop;
 
-    my $no_insert   = $q->param('no_insert')   ? 1 : 0;
-    my $perms       = $app->permissions;
+    my $no_insert = $q->param('no_insert') ? 1 : 0;
+    my $perms = $app->permissions;
     my %carry_params
       = map { $_ => $q->param($_) || '' }
       (
@@ -245,7 +245,7 @@ sub dialog_list_asset {
            args     => \%args,
            type     => 'asset',
            code     => $hasher,
-           template => 'dialog/asset_list.tmpl',                                                                                                                  
+           template => 'dialog/asset_list.tmpl',
            params   => { (
                   $blog
                   ? (
@@ -523,10 +523,13 @@ sub complete_upload {
 
     return
       $app->redirect(
-                    $app->uri(
-                        'mode' => 'list',
-                        args => { 'blog_id' => $app->query->param('blog_id'), '_type' => 'asset' }
-                    )
+                      $app->uri(
+                               'mode' => 'list',
+                               args   => {
+                                   'blog_id' => $app->query->param('blog_id'),
+                                   '_type'   => 'asset'
+                               }
+                      )
       );
 } ## end sub complete_upload
 

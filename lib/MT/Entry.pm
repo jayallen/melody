@@ -182,28 +182,27 @@ sub container_label {
 
 sub list_props {
     return {
-        id => {
-            base  => '__virtual.id',
-            order => 100,
-        },
+        id    => { base => '__virtual.id', order => 100, },
         title => {
             base       => '__virtual.title',
             label      => 'Title',
             display    => 'force',
             order      => 200,
-            sub_fields => [
-                {   class   => 'status',
-                    label   => 'Status',
-                    display => 'default',
-                },
-                {   class   => 'view-link',
-                    label   => 'Link',
-                    display => 'default',
-                },
-                {   class   => 'excerpt',
-                    label   => 'Excerpt',
-                    display => 'optional',
-                },
+            sub_fields => [ {
+                              class   => 'status',
+                              label   => 'Status',
+                              display => 'default',
+                            },
+                            {
+                              class   => 'view-link',
+                              label   => 'Link',
+                              display => 'default',
+                            },
+                            {
+                              class   => 'excerpt',
+                              label   => 'Excerpt',
+                              display => 'optional',
+                            },
             ],
             html => sub {
                 my $prop        = shift;
@@ -212,7 +211,7 @@ sub list_props {
                 my $class_label = $obj->class_label;
                 my $title       = $prop->super(@_);
                 my $excerpt     = remove_html( $obj->excerpt )
-                    || remove_html( $obj->text );
+                  || remove_html( $obj->text );
                 ## FIXME: Hard coded
                 my $len = 40;
                 if ( length $excerpt > $len ) {
@@ -221,44 +220,45 @@ sub list_props {
                 }
                 my $id        = $obj->id;
                 my $permalink = MT::Util::encode_html( $obj->permalink );
-                my $edit_url  = MT->app->uri(
-                    mode => 'view',
-                    args => {
-                        _type   => $class,
-                        id      => $obj->id,
-                        blog_id => $obj->blog_id,
-                    }
-                );
+                my $edit_url =
+                  MT->app->uri(
+                                mode => 'view',
+                                args => {
+                                          _type   => $class,
+                                          id      => $obj->id,
+                                          blog_id => $obj->blog_id,
+                                }
+                  );
                 my $status = $obj->status;
                 my $status_class
-                    = $status == MT::Entry::HOLD()    ? 'Draft'
-                    : $status == MT::Entry::RELEASE() ? 'Published'
-                    : $status == MT::Entry::REVIEW()  ? 'Review'
-                    : $status == MT::Entry::FUTURE()  ? 'Future'
-                    : $status == MT::Entry::JUNK()    ? 'Junk'
-                    :                                   '';
+                  = $status == MT::Entry::HOLD()    ? 'Draft'
+                  : $status == MT::Entry::RELEASE() ? 'Published'
+                  : $status == MT::Entry::REVIEW()  ? 'Review'
+                  : $status == MT::Entry::FUTURE()  ? 'Future'
+                  : $status == MT::Entry::JUNK()    ? 'Junk'
+                  :                                   '';
                 my $lc_status_class = lc $status_class;
                 require MT::Entry;
                 my $status_file
-                    = $status == MT::Entry::HOLD()    ? 'draft.gif'
-                    : $status == MT::Entry::RELEASE() ? 'success.gif'
-                    : $status == MT::Entry::REVIEW()  ? 'warning.gif'
-                    : $status == MT::Entry::FUTURE()  ? 'future.gif'
-                    : $status == MT::Entry::JUNK()    ? 'warning.gif'
-                    :                                   '';
+                  = $status == MT::Entry::HOLD()    ? 'draft.gif'
+                  : $status == MT::Entry::RELEASE() ? 'success.gif'
+                  : $status == MT::Entry::REVIEW()  ? 'warning.gif'
+                  : $status == MT::Entry::FUTURE()  ? 'future.gif'
+                  : $status == MT::Entry::JUNK()    ? 'warning.gif'
+                  :                                   '';
                 my $status_img
-                    = MT->static_path . 'images/status_icons/' . $status_file;
+                  = MT->static_path . 'images/status_icons/' . $status_file;
                 my $view_img
-                    = MT->static_path . 'images/status_icons/view.gif';
+                  = MT->static_path . 'images/status_icons/view.gif';
                 my $view_link = $obj->status == MT::Entry::RELEASE()
-                    ? qq{
+                  ? qq{
                     <span class="view-link">
                       <a href="$permalink" target="_blank">
                         <img alt="View $class_label" src="$view_img" />
                       </a>
                     </span>
                 }
-                    : '';
+                  : '';
 
                 my $out = qq{
                     <span class="icon status $lc_status_class">
@@ -270,74 +270,78 @@ sub list_props {
                     $view_link
                 };
                 $out .= qq{<p class="excerpt description">$excerpt</p>}
-                    if trim($excerpt);
+                  if trim($excerpt);
                 return $out;
             },
         },
         author_name => {
-            base    => '__virtual.author_name',
-            order   => 300,
-            display => 'default',
+                         base    => '__virtual.author_name',
+                         order   => 300,
+                         display => 'default',
         },
         blog_name => {
             base  => '__common.blog_name',
             label => sub {
                 MT->translate('Blog Name')
-                #MT->app->blog
-                #    ? MT->translate('Blog Name')
-                #    : MT->translate('Website/Blog Name');
+
+                  #MT->app->blog
+                  #    ? MT->translate('Blog Name')
+                  #    : MT->translate('Website/Blog Name');
             },
             display   => 'default',
             site_name => sub { MT->app->blog ? 0 : 1 },
             order     => 400,
         },
         category_id => {
-            label            => 'Primary Category',
-            filter_label     => 'Category',
-            filter_tmpl        => '<mt:Var name="filter_form_hidden">',
-            order            => 500,
-            display          => 'default',
-            base             => '__virtual.integer',
-            filter_editable    => 0,
-            col_class        => 'string',
-            view_filter      => 'blog',
-            category_class   => 'category',
-            terms => sub {
+            label           => 'Primary Category',
+            filter_label    => 'Category',
+            filter_tmpl     => '<mt:Var name="filter_form_hidden">',
+            order           => 500,
+            display         => 'default',
+            base            => '__virtual.integer',
+            filter_editable => 0,
+            col_class       => 'string',
+            view_filter     => 'blog',
+            category_class  => 'category',
+            terms           => sub {
                 my ( $prop, $args, $db_terms, $db_args ) = @_;
                 my $blog_id = MT->app->blog->id;
                 my $cat_id  = $args->{value};
-                return $prop->error(
-                    MT->translate(
-                        '[_1] ( id:[_2] ) does not exists.',
-                        $prop->datasource->container_label,
-                        $cat_id
-                    )
-                ) unless $cat_id;
+                return
+                  $prop->error(
+                                MT->translate(
+                                          '[_1] ( id:[_2] ) does not exists.',
+                                          $prop->datasource->container_label,
+                                          $cat_id
+                                )
+                  ) unless $cat_id;
 
                 $db_args->{joins} ||= [];
                 my $join_str = '= entry_id';
                 push @{ $db_args->{joins} }, MT->model('placement')->join_on(
-                    undef,
-                    {   category_id => $cat_id,
-                        entry_id    => \$join_str,
-                        blog_id     => $blog_id,
-                    },
-                    { unique => 1, },
+                                                    undef,
+                                                    {
+                                                      category_id => $cat_id,
+                                                      entry_id => \$join_str,
+                                                      blog_id  => $blog_id,
+                                                    },
+                                                    { unique => 1, },
                 );
                 return;
             },
             args_via_param => sub {
                 my $prop = shift;
                 my ( $app, $val ) = @_;
-                my $id    = MT->app->param('filter_val');
-                my $cat   = MT->model('category')->load($id)
-                    or return $prop->error(
-                    MT->translate(
-                        '[_1] ( id:[_2] ) does not exists.',
-                        $prop->datasource->container_label,
-                        $id
-                    )
-                    );
+                my $id  = MT->app->param('filter_val');
+                my $cat = MT->model('category')->load($id)
+                  or return
+                  $prop->error(
+                                MT->translate(
+                                          '[_1] ( id:[_2] ) does not exists.',
+                                          $prop->datasource->container_label,
+                                          $id
+                                )
+                  );
                 return { option => 'equal', value => $cat->id };
             },
             label_via_param => sub {
@@ -345,18 +349,19 @@ sub list_props {
                 my ($app) = @_;
                 my $id    = $app->param('filter_val');
                 my $cat   = MT->model('category')->load($id)
-                    or return $prop->error(
-                    MT->translate(
-                        '[_1] ( id:[_2] ) does not exists.',
-                        $prop->datasource->container_label,
-                        $id
-                    )
-                    );
+                  or return
+                  $prop->error(
+                                MT->translate(
+                                          '[_1] ( id:[_2] ) does not exists.',
+                                          $prop->datasource->container_label,
+                                          $id
+                                )
+                  );
                 return if !$app->blog || $app->blog->id != $cat->blog_id;
                 my $label = MT->translate( 'Entries from category: [_1]',
-                    $cat->label." (ID:".$cat->id.")", );
+                                    $cat->label . " (ID:" . $cat->id . ")", );
                 $prop->{filter_label} = MT::Util::encode_html($label);
-                $label
+                $label;
             },
         },
         category => {
@@ -373,35 +378,25 @@ sub list_props {
                 my $prop = shift;
                 my ( $objs, $app, $opts ) = @_;
                 return ( $opts->{bulk_cats}, $opts->{bulk_placements} )
-                    if $opts->{bulk_cats};
+                  if $opts->{bulk_cats};
                 my @entry_ids = map { $_->id } @$objs;
-                my @placements = MT->model('placement')->load(
-                    {   entry_id   => \@entry_ids,
-                        is_primary => 1,
-                    },
-                    {   fetchonly => {
-                            entry_id    => 1,
-                            category_id => 1,
-                        }
-                    }
-                );
+                my @placements
+                  = MT->model('placement')
+                  ->load( { entry_id => \@entry_ids, is_primary => 1, },
+                      { fetchonly => { entry_id => 1, category_id => 1, } } );
                 unless ( scalar @placements ) {
                     $opts->{bulk_placements} = {};
                     $opts->{bulk_cats}       = {};
                     return ( {}, {} );
                 }
                 my %placements
-                    = map { $_->entry_id => $_->category_id } @placements;
+                  = map { $_->entry_id => $_->category_id } @placements;
                 $opts->{bulk_placements} = \%placements;
                 my @cat_ids = map { $_->category_id } @placements;
-                my @categories = MT->model( $prop->category_class )->load(
-                    { id => \@cat_ids },
-                    {   fetchonly => {
-                            id    => 1,
-                            label => 1,
-                        }
-                    }
-                );
+                my @categories
+                  = MT->model( $prop->category_class )
+                  ->load( { id => \@cat_ids },
+                          { fetchonly => { id => 1, label => 1, } } );
                 my %categories = map { $_->id => $_->label } @categories;
                 $opts->{bulk_cats} = \%categories;
                 return ( \%categories, \%placements );
@@ -412,8 +407,8 @@ sub list_props {
                 my ( $cats, $placs ) = $prop->bulk_cats(@_);
                 return map {
                     MT::Util::encode_html(
-                        $cats->{ $placs->{ $_->id } || 0 } )
-                        || $prop->zero_state_label
+                                          $cats->{ $placs->{ $_->id } || 0 } )
+                      || $prop->zero_state_label
                 } @$objs;
             },
             bulk_sort => sub {
@@ -421,10 +416,10 @@ sub list_props {
                 my ( $objs, $app, $opts ) = @_;
                 my ( $cats, $placs ) = $prop->bulk_cats(@_);
                 return sort {
-                    (          $cats->{ $placs->{ $a->id } || 0 }
-                            || $prop->zero_state_label )
-                        cmp(   $cats->{ $placs->{ $b->id } || 0 }
-                            || $prop->zero_state_label )
+                    (     $cats->{ $placs->{ $a->id } || 0 }
+                       || $prop->zero_state_label )
+                      cmp(    $cats->{ $placs->{ $b->id } || 0 }
+                           || $prop->zero_state_label )
                 } @$objs;
             },
             raw => sub {
@@ -459,9 +454,9 @@ sub list_props {
             terms => sub {
                 my ( $prop, $args, $db_terms, $db_args ) = @_;
                 my $blog_id = MT->app->blog->id;
-                my $app = MT->instance;
-                my $option = $args->{option};
-                my $query  = $args->{string};
+                my $app     = MT->instance;
+                my $option  = $args->{option};
+                my $query   = $args->{string};
                 if ( 'contains' eq $option ) {
                     $query = { like => "%$query%" };
                 }
@@ -476,37 +471,33 @@ sub list_props {
                 }
                 my $join_str1 = '= entry_id';
                 my $join_str2 = '= placement_category_id';
-                push @{ $db_args->{joins} },
-                    MT->model('placement')->join_on(
-                    undef,
-                    {   entry_id => \$join_str1,
-                        blog_id  => $blog_id,
-                    },
-                    {   unique => 1,
-                        join   => MT->model($prop->category_class)->join_on(
-                            undef,
-                            {   label   => $query,
-                                id      => \$join_str2,
-                                blog_id => $blog_id,
-                            },
-                            { unique => 1, }
-                        ),
-                    },
-                    );
+                push @{ $db_args->{joins} }, MT->model('placement')->join_on(
+                       undef,
+                       { entry_id => \$join_str1, blog_id => $blog_id, },
+                       {
+                         unique => 1,
+                         join => MT->model( $prop->category_class )->join_on(
+                                                       undef,
+                                                       {
+                                                         label => $query,
+                                                         id    => \$join_str2,
+                                                         blog_id => $blog_id,
+                                                       },
+                                                       { unique => 1, }
+                         ),
+                       },
+                );
                 return;
             },
         },
         authored_on => {
-            auto       => 1,
-            display    => 'default',
-            label      => 'Publish Date',
-            use_future => 1,
-            order      => 600,
+                         auto       => 1,
+                         display    => 'default',
+                         label      => 'Publish Date',
+                         use_future => 1,
+                         order      => 600,
         },
-        modified_on => {
-            base  => '__virtual.modified_on',
-            order => 700,
-        },
+        modified_on   => { base => '__virtual.modified_on', order => 700, },
         comment_count => {
             auto         => 1,
             display      => 'default',
@@ -517,15 +508,16 @@ sub list_props {
                 my $prop = shift;
                 my ( $obj, $app, $opts ) = @_;
                 return unless $app->can_do('access_to_comment_list');
-                return $app->uri(
-                    mode => 'list',
-                    args => {
-                        _type      => 'comment',
-                        filter     => 'entry',
-                        filter_val => $obj->id,
-                        blog_id    => $opts->{blog_id} || 0,
-                    },
-                );
+                return
+                  $app->uri(
+                             mode => 'list',
+                             args => {
+                                       _type      => 'comment',
+                                       filter     => 'entry',
+                                       filter_val => $obj->id,
+                                       blog_id    => $opts->{blog_id} || 0,
+                             },
+                  );
             },
         },
         ping_count => {
@@ -538,55 +530,37 @@ sub list_props {
                 my $prop = shift;
                 my ( $obj, $app, $opts ) = @_;
                 return unless $app->can_do('access_to_trackback_list');
-                return $app->uri(
-                    mode => 'list',
-                    args => {
-                        _type      => 'ping',
-                        filter     => 'entry_id',
-                        filter_val => $obj->id,
-                        blog_id    => $opts->{blog_id} || 0,
-                    },
-                );
+                return
+                  $app->uri(
+                             mode => 'list',
+                             args => {
+                                       _type      => 'ping',
+                                       filter     => 'entry_id',
+                                       filter_val => $obj->id,
+                                       blog_id    => $opts->{blog_id} || 0,
+                             },
+                  );
             },
         },
-        text => {
-            auto    => 1,
-            display => 'none',
-            label   => 'Body',
+        text      => { auto => 1, display => 'none', label => 'Body', },
+        text_more => { auto => 1, display => 'none', label => 'Extended', },
+        excerpt   => { auto => 1, display => 'none', label => 'Excerpt', },
+        status    => {
+                    label                 => 'Status',
+                    col                   => 'status',
+                    display               => 'none',
+                    col_class             => 'icon',
+                    base                  => '__virtual.single_select',
+                    single_select_options => [
+                         { label => MT->translate('Draft'),     value => 1, },
+                         { label => MT->translate('Published'), value => 2, },
+                         { label => MT->translate('Reviewing'), value => 3, },
+                         { label => MT->translate('Scheduled'), value => 4, },
+                         { label => MT->translate('Junk'),      value => 5, },
+                    ],
         },
-        text_more => {
-            auto    => 1,
-            display => 'none',
-            label   => 'Extended',
-        },
-        excerpt => {
-            auto    => 1,
-            display => 'none',
-            label   => 'Excerpt',
-        },
-        status => {
-            label                 => 'Status',
-            col                   => 'status',
-            display               => 'none',
-            col_class             => 'icon',
-            base                  => '__virtual.single_select',
-            single_select_options => [
-                { label => MT->translate('Draft'),     value => 1, },
-                { label => MT->translate('Published'), value => 2, },
-                { label => MT->translate('Reviewing'), value => 3, },
-                { label => MT->translate('Scheduled'), value => 4, },
-                { label => MT->translate('Junk'),      value => 5, },
-            ],
-        },
-        created_on => {
-            base    => '__virtual.created_on',
-            display => 'none',
-        },
-        basename => {
-            label   => 'Basename',
-            display => 'none',
-            auto    => 1,
-        },
+        created_on => { base => '__virtual.created_on', display => 'none', },
+        basename => { label => 'Basename', display => 'none', auto => 1, },
         commented_on => {
             base          => '__virtual.date',
             label         => 'Date Commented',
@@ -611,19 +585,19 @@ sub list_props {
 
                 if ( 'range' eq $option ) {
                     $query = [
-                        '-and',
-                        { op => '>', value => $from },
-                        { op => '<', value => $to },
+                               '-and',
+                               { op => '>', value => $from },
+                               { op => '<', value => $to },
                     ];
                 }
                 elsif ( 'days' eq $option ) {
                     my $days   = $args->{days};
                     my $origin = MT::Util::epoch2ts( $blog,
-                        time - $days * 60 * 60 * 24 );
+                                                time - $days * 60 * 60 * 24 );
                     $query = [
-                        '-and',
-                        { op => '>', value => $origin },
-                        { op => '<', value => $now },
+                               '-and',
+                               { op => '>', value => $origin },
+                               { op => '<', value => $now },
                     ];
                 }
                 elsif ( 'before' eq $option ) {
@@ -641,11 +615,10 @@ sub list_props {
                 $db_args->{joins} ||= [];
                 my $join_str = '= entry_id';
                 push @{ $db_args->{joins} },
-                    MT->model( $prop->comment_class )->join_on(
-                    undef,
-                    { entry_id => \$join_str, created_on => $query },
-                    { unique   => 1, },
-                    );
+                  MT->model( $prop->comment_class )->join_on( undef,
+                             { entry_id => \$join_str, created_on => $query },
+                             { unique   => 1, },
+                  );
                 return;
             },
             sort => 0,
@@ -664,18 +637,18 @@ sub list_props {
         },
         tag          => { base => '__virtual.tag', },
         current_user => {
-            base            => '__common.current_user',
-            label           => 'My Entries',
-            filter_editable => 1,
+                          base            => '__common.current_user',
+                          label           => 'My Entries',
+                          filter_editable => 1,
         },
         author_status => {
             base                  => '__virtual.single_select',
             display               => 'none',
             label                 => 'Author Status',
             single_select_options => [
-                { label => MT->translate('Deleted'),  value => 'deleted', },
-                { label => MT->translate('Enabled'),  value => 'enabled', },
-                { label => MT->translate('Disabled'), value => 'disabled', },
+                 { label => MT->translate('Deleted'),  value => 'deleted', },
+                 { label => MT->translate('Enabled'),  value => 'enabled', },
+                 { label => MT->translate('Disabled'), value => 'disabled', },
             ],
             terms => sub {
                 my $prop = shift;
@@ -683,67 +656,59 @@ sub list_props {
                 my $val = $args->{value};
                 if ( $val eq 'deleted' ) {
                     my @all_authors = MT->model('author')
-                        ->load( undef, { fetchonly => { id => 1 }, }, );
+                      ->load( undef, { fetchonly => { id => 1 }, }, );
                     return { author_id =>
-                            { not => [ map { $_->id } @all_authors ] }, };
+                             { not => [ map { $_->id } @all_authors ] }, };
                 }
                 else {
                     my $status
-                        = $val eq 'enabled'
-                        ? MT::Author::ACTIVE()
-                        : MT::Author::INACTIVE();
+                      = $val eq 'enabled'
+                      ? MT::Author::ACTIVE()
+                      : MT::Author::INACTIVE();
                     $db_args->{joins} ||= [];
                     my $join_str = '= entry_author_id';
-                    push @{ $db_args->{joins} }, MT->model('author')->join_on(
-                        undef,
-                        {   id     => \$join_str,
-                            status => $status,
-                        },
-                    );
+                    push @{ $db_args->{joins} },
+                      MT->model('author')->join_on( undef,
+                                  { id => \$join_str, status => $status, }, );
                 }
             },
         },
-        current_context => {
-            base      => '__common.current_context',
-            condition => sub {0},
-        },
+        current_context =>
+          { base => '__common.current_context', condition => sub {0}, },
     };
-}
+} ## end sub list_props
 
 sub system_filters {
     return {
         published => {
-            label => 'Published Entries',
-            items => [
-                { type => 'status', args => { value => '2' }, },
-            ],
+                label => 'Published Entries',
+                items => [ { type => 'status', args => { value => '2' }, }, ],
         },
         draft => {
-            label => 'Unpublished Entries',
-            items => [
-                { type => 'status', args => { value => '1' }, },
-            ],
+                label => 'Unpublished Entries',
+                items => [ { type => 'status', args => { value => '1' }, }, ],
         },
         future => {
-            label => 'Scheduled Entries',
-            items => [
-                { type => 'status', args => { value => '4' }, },
-            ],
+                label => 'Scheduled Entries',
+                items => [ { type => 'status', args => { value => '4' }, }, ],
         },
         my_posts_on_this_context => {
             label => 'My blog posts on this blog',
             items => sub {
-                [ { type => 'current_user' }, { type => 'current_context' } ],
+                [ { type => 'current_user' }, { type => 'current_context' } ]
+                ,;
             },
         },
         commented_in_last_7_days => {
-            label => 'Entries with comments in the last 7 days',
-            items => [
-                { type => 'commented_on', args => { option => 'days', days => 7 } }
-            ],
+                          label => 'Entries with comments in the last 7 days',
+                          items => [ {
+                                      type => 'commented_on',
+                                      args => { option => 'days', days => 7 }
+                                    }
+                          ],
         },
     };
-}
+} ## end sub system_filters
 
 sub cache_key {
     my ( $entry_id, $key );

@@ -646,69 +646,74 @@ sub generate_dashboard_stats_comment_tab {
 
 sub melody_docs_widget {
     my $app = shift;
-    my ($tmpl, $param) = @_;
+    my ( $tmpl, $param ) = @_;
     my $cache_duration = 60 * 60 * 24;
-    my $session = MT::Session::get_unexpired_value($cache_duration, {
-        id   => 'MELODY_DOCS_UPDATE',
-        kind => 'MD'
-    });
-    
-    if ( $session ) {
+    my $session        = MT::Session::get_unexpired_value( $cache_duration,
+                               { id => 'MELODY_DOCS_UPDATE', kind => 'MD' } );
+
+    if ($session) {
         $param->{news_items} = $session->data;
-    } else {
+    }
+    else {
         my $ua = MT->new_ua( { timeout => 10, max_size => 1000000000 } );
 
         my $req    = new HTTP::Request( GET => $app->config('DocNewsURL') );
         my $resp   = $ua->request($req);
         my $result = $resp->content();
         if ( $resp->is_success() && $result ) {
-            use XML::Simple;            
+            use XML::Simple;
             use File::Temp;
             use utf8;
             my $fh = File::Temp->new( UNLINK => 0 );
             my $xml;
-            
+
             $fh->autoflush(1);
             print $fh $result;
-            $fh->seek(0,0);
-            $xml = XMLin($result, ForceArray => 1);
-            close( $fh );
-            
+            $fh->seek( 0, 0 );
+            $xml = XMLin( $result, ForceArray => 1 );
+            close($fh);
+
             my $entries = $xml->{entry};
             my @items;
-            
-            my $data = '';
+
+            my $data    = '';
             my $counter = 0;
-            while ($counter < 5) {
-                my $entry = $entries->[$counter];
-                my $date = $entry->{published}->[0];
+            while ( $counter < 5 ) {
+                my $entry  = $entries->[$counter];
+                my $date   = $entry->{published}->[0];
                 my $author = $entry->{author}->[0]->{name}->[0];
                 my $url = 'http://github.com' . $entry->{'link'}->[0]->{href};
                 my $title = $entry->{title}->[0];
 
                 $data .= '<ul>' if $entry == $entries->[0];
-                $date = substr($date, 0, index($date, 'T'));
-                $data .= sprintf('<li class="most-recent-entry"><div class="date">%s</div><a href="%s">%s updated %s</a></li>', $date, $url, $author, $title);
-                
+                $date = substr( $date, 0, index( $date, 'T' ) );
+                $data
+                  .= sprintf(
+                    '<li class="most-recent-entry"><div class="date">%s</div><a href="%s">%s updated %s</a></li>',
+                    $date, $url, $author, $title );
+
                 $counter++;
             }
             $data .= '</ul>';
 
             $param->{news_items} = $data;
-            
+
             $session = MT->model('session')->new();
             $session->id('MELODY_DOCS_UPDATE');
             $session->kind('MD');
-            $session->data( $data );
-            $session->start(time());
-            $session->save() ||
-                $app->log({
-                    message => $app->translate('Could not update Melody documentation widget.')
-                });
-        }
-    }
+            $session->data($data);
+            $session->start( time() );
+            $session->save()
+              || $app->log( {
+                         message =>
+                           $app->translate(
+                              'Could not update Melody documentation widget.')
+                       }
+              );
+        } ## end if ( $resp->is_success...)
+    } ## end else [ if ($session) ]
 
-}
+} ## end sub melody_docs_widget
 
 1;
 

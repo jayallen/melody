@@ -55,7 +55,7 @@ BEGIN {
         $PRODUCT_NAME    = 'Melody';
         $PRODUCT_CODE    = 'OM';
         $VERSION_ID      = '1.0.1';
-        $PORTAL_URL      = 'http://openmelody.org';
+        $PORTAL_URL = 'http://openmelody.org';
     } ## end if ( '__MAKE_ME__' eq ...)
     else {
 
@@ -2224,8 +2224,7 @@ sub update_ping_list {
             }
             !igem or last;
         } ## end while (1)
-        $text = Encode::decode_utf8($text)
-            unless Encode::is_utf8($text);
+        $text = Encode::decode_utf8($text) unless Encode::is_utf8($text);
         return $text;
     } ## end sub translate_templatized
 

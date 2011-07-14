@@ -185,7 +185,7 @@ sub init_testdb {
     # to only contain the test 'Foo', 'Bar' classes and neuter
     # the
     require MT::Upgrade;
-    
+
     # Add our test 'Foo' and 'Bar' classes to the list of
     # object classes to install.
     %MT::Upgrade::classes = ( foo => 'Foo', bar => 'Bar' );
@@ -400,23 +400,24 @@ sub init_db {
 }
 
 sub debug_handle {
-    return $_[0]->DEBUG ? sub { diag( @_ ) }    # Diagnostic output function
-                        : sub { };              # No-op function
+    return $_[0]->DEBUG
+      ? sub { diag(@_) }    # Diagnostic output function
+      : sub { };            # No-op function
 }
 
 sub revert_component_init {
-    my $pkg    = shift;
-    my $debug  = $pkg->debug_handle( shift );
-    my $mt     = MT->instance;
+    my $pkg   = shift;
+    my $debug = $pkg->debug_handle(shift);
+    my $mt    = MT->instance;
 
     # MT package scalar variables we need to reset
     my @global_scalars = qw(    plugin_sig         plugin_envelope
-                                plugin_registry    plugins_installed 
-                                $plugin_full_path                       );
-    my $c_hash = \%MT::Components;      # Aliased...
-    my $c_arry = \@MT::Components;      #  for...
-    my $p_hash = \%MT::Plugins;         #   brevity!
-    $debug->( 'INITIAL %MT::Components: ' . Dumper( $c_hash ));
+      plugin_registry    plugins_installed
+      $plugin_full_path                       );
+    my $c_hash = \%MT::Components;    # Aliased...
+    my $c_arry = \@MT::Components;    #  for...
+    my $p_hash = \%MT::Plugins;       #   brevity!
+    $debug->( 'INITIAL %MT::Components: ' . Dumper($c_hash) );
 
     # We are reinitializing everything *BUT* the core component
     # so we need to preserve it before destroying the rest.
@@ -424,14 +425,15 @@ sub revert_component_init {
     my $core = delete $c_hash->{core} or die "No core component found!";
 
 
-    $debug->( 'Undefining all MT package scalar vars '
-            . 'related to component/plugin initialization' );
+    $debug->(   'Undefining all MT package scalar vars '
+              . 'related to component/plugin initialization' );
     no strict 'refs';
-    undef ${"MT::$_"} and $debug->( "\t\$MT::$_" ) for @global_scalars;
+    undef ${"MT::$_"} and $debug->("\t\$MT::$_") for @global_scalars;
 
     # %MT::addons Anyone??????Bueller?? Bueller??
 
     {
+
         # As it says in MT.pm:
         #   Reset the Text_filters hash in case it was preloaded by plugins
         #   by calling all_text_filters (Markdown in particular does this).
@@ -442,61 +444,63 @@ sub revert_component_init {
     }
 
     $debug->('Unloading plugins\' perl init scripts from %INC cache');
+
     # This forces both perl and MT to treat the file as if it's never been
     # loaded previously which is necessary for making MT process the plugin
     # as it does in its own init methods.
     foreach my $pdata ( values %$p_hash ) {
         my $path = first { defined($_) and m{\.pl}i }
-                    $pdata->{object}{"full_path","path"};
+        $pdata->{object}{ "full_path", "path" };
         next unless $path;
-        delete $INC{ $path } and $debug->("\t$path");
+        delete $INC{$path} and $debug->("\t$path");
     }
 
     # And finally: Re-initialize %MT::Components and @MT::Components
     # with only the 'core' component and undef %MT::Plugins completely
-    $c_arry = [ $core ];
+    $c_arry = [$core];
     $c_hash = { core => $core };
-    $p_hash = { };
+    $p_hash = {};
 
     # Find and initialize all non-core components
     #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-    my %path_params = (
-        Config    => $mt->{config_dir},
-        Directory => $mt->{mt_dir}
-    );
-    my $killme = sub { die "FAIL ".Carp::longmess() };
+    my %path_params
+      = ( Config => $mt->{config_dir}, Directory => $mt->{mt_dir} );
+    my $killme = sub { die "FAIL " . Carp::longmess() };
+
     #-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
     eval {
         $debug->('Re-initializing addons');
-        $mt->init_addons()                          or $killme->();
+        $mt->init_addons() or $killme->();
 
-        $mt->init_config_from_db( \%path_params )   or $killme->();
+        $mt->init_config_from_db( \%path_params ) or $killme->();
         $mt->init_debug_mode;
 
         $debug->('Re-initializing plugins');
-        $mt->init_plugins()                         or $killme->();
+        $mt->init_plugins() or $killme->();
 
         # Set the plugins_installed flag signalling that it's
         # okay to initialize the schema and use the database.
         no warnings 'once';
-        $MT::plugins_installed = 1;        
+        $MT::plugins_installed = 1;
     };
-    die "Failed: $@".Carp::longmess() if $@;
+    die "Failed: $@" . Carp::longmess() if $@;
     $debug->('Plugins re-initialization complete');
-}
+} ## end sub revert_component_init
 
 {
     my $re_looped = 0;
+
     sub mt_package_hashvars_dump {
         my $pkg = shift;
         my $re  = $re_looped++ ? 're' : '';
-        my $sep = '---'x25;
-        return join( "\n\n",
-            $sep,
-            'Components ${re}initialized: ' . Dumper(\%MT::Components),
-            'Plugins ${re}initialized: '    . Dumper(\%MT::Plugins),
-            $sep,
-        );
+        my $sep = '---' x 25;
+        return
+          join( "\n\n",
+                $sep,
+                'Components ${re}initialized: ' . Dumper( \%MT::Components ),
+                'Plugins ${re}initialized: ' . Dumper( \%MT::Plugins ),
+                $sep,
+          );
     }
 }
 

@@ -52,11 +52,7 @@ __PACKAGE__->install_properties( {
            'password_reset_return_to' => 'string meta',
            'list_prefs'               => 'hash meta',
        },
-       defaults => { 
-           type => 1, 
-           status => 1, 
-           date_format => 'relative',
-       },
+       defaults => { type => 1, status => 1, date_format => 'relative', },
        indexes  => {
             created_on     => 1,
             name           => 1,
@@ -110,39 +106,40 @@ use vars qw(@EXPORT_OK %EXPORT_TAGS);
 sub list_props {
     return {
         name => {
-            auto       => 1,
-            label      => 'Username',
-            display    => 'force',
-            order      => 100,
-            sub_fields => [
-                {   class   => 'userpic',
-                    label   => 'Userpic',
-                    display => 'optional',
-                },
-                {   class   => 'user-info',
-                    label   => 'User Info',
-                    display => 'optional',
-                },
-            ],
-            bulk_html => \&_bulk_author_name_html,
+                  auto       => 1,
+                  label      => 'Username',
+                  display    => 'force',
+                  order      => 100,
+                  sub_fields => [ {
+                                    class   => 'userpic',
+                                    label   => 'Userpic',
+                                    display => 'optional',
+                                  },
+                                  {
+                                    class   => 'user-info',
+                                    label   => 'User Info',
+                                    display => 'optional',
+                                  },
+                  ],
+                  bulk_html => \&_bulk_author_name_html,
         },
         nickname => {
-            auto      => 1,
-            label     => 'Display Name',
-            display   => 'default',
-            order     => 200,
-            bulk_html => \&_nickname_bulk_html,
+                      auto      => 1,
+                      label     => 'Display Name',
+                      display   => 'default',
+                      order     => 200,
+                      bulk_html => \&_nickname_bulk_html,
         },
         entry_count => {
-            label        => 'Entries',
-            filter_label => '__ENTRY_COUNT',
-            display      => 'default',
-            order        => 300,
-            base         => '__virtual.object_count',
-            col_class    => 'num',
-            count_class  => 'entry',
-            count_col    => 'author_id',
-            filter_type  => 'author_id',
+                         label        => 'Entries',
+                         filter_label => '__ENTRY_COUNT',
+                         display      => 'default',
+                         order        => 300,
+                         base         => '__virtual.object_count',
+                         col_class    => 'num',
+                         count_class  => 'entry',
+                         count_col    => 'author_id',
+                         filter_type  => 'author_id',
         },
         comment_count => {
             base         => 'author.entry_count',
@@ -156,24 +153,18 @@ sub list_props {
             raw          => sub {
                 my ( $prop, $obj ) = @_;
                 MT->model( $prop->count_class )
-                    ->count( { commenter_id => $obj->id } );
+                  ->count( { commenter_id => $obj->id } );
             },
         },
         author_name => {
-            base        => '__virtual.author_name',
-            label       => 'Created by',
-            display     => 'default',
-            order       => 500,
-            view_filter => [],
+                         base        => '__virtual.author_name',
+                         label       => 'Created by',
+                         display     => 'default',
+                         order       => 500,
+                         view_filter => [],
         },
-        created_on => {
-            base  => '__virtual.created_on',
-            order => 600,
-        },
-        modified_on => {
-            base  => '__virtual.modified_on',
-            order => 700,
-        },
+        created_on  => { base => '__virtual.created_on',  order => 600, },
+        modified_on => { base => '__virtual.modified_on', order => 700, },
 
         status => {
             base    => '__virtual.single_select',
@@ -183,19 +174,27 @@ sub list_props {
             terms   => sub {
                 my $prop = shift;
                 my ( $args, $db_terms, $db_args ) = @_;
-                my $val      = $args->{value};
+                my $val = $args->{value};
                 my %statuses = (
-                    active   => ACTIVE(),
-                    disabled => INACTIVE(),
-                    pending  => PENDING(),
+                                 active   => ACTIVE(),
+                                 disabled => INACTIVE(),
+                                 pending  => PENDING(),
                 );
                 $val = exists $statuses{$val} ? $statuses{$val} : $val;
                 return { status => $val };
             },
-            single_select_options => [
-                { label => MT->translate('Active'),   value => 'active', },
-                { label => MT->translate('Disabled'), value => 'disabled', },
-                { label => MT->translate('Pending'),  value => 'pending', },
+            single_select_options => [ {
+                                          label => MT->translate('Active'),
+                                          value => 'active',
+                                       },
+                                       {
+                                          label => MT->translate('Disabled'),
+                                          value => 'disabled',
+                                       },
+                                       {
+                                          label => MT->translate('Pending'),
+                                          value => 'pending',
+                                       },
             ],
         },
         url => {
@@ -207,6 +206,7 @@ sub list_props {
                 return $obj->url;
             },
         },
+
 # This depends upon extensible permissions from MT5
 #        privilege => {
 #            base                  => '__virtual.single_select',
@@ -236,40 +236,37 @@ sub list_props {
 #                return;
 #            },
 #        },
-        email => {
-            auto    => 1,
-            label   => 'Email Address',
-            display => 'none',
-        },
+        email => { auto => 1, label => 'Email Address', display => 'none', },
         id => { view => [] },
     };
-}
+} ## end sub list_props
 
 sub member_list_props {
     return {
         name => {
-            auto       => 1,
-            label      => 'Username',
-            display    => 'force',
-            bulk_html  => \&_bulk_author_name_html,
-            sub_fields => [
-                {   class   => 'userpic',
-                    label   => 'Userpic',
-                    display => 'optional',
-                },
-                {   class   => 'user-info',
-                    label   => 'User Info',
-                    display => 'optional',
-                },
-            ],
-            order => 100,
+                  auto       => 1,
+                  label      => 'Username',
+                  display    => 'force',
+                  bulk_html  => \&_bulk_author_name_html,
+                  sub_fields => [ {
+                                    class   => 'userpic',
+                                    label   => 'Userpic',
+                                    display => 'optional',
+                                  },
+                                  {
+                                    class   => 'user-info',
+                                    label   => 'User Info',
+                                    display => 'optional',
+                                  },
+                  ],
+                  order => 100,
         },
         nickname => {
-            label     => 'Display Name',
-            auto      => 1,
-            bulk_html => \&_nickname_bulk_html,
-            order     => 200,
-            display   => 'default',
+                      label     => 'Display Name',
+                      auto      => 1,
+                      bulk_html => \&_nickname_bulk_html,
+                      order     => 200,
+                      display   => 'default',
         },
         role => {
             base      => '__virtual.single_select',
@@ -280,40 +277,44 @@ sub member_list_props {
             html      => sub {
                 my ( $prop, $obj ) = @_;
                 my $blog_id = MT->app->blog->id;
-                my @roles   = MT->model('role')->load(
-                    undef,
-                    {   join => MT->model('association')->join_on(
-                            'role_id',
-                            {   blog_id   => $blog_id,
-                                author_id => $obj->id,
-                            },
-                        ),
-                    },
+                my @roles = MT->model('role')->load(
+                                       undef,
+                                       {
+                                         join =>
+                                           MT->model('association')->join_on(
+                                                     'role_id',
+                                                     {
+                                                       blog_id   => $blog_id,
+                                                       author_id => $obj->id,
+                                                     },
+                                           ),
+                                       },
                 );
                 return '' unless scalar @roles;
                 return '<ul>'
-                    . join( '',
-                    map      {qq(<li class="role-item">$_</li>)}
-                    sort map { MT::Util::encode_html($_->name) } @roles )
-                    . '</ul>';
+                  . join( '',
+                          map        {qq(<li class="role-item">$_</li>)}
+                            sort map { MT::Util::encode_html( $_->name ) }
+                            @roles )
+                  . '</ul>';
             },
             terms => sub {
                 my ( $prop, $args, $db_terms, $db_args ) = @_;
                 my $terms = {};
-                $terms->{blog_id}   = MT->app->param('blog_id');
-                $terms->{role_id}   = $args->{value} if $args->{value};
-                $terms->{author_id} = \"= author_id";  # baka editors";
+                $terms->{blog_id} = MT->app->param('blog_id');
+                $terms->{role_id} = $args->{value} if $args->{value};
+                $terms->{author_id} = \"= author_id";    # baka editors";
                 $db_args->{joins} ||= [];
                 push @{ $db_args->{joins} },
-                    MT->model('association')
-                    ->join_on( undef, $terms, { unique => 1 } );
+                  MT->model('association')
+                  ->join_on( undef, $terms, { unique => 1 } );
                 return;
             },
             single_select_options => sub {
                 my $prop  = shift;
                 my @roles = MT->model('role')->load;
                 return [ map { { label => $_->name, value => $_->id } }
-                        @roles ];
+                         @roles ];
             },
         },
         entry_count => {
@@ -355,27 +356,24 @@ sub member_list_props {
             condition => sub {
                 MT->config->SingleCommunity ? 0 : 1;
             },
-            single_select_options => [
-                { label => MT->translate('MT Users'),   value => AUTHOR(), },
-                { label => MT->translate('Commenters'), value => COMMENTER(), },
+            single_select_options => [ {
+                                          label => MT->translate('MT Users'),
+                                          value => AUTHOR(),
+                                       },
+                                       {
+                                          label =>
+                                            MT->translate('Commenters'),
+                                          value => COMMENTER(),
+                                       },
             ],
         },
         status     => { base => 'author.status', },
-        created_on => {
-            base    => '__virtual.created_on',
-            display => 'none',
-        },
-        modified_on => {
-            base    => '__virtual.modified_on',
-            display => 'none',
-        },
-        email => {
-            auto    => 1,
-            label   => 'Email Address',
-            display => 'none',
-        },
+        created_on => { base => '__virtual.created_on', display => 'none', },
+        modified_on =>
+          { base => '__virtual.modified_on', display => 'none', },
+        email => { auto => 1, label => 'Email Address', display => 'none', },
     };
-}
+} ## end sub member_list_props
 
 sub member_system_filters {
     return {
@@ -396,18 +394,18 @@ sub member_system_filters {
             order => 200,
         },
     };
-}
+} ## end sub member_system_filters
 
 sub _bulk_author_name_html {
     my ( $prop, $objs, $app, $opts ) = @_;
 
     # Load userpics
     my %asset_for_load = map { $_->userpic_asset_id => 1 }
-        grep { $_->userpic_asset_id } @$objs;
+      grep { $_->userpic_asset_id } @$objs;
     my @userpics;
     @userpics
-        = MT->model('asset.image')->load( { id => [ keys %asset_for_load ] } )
-        if keys %asset_for_load;
+      = MT->model('asset.image')->load( { id => [ keys %asset_for_load ] } )
+      if keys %asset_for_load;
     my %userpic = map { $_->id => $_ } @userpics;
     my @results;
     my $mail_icon = MT->static_path . 'images/status_icons/email.gif';
@@ -416,11 +414,12 @@ sub _bulk_author_name_html {
     for my $obj (@$objs) {
         my $userpic_url;
         if ( my $userpic = $userpic{ $obj->userpic_asset_id || 0 } ) {
-            ($userpic_url) = $userpic->thumbnail_url(
-                Width  => 36,
-                Height => 36,
-                Square => 1
-            );
+            ($userpic_url)
+              = $userpic->thumbnail_url(
+                                         Width  => 36,
+                                         Height => 36,
+                                         Square => 1
+              );
         }
         else {
             $userpic_url = MT->static_path . 'images/default-userpic-36.jpg';
@@ -429,35 +428,35 @@ sub _bulk_author_name_html {
         if ( MT->config->SingleCommunity ) {
             if ( $obj->type == MT::Author::AUTHOR() ) {
                 $status_img
-                    = $obj->status == ACTIVE()   ? 'user-enabled.gif'
-                    : $obj->status == INACTIVE() ? 'user-disabled.gif'
-                    :                              'user-pending.gif';
+                  = $obj->status == ACTIVE()   ? 'user-enabled.gif'
+                  : $obj->status == INACTIVE() ? 'user-disabled.gif'
+                  :                              'user-pending.gif';
                 $status_label
-                    = $obj->status == ACTIVE()   ? 'Enabled'
-                    : $obj->status == INACTIVE() ? 'Disabled'
-                    :                              'Pending';
+                  = $obj->status == ACTIVE()   ? 'Enabled'
+                  : $obj->status == INACTIVE() ? 'Disabled'
+                  :                              'Pending';
             }
             else {
                 $status_img
-                    = $obj->is_trusted(0) ? 'trusted.gif'
-                    : $obj->is_banned(0)  ? 'banned.gif'
-                    :                       'authenticated.gif';
+                  = $obj->is_trusted(0) ? 'trusted.gif'
+                  : $obj->is_banned(0)  ? 'banned.gif'
+                  :                       'authenticated.gif';
                 $status_label
-                    = $obj->is_trusted(0) ? 'Trusted'
-                    : $obj->is_banned(0)  ? 'Banned'
-                    :                       'Authenticated';
+                  = $obj->is_trusted(0) ? 'Trusted'
+                  : $obj->is_banned(0)  ? 'Banned'
+                  :                       'Authenticated';
             }
-        }
+        } ## end if ( MT->config->SingleCommunity)
         else {
             my $blog_id = $opts->{blog_id};
             $status_img
-                = $obj->is_trusted($blog_id) ? 'trusted.gif'
-                : $obj->is_banned($blog_id)  ? 'banned.gif'
-                :                              'authenticated.gif';
+              = $obj->is_trusted($blog_id) ? 'trusted.gif'
+              : $obj->is_banned($blog_id)  ? 'banned.gif'
+              :                              'authenticated.gif';
             $status_label
-                = $obj->is_trusted($blog_id) ? 'Trusted'
-                : $obj->is_banned($blog_id)  ? 'Banned'
-                :                              'Authenticated';
+              = $obj->is_trusted($blog_id) ? 'Trusted'
+              : $obj->is_banned($blog_id)  ? 'Banned'
+              :                              'Authenticated';
         }
 
         $status_img = MT->static_path . 'images/status_icons/' . $status_img;
@@ -470,14 +469,15 @@ sub _bulk_author_name_html {
         }
         else {
             my $auth
-                = MT->registry( commenter_authenticators => $obj->auth_type );
+              = MT->registry( commenter_authenticators => $obj->auth_type );
             $auth_img .= $auth->{logo_small};
             $auth_label = $auth->{label};
             $auth_label = $auth_label->() if ref $auth_label;
         }
         my $lc_auth_label = lc $auth_label;
 
-        my $name  = MT::Util::encode_html( $obj->name ) || '(' . MT->translate('Registered User') . ')';
+        my $name = MT::Util::encode_html( $obj->name )
+          || '(' . MT->translate('Registered User') . ')';
         my $email = MT::Util::encode_html( $obj->email );
         my $url   = MT::Util::encode_html( $obj->url );
         my $out   = qq{
@@ -492,17 +492,17 @@ sub _bulk_author_name_html {
 
         if ( $app->can_do('edit_authors') || $app->user->id == $obj->id ) {
             my $edit_link = $app->uri(
-                mode => 'view',
-                args => {
-                    _type => $obj->type == MT::Author::AUTHOR()
-                    ? 'author'
-                    : 'commenter',
-                    id      => $obj->id,
-                    blog_id => 0,
-                },
+                               mode => 'view',
+                               args => {
+                                   _type => $obj->type == MT::Author::AUTHOR()
+                                   ? 'author'
+                                   : 'commenter',
+                                   id      => $obj->id,
+                                   blog_id => 0,
+                               },
             );
             $out
-                .= qq{<span class="username"><a href="$edit_link">$name</a></span>};
+              .= qq{<span class="username"><a href="$edit_link">$name</a></span>};
         }
         else {
             $out .= qq{<span class="username">$name</span>};
@@ -510,17 +510,17 @@ sub _bulk_author_name_html {
         if ( $url || $email ) {
             $out .= q{<ul class="user-info description">};
             $out
-                .= qq{<li class="user-info-item user-email"><img alt="Email "src="$mail_icon" /> <a href="mailto:$email" title="$email">$email</a></li>}
-                if $email;
+              .= qq{<li class="user-info-item user-email"><img alt="Email "src="$mail_icon" /> <a href="mailto:$email" title="$email">$email</a></li>}
+              if $email;
             $out
-                .= qq{<li class="user-info-item user-url"><img alt="URL" src="$view_icon" /> <a href="$url" title="$url">$url</a></li>}
-                if $url;
+              .= qq{<li class="user-info-item user-url"><img alt="URL" src="$view_icon" /> <a href="$url" title="$url">$url</a></li>}
+              if $url;
             $out .= q{</ul>};
         }
         push @results, $out;
-    }
+    } ## end for my $obj (@$objs)
     return @results;
-}
+} ## end sub _bulk_author_name_html
 
 sub _nickname_bulk_html {
     my ( $prop, $objs, $app ) = @_;
