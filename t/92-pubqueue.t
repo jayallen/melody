@@ -133,7 +133,9 @@ foreach my $blog (@blogs) {
 
     my $rebuild = $mt->rebuild( BlogID => $blog->id, Force => 1 ) || 0;
 
-    ok( $rebuild, "Rebuilt all without the publish queue" );
+    ok( $rebuild, "Rebuilt all without the publish queue" )
+      or diag explain 'A publishing error occurred: ' . $mt->errstr;
+
     @jobs      = MT::TheSchwartz::Job->load();
     $job_count = scalar(@jobs);
     ok( $job_count == 0, "There are no new jobs" );

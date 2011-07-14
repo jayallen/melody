@@ -2490,6 +2490,100 @@ sub upload_info {
     return ( $fh, $info );
 } ## end sub upload_info
 
+sub validate_upload {
+    my $app  = shift;
+    my $args = shift;
+
+    my $INVALID = sub {
+        my $desc = $app->translate( @_ ? @_ : 'Reason unspecified' );
+        require MT::Log;
+        $app->log( {
+                  level    => MT::Log::SECURITY(),
+                  class    => 'asset',
+                  category => 'invalid',
+                  message =>
+                    $app->translate( 'Blocked invalid upload: [_1]', $desc ),
+                }
+        );
+        return $app->errtrans('Invalid upload file');
+    };
+
+    ###
+    # Check filename for validity and allowed upload file extensions
+    # The file need not exist for these checks.
+    ###
+    if ( defined $args->{filename} ) {
+        require File::Basename;
+        my ($file) = File::Basename::fileparse( $args->{filename} );
+        my $cfg = $app->config();
+
+        defined $file
+          or return $INVALID->( 'Could not parse filepath [_1]',
+                                $args->{filename} );
+
+        return
+          $INVALID->(
+                      'Invalid characters in filename: [_1]',
+                      $args->{filename}
+          )
+          if $file =~ m{
+                /       | # Filename shouldn't have slash; indicates directory
+                \.\.    | # No upward traversal allowed
+                \0      | # No NULL bytes allowed
+                \|      | # No pipes allowed
+                ^$        # Empty filename
+            }x;
+
+        my $deny_exts = $cfg->DeniedAssetFileExtensions || [];
+        if (@$deny_exts) {
+            my $match = MT::Util::match_file_extension( $file, $deny_exts );
+            if ( defined $match and $match ne '' ) {
+                return
+                  $INVALID->(
+                      'Blacklisted file extension ([_1]) found for file [_2]',
+                      $match, $file
+                  );
+            }
+        }
+
+        my $allow_exts = $cfg->AssetFileExtensions || [];
+        if (@$allow_exts) {
+            my $match = MT::Util::match_file_extension( $file, $allow_exts );
+            unless ( defined $match and $match ne '' ) {
+                return
+                  $INVALID->(
+                             'File does not have whitelisted extension: [_1]',
+                             $file
+                  );
+            }
+        }
+    } ## end if ( defined $args->{filename...})
+
+    ###
+    # Evaluation of a binary data to see if it contains HTML or
+    # JavaScript content in the first 1K of the body.  Image
+    # files (in particular) that contain embedded HTML or JavaScript are
+    # a known vector for an IE 6 and 7 content-sniffing vulnerability.
+    ###
+    if ( defined( my $data = $args->{data} ) ) {
+        require MT::Image;
+        my $has_html = MT::Image->has_html_signature( data => $data );
+
+        defined $has_html
+          or return
+          $INVALID->(
+                      'Error reading image [_1]: [_2]',
+                      'data', MT::Image->errstr
+          );
+
+        $has_html
+          or return $INVALID->(
+                         'Image file contains suspicious filetype signature');
+    }
+
+    1;
+} ## end sub validate_upload
+
 sub cookie_val {
     my $app     = shift;
     my $cookies = $app->cookies;
@@ -3744,14 +3838,13 @@ sub query {
 
 sub blog {
     my $app = shift;
-    $app->{_blog} = shift if @_;
-    return $app->{_blog} if $app->{_blog};
-    return undef unless $app->query;
-    my $blog_id = $app->query->param('blog_id');
-    if ($blog_id) {
-        $app->{_blog} = MT->model('blog')->load($blog_id);
-    }
-    return $app->{_blog};
+    my $blog = shift || $app->{_blog};
+    $blog ||= eval {
+        no warnings;
+        my $blog_id = int( $app->query->param('blog_id') || 0 );
+        return $blog_id ? $app->model('blog')->load($blog_id) : undef;
+    };
+    return $app->{_blog} = $blog;
 }
 
 ## Logging/tracing
@@ -4248,6 +4341,35 @@ Automatically selecting either Apache::Request or CGI.pm, returns
 a file handle and a hashref of header details for a given field name.
 If there is a problem with the upload, undef will be returned instead
 and a warning may be logged with more detail.
+
+=head2 $app->validate_upload( \%param )
+
+This method performs basic upload file validation on either the filename or
+the data contained in the file.  MT::App subclasses should override this
+method as needed to perform validation specific to the app.  See
+C<MT::AtomServer> for an example.
+
+The C<%param> has can contain one or more of the following keys:
+
+=over 4
+
+=item * filename
+
+The value of the C<filename> key is expected to be a filename (with or without
+a path) and will be checked for a variety of disallowed characters and strings
+as well as having an approved file extension as specified by the
+DeniedAssetFileExtensions and AssetFileExtensions configuration directives. 
+The file does not have to exist on the filesystem to validate the filename.
+
+=item * data
+
+The value of the C<data> key is expected to be a scalar variable containing 
+binary data (presumably an image).  This data is checked (via
+C<MT::Image::has_html_signature>) for HTML-ish content within the first 1K of 
+the data. Image files (in particular) that contain embedded HTML or JavaScript 
+are a known vector for an IE 6 and 7 content-sniffing vulnerability.
+
+=back
 
 =head2 $app->uri_params(%param)
 

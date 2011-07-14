@@ -8,7 +8,7 @@
   <script type="text/javascript" src="<$mt:PluginStaticWebPath component="themeexport"$>jquery.scrollTo-1.4.2-min.js"></script>
 
   <script type="text/javascript">
-  jQuery(document).ready( function($) {
+  $(document).ready( function() {
     $('#continue').click( function() {
         $('.page').hide();
         $('#steps').hide();
@@ -23,22 +23,51 @@
                 'theme_name'        : $('#name-field input').val(),
                 'theme_description' : $('#description-field textarea').val(),
                 'theme_version'     : $('#version-field input').val(),
+                'system_cf'         : $('#system_cf-field input').is(':checked') ? 1 : 0,
+                'system_fd'         : $('#system_fd-field input').is(':checked') ? 1 : 0,
                 'designer_name'     : $('#designer-field input').val(),
                 'designer_link'     : $('#designer-url-field input').val()
             },
             success: function(text, textStatus, XMLHttpRequest) {
-              var matches = text.match(/JSON:(.*)$/);
-              if (matches && matches.length) {
-                var json = matches[1];
-                var data = eval( '(' + json + ')' );
-                $('#export-pane .progress').fadeOut( function() { $(this).html('<a href="'+data.download_url+'" title="Download Theme">Download '+data.zipfilename+'</a>').fadeIn() });;
-              }
+                var matches = text.split(/JSON:/);
+                if (matches && matches.length) {
+
+                    // Successfully exported!
+                    var json = matches[1];
+                    if (json) {
+
+                        var data = eval( '(' + json + ')' );
+                        if (data.error) {
+                            $('#export-pane .progress').html(
+                                '<p>' + data.error + '</p>'
+                            );
+                        }
+                        else {
+                            // Add the download button
+                            $('#export-pane .progress').html(
+                                '<p><a href="' + data.download_url
+                                + '" title="Download Theme">Download ' 
+                                + data.zipfilename + '</a></p>'
+                            );
+                        }
+
+                        // After the log is finished, show the result.
+                        $('#export-pane .progress').show();
+
+                        // Remove the export button, and change "Cancel" 
+                        // to "Close."
+                        $('button#continue').hide();
+                        $('button#close').text('Close');
+                    }
+                }
+
             }
         });
+
         xhr.onreadystatechange = function() {
-          if ( xhr.readyState == 3 ) {
-            interactive_export( xhr );            
-          }
+            if ( xhr.readyState == 3 ) {
+                interactive_export( xhr );
+            }
         };
 
     });
@@ -49,6 +78,15 @@
 <mt:include name="dialog/header.tmpl">
 
 <div id="export_theme_content">
+
+    <div id="msg-container">
+        <mtapp:statusmsg
+            id="message"
+            class="info">
+                This tool will take you through the process of exporting a theme. Your theme metadata (entered in the General Information and Designer Details tabs), your blog's templates, and a <code>config.yaml</code> file will be exported and zipped for you to download. Your existing site will be unaffected by this export. Learn more about themes in the <a href="https://github.com/openmelody/melody/wiki/designguide-theme" target="_blank">Theme Designer Guide</a>.
+        </mtapp:statusmsg>
+    </div>
+
   <form id="export-form" method="post" 
         action="<$mt:var name="script_url"$>">
 
@@ -56,34 +94,56 @@
 
     <ol id="steps" class="pkg">
       <li class="page-1 general active" pageid="1"><label>General Information</label></li>
-      <li class="page-2 pricing" pageid="2"><label>Designer Details</label></li>
+      <li class="page-2" pageid="2"><label>Designer Details</label></li>
     </ol>
 
     <fieldset id="page-1" class="page first details">
 
-      <mtapp:setting
-          id="name"
-          label_class="top-label"
-          label="<__trans phrase="Theme Name">"
-          hint="The name of your theme."
-          show_hint="0">
-        <input class="full-width" name="theme_name" type="text" size="60" value="<$mt:var name="theme_name"$>" />
-      </mtapp:setting>
+        <mtapp:setting
+            id="name"
+            label_class="top-label"
+            label="<__trans phrase="Theme Name">"
+            hint="The name of your theme."
+            show_hint="0">
+            <input class="full-width" name="theme_name" type="text" value="<$mt:var name="theme_name"$>" />
+        </mtapp:setting>
 
-      <mtapp:setting
-          id="description"
-          label_class="top-label"
-          label="<__trans phrase="Description">">
-        <textarea class="full-width" rows="3" name="description"><$mt:var name="theme_description"$></textarea>
-      </mtapp:setting>
+        <mtapp:setting
+            id="description"
+            label_class="top-label"
+            label="<__trans phrase="Description">">
+            <textarea class="full-width" rows="3" name="description"><$mt:var name="theme_description"$></textarea>
+        </mtapp:setting>
 
-      <mtapp:setting
-          id="version"
-          label_class="top-label"
-          label="<__trans phrase="Version">"
-          show_hint="0">
-        <input name="theme_version" type="text" size="20" value="<$mt:var name="theme_version"$>" />
-      </mtapp:setting>
+        <mtapp:setting
+            id="version"
+            label_class="top-label"
+            label="<__trans phrase="Version">"
+            show_hint="0">
+            <input class="full-width" name="theme_version" type="text" value="<$mt:var name="theme_version"$>" />
+        </mtapp:setting>
+
+    <mt:If name="system_cf">
+        <mtapp:setting
+            id="system_cf"
+            label_class="top-label"
+            label="<__trans phrase="Export system-level Custom Fields">"
+            show_hint="0">
+            <input name="system_cf" id="system_cf" type="checkbox" value="<mt:Var name="system_cf">" checked="checked" />
+            <label for="system_cf">Export system-level Custom Fields. (Uncheck if they are not required for this theme or if they are part of another theme.)</label>
+        </mtapp:setting>
+    </mt:If>
+
+    <mt:If name="system_fd">
+        <mtapp:setting
+            id="system_fd"
+            label_class="top-label"
+            label="<__trans phrase="Export system-level Field Day fields">"
+            show_hint="0">
+            <input name="system_fd" id="system_fd" type="checkbox" value="<mt:Var name="system_fd">" checked="checked" />
+            <label for="system_fd">Export system-level Field Day fields. (Uncheck if they are not required for this theme or if they are part of another theme.)</label>
+        </mtapp:setting>
+    </mt:If>
 
     </fieldset>
 
@@ -92,17 +152,17 @@
       <mtapp:setting
           id="designer"
           label_class="top-label"
-          label="<__trans phrase="Designer Name">"
+          label="<__trans phrase="Designer/Author Name">"
           show_hint="0">
-        <input class="full-width" name="designer_name" type="text" size="20" value="<$mt:var name="designer_name"$>" />
+        <input class="full-width" name="designer_name" type="text" value="<$mt:var name="designer_name"$>" />
       </mtapp:setting>
 
       <mtapp:setting
           id="designer-url"
           label_class="top-label"
-          label="<__trans phrase="Designer URL">"
+          label="<__trans phrase="Designer/Author URL">"
           show_hint="0">
-        <input class="full-width" name="designer_link" type="text" size="20" value="<$mt:var name="designer_url"$>" />
+        <input class="full-width" name="designer_link" type="text" value="<$mt:var name="designer_url"$>" />
       </mtapp:setting>
 
     </fieldset>
@@ -110,11 +170,10 @@
     <div id="export-pane">
       <div id="export-log">
         <ul>
+            <li>Exporting...</li>
         </ul>
       </div>
-      <div class="progress">
-        <p class="working">Exporting...</p>
-      </div>
+      <div class="progress" style="display: none;"></div>
     </div>
 
     <div class="actions-bar">

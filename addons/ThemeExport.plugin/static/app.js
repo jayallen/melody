@@ -27,19 +27,13 @@ function interactive_export( c ) {
     text = text.replace(/\r?\n$/, '');
     
     var lines = text.split(/\r?\n/);
-    var last_line;
     for (var i = 0; i < lines.length; i++) {
         var line = lines[i];
         var h = $('#export-log ul').append('<li>' + line + '</li>').height();
-        $('#export-log').scrollTo( 'max' , { 'axis' : 'y' });
+        $('#export-log').scrollTo( 'max' , { 'axis' : 'y' } );
     }
-    if (last_line) {
-        alert("Last line: " + last_line);
-        //current_task.innerHTML = last_line;
-    }
-   
 }
-jQuery(document).ready( function($) {
+$(document).ready( function() {
     $('#steps li').click( function() {
         var p = $(this).attr('pageid');
         if (p != page) {

@@ -7,7 +7,7 @@ use MT::Util qw( format_ts epoch2ts caturl );
 
 sub export {
     my $app  = shift;
-    my $q    = $app->{query};
+    my $q    = $app->query;
     my $blog = $app->blog;
 
     $| = 1;
@@ -27,10 +27,13 @@ sub export {
                     pack_name        => $q->param('theme_name') || '',
                     pack_description => $q->param('theme_description') || '',
                     pack_version     => $q->param('theme_version') || '',
+                    system_cf        => $q->param('system_cf') || '',
+                    system_fd        => $q->param('system_fd') || '',
                     author_name      => $q->param('designer_name') || '',
                     author_link      => $q->param('designer_link') || '',
                     outdir           => $basedir
     };
+
     my $exporter = MT::Theme::Exporter->new($options);
 
     $exporter->export(
@@ -41,7 +44,7 @@ sub export {
     $support_dir = File::Spec->catdir(
                                        'support',
                                        'theme-export',
-                                       $blog->id,
+                                       'blog_id_' . $blog->id,
                                        format_ts(
                                            "%Y-%m-%d", epoch2ts( undef, time )
                                        )
@@ -56,8 +59,22 @@ sub export {
     $target_path = File::Spec->catfile( $target_path, $zipfilename );
     $target_url = caturl( $app->static_path, $support_dir, $zipfilename );
 
-    move( $exporter->{'zipfilepath'}, $target_path );
+    # $fmgr can't always be used to move the zip file because it may not have
+    # permission to move a file created by a different user. That is, in
+    # MT::Theme::Exporter::write, the zip is created by the system.
+    #$fmgr->rename( $exporter->{'zipfilepath'}, $target_path )
+    move( $exporter->{'zipfilepath'}, $target_path )
+      or die $app->print(
+                'JSON:'
+                  . MT::Util::to_json( {
+                      'error' => "The destination $target_path could not be "
+                        . "written. Check permissions before retrying.",
+                    }
+                  )
+      );
 
+    # The zip file has been moved to $target_path now, so go ahead and delete
+    # the temporary files.
     File::Path::rmtree($basedir);
 
     return
@@ -71,7 +88,7 @@ sub export {
 
 sub export_start {
     my $app  = shift;
-    my $q    = $app->{query};
+    my $q    = $app->query;
     my $blog = $app->blog;
     my $tmpl = $app->load_tmpl('dialog_export.tmpl');
     $tmpl->param( blog_id    => $blog->id );
@@ -81,8 +98,26 @@ sub export_start {
     $tmpl->param( theme_version => '1.0' );
     $tmpl->param( designer_name => $app->user->nickname );
     $tmpl->param( designer_url  => $app->user->url );
+
+    # If there are any system-level custom fields, give the user the option to
+    # export them.
+    if (    MT->component('Commercial')
+         && MT->model('field')->load( { blog_id => '0' } ) )
+    {
+        $tmpl->param( system_cf => '1' );
+    }
+
+    # If there are any system-level Field Day fields, giv ethe user the option
+    # to export them.
+    if (    MT->component('FieldDay')
+         && MT->model('fdsetting')
+         ->load( { object_type => [ 'blog', 'system', 'user' ] } ) )
+    {
+        $tmpl->param( system_fd => 1 );
+    }
+
     return $app->build_page($tmpl);
-}
+} ## end sub export_start
 
 1;
 __END__

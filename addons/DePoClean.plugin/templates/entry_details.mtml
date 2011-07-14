@@ -12,6 +12,9 @@
 		        <h3><a href="<$mt:EntryPermalink$>" rel="bookmark" title="<__trans phrase="Permanent Link to"> <$mt:EntryTitle escape="html"$>."><$mt:EntryTitle escape="html"$></a> 
 		        </h3> 
 		        <p><$mt:EntryBody$></p>
+                        <mt:If tag="EntryMore">
+                                <p><$mt:EntryMore$></p>
+                        </mt:If>
 		        <br clear="left" /> 
 		    </div> 
         </div><!-- end post --> 

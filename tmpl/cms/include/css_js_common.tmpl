@@ -34,6 +34,7 @@
     <mt:if name="local_lang_id" ne="en-us">
       <mt:setvarblock name="relpath">styles_<mt:var name="local_lang_id">.css</mt:setvarblock>
       <mt:var name="linked_stylesheet" relpath="$relpath">
+      <mt:var name="relpath" value=""/>
     </mt:if>
 
     <mt:ignore>
@@ -94,6 +95,7 @@
     <mt:if name="local_lang_id" ne="en-us">
         <mt:setvarblock name="relpath">mt_<mt:var name="local_lang_id">.js</mt:setvarblock>
         <mt:var name="linked_script" relpath="$relpath">
+        <mt:var name="relpath" value=""/>
     </mt:if>
 
     <script type="text/javascript">

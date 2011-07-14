@@ -34,8 +34,8 @@ sub new {
     my $params = shift;
     my $self   = {};
     foreach my $prop (
-             qw( id key pack_name pack_description pack_version dryrun verbose
-             logger app author_name author_link basedir outdir zip )
+        qw( id key pack_name pack_description pack_version system_cf system_fd
+        dryrun verbose logger app author_name author_link basedir outdir zip )
       )
     {
         if ( exists $params->{$prop} ) {
@@ -121,7 +121,6 @@ sub write {
         $str =~ s{^---}{};
         open FILE, ">$filepath"
           or die "Could not open $filepath for openning";
-        print FILE '---';
         print FILE $header;
         print FILE $str;
         close FILE;
@@ -173,7 +172,7 @@ sub export {
                           $templates_path, $self->{'fmgr'}->errstr );
     }
 
-# TODO - static files need utilize config assistant's new static file structure
+    # TODO - static files need utilize config assistant's new static file structure
     my $from
       = File::Spec->catdir( _static_file_path( $self->{'app'} ), $static );
     if ( -e $from && $static ) {
@@ -207,6 +206,9 @@ sub export {
     #   = $cfg->{data};
 
     $self->_process_export_queue();
+
+    $self->_process_custom_fields( $blog_id, $ts_id );
+    $self->_process_field_day_fields( $blog_id, $ts_id );
 } ## end sub export
 
 =head2
@@ -409,9 +411,6 @@ sub _process_templates {
                       && $t->build_type != MT::PublishOption::ONDEMAND()
                     ) ? ( build_type => $t->build_type ) : (),
             };
-            use Data::Dumper;
-
-#            print Dumper($cfg);
             if ( $t->type =~ /^(module|widget|custom)$/ ) {
                 $cfg->{'include_with_ssi'} = 1 if ( $t->include_with_ssi );
                 foreach (qw( expire_type expire_event expire_interval )) {
@@ -605,6 +604,111 @@ sub _find_includes {
     return \@includes;
 } ## end sub _find_includes
 
+sub _process_custom_fields {
+    my $self = shift;
+    my ( $blog_id, $ts_id ) = @_;
+
+    return unless MT->component('Commercial');
+
+    my @blogs;
+    push @blogs, $blog_id;
+    if ( $self->{'system_cf'} ) {
+        push @blogs, '0';
+    }
+
+    # Grab all custom fields in this blog, as well as all system-level
+    # custom fields. System-level fields may be required/used for this
+    # blog, and author fields may be needed, too.
+    my $iter = MT->model('field')
+      ->load_iter( { blog_id => \@blogs, }, { sort => 'name', } );
+    if ($iter) {
+        print "Exporting Custom Fields from blog #$blog_id\n";
+    }
+    while ( my $cf = $iter->() ) {
+        $self->_debug(
+                 "\t- Writing Custom Field definition: " . $cf->name . "\n" );
+
+        # YAML::Tiny will convert a hash into the necessary structure to
+        # write YAML, however we can't do that because of some naming
+        # differences. For example, the field's public name is "label" but
+        # it's stored as "name".
+        $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fields'}
+          ->{ $cf->basename }->{'label'} = $cf->name;
+        $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fields'}
+          ->{ $cf->basename }->{'description'} = $cf->description
+          if $cf->description;
+        $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fields'}
+          ->{ $cf->basename }->{'tag'} = $cf->tag;
+        $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fields'}
+          ->{ $cf->basename }->{'obj_type'} = $cf->obj_type;
+        $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fields'}
+          ->{ $cf->basename }->{'type'} = $cf->type;
+        $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fields'}
+          ->{ $cf->basename }->{'options'} = $cf->options
+          if $cf->options;
+        $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fields'}
+          ->{ $cf->basename }->{'required'} = $cf->required
+          if $cf->required;
+        $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fields'}
+          ->{ $cf->basename }->{'default'} = $cf->default
+          if $cf->default;
+    } ## end while ( my $cf = $iter->(...))
+} ## end sub _process_custom_fields
+
+sub _process_field_day_fields {
+    my $self = shift;
+    my ( $blog_id, $ts_id ) = @_;
+
+    return unless MT->component('FieldDay');
+
+    # Grab all Field Day fields in this blog.
+    my $iter = MT->model('fdsetting')
+      ->load_iter( { blog_id => $blog_id, }, { sort => 'name', } );
+    if ($iter) {
+        print "Exporting Field Day fields from blog #$blog_id\n";
+    }
+    while ( my $fd = $iter->() ) {
+        $self->_write_field_day_yaml( $ts_id, $fd );
+    }
+
+    # System-level field day objects leave the blog_id set as NULL, so they
+    # can't be looked up with the above load.
+    if ( $self->{'system_fd'} ) {
+        $iter = MT->model('fdsetting')->load_iter( {
+                                              object_type =>
+                                                [ 'blog', 'system', 'user' ],
+                                            },
+                                            { sort => 'name', }
+        );
+        while ( my $fd = $iter->() ) {
+            $self->_write_field_day_yaml( $ts_id, $fd );
+        }
+    }
+} ## end sub _process_field_day_fields
+
+sub _write_field_day_yaml {
+    my $self = shift;
+    my ( $ts_id, $fd ) = @_;
+
+    $self->_debug(
+                 "\t- Writing Custom Field definition: " . $fd->name . "\n" );
+
+    # YAML::Tiny will convert a hash into the necessary structure to
+    # write YAML, however we don't want to do that because Field Day
+    # uses non-standard names ("object_type" instead of "obj_type"),
+    # so we should try to standardize that.
+    $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fd_fields'}
+      ->{ $fd->name }->{'obj_type'} = $fd->object_type;
+    $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fd_fields'}
+      ->{ $fd->name }->{'type'} = $fd->type;
+    $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fd_fields'}
+      ->{ $fd->name }->{'order'} = $fd->order;
+
+    # The data field is a serialized blob.
+    $self->{'yaml'}->[0]->{'template_sets'}->{$ts_id}->{'fd_fields'}
+      ->{ $fd->name }->{'data'} = $fd->data;
+} ## end sub _write_field_day_yaml
+
 1;
 __END__
 
@@ -740,7 +844,7 @@ This method will do nothing if the "dryrun" option has been selected.
 
 =head1 VERSION CONTROL
 
-L<http://github.com/byrnereese/mt-tool-exportts
+L<http://github.com/byrnereese/mt-tool-exportts>
 
 =head1 AUTHORS and CREDITS
 

@@ -602,6 +602,10 @@ sub preview {
         $entry->id(-1);    # fake out things like MT::Taggable::__load_tags
         $entry->blog_id($blog_id);
     }
+
+    return $app->error( $app->translate("Permission denied.") )
+      unless $app->permissions->can_edit_entry( $entry, $app->user );
+
     my $cat;
     my $names = $entry->column_names;
 
@@ -1737,7 +1741,7 @@ sub build_entry_table {
       = const('DISPLAY_LENGTH_EDIT_ENTRY_TEXT_FROM_EXCERPT');
     my $text_max_len = const('DISPLAY_LENGTH_EDIT_ENTRY_TEXT_BREAK_UP');
     my %blog_perms;
-    $blog_perms{ $perms->blog_id } = $perms if $perms;
+    $blog_perms{ $perms->blog_id } = $perms if $perms and $perms->blog_id;
 
     while ( my $obj = $iter->() ) {
         my $blog_perms;

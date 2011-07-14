@@ -1,3 +1,9 @@
+#export_theme_content {
+    height: 375px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
 .page {
   display: none;
 }
@@ -14,13 +20,14 @@
   color: black;
   margin-right: 20px;
   padding: 5px 12px 5px 7px;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  background-color: #ccc;
 }
 #steps li.active {
   background-color: #336699;
   color: white;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
 }
 #steps li span {
   color: white;
@@ -39,6 +46,12 @@
 #steps li,
 #steps li span,
 #steps li label { cursor: pointer; }
+
+input[type=text] {
+    border: 1px solid #ccc;
+    padding: 3px;
+    width: 600px;
+}
 
 #export-pane {
   display: none;
@@ -71,6 +84,7 @@
   border: 1px solid black;
   color: #222;
   font-family: monospace;
+  font-size: 1em;
   width: 588px;
   height: 310px;
   padding: 5px 10px;

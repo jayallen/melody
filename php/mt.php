@@ -6,9 +6,9 @@
 # $Id$
 
 if('__MAKE_ME__' == '__MAKE_' . 'ME__') { # If make is not run
-    define('VERSION', '4.36');
-    define('VERSION_ID', '1.0.1');
-    define('PRODUCT_VERSION', '1.0.1');
+    define('VERSION', '4.37');
+    define('VERSION_ID', '1.0.2');
+    define('PRODUCT_VERSION', '1.0.2');
     define('PRODUCT_NAME', 'Melody');    
 } else {
     define('VERSION', '__API_VERSION__');

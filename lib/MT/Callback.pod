@@ -78,10 +78,11 @@ MT callbacks are typically in one of these forms:
 
 =item * callback_name
 
-This is the most common form of callback name and is generally recommended for new
-callbacks in order to provide consistency.  Examples of these include most of the
-L<MT::Object> callbacks (such as C<pre_save>, C<post_save>, etc.) and the
-L<MT::WeblogPublisher> callbacks (e.g. build_file_filter, build_page, build_file).
+This is the most common form of callback name and is generally recommended for
+new callbacks in order to provide consistency. Examples of these include most
+of the L<MT::Object> callbacks (such as C<pre_save>, C<post_save>, etc.) and
+the L<MT::WeblogPublisher> callbacks (e.g. build_file_filter, build_page,
+build_file).
 
 =item * CallbackName
 
@@ -760,8 +761,6 @@ The C<$feed> parameter is a scalar reference to a string-- the contents
 of the generated feed. Upon return, this value is printed out. The content
 should be an Atom-based feed.
 
-=back
-
 =head1 API Callbacks
 
 =head2 Publishing
@@ -849,8 +848,8 @@ false if a page was actually created on disk for this "page," and false if no
 page was created (because the corresponding template is set to be
 built dynamically).
 
-It is possible for the C<FileInfo> parameter to be undefined, namely if the blog
-has not been configured to publish anything dynamically, or if the
+It is possible for the C<FileInfo> parameter to be undefined, namely if the
+blog has not been configured to publish anything dynamically, or if the
 installation is using a data driver that does not support dynamic publishing.
 
 =back

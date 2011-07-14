@@ -55,8 +55,22 @@ h2#page-title span.star { display: none; }
   background: url(../colorpicker/images/select.png) center;
 }
 
-.field-type-link-group label.link-text {
+.field-type-link-group label.link-text, .field-type-text-group label.link-text {
   padding-right: 10px;
+}
+
+.field-type-link-group a.add-link, .field-type-text-group a.add-item {
+    display: block;
+    float: left;
+    color: white;
+    font-size: 11px;
+    background: #999;
+    margin: 0 10px 0 0;
+    padding: 3px 8px;
+    border: 0;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 }
 
 #theme-options #container .actions-bar-wrapper {
@@ -232,3 +246,10 @@ h2#page-title span.star { display: none; }
 .dialog .field-left-label {
     width: 580px;
 }
+
+/* Timepicker CSS */
+.ui-timepicker-div .ui-widget-header{ margin-bottom: 8px; }
+.ui-timepicker-div dl{ text-align: left; }
+.ui-timepicker-div dl dt{ height: 25px; }
+.ui-timepicker-div dl dd{ margin: -25px 0 10px 65px; }
+.ui-timepicker-div td { font-size: 90%; }
