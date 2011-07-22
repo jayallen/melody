@@ -639,7 +639,6 @@ sub list {
 
     # Validate scope
     if ( my $view = $screen_settings->{view} ) {
-        print STDERR "View: " . join( ',', @$view ) . "\n";
         $view = [$view] unless ref $view;
         my %view = map { $_ => 1 } @$view;
         if ( !$view{$scope} ) {
