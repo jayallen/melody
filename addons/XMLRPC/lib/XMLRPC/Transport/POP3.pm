@@ -23,8 +23,7 @@ package XMLRPC::Transport::POP3::Server;
 
 @XMLRPC::Transport::POP3::Server::ISA = qw(SOAP::Transport::POP3::Server);
 
-sub initialize;
-*initialize = \&XMLRPC::Server::initialize;
+sub initialize; *initialize = \&XMLRPC::Server::initialize;
 
 # ======================================================================
 

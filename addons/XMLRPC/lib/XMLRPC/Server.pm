@@ -1411,9 +1411,9 @@ sub newMediaObject {
         die _fault( MT->translate( "Invalid filename '[_1]'", $fname ) );
     }
 
-    $mt->validate_upload( { filename => $fname } )
-      or die _fault( $mt->errstr );
-
+    $mt->validate_upload({ filename => $fname })
+        or die _fault( $mt->errstr );
+    
     # Copy the filename and extract the extension.
     my $ext = $fname;
     $ext =~ m!.*\.(.*)$!

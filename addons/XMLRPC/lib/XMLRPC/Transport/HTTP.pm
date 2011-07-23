@@ -24,17 +24,16 @@ package XMLRPC::Transport::HTTP::CGI;
 
 @XMLRPC::Transport::HTTP::CGI::ISA = qw(SOAP::Transport::HTTP::CGI);
 
-sub initialize;
-*initialize = \&XMLRPC::Server::initialize;
+sub initialize; *initialize = \&XMLRPC::Server::initialize;
 
 sub make_fault {
-    local $SOAP::Constants::HTTP_ON_FAULT_CODE = 200;
-    shift->SUPER::make_fault(@_);
+  local $SOAP::Constants::HTTP_ON_FAULT_CODE = 200;
+  shift->SUPER::make_fault(@_);
 }
 
 sub make_response {
-    local $SOAP::Constants::DO_NOT_USE_CHARSET = 1;
-    shift->SUPER::make_response(@_);
+  local $SOAP::Constants::DO_NOT_USE_CHARSET = 1;
+  shift->SUPER::make_response(@_);
 }
 
 # ======================================================================
@@ -43,12 +42,9 @@ package XMLRPC::Transport::HTTP::Daemon;
 
 @XMLRPC::Transport::HTTP::Daemon::ISA = qw(SOAP::Transport::HTTP::Daemon);
 
-sub initialize;
-*initialize = \&XMLRPC::Server::initialize;
-sub make_fault;
-*make_fault = \&XMLRPC::Transport::HTTP::CGI::make_fault;
-sub make_response;
-*make_response = \&XMLRPC::Transport::HTTP::CGI::make_response;
+sub initialize; *initialize = \&XMLRPC::Server::initialize;
+sub make_fault; *make_fault = \&XMLRPC::Transport::HTTP::CGI::make_fault;
+sub make_response; *make_response = \&XMLRPC::Transport::HTTP::CGI::make_response;
 
 # ======================================================================
 
@@ -56,12 +52,9 @@ package XMLRPC::Transport::HTTP::Apache;
 
 @XMLRPC::Transport::HTTP::Apache::ISA = qw(SOAP::Transport::HTTP::Apache);
 
-sub initialize;
-*initialize = \&XMLRPC::Server::initialize;
-sub make_fault;
-*make_fault = \&XMLRPC::Transport::HTTP::CGI::make_fault;
-sub make_response;
-*make_response = \&XMLRPC::Transport::HTTP::CGI::make_response;
+sub initialize; *initialize = \&XMLRPC::Server::initialize;
+sub make_fault; *make_fault = \&XMLRPC::Transport::HTTP::CGI::make_fault;
+sub make_response; *make_response = \&XMLRPC::Transport::HTTP::CGI::make_response;
 
 # ======================================================================
 
