@@ -249,9 +249,9 @@ sub xml_body {
                 die "Error Parsing XML Input $@ ";
             }
         }
-    } ## end unless ( exists $app->{xml_body...})
+    }
     $app->{xml_body};
-} ## end sub xml_body
+}
 
 sub atom_body {
     my $app = shift;
@@ -278,7 +278,7 @@ sub atom_body {
         ) or return $app->error( 500, MT::Atom::Entry->errstr );
     }
     $atom;
-} ## end sub atom_body
+}
 
 # $target_zone is expected to be a number of hours from GMT
 sub iso2ts {
@@ -958,38 +958,37 @@ sub delete_post {
 sub validate_upload {
     my $app = shift;
 
-    if (@_) {
-        $app->SUPER::validate_upload(@_)
-          or return $app->error( 500, $app->errstr );
+    if ( @_ ) {
+        $app->SUPER::validate_upload( @_ )
+            or return $app->error( 500, $app->errstr );
     }
-    else {    # Check Atom payload
+    else {   # Check Atom payload
 
         return $app->error( 403, "Access denied" )
-          unless $app->{perms}->can_upload;
+            unless $app->{perms}->can_upload;
 
-        my $atom = $app->atom_body
-          or return $app->error( 400, "atom body is required" );
+        my $atom    = $app->atom_body
+            or return $app->error( 400, "atom body is required" );
 
         my $content = $atom->content;
         my $data    = $content->body;
 
-        my $type = $content->type
-          or return $app->error( 400, "content \@type is required" );
+        my $type    = $content->type
+            or return $app->error( 400, "content \@type is required" );
 
-        my $fname = $atom->title
-          or return $app->error( 400, "title is required" );
+        my $fname   = $atom->title
+            or return $app->error( 400, "title is required" );
 
         # Call self to have $app->SUPER check the filename and data
-        $app->validate_upload(
-                             { filename => basename($fname), data => $data } )
-          or return $app->error( 500, $app->errstr );
-    } ## end else [ if (@_) ]
+        $app->validate_upload({ filename => basename($fname), data => $data })
+            or return $app->error( 500, $app->errstr );
+    }
 
-    1;    # Looks good
-} ## end sub validate_upload
+    1;  # Looks good
+}
 
 sub _upload_to_asset {
-    my $app = shift;
+    my $app     = shift;
 
     return unless $app->validate_upload();
 
@@ -1002,15 +1001,16 @@ sub _upload_to_asset {
     my $type    = $content->type;
     my $data    = $content->body;
 
-    my $local = File::Spec->catfile( $blog->site_path, $fname );
+    my $local
+        = File::Spec->catfile( $blog->site_path, $fname );
 
     my ( $base, $path, $ext )
-      = File::Basename::fileparse( $local, '\.[^\.]*' );
+        = File::Basename::fileparse( $local, '\.[^\.]*' );
 
     # FIXME Unnecessarily hard-coded hash of a handful of MIME types
     # If there's no extension, look it up against a hash of arbitrarily
     # chosen, sadly non-comprehensive list of popular MIME types.
-    if ( !defined $ext or $ext eq '' ) {
+    if ( ! defined $ext or $ext eq '' ) {
         my %MIME2EXT = (
                          'text/plain'         => '.txt',
                          'image/jpeg'         => '.jpg',
@@ -1023,20 +1023,21 @@ sub _upload_to_asset {
                          'audio/ogg'          => '.ogg',
                          'audio/ogg-vorbis'   => '.ogg',
         );
-        ($ext) = $MIME2EXT{$type} || MT::Util::mime_type_extension($type);
+        ($ext) = $MIME2EXT{$type}
+              || MT::Util::mime_type_extension( $type );
     }
 
     my $i         = 1;
     my $base_copy = $base;
-    while ( $fmgr->exists( join( '', $path, $base, $ext ) ) ) {
+    while ( $fmgr->exists( join('', $path, $base, $ext) ) ) {
         $base = join( '_', $base_copy, $i++ );
     }
-    my $local_basename = join( '', $base, $ext );
-    $local = join( '', $path, $local_basename );
+    my $local_basename = join('', $base, $ext);
+    $local             = join('', $path, $local_basename);
 
     # Re-check in case extension was added
-    $app->validate_upload( { filename => $local_basename } )
-      or return $app->error( 500, $app->errstr );
+    $app->validate_upload({ filename => $local_basename })
+        or return $app->error( 500, $app->errstr );
 
     defined( my $bytes = $fmgr->put_data( $data, $local, 'upload' ) )
       or return $app->error( 500, "Error writing uploaded file" );
@@ -1047,17 +1048,15 @@ sub _upload_to_asset {
     my $is_image = 0;
     if ( $asset_pkg eq 'MT::Asset::Image' ) {
         eval { require Image::Size; };
-        if ($@) {
-            $fmgr->delete($local);
-            return
-              $app->error(
-                       500,
-                       MT->translate(
-                           'Perl module Image::Size is required to determine '
-                             . 'width and height of uploaded images.'
-                         )
-                         . ' Upload aborted.'
-              );
+        if ( $@ ) {
+            $fmgr->delete( $local );
+            return $app->error(
+                500,
+                MT->translate(
+                    'Perl module Image::Size is required to determine '
+                    .'width and height of uploaded images.'
+                ).' Upload aborted.'
+            );
         }
         $is_image = 1;
     }
@@ -1065,7 +1064,6 @@ sub _upload_to_asset {
     my ( $w, $h, $id ) = Image::Size::imgsize($local);
 
     unless ( defined($w) && defined($h) ) {
-
         # rebless to file type
         $asset_pkg = 'MT::Asset';
     }
@@ -1080,18 +1078,18 @@ sub _upload_to_asset {
       )
     {
         $asset = $asset_pkg->new();
-        $asset->file_path( join( '/', '%r', $local_basename ) );
-        $asset->file_name($local_basename);
+        $asset->file_path( join('/', '%r', $local_basename ) );
+        $asset->file_name( $local_basename );
         $asset->blog_id( $blog->id );
         $asset->created_by( $user->id );
-        ( my $ext_copy = $ext ) =~ s/\.//;
+        (my $ext_copy  = $ext) =~ s/\.//;
         $asset->file_ext($ext_copy);
     }
     else {
         $asset->modified_by( $user->id );
     }
     my $original = $asset->clone;
-    my $url = join( '/', '%r', $local_basename );
+    my $url      = join('/', '%r', $local_basename );
     $asset->url($url);
     if ($is_image) {
         $asset->image_width($w);

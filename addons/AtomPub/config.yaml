@@ -2,7 +2,7 @@ name: AtomPub API
 id: AtomPub
 author_name: Endevver
 description: Provides enhanced support for the AtomPub blog publishing API.
-version: 1.0
+version: 1.0.1
 schema_version: 1
 
 applications:
